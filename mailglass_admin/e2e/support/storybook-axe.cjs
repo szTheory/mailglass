@@ -311,6 +311,9 @@ function validateApproval(approval) {
     if (!nonempty(reason) || !nonempty(disposition) || disposition === "untriaged" || !nonempty(evidence)) {
       errors.push("incomplete triage needs a reason, reviewed disposition and evidence");
     }
+    if (approval.review_basis?.run_id && evidence !== approval.review_basis.run_id) {
+      errors.push("incomplete triage evidence must name the independent review_basis run");
+    }
   }
   return [...new Set(errors)];
 }

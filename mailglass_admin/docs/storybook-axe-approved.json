@@ -1,0 +1,964 @@
+{
+  "schema_version": 1,
+  "review_basis": {
+    "run_id": "phase174-05-20261027T041038Z-initial-final",
+    "source_revision": "143ae3d45b25b7975ddf9585e51c1f9782450d17",
+    "source_digest": "18607b9e80d4e8d42b878e4127710c59a69b59a00b14cd5fc4925ff98ffe3f03",
+    "reviewed_at": "2026-10-27T04:32:11.110Z",
+    "reviewer": "phase174-05 evidence triage",
+    "source": "Preserved initial selected-story axe report; incomplete results only, no violation approvals"
+  },
+  "approved_fingerprints": [],
+  "incomplete_triage": [
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_first-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_first-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_first-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_first-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_last-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_last-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_last-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-northstar_last-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ],
+        [
+          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
+        ],
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
+        ],
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
+        ],
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "disposition": "retained-incomplete-no-machine-verdict",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
+        ],
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T041038Z-initial-final"
+    }
+  ]
+}

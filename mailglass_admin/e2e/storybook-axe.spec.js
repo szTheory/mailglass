@@ -1,5 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
+const { selectedCases, validateReport, compareFindings } = require("./support/storybook-axe.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -16,69 +17,9 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const EXECUTION_TOKEN = process.env.STORYBOOK_AXE_EXECUTION_TOKEN || null;
 const MANIFEST = JSON.parse(fs.readFileSync(SCENARIO_PATH, "utf8"));
 const SCENARIOS = new Map((MANIFEST.scenarios || []).map(scenario => [scenario.id, scenario]));
-const SELECTION = MANIFEST.axe_selection || [];
-
-function selectedCases() {
-  const selectedVariants = SELECTION.filter(entry => entry.selected === true);
-  const emptyRouteOnly = SELECTION.filter(
-    entry => entry.selected === false && entry.proof_boundary === "connected-real-route-only"
-  );
-
-  if (selectedVariants.length !== 9) {
-    throw new Error(`Expected 9 selected rendered variants, received ${selectedVariants.length}`);
-  }
-  if (emptyRouteOnly.length !== 2 || emptyRouteOnly.some(entry => !entry.reason)) {
-    throw new Error("Both unselected empty cases must retain their connected-real-route-only proof boundary and reason");
-  }
-  if (
-    emptyRouteOnly.some(entry => {
-      const scenario = SCENARIOS.get(entry.scenario_id);
-      return (
-        entry.state !== "empty" ||
-        !scenario ||
-        scenario.state !== "empty" ||
-        scenario.rendered !== false ||
-        scenario.story_path !== null ||
-        scenario.variation_id !== null
-      );
-    })
-  ) {
-    throw new Error("The two excluded empty cases must remain unrendered real-route-only scenarios");
-  }
-
-  const cases = selectedVariants.flatMap(selection => {
-    const scenario = SCENARIOS.get(selection.scenario_id);
-    if (
-      !scenario ||
-      scenario.rendered !== true ||
-      scenario.state !== selection.state ||
-      !scenario.story_path ||
-      !scenario.variation_id ||
-      !Array.isArray(selection.themes) ||
-      selection.themes.length !== 2 ||
-      selection.themes.some(theme => !["light", "dark"].includes(theme)) ||
-      selection.root_selector !== ".mg-admin-root"
-    ) {
-      throw new Error(`Invalid selected Storybook execution identity: ${selection.scenario_id}`);
-    }
-    return selection.themes.map(theme => ({
-      case_id: `${selection.scenario_id}::${selection.state}::${theme}`,
-      scenario_id: selection.scenario_id,
-      state: selection.state,
-      theme,
-      story_path: scenario.story_path,
-      variation_id: scenario.variation_id,
-      root_selector: selection.root_selector
-    }));
-  });
-
-  if (cases.length !== 18 || new Set(cases.map(item => item.case_id)).size !== 18) {
-    throw new Error(`Expected 18 unique selected Storybook cases, received ${cases.length}`);
-  }
-  return { cases, emptyRouteOnly };
-}
-
-const { cases: EXPECTED_CASES, emptyRouteOnly: EXCLUDED_CASES } = selectedCases();
+const APPROVED_PATH = path.resolve(__dirname, "..", "docs", "storybook-axe-approved.json");
+const APPROVED = JSON.parse(fs.readFileSync(APPROVED_PATH, "utf8"));
+const { cases: EXPECTED_CASES, emptyRouteOnly: EXCLUDED_CASES } = selectedCases(MANIFEST);
 const freshReport = {
   schema_version: 1,
   run_id: process.env.STORYBOOK_AXE_RUN_ID || null,
@@ -168,6 +109,22 @@ function persistReport(complete = false) {
 
 test.afterAll(() => {
   persistReport(report.executed.length === report.expected.length);
+  const validation = validateReport(report, {
+    manifest: MANIFEST,
+    runId: process.env.STORYBOOK_AXE_RUN_ID,
+    revision: process.env.STORYBOOK_SOURCE_REVISION,
+    sourceDigest: process.env.STORYBOOK_SOURCE_DIGEST,
+    approval: APPROVED
+  });
+  const comparison = compareFindings(report, APPROVED);
+  const errors = [...validation.errors, ...comparison.errors];
+  if (errors.length > 0) {
+    throw new Error(
+      `Phase174 selected axe report rejected (${validation.metrics.expected} expected, ` +
+        `${validation.metrics.successful} successful, ${comparison.metrics.unapproved} unapproved, ` +
+        `${comparison.metrics.untriaged} untriaged): ${errors.join("; ")}`
+    );
+  }
 });
 
 for (const item of EXPECTED_CASES) {

@@ -1,7 +1,10 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { validateReport, compareFindings } = require("./storybook-axe.cjs");
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -9,20 +12,6 @@ const manifest = JSON.parse(
     "utf8"
   )
 );
-
-let comparator;
-try {
-  comparator = require("./storybook-axe.cjs");
-} catch (error) {
-  if (error.code !== "MODULE_NOT_FOUND") throw error;
-}
-
-// The fail-open fallback keeps the RED phase at an assertion about the planned
-// behavior instead of treating a missing module as a fixture/load failure.
-const validateReport = (...args) =>
-  comparator?.validateReport(...args) || { valid: true, errors: [] };
-const compareFindings = (...args) =>
-  comparator?.compareFindings(...args) || { valid: true, errors: [] };
 
 const cases = manifest.axe_selection
   .filter(selection => selection.selected)
@@ -151,6 +140,8 @@ test("validateReport rejects failed, skipped and unfinished executions", () => {
   for (const status of ["failed", "skipped", "running"]) {
     const report = validReport();
     report.executed[0].status = status;
+    report.executed[0].failure_stage = "axe analysis";
+    report.executed[0].error = "Error";
     assertInvalidValidation(report, context, new RegExp(status));
   }
   const unfinished = validReport();
@@ -202,9 +193,10 @@ test("compareFindings requires exact triage for every incomplete fingerprint", (
     ...incomplete,
     reason: "Axe returned incomplete and no contrast pass is inferred.",
     disposition: "reviewed-incomplete-no-verdict",
-    evidence: context.runId
+    evidence: "storybook-run-prior"
   };
   assert.equal(compareFindings(report, approvalFor([], [triage])).valid, true);
+  assertInvalidComparison(report, approvalFor([], [{ ...triage, evidence: "unrelated-run" }]), /review_basis/i);
 });
 
 test("compareFindings rejects a report used as its own approval evidence", () => {
@@ -222,4 +214,50 @@ test("compareFindings passes an unchanged exact independently approved fingerpri
 
 test("compareFindings passes an improved report with no findings", () => {
   assert.equal(compareFindings(validReport(), approvalFor([finding()])).valid, true);
+});
+
+test("CLI prints execution counts and rejects a missing report file", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "phase174-axe-cli-"));
+  try {
+    const reportPath = path.join(tempDir, "report.json");
+    const approvalPath = path.join(tempDir, "approved.json");
+    const manifestPath = path.join(tempDir, "manifest.json");
+    fs.writeFileSync(reportPath, JSON.stringify(validReport()));
+    fs.writeFileSync(approvalPath, JSON.stringify(approvalFor()));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    const cliPath = path.resolve(__dirname, "storybook-axe.cjs");
+    const args = [
+      cliPath,
+      "--report", reportPath,
+      "--approved", approvalPath,
+      "--manifest", manifestPath,
+      "--run-id", context.runId,
+      "--revision", context.revision,
+      "--source-digest", context.sourceDigest
+    ];
+    const success = spawnSync(process.execPath, args, { encoding: "utf8" });
+    assert.equal(success.status, 0, success.stderr);
+    assert.deepEqual(JSON.parse(success.stdout), {
+      expected: 18,
+      executed: 18,
+      successful: 18,
+      failed: 0,
+      missing: 0,
+      incomplete: 0,
+      violations: 0,
+      unapproved: 0,
+      untriaged: 0,
+      valid: true
+    });
+
+    const missing = spawnSync(process.execPath, [
+      ...args.slice(0, 2),
+      path.join(tempDir, "missing.json"),
+      ...args.slice(3)
+    ], { encoding: "utf8" });
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stderr, /report could not be read/i);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });
