@@ -1,7 +1,7 @@
 ---
 phase: "175"
 slug: "delivery-investigation-and-safe-replay"
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-27"
@@ -234,3 +234,11 @@ The spec-less recall ran per exact requirement, then a precision pass dropped ro
 |REPLAY-08 |automatic retry pressure, success-like failure, concealed error, lost identity, stuck confirm, duplicate side effect, exception leak, auth bypass, flicker, stale retry |keep safe explicit recovery intent; auth/error canon referred; routine transitions covered |
 
 Owning plans: UXF-12/REPLAY-04/05 →01; OUTUX-07/08 →02; REPLAY-06/07 →03; REPLAY-08 →04. All eight remain surfaced and descriptor-less as required by the fallback. Canon breadcrumb: injection, authorization bypass and general private-data disclosure are owned by the existing security controls/phase threat audit, not newly minted probe checks.
+
+## Validation Audit 2026-10-27
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
