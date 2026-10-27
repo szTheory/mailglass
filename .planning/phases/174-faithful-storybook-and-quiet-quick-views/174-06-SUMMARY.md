@@ -20,12 +20,12 @@ provides:
   - Current Phase 174 requirements, feedback dispositions, cost limits, and evidence boundaries
 affects: [178]
 actuals:
-  tokens: 39658.5
+  tokens: 45938.5
   tasks: 2
-  commits: 13
-commits: 13
+  commits: 19
+commits: 19
 plan_head_before: 0d1f4953d0ccaaa1a5806dedb66b39301e180d6f
-plan_head_after: 86a04b6bdbbd0e860953a4a1e1486cd95a846b60
+plan_head_after: 424d30b2e86754023c346ddf5218b5a8eaba38a0
 tech-stack:
   added: []
   patterns:
@@ -37,6 +37,8 @@ key-files:
     - scripts/check_phase174_evidence.cjs
     - scripts/check_phase174_evidence.test.cjs
     - mailglass_admin/docs/phase174-review.md
+    - reference/demo_app/assets/scripts/evidence-output-path.cjs
+    - reference/demo_app/assets/scripts/evidence-output-path.test.cjs
   modified:
     - .github/workflows/ci.yml
     - scripts/run_demo_browser_evidence.sh
@@ -47,11 +49,14 @@ key-files:
     - mailglass_admin/e2e/flows.spec.js
     - mailglass_admin/lib/mailglass_admin/operator/quick_view.ex
     - mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex
+    - mailglass_admin/lib/mailglass_admin/inbound_live.ex
     - mailglass_admin/playwright.config.cjs
+    - reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs
+    - reference/demo_app/assets/scripts/check-demo-browser-evidence.test.cjs
     - .planning/publish/mailglass_admin-files.expected
 key-decisions:
   - Keep the selected Phase 174 sweep in the existing advisory Demo Browser Evidence job; do not promote it to a protected required context.
-  - Measure the full hosted job against a same-profile successful baseline; report the observed 15-second wall-budget overage without implying causality or critical-path latency.
+  - Measure the full hosted job against a same-profile successful baseline; report the observed 14-second wall-budget overage without implying causality or critical-path latency.
   - Keep Axe violation approvals empty and retain incomplete findings as incomplete even when triage removes them from the untriaged count.
   - Keep Delivery's inert boundary and Inbound's native disabled-button boundary semantics distinct.
   - Leave non-Phase-174 feedback with its named Phase 175–178 owners; defer set-wide STORY-07 and zoom reconciliation to Phase 178.
@@ -62,7 +67,7 @@ coverage:
     requirement: UIQ-05
     verification:
       - kind: e2e
-        ref: "CI 40491221303, head fbf7d791; --require-ci checker: cold 148/148, warm 148/148, Axe 18/18 each"
+        ref: "CI 40498413906, head 18c6cf32; --require-ci checker: cold 148/148, warm 148/148, Axe 18/18 each"
         status: pass
     human_judgment: true
     rationale: Each condition retains 50 incomplete Axe findings; they are triaged but remain machine-incomplete and are not claimed as passes.
@@ -71,7 +76,7 @@ coverage:
     requirement: UXF-11
     verification:
       - kind: e2e
-        ref: "CI 40491221303; qv-delivery-* and qv-inbound-* selected scenarios plus connected quick-view cases"
+        ref: "CI 40498413906; qv-delivery-* and qv-inbound-* selected scenarios plus connected quick-view cases"
         status: pass
     human_judgment: false
   - id: D3
@@ -79,7 +84,7 @@ coverage:
     requirement: STORY-03
     verification:
       - kind: e2e
-        ref: "CI 40491221303; selected persona-screenshots.spec.js and quick-views.spec.js cases"
+        ref: "CI 40498413906; selected persona-screenshots.spec.js and quick-views.spec.js cases"
         status: pass
     human_judgment: false
   - id: D4
@@ -87,7 +92,7 @@ coverage:
     requirement: STORY-04
     verification:
       - kind: e2e
-        ref: "CI 40491221303; phase174/fidelity.json, 20 responsive cases, and 12 loaded font receipts"
+        ref: "CI 40498413906; phase174/fidelity.json, 20 responsive cases, and 12 loaded font receipts"
         status: pass
     human_judgment: false
   - id: D5
@@ -95,7 +100,7 @@ coverage:
     requirement: STORY-05
     verification:
       - kind: e2e
-        ref: "CI 40491221303; theme cases in phase174/fidelity.json"
+        ref: "CI 40498413906; theme cases in phase174/fidelity.json"
         status: pass
     human_judgment: false
   - id: D6
@@ -103,21 +108,21 @@ coverage:
     requirement: STORY-06
     verification:
       - kind: e2e
-        ref: "CI 40491221303; phase174/hooks.json and Operator Browser Gate job 122145432867"
+        ref: "CI 40498413906; phase174/hooks.json and Operator Browser Gate job 122170443965"
         status: pass
     human_judgment: false
   - id: D7
     description: Current-source review records a bounded visual judgment and all known evidence limits.
     verification:
       - kind: automated_ui
-        ref: "Candidate screenshots retained under ci/40491221303-attempt-1/phase174/; mailglass_admin/docs/phase174-review.md"
+        ref: "Candidate screenshots retained under ci/40498413906-attempt-1/phase174/; mailglass_admin/docs/phase174-review.md"
         status: pass
     human_judgment: true
     rationale: The selected Chromium captures received a qualitative review; it is not owner approval, an aesthetic score, or evidence for all browsers and zoom.
 metrics:
-  duration: 4h29m
+  duration: 5h32m
   completed: 2026-10-27
-  files: 24
+  files: 32
 status: complete
 ---
 
@@ -127,11 +132,11 @@ status: complete
 
 ## Performance
 
-- **Duration:** 4h29m from the first Plan 174-06 commit to the Task 2 documentation commit; includes waiting for the exact hosted workflow.
+- **Duration:** 5h32m from the first Plan 174-06 task commit to the final Task 2 documentation commit; includes the repaired-source review and final hosted proof.
 - **Completed:** 2026-10-27
 - **Tasks:** 2
-- **Plan files changed:** 24
-- **Task commits:** 13 (measured from the plan ledger; excludes the final metadata commit).
+- **Plan files changed:** 32 (measured from the task-commit path list, including the guide and bounded audit appendices).
+- **Task commits:** 14. The persisted plan ledger measures 19 commits since its recorded base, including interleaved metadata and audit commits; the final summary commit is excluded.
 
 ## Accomplishments
 
@@ -142,35 +147,39 @@ status: complete
 
 ## Hosted Evidence and Verification
 
-The exact candidate was fbf7d791f4f489db8a5d344455a33f0942a434d4, on owner ref gsd/phase-174-evidence. GitHub Actions run [40491221303](https://github.com/szTheory/mailglass/actions/runs/40491221303), attempt 1, completed/success at 2026-10-27T11:03:56Z; all 26 jobs completed/success. The named Demo browser evidence job [122145432926](https://github.com/szTheory/mailglass/actions/runs/40491221303/job/122145432926) and Operator Browser Gate [122145432867](https://github.com/szTheory/mailglass/actions/runs/40491221303/job/122145432867) passed. Core Deterministic Suite [122145432761](https://github.com/szTheory/mailglass/actions/runs/40491221303/job/122145432761) also passed.
+After the three source-review findings were repaired, the exact candidate was `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5` on `gsd/phase-174-evidence`. GitHub Actions run [40498413906](https://github.com/szTheory/mailglass/actions/runs/40498413906), attempt 1, completed/success at `2026-10-27T12:02:39Z`; all 26 jobs succeeded. The Demo Browser Evidence job [122170444350](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170444350), Operator Browser Gate [122170443965](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443965), and Preview Capture Advisory [122170443973](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443973) passed.
 
-The downloaded artifact and independent metadata are retained in the ignored run-owned directory reference/demo_app/tmp/demo_browser_evidence/ci/40491221303-attempt-1/. The downloaded artifact cost remains unmodified as phase174/cost.downloaded.json; enriched phase174/cost.json keeps the actual job timestamps and runner identity. The current and baseline raw GitHub REST responses, ci-job.json, and baseline job details are preserved beside the artifact.
+The exact downloaded artifact and independent metadata are retained in `reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/`. The original artifact cost is preserved as `phase174/cost.downloaded.json`; enriched `phase174/cost.json`, `ci-job.json`, `github-run.raw.json`, and `github-jobs.raw.json` retain actual timestamps and runner identity.
 
-The final required check passed:
+The final strict hosted check passed:
 
 ~~~sh
-node scripts/check_phase174_evidence.cjs --evidence-dir reference/demo_app/tmp/demo_browser_evidence/ci/40491221303-attempt-1 --pilot --require-ci
+node scripts/check_phase174_evidence.cjs --evidence-dir reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1 --pilot --require-ci
 ~~~
 
-Result: valid: true; exact source revision and digest match; each cold/warm condition is 148/148 (98 Demo, 6 hooks, 26 fidelity, 18 Axe); each Axe comparison is 18/18 successful with zero violations, zero unapproved violations, zero untriaged findings, and 50 incomplete findings retained.
+Result: `valid: true`; exact source revision and digest match; each cold/warm condition is 148/148 (98 Demo, 6 hooks, 26 fidelity, 18 Axe). Each Axe comparison is 18/18 successful with zero violations, zero unapproved violations, zero untriaged findings, and 50 incomplete findings retained.
 
-The 45 tracked source input paths and digest method, sha256(sorted(path\0byte_length\0file_sha256\n)), are in phase174/execution.json#source. The source was clean at the candidate revision. Both conditions used the same run identity; Demo and Admin browser caches missed cold and hit warm. Admin's cold/warm install lookup took 9,142 ms / 422 ms; Demo's took 12,597 ms / 985 ms. The run-owned Compose project was mailglass-evidence-40491221303-1, and the warm receipt measured cleanup at 11,466 ms.
+The source receipt contains 57 input paths with digest `21542c6a5e3a10a8d6334b902c9cbfbecde06e210aca8ae9c333cbe3054ed1c2`; its method is `sha256(sorted(path\0byte_length\0file_sha256\n))`. Both conditions use the same run identity. Demo Playwright 1.60.0 / Chromium 1223 and Admin Playwright 1.59.1 / Chromium 1217 both missed cache cold and hit warm. Admin install lookup took 9,248 ms cold / 415 ms warm; Demo took 11,390 ms / 1,046 ms. The run-owned Compose project was `mailglass-evidence-40498413906-1`; warm teardown took 11,716 ms.
+
+The earlier successful sample run `40491221303` on `fbf7d791` remains historical pre-review evidence and is superseded for current-source proof. The first post-review run `40496672358` had a successful Demo evidence job, but the separate Preview Capture Advisory job failed its 90-iteration readiness window at `11:34:55Z` while the cold server was compiling/seeding at `stage=sandbox_owner_started`; the runner log also records a PostgreSQL `role "root" does not exist` connection. The workflow was cancelled after the unchanged-candidate retry was queued. Its artifact, pre-dispatch and final run/job metadata, failed Preview job metadata, and log are preserved in `ci/40496672358-attempt-1/`. No timeout, checker, or gate was changed.
 
 ## Cost and Advisory Placement
 
 | Measurement | Result |
 | --- | --- |
-| Cold condition | 355,489 ms wall: 194,562 ms setup, 156,293 ms execution |
-| Warm condition | 158,321 ms wall: 2,957 ms setup, 153,281 ms execution, 11,466 ms final cleanup |
-| Setup-inclusive pilot | 525,889 ms wall (8m45.889s) |
+| Cold condition | 354,054 ms wall: 193,263 ms setup, 156,798 ms execution |
+| Warm condition | 157,923 ms wall: 2,972 ms setup, 152,708 ms execution, 11,716 ms final cleanup |
+| Setup-inclusive pilot | 524,496 ms wall (8m44.496s) |
 | Same-profile baseline | Run 40414024714, head e326da4d, successful Demo job 121891818059 on ubuntu-latest: 221,000 ms (3m41s) |
-| Candidate full hosted job | 536,000 ms (8m56s; one runner; 8.933 runner minutes) |
-| Observed added delta | +315,000 ms (5m15s wall; 5.25 runner minutes) |
-| Provisional budgets | Wall exceeds the 5-minute limit by 15 seconds; runner use is within 10 minutes by 4.75 minutes |
+| Candidate full hosted job | 535,000 ms (8m55s; one runner; 8.917 runner minutes) |
+| Observed added delta | +314,000 ms (5m14s wall; 5.233 runner minutes) |
+| Provisional budgets | Wall exceeds the 5-minute limit by 14 seconds; runner use is within 10 minutes by 4.767 minutes |
 
 The delta is an observational same-job comparison with one successful baseline sample; it includes runner and setup variance and is not a causal estimate or a CI critical-path guarantee. The full job timestamps define runner cost; scan-only times are not substituted.
 
-Recommendation: keep this pilot integrated into the existing advisory Demo Browser Evidence job rather than add a second lane. One lane shares checkout, the isolated service, and cold/warm caches while retaining all 148 cases in both conditions. Re-measure the 15-second wall overage before changing scope. If it persists, optimize shared setup or adjust repeated baseline execution only after proving every acceptance case still runs and all Phase 174 cases remain in both conditions. Preserve the current required gates.
+The live `main` branch protection query remains strict with required contexts `CI Green` and `Guard Release Trigger`. Demo Browser Evidence remains advisory and is not a dependency of `CI Green`; no protected context or aggregate policy changed.
+
+Recommendation: keep this pilot integrated into the existing advisory Demo Browser Evidence job rather than add a second lane. One lane shares checkout, the isolated service, and cold/warm caches while retaining all 148 cases in both conditions. Re-measure the 14-second wall overage before considering any scope adjustment; preserve every acceptance case, both Phase 174 conditions, and the current required gates.
 
 ## Requirement and Feedback Disposition
 
@@ -189,7 +198,7 @@ fb-quiet-quick-view-arrows is resolved against connected evidence and the exact 
 
 ## Visual Review and Evidence Limits
 
-The bounded review used the candidate's Delivery Light/Dark, 320px Delivery boundary, and wide Inbound boundary captures. Subject, outcome, recipient, timestamp, Account/provider and technical identity retain a clear hierarchy. Narrow text wraps and continues vertically without visible horizontal spill. The Storybook review-theme selector crowds the top of its own narrow chrome. This is qualitative inspection of selected Chromium captures, not an aesthetic score or cross-browser/device/zoom claim.
+The bounded review inspected the current candidate's Delivery Light/Dark, 320px Delivery boundary, and wide Inbound boundary captures. Subject, outcome, recipient, timestamp, Account/provider and technical identity retain a clear hierarchy. Narrow text wraps and continues vertically without visible horizontal spill. The Storybook review-theme selector crowds the top of its own narrow chrome. This is qualitative inspection of selected Chromium captures, not an aesthetic score or cross-browser/device/zoom claim.
 
 Fifty incomplete Axe findings remain machine-incomplete and retained for interpretation; no violation fingerprint is approved. The descriptorless transparency prohibition remains flagged-unverified and this plan makes no owner-approval claim. Real browser zoom and final STORY-07 reconciliation remain Phase 178 work. Focus, reduced motion, width, theme, hook, keyboard and connected interaction proof for this repair is current.
 
@@ -197,14 +206,13 @@ No new public endpoint, authentication path, persistence schema, or dependency w
 
 ## Task Commits
 
-3. **Task 1: Close reviewed evidence and focus gaps** — `18c6cf32`.
-
 1. **Task 1: Run complete selected evidence in the existing advisory browser lane** — `a06a311b`, `d01f1b63`, `b0ea5986`, `1b4ace7a`, `95fe9b92`, `be87c9c6`, `e7553eee`, `bc52eac7`, `79f24834`, `d46e7e37`, `fbf7d791`.
-2. **Task 2: Record the cold/warm pilot and current-source review disposition** — `86a04b6b`.
+2. **Task 1: Close reviewed evidence and focus gaps** — `18c6cf32`.
+3. **Task 2: Record the cold/warm pilot and current-source review disposition** — `86a04b6b` (initial pre-review sample), `424d30b2` (current-source proof and audit refresh).
 
 ## Post-Review Repair
 
-The phase code review found a symlink-parent escape in evidence paths, missing full-detail focus ownership in Inbound, and omitted route/story bytes in the local source digest. All three were repaired in `18c6cf32` with 24 passing Node checks and 3 passing connected operator cases; the focused independent `174-REVIEW-FIX.md` reports clean. Prior retained evidence is archived instead of recursively deleted, symlink components are rejected before writing, and checkpoint writes use no-follow flags. Inbound full detail now focuses its stable back link and returning focuses Quick view Close. Route, story `.exs`, fixture, asset and Admin flow bytes are explicitly included in source identity. Fresh CI run40496672358 targets the repair; final proof and revised metrics must supersede the earlier sample before phase completion.
+The phase code review found a symlink-parent escape in evidence paths, missing full-detail focus ownership in Inbound, and omitted route/story bytes in the local source digest. All three were repaired in `18c6cf32` with 24 passing Node checks and 3 passing connected operator cases; the focused independent `174-REVIEW-FIX.md` reports clean. Prior retained evidence is archived instead of recursively deleted, symlink components are rejected before writing, and checkpoint writes use no-follow flags. Inbound full detail now focuses its stable back link and returning focuses Quick view Close. Route, story `.exs`, fixture, asset and Admin flow bytes are explicitly included in source identity. The final exact-candidate proof is run `40498413906` and passes all 26 jobs plus the strict current-source evidence check. The first post-review attempt `40496672358` is retained as a failed readiness attempt followed by cancellation; its evidence and log are not presented as a successful workflow.
 
 ## Deviations from Plan
 
@@ -215,7 +223,7 @@ The phase code review found a symlink-parent escape in evidence paths, missing f
 - **Issue:** Earlier attempts exposed reset identity/trust assumptions and a private-file permission failure when a Linux container handed receipts to the host.
 - **Fix:** Use actual run-owned reset/project identities, process-scoped Git trust, bounded iframe readiness, and the established host-owned private-file handoff; validate cleanup and status preservation in a disposable image.
 - **Files modified:** scripts/run_demo_browser_evidence.sh, Demo evidence scripts/controllers/tests, .github/workflows/ci.yml.
-- **Verification:** Exact CI run 40491221303 passed; evidence checker validated run/job identity and both conditions.
+- **Verification:** Earlier run 40491221303 passed before the source-review repairs; exact current-source run 40498413906 and the independent `--require-ci` checker now pass.
 - **Committed in:** 79f24834, d46e7e37.
 
 **2. [Rule 3 - Blocking issue] Updated the package allowlist and in-progress CI timing contract**
@@ -231,14 +239,22 @@ The phase code review found a symlink-parent escape in evidence paths, missing f
 - **Issue:** The default Playwright discovery also ran the Admin-only 18-case Axe spec without its required identity; a stale Delivery boundary assertion also expected the old button behavior.
 - **Fix:** Exclude only the dedicated Storybook Axe spec from default discovery, leave its separate config unchanged, and assert Delivery's inert span boundary and target geometry.
 - **Files modified:** mailglass_admin/playwright.config.cjs, mailglass_admin/e2e/flows.spec.js, related browser tests.
-- **Verification:** Three focused cases passed; final CI run 40491221303 passed the Operator Browser Gate and dedicated Demo evidence lane.
+- **Verification:** Three focused cases passed; current CI run 40498413906 passed the Operator Browser Gate and dedicated Demo evidence lane.
 - **Committed in:** fbf7d791.
 
-**Total deviations:** 3 auto-fixed blocking/behavior issues. No new dependency, required context, release action, or scope expansion was introduced.
+**4. [Rule 1 / Rule 2 - Bug and security] Closed the three source-review findings**
+- **Found during:** Post-task source review recorded in `174-REVIEW.md`.
+- **Issue:** Evidence output paths could follow symlink parents, Inbound full-detail focus did not move to the newly visible view, and the source digest omitted changed route/story files.
+- **Fix:** Reject symlink components before writes, preserve existing retained captures, use no-follow checkpoint writes, focus the stable Inbound back link and returned Quick view control, and hash the missing route/story inputs.
+- **Files modified:** `reference/demo_app/assets/scripts/evidence-output-path.cjs`, its tests, Demo evidence checker/tests, `mailglass_admin/lib/mailglass_admin/inbound_live.ex`, Admin browser flow, phase174 checker/tests, and wrapper.
+- **Verification:** 24 focused Node checks, 3 connected browser cases, independent clean review in `174-REVIEW-FIX.md`, and exact-candidate run 40498413906 with strict hosted checker passed.
+- **Committed in:** `18c6cf32`.
+
+**Total deviations:** 4 auto-fixed entries: two Rule 3 blockers, one Rule 1 bug, and one source-review entry covering a Rule 1 bug plus a Rule 2 security fix. No new dependency, required context, release action, or scope expansion was introduced.
 
 ## Issues Encountered
 
-Earlier hosted attempts 40484284465 and 40486544710 exposed guard/Git trust and Linux permission failures; 40488505137 exposed incorrect Playwright lane discovery. Their failure artifacts remain preserved. They are not used as successful proof. The exact-head 40491221303 run and final independent checker supersede those attempts.
+Earlier hosted attempts 40484284465 and 40486544710 exposed guard/Git trust and Linux permission failures; 40488505137 exposed incorrect Playwright lane discovery. The successful pre-review sample 40491221303 is retained as historical proof for `fbf7d791`, not as proof of the repaired source. Post-review run 40496672358 failed only its separate Preview Capture Advisory readiness window while the cold server was compiling/seeding; its Demo artifact and raw failure metadata/log were preserved, then the ineligible workflow was cancelled after the exact-candidate retry was queued. The unchanged candidate succeeded in run 40498413906. No CI timeout, checker, or gate policy changed.
 
 ## User Setup Required
 
@@ -246,12 +262,12 @@ None.
 
 ## Next Phase Readiness
 
-Plan 174-06 completes its six assigned requirements and supplies current evidence to the phase-level verifier. Phase 174 is ready for verification; Phase 178 still owns STORY-07 reconciliation, real zoom, and the remaining Preview feedback. No merge, release, publication, or deployment was performed or authorized.
+Plan 174-06 completes its six assigned requirements and supplies current evidence to the phase-level verifier. Phase-level status remains `verifying` for the parent-owned verifier and transition. Phase 178 still owns STORY-07 reconciliation, real zoom, and the remaining Preview feedback. No merge, release, publication, or deployment was performed or authorized.
 
 ## Self-Check: PASSED
 
-- Summary, checker, checker tests, and review guide exist.
-- All 13 listed plan commits are reachable from HEAD.
+- Summary, checker, checker tests, review guide, validation audit, and security audit exist.
+- All 14 listed task commits are reachable from HEAD.
 - git diff --check passed.
 
 ---
