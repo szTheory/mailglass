@@ -183,3 +183,8 @@ Observed same-profile added cost is 315s versus a 221s prior successful job: 15s
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+
+## Post-Review Reconciliation
+
+The independent source review identified three concrete gaps that the initial audit had missed. Commit `18c6cf32` adds symlink-component rejection, no-follow checkpoint writes and preservation of prior retained evidence (CR-01/T-174-16/18); full-detail focus ownership and a connected regression (WR-01); and omitted route/story inputs plus dirty-byte digest controls (WR-02/T-174-17). All 24 focused Node checks and 3 browser cases passed, with an independent clean re-review in `174-REVIEW-FIX.md`. The initial report is retained and all three dispositions are fixed. Current exact-candidate CI proof is tracked separately from these focused checks; no risk acceptance or gate reduction occurred.

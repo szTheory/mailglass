@@ -22,8 +22,8 @@ affects: [178]
 actuals:
   tokens: 39658.5
   tasks: 2
-  commits: 12
-commits: 12
+  commits: 13
+commits: 13
 plan_head_before: 0d1f4953d0ccaaa1a5806dedb66b39301e180d6f
 plan_head_after: 86a04b6bdbbd0e860953a4a1e1486cd95a846b60
 tech-stack:
@@ -131,7 +131,7 @@ status: complete
 - **Completed:** 2026-10-27
 - **Tasks:** 2
 - **Plan files changed:** 24
-- **Task commits:** 12 (measured from the plan ledger; excludes the final metadata commit).
+- **Task commits:** 13 (measured from the plan ledger; excludes the final metadata commit).
 
 ## Accomplishments
 
@@ -197,8 +197,14 @@ No new public endpoint, authentication path, persistence schema, or dependency w
 
 ## Task Commits
 
+3. **Task 1: Close reviewed evidence and focus gaps** — `18c6cf32`.
+
 1. **Task 1: Run complete selected evidence in the existing advisory browser lane** — `a06a311b`, `d01f1b63`, `b0ea5986`, `1b4ace7a`, `95fe9b92`, `be87c9c6`, `e7553eee`, `bc52eac7`, `79f24834`, `d46e7e37`, `fbf7d791`.
 2. **Task 2: Record the cold/warm pilot and current-source review disposition** — `86a04b6b`.
+
+## Post-Review Repair
+
+The phase code review found a symlink-parent escape in evidence paths, missing full-detail focus ownership in Inbound, and omitted route/story bytes in the local source digest. All three were repaired in `18c6cf32` with 24 passing Node checks and 3 passing connected operator cases; the focused independent `174-REVIEW-FIX.md` reports clean. Prior retained evidence is archived instead of recursively deleted, symlink components are rejected before writing, and checkpoint writes use no-follow flags. Inbound full detail now focuses its stable back link and returning focuses Quick view Close. Route, story `.exs`, fixture, asset and Admin flow bytes are explicitly included in source identity. Fresh CI run40496672358 targets the repair; final proof and revised metrics must supersede the earlier sample before phase completion.
 
 ## Deviations from Plan
 
@@ -245,7 +251,7 @@ Plan 174-06 completes its six assigned requirements and supplies current evidenc
 ## Self-Check: PASSED
 
 - Summary, checker, checker tests, and review guide exist.
-- All 12 measured plan commits are reachable from HEAD.
+- All 13 listed plan commits are reachable from HEAD.
 - git diff --check passed.
 
 ---
