@@ -81,7 +81,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </div>
         </dl>
         <Components.technical_details
-          collapsible={not is_nil(Map.get(@record, :provider_message_id))}
+          collapsible={false}
           id="inbound-detail-technical"
         >
           <div>
@@ -107,6 +107,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           id="inbound-replay-open-btn"
           type="button"
           phx-click="open_replay"
+          phx-value-origin="full"
           data-testid="inbound-replay-open"
           disabled={replay_disabled?(@outcome)}
           class={["btn btn-error min-h-11 px-md", replay_disabled?(@outcome) && "btn-disabled"]}

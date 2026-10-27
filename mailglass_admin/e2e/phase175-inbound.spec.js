@@ -129,13 +129,22 @@ test("Phase 175 Inbound full: Escape closes review and returns focus to its deta
 
 test("Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await openInbound(page, `tenant_id=${tenantId}&outcome=accept&window_hours=168`);
+  await openInbound(page);
+  await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
+  await page.getByLabel("Time window", { exact: true }).selectOption("24");
+  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(page).toHaveURL(/outcome=accept/);
+  await expect(page).toHaveURL(/window_hours=24/);
+  const routeContext = new URL(page.url());
+  expect(routeContext.searchParams.get("tenant_id")).toBe(tenantId);
+  expect(routeContext.searchParams.get("outcome"), page.url()).toBe("accept");
+  expect(routeContext.searchParams.get("window_hours")).toBe("24");
 
   const { modal, recordId, trigger } = await openInboundQuickReplay(page);
   const initialUrl = new URL(page.url());
   expect(initialUrl.searchParams.get("tenant_id")).toBe(tenantId);
-  expect(initialUrl.searchParams.get("outcome")).toBe("accept");
-  expect(initialUrl.searchParams.get("window_hours")).toBe("168");
+  expect(initialUrl.searchParams.get("outcome"), page.url()).toBe("accept");
+  expect(initialUrl.searchParams.get("window_hours")).toBe("24");
   expect(initialUrl.searchParams.get("inbound_id")).toBe(recordId);
   await expect(modal).toContainText(recordId);
   await expect(modal).toContainText("Recorded Mailbox:");
@@ -156,7 +165,7 @@ test("Phase 175 Inbound quick: review preserves Account, filters, selection and 
 
   await trigger.click();
   await expect(page.getByTestId("inbound-replay-modal")).toBeVisible();
-  await page.getByTestId("inbound-replay-cancel").click();
+  await page.locator("#inbound-replay-cancel").click();
   await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-quick-replay-open-btn");
   expect(new URL(page.url()).searchParams.get("inbound_id")).toBe(recordId);

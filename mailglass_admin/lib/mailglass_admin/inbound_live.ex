@@ -123,6 +123,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:replay_consumed_review_id, nil)
      |> assign(:replay_feedback, nil)
      |> assign(:replay_dialog_feedback, nil)
+     |> assign(:replay_eligibility, nil)
      |> assign(:replay_trigger_id, "inbound-replay-open-btn")
      |> assign(:base_path, "/inbound")
      |> assign(:page_uri, "/inbound")
@@ -817,6 +818,8 @@ defmodule MailglassAdmin.InboundLive do
             <QuickView.quick_view
               :if={not @full_detail? and (@selected_record != nil or @detail_error != nil)}
               record={@selected_record}
+              replay_eligibility={@replay_eligibility}
+              replay_open?={@replay_modal_open?}
               detail_error={@detail_error}
               outside_results?={@selected_outside_results?}
               account_labels={@account_labels}
@@ -869,7 +872,7 @@ defmodule MailglassAdmin.InboundLive do
             />
             <ReplayModal.replay_modal
               open?={@replay_modal_open?}
-              record={selected_record_struct(@detail)}
+              record={selected_record_struct(@detail) || @selected_record}
               review={@replay_review}
               feedback={@replay_dialog_feedback}
             />
@@ -927,6 +930,9 @@ defmodule MailglassAdmin.InboundLive do
 
     detail_error = detail_error_for(selected_inbound_id, detail, detail_read_state)
 
+    replay_eligibility =
+      replay_eligibility_for(filter_params, selected_inbound_id, detail, detail_read_state)
+
     selected_outside_results? =
       records_read_state == :ok and not is_nil(selected_record) and
         is_nil(find_selected_record(records, selected_inbound_id))
@@ -946,6 +952,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:selected_outside_results?, selected_outside_results?)
     |> assign(:quick_view_focus_return_id, quick_view_focus_return_id)
     |> assign(:detail, if(full?, do: detail, else: nil))
+    |> assign(:replay_eligibility, replay_eligibility)
     |> assign(:runs, runs)
     |> assign(:detail_read_state, detail_read_state)
     |> assign(:timeline_read_state, timeline_read_state)
@@ -974,6 +981,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:records_read_state, :ok)
     |> assign(:summary_read_state, :ok)
     |> assign(:detail_read_state, :ok)
+    |> assign(:replay_eligibility, nil)
     |> assign(:timeline_read_state, :not_requested)
     |> assign(:timeline_read_at, nil)
     |> assign(:provider_options_state, :ok)
@@ -1649,6 +1657,31 @@ defmodule MailglassAdmin.InboundLive do
 
   defp load_selected_detail(filter_params, selected_inbound_id),
     do: load_detail(filter_params, selected_inbound_id)
+
+  defp replay_eligibility_for(_filter_params, nil, _detail, _detail_read_state), do: nil
+
+  defp replay_eligibility_for(filter_params, selected_id, %{record: record}, :ok)
+       when is_binary(selected_id) and is_map(record) do
+    tenant_id = filter_params["tenant_id"]
+
+    if Map.get(record, :id) == selected_id and Map.get(record, :tenant_id) == tenant_id do
+      case read_replay_eligibility(selected_id, tenant_id) do
+        {:ok, eligibility} -> eligibility
+        {:error, reason} -> %{status: :ineligible, reason: eligibility_failure_reason(reason)}
+      end
+    else
+      %{status: :ineligible, reason: :record_unavailable}
+    end
+  end
+
+  defp replay_eligibility_for(_filter_params, _selected_id, _detail, :read_unavailable),
+    do: %{status: :ineligible, reason: :read_unavailable}
+
+  defp replay_eligibility_for(_filter_params, _selected_id, _detail, :package_unavailable),
+    do: %{status: :ineligible, reason: :package_unavailable}
+
+  defp replay_eligibility_for(_filter_params, _selected_id, _detail, _detail_read_state),
+    do: %{status: :ineligible, reason: :record_unavailable}
 
   defp load_selected_timeline(_filter_params, nil, _detail), do: {[], :not_requested}
   defp load_selected_timeline(_filter_params, _selected_inbound_id, nil), do: {[], :not_requested}
