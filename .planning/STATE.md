@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 174
 current_phase_name: Faithful Storybook and Quiet Quick Views
 status: executing
-stopped_at: Completed 174-04-PLAN.md
-last_updated: "2026-10-27T04:08:14.198Z"
+stopped_at: Completed 174-05-PLAN.md
+last_updated: "2026-10-27T05:35:35.285Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 174 execution started
-state_head: a3b3548abe93c19a71a7ee3d43d0390952314826
+state_head: cc9aa419be6ac59f9970221ac08e041080e50d4f
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 ## Current Position
 
 Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Completed Plan 02; Plan 03 ready to execute
 
@@ -294,6 +294,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 174 P02 | 26m | 2 tasks | 10 files |
 | Phase 174 P03 | 31min | 2 tasks | 7 files |
 | Phase 174 P04 | 33m43s | 2 tasks | 10 files |
+| Phase 174 P05 | 86m | 3 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -533,6 +534,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: Serve production hooks plus the local theme adapter from a Demo-only versioned route. The pinned PhoenixStorybook macro evaluates use options before module attributes, so js_path uses the computed literal hash with a compile-time equality guard.
 - [Phase 174]: Scope Inter, Inter Tight, and IBM Plex Mono to the production .mg-admin-root, display, and code roles while retaining existing global defaults.
 - [Phase 174]: Keep source CSS, compiled bundle, and served response digests as separate receipt fields; assert byte equality only for built and served CSS.
+- [Phase 174]: Reuse Admin's locked @axe-core/playwright dependency in a dedicated Storybook scan config.
+- [Phase 174]: Require independent report identity and exact rule/target/scenario/state/theme fingerprint comparison.
+- [Phase 174]: Keep incomplete Axe results explicitly triaged against a reproduced pre-repair report; approve no violations.
+- [Phase 174]: Make each quick-view dialog focusable and use native disabled Delivery boundary buttons.
 
 ## Quick Tasks Completed
 
@@ -584,8 +589,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T04:08:14.164Z
-Stopped at: Completed 174-04-PLAN.md
+Last session: 2026-10-27T05:35:35.263Z
+Stopped at: Completed 174-05-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
