@@ -1,15 +1,15 @@
 ---
 phase: "175"
 slug: "delivery-investigation-and-safe-replay"
-status: planned
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-27"
 ---
 
 # Phase 175 — Validation Strategy
 
-Final planning contract, not an execution result. The task map matches all six plans. All implementation checks below remain pending.
+Executed validation map. Plans 175-01 through 175-05 retain their task summaries; Plan 175-06 adds current-source cold/warm receipts and closes the assigned requirement, edge and UI rows. Remaining Phase 178 ownership and descriptor-less flagged-unverified prohibitions are explicit.
 
 ## Test Infrastructure
 
@@ -22,7 +22,7 @@ Final planning contract, not an execution result. The task map matches all six p
 | Connected Admin | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 175"` |
 | Persisted demo | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"` |
 | Regression gate | `bash scripts/gsd-regression-gate.sh` |
-| Runtime | Not measured for Phase 175; record focused and cold/warm added cost during execution |
+| Runtime | Current-source P175 attributable incremental local wall: 45,255 ms (0.75425 min); hosted runner cost not observed; see 175-AUTOMATION.md |
 
 Run commands from the repository root unless the command changes directory. Supply the existing test database/reset-token setup through the established browser harness; do not weaken auth or destructive-reset checks to make a test run. Preserve the existing demo replay grant and authorization-actions guard.
 
@@ -36,38 +36,38 @@ Run commands from the repository root unless the command changes directory. Supp
 
 ## Requirement Verification Map
 
-| Requirement | Required behavior | Boundary and existing test seam | Status |
-| --- | --- | --- | --- |
-| UXF-12 | Both full-detail pages expose grouped technical evidence without expansion, including long/missing values | Component + LiveView tests; connected DOM assertion in both domains | pending |
-| OUTUX-07 | Real Account-scoped Refresh/Retry; ready/empty/stale/unavailable, external changes and expiry | Operator LiveView and scoped suppression read tests; connected action/state assertion | pending |
-| OUTUX-08 | Unknown expiry is not never; removal policy is explained without an invented mutation control | Suppression component/LiveView assertions and retained adverse-state story | pending |
-| REPLAY-04 | Exact selected record can enter review from quick view or full detail in both domains | Both LiveView suites and selected connected flows preserving Account/filter/selection | pending |
-| REPLAY-05 | Unavailable reason precedes dialog; stale/denied/changed selection never silently falls back | Existing stale/auth/revalidation server tests plus connected blocked-state assertions | pending |
-| REPLAY-06 | Identifiable request, shared concise shell, X named Close, Escape, trap and exact trigger return | Production component + Playwright keyboard/focus assertions in both entry surfaces/domains | pending |
-| REPLAY-07 | Success closes dialog, announces accessible toast and refreshes actual new-work/no-change or distinct Inbound result | LiveView result assertions; existing persisted demo replay/audit E2E extended with toast | pending |
-| REPLAY-08 | Failure stays visible in open dialog; safe retry/fresh review; duplicate/stale confirmation is safe | LiveView fault/auth seams plus connected error/re-review checks | pending |
-| STORY-07 continuation | Complete early Delivery investigation/recovery path and relevant adverse states use production presentation | Existing scenario/manifest/projection tests, retained Storybook and connected job proof; final requirement remains Phase 178 | pending |
+| Requirement | Required behavior | Boundary and existing test seam | Status | Current status and proof |
+| --- | --- | --- | --- | --- |
+| UXF-12 | Both full-detail pages expose grouped technical evidence without expansion, including long/missing values | Component + LiveView tests; connected DOM assertion in both domains | automated | automated — [technical evidence](175-AUTOMATION.md#technical-evidence-uxf-12) |
+| OUTUX-07 | Real Account-scoped Refresh/Retry; ready/empty/stale/unavailable, external changes and expiry | Operator LiveView and scoped suppression read tests; connected action/state assertion | automated | automated — [suppression refresh](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-08 | Unknown expiry is not never; removal policy is explained without an invented mutation control | Suppression component/LiveView assertions and retained adverse-state story | automated | automated — [suppression policy](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| REPLAY-04 | Exact selected record can enter review from quick view or full detail in both domains | Both LiveView suites and selected connected flows preserving Account/filter/selection | automated | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-05 | Unavailable reason precedes dialog; stale/denied/changed selection never silently falls back | Existing stale/auth/revalidation server tests plus connected blocked-state assertions | automated | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06 | Identifiable request, shared concise shell, X named Close, Escape, trap and exact trigger return | Production component + Playwright keyboard/focus assertions in both entry surfaces/domains | automated | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-07 | Success closes dialog, announces accessible toast and refreshes actual new-work/no-change or distinct Inbound result | LiveView result assertions; existing persisted demo replay/audit E2E extended with toast | automated | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-08 | Failure stays visible in open dialog; safe retry/fresh review; duplicate/stale confirmation is safe | LiveView fault/auth seams plus connected error/re-review checks | automated | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| STORY-07 continuation | Complete early Delivery investigation/recovery path and relevant adverse states use production presentation | Existing scenario/manifest/projection tests, retained Storybook and connected job proof; final requirement remains Phase 178 | partial — final ownership in Phase 178 | automated — partial; [fidelity evidence](175-AUTOMATION.md#current-source-run-identity-and-coverage); final UIQ/STORY-07 ownership stays Phase 178 |
 
 ## Per-Task Verification Map
 
-Final plan/task map; all execution is **pending**. Existing infrastructure is sufficient; tests are added beside behavior, with no separate infrastructure Wave0.
+All plan tasks have retained automated execution records. Plan 175-06 current cold/warm receipts and the exact case inventory are indexed in 175-AUTOMATION.md. Existing infrastructure was reused; no framework/dependency Wave0 was required.
 
-| Task | Wave | Automated command(s), from repository root | Required proof / Threat Ref | Status |
-| --- | --- | --- | --- | --- |
-| 175-01-01 | 1 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery tracer"` | 175-01-01: Complete one scoped Delivery investigation and permitted replay / T-175-01–04 | pending |
-| 175-01-02 | 1 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs --only phase175 --trace` | 175-01-02: Expose exact Delivery quick-view replay and truthful unavailable states / T-175-01–02 | pending |
-| 175-02-01 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 suppression refresh"` | 175-02-01: Refresh one scoped suppression through failure and successful retry / T-175-05–06 | pending |
-| 175-02-02 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 suppression policy"` | 175-02-02: Explain expiry/removal and prove real changes remain scoped / T-175-05–07 | pending |
-| 175-03-01 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/inbound_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- phase175-inbound.spec.js --grep "Phase 175 Inbound full"` | 175-03-01: Complete and recover a recorded Inbound replay through the shared shell / T-175-08–11 | pending |
-| 175-03-02 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/inbound/components_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- phase175-inbound.spec.js --grep "Phase 175 Inbound quick"` | 175-03-02: Expose Inbound quick replay and grouped full technical facts / T-175-08–10 | pending |
-| 175-03-03 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/components_test.exs test/mailglass_admin/inbound/components_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- structural.spec.js --grep "replay\|Replay"` | 175-03-03: Reuse dialog presentation on Delivery and reconcile structural expectations / T-175-10 | pending |
-| 175-04-01 | 3 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery recovery\|Phase 168 confirmation focus"` | 175-04-01: Recover a failed Delivery replay in the mounted dialog / T-175-12–15 | pending |
-| 175-04-02 | 3 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/auth_actions_contract_test.exs --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery safety"` | 175-04-02: Prove exact identity under stale, denied, duplicate and no-change outcomes / T-175-12–15 | pending |
-| 175-05-01 | 4 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/quick_view_projection_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- delivery-investigation.spec.js --grep "Phase 175 retained"` | 175-05-01: Retain the complete production Delivery job and reachable adverse cases / T-175-16 | pending |
-| 175-05-02 | 4 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 175.*layout"`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "Phase 175 fidelity\|Phase 175 retained"`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:storybook-axe -- --grep "Phase 175"` | 175-05-02: Prove repaired rendering, keyboard and accessibility at real boundaries / T-175-17 | pending |
-| 175-06-01 | 5 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"` | 175-06-01: Extend existing durable demo replay with accessible toast proof / T-175-03 | pending |
-| 175-06-02 | 5 | `node --test scripts/check_phase175_evidence.test.cjs`<br>`bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` | 175-06-02: Integrate scoped fail-closed evidence into existing lanes / T-175-18–20 | pending |
-| 175-06-03 | 5 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/auth_actions_contract_test.exs`<br>`node scripts/check_phase175_evidence.cjs --evidence-dir .planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175 --pilot`<br>`bash scripts/gsd-regression-gate.sh` | 175-06-03: Close proved acceptance and publish reproduction/cost limits / T-175-18–20 | pending |
+| Task | Wave | Automated command(s), from repository root | Required proof / Threat Ref | Status | Current status and proof |
+| --- | --- | --- | --- | --- | --- |
+| 175-01-01 | 1 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery tracer"` | 175-01-01: Complete one scoped Delivery investigation and permitted replay / T-175-01–04 | automated | automated — [plan summary](175-01-SUMMARY.md) |
+| 175-01-02 | 1 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs --only phase175 --trace` | 175-01-02: Expose exact Delivery quick-view replay and truthful unavailable states / T-175-01–02 | automated | automated — [plan summary](175-01-SUMMARY.md) |
+| 175-02-01 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 suppression refresh"` | 175-02-01: Refresh one scoped suppression through failure and successful retry / T-175-05–06 | automated | automated — [plan summary](175-02-SUMMARY.md) |
+| 175-02-02 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 suppression policy"` | 175-02-02: Explain expiry/removal and prove real changes remain scoped / T-175-05–07 | automated | automated — [plan summary](175-02-SUMMARY.md) |
+| 175-03-01 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/inbound_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- phase175-inbound.spec.js --grep "Phase 175 Inbound full"` | 175-03-01: Complete and recover a recorded Inbound replay through the shared shell / T-175-08–11 | automated | automated — [plan summary](175-03-SUMMARY.md) |
+| 175-03-02 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/inbound/components_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- phase175-inbound.spec.js --grep "Phase 175 Inbound quick"` | 175-03-02: Expose Inbound quick replay and grouped full technical facts / T-175-08–10 | automated | automated — [plan summary](175-03-SUMMARY.md) |
+| 175-03-03 | 2 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/components_test.exs test/mailglass_admin/inbound/components_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- structural.spec.js --grep "replay\ | Replay"` | 175-03-03: Reuse dialog presentation on Delivery and reconcile structural expectations / T-175-10 | automated | automated — [plan summary](175-03-SUMMARY.md) |
+| 175-04-01 | 3 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery recovery\ | Phase 168 confirmation focus"` | 175-04-01: Recover a failed Delivery replay in the mounted dialog / T-175-12–15 | automated | automated — [plan summary](175-04-SUMMARY.md) |
+| 175-04-02 | 3 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/auth_actions_contract_test.exs --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase 175 Delivery safety"` | 175-04-02: Prove exact identity under stale, denied, duplicate and no-change outcomes / T-175-12–15 | automated | automated — [plan summary](175-04-SUMMARY.md) |
+| 175-05-01 | 4 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/quick_view_projection_test.exs --only phase175 --trace`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- delivery-investigation.spec.js --grep "Phase 175 retained"` | 175-05-01: Retain the complete production Delivery job and reachable adverse cases / T-175-16 | automated | automated — [plan summary](175-05-SUMMARY.md) |
+| 175-05-02 | 4 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 175.*layout"`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "Phase 175 fidelity\ | Phase 175 retained"`<br>`ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:storybook-axe -- --grep "Phase 175"` | 175-05-02: Prove repaired rendering, keyboard and accessibility at real boundaries / T-175-17 | automated | automated — [plan summary](175-05-SUMMARY.md) |
+| 175-06-01 | 5 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"` | 175-06-01: Extend existing durable demo replay with accessible toast proof / T-175-03 | automated | automated — [current replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| 175-06-02 | 5 | `node --test scripts/check_phase175_evidence.test.cjs`<br>`bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` | 175-06-02: Integrate scoped fail-closed evidence into existing lanes / T-175-18–20 | automated | automated — [current-source receipts](175-AUTOMATION.md#current-source-run-identity-and-coverage) |
+| 175-06-03 | 5 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/auth_actions_contract_test.exs`<br>`node scripts/check_phase175_evidence.cjs --evidence-dir .planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175 --pilot`<br>`bash scripts/gsd-regression-gate.sh` | 175-06-03: Close proved acceptance and publish reproduction/cost limits / T-175-18–20 | automated | automated — focused Admin/auth 353 tests, current retained receipt validates, and full regression gate passed; see 175-AUTOMATION.md |
 
 ## Wave 0 Requirements
 
@@ -85,15 +85,15 @@ None planned. Follow `.planning/METHODOLOGY.md` D-52: machine-observable checks 
 
 ## Validation Sign-Off
 
-- [ ] Final task numbering and commands match all plans.
-- [ ] Every task has automated verification and a concrete failing direction.
-- [ ] No three consecutive tasks lack automated verification; no watch flags.
-- [ ] New selected cases exist and required execution counts are nonzero.
-- [ ] Security, persisted outcomes and full connected Delivery path have current evidence.
-- [ ] Feedback/runtime measurements recorded.
-- [ ] Set `nyquist_compliant` and `wave_0_complete` only when their execution evidence exists.
+- [x] Final task numbering and commands match all plans.
+- [x] Every task has automated verification and a concrete failing direction.
+- [x] No three consecutive tasks lack automated verification; the eight descriptor-less prohibition-recall flags remain explicitly `flagged-unverified`.
+- [x] New selected cases exist and required execution counts are nonzero.
+- [x] Security, persisted outcomes and full connected Delivery path have current evidence.
+- [x] Feedback/runtime measurements recorded.
+- [x] `nyquist_compliant` and `wave_0_complete` are set from execution evidence.
 
-**Approval:** final planning map; execution not started. No passing implementation or CI result is asserted.
+**Execution closeout:** The current-source combined cold/warm run, retained receipt checker, focused Admin/auth suite and existing regression gate passed. The existing hosted Demo Browser Evidence job remains advisory; no hosted CI run or hosted runner-minute cost is asserted. Axe incompletes remain separately triaged, and descriptor-less prohibition flags remain flagged-unverified.
 
 ## Final Source Coverage Audit
 
@@ -146,77 +146,77 @@ The29 UI truth strings and corresponding29 table cells below have had a trailing
 
 ## Deterministic Edge Acceptance Map
 
-All31 provided edge strings are lifted verbatim to the relevant plan frontmatter truths. These are planned explicit assertions, not passing results.
+All31 provided edge strings are lifted verbatim to the plan frontmatter truths. Current status and proof-family anchors are added per row; exact selected/executed case IDs and source receipts are in 175-AUTOMATION.md.
 
-| Requirement/category | Plan truth and task proof | Boundary |
-| --- | --- | --- |
-| UXF-12/adjacency | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state |
-| UXF-12/empty | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state |
-| UXF-12/encoding | 175-01 /01-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests |
-| UXF-12/ordering | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state |
-| OUTUX-07/idempotency | 175-02 /02-01–02;04-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| OUTUX-07/concurrency | 175-02 /02-01–02;04-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| OUTUX-08/empty | 175-02 /02-01–02;05-02 | Tagged server/component and connected visible state |
-| OUTUX-08/encoding | 175-02 /02-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests |
-| OUTUX-08/idempotency | 175-02 /02-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| OUTUX-08/concurrency | 175-02 /02-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-04/adjacency | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state |
-| REPLAY-04/empty | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state |
-| REPLAY-04/ordering | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state |
-| REPLAY-04/idempotency | 175-01 /01-02;03-02;04-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-04/concurrency | 175-01 /01-02;03-02;04-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-05/empty | 175-01 /01-02;04-02;05-02 | Tagged server/component and connected visible state |
-| REPLAY-05/encoding | 175-01 /01-02;04-02;05-02 | Connected browser geometry/escaping/zoom plus component tests |
-| REPLAY-05/idempotency | 175-01 /01-02;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-05/concurrency | 175-01 /01-02;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-06/adjacency | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state |
-| REPLAY-06/empty | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state |
-| REPLAY-06/encoding | 175-03 /03-01–03;04-02;05-02 | Connected browser geometry/escaping/zoom plus component tests |
-| REPLAY-06/ordering | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state |
-| REPLAY-06/idempotency | 175-03 /03-01–03;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-06/concurrency | 175-03 /03-01–03;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-07/idempotency | 175-03 /01-01;03-01;04-02;06-01 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-07/concurrency | 175-03 /01-01;03-01;04-02;06-01 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-08/empty | 175-04 /04-01–02;05-02 | Tagged server/component and connected visible state |
-| REPLAY-08/encoding | 175-04 /04-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests |
-| REPLAY-08/idempotency | 175-04 /04-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
-| REPLAY-08/concurrency | 175-04 /04-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls |
+| Requirement/category | Plan truth and task proof | Boundary | Current status and exact proof pointer |
+| --- | --- | --- | --- |
+| UXF-12/adjacency | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state | automated — [technical evidence](175-AUTOMATION.md#technical-evidence-uxf-12) |
+| UXF-12/empty | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state | automated — [technical evidence](175-AUTOMATION.md#technical-evidence-uxf-12) |
+| UXF-12/encoding | 175-01 /01-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests | automated — [technical evidence](175-AUTOMATION.md#technical-evidence-uxf-12) |
+| UXF-12/ordering | 175-01 /01-01–02;05-02 | Tagged server/component and connected visible state | automated — [technical evidence](175-AUTOMATION.md#technical-evidence-uxf-12) |
+| OUTUX-07/idempotency | 175-02 /02-01–02;04-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [suppression refresh](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-07/concurrency | 175-02 /02-01–02;04-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [suppression refresh](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-08/empty | 175-02 /02-01–02;05-02 | Tagged server/component and connected visible state | automated — [suppression policy](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-08/encoding | 175-02 /02-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests | automated — [suppression policy](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-08/idempotency | 175-02 /02-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [suppression policy](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| OUTUX-08/concurrency | 175-02 /02-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [suppression policy](175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08) |
+| REPLAY-04/adjacency | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-04/empty | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-04/ordering | 175-01 /01-02;03-02;04-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-04/idempotency | 175-01 /01-02;03-02;04-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-04/concurrency | 175-01 /01-02;03-02;04-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-05/empty | 175-01 /01-02;04-02;05-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-05/encoding | 175-01 /01-02;04-02;05-02 | Connected browser geometry/escaping/zoom plus component tests | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-05/idempotency | 175-01 /01-02;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-05/concurrency | 175-01 /01-02;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/adjacency | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/empty | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/encoding | 175-03 /03-01–03;04-02;05-02 | Connected browser geometry/escaping/zoom plus component tests | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/ordering | 175-03 /03-01–03;04-02;05-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/idempotency | 175-03 /03-01–03;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-06/concurrency | 175-03 /03-01–03;04-02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-07/idempotency | 175-03 /01-01;03-01;04-02;06-01 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-07/concurrency | 175-03 /01-01;03-01;04-02;06-01 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-08/empty | 175-04 /04-01–02;05-02 | Tagged server/component and connected visible state | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-08/encoding | 175-04 /04-01–02;05-02 | Connected browser geometry/escaping/zoom plus component tests | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-08/idempotency | 175-04 /04-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
+| REPLAY-08/concurrency | 175-04 /04-01–02;05-02 | Server exact-state/auth/domain effects, with selected connected controls | automated — [replay proof](175-AUTOMATION.md#replay-path-replay-04-through-replay-08) |
 
 ## UI Consideration Acceptance Map
 
-All29 approved element/category acceptance strings are lifted to plan frontmatter truths, with element/category prefixes for traceability. Repeated strings remain independently mapped to their element. Execution remains pending.
+All29 approved element/category acceptance strings remain independently mapped to their element. Current status and the predicate-specific proof matrix are linked per row in 175-AUTOMATION.md.
 
-| UI predicate | Plan/task | Required proof |
-| --- | --- | --- |
-| U1/empty |175-01/01-01–02;05-01 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. |
-| U1/loading |175-04/04-01;05-02 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. |
-| U1/error |175-04/04-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. |
-| U1/populated |175-01/01-01–02 | Keep selected Delivery primary facts and exact identity readable; expose technical groups and eligible review action through production components. |
-| U1/partial |175-04/04-01;02-02 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. |
-| U1/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. |
-| U1/zero-one-many |175-01/01-02;05-01 | Zero/one/many list and evidence results retain truthful count, empty, selection and pagination states; ambiguous exact replay targets require deliberate choice. |
-| U1/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
-| U2/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. |
-| U2/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
-| U3/empty |175-02/02-01–02 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. |
-| U3/loading |175-02/02-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. |
-| U3/error |175-02/02-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. |
-| U3/populated |175-02/02-01 | Keep selected Delivery primary facts and exact identity readable; expose technical groups and eligible review action through production components. |
-| U3/partial |175-02/02-02 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. |
-| U3/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. |
-| U3/zero-one-many |175-02/02-02;05-01 | Zero/one/many list and evidence results retain truthful count, empty, selection and pagination states; ambiguous exact replay targets require deliberate choice. |
-| U3/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
-| U4/loading |175-03/03-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. |
-| U4/error |175-03/03-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. |
-| U4/long-text |175-03/03-02;05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
-| U5/empty |175-04/04-02 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. |
-| U5/loading |175-03/03-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. |
-| U5/error |175-03/03-01;04-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. |
-| U5/partial |175-03/03-01 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. |
-| U5/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. |
-| U5/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
-| U6/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. |
-| U6/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. |
+| UI predicate | Plan/task | Required proof | Current status and exact proof pointer |
+| --- | --- | --- | --- |
+| U1/empty |175-01/01-01–02;05-01 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/loading |175-04/04-01;05-02 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/error |175-04/04-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/populated |175-01/01-01–02 | Keep selected Delivery primary facts and exact identity readable; expose technical groups and eligible review action through production components. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/partial |175-04/04-01;02-02 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/zero-one-many |175-01/01-02;05-01 | Zero/one/many list and evidence results retain truthful count, empty, selection and pagination states; ambiguous exact replay targets require deliberate choice. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U1/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U2/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U2/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/empty |175-02/02-01–02 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/loading |175-02/02-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/error |175-02/02-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/populated |175-02/02-01 | Keep selected Delivery primary facts and exact identity readable; expose technical groups and eligible review action through production components. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/partial |175-02/02-02 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/zero-one-many |175-02/02-02;05-01 | Zero/one/many list and evidence results retain truthful count, empty, selection and pagination states; ambiguous exact replay targets require deliberate choice. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U3/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U4/loading |175-03/03-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U4/error |175-03/03-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U4/long-text |175-03/03-02;05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/empty |175-04/04-02 | Use the Copywriting Contract heading/body/action for each Delivery-list empty state; an empty suppression read retains Refresh and states Account-local scope; an absent replay identity cannot enable confirmation. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/loading |175-03/03-01 | Keep current content and focus stable during reads/navigation/review; show an in-flight control label and suppress duplicate confirmation until the result arrives. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/error |175-03/03-01;04-01 | Show the safe error and next action on the affected surface; replay errors remain inside the open dialog and suppression failure is stale with retained facts or unavailable without them. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/partial |175-03/03-01 | Represent missing technical fields with existing bounded empty-value treatment; retained suppression facts after failure are stale and unknown expiry is explicitly not recorded. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U5/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U6/overflow |175-05/05-02 | Wrap bounded technical/request values without page horizontal overflow; dialog body scrolls with Close and primary action reachable while underlying page context is preserved. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
+| U6/long-text |175-05/05-02 | Long Unicode labels, IDs and Mailbox identity wrap at narrow widths and real 200% zoom, keeping readable action labels and 44px controls. | automated — predicate-specific case in [UI proof matrix](175-AUTOMATION.md#ui-acceptance-proof-matrix) |
 
 ## Descriptor-less Prohibition Recall (Flagged-Unverified)
 

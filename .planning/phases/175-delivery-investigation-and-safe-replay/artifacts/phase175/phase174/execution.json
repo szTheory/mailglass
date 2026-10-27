@@ -1,0 +1,883 @@
+{
+  "schema_version": "phase174-execution.v1",
+  "phase": 174,
+  "run_id": "mailglass-evidence-20261027200450-16960-29407",
+  "mode": "local",
+  "pilot": true,
+  "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+  "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+  "source": {
+    "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
+    "input_paths": [
+      ".github/workflows/ci.yml",
+      "compose.demo.yml",
+      "mailglass_admin/assets/css/app.css",
+      "mailglass_admin/docs/storybook-axe-approved.json",
+      "mailglass_admin/e2e/flows.spec.js",
+      "mailglass_admin/e2e/storybook-axe.spec.js",
+      "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+      "mailglass_admin/e2e/support/storybook-axe.cjs",
+      "mailglass_admin/e2e/support/storybook-axe.test.cjs",
+      "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+      "mailglass_admin/mix.lock",
+      "mailglass_admin/package-lock.json",
+      "mailglass_admin/package.json",
+      "mailglass_admin/playwright.config.cjs",
+      "mailglass_admin/playwright.storybook.config.cjs",
+      "mailglass_admin/priv/static/app.css",
+      "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+      "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+      "mailglass_admin/priv/static/fonts/inter-400.woff2",
+      "mailglass_admin/priv/static/fonts/inter-700.woff2",
+      "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+      "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+      "mailglass_admin/priv/static/hooks.js",
+      "reference/demo_app/assets/e2e/cohort.spec.js",
+      "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+      "reference/demo_app/assets/e2e/demo.spec.js",
+      "reference/demo_app/assets/e2e/outbound-replay.spec.js",
+      "reference/demo_app/assets/e2e/persona-screenshots.spec.js",
+      "reference/demo_app/assets/e2e/phase173-evidence.spec.js",
+      "reference/demo_app/assets/e2e/quick-views.spec.js",
+      "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+      "reference/demo_app/assets/e2e/storybook-hooks.spec.js",
+      "reference/demo_app/assets/package-lock.json",
+      "reference/demo_app/assets/package.json",
+      "reference/demo_app/assets/playwright.config.cjs",
+      "reference/demo_app/assets/scripts/check-demo-browser-deps.cjs",
+      "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs",
+      "reference/demo_app/assets/scripts/check-persona-reset-target.cjs",
+      "reference/demo_app/assets/scripts/evidence-output-path.cjs",
+      "reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+      "reference/demo_app/Dockerfile",
+      "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+      "reference/demo_app/lib/mailglass_demo_web/router.ex",
+      "reference/demo_app/mix.lock",
+      "reference/demo_app/storybook/primitives/theme_picker.story.exs",
+      "reference/demo_app/storybook/quick_views/delivery.story.exs",
+      "reference/demo_app/storybook/quick_views/inbound.story.exs",
+      "reference/persona_spec/quick_view_scenarios.ex",
+      "reference/persona_spec/quick_view_scenarios.json",
+      "scripts/check_phase174_evidence.cjs",
+      "scripts/check_phase174_evidence.test.cjs",
+      "scripts/ci_green_policy.sh",
+      "scripts/gsd-regression-gate.sh",
+      "scripts/phase174-review-claims.cjs",
+      "scripts/phase174-review-claims.test.cjs",
+      "scripts/prepare_phase173_baselines.cjs",
+      "scripts/run_demo_browser_evidence.sh",
+      "test/fixtures/phase174-overstated-review.cjs"
+    ],
+    "files": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "bytes": 62839,
+        "sha256": "4633141d9a615de87c0f76fbf30d6d377ca08039928d927ae0634e3e5afc1216"
+      },
+      {
+        "path": "compose.demo.yml",
+        "bytes": 4050,
+        "sha256": "9fdfbe795a9b50bd3906057dec9332f7df798cf4aefdc550a1b4ca8d0c702dc0"
+      },
+      {
+        "path": "mailglass_admin/assets/css/app.css",
+        "bytes": 30098,
+        "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+      },
+      {
+        "path": "mailglass_admin/docs/storybook-axe-approved.json",
+        "bytes": 208120,
+        "sha256": "824aa248575a7647b1677fff0b5fb667d08728e7c33b8345270baf8f17b716e1"
+      },
+      {
+        "path": "mailglass_admin/e2e/flows.spec.js",
+        "bytes": 131152,
+        "sha256": "2b9572845a3b2833ec8bea23d8f61e4c4f9ad8e605bf4a50e5c3d8da6c9f48e8"
+      },
+      {
+        "path": "mailglass_admin/e2e/storybook-axe.spec.js",
+        "bytes": 12645,
+        "sha256": "d6d388dddb5e77abb82e04824df25c50fba2a4f55f5d031850bac183655d541c"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+        "bytes": 8677,
+        "sha256": "9d2a43b0584c42fab0a2acdda414f7bc1fd783f444f039e4d69491f8c4fac648"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe.cjs",
+        "bytes": 23380,
+        "sha256": "5cea94555e3256eaee1a4ca7927ef0aab1e5720fdbc0efac0e4ffc3c8ec0d686"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe.test.cjs",
+        "bytes": 15613,
+        "sha256": "c3bd8107c288ac0752ac7537d0f1b8e4413683dfcec2eafa3960ac43cc976933"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
+        "bytes": 17029,
+        "sha256": "b8fa2b5cbea5679eaeac48c7575ac60014893a1a0871e7e6230ec24c8af2170e"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+        "bytes": 75242,
+        "sha256": "e04aa4d0043d6233eef9ee963d3f66f052aac37f1b50be1f602e66ea5463695d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+        "bytes": 10713,
+        "sha256": "4d90a1892db27d86d7a75f36fc12d59b6eb7523fefff94d6459865000e3cbd5c"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+        "bytes": 19243,
+        "sha256": "d990223fba0b18539bb9bcb20bba9dcd60928ba89a357f425775eaab793b74a1"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+        "bytes": 9324,
+        "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+      },
+      {
+        "path": "mailglass_admin/mix.lock",
+        "bytes": 19402,
+        "sha256": "098389f684d25e259e3e7bf68c0040540727df8bc8c27cdc3bc827c38f351423"
+      },
+      {
+        "path": "mailglass_admin/package-lock.json",
+        "bytes": 3092,
+        "sha256": "7c21d914768e7034c8595aa5e4a1c8959c40ce8d10e3b9f871a92eec8282be58"
+      },
+      {
+        "path": "mailglass_admin/package.json",
+        "bytes": 410,
+        "sha256": "f28226522bfa5607acf97023a716a4a32db3cbd522c2daacdb404dfe352f3b9f"
+      },
+      {
+        "path": "mailglass_admin/playwright.config.cjs",
+        "bytes": 2199,
+        "sha256": "2892adba319c2305b6f1b6b0b7cee5de41857a490a697f515b1601d8b32cb074"
+      },
+      {
+        "path": "mailglass_admin/playwright.storybook.config.cjs",
+        "bytes": 590,
+        "sha256": "b1b7d4c35edc22fc8f3446de5dcd9bdec4321dc26b918f4c783cfb9694969f2a"
+      },
+      {
+        "path": "mailglass_admin/priv/static/app.css",
+        "bytes": 137809,
+        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+        "bytes": 10180,
+        "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+        "bytes": 10152,
+        "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-400.woff2",
+        "bytes": 23396,
+        "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-700.woff2",
+        "bytes": 23932,
+        "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+        "bytes": 24908,
+        "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+        "bytes": 26084,
+        "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258"
+      },
+      {
+        "path": "mailglass_admin/priv/static/hooks.js",
+        "bytes": 4437,
+        "sha256": "87aa55436b1c87fe07102e7dd02a524fe496ed8c12234afa30e3f05b824dd761"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/cohort.spec.js",
+        "bytes": 9671,
+        "sha256": "d0abe36e6f6bc180de237a0901fa7044980c0c4490c7145e0cbd74a26dccff20"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+        "bytes": 8220,
+        "sha256": "902009f32c8c1503d5ef912322dbc53be55b77a2ba3454b8300414085cf29719"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/demo.spec.js",
+        "bytes": 15899,
+        "sha256": "dfc98491d159c8c9d4f30b5054676b097e7c7fffa03b7c49c4f094e5dea0c983"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/outbound-replay.spec.js",
+        "bytes": 4023,
+        "sha256": "422ead33a4189bdc69d4b84fe13ca8665519d37d540eedc3fba10edbb7c61eec"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/persona-screenshots.spec.js",
+        "bytes": 16166,
+        "sha256": "ee7238d283262742f1885a84e478bdb9570ffb684b938f90bd719a7ba315266f"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/phase173-evidence.spec.js",
+        "bytes": 16378,
+        "sha256": "d8795fc6b0198927dd43e752c3248af121b74105cded83b733dcbdc4d23b5e16"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/quick-views.spec.js",
+        "bytes": 28055,
+        "sha256": "5b1426c7938029b5772ce6b5c1f0ad11020a4965c3025936fb87f4a483c1fce2"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+        "bytes": 56832,
+        "sha256": "68bb7e9f5547ae8eeaf5ee321e9d518442ff853d9880ea7f25280fea1a8a4bfd"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/storybook-hooks.spec.js",
+        "bytes": 24615,
+        "sha256": "7e91d570b827b7013abe89ba1c58f4c23bd638b119137a6ef9a8c305d3abe873"
+      },
+      {
+        "path": "reference/demo_app/assets/package-lock.json",
+        "bytes": 2223,
+        "sha256": "ba025dde6183e206b32ad32b386e50501472dcf28448f8c504fce9aa5ce4dc80"
+      },
+      {
+        "path": "reference/demo_app/assets/package.json",
+        "bytes": 331,
+        "sha256": "9bcef845d405e990b361cf60020bbb5d484fb16ecbc3823f273e294070a2444c"
+      },
+      {
+        "path": "reference/demo_app/assets/playwright.config.cjs",
+        "bytes": 2062,
+        "sha256": "30f48cad82edc48ac00133beda32846e36b36539c4859e7feb10a28a6f5839cd"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-demo-browser-deps.cjs",
+        "bytes": 4751,
+        "sha256": "3e7264a0039b7d82e54fea40f2d91663f9e924b69b01ab1503ad5e9ac4acb07b"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs",
+        "bytes": 20771,
+        "sha256": "fa08f40cc6857df92b80a80e230d123abc72835393a56c62a8c2a813e96c9a43"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-persona-reset-target.cjs",
+        "bytes": 2156,
+        "sha256": "a57c397fb41cf591f563d78abab6fa3ecf2258a7183c9a65465523e599978551"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/evidence-output-path.cjs",
+        "bytes": 1092,
+        "sha256": "c85f07e9e3e160db2e3b0d09193fd44648b9bc8bb89d1674d118f21de33f47e9"
+      },
+      {
+        "path": "reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+        "bytes": 6722,
+        "sha256": "728241450be128bee8dc516ff1f6918847e0d72f0167539ddac42b5bd610c45b"
+      },
+      {
+        "path": "reference/demo_app/Dockerfile",
+        "bytes": 943,
+        "sha256": "6dd95c7ea5739d8b31d228b50c8501d1699ead53329e641d85fa12cd049c71e5"
+      },
+      {
+        "path": "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+        "bytes": 9631,
+        "sha256": "120832712144ebea86a47c1423a78e7e7e1a635efd0cd3d72cda7f9933e0b607"
+      },
+      {
+        "path": "reference/demo_app/lib/mailglass_demo_web/router.ex",
+        "bytes": 4601,
+        "sha256": "04ab7553a3ad85105e07d80d7ed00109b689ff2f13e12f3905eb50a6814c03fc"
+      },
+      {
+        "path": "reference/demo_app/mix.lock",
+        "bytes": 25214,
+        "sha256": "1472692952d9ddbd91df7a116a4b5cf28f717ca3369a7a04bf80cc94b39711d7"
+      },
+      {
+        "path": "reference/demo_app/storybook/primitives/theme_picker.story.exs",
+        "bytes": 1659,
+        "sha256": "49bcf2adef9b56338483fac11835a0d907d3814136d42b99e7a685c0f45311d7"
+      },
+      {
+        "path": "reference/demo_app/storybook/quick_views/delivery.story.exs",
+        "bytes": 2834,
+        "sha256": "ca90aefbd618f234ce33bc1fd0ebd0bef6d3893d2277b9b0573f0fdac8aedcf5"
+      },
+      {
+        "path": "reference/demo_app/storybook/quick_views/inbound.story.exs",
+        "bytes": 2936,
+        "sha256": "9ac3c872b7ef7bed55374d725e8dd6d2094bf9b36ed4bbc294150cb821096177"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.ex",
+        "bytes": 10699,
+        "sha256": "a6a8ec5cc8c4f1b4d4d20aed1d7779edddc63ce704967a4e989ba280a9a13fce"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.json",
+        "bytes": 54206,
+        "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
+      },
+      {
+        "path": "scripts/check_phase174_evidence.cjs",
+        "bytes": 42410,
+        "sha256": "12c3183fe31474852cebfd2fede078fc0c819d667c0f00b3b20741f7ef2fd652"
+      },
+      {
+        "path": "scripts/check_phase174_evidence.test.cjs",
+        "bytes": 27406,
+        "sha256": "28a33b913fa0f270bcce071ca3f81367b5af3aa2a939f28259cbb14e4c36c41e"
+      },
+      {
+        "path": "scripts/ci_green_policy.sh",
+        "bytes": 3407,
+        "sha256": "0807008d11a396daf52e5cf6e317142c231842c04171bc8817329fb3185ace9b"
+      },
+      {
+        "path": "scripts/gsd-regression-gate.sh",
+        "bytes": 4724,
+        "sha256": "6648a73ad88bcdc8b13af592cfaa076109fd015a103af141e423499949741a87"
+      },
+      {
+        "path": "scripts/phase174-review-claims.cjs",
+        "bytes": 1703,
+        "sha256": "13c82e033df4de0841e9e253da3ecf51abb783cd0ed82f20d34a4ac1396308df"
+      },
+      {
+        "path": "scripts/phase174-review-claims.test.cjs",
+        "bytes": 1679,
+        "sha256": "075a5786ba8f9421a0fb4100979ed36f31f2dbca3c6ab22e44572dbd7409a520"
+      },
+      {
+        "path": "scripts/prepare_phase173_baselines.cjs",
+        "bytes": 1593,
+        "sha256": "f4e908c4aa3473da7337ab285a6fac065f201ae61dd15994a998bab028e86719"
+      },
+      {
+        "path": "scripts/run_demo_browser_evidence.sh",
+        "bytes": 38724,
+        "sha256": "6cf0979ff7c7c8ed02cba5d83d0bdf9f30a7866d25c222580ca23bae68f68854"
+      },
+      {
+        "path": "test/fixtures/phase174-overstated-review.cjs",
+        "bytes": 278,
+        "sha256": "c628af8272d4c0880008a26de7c7063e8159acd47d2e639065408ee9d9cc2c72"
+      }
+    ],
+    "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+  },
+  "github": {
+    "actions": false,
+    "run_id": "",
+    "run_attempt": "",
+    "job": "",
+    "sha": "",
+    "repository": "",
+    "runner_name": "",
+    "runner_os": "",
+    "runner_arch": ""
+  },
+  "reset": {
+    "compose_project": "mailglass-evidence-20261027200450-16960-29407",
+    "host_http_port": "55839",
+    "host_db_port": "55840",
+    "token_recorded": false
+  },
+  "serialization": {
+    "playwright_workers": 1,
+    "conditions_run_serially": true
+  },
+  "conditions": [
+    {
+      "condition": "cold",
+      "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+      "job_id": "local",
+      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+      "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+      "status": "passed",
+      "started_at": "2026-10-27T20:04:50.692Z",
+      "completed_at": "2026-10-27T20:09:36.148Z",
+      "timings_ms": {
+        "service_start": 52413,
+        "demo_lock_audit": 114,
+        "demo_npm_ci": 1287,
+        "demo_browser_install": 33702,
+        "demo_scan": 91830,
+        "admin_npm_ci": 1013,
+        "admin_browser_install": 32226,
+        "admin_axe_scan": 46334,
+        "comparison": 75
+      },
+      "expected_counts": {
+        "demo": 101,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 26,
+        "total": 159
+      },
+      "executed_counts": {
+        "demo": 101,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 26,
+        "total": 159
+      },
+      "demo_case_ids": [
+        "cohort.spec.js:58:account picker lists the two deliveries-bearing personas; helios-void absent",
+        "cohort.spec.js:82:fjordline-aps edge values render: long-ID + long-mailable truncated, recipient verbatim, nil reject_reason no reason line",
+        "cohort.spec.js:151:northstar high-count lifecycle renders without horizontal overflow",
+        "cohort.spec.js:167:helios-void direct URL renders the empty state, not a crash",
+        "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
+        "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
+        "demo.spec.js:49:built-in unsubscribe pages keep their copy within narrow viewports",
+        "demo.spec.js:113:dashboard links to preview and operator surfaces",
+        "demo.spec.js:140:preview distinguishes the public component and AtlasDesk HTML authoring paths",
+        "demo.spec.js:294:outbound operator opens with seeded delivery evidence",
+        "demo.spec.js:315:inbound operator opens with seeded support mailbox evidence",
+        "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
+        "persona-screenshots.spec.js:163:shot overview-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot overview-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-northstar-320-system",
+        "persona-screenshots.spec.js:163:shot overview-northstar-768-system",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-320-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-768-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-320-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-768-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-system",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot preview-any-375-light",
+        "persona-screenshots.spec.js:163:shot preview-any-375-dark",
+        "persona-screenshots.spec.js:163:shot preview-any-1440-light",
+        "persona-screenshots.spec.js:163:shot preview-any-1440-dark",
+        "persona-screenshots.spec.js:163:shot gallery-any-375-light",
+        "persona-screenshots.spec.js:163:shot gallery-any-375-dark",
+        "persona-screenshots.spec.js:163:shot gallery-any-1440-light",
+        "persona-screenshots.spec.js:163:shot gallery-any-1440-dark",
+        "persona-screenshots.spec.js:163:shot storybook-any-375-light",
+        "persona-screenshots.spec.js:163:shot storybook-any-375-dark",
+        "persona-screenshots.spec.js:163:shot storybook-any-1440-light",
+        "persona-screenshots.spec.js:163:shot storybook-any-1440-dark",
+        "persona-screenshots.spec.js:191:Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns",
+        "persona-screenshots.spec.js:238:serves the expected routes and the committed Admin CSS at its mount path",
+        "phase173-evidence.spec.js:244:dashboard links to preview and operator surfaces",
+        "phase173-evidence.spec.js:286:outbound operator opens with seeded delivery evidence",
+        "phase173-evidence.spec.js:311:inbound operator opens with seeded support mailbox evidence",
+        "phase173-evidence.spec.js:335:empty account stays isolated and explains the absence of deliveries",
+        "phase173-evidence.spec.js:358:recipient browser shows a truthful expired unsubscribe state",
+        "quick-views.spec.js:13:Phase174 tracer opens a real Delivery and its retained production story",
+        "quick-views.spec.js:83:Phase174 delivery keyboard navigation preserves selection context and focus return",
+        "quick-views.spec.js:138:Phase174 delivery first, last, single, empty, and nil-position states remain truthful",
+        "quick-views.spec.js:210:Phase174 delivery retained variants preserve exact scenario facts and bounded theme captures",
+        "quick-views.spec.js:261:Phase174 delivery scenario manifest accounts for rendered and real-route-only cases",
+        "quick-views.spec.js:306:Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries",
+        "quick-views.spec.js:431:Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable",
+        "quick-views.spec.js:460:Phase174 inbound manifest selects exactly five variants and preserves route-only emptiness",
+        "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom",
+        "storybook-fidelity.spec.js:255:delivery story owns Light, Dark, and live System review themes",
+        "storybook-fidelity.spec.js:255:inbound story owns Light, Dark, and live System review themes",
+        "storybook-fidelity.spec.js:463:delivery loads production CSS, all font bytes, and computed roles",
+        "storybook-fidelity.spec.js:463:inbound loads production CSS, all font bytes, and computed roles",
+        "storybook-fidelity.spec.js:691:delivery normal and boundary quick views fit bounded responsive widths",
+        "storybook-fidelity.spec.js:691:inbound normal and boundary quick views fit bounded responsive widths",
+        "storybook-hooks.spec.js:180:Storybook owns its iframe hook and both pinned Demo surfaces complete real cycles"
+      ],
+      "hook_case_ids": [
+        "storybook:mounted-preview",
+        "delivery:escape-focus-return",
+        "delivery:close-focus-return",
+        "delivery:reconnect-focus-return",
+        "inbound:close-focus-return",
+        "inbound:escape-focus-return"
+      ],
+      "fidelity_case_ids": [
+        "theme:delivery:northstar_normal",
+        "theme:inbound:northstar_normal",
+        "fonts:delivery:northstar_normal",
+        "fonts:inbound:northstar_normal",
+        "widths:delivery:responsive-matrix",
+        "width:delivery:northstar_normal:320:light",
+        "width:delivery:northstar_first:320:dark",
+        "width:delivery:northstar_first:375:light",
+        "width:delivery:northstar_normal:375:dark",
+        "width:delivery:northstar_normal:768:light",
+        "width:delivery:northstar_first:768:dark",
+        "width:delivery:northstar_first:1280:light",
+        "width:delivery:northstar_normal:1280:dark",
+        "width:delivery:northstar_normal:1440:light",
+        "width:delivery:northstar_first:1440:dark",
+        "widths:inbound:responsive-matrix",
+        "width:inbound:northstar_normal:320:light",
+        "width:inbound:northstar_first:320:dark",
+        "width:inbound:northstar_first:375:light",
+        "width:inbound:northstar_normal:375:dark",
+        "width:inbound:northstar_normal:768:light",
+        "width:inbound:northstar_first:768:dark",
+        "width:inbound:northstar_first:1280:light",
+        "width:inbound:northstar_normal:1280:dark",
+        "width:inbound:northstar_normal:1440:light",
+        "width:inbound:northstar_first:1440:dark"
+      ],
+      "axe_case_ids": [
+        "qv-delivery-normal::normal::light",
+        "qv-delivery-normal::normal::dark",
+        "qv-delivery-first::first::light",
+        "qv-delivery-first::first::dark",
+        "qv-delivery-last::last::light",
+        "qv-delivery-last::last::dark",
+        "qv-delivery-single-unicode::single-unicode::light",
+        "qv-delivery-single-unicode::single-unicode::dark",
+        "delivery-investigation-northstar-normal::normal-permitted-review::light",
+        "delivery-investigation-northstar-normal::normal-permitted-review::dark",
+        "delivery-investigation-fjordline-long-unicode::long-unicode::light",
+        "delivery-investigation-fjordline-long-unicode::long-unicode::dark",
+        "delivery-investigation-suppression-stale::stale-retained-match::light",
+        "delivery-investigation-suppression-stale::stale-retained-match::dark",
+        "delivery-investigation-replay-ambiguous::replay-ambiguous::light",
+        "delivery-investigation-replay-ambiguous::replay-ambiguous::dark",
+        "qv-inbound-normal::normal::light",
+        "qv-inbound-normal::normal::dark",
+        "qv-inbound-first::first::light",
+        "qv-inbound-first::first::dark",
+        "qv-inbound-last::last::light",
+        "qv-inbound-last::last::dark",
+        "qv-inbound-single-unicode::single-unicode::light",
+        "qv-inbound-single-unicode::single-unicode::dark",
+        "qv-inbound-unavailable::unavailable::light",
+        "qv-inbound-unavailable::unavailable::dark"
+      ],
+      "setup_ms": 120755,
+      "execution_ms": 138239,
+      "wall_ms": 285461,
+      "admin_browser": {
+        "schema_version": "phase174-admin-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+          "condition": "cold",
+          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+        },
+        "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
+        "version": "1.59.1",
+        "chromium_revision": "1217",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "miss",
+        "installer_ms": 32226,
+        "install_exit_code": 0
+      },
+      "demo_browser": {
+        "schema_version": "phase174-demo-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+          "condition": "cold",
+          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+        },
+        "version": "1.60.0",
+        "chromium_revision": "1223",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "miss",
+        "installer_ms": 33702
+      }
+    },
+    {
+      "condition": "warm",
+      "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+      "job_id": "local",
+      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+      "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+      "status": "passed",
+      "started_at": "2026-10-27T20:09:36.450Z",
+      "completed_at": "2026-10-27T20:12:16.083Z",
+      "timings_ms": {
+        "service_start": 0,
+        "demo_lock_audit": 107,
+        "demo_npm_ci": 427,
+        "demo_browser_install": 552,
+        "demo_scan": 93873,
+        "admin_npm_ci": 794,
+        "admin_browser_install": 260,
+        "admin_axe_scan": 40951,
+        "comparison": 67
+      },
+      "expected_counts": {
+        "demo": 101,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 26,
+        "total": 159
+      },
+      "executed_counts": {
+        "demo": 101,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 26,
+        "total": 159
+      },
+      "demo_case_ids": [
+        "cohort.spec.js:58:account picker lists the two deliveries-bearing personas; helios-void absent",
+        "cohort.spec.js:82:fjordline-aps edge values render: long-ID + long-mailable truncated, recipient verbatim, nil reject_reason no reason line",
+        "cohort.spec.js:151:northstar high-count lifecycle renders without horizontal overflow",
+        "cohort.spec.js:167:helios-void direct URL renders the empty state, not a crash",
+        "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
+        "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
+        "demo.spec.js:49:built-in unsubscribe pages keep their copy within narrow viewports",
+        "demo.spec.js:113:dashboard links to preview and operator surfaces",
+        "demo.spec.js:140:preview distinguishes the public component and AtlasDesk HTML authoring paths",
+        "demo.spec.js:294:outbound operator opens with seeded delivery evidence",
+        "demo.spec.js:315:inbound operator opens with seeded support mailbox evidence",
+        "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
+        "persona-screenshots.spec.js:163:shot overview-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot overview-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-northstar-320-system",
+        "persona-screenshots.spec.js:163:shot overview-northstar-768-system",
+        "persona-screenshots.spec.js:163:shot overview-northstar-1440-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-320-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-768-system",
+        "persona-screenshots.spec.js:163:shot overview-fjordline-aps-1440-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-320-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-768-system",
+        "persona-screenshots.spec.js:163:shot overview-helios-void-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-northstar-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-fjordline-aps-1440-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-320-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-768-system",
+        "persona-screenshots.spec.js:163:shot deliveries-helios-void-1440-system",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-northstar-1440-dark",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-fjordline-aps-1440-dark",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-375-light",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-375-dark",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-1440-light",
+        "persona-screenshots.spec.js:163:shot inbound-helios-void-1440-dark",
+        "persona-screenshots.spec.js:163:shot preview-any-375-light",
+        "persona-screenshots.spec.js:163:shot preview-any-375-dark",
+        "persona-screenshots.spec.js:163:shot preview-any-1440-light",
+        "persona-screenshots.spec.js:163:shot preview-any-1440-dark",
+        "persona-screenshots.spec.js:163:shot gallery-any-375-light",
+        "persona-screenshots.spec.js:163:shot gallery-any-375-dark",
+        "persona-screenshots.spec.js:163:shot gallery-any-1440-light",
+        "persona-screenshots.spec.js:163:shot gallery-any-1440-dark",
+        "persona-screenshots.spec.js:163:shot storybook-any-375-light",
+        "persona-screenshots.spec.js:163:shot storybook-any-375-dark",
+        "persona-screenshots.spec.js:163:shot storybook-any-1440-light",
+        "persona-screenshots.spec.js:163:shot storybook-any-1440-dark",
+        "persona-screenshots.spec.js:191:Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns",
+        "persona-screenshots.spec.js:238:serves the expected routes and the committed Admin CSS at its mount path",
+        "phase173-evidence.spec.js:244:dashboard links to preview and operator surfaces",
+        "phase173-evidence.spec.js:286:outbound operator opens with seeded delivery evidence",
+        "phase173-evidence.spec.js:311:inbound operator opens with seeded support mailbox evidence",
+        "phase173-evidence.spec.js:335:empty account stays isolated and explains the absence of deliveries",
+        "phase173-evidence.spec.js:358:recipient browser shows a truthful expired unsubscribe state",
+        "quick-views.spec.js:13:Phase174 tracer opens a real Delivery and its retained production story",
+        "quick-views.spec.js:83:Phase174 delivery keyboard navigation preserves selection context and focus return",
+        "quick-views.spec.js:138:Phase174 delivery first, last, single, empty, and nil-position states remain truthful",
+        "quick-views.spec.js:210:Phase174 delivery retained variants preserve exact scenario facts and bounded theme captures",
+        "quick-views.spec.js:261:Phase174 delivery scenario manifest accounts for rendered and real-route-only cases",
+        "quick-views.spec.js:306:Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries",
+        "quick-views.spec.js:431:Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable",
+        "quick-views.spec.js:460:Phase174 inbound manifest selects exactly five variants and preserves route-only emptiness",
+        "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom",
+        "storybook-fidelity.spec.js:255:delivery story owns Light, Dark, and live System review themes",
+        "storybook-fidelity.spec.js:255:inbound story owns Light, Dark, and live System review themes",
+        "storybook-fidelity.spec.js:463:delivery loads production CSS, all font bytes, and computed roles",
+        "storybook-fidelity.spec.js:463:inbound loads production CSS, all font bytes, and computed roles",
+        "storybook-fidelity.spec.js:691:delivery normal and boundary quick views fit bounded responsive widths",
+        "storybook-fidelity.spec.js:691:inbound normal and boundary quick views fit bounded responsive widths",
+        "storybook-hooks.spec.js:180:Storybook owns its iframe hook and both pinned Demo surfaces complete real cycles"
+      ],
+      "hook_case_ids": [
+        "storybook:mounted-preview",
+        "delivery:escape-focus-return",
+        "delivery:close-focus-return",
+        "delivery:reconnect-focus-return",
+        "inbound:close-focus-return",
+        "inbound:escape-focus-return"
+      ],
+      "fidelity_case_ids": [
+        "theme:delivery:northstar_normal",
+        "theme:inbound:northstar_normal",
+        "fonts:delivery:northstar_normal",
+        "fonts:inbound:northstar_normal",
+        "widths:delivery:responsive-matrix",
+        "width:delivery:northstar_normal:320:light",
+        "width:delivery:northstar_first:320:dark",
+        "width:delivery:northstar_first:375:light",
+        "width:delivery:northstar_normal:375:dark",
+        "width:delivery:northstar_normal:768:light",
+        "width:delivery:northstar_first:768:dark",
+        "width:delivery:northstar_first:1280:light",
+        "width:delivery:northstar_normal:1280:dark",
+        "width:delivery:northstar_normal:1440:light",
+        "width:delivery:northstar_first:1440:dark",
+        "widths:inbound:responsive-matrix",
+        "width:inbound:northstar_normal:320:light",
+        "width:inbound:northstar_first:320:dark",
+        "width:inbound:northstar_first:375:light",
+        "width:inbound:northstar_normal:375:dark",
+        "width:inbound:northstar_normal:768:light",
+        "width:inbound:northstar_first:768:dark",
+        "width:inbound:northstar_first:1280:light",
+        "width:inbound:northstar_normal:1280:dark",
+        "width:inbound:northstar_normal:1440:light",
+        "width:inbound:northstar_first:1440:dark"
+      ],
+      "axe_case_ids": [
+        "qv-delivery-normal::normal::light",
+        "qv-delivery-normal::normal::dark",
+        "qv-delivery-first::first::light",
+        "qv-delivery-first::first::dark",
+        "qv-delivery-last::last::light",
+        "qv-delivery-last::last::dark",
+        "qv-delivery-single-unicode::single-unicode::light",
+        "qv-delivery-single-unicode::single-unicode::dark",
+        "delivery-investigation-northstar-normal::normal-permitted-review::light",
+        "delivery-investigation-northstar-normal::normal-permitted-review::dark",
+        "delivery-investigation-fjordline-long-unicode::long-unicode::light",
+        "delivery-investigation-fjordline-long-unicode::long-unicode::dark",
+        "delivery-investigation-suppression-stale::stale-retained-match::light",
+        "delivery-investigation-suppression-stale::stale-retained-match::dark",
+        "delivery-investigation-replay-ambiguous::replay-ambiguous::light",
+        "delivery-investigation-replay-ambiguous::replay-ambiguous::dark",
+        "qv-inbound-normal::normal::light",
+        "qv-inbound-normal::normal::dark",
+        "qv-inbound-first::first::light",
+        "qv-inbound-first::first::dark",
+        "qv-inbound-last::last::light",
+        "qv-inbound-last::last::dark",
+        "qv-inbound-single-unicode::single-unicode::light",
+        "qv-inbound-single-unicode::single-unicode::dark",
+        "qv-inbound-unavailable::unavailable::light",
+        "qv-inbound-unavailable::unavailable::dark"
+      ],
+      "setup_ms": 2140,
+      "execution_ms": 134891,
+      "wall_ms": 159633,
+      "admin_browser": {
+        "schema_version": "phase174-admin-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+          "condition": "warm",
+          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+        },
+        "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
+        "version": "1.59.1",
+        "chromium_revision": "1217",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "hit",
+        "installer_ms": 260,
+        "install_exit_code": 0
+      },
+      "demo_browser": {
+        "schema_version": "phase174-demo-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+          "condition": "warm",
+          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+        },
+        "version": "1.60.0",
+        "chromium_revision": "1223",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "hit",
+        "installer_ms": 552
+      }
+    }
+  ]
+}

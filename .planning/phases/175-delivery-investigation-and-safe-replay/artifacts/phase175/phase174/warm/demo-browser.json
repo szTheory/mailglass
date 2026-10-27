@@ -1,0 +1,14 @@
+{
+  "schema_version": "phase174-demo-browser.v1",
+  "run_identity": {
+    "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+    "condition": "warm",
+    "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+  },
+  "version": "1.60.0",
+  "chromium_revision": "1223",
+  "cache_directory": "/cache/playwright",
+  "cache_state": "hit",
+  "installer_ms": 552
+}

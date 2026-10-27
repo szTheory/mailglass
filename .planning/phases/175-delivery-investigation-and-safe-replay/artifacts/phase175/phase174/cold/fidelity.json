@@ -1,0 +1,2351 @@
+{
+  "source": {
+    "revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "dirty": true,
+    "dirtyStatusSha256": "1dc418b0c3989fe8d89a872e1f58440168d0512686c2ae1cc86e8fb0efdb7f58"
+  },
+  "selectedCaseIds": [
+    "theme:delivery:northstar_normal",
+    "theme:inbound:northstar_normal",
+    "fonts:delivery:northstar_normal",
+    "fonts:inbound:northstar_normal",
+    "widths:delivery:responsive-matrix",
+    "width:delivery:northstar_normal:320:light",
+    "width:delivery:northstar_first:320:dark",
+    "width:delivery:northstar_first:375:light",
+    "width:delivery:northstar_normal:375:dark",
+    "width:delivery:northstar_normal:768:light",
+    "width:delivery:northstar_first:768:dark",
+    "width:delivery:northstar_first:1280:light",
+    "width:delivery:northstar_normal:1280:dark",
+    "width:delivery:northstar_normal:1440:light",
+    "width:delivery:northstar_first:1440:dark",
+    "widths:inbound:responsive-matrix",
+    "width:inbound:northstar_normal:320:light",
+    "width:inbound:northstar_first:320:dark",
+    "width:inbound:northstar_first:375:light",
+    "width:inbound:northstar_normal:375:dark",
+    "width:inbound:northstar_normal:768:light",
+    "width:inbound:northstar_first:768:dark",
+    "width:inbound:northstar_first:1280:light",
+    "width:inbound:northstar_normal:1280:dark",
+    "width:inbound:northstar_normal:1440:light",
+    "width:inbound:northstar_first:1440:dark"
+  ],
+  "executedCaseIds": [
+    "theme:delivery:northstar_normal",
+    "theme:inbound:northstar_normal",
+    "fonts:delivery:northstar_normal",
+    "fonts:inbound:northstar_normal",
+    "widths:delivery:responsive-matrix",
+    "width:delivery:northstar_normal:320:light",
+    "width:delivery:northstar_first:320:dark",
+    "width:delivery:northstar_first:375:light",
+    "width:delivery:northstar_normal:375:dark",
+    "width:delivery:northstar_normal:768:light",
+    "width:delivery:northstar_first:768:dark",
+    "width:delivery:northstar_first:1280:light",
+    "width:delivery:northstar_normal:1280:dark",
+    "width:delivery:northstar_normal:1440:light",
+    "width:delivery:northstar_first:1440:dark",
+    "widths:inbound:responsive-matrix",
+    "width:inbound:northstar_normal:320:light",
+    "width:inbound:northstar_first:320:dark",
+    "width:inbound:northstar_first:375:light",
+    "width:inbound:northstar_normal:375:dark",
+    "width:inbound:northstar_normal:768:light",
+    "width:inbound:northstar_first:768:dark",
+    "width:inbound:northstar_first:1280:light",
+    "width:inbound:northstar_normal:1280:dark",
+    "width:inbound:northstar_normal:1440:light",
+    "width:inbound:northstar_first:1440:dark"
+  ],
+  "themes": [
+    {
+      "caseId": "theme:delivery:northstar_normal",
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+      "iframeUrl": "about:srcdoc",
+      "owner": "quick-view-story",
+      "systemLight": {
+        "selectedPreference": "system",
+        "resolvedScheme": "light",
+        "osPreference": "light",
+        "dataTheme": "mailglass-light",
+        "base100": "#f8fbfd",
+        "baseContent": "#0d1b2a"
+      },
+      "systemDark": {
+        "selectedPreference": "system",
+        "resolvedScheme": "dark",
+        "osPreference": "dark",
+        "dataTheme": "mailglass-dark",
+        "base100": "#0d1b2a",
+        "baseContent": "#eaf6fb"
+      },
+      "production": {
+        "light": "mailglass-light",
+        "dark": "mailglass-dark"
+      },
+      "explicitThemeStability": true,
+      "selectionPreserved": true,
+      "hostPreferencePersisted": false
+    },
+    {
+      "caseId": "theme:inbound:northstar_normal",
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+      "iframeUrl": "about:srcdoc",
+      "owner": "quick-view-story",
+      "systemLight": {
+        "selectedPreference": "system",
+        "resolvedScheme": "light",
+        "osPreference": "light",
+        "dataTheme": "mailglass-light",
+        "base100": "#f8fbfd",
+        "baseContent": "#0d1b2a"
+      },
+      "systemDark": {
+        "selectedPreference": "system",
+        "resolvedScheme": "dark",
+        "osPreference": "dark",
+        "dataTheme": "mailglass-dark",
+        "base100": "#0d1b2a",
+        "baseContent": "#eaf6fb"
+      },
+      "production": {
+        "light": "mailglass-light",
+        "dark": "mailglass-dark"
+      },
+      "explicitThemeStability": true,
+      "selectionPreserved": true,
+      "hostPreferencePersisted": false
+    }
+  ],
+  "stylesheets": [
+    {
+      "caseId": "fonts:delivery:northstar_normal",
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168",
+      "source": {
+        "path": "mailglass_admin/assets/css/app.css",
+        "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+      },
+      "built": {
+        "path": "mailglass_admin/priv/static/app.css",
+        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "bytes": 137809
+      },
+      "served": {
+        "storyUrl": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "productionUrl": "http://demo:4015/ops/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "md5": "3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "bytes": 137809,
+        "matchesBuilt": true
+      }
+    },
+    {
+      "caseId": "fonts:inbound:northstar_normal",
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168",
+      "source": {
+        "path": "mailglass_admin/assets/css/app.css",
+        "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+      },
+      "built": {
+        "path": "mailglass_admin/priv/static/app.css",
+        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "bytes": 137809
+      },
+      "served": {
+        "storyUrl": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "productionUrl": "http://demo:4015/ops/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "md5": "3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+        "bytes": 137809,
+        "matchesBuilt": true
+      }
+    }
+  ],
+  "fonts": [
+    {
+      "caseId": "fonts:delivery:northstar_normal",
+      "assets": [
+        {
+          "path": "inter-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 23396,
+          "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 23932,
+          "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-tight-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-tight-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 24908,
+          "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-tight-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-tight-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 26084,
+          "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "ibm-plex-mono-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 10180,
+          "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "ibm-plex-mono-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 10152,
+          "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a",
+          "loadedFace": "loaded"
+        }
+      ]
+    },
+    {
+      "caseId": "fonts:inbound:northstar_normal",
+      "assets": [
+        {
+          "path": "inter-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 23396,
+          "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 23932,
+          "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-tight-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-tight-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 24908,
+          "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "inter-tight-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/inter-tight-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 26084,
+          "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "ibm-plex-mono-400.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-400.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 10180,
+          "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340",
+          "loadedFace": "loaded"
+        },
+        {
+          "path": "ibm-plex-mono-700.woff2",
+          "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-700.woff2",
+          "status": 200,
+          "contentType": "font/woff2",
+          "bytes": 10152,
+          "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a",
+          "loadedFace": "loaded"
+        }
+      ]
+    }
+  ],
+  "computedRoles": [
+    {
+      "caseId": "fonts:delivery:northstar_normal",
+      "story": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "production": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "owner": "quick-view-story",
+      "selectedPreference": "system",
+      "resolvedScheme": "light",
+      "osPreference": "light",
+      "dataTheme": "mailglass-light",
+      "adversarialSandboxReset": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+      "iframeUrl": "about:srcdoc",
+      "productionConnected": "phx-connected"
+    },
+    {
+      "caseId": "fonts:inbound:northstar_normal",
+      "story": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "production": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "owner": "quick-view-story",
+      "selectedPreference": "system",
+      "resolvedScheme": "light",
+      "osPreference": "light",
+      "dataTheme": "mailglass-light",
+      "adversarialSandboxReset": {
+        "ui": {
+          "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "400"
+        },
+        "display": {
+          "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+          "weight": "700"
+        },
+        "code": {
+          "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "weight": "400"
+        }
+      },
+      "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+      "iframeUrl": "about:srcdoc",
+      "productionConnected": "phx-connected"
+    }
+  ],
+  "widths": [
+    {
+      "caseId": "widths:delivery:responsive-matrix",
+      "cases": [
+        {
+          "caseId": "width:delivery:northstar_normal:320:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+          "paneWidth": 270,
+          "viewportWidth": 320,
+          "iframeViewportWidth": 270,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "2 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-normal",
+            "value": "phase174-northstar-normal",
+            "width": 221,
+            "scrollWidth": 221,
+            "height": 48,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous delivery",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next delivery",
+              "left": 134,
+              "top": 152,
+              "right": 184,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 192,
+              "top": 152,
+              "right": 246,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 328.59375,
+              "right": 124,
+              "bottom": 372.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 25,
+              "top": 440.1875,
+              "right": 195,
+              "bottom": 484.1875,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 659.96875,
+              "right": 246,
+              "bottom": 707.96875,
+              "width": 221,
+              "height": 48
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 914.96875,
+              "right": 193,
+              "bottom": 958.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_first:320:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_first",
+          "paneWidth": 270,
+          "viewportWidth": 320,
+          "iframeViewportWidth": 270,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-first",
+            "value": "phase174-northstar-first",
+            "width": 221,
+            "scrollWidth": 221,
+            "height": 48,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Next delivery",
+              "left": 134,
+              "top": 152,
+              "right": 184,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 192,
+              "top": 152,
+              "right": 246,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 328.59375,
+              "right": 124,
+              "bottom": 372.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 25,
+              "top": 440.1875,
+              "right": 195,
+              "bottom": 484.1875,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 659.96875,
+              "right": 246,
+              "bottom": 707.96875,
+              "width": 221,
+              "height": 48
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 914.96875,
+              "right": 193,
+              "bottom": 958.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/delivery-320-boundary-dark.png"
+        },
+        {
+          "caseId": "width:delivery:northstar_first:375:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_first",
+          "paneWidth": 325,
+          "viewportWidth": 375,
+          "iframeViewportWidth": 325,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "light",
+          "position": "1 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-first",
+            "value": "phase174-northstar-first",
+            "width": 240,
+            "scrollWidth": 240,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Next delivery",
+              "left": 134,
+              "top": 152,
+              "right": 184,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 192,
+              "top": 152,
+              "right": 246,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 304.59375,
+              "right": 124,
+              "bottom": 348.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 396.59375,
+              "right": 258,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 616.375,
+              "right": 265,
+              "bottom": 660.375,
+              "width": 240,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 843.375,
+              "right": 193,
+              "bottom": 887.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_normal:375:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+          "paneWidth": 325,
+          "viewportWidth": 375,
+          "iframeViewportWidth": 325,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "dark",
+          "position": "2 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-normal",
+            "value": "phase174-northstar-normal",
+            "width": 250,
+            "scrollWidth": 250,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous delivery",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next delivery",
+              "left": 137,
+              "top": 152,
+              "right": 187,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 195,
+              "top": 152,
+              "right": 249,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 304.59375,
+              "right": 124,
+              "bottom": 348.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 396.59375,
+              "right": 258,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 616.375,
+              "right": 275,
+              "bottom": 660.375,
+              "width": 250,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 843.375,
+              "right": 193,
+              "bottom": 887.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_normal:768:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+          "paneWidth": 718,
+          "viewportWidth": 768,
+          "iframeViewportWidth": 718,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "2 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-normal",
+            "value": "phase174-northstar-normal",
+            "width": 250,
+            "scrollWidth": 250,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous delivery",
+              "left": 470,
+              "top": 120,
+              "right": 520,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next delivery",
+              "left": 582,
+              "top": 120,
+              "right": 632,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 640,
+              "top": 120,
+              "right": 694,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 452.8125,
+              "top": 216.59375,
+              "right": 551.8125,
+              "bottom": 260.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 308.59375,
+              "right": 258,
+              "bottom": 352.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 464.78125,
+              "right": 275,
+              "bottom": 508.78125,
+              "width": 250,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 667.78125,
+              "right": 193,
+              "bottom": 711.78125,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_first:768:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_first",
+          "paneWidth": 718,
+          "viewportWidth": 768,
+          "iframeViewportWidth": 718,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-first",
+            "value": "phase174-northstar-first",
+            "width": 240,
+            "scrollWidth": 240,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Next delivery",
+              "left": 582,
+              "top": 120,
+              "right": 632,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 640,
+              "top": 120,
+              "right": 694,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 452.8125,
+              "top": 216.59375,
+              "right": 551.8125,
+              "bottom": 260.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 308.59375,
+              "right": 258,
+              "bottom": 352.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 464.78125,
+              "right": 265,
+              "bottom": 508.78125,
+              "width": 240,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 667.78125,
+              "right": 193,
+              "bottom": 711.78125,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/delivery-768-boundary-dark.png"
+        },
+        {
+          "caseId": "width:delivery:northstar_first:1280:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_first",
+          "paneWidth": 350,
+          "viewportWidth": 1280,
+          "iframeViewportWidth": 350,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "light",
+          "position": "1 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-first",
+            "value": "phase174-northstar-first",
+            "width": 240,
+            "scrollWidth": 240,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Next delivery",
+              "left": 134,
+              "top": 152,
+              "right": 184,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 192,
+              "top": 152,
+              "right": 246,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 304.59375,
+              "right": 124,
+              "bottom": 348.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 396.59375,
+              "right": 258,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 616.375,
+              "right": 265,
+              "bottom": 660.375,
+              "width": 240,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 843.375,
+              "right": 193,
+              "bottom": 887.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_normal:1280:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+          "paneWidth": 350,
+          "viewportWidth": 1280,
+          "iframeViewportWidth": 350,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "dark",
+          "position": "2 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-normal",
+            "value": "phase174-northstar-normal",
+            "width": 250,
+            "scrollWidth": 250,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous delivery",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next delivery",
+              "left": 137,
+              "top": 152,
+              "right": 187,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 195,
+              "top": 152,
+              "right": 249,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 304.59375,
+              "right": 124,
+              "bottom": 348.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 396.59375,
+              "right": 258,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 616.375,
+              "right": 275,
+              "bottom": 660.375,
+              "width": 250,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 843.375,
+              "right": 193,
+              "bottom": 887.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_normal:1440:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
+          "paneWidth": 414,
+          "viewportWidth": 1440,
+          "iframeViewportWidth": 414,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "2 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-normal",
+            "value": "phase174-northstar-normal",
+            "width": 250,
+            "scrollWidth": 250,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous delivery",
+              "left": 166,
+              "top": 120,
+              "right": 216,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next delivery",
+              "left": 278,
+              "top": 120,
+              "right": 328,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 336,
+              "top": 120,
+              "right": 390,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 272.59375,
+              "right": 124,
+              "bottom": 316.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 364.59375,
+              "right": 258,
+              "bottom": 408.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 584.375,
+              "right": 275,
+              "bottom": 628.375,
+              "width": 250,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 811.375,
+              "right": 193,
+              "bottom": 855.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:delivery:northstar_first:1440:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_first",
+          "paneWidth": 414,
+          "viewportWidth": 1440,
+          "iframeViewportWidth": 414,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 16",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-northstar-first",
+            "value": "phase174-northstar-first",
+            "width": 240,
+            "scrollWidth": 240,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Next delivery",
+              "left": 278,
+              "top": 120,
+              "right": 328,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 336,
+              "top": 120,
+              "right": 390,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Bounced",
+              "left": 25,
+              "top": 272.59375,
+              "right": 124,
+              "bottom": 316.59375,
+              "width": 99,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 88,
+              "top": 364.59375,
+              "right": 258,
+              "bottom": 408.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "Copy Delivery ID",
+              "left": 25,
+              "top": 584.375,
+              "right": 265,
+              "bottom": 628.375,
+              "width": 240,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 811.375,
+              "right": 193,
+              "bottom": 855.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/delivery-1440-boundary-dark.png"
+        }
+      ]
+    },
+    {
+      "caseId": "widths:inbound:responsive-matrix",
+      "cases": [
+        {
+          "caseId": "width:inbound:northstar_normal:320:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+          "paneWidth": 270,
+          "viewportWidth": 320,
+          "iframeViewportWidth": 270,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "3 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-normal",
+            "value": "phase174-inbound-normal",
+            "width": 221,
+            "scrollWidth": 221,
+            "height": 48,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 132,
+              "top": 152,
+              "right": 182,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 190,
+              "top": 152,
+              "right": 244,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Accepted",
+              "left": 25,
+              "top": 304.59375,
+              "right": 131,
+              "bottom": 348.59375,
+              "width": 106,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 25,
+              "top": 464.1875,
+              "right": 195,
+              "bottom": 508.1875,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 611.375,
+              "right": 150,
+              "bottom": 655.375,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 767.5625,
+              "right": 246,
+              "bottom": 815.5625,
+              "width": 221,
+              "height": 48
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 996.5625,
+              "right": 193,
+              "bottom": 1040.5625,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_first:320:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_first",
+          "paneWidth": 270,
+          "viewportWidth": 320,
+          "iframeViewportWidth": 270,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-first",
+            "value": "phase174-inbound-first",
+            "width": 220,
+            "scrollWidth": 220,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 129,
+              "top": 152,
+              "right": 179,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 187,
+              "top": 152,
+              "right": 241,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Unknown",
+              "left": 25,
+              "top": 304.59375,
+              "right": 126,
+              "bottom": 348.59375,
+              "width": 101,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 25,
+              "top": 464.1875,
+              "right": 195,
+              "bottom": 508.1875,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 611.375,
+              "right": 150,
+              "bottom": 655.375,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 767.5625,
+              "right": 245,
+              "bottom": 811.5625,
+              "width": 220,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 992.5625,
+              "right": 193,
+              "bottom": 1036.5625,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/inbound-320-boundary-dark.png"
+        },
+        {
+          "caseId": "width:inbound:northstar_first:375:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_first",
+          "paneWidth": 325,
+          "viewportWidth": 375,
+          "iframeViewportWidth": 325,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "light",
+          "position": "1 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-first",
+            "value": "phase174-inbound-first",
+            "width": 220,
+            "scrollWidth": 220,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 129,
+              "top": 152,
+              "right": 179,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 187,
+              "top": 152,
+              "right": 241,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Unknown",
+              "left": 25,
+              "top": 304.59375,
+              "right": 126,
+              "bottom": 348.59375,
+              "width": 101,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 396.59375,
+              "right": 260,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 543.78125,
+              "right": 150,
+              "bottom": 587.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 699.96875,
+              "right": 245,
+              "bottom": 743.96875,
+              "width": 220,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 900.96875,
+              "right": 193,
+              "bottom": 944.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_normal:375:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+          "paneWidth": 325,
+          "viewportWidth": 375,
+          "iframeViewportWidth": 325,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "dark",
+          "position": "3 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-normal",
+            "value": "phase174-inbound-normal",
+            "width": 230,
+            "scrollWidth": 230,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 132,
+              "top": 152,
+              "right": 182,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 190,
+              "top": 152,
+              "right": 244,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Accepted",
+              "left": 25,
+              "top": 304.59375,
+              "right": 131,
+              "bottom": 348.59375,
+              "width": 106,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 396.59375,
+              "right": 260,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 543.78125,
+              "right": 150,
+              "bottom": 587.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 699.96875,
+              "right": 255,
+              "bottom": 743.96875,
+              "width": 230,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 900.96875,
+              "right": 193,
+              "bottom": 944.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_normal:768:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+          "paneWidth": 718,
+          "viewportWidth": 768,
+          "iframeViewportWidth": 718,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "3 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-normal",
+            "value": "phase174-inbound-normal",
+            "width": 230,
+            "scrollWidth": 230,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 475,
+              "top": 120,
+              "right": 525,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 582,
+              "top": 120,
+              "right": 632,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 640,
+              "top": 120,
+              "right": 694,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Accepted",
+              "left": 355.203125,
+              "top": 216.59375,
+              "right": 461.203125,
+              "bottom": 260.59375,
+              "width": 106,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 308.59375,
+              "right": 260,
+              "bottom": 352.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 367.5,
+              "top": 392.1875,
+              "right": 492.5,
+              "bottom": 436.1875,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 548.375,
+              "right": 255,
+              "bottom": 592.375,
+              "width": 230,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 725.375,
+              "right": 193,
+              "bottom": 769.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_first:768:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_first",
+          "paneWidth": 718,
+          "viewportWidth": 768,
+          "iframeViewportWidth": 718,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-first",
+            "value": "phase174-inbound-first",
+            "width": 220,
+            "scrollWidth": 220,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 478,
+              "top": 120,
+              "right": 528,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 582,
+              "top": 120,
+              "right": 632,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 640,
+              "top": 120,
+              "right": 694,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Unknown",
+              "left": 355.203125,
+              "top": 216.59375,
+              "right": 456.203125,
+              "bottom": 260.59375,
+              "width": 101,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 308.59375,
+              "right": 260,
+              "bottom": 352.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 367.5,
+              "top": 392.1875,
+              "right": 492.5,
+              "bottom": 436.1875,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 548.375,
+              "right": 245,
+              "bottom": 592.375,
+              "width": 220,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 725.375,
+              "right": 193,
+              "bottom": 769.375,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/inbound-768-boundary-dark.png"
+        },
+        {
+          "caseId": "width:inbound:northstar_first:1280:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_first",
+          "paneWidth": 350,
+          "viewportWidth": 1280,
+          "iframeViewportWidth": 350,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "light",
+          "position": "1 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-first",
+            "value": "phase174-inbound-first",
+            "width": 220,
+            "scrollWidth": 220,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 129,
+              "top": 152,
+              "right": 179,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 187,
+              "top": 152,
+              "right": 241,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Unknown",
+              "left": 25,
+              "top": 304.59375,
+              "right": 126,
+              "bottom": 348.59375,
+              "width": 101,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 396.59375,
+              "right": 260,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 543.78125,
+              "right": 150,
+              "bottom": 587.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 699.96875,
+              "right": 245,
+              "bottom": 743.96875,
+              "width": 220,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 900.96875,
+              "right": 193,
+              "bottom": 944.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_normal:1280:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+          "paneWidth": 350,
+          "viewportWidth": 1280,
+          "iframeViewportWidth": 350,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "dark",
+          "position": "3 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-normal",
+            "value": "phase174-inbound-normal",
+            "width": 230,
+            "scrollWidth": 230,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 25,
+              "top": 152,
+              "right": 75,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 132,
+              "top": 152,
+              "right": 182,
+              "bottom": 196,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 190,
+              "top": 152,
+              "right": 244,
+              "bottom": 196,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Accepted",
+              "left": 25,
+              "top": 304.59375,
+              "right": 131,
+              "bottom": 348.59375,
+              "width": 106,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 396.59375,
+              "right": 260,
+              "bottom": 440.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 543.78125,
+              "right": 150,
+              "bottom": 587.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 699.96875,
+              "right": 255,
+              "bottom": 743.96875,
+              "width": 230,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 900.96875,
+              "right": 193,
+              "bottom": 944.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_normal:1440:light",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
+          "paneWidth": 414,
+          "viewportWidth": 1440,
+          "iframeViewportWidth": 414,
+          "viewportHeight": 610,
+          "scenario": "normal",
+          "theme": "light",
+          "position": "3 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-normal",
+            "value": "phase174-inbound-normal",
+            "width": 230,
+            "scrollWidth": 230,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 171,
+              "top": 120,
+              "right": 221,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 278,
+              "top": 120,
+              "right": 328,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 336,
+              "top": 120,
+              "right": 390,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Accepted",
+              "left": 25,
+              "top": 248.59375,
+              "right": 131,
+              "bottom": 292.59375,
+              "width": 106,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 340.59375,
+              "right": 260,
+              "bottom": 384.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 487.78125,
+              "right": 150,
+              "bottom": 531.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 643.96875,
+              "right": 255,
+              "bottom": 687.96875,
+              "width": 230,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 844.96875,
+              "right": 193,
+              "bottom": 888.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          }
+        },
+        {
+          "caseId": "width:inbound:northstar_first:1440:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_first",
+          "paneWidth": 414,
+          "viewportWidth": 1440,
+          "iframeViewportWidth": 414,
+          "viewportHeight": 610,
+          "scenario": "boundary",
+          "theme": "dark",
+          "position": "1 of 6",
+          "closeWithinPane": true,
+          "technicalWrapping": {
+            "text": "phase174-inbound-first",
+            "value": "phase174-inbound-first",
+            "width": 220,
+            "scrollWidth": 220,
+            "height": 44,
+            "overflowWrap": "anywhere",
+            "wordBreak": "break-all"
+          },
+          "controls": [
+            {
+              "label": "Previous inbound record",
+              "left": 174,
+              "top": 120,
+              "right": 224,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Next inbound record",
+              "left": 278,
+              "top": 120,
+              "right": 328,
+              "bottom": 164,
+              "width": 50,
+              "height": 44
+            },
+            {
+              "label": "Close quick view",
+              "left": 336,
+              "top": 120,
+              "right": 390,
+              "bottom": 164,
+              "width": 54,
+              "height": 44
+            },
+            {
+              "label": "Unknown",
+              "left": 25,
+              "top": 248.59375,
+              "right": 126,
+              "bottom": 292.59375,
+              "width": 101,
+              "height": 44
+            },
+            {
+              "label": "Copy timestamp as UTC: 2026-10-26 12:00:00 UTC",
+              "left": 90,
+              "top": 340.59375,
+              "right": 260,
+              "bottom": 384.59375,
+              "width": 170,
+              "height": 44
+            },
+            {
+              "label": "SupportMailbox",
+              "left": 25,
+              "top": 487.78125,
+              "right": 150,
+              "bottom": 531.78125,
+              "width": 125,
+              "height": 44
+            },
+            {
+              "label": "Copy Record ID",
+              "left": 25,
+              "top": 643.96875,
+              "right": 245,
+              "bottom": 687.96875,
+              "width": 220,
+              "height": 44
+            },
+            {
+              "label": "Open full detail →",
+              "left": 25,
+              "top": 844.96875,
+              "right": 193,
+              "bottom": 888.96875,
+              "width": 168,
+              "height": 44
+            }
+          ],
+          "reviewTheme": {
+            "left": 8,
+            "top": 8,
+            "right": 255,
+            "bottom": 85,
+            "width": 247,
+            "height": 77
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/cold/inbound-1440-boundary-dark.png"
+        }
+      ]
+    }
+  ],
+  "evidenceLimits": [
+    "Browser zoom reconciliation is owned by Phase 178.",
+    "Captures use synthetic Northstar demo records only.",
+    "The width matrix exercises System-resolved light and dark tokens at every viewport; the dedicated theme cases exercise Light/Dark/System radio selection and live preference changes."
+  ],
+  "run_identity": {
+    "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+    "condition": "cold",
+    "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+  }
+}

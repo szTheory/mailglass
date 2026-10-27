@@ -1,0 +1,9 @@
+{
+  "demo_lock_audit_ms": 107,
+  "demo_npm_ci_ms": 427,
+  "demo_browser_install_ms": 552,
+  "demo_scan_ms": 93873,
+  "admin_npm_ci_ms": 794,
+  "admin_browser_install_ms": 260,
+  "admin_axe_scan_ms": 40951
+}
