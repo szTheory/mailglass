@@ -240,7 +240,7 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**v2.10 UI Repairs & Faithful Storybook** — milestone scope confirmed 2026-10-26; detailed requirements are being defined from the current upstream brief and unresolved owner feedback.
+**v2.10 UI Repairs & Faithful Storybook** — scope, all 31 [requirements](REQUIREMENTS.md), and the [roadmap](ROADMAP.md) approved 2026-10-26 from the current upstream brief and unresolved owner feedback. Phases 174–178 map every requirement exactly once. Ready to plan Phase 174; implementation has not started.
 
 - [ ] Resolve all admitted Health, Account/navigation, collection-filter, quick-view, evidence, suppression, replay and Preview feedback with a current-source disposition for every row.
 - [ ] Establish trustworthy Storybook navigation, assets, typography, themes and hooks, then retain realistic scenarios invoking production presentation alongside the repaired jobs/areas.
@@ -1191,7 +1191,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-26 after confirmation of v2.10 UI Repairs & Faithful Storybook scope; requirements and roadmap definition in progress.*
+*Last updated: 2026-10-26 after approval of all 31 v2.10 requirements and the five-phase roadmap; ready to plan Phase 174.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

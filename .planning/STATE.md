@@ -2,11 +2,16 @@
 gsd_state_version: "1.0"
 milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
+current_phase: 174
+current_phase_name: Faithful Storybook and Quiet Quick Views
 status: planning
-last_updated: "2026-10-27T00:10:47.311Z"
+stopped_at: "v2.10 initialized; scope, 31 requirements and five-phase roadmap approved; next: plan Phase 174"
+last_updated: "2026-10-27T00:25:06.851Z"
 last_activity: 2026-10-26
+last_activity_desc: v2.10 roadmap approved; ready to plan Phase 174
+state_head: 60c848f5388c7d281c6b21d9886928b75f3b427c
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.10 UI Repairs & Faithful Storybook — defining requirements
+**Current focus:** Phase 174 — Faithful Storybook and Quiet Quick Views
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -34,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 174 (Faithful Storybook and Quiet Quick Views)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-26 — Milestone v2.10 started
+Status: Ready to plan
+Last activity: 2026-10-26 — v2.10 roadmap approved; ready to plan Phase 174
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -509,6 +514,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 173]: Use sparse exclusions before candidate materialization and exclude both protected inputs from Docker contexts.
 - [Phase 173]: Install only lockfile-pinned Mix/npm dependencies in the detached candidate and restore only candidate-generated demo lock drift.
 - [Phase 173]: Keep delivery incomplete until required exact-SHA CI Green and protected owner acceptance are verified.
+- [Phase ?]: v2.10 reuses the supplied ui-quality-engine scope and focused research; no additional milestone ecosystem pass and no change to workflow.research. — Owner chose reuse; upstream stopping rule says implementation research belongs at actual phase uncertainties.
 
 ## Quick Tasks Completed
 
@@ -560,10 +566,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-26T23:57:51.991Z
-Stopped at: v2.10 scope confirmed; research choice before requirements
-Resume file: .planning/research/ui-quality-engine/UPSTREAM-SCOPE.md
+Last session: 2026-10-27T00:24:29.452Z
+Stopped at: v2.10 initialized; scope, 31 requirements and five-phase roadmap approved; next: plan Phase 174
+Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Continue v2.10 initialization: choose reuse of existing research or an additional research pass, then define requirements and roadmap.
+- Run `$gsd-plan-phase 174` for Faithful Storybook and Quiet Quick Views; use `$gsd-discuss-phase 174` if additional context gathering is useful. Scope, 31 requirements and the five-phase roadmap are approved; implementation has not started.

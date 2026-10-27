@@ -1,12 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.10",
-  "phases": [],
+  "milestone": "v2.10 — UI Repairs & Faithful Storybook",
+  "phases": [
+    {
+      "number": "174",
+      "name": "Faithful Storybook and Quiet Quick Views",
+      "status": "pending"
+    },
+    {
+      "number": "175",
+      "name": "Delivery Investigation and Safe Replay",
+      "status": "pending"
+    },
+    {
+      "number": "176",
+      "name": "Direct Filters and Useful Inbound Evidence",
+      "status": "pending"
+    },
+    {
+      "number": "177",
+      "name": "Readable Health and Coherent Account Navigation",
+      "status": "pending"
+    },
+    {
+      "number": "178",
+      "name": "Preview Authoring and Milestone Review",
+      "status": "pending"
+    }
+  ],
   "next": {
-    "command": "$gsd-discuss-phase",
-    "label": "Discuss the first phase",
-    "reason": "Project initialized — plan your first phase"
+    "command": "$gsd-progress --next",
+    "label": "Advance to the next step (plan phase 174)",
+    "reason": "Phase 1 of 5 — needs a plan"
   },
-  "updated_at": "2026-10-27T00:10:47.314Z"
+  "updated_at": "2026-10-27T00:25:06.878Z"
 }

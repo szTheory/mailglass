@@ -128,43 +128,43 @@ UIQ-04–08 and the shared acceptance obligations apply across these rows. Phase
 
 ## Traceability
 
-Requirements confirmed 2026-10-26. Roadmap assignment is in progress. Each of the 31 requirements must map to exactly one phase; no implementation is marked complete.
+Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requirements is assigned to exactly one phase; no implementation is marked complete.
 
 | Requirement | Phase | Status |
 | --- | --- | --- |
-| UXF-09 | Unassigned | Pending |
-| UXF-10 | Unassigned | Pending |
-| UXF-11 | Unassigned | Pending |
-| UXF-12 | Unassigned | Pending |
-| FILTER-01 | Unassigned | Pending |
-| FILTER-02 | Unassigned | Pending |
-| FILTER-03 | Unassigned | Pending |
-| FILTER-04 | Unassigned | Pending |
-| OUTUX-06 | Unassigned | Pending |
-| OUTUX-07 | Unassigned | Pending |
-| OUTUX-08 | Unassigned | Pending |
-| INUX-05 | Unassigned | Pending |
-| INUX-06 | Unassigned | Pending |
-| REPLAY-04 | Unassigned | Pending |
-| REPLAY-05 | Unassigned | Pending |
-| REPLAY-06 | Unassigned | Pending |
-| REPLAY-07 | Unassigned | Pending |
-| REPLAY-08 | Unassigned | Pending |
-| PRVUX-05 | Unassigned | Pending |
-| PRVUX-06 | Unassigned | Pending |
-| PRVUX-07 | Unassigned | Pending |
-| STORY-03 | Unassigned | Pending |
-| STORY-04 | Unassigned | Pending |
-| STORY-05 | Unassigned | Pending |
-| STORY-06 | Unassigned | Pending |
-| STORY-07 | Unassigned | Pending |
-| UIQ-04 | Unassigned | Pending |
-| UIQ-05 | Unassigned | Pending |
-| UIQ-06 | Unassigned | Pending |
-| UIQ-07 | Unassigned | Pending |
-| UIQ-08 | Unassigned | Pending |
+| UXF-09 | Phase 177 | Pending |
+| UXF-10 | Phase 177 | Pending |
+| UXF-11 | Phase 174 | Pending |
+| UXF-12 | Phase 175 | Pending |
+| FILTER-01 | Phase 176 | Pending |
+| FILTER-02 | Phase 176 | Pending |
+| FILTER-03 | Phase 176 | Pending |
+| FILTER-04 | Phase 176 | Pending |
+| OUTUX-06 | Phase 177 | Pending |
+| OUTUX-07 | Phase 175 | Pending |
+| OUTUX-08 | Phase 175 | Pending |
+| INUX-05 | Phase 176 | Pending |
+| INUX-06 | Phase 176 | Pending |
+| REPLAY-04 | Phase 175 | Pending |
+| REPLAY-05 | Phase 175 | Pending |
+| REPLAY-06 | Phase 175 | Pending |
+| REPLAY-07 | Phase 175 | Pending |
+| REPLAY-08 | Phase 175 | Pending |
+| PRVUX-05 | Phase 178 | Pending |
+| PRVUX-06 | Phase 178 | Pending |
+| PRVUX-07 | Phase 178 | Pending |
+| STORY-03 | Phase 174 | Pending |
+| STORY-04 | Phase 174 | Pending |
+| STORY-05 | Phase 174 | Pending |
+| STORY-06 | Phase 174 | Pending |
+| STORY-07 | Phase 178 | Pending |
+| UIQ-04 | Phase 178 | Pending |
+| UIQ-05 | Phase 174 | Pending |
+| UIQ-06 | Phase 178 | Pending |
+| UIQ-07 | Phase 178 | Pending |
+| UIQ-08 | Phase 178 | Pending |
 
-**Coverage:** 31 requirements; 0 assigned; 31 awaiting roadmap assignment.
+**Coverage:** 31 requirements; 31 assigned exactly once; 0 unmapped; 0 duplicated.
 
 ---
-*Last updated: 2026-10-26 after owner approval of all 31 requirements; roadmap creation in progress.*
+*Last updated: 2026-10-26 after owner approval of all 31 requirements and the Phase 174–178 roadmap.*
