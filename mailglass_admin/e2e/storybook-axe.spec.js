@@ -90,7 +90,7 @@ function safeFindings(results, item, collection) {
 }
 
 async function waitForSelectedStory(page, args) {
-  const ready = await page.waitForFunction(async ({ frameSelector, rootSelector, theme, expectedPosition, errorSelector }) => {
+  const ready = await page.waitForFunction(({ frameSelector, rootSelector, theme, expectedPosition, errorSelector }) => {
     const frames = document.querySelectorAll(frameSelector);
     if (frames.length !== 1) return false;
     const iframe = frames[0];
@@ -136,7 +136,7 @@ async function waitForSelectedStory(page, args) {
       return false;
     }
 
-    if (frameDocument.fonts) await frameDocument.fonts.ready;
+    if (frameDocument.fonts && frameDocument.fonts.status !== "loaded") return false;
     const currentFrames = document.querySelectorAll(frameSelector);
     if (currentFrames.length !== 1 || currentFrames[0] !== iframe || iframe.contentDocument !== frameDocument) {
       window.__phase174StableStoryFrame = null;
