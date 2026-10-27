@@ -62,6 +62,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias MailglassAdmin.InboundLive
   alias MailglassAdmin.PubSub.Topics
   alias MailglassAdmin.Inbound.ReadResult
   alias MailglassAdmin.Inbound.RecordsList
@@ -1298,6 +1299,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "replay confirm flow (IADM-03)" do
+    @describetag :phase175
     test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{
       conn: conn
     } do
@@ -1357,30 +1359,32 @@ defmodule MailglassAdmin.InboundLiveTest do
         |> element("#inbound-replay-confirm")
         |> render_click()
 
-      assert unescape(html) =~
-               "Replay run recorded. Mailbox outcome: Accepted."
+      refute html =~ "Replay run recorded. Mailbox outcome"
 
-      assert html =~ ~s(data-testid="inbound-replay-feedback")
-      assert html =~ ~s(role="status")
-      assert html =~ ~s(aria-live="polite")
-      refute html =~ "Replay requested"
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
-      # The successful command is reported independently from the selected
-      # history snapshot. It does not trigger a read or invent a timeline event.
+      refute html =~ ~s(data-testid="inbound-replay-modal")
+
       assert length(
                Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")
              ) ==
-               initial_timeline_count
-
-      assert Floki.find(
-               Floki.parse_document!(html),
-               "[data-testid='inbound-timeline-snapshot'] time"
-             )
-             |> Floki.attribute("datetime")
-             |> List.first() == initial_snapshot_at
+               initial_timeline_count + 1
 
       replay_run = latest_run(record.id)
-      refute html =~ replay_run.id
+      assert html =~ replay_run.id
+
+      refreshed_snapshot_at =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-timeline-snapshot'] time")
+        |> Floki.attribute("datetime")
+        |> List.first()
+
+      assert is_binary(refreshed_snapshot_at)
+      refute refreshed_snapshot_at == initial_snapshot_at
 
       refreshed_html = render_click(view, "refresh_inbound_timeline", %{})
       assert refreshed_html =~ replay_run.id
@@ -1393,7 +1397,7 @@ defmodule MailglassAdmin.InboundLiveTest do
              ) ==
                initial_timeline_count + 1
 
-      assert refreshed_html =~ "Replay run recorded. Mailbox outcome: Accepted."
+      assert refreshed_html =~ replay_run.id
 
       after_count = run_count(record.id)
       assert after_count == before_count + 1
@@ -1526,7 +1530,38 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay review is stale. Reopen it to check the recorded Mailbox again."
+      assert html =~
+               "Replay review is stale. Review again to check the selected record and recorded Mailbox."
+
+      assert html =~ ~s(data-testid="inbound-replay-modal")
+      assert html =~ ~s(data-testid="inbound-replay-feedback")
+
+      old_review_id =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("#inbound-replay-identity")
+        |> Floki.attribute("data-review-id")
+        |> hd()
+
+      assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
+      assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
+      assert run_count(record.id) == before_count
+
+      refreshed_review = render_click(view, "review_replay_again", %{})
+
+      new_review_id =
+        refreshed_review
+        |> Floki.parse_document!()
+        |> Floki.find("#inbound-replay-identity")
+        |> Floki.attribute("data-review-id")
+        |> hd()
+
+      refute new_review_id == old_review_id
+      assert refreshed_review =~ "No mailbox matched this message when it was received"
+
+      assert Floki.find(Floki.parse_document!(refreshed_review), "#inbound-replay-confirm")
+             |> Floki.attribute("disabled") != []
+
       assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
       assert run_count(record.id) == before_count
     end
@@ -1596,7 +1631,35 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ "Replay blocked: this action is not authorized for the current operator."
       assert html =~ ~s(data-testid="inbound-replay-feedback")
+      assert html =~ ~s(data-testid="inbound-replay-modal")
+      assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
       assert run_count(record.id) == before_count
+    end
+
+    test "reported Mailbox outcomes stay distinct from a queued replay request" do
+      assert InboundLive.replay_result_copy(%{status: :queued}) ==
+               "Replay requested. The runtime reported that this replay is queued."
+
+      assert InboundLive.replay_result_copy(%{status: :requested}) ==
+               "Replay requested. The runtime reported that this replay is queued."
+
+      for {outcome, label} <- [
+            {:accept, "Accepted"},
+            {:ignore, "Ignored"},
+            {:reject, "Rejected"},
+            {:bounce, "Bounced"},
+            {:no_match, "No mailbox matched"},
+            {:no_change, "No change"}
+          ] do
+        assert InboundLive.replay_result_copy(%{outcome: outcome}) ==
+                 "Replay run recorded. Mailbox outcome: #{label}."
+      end
+
+      assert InboundLive.replay_result_copy(%{outcome: :failed}) ==
+               "Replay run recorded. Mailbox execution failed."
+
+      assert InboundLive.replay_result_copy(%{outcome: :future_outcome}) ==
+               "Replay run recorded. Mailbox outcome is unavailable."
     end
   end
 

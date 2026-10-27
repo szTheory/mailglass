@@ -610,6 +610,75 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  attr(:id, :string, required: true)
+  attr(:title_id, :string, required: true)
+  attr(:description_id, :string, required: true)
+  attr(:close_id, :string, required: true)
+  attr(:close_event, :string, required: true)
+  attr(:described_by, :string, default: nil)
+  slot(:title, required: true)
+  slot(:description, required: true)
+  slot(:body, required: true)
+  slot(:actions, required: true)
+
+  @doc "Shared accessible presentation shell for domain-specific replay reviews."
+  def replay_dialog(assigns) do
+    ~H"""
+    <div
+      class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 flex items-center justify-center overflow-hidden p-md"
+      phx-remove={
+        JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
+      }
+    >
+      <div
+        id={@id}
+        data-testid={@id}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={@title_id}
+        aria-describedby={Enum.join(Enum.reject([@description_id, @described_by], &is_nil/1), " ")}
+        tabindex="-1"
+        phx-hook="ModalFocusTrap"
+        phx-mounted={JS.focus(to: "##{@close_id}")}
+        phx-window-keydown={@close_event}
+        phx-key="Escape"
+        class="motion-overlay mg-layer-overlay-panel mg-inbound-replay-dialog relative my-md w-full shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-lg shadow-overlay"
+        phx-remove={
+          JS.hide(
+            time: 150,
+            transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"}
+          )
+        }
+      >
+        <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
+        <div class="flex items-start justify-between gap-md">
+          <div class="min-w-0 space-y-sm">
+            <h2 id={@title_id} class="text-heading font-bold text-base-content">
+              {render_slot(@title)}
+            </h2>
+            <p id={@description_id} class="text-body text-secondary">
+              {render_slot(@description)}
+            </p>
+          </div>
+          <button
+            id={@close_id}
+            type="button"
+            phx-click={@close_event}
+            aria-label="Close"
+            class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 shrink-0 px-md"
+          >
+            <.icon name="hero-x-mark" class="h-5 w-5" />
+          </button>
+        </div>
+
+        {render_slot(@body)}
+        {render_slot(@actions)}
+        <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
+      </div>
+    </div>
+    """
+  end
+
   @doc "Short module name with the exact identity available through contextual help."
   attr(:value, :string, required: true)
   attr(:id, :string, required: true)

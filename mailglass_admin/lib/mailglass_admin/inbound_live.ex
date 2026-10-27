@@ -122,6 +122,8 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:replay_pending_review_id, nil)
      |> assign(:replay_consumed_review_id, nil)
      |> assign(:replay_feedback, nil)
+     |> assign(:replay_dialog_feedback, nil)
+     |> assign(:replay_trigger_id, "inbound-replay-open-btn")
      |> assign(:base_path, "/inbound")
      |> assign(:page_uri, "/inbound")
      |> assign(:dark_chrome, false)
@@ -356,39 +358,17 @@ defmodule MailglassAdmin.InboundLive do
      )}
   end
 
-  def handle_event("open_replay", _params, socket) do
-    case selected_replayable_record(socket) do
-      {:ok, record} ->
-        with :ok <- verify_tenant(record, socket.assigns.filter_params) do
-          eligibility =
-            case read_replay_eligibility(record.id, record.tenant_id) do
-              {:ok, result} ->
-                result
+  def handle_event("open_replay", params, socket) do
+    case fresh_replay_snapshot(socket) do
+      {:ok, record, eligibility} ->
+        review = replay_review(record, eligibility)
 
-              {:error, reason} ->
-                %{status: :ineligible, reason: eligibility_failure_reason(reason)}
-            end
-
-          review = %{
-            review_id: System.unique_integer([:positive]),
-            tenant_id: record.tenant_id,
-            record_id: record.id,
-            eligibility: eligibility
-          }
-
-          {:noreply,
-           socket
-           |> assign(:replay_review, review)
-           |> assign(:replay_modal_open?, true)}
-        else
-          {:error, :cross_tenant} ->
-            {:noreply,
-             put_flash(
-               socket,
-               :error,
-               "Replay blocked: this action is not authorized for the current operator."
-             )}
-        end
+        {:noreply,
+         socket
+         |> assign(:replay_review, review)
+         |> assign(:replay_dialog_feedback, nil)
+         |> assign(:replay_trigger_id, replay_trigger_id(params))
+         |> assign(:replay_modal_open?, true)}
 
       {:error, :cross_tenant} ->
         {:noreply,
@@ -398,12 +378,40 @@ defmodule MailglassAdmin.InboundLive do
            "Replay blocked: this action is not authorized for the current operator."
          )}
 
-      {:error, :no_selection} ->
+      {:error, _reason} ->
         {:noreply,
          put_flash(
            socket,
            :error,
            "Select an InboundMessage to review its recorded Mailbox before replay."
+         )}
+    end
+  end
+
+  def handle_event("review_replay_again", _params, socket) do
+    case fresh_replay_snapshot(socket) do
+      {:ok, record, eligibility} ->
+        {:noreply,
+         socket
+         |> assign(:replay_review, replay_review(record, eligibility))
+         |> assign(:replay_dialog_feedback, nil)
+         |> assign(:replay_pending_review_id, nil)}
+
+      {:error, :cross_tenant} ->
+        {:noreply,
+         replay_dialog_feedback(
+           socket,
+           :error,
+           "Replay blocked: this action is not authorized for the current operator. Review the selected record again."
+         )}
+
+      {:error, reason} ->
+        {:noreply,
+         replay_dialog_feedback(
+           socket,
+           :error,
+           "The selected Inbound message could not be checked again. " <>
+             replay_error_copy(reason)
          )}
     end
   end
@@ -464,12 +472,12 @@ defmodule MailglassAdmin.InboundLive do
       %{replay_consumed_review_id: consumed, replay_review: %{review_id: consumed}}
       when not is_nil(consumed) ->
         {:noreply,
-         replay_feedback(socket, :error, "Replay was already submitted for this review.")}
+         replay_dialog_feedback(socket, :error, "Replay was already submitted for this review.")}
 
       %{replay_pending_review_id: pending, replay_review: %{review_id: pending}}
       when not is_nil(pending) ->
         {:noreply,
-         replay_feedback(socket, :error, "Replay is already in progress for this review.")}
+         replay_dialog_feedback(socket, :error, "Replay is already in progress for this review.")}
 
       %{replay_modal_open?: true, replay_review: %{review_id: review_id}} ->
         socket =
@@ -481,7 +489,7 @@ defmodule MailglassAdmin.InboundLive do
 
       _assigns ->
         {:noreply,
-         replay_feedback(
+         replay_dialog_feedback(
            socket,
            :error,
            "Replay review is no longer open. Review the record again before confirming."
@@ -620,7 +628,7 @@ defmodule MailglassAdmin.InboundLive do
                 </p>
 
                 <div
-                  :if={@replay_feedback}
+                  :if={@replay_feedback && !@replay_modal_open?}
                   id="inbound-replay-feedback"
                   data-testid="inbound-replay-feedback"
                   role="status"
@@ -851,7 +859,7 @@ defmodule MailglassAdmin.InboundLive do
             <%!-- The modal hook contains focus; this sentinel returns focus to the trigger when it closes. --%>
             <span
               :if={@replay_modal_open?}
-              phx-remove={JS.focus(to: "#inbound-replay-open-btn")}
+              phx-remove={JS.focus(to: "##{@replay_trigger_id}")}
             />
 
             <%!-- Re-redact focus return (D-11): a one-shot sentinel returns focus to the reveal disclosure button after collapsing a revealed payload. --%>
@@ -863,6 +871,7 @@ defmodule MailglassAdmin.InboundLive do
               open?={@replay_modal_open?}
               record={selected_record_struct(@detail)}
               review={@replay_review}
+              feedback={@replay_dialog_feedback}
             />
         <% end %>
       <% end %>
@@ -942,6 +951,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:timeline_read_state, timeline_read_state)
     |> assign(:timeline_read_at, timeline_read_at)
     |> assign(:replay_feedback, nil)
+    |> assign(:replay_dialog_feedback, nil)
     |> assign(
       :routing_trace,
       if(full?, do: routing_trace_for(socket.assigns.inbound_router, detail), else: [])
@@ -1002,18 +1012,69 @@ defmodule MailglassAdmin.InboundLive do
   # error → UI-SPEC copy.
   # ---------------------------------------------------------------------------
 
-  # The replayable record is the loaded detail's canonical struct (tenant-resolved
-  # by the read-model). A selected id that did NOT resolve to a detail (a foreign
-  # tenant's id, or a deleted/forged id) surfaces as a `detail_error` — confirming
-  # replay against it is blocked as not-authorized (the tenant gate -05 fired
-  # at the read-model BEFORE replay/2). A confirm with no selection at all is a
-  # no-selection no-op.
-  defp selected_replayable_record(%{assigns: %{detail: %{record: record}}}), do: {:ok, record}
+  # The modal is a review snapshot, not an authorization token. Opening or
+  # refreshing it reads the selected ID again inside the active Account and
+  # then reads the recorded Mailbox eligibility for that exact record.
+  defp fresh_replay_snapshot(socket) do
+    selected_id = current_selected_record_id(socket)
+    tenant_id = socket.assigns.filter_params["tenant_id"]
 
-  defp selected_replayable_record(%{assigns: %{detail_error: error}}) when not is_nil(error),
-    do: {:error, :cross_tenant}
+    cond do
+      not is_binary(selected_id) or selected_id == "" ->
+        if socket.assigns.detail_error, do: {:error, :cross_tenant}, else: {:error, :no_selection}
 
-  defp selected_replayable_record(_socket), do: {:error, :no_selection}
+      not is_binary(tenant_id) or tenant_id == "" ->
+        {:error, :cross_tenant}
+
+      true ->
+        case load_detail(socket.assigns.filter_params, selected_id) do
+          {%{record: record}, :ok}
+          when is_map(record) and record.id == selected_id and record.tenant_id == tenant_id ->
+            eligibility =
+              case read_replay_eligibility(record.id, record.tenant_id) do
+                {:ok, result} ->
+                  result
+
+                {:error, reason} ->
+                  %{status: :ineligible, reason: eligibility_failure_reason(reason)}
+              end
+
+            {:ok, record, eligibility}
+
+          {nil, :ok} ->
+            {:error, :cross_tenant}
+
+          {_detail, :read_unavailable} ->
+            {:error, :read_unavailable}
+
+          {_detail, :package_unavailable} ->
+            {:error, :package_unavailable}
+
+          _other ->
+            {:error, :cross_tenant}
+        end
+    end
+  end
+
+  defp current_selected_record_id(%{assigns: %{detail: %{record: record}}}),
+    do: Map.get(record, :id)
+
+  defp current_selected_record_id(%{assigns: %{selected_record: %{id: record_id}}}),
+    do: record_id
+
+  defp current_selected_record_id(_socket), do: nil
+
+  defp replay_review(record, eligibility) do
+    %{
+      review_id: System.unique_integer([:positive]),
+      tenant_id: record.tenant_id,
+      record_id: record.id,
+      eligibility: eligibility
+    }
+  end
+
+  defp replay_trigger_id(%{"origin" => "quick"}), do: "inbound-quick-replay-open-btn"
+  defp replay_trigger_id(_params), do: "inbound-replay-open-btn"
 
   defp submit_replay_review(socket) do
     result =
@@ -1030,46 +1091,58 @@ defmodule MailglassAdmin.InboundLive do
 
     case result do
       {:ok, authorized_socket, _record, replay_result} ->
+        record_id = socket.assigns.replay_review.record_id
+
         authorized_socket
         |> close_replay_modal()
-        |> replay_feedback(:info, replay_result_copy(replay_result))
+        |> assign_inbound_state(
+          socket.assigns.filter_params,
+          record_id,
+          socket.assigns.full_detail?
+        )
+        |> push_event("mailglass:toast", %{
+          message: replay_result_copy(replay_result),
+          error: false
+        })
 
       {:error, :stale_review} ->
-        socket
-        |> close_replay_modal()
-        |> replay_feedback(
+        replay_dialog_feedback(
+          socket,
           :error,
-          "Replay review is stale. Reopen it to check the recorded Mailbox again."
+          "Replay review is stale. Review again to check the selected record and recorded Mailbox."
         )
 
       {:error, :no_selection} ->
-        replay_feedback(
+        replay_dialog_feedback(
           socket,
           :error,
-          "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
+          "The selected Inbound message could not be checked. Review the record again before confirming."
         )
 
       {:error, :cross_tenant} ->
-        socket
-        |> close_replay_modal()
-        |> replay_feedback(
+        replay_dialog_feedback(
+          socket,
           :error,
-          "Replay blocked: this action is not authorized for the current operator."
+          "Replay blocked: this action is not authorized for the current operator. Review the selected record again."
         )
 
       {:error, {:auth, message}} ->
-        socket
-        |> close_replay_modal()
-        |> replay_feedback(:error, message)
+        replay_dialog_feedback(socket, :error, message)
 
       {:error, reason} ->
-        socket
-        |> close_replay_modal()
-        |> replay_feedback(
+        replay_dialog_feedback(
+          socket,
           :error,
-          "Replay could not be started. No run was recorded. " <> replay_error_copy(reason)
+          "Replay could not be started. No run was recorded. " <>
+            replay_error_copy(reason) <> " Review again to check the record before retrying."
         )
     end
+  end
+
+  defp replay_dialog_feedback(socket, kind, message) do
+    socket
+    |> assign(:replay_pending_review_id, nil)
+    |> assign(:replay_dialog_feedback, %{kind: kind, text: message})
   end
 
   defp replay_feedback(socket, kind, message) do
@@ -1079,31 +1152,32 @@ defmodule MailglassAdmin.InboundLive do
     |> put_flash(if(kind == :error, do: :error, else: :info), message)
   end
 
-  defp replay_result_copy(%{status: status}) when status in [:queued, :requested],
+  @doc false
+  def replay_result_copy(%{status: status}) when status in [:queued, :requested],
     do: "Replay requested. The runtime reported that this replay is queued."
 
-  defp replay_result_copy(%{outcome: :failed}),
+  def replay_result_copy(%{outcome: :failed}),
     do: "Replay run recorded. Mailbox execution failed."
 
-  defp replay_result_copy(%{outcome: :no_change}),
+  def replay_result_copy(%{outcome: :no_change}),
     do: "Replay run recorded. Mailbox outcome: No change."
 
-  defp replay_result_copy(%{outcome: :accept}),
+  def replay_result_copy(%{outcome: :accept}),
     do: "Replay run recorded. Mailbox outcome: Accepted."
 
-  defp replay_result_copy(%{outcome: :ignore}),
+  def replay_result_copy(%{outcome: :ignore}),
     do: "Replay run recorded. Mailbox outcome: Ignored."
 
-  defp replay_result_copy(%{outcome: :reject}),
+  def replay_result_copy(%{outcome: :reject}),
     do: "Replay run recorded. Mailbox outcome: Rejected."
 
-  defp replay_result_copy(%{outcome: :bounce}),
+  def replay_result_copy(%{outcome: :bounce}),
     do: "Replay run recorded. Mailbox outcome: Bounced."
 
-  defp replay_result_copy(%{outcome: :no_match}),
+  def replay_result_copy(%{outcome: :no_match}),
     do: "Replay run recorded. Mailbox outcome: No mailbox matched."
 
-  defp replay_result_copy(_result),
+  def replay_result_copy(_result),
     do: "Replay run recorded. Mailbox outcome is unavailable."
 
   defp refresh_selected_timeline(socket) do
@@ -1129,15 +1203,6 @@ defmodule MailglassAdmin.InboundLive do
     do: assign(socket, :timeline_read_at, DateTime.utc_now())
 
   defp maybe_assign_timeline_read_at(socket, _read_state), do: socket
-
-  # -05 cross-tenant gate: the active tenant comes from filter_params; the
-  # record's tenant_id must match it. (The detail read-model already tenant-scopes
-  # the load; this is belt-and-suspenders directly before the un-scoped replay/2.)
-  defp verify_tenant(%{tenant_id: tenant_id}, %{"tenant_id" => active})
-       when is_binary(tenant_id) and tenant_id == active and active != "",
-       do: :ok
-
-  defp verify_tenant(_record, _filter_params), do: {:error, :cross_tenant}
 
   # The modal is a review snapshot, not an authorization token. Confirmation
   # requires the same open review, Account and selected ID, then repeats both
