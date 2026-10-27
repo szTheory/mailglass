@@ -1686,6 +1686,90 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   });
 
+  test("Phase 175 Delivery recovery", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdNextReply = false;
+    let holdReplayResponse = true;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    await selectDeliveryFull(
+      page,
+      page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3)
+    );
+    await page.getByTestId("operator-replay-open").click();
+
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    const modalNode = await modal.elementHandle();
+    const targetId = await modal.getByTestId("operator-replay-target-id").innerText();
+    const confirm = modal.getByTestId("operator-replay-confirm");
+    const initialReviewId = await confirm.getAttribute("phx-value-review");
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=selected_delivery",
+        {
+          method: "POST",
+          headers: { "x-csrf-token": csrfToken },
+          redirect: "manual"
+        }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+    holdReplayResponse = false;
+
+    const feedback = modal.getByTestId("operator-replay-feedback");
+    await expect(feedback).toContainText("Couldn’t refresh current Delivery eligibility.");
+    await expect(feedback.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    expect(await modal.evaluate((element, original) => element === original, modalNode)).toBeTruthy();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+
+    await feedback.getByRole("button", { name: "Review again", exact: true }).click();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+    expect(await modal.evaluate((element, original) => element === original, modalNode)).toBeTruthy();
+    await expect(confirm).toBeEnabled();
+    expect(await confirm.getAttribute("phx-value-review")).not.toBe(initialReviewId);
+
+    await confirm.click();
+    await expect(modal).toHaveCount(0);
+    await expect(page.getByTestId("copy-toast")).toContainText(/Replay command added .* Event/);
+  });
+
   test("Phase 175 suppression refresh", async ({ page }) => {
     const resetResponse = await page.request.get(
       "/ops/browser-reset?scenario=phase169-suppression&variant=one"
@@ -1930,9 +2014,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await deniedConfirm.focus();
       await expect(deniedConfirm).toBeFocused();
       await page.keyboard.press("Enter");
-      await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
+      await expect(deniedModal.getByTestId("operator-replay-feedback")).toContainText(
+        "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+      );
+      await expect(deniedModal.getByTestId("operator-replay-review-again")).toBeVisible();
       await expect(deniedModal).toBeVisible();
       await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
+      await expect(deniedConfirm).toBeDisabled();
       await deniedModal.locator("#operator-replay-close").focus();
       await page.keyboard.press("Shift+Tab");
       await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
@@ -1943,15 +2031,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
       await openOperator(page);
       await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).first());
-      await page.getByTestId("operator-replay-open").tap();
-      const unavailableModal = page.getByTestId("operator-replay-modal");
-      await expect(unavailableModal).toContainText("Replay unavailable");
-      await expect(unavailableModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
-      await expect(unavailableModal.getByTestId("operator-replay-target-id")).toHaveCount(0);
-      await unavailableModal.locator("#operator-replay-close").focus();
-      await page.keyboard.press("Shift+Tab");
-      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
-      await expect.poll(() => unavailableModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+      const unavailableDetail = page.getByTestId("operator-detail-column");
+      await expect(unavailableDetail).toContainText("Replay is unavailable.");
+      await expect(unavailableDetail).toContainText("Historical rows without exact webhook linkage");
+      await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+      await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
     } finally {
       await context.close();
     }

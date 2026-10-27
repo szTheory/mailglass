@@ -94,10 +94,12 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_history, [])
       |> assign(:replay_history_read_state, :ready)
       |> assign(:replay_command_feedback, nil)
+      |> assign(:replay_dialog_feedback, nil)
       |> assign(:replay_modal_open?, false)
       |> assign(:replay_origin, nil)
       |> assign(:replay_focus_return_id, nil)
       |> assign(:replay_selected_target_id, nil)
+      |> assign(:replay_review_scope, nil)
       |> assign(:replay_review_snapshot, nil)
       |> assign(:replay_review_id, nil)
       |> assign(:replay_review_consumed?, false)
@@ -401,6 +403,8 @@ defmodule MailglassAdmin.OperatorLive do
           do: "replay-open-btn",
           else: "operator-quick-view-replay-open-btn"
 
+      review_scope = replay_review_scope(socket.assigns.selected_delivery)
+
       {:noreply,
        socket
        |> assign(:replay_targets, replay_targets)
@@ -408,7 +412,9 @@ defmodule MailglassAdmin.OperatorLive do
        |> assign(:replay_origin, origin)
        |> assign(:replay_focus_return_id, focus_return_id)
        |> assign(:replay_command_feedback, nil)
+       |> assign(:replay_dialog_feedback, nil)
        |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_review_scope, review_scope)
        |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
        |> assign(:replay_review_id, review_id)
        |> assign(:replay_review_consumed?, false)
@@ -530,7 +536,14 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
-    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
+    socket = select_frozen_replay_target(socket, webhook_event_id)
+
+    socket =
+      if socket.assigns.replay_review_consumed?,
+        do: socket,
+        else: assign(socket, :replay_dialog_feedback, nil)
+
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -538,8 +551,27 @@ defmodule MailglassAdmin.OperatorLive do
         %{"replay" => %{"webhook_event_id" => webhook_event_id}},
         socket
       ) do
-    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
+    handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket)
   end
+
+  def handle_event(
+        "review_replay_again",
+        _params,
+        %{
+          assigns: %{
+            replay_modal_open?: true,
+            replay_review_scope: %{tenant_id: tenant_id, delivery_id: delivery_id}
+          }
+        } = socket
+      ) do
+    if replay_review_scope_matches?(socket) do
+      refresh_replay_review(socket, tenant_id, delivery_id)
+    else
+      {:noreply, replay_dialog_failure(socket, :review_changed)}
+    end
+  end
+
+  def handle_event("review_replay_again", _params, socket), do: {:noreply, socket}
 
   def handle_event(
         "confirm_replay",
@@ -556,9 +588,11 @@ defmodule MailglassAdmin.OperatorLive do
       socket
       |> assign(:replay_review_consumed?, true)
       |> assign(:replay_pending?, true)
+      |> assign(:replay_dialog_feedback, nil)
       |> assign(:replay_command_feedback, nil)
 
-    with %{id: delivery_id, tenant_id: tenant_id} <-
+    with true <- replay_review_scope_matches?(socket),
+         %{id: delivery_id, tenant_id: tenant_id} <-
            socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
            read_confirmation_delivery(socket, tenant_id, delivery_id),
@@ -597,64 +631,33 @@ defmodule MailglassAdmin.OperatorLive do
        |> push_event("mailglass:toast", %{message: feedback, error: false})}
     else
       {:error, :no_selected_delivery} ->
-        {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+        {:noreply, replay_dialog_failure(socket, :no_selected_delivery)}
+
+      false ->
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
 
       {:error, :unavailable} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(
-           :info,
-           "Replay is unavailable for this delivery. Review it again before retrying."
-         )}
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
 
       {:error, :read_unavailable} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> assign(:replay_review_consumed?, false)
-         |> put_flash(
-           :info,
-           "Current records could not be refreshed. The exact reviewed request is retained."
-         )}
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
 
       {:error, :review_changed} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(
-           :info,
-           "This webhook request changed or is no longer eligible. Review the current request before replaying."
-         )}
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
 
       {:error, :target_required} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(:info, "Choose one webhook target before confirming replay.")}
+        {:noreply, replay_dialog_failure(socket, :target_required)}
 
-      {:error, {:auth, message}} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(:info, RepairState.authorization_feedback(message))}
+      {:error, {:auth, _message}} ->
+        {:noreply, replay_dialog_failure(socket, :denied)}
 
-      {:error, reason} ->
-        {:noreply,
-         socket
-         |> assign_delivery_state(
-           socket.assigns.filter_params,
-           get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]),
-           true,
-           false
-         )
-         |> assign(:replay_pending?, false)
-         |> put_flash(:error, RepairState.flash_failure(reason))}
+      {:error, _reason} ->
+        {:noreply, replay_dialog_failure(socket, :command_failure)}
     end
   end
 
   def handle_event("confirm_replay", _params, %{assigns: %{selected_delivery: nil}} = socket) do
-    {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+    {:noreply, replay_dialog_failure(socket, :no_selected_delivery)}
   end
 
   def handle_event("confirm_replay", _params, socket), do: {:noreply, socket}
@@ -1135,6 +1138,7 @@ defmodule MailglassAdmin.OperatorLive do
                 account_label={Accounts.label(@selected_tenant_id, @account_labels)}
                 pending?={@replay_pending?}
                 consumed?={@replay_review_consumed?}
+                feedback={@replay_dialog_feedback}
               />
           <% end %>
         <% end %>
@@ -2051,11 +2055,79 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_origin, nil)
     |> assign(:replay_focus_return_id, nil)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
+    |> assign(:replay_dialog_feedback, nil)
+    |> assign(:replay_review_scope, nil)
     |> assign(:replay_review_snapshot, nil)
     |> assign(:replay_review_id, nil)
     |> assign(:replay_review_consumed?, false)
     |> assign(:replay_pending?, false)
   end
+
+  defp refresh_replay_review(socket, tenant_id, delivery_id) do
+    with %{id: ^delivery_id, tenant_id: ^tenant_id} <-
+           read_confirmation_delivery(socket, tenant_id, delivery_id),
+         {:ok, replay_targets} <- read_confirmation_targets(socket, tenant_id, delivery_id) do
+      prior_target_id = socket.assigns.replay_selected_target_id
+      selected_target_id = reviewed_replay_selection(replay_targets, prior_target_id)
+
+      feedback =
+        if is_binary(prior_target_id) and is_nil(selected_target_id) and
+             replay_targets.status in [:exact, :ambiguous] do
+          RepairState.dialog_feedback(:review_changed)
+        end
+
+      {:noreply,
+       socket
+       |> assign(:replay_targets, replay_targets)
+       |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+       |> assign(:replay_review_id, Ecto.UUID.generate())
+       |> assign(:replay_review_consumed?, false)
+       |> assign(:replay_pending?, false)
+       |> assign(:replay_dialog_feedback, feedback)}
+    else
+      {:error, _reason} ->
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
+
+      _other ->
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
+    end
+  end
+
+  defp replay_dialog_failure(socket, reason) do
+    socket
+    |> assign(:replay_pending?, false)
+    |> assign(:replay_dialog_feedback, RepairState.dialog_feedback(reason))
+  end
+
+  defp replay_review_scope(%{id: delivery_id, tenant_id: tenant_id}) do
+    %{tenant_id: tenant_id, delivery_id: delivery_id}
+  end
+
+  defp replay_review_scope(_delivery), do: nil
+
+  defp replay_review_scope_matches?(%{
+         assigns: %{
+           replay_review_scope: %{tenant_id: tenant_id, delivery_id: delivery_id},
+           filter_params: %{"tenant_id" => tenant_id},
+           selected_delivery: %{id: delivery_id, tenant_id: tenant_id}
+         }
+       }),
+       do: true
+
+  defp replay_review_scope_matches?(_socket), do: false
+
+  defp reviewed_replay_selection(%{status: :exact, candidate: candidate}, prior_target_id) do
+    if candidate.webhook_event_id == prior_target_id, do: prior_target_id, else: nil
+  end
+
+  defp reviewed_replay_selection(%{status: :ambiguous, candidates: candidates}, prior_target_id) do
+    if Enum.any?(candidates, &(&1.webhook_event_id == prior_target_id)),
+      do: prior_target_id,
+      else: nil
+  end
+
+  defp reviewed_replay_selection(_replay_targets, _prior_target_id), do: nil
 
   defp replay_review_snapshot(socket, %{status: status, candidates: candidates})
        when status in [:exact, :ambiguous] do

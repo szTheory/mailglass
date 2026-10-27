@@ -1084,6 +1084,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "Phase 175 Delivery entry exposes replay from the selected quick and full detail", %{
       conn: conn
     } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
       conn = operator_conn(conn)
       {delivery, webhook_event} = insert_exact_replay_fixture!("pm-phase175-entry", 17501)
 
@@ -1453,13 +1454,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> element("[data-testid='operator-replay-open']")
       |> render_click()
 
-      view
-      |> element("[data-testid='operator-replay-confirm']")
-      |> render_click()
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      html = render(view)
+      assert html =~
+               "Replay isn’t allowed for your account. Ask an Account administrator to review access."
 
-      assert html =~ "Recent authentication is required."
+      assert html =~ ~s(data-testid="operator-replay-feedback")
+      assert html =~ ~s(data-testid="operator-replay-review-again")
+      assert html =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       assert replay_audit_rows_for(webhook_event.id) == []
     end
 
@@ -1485,8 +1488,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      assert html =~ "This webhook request changed or is no longer eligible."
-      assert html =~ "Review the current request before replaying."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ ~s(data-testid="operator-replay-feedback")
+      assert html =~ ~s(data-testid="operator-replay-review-again")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
     end
@@ -1519,7 +1524,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      assert html =~ "This webhook request changed or is no longer eligible."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ reviewed.id
+      assert html =~ ~s(data-testid="operator-replay-review-again")
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
@@ -1569,7 +1576,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       TestRepo.delete!(reviewed)
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
-      assert html =~ "This webhook request changed or is no longer eligible."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ reviewed.id
+      assert html =~ ~s(data-testid="operator-replay-review-again")
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
@@ -1634,15 +1643,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
 
-      assert html =~
-               "Current records could not be refreshed. The exact reviewed request is retained."
+      assert html =~ "Couldn’t refresh current Delivery eligibility. Review again before trying."
+      assert html =~ ~s(data-testid="operator-replay-review-again")
 
       assert replay_review_id(view) == review_id
-      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       refute html =~ "Replaying the reviewed request…"
       refute html =~ "Webhook replay requested"
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == review_id
+      assert render(view) =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
@@ -1683,15 +1698,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
 
-      assert html =~
-               "Current records could not be refreshed. The exact reviewed request is retained."
+      assert html =~ "Couldn’t refresh current Delivery eligibility. Review again before trying."
+      assert html =~ ~s(data-testid="operator-replay-review-again")
 
       assert replay_review_id(view) == review_id
-      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       refute html =~ "Replaying the reviewed request…"
       refute html =~ "Webhook replay requested"
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == review_id
+      assert render(view) =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
@@ -1796,6 +1817,115 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Last replay: completed · 0 newly normalized Events"
     end
 
+    @tag :phase175
+    test "Phase 175 Delivery recovery re-reviews the exact request after command failure", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("phase175-recovery-command", 17541)
+      trigger_name = "reject_replay_recovery_#{System.unique_integer([:positive])}"
+      schema = Mailglass.Config.schema()
+
+      try do
+        TestRepo.query!("""
+        CREATE FUNCTION #{schema}.#{trigger_name}_fn() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.type = 'webhook_replay_succeeded'
+             AND NEW.metadata->>'webhook_event_id' = '#{webhook_event.id}' THEN
+            RAISE EXCEPTION 'private simulated replay recovery failure';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        """)
+
+        TestRepo.query!("""
+        CREATE TRIGGER #{trigger_name}
+        BEFORE INSERT ON #{schema}.mailglass_events
+        FOR EACH ROW EXECUTE FUNCTION #{schema}.#{trigger_name}_fn();
+        """)
+
+        {:ok, view, _html} =
+          live(
+            conn,
+            operator_path(%{
+              "tenant_id" => @tenant_id,
+              "delivery_id" => delivery.id,
+              "full" => "1"
+            })
+          )
+
+        view |> element("[data-testid='operator-replay-open']") |> render_click()
+        reviewed_id = replay_review_id(view)
+        html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+        assert html =~ ~s(data-testid="operator-replay-modal")
+        assert html =~ ~s(data-testid="operator-replay-feedback")
+
+        assert html =~
+                 "Replay couldn’t be completed. Review current eligibility before trying again."
+
+        assert html =~ webhook_event.id
+        refute html =~ "private simulated replay recovery failure"
+        assert replay_review_id(view) == reviewed_id
+        assert has_element?(view, "#operator-replay-confirm[disabled]")
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_requested)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_failed)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_succeeded)
+               ) == 0
+
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+        fresh_review_id = replay_review_id(view)
+        refute fresh_review_id == reviewed_id
+        assert render(view) =~ webhook_event.id
+        assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+
+        success_html =
+          view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+        assert success_html =~ "Replay command added 1 newly normalized Event."
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_requested)
+               ) == 2
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_failed)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_succeeded)
+               ) == 1
+
+        assert Enum.map(
+                 MailglassAdmin.TestOperatorAuth.destructive_calls(),
+                 & &1.webhook_event_id
+               ) ==
+                 [webhook_event.id, webhook_event.id]
+      after
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+      end
+    end
+
     test "reports terminal audit write failure safely and retains requested and failed evidence",
          %{
            conn: conn
@@ -1838,8 +1968,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
         html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
         assert html =~
-                 "Replay processing could not be recorded because persistence failed. Normalized Events and projection changes were rolled back."
+                 "Replay couldn’t be completed. Review current eligibility before trying again."
 
+        assert html =~ ~s(data-testid="operator-replay-modal")
+        assert html =~ ~s(data-testid="operator-replay-review-again")
         refute html =~ "private simulated terminal audit failure detail"
         assert html =~ "Webhook replay requested"
         assert html =~ "Webhook replay failed"
@@ -1853,6 +1985,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
                  replay_audit_rows_for(webhook_event.id),
                  &(&1.type == :webhook_replay_failed)
                ) == 1
+
+        assert has_element?(view, "#operator-replay-confirm[disabled]")
 
         assert replay_audit_rows_for(webhook_event.id)
                |> Enum.any?(&(&1.type == :webhook_replay_succeeded)) == false

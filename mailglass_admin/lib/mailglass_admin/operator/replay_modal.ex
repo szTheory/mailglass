@@ -17,6 +17,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:account_label, :string, default: nil)
   attr(:pending?, :boolean, default: false)
   attr(:consumed?, :boolean, default: false)
+  attr(:feedback, :map, default: nil)
 
   def replay_modal(assigns) do
     ~H"""
@@ -36,10 +37,23 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <%= case @replay_targets do %>
             <% %{status: :exact, candidate: candidate} -> %>
               <div class="mt-6 space-y-4">
-                <p class="text-body text-base-content">
-                  Review the exact stored request before confirming.
-                </p>
-                <.target_card candidate={candidate} selected={true} />
+                <%= if candidate.webhook_event_id == @selected_target_id do %>
+                  <p class="text-body text-base-content">
+                    Review the exact stored request before confirming.
+                  </p>
+                  <.target_card candidate={candidate} selected={true} />
+                <% else %>
+                  <p class="text-body text-base-content">
+                    This exact request changed. Review the current request before confirming.
+                  </p>
+                  <form
+                    id="operator-replay-targets"
+                    phx-change="choose_replay_target"
+                    class="space-y-3"
+                  >
+                    <.target_choice candidate={candidate} selected={false} />
+                  </form>
+                <% end %>
               </div>
             <% %{status: :ambiguous, candidates: candidates} -> %>
               <div class="mt-6 space-y-4">
@@ -108,6 +122,25 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 </dd>
               </div>
             </dl>
+          </div>
+
+          <div
+            :if={@feedback}
+            role="status"
+            aria-live="polite"
+            data-testid="operator-replay-feedback"
+            class="mt-6 rounded-box border border-error/40 bg-error/10 p-4 text-body text-base-content"
+          >
+            <p>{@feedback.text}</p>
+            <button
+              type="button"
+              phx-click="review_replay_again"
+              disabled={@pending?}
+              data-testid="operator-replay-review-again"
+              class="btn btn-ghost mt-3 min-h-11 px-md"
+            >
+              Review again
+            </button>
           </div>
 
           <p :if={@pending?} role="status" aria-live="polite" class="mt-4 text-body text-secondary">
