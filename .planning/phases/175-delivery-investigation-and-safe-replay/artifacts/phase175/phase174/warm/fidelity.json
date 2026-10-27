@@ -1,8 +1,8 @@
 {
   "source": {
-    "revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
     "dirty": true,
-    "dirtyStatusSha256": "1dc418b0c3989fe8d89a872e1f58440168d0512686c2ae1cc86e8fb0efdb7f58"
+    "dirtyStatusSha256": "29361cd5b69dcadc1e5a0cc023ed92dc99dec1a20b419ec0eb245944d46de3c7"
   },
   "selectedCaseIds": [
     "theme:delivery:northstar_normal",
@@ -124,44 +124,44 @@
     {
       "caseId": "fonts:delivery:northstar_normal",
       "storyUrl": "http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal",
-      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17efc-8530-7084-a8b2-3fa8f7f10c69&tenant_id=northstar&window_hours=168",
+      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2d-45da-7056-bfe7-957135e0b1a7&tenant_id=northstar&window_hours=168",
       "source": {
         "path": "mailglass_admin/assets/css/app.css",
         "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
       },
       "built": {
         "path": "mailglass_admin/priv/static/app.css",
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
-        "bytes": 137809
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+        "bytes": 137731
       },
       "served": {
-        "storyUrl": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "productionUrl": "http://demo:4015/ops/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
-        "md5": "3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "bytes": 137809,
+        "storyUrl": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+        "productionUrl": "http://demo:4015/ops/mail/css-21549168ce191c96f1ac179e72be0631",
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+        "md5": "21549168ce191c96f1ac179e72be0631",
+        "bytes": 137731,
         "matchesBuilt": true
       }
     },
     {
       "caseId": "fonts:inbound:northstar_normal",
       "storyUrl": "http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal",
-      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17efc-8530-7084-a8b2-3fa8f7f10c69&tenant_id=northstar&window_hours=168",
+      "productionQuickViewUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2d-45da-7056-bfe7-957135e0b1a7&tenant_id=northstar&window_hours=168",
       "source": {
         "path": "mailglass_admin/assets/css/app.css",
         "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
       },
       "built": {
         "path": "mailglass_admin/priv/static/app.css",
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
-        "bytes": 137809
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+        "bytes": 137731
       },
       "served": {
-        "storyUrl": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "productionUrl": "http://demo:4015/ops/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
-        "md5": "3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "bytes": 137809,
+        "storyUrl": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+        "productionUrl": "http://demo:4015/ops/mail/css-21549168ce191c96f1ac179e72be0631",
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+        "md5": "21549168ce191c96f1ac179e72be0631",
+        "bytes": 137731,
         "matchesBuilt": true
       }
     }
@@ -576,7 +576,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/delivery-320-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/delivery-320-boundary-dark.png"
         },
         {
           "caseId": "width:delivery:northstar_first:375:light",
@@ -935,7 +935,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/delivery-768-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/delivery-768-boundary-dark.png"
         },
         {
           "caseId": "width:delivery:northstar_first:1280:light",
@@ -1294,7 +1294,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/delivery-1440-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/delivery-1440-boundary-dark.png"
         }
       ]
     },
@@ -1506,7 +1506,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/inbound-320-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/inbound-320-boundary-dark.png"
         },
         {
           "caseId": "width:inbound:northstar_first:375:light",
@@ -1919,7 +1919,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/inbound-768-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/inbound-768-boundary-dark.png"
         },
         {
           "caseId": "width:inbound:northstar_first:1280:light",
@@ -2332,7 +2332,7 @@
             "width": 247,
             "height": 77
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/inbound-1440-boundary-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/inbound-1440-boundary-dark.png"
         }
       ]
     }
@@ -2343,9 +2343,9 @@
     "The width matrix exercises System-resolved light and dark tokens at every viewport; the dedicated theme cases exercise Light/Dark/System radio selection and live preference changes."
   ],
   "run_identity": {
-    "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+    "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
     "condition": "warm",
-    "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-    "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+    "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+    "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
   }
 }

@@ -1,7 +1,7 @@
 {
   "source": {
     "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
-    "revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+    "revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
     "files": [
       {
         "path": "mailglass_admin/assets/css/app.css",
@@ -10,8 +10,8 @@
       },
       {
         "path": "mailglass_admin/e2e/flows.spec.js",
-        "bytes": 131152,
-        "sha256": "2b9572845a3b2833ec8bea23d8f61e4c4f9ad8e605bf4a50e5c3d8da6c9f48e8"
+        "bytes": 131270,
+        "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
       },
       {
         "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
@@ -35,8 +35,18 @@
       },
       {
         "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
-        "bytes": 6416,
-        "sha256": "f88d97b49196a46649d7ee0e6453e4d94c00baa538ceb2ccf5cd4539d448e419"
+        "bytes": 6426,
+        "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+        "bytes": 10715,
+        "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+        "bytes": 6250,
+        "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
       },
       {
         "path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
@@ -44,9 +54,14 @@
         "sha256": "d8a4f092fb80426c9cff94b4e07e57d3a3d6ba16139d60239c6ac68f116e8277"
       },
       {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+        "bytes": 9324,
+        "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+      },
+      {
         "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
-        "bytes": 12682,
-        "sha256": "94ade58a9b5982887b06b5021c9d7f68a07f70170d54a4196893ad6e8aa77ad5"
+        "bytes": 12931,
+        "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
       },
       {
         "path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
@@ -55,8 +70,8 @@
       },
       {
         "path": "mailglass_admin/priv/static/app.css",
-        "bytes": 137809,
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359"
+        "bytes": 137731,
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
       },
       {
         "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
@@ -100,13 +115,13 @@
       },
       {
         "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
-        "bytes": 56832,
-        "sha256": "68bb7e9f5547ae8eeaf5ee321e9d518442ff853d9880ea7f25280fea1a8a4bfd"
+        "bytes": 58022,
+        "sha256": "34199698f894948626ecaf11653f10442d46a40521d6963f3626919a1d9d4c59"
       },
       {
         "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
-        "bytes": 4295,
-        "sha256": "2513232aafa4a71530d9ebac5c176083d040a9ed0fea68d30e80adbb8139bda6"
+        "bytes": 4287,
+        "sha256": "5a8ff9c94020b82641d757aec722c9a78744fc684c2a4a2066569fb1ea528e07"
       },
       {
         "path": "reference/persona_spec/quick_view_scenarios.ex",
@@ -119,7 +134,7 @@
         "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
       }
     ],
-    "digest": "612410522f3612b4a11656c7718628e401e65fcb8bbeeebac9ab8ab94ddd7852"
+    "digest": "9a2d0bbe34638507de453609c100c43f0683e66ea21445512e04d23ab798f0cd"
   },
   "selectedCaseIds": [
     "story:delivery-investigation-fjordline-long-unicode",
@@ -150,7 +165,7 @@
       "caseId": "fidelity:delivery-investigation:long-unicode",
       "source": {
         "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
-        "revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+        "revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
         "files": [
           {
             "path": "mailglass_admin/assets/css/app.css",
@@ -159,8 +174,8 @@
           },
           {
             "path": "mailglass_admin/e2e/flows.spec.js",
-            "bytes": 131152,
-            "sha256": "2b9572845a3b2833ec8bea23d8f61e4c4f9ad8e605bf4a50e5c3d8da6c9f48e8"
+            "bytes": 131270,
+            "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
           },
           {
             "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
@@ -184,8 +199,18 @@
           },
           {
             "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
-            "bytes": 6416,
-            "sha256": "f88d97b49196a46649d7ee0e6453e4d94c00baa538ceb2ccf5cd4539d448e419"
+            "bytes": 6426,
+            "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+            "bytes": 10715,
+            "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+            "bytes": 6250,
+            "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
           },
           {
             "path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
@@ -193,9 +218,14 @@
             "sha256": "d8a4f092fb80426c9cff94b4e07e57d3a3d6ba16139d60239c6ac68f116e8277"
           },
           {
+            "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+            "bytes": 9324,
+            "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+          },
+          {
             "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
-            "bytes": 12682,
-            "sha256": "94ade58a9b5982887b06b5021c9d7f68a07f70170d54a4196893ad6e8aa77ad5"
+            "bytes": 12931,
+            "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
           },
           {
             "path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
@@ -204,8 +234,8 @@
           },
           {
             "path": "mailglass_admin/priv/static/app.css",
-            "bytes": 137809,
-            "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359"
+            "bytes": 137731,
+            "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
           },
           {
             "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
@@ -249,13 +279,13 @@
           },
           {
             "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
-            "bytes": 56832,
-            "sha256": "68bb7e9f5547ae8eeaf5ee321e9d518442ff853d9880ea7f25280fea1a8a4bfd"
+            "bytes": 58022,
+            "sha256": "34199698f894948626ecaf11653f10442d46a40521d6963f3626919a1d9d4c59"
           },
           {
             "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
-            "bytes": 4295,
-            "sha256": "2513232aafa4a71530d9ebac5c176083d040a9ed0fea68d30e80adbb8139bda6"
+            "bytes": 4287,
+            "sha256": "5a8ff9c94020b82641d757aec722c9a78744fc684c2a4a2066569fb1ea528e07"
           },
           {
             "path": "reference/persona_spec/quick_view_scenarios.ex",
@@ -268,7 +298,7 @@
             "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
           }
         ],
-        "digest": "612410522f3612b4a11656c7718628e401e65fcb8bbeeebac9ab8ab94ddd7852"
+        "digest": "9a2d0bbe34638507de453609c100c43f0683e66ea21445512e04d23ab798f0cd"
       },
       "selectedCaseCount": 10,
       "expectedCaseCount": 10,
@@ -382,7 +412,7 @@
               }
             ]
           },
-          "screenshot": ".planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/cold/delivery-investigation-320-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase175/cold/delivery-investigation-320-dark.png"
         },
         {
           "caseId": "fidelity:delivery-investigation:375:light",
@@ -695,7 +725,7 @@
               }
             ]
           },
-          "screenshot": ".planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/cold/delivery-investigation-1440-dark.png"
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase175/cold/delivery-investigation-1440-dark.png"
         }
       ],
       "screenshots": [
@@ -705,11 +735,11 @@
       ],
       "assets": {
         "stylesheet": {
-          "url": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+          "url": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
           "status": 200,
-          "bytes": 137809,
-          "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
-          "md5": "3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
+          "bytes": 137731,
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+          "md5": "21549168ce191c96f1ac179e72be0631",
           "matchesBuilt": true
         },
         "fonts": [
@@ -819,10 +849,10 @@
       "hooks": {
         "caseId": "hook:storybook-host-connected-and-production-quick-view-focus-return",
         "storyHostConnected": true,
-        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168",
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168",
         "connectedThemeOwner": null,
         "quickViewClosed": true,
-        "exactFocusReturnId": "operator-delivery-desktop-01a17ef9-72a1-750f-8742-94635d40aa92"
+        "exactFocusReturnId": "operator-delivery-desktop-01a17f2a-5e7f-7708-9df6-cd23387ab35a"
       },
       "urls": {
         "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
@@ -832,16 +862,16 @@
         "storyIframeParentOrigin": "http://demo:4015",
         "storyIframeMode": "srcdoc",
         "storyIframeHasSrcAttribute": false,
-        "storyIframeSrcdocBytes": 22216,
-        "storyIframeSrcdocSha256": "6c2907f74203de456601526c63cfa44bb30fa2491fbd5b4cd73a06295fde73c0",
-        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168"
+        "storyIframeSrcdocBytes": 22213,
+        "storyIframeSrcdocSha256": "9c21e24f5a53a9dfbfeb9cef0674510e48473ec56cc7c99a266b7375b22ac741",
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168"
       },
       "zoom": {
         "caseId": "fidelity:delivery-investigation:real-200-percent-zoom",
         "url": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
         "iframeUrl": "about:srcdoc",
         "tabZoom": {
-          "tabId": 1436026773,
+          "tabId": 88587960,
           "factor": 2
         },
         "initial": {
@@ -851,7 +881,7 @@
         },
         "effective": {
           "viewportWidth": 320,
-          "viewportHeight": 2157,
+          "viewportHeight": 2324,
           "documentWidth": 320,
           "devicePixelRatio": 4,
           "owner": "delivery-investigation-story",

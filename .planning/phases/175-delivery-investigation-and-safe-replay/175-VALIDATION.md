@@ -22,7 +22,7 @@ Executed validation map. Plans 175-01 through 175-05 retain their task summaries
 | Connected Admin | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 175"` |
 | Persisted demo | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"` |
 | Regression gate | `bash scripts/gsd-regression-gate.sh` |
-| Runtime | Current-source P175 attributable incremental local wall: 45,255 ms (0.75425 min); hosted runner cost not observed; see 175-AUTOMATION.md |
+| Runtime | Current-source P175 attributable incremental local wall: 42,290 ms (0.70483 min); hosted runner cost not observed; see 175-AUTOMATION.md |
 
 Run commands from the repository root unless the command changes directory. Supply the existing test database/reset-token setup through the established browser harness; do not weaken auth or destructive-reset checks to make a test run. Preserve the existing demo replay grant and authorization-actions guard.
 
@@ -94,6 +94,8 @@ None planned. Follow `.planning/METHODOLOGY.md` D-52: machine-observable checks 
 - [x] `nyquist_compliant` and `wave_0_complete` are set from execution evidence.
 
 **Execution closeout:** The current-source combined cold/warm run, retained receipt checker, focused Admin/auth suite and existing regression gate passed. The existing hosted Demo Browser Evidence job remains advisory; no hosted CI run or hosted runner-minute cost is asserted. Axe incompletes remain separately triaged, and descriptor-less prohibition flags remain flagged-unverified.
+
+**Review-fix closeout (2026-10-27):** WR-01 through WR-03 and the listed UI review repairs are recorded in [175-REVIEW-FIXES.md](175-REVIEW-FIXES.md). Fresh combined run `mailglass-evidence-20261027205816-4815-29177` passed cold/warm with source revision `fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8`, Phase 175 digest `0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb`, and Phase 174 digest `7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae`. The checker suite now passes 6/6, and the regression gate passes Node 41/41, Core 81/81, Admin 661 tests (1 excluded), Inbound 480 tests (3 excluded), and browser 31/31. No owner UAT is required for these observable criteria under D-52.
 
 ## Final Source Coverage Audit
 

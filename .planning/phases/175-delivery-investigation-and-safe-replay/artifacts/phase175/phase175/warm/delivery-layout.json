@@ -4,7 +4,7 @@
   "cases": [
     {
       "width": 320,
-      "deliveryId": "01a17efd-c954-7945-b75d-14b20288defa",
+      "deliveryId": "01a17f2e-9973-71be-9fd4-cf108fdc700d",
       "account": "fjordline-aps",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName",
       "viewportWidth": 320,
@@ -14,7 +14,7 @@
     },
     {
       "width": 375,
-      "deliveryId": "01a17efd-c954-7945-b75d-14b20288defa",
+      "deliveryId": "01a17f2e-9973-71be-9fd4-cf108fdc700d",
       "account": "fjordline-aps",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName",
       "viewportWidth": 375,
@@ -23,7 +23,7 @@
     },
     {
       "width": 768,
-      "deliveryId": "01a17efd-c954-7945-b75d-14b20288defa",
+      "deliveryId": "01a17f2e-9973-71be-9fd4-cf108fdc700d",
       "account": "fjordline-aps",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName",
       "viewportWidth": 768,
@@ -32,7 +32,7 @@
     },
     {
       "width": 1280,
-      "deliveryId": "01a17efd-c954-7945-b75d-14b20288defa",
+      "deliveryId": "01a17f2e-9973-71be-9fd4-cf108fdc700d",
       "account": "fjordline-aps",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName",
       "viewportWidth": 1280,
@@ -41,7 +41,7 @@
     },
     {
       "width": 1440,
-      "deliveryId": "01a17efd-c954-7945-b75d-14b20288defa",
+      "deliveryId": "01a17f2e-9973-71be-9fd4-cf108fdc700d",
       "account": "fjordline-aps",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName",
       "viewportWidth": 1440,
@@ -53,11 +53,11 @@
   "realZoom": {
     "caseId": "layout:delivery:real-200-percent-zoom",
     "longTextEvidence": {
-      "url": "http://127.0.0.1:4101/ops/mail?delivery_id=01a17efd-d11a-7fac-9230-c53a5de95cfb&full=1&tenant_id=fjordline-aps&window_hours=168",
-      "deliveryId": "01a17efd-d11a-7fac-9230-c53a5de95cfb",
+      "url": "http://127.0.0.1:4101/ops/mail?delivery_id=01a17f2e-a1a0-75f2-bfce-3b54ec190ccf&full=1&tenant_id=fjordline-aps&window_hours=168",
+      "deliveryId": "01a17f2e-a1a0-75f2-bfce-3b54ec190ccf",
       "mailable": "Mailables.TransactionalEmailWithVeryLongModuleName"
     },
-    "url": "http://127.0.0.1:4101/ops/mail?delivery_id=01a17efd-d45f-7e89-9644-a9224c71188e&full=1&tenant_id=browser-tenant&window_hours=168",
+    "url": "http://127.0.0.1:4101/ops/mail?delivery_id=01a17f2e-a538-7ef8-b69e-7e88bcb8636e&full=1&tenant_id=browser-tenant&window_hours=168",
     "source": {
       "initial": {
         "viewportWidth": 1440,
@@ -71,7 +71,7 @@
         "devicePixelRatio": 4
       },
       "tabZoom": {
-        "tabId": 1985785164,
+        "tabId": 481799656,
         "factor": 2
       }
     },
@@ -81,7 +81,7 @@
       "overflowY": "auto",
       "scrollTop": 0,
       "accountContext": "Account\n        \n          browser-tenant\n        \n      \n      \n    \n    \n      \n        \n          browser-tenant\n          browser-tenant\n        \n      \n        \n          deny-reveal\n          deny-reveal\n        \n      \n    \n  \n  \n  \n    browser-tenant\n  \n  \n    Switching to deny-reveal…",
-      "exactTargetId": "d24fb4f9-c51d-46cd-b3e2-d77ce7b0e154",
+      "exactTargetId": "0aeb61a1-ea8a-477b-9ee9-9f47f6e5450f",
       "closeTarget": {
         "x": 225,
         "y": 41,

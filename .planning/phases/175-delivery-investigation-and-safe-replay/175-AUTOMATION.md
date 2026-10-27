@@ -20,21 +20,21 @@ The wrapper owns one isolated Compose project and test database, serial cold/war
 ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"
 ```
 
-The current isolated Admin/auth run used `MIX_ENV=test`, `POSTGRES_HOST=demo_db`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, a run-specific `MIX_BUILD_PATH`, and the Phase 175 browser-test database. The focused operator, component, Inbound, and auth-contract command completed 353 tests with no failures. The separate complete current-source browser selection and persisted demo outcome are included in the run below. The full regression gate passed Node contracts 40/40, core renderer 81/81, Admin LiveView/component 658 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview browser cases 31/31.
+The current isolated Admin/auth run used `MIX_ENV=test`, `POSTGRES_HOST=demo_db`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, a run-specific `MIX_BUILD_PATH`, and the Phase 175 browser-test database. The focused operator/component/Inbound/auth tests and subsequent correction tests passed; the full counts are in [175-REVIEW-FIXES.md](175-REVIEW-FIXES.md). The complete current-source browser selection and persisted demo outcome are included in the run below. The full regression gate passed Node contracts 41/41, core renderer 81/81, Admin LiveView/component 661 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview browser cases 31/31.
 
 ## Current-source run identity and coverage
 
 | Field | Cold | Warm |
 | --- | --- | --- |
-| Run ID | `mailglass-evidence-20261027200450-16960-29407-cold` | `mailglass-evidence-20261027200450-16960-29407-warm` |
-| Source revision | `8cd973774c293cc3d95b1e8f9be489b5e4ca5caa` | same |
-| Phase 175 source digest | `77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b` | same |
-| Phase 174 source digest | `6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06` | same |
+| Run ID | `mailglass-evidence-20261027205816-4815-29177-cold` | `mailglass-evidence-20261027205816-4815-29177-warm` |
+| Source revision | `fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8` | same |
+| Phase 175 source digest | `0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb` | same |
+| Phase 174 source digest | `7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae` | same |
 | Expected / executed | Demo 4/4; Admin 10/10; fidelity 10/10; Axe 26/26 | same |
 | Layout checks | Delivery 6/6; Inbound 6/6 | same |
 | Axe outcome | 0 violations; 116 incomplete, separately triaged | same |
 
-The exact selected and executed inventories, including source locations, are in `artifacts/phase175/phase175/execution.json`; the case reports are beside it under `phase175/{cold,warm}/`. The checker requires exact nonempty expected/executed IDs and rejects missing, malformed, duplicate, unexpected, failed, skipped, stale-source, and wrong-source evidence. Its five Node tests passed, including fixtures built from the retained cold/warm report schemas. The independent earlier 116-incomplete report remains retained for triage, and the failed report with two untriaged findings remains marked failed. All reports are retained after the isolated Compose project and volumes were removed; `phase175/run.json` records completed cleanup and volume removal.
+The exact selected and executed inventories, including source locations, are in `artifacts/phase175/phase175/execution.json`; the case reports are beside it under `phase175/{cold,warm}/`. The checker requires exact nonempty expected/executed IDs and rejects missing, malformed, duplicate, unexpected, failed, skipped, stale-source, and wrong-source evidence. Its six Node tests pass, including decoded-PNG and adversarial path cases. The independent earlier 116-incomplete report remains retained for triage, and the failed report with two untriaged findings remains marked failed. All current reports are retained after the isolated Compose project and volumes were removed; `phase175/run.json` records completed cleanup and volume removal.
 
 ### Named Demo and connected Admin cases
 
@@ -64,13 +64,13 @@ The 26 Axe IDs are the following 13 scenario/state pairs, each run in both `ligh
 
 ## Actual route, iframe, assets, and layout
 
-The checked story route is `http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`. The Storybook frame is inline `about:srcdoc` (no `src` attribute), document origin `null`; its owner and readable parent origin are both `http://demo:4015`. Cold `srcdoc` is 22,216 bytes with SHA-256 `6c2907f74203de456601526c63cfa44bb30fa2491fbd5b4cd73a06295fde73c0`; warm is the same size with SHA-256 `c4b2efcd7a45576c0480acf87b9e49f72f8097fcd2567998558ad7bff734dbee`. This records the actual iframe source and parent-access result for the current frame mode.
+The checked story route is `http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`. The Storybook frame is inline `about:srcdoc` (no `src` attribute), document origin `null`; its owner and readable parent origin are both `http://demo:4015`. Cold `srcdoc` is 22,213 bytes with SHA-256 `9c21e24f5a53a9dfbfeb9cef0674510e48473ec56cc7c99a266b7375b22ac741`; warm is the same size with SHA-256 `05a7814d7e08445a1da490524722f45ccaca4fb48038506c537a387e2810083e`. This records the actual iframe source and parent-access result for the current frame mode.
 
-The connected route is Account-scoped at `http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168` in cold evidence and `http://demo:4015/ops/mail?delivery_id=01a17efc-8530-7084-a8b2-3fa8f7f10c69&tenant_id=northstar&window_hours=168` in warm evidence. Both point to the current Delivery route and each condition records connected hook and focus-return proof.
+The connected route is Account-scoped at `http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168` in cold evidence and `http://demo:4015/ops/mail?delivery_id=01a17f2d-45da-7056-bfe7-957135e0b1a7&tenant_id=northstar&window_hours=168` in warm evidence. Both point to the current Delivery route and each condition records connected hook and focus-return proof.
 
 | Served asset | Current URL | Identity |
 | --- | --- | --- |
-| Production CSS | `http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3` | 137,809 bytes; SHA-256 `4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359`; HTTP 200 and matches built CSS |
+| Production CSS | `http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631` | 137,731 bytes; SHA-256 `25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00`; HTTP 200 and matches built CSS |
 | Inter 400 | `http://demo:4015/dev/mail/fonts/inter-400.woff2` | SHA-256 `384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626` |
 | Inter 700 | `http://demo:4015/dev/mail/fonts/inter-700.woff2` | SHA-256 `ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0` |
 | Inter Tight 400 | `http://demo:4015/dev/mail/fonts/inter-tight-400.woff2` | SHA-256 `13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be` |
@@ -161,6 +161,6 @@ The failed 116-incomplete report has exactly two new fingerprints relative to th
 
 The checker tests are in the existing `scripts/gsd-regression-gate.sh` and the existing GitHub Actions `Demo Browser Evidence (Docker Compose / Chromium)` job. That job runs the current combined selector and uploads its owned artifacts; it adds no required branch-protection context. No hosted run or hosted runner-minute measurement was observed for this revision. The provisional ceilings remain five added wall minutes and ten runner minutes, but only the local wall observation below is measured.
 
-The runner records **45,255 ms (0.75425 minutes) of attributable incremental local Phase 175 wall time** across cold/warm selected operator runs: 24,219 ms cold and 20,937 ms warm, including checker overhead. This is within the provisional five-minute added wall allowance. The figure is only the attributable Phase 175 increment; it is not total combined-workflow wall time or a hosted runner-cost estimate. Phase 174 setup, browser installation, Demo/Axe scans, and teardown are retained separately and are not charged again to Phase 175. Teardown for this run completed in 2,286 ms and removed the owned volumes. The local run used the isolated `mailglass_demo_phase175_05` database because the default Demo DB retained a migration ledger without the Demo schema; the default database was not repaired or modified.
+The runner records **42,290 ms (0.70483 minutes) of attributable incremental local Phase 175 wall time** across cold/warm selected operator runs: 20,689 ms cold and 21,471 ms warm, including checker overhead. This is within the provisional five-minute added wall allowance. The figure is only the attributable Phase 175 increment; it is not total combined-workflow wall time or a hosted runner-cost estimate. Phase 174 setup, browser installation, Demo/Axe scans, and teardown are retained separately and are not charged again to Phase 175. Teardown for this run completed in 2,265 ms and removed the owned volumes. The local run used the isolated `mailglass_demo_phase175_05` database because the default Demo DB retained a migration ledger without the Demo schema; the default database was not repaired or modified.
 
 The selected evidence covers the declared current Chromium/viewport/theme/state inventory, not all browsers, devices, operating systems, or every viewport/theme Cartesian combination. Story rendering proves presentation; connected routes and server tests prove selected actions and recorded outcomes. The CI job remains outside required contexts; no hosted CI execution or hosted runner cost is claimed. Axe incomplete findings remain incomplete, and eight descriptor-less prohibition-recall flags remain flagged-unverified. Phase 178 retains STORY-07/UIQ final ownership.

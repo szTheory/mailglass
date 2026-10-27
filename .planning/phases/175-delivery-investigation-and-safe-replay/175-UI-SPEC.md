@@ -47,7 +47,7 @@ Enumerated by `rg -o '^  def [a-z][a-z0-9_]*\(assigns\) do|^  def [a-z][a-z0-9_]
 
 Use the existing 4px grid: xs 4px, sm 8px, md 16px, lg 24px, xl 32px, 2xl 48px, 3xl 64px.
 
-Exceptions: none. Interactive controls retain the existing 44px minimum target; this is the control-size token, not a spacing exception. Use semantic spacing utilities, rounded-field/rounded-box, and existing border-first elevation. Dialogs alone use shadow-overlay.
+Exception: the Operator replay modal keeps 12px item separation (`space-y-3`) as a deliberate presentational rhythm composed from the existing 8px `sm` and 4px `xs` grid values. This adds no spacing token. Interactive controls retain the existing 44px minimum target; this is the control-size token, not a spacing exception. Use semantic spacing utilities, rounded-field/rounded-box, and existing border-first elevation. Dialogs alone use shadow-overlay.
 
 ## Typography
 

@@ -1,31 +1,31 @@
 {
   "schema_version": "phase174-cost.v1",
-  "run_id": "mailglass-evidence-20261027200450-16960-29407",
-  "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-  "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+  "run_id": "mailglass-evidence-20261027205816-4815-29177",
+  "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+  "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
   "pilot": true,
   "conditions": [
     {
       "condition": "cold",
-      "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+      "run_id": "mailglass-evidence-20261027205816-4815-29177-cold",
       "job_id": "local",
-      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-      "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+      "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
       "timings_ms": {
-        "service_start": 52413,
-        "demo_lock_audit": 114,
-        "demo_npm_ci": 1287,
-        "demo_browser_install": 33702,
-        "demo_scan": 91830,
-        "admin_npm_ci": 1013,
-        "admin_browser_install": 32226,
-        "admin_axe_scan": 46334,
-        "comparison": 75
+        "service_start": 51779,
+        "demo_lock_audit": 101,
+        "demo_npm_ci": 834,
+        "demo_browser_install": 33441,
+        "demo_scan": 93337,
+        "admin_npm_ci": 870,
+        "admin_browser_install": 33315,
+        "admin_axe_scan": 39143,
+        "comparison": 73
       },
-      "setup_ms": 120755,
-      "execution_ms": 138239,
+      "setup_ms": 120340,
+      "execution_ms": 132553,
       "teardown_ms": 0,
-      "wall_ms": 285461,
+      "wall_ms": 275774,
       "runner_count": 1,
       "runner_minutes": null,
       "runner_minutes_status": "awaiting-hosted-job",
@@ -46,55 +46,55 @@
       "admin_browser": {
         "schema_version": "phase174-admin-browser.v1",
         "run_identity": {
-          "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+          "run_id": "mailglass-evidence-20261027205816-4815-29177-cold",
           "condition": "cold",
-          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+          "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+          "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
         },
         "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
         "version": "1.59.1",
         "chromium_revision": "1217",
         "cache_directory": "/cache/playwright",
         "cache_state": "miss",
-        "installer_ms": 32226,
+        "installer_ms": 33315,
         "install_exit_code": 0
       },
       "demo_browser": {
         "schema_version": "phase174-demo-browser.v1",
         "run_identity": {
-          "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
+          "run_id": "mailglass-evidence-20261027205816-4815-29177-cold",
           "condition": "cold",
-          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+          "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+          "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
         },
         "version": "1.60.0",
         "chromium_revision": "1223",
         "cache_directory": "/cache/playwright",
         "cache_state": "miss",
-        "installer_ms": 33702
+        "installer_ms": 33441
       }
     },
     {
       "condition": "warm",
-      "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+      "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
       "job_id": "local",
-      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-      "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+      "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
       "timings_ms": {
         "service_start": 0,
-        "demo_lock_audit": 107,
-        "demo_npm_ci": 427,
-        "demo_browser_install": 552,
-        "demo_scan": 93873,
-        "admin_npm_ci": 794,
-        "admin_browser_install": 260,
-        "admin_axe_scan": 40951,
-        "comparison": 67
+        "demo_lock_audit": 112,
+        "demo_npm_ci": 414,
+        "demo_browser_install": 496,
+        "demo_scan": 93527,
+        "admin_npm_ci": 642,
+        "admin_browser_install": 329,
+        "admin_axe_scan": 43001,
+        "comparison": 78
       },
-      "setup_ms": 2140,
-      "execution_ms": 134891,
-      "teardown_ms": 2286,
-      "wall_ms": 159633,
+      "setup_ms": 1993,
+      "execution_ms": 136606,
+      "teardown_ms": 2265,
+      "wall_ms": 161684,
       "runner_count": 1,
       "runner_minutes": null,
       "runner_minutes_status": "awaiting-hosted-job",
@@ -115,48 +115,48 @@
       "admin_browser": {
         "schema_version": "phase174-admin-browser.v1",
         "run_identity": {
-          "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+          "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
           "condition": "warm",
-          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+          "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+          "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
         },
         "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
         "version": "1.59.1",
         "chromium_revision": "1217",
         "cache_directory": "/cache/playwright",
         "cache_state": "hit",
-        "installer_ms": 260,
+        "installer_ms": 329,
         "install_exit_code": 0
       },
       "demo_browser": {
         "schema_version": "phase174-demo-browser.v1",
         "run_identity": {
-          "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
+          "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
           "condition": "warm",
-          "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-          "source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06"
+          "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+          "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
         },
         "version": "1.60.0",
         "chromium_revision": "1223",
         "cache_directory": "/cache/playwright",
         "cache_state": "hit",
-        "installer_ms": 552
+        "installer_ms": 496
       }
     }
   ],
-  "pilot_wall_ms": 448104,
+  "pilot_wall_ms": 440447,
   "added_cost": {
     "status": "measured",
-    "added_ms": 45255,
-    "added_minutes": 0.75425,
+    "added_ms": 42290,
+    "added_minutes": 0.7048333333333333,
     "reason": "The Phase 174 Demo/fidelity/Axe run already includes the selected Phase 175 Demo cases. Incremental Phase 175 work is the connected Admin browser scope plus Phase 175 receipt validation; hosted runner minutes remain tied to the existing advisory job's complete duration."
   },
   "budget": {
     "added_wall_minutes": 5,
     "added_runner_minutes": 10,
     "disposition": "within-provisional-five-minute-added-wall-budget",
-    "phase175_added_ms": 45255,
-    "phase175_added_runner_minutes": 0.75425
+    "phase175_added_ms": 42290,
+    "phase175_added_runner_minutes": 0.7048333333333333
   },
-  "teardown_completed_at": "2026-10-27T20:12:18.582Z"
+  "teardown_completed_at": "2026-10-27T21:05:37.812Z"
 }

@@ -17,19 +17,19 @@
         "buildHref": "undefined//actions/runs/"
       },
       "gitCommit": {
-        "shortHash": "8cd97377",
-        "hash": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-        "subject": "fix(175-06): align safe replay regression contracts",
-        "body": "fix(175-06): align safe replay regression contracts\n\nUpdate Phase 170 replay journey assertions to the current retained-error and toast contract. Refresh component fixtures and source guards for the shared dialog and remove the helper whose final caller moved to toast-event proof.\n",
+        "shortHash": "fc262b98",
+        "hash": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+        "subject": "fix(175): assert stale auth recovery copy",
+        "body": "fix(175): assert stale auth recovery copy\n",
         "author": {
           "name": "szTheory",
           "email": "szTheory@users.noreply.github.com",
-          "time": 1793131437000
+          "time": 1793134692000
         },
         "committer": {
           "name": "szTheory",
           "email": "szTheory@users.noreply.github.com",
-          "time": 1793131437000
+          "time": 1793134692000
         },
         "branch": "main"
       },
@@ -48,19 +48,19 @@
             "buildHref": "undefined//actions/runs/"
           },
           "gitCommit": {
-            "shortHash": "8cd97377",
-            "hash": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-            "subject": "fix(175-06): align safe replay regression contracts",
-            "body": "fix(175-06): align safe replay regression contracts\n\nUpdate Phase 170 replay journey assertions to the current retained-error and toast contract. Refresh component fixtures and source guards for the shared dialog and remove the helper whose final caller moved to toast-event proof.\n",
+            "shortHash": "fc262b98",
+            "hash": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+            "subject": "fix(175): assert stale auth recovery copy",
+            "body": "fix(175): assert stale auth recovery copy\n",
             "author": {
               "name": "szTheory",
               "email": "szTheory@users.noreply.github.com",
-              "time": 1793131437000
+              "time": 1793134692000
             },
             "committer": {
               "name": "szTheory",
               "email": "szTheory@users.noreply.github.com",
-              "time": 1793131437000
+              "time": 1793134692000
             },
             "branch": "main"
           },
@@ -98,57 +98,57 @@
       "command": "MIX_ENV=test mix run --no-halt -e \"MailglassAdmin.TestSupport.OperatorBrowserServer.run!()\"",
       "cwd": "/workspace/mailglass_admin",
       "env": {
-        "STORYBOOK_AXE_EXECUTION_TOKEN": "mailglass-evidence-20261027200450-16960-29407-warm",
+        "STORYBOOK_AXE_EXECUTION_TOKEN": "mailglass-evidence-20261027205816-4815-29177-warm",
         "DEMO_PAGE_CONTROLLER_BEAM_SHA256": "6b4ef6f5ede3936c67234b3a55e7c04ded16ced493ee810fc276fbd367d0e927",
-        "PHASE174_RUN_ID": "mailglass-evidence-20261027200450-16960-29407-warm",
-        "PHASE174_SOURCE_REVISION": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+        "PHASE174_SOURCE_REVISION": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+        "PHASE174_RUN_ID": "mailglass-evidence-20261027205816-4815-29177-warm",
         "CI": "true",
-        "HOSTNAME": "1887345562d0",
+        "HOSTNAME": "07cf1ab9baf4",
         "PHASE174_HOST_UID": "501",
         "PHASE174_CONDITION": "warm",
         "HOME": "/root",
         "GIT_CONFIG_COUNT": "1",
         "OLDPWD": "/workspace",
-        "STORYBOOK_AXE_REPORT": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm/axe.json",
-        "STORYBOOK_SOURCE_REVISION": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+        "STORYBOOK_SOURCE_REVISION": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+        "STORYBOOK_AXE_REPORT": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm/axe.json",
+        "STORYBOOK_AXE_RUN_ID": "mailglass-evidence-20261027205816-4815-29177-warm",
         "DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256": "8d54ed8c4442c6fffaa0363451e48c4879345400eb004c3f32c109450a5a45d4",
-        "STORYBOOK_AXE_RUN_ID": "mailglass-evidence-20261027200450-16960-29407-warm",
-        "DEMO_BROWSER_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm",
+        "DEMO_BROWSER_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm",
         "PHASE175_ENABLED": "true",
-        "DEMO_EVIDENCE_RESET_TOKEN": "avbrYmKMwioZX8mnQM3ZlQjqWO3l6YjjX9qfLuBV2iQ",
+        "DEMO_EVIDENCE_RESET_TOKEN": "5jBSNVdIvgJmdH7L6Vp_-Si0M3Y8MuSFLbX1lcJ1J4M",
         "RUNNER_OS": "",
         "PHASE174_JOB_ID": "local",
         "BROWSER_SERVER_PORT": "4101",
-        "npm_config_cache": "/cache/npm",
-        "DEMO_EVIDENCE_RUN_ID": "mailglass-evidence-20261027200450-16960-29407",
+        "DEMO_EVIDENCE_RUN_ID": "mailglass-evidence-20261027205816-4815-29177",
         "GITHUB_RUN_ID": "",
+        "npm_config_cache": "/cache/npm",
         "GIT_CONFIG_VALUE_0": "/workspace",
         "POSTGRES_PASSWORD": "postgres",
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-        "PHASE174_SOURCE_DIGEST": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
-        "PLAYWRIGHT_BROWSERS_PATH": "/cache/playwright",
         "RUNNER_ARCH": "",
-        "PHASE175_SOURCE_DIGEST": "77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b",
-        "DEMO_CANDIDATE_REVISION": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
+        "PLAYWRIGHT_BROWSERS_PATH": "/cache/playwright",
+        "PHASE174_SOURCE_DIGEST": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
+        "PHASE175_SOURCE_DIGEST": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb",
+        "DEMO_CANDIDATE_REVISION": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
         "POSTGRES_HOST": "demo_db",
         "LANG": "C.UTF-8",
         "POSTGRES_USER": "postgres",
         "GITHUB_REPOSITORY": "",
         "RUNNER_NAME": "",
+        "STORYBOOK_SOURCE_DIGEST": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
         "GITHUB_ACTIONS": "false",
-        "STORYBOOK_SOURCE_DIGEST": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
-        "PHASE174_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027200450-16960-29407/phase174/warm",
+        "PHASE174_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase174/warm",
         "GIT_CONFIG_KEY_0": "safe.directory",
-        "GITHUB_JOB": "",
+        "PHASE175_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase175/warm",
         "PHASE174_HOST_GID": "20",
-        "PHASE175_EVIDENCE_DIR": "/workspace/.planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/warm",
+        "GITHUB_JOB": "",
         "STORYBOOK_BASE_URL": "http://demo:4015",
-        "GITHUB_RUN_ATTEMPT": "",
-        "DEMO_BASE_URL": "http://demo:4015",
         "DEMO_CANDIDATE_DIRTY": "true",
+        "DEMO_BASE_URL": "http://demo:4015",
         "GITHUB_SHA": "",
+        "GITHUB_RUN_ATTEMPT": "",
         "PWD": "/workspace/mailglass_admin",
-        "DEMO_EVIDENCE_PROJECT_ID": "mailglass-evidence-20261027200450-16960-29407",
+        "DEMO_EVIDENCE_PROJECT_ID": "mailglass-evidence-20261027205816-4815-29177",
         "BROWSERSLIST_IGNORE_OLD_DATA": "true",
         "MIX_ENV": "test",
         "MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH": "test-results/operator-browser-server.ndjson"
@@ -190,12 +190,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1593,
+                      "duration": 1588,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:11:57.630Z",
+                      "startTime": "2026-10-27T21:05:16.611Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -224,12 +224,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1324,
+                      "duration": 1362,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:11:59.259Z",
+                      "startTime": "2026-10-27T21:05:18.241Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -258,12 +258,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3133,
+                      "duration": 3134,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:12:00.589Z",
+                      "startTime": "2026-10-27T21:05:19.608Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -292,12 +292,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4188,
+                      "duration": 4391,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:12:03.729Z",
+                      "startTime": "2026-10-27T21:05:22.748Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -307,7 +307,7 @@
               ],
               "id": "50593df043d465c1094d-a750f39280b3fcc333cc",
               "file": "flows.spec.js",
-              "line": 1917,
+              "line": 1916,
               "column": 3
             },
             {
@@ -326,12 +326,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 687,
+                      "duration": 665,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:12:07.922Z",
+                      "startTime": "2026-10-27T21:05:27.145Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -341,7 +341,7 @@
               ],
               "id": "50593df043d465c1094d-e658f492a72f9905378a",
               "file": "flows.spec.js",
-              "line": 2113,
+              "line": 2112,
               "column": 3
             },
             {
@@ -360,12 +360,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 513,
+                      "duration": 449,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-27T20:12:08.613Z",
+                      "startTime": "2026-10-27T21:05:27.815Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -375,7 +375,7 @@
               ],
               "id": "50593df043d465c1094d-f1d2124b88decd18bab3",
               "file": "flows.spec.js",
-              "line": 2187,
+              "line": 2186,
               "column": 3
             }
           ]
@@ -404,12 +404,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1404,
+                  "duration": 1417,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-27T20:12:09.143Z",
+                  "startTime": "2026-10-27T21:05:28.283Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -438,12 +438,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1052,
+                  "duration": 917,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-27T20:12:10.553Z",
+                  "startTime": "2026-10-27T21:05:29.704Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -472,12 +472,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1752,
+                  "duration": 1837,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-27T20:12:11.611Z",
+                  "startTime": "2026-10-27T21:05:30.627Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -506,12 +506,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2049,
+                  "duration": 2137,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-27T20:12:13.369Z",
+                  "startTime": "2026-10-27T21:05:32.470Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -529,8 +529,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-27T20:11:56.049Z",
-    "duration": 19541.024,
+    "startTime": "2026-10-27T21:05:14.913Z",
+    "duration": 19871.481,
     "expected": 10,
     "skipped": 0,
     "unexpected": 0,

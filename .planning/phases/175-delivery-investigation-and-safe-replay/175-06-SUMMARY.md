@@ -123,7 +123,7 @@ coverage:
     description: "Phase 175 receipts reject missing, zero, malformed, duplicate, unexpected, skipped, failed, stale, and wrong-source evidence."
     verification:
       - kind: unit
-        ref: "node --test scripts/check_phase175_evidence.test.cjs (5 passed, 0 failed, 0 skipped)"
+        ref: "node --test scripts/check_phase175_evidence.test.cjs (6 passed, 0 failed, 0 skipped)"
         status: pass
       - kind: other
         ref: "node scripts/check_phase175_evidence.cjs --evidence-dir .planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175 --pilot"
@@ -152,36 +152,36 @@ metrics:
 
 - Extended the existing successful Demo replay proof to assert its accessible actual-result toast and the persisted no-change audit outcome, preserving the existing reset-token, grant, and authorization-actions guards.
 - Added composable `--phase175` selection to the isolated Phase 174 evidence runner, source and asset receipts, and a narrow checker that requires exact nonzero expected/executed IDs and rejects missing, malformed, duplicate, unexpected, skipped, failed, stale-source, and wrong-source evidence.
-- Wired five checker tests into the existing regression gate and the existing advisory Demo Browser Evidence CI job without changing required-context meanings or adding dependencies.
+- Wired six checker tests into the existing regression gate and the existing advisory Demo Browser Evidence CI job without changing required-context meanings or adding dependencies.
 - Retained the final current-source cold/warm evidence, three historical Axe records, exact selected/executed inventories, screenshots, URLs, assets, and cleanup receipts; mapped all eight assigned requirements, 31 edge rows, and 29 UI rows to proof.
 - Recorded reproduction steps, source identity, local attributable runtime, CI placement, database posture, and evidence limits in the review and automation documents.
 
 ## Current-Source Evidence
 
-The final combined run is `mailglass-evidence-20261027200450-16960-29407`, produced at source revision `8cd973774c293cc3d95b1e8f9be489b5e4ca5caa`. Its Phase 175 source digest is `77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b`; the Phase 174 digest is `6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06`. The post-run documentation commit does not modify any selected source or asset input, and the retained receipt checker validates their current bytes.
+The latest combined run is `mailglass-evidence-20261027205816-4815-29177`, produced at source revision `fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8`. Its Phase 175 source digest is `0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb`; the Phase 174 digest is `7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae`. The retained receipt checker validates the copied, source-bound cold/warm reports and decoded screenshot bytes.
 
 Both cold and warm conditions executed all declared cases once: Demo 4/4, connected Admin 10/10, fidelity 10/10, and Axe 26/26. Delivery and Inbound each completed six layout cases across 320, 375, 768, 1280, and 1440 CSS-pixel widths, including actual 200% browser zoom. The combined runner exited 0, validated both conditions, removed the owned Compose project and volumes, and retained the final `execution.json` as valid.
 
 Current cold and warm Axe reports each have 0 violations and 116 incomplete findings, with 0 untriaged findings. These findings remain incomplete and are not described as a clean accessibility pass. The historical 114 report, the failed 116 report with two untriaged fingerprints, and an independent 116 report remain separate under `artifacts/phase175/axe-history/`. The failed report contains exactly two additions over the earlier 114: `color-contrast` on `.min-w-0:nth-child(2) > .mono.mt-1.break-all` for `delivery-investigation-northstar-normal`, state `normal-permitted-review`, in Light and Dark. Phase 175-01 made grouped technical details visible by default, exposing the provider event ID. Independent rendered sampling measured 17.3939:1 Light and 14.0910:1 Dark at 16px/400 against a 4.5:1 minimum; these samples explain the triage and do not change Axe's incomplete result.
 
-The story route is `http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`. The connected cold and warm Account routes, production CSS URL and hash, all six font URLs and hashes, inline `about:srcdoc` mode/origin, source hashes, and exact case IDs are retained in the cold/warm reports. The CSS hash is `4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359`; every font face loaded with the expected hash.
+The story route is `http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`. The connected cold and warm Account routes, production CSS URL and hash, all six font URLs and hashes, inline `about:srcdoc` mode/origin, source hashes, exact case IDs, and 320px/1440px/200%-zoom screenshots are retained in the cold/warm reports. The CSS hash is `25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00`; every font face loaded with the expected hash.
 
 ## Verification
 
 - `bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` — exit 0; cold/warm scopes complete, exact expected cases executed, Axe incompletes accounted separately, teardown verified.
 - `node scripts/check_phase175_evidence.cjs --evidence-dir .planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175 --pilot` — exit 0; final receipt valid against current selected-source files.
-- `node --test scripts/check_phase175_evidence.test.cjs` — 5 passed, 0 failed, 0 skipped.
+- `node --test scripts/check_phase175_evidence.test.cjs` — 6 passed, 0 failed, 0 skipped.
 - `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/auth_actions_contract_test.exs` — 353 tests, 0 failures.
-- `bash scripts/gsd-regression-gate.sh` — passed Node contracts 40/40, core renderer 81/81, Admin LiveView/component 658 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview 31/31.
+- `bash scripts/gsd-regression-gate.sh` — passed Node contracts 41/41, core renderer 81/81, Admin LiveView/component 661 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview 31/31.
 - `git diff --check` — passed.
 
 The current durable Demo no-change case ran in both cold and warm selected reports and asserted the accessible toast plus persisted actual audit result. The browser test dependency install/download occurred in the isolated evidence runtime; no package or version changes were made.
 
 ## Runtime, Placement, and Limits
 
-The runner attributes 45,255 ms (0.75425 minutes) to the incremental Phase 175 selection: 24,219 ms cold, 20,937 ms warm, plus checker overhead. This is local incremental wall time, not total combined-workflow time or a hosted runner-minute measurement. It is within the provisional five-minute added PR wall allowance; the provisional ten-minute runner limit has not been measured in hosted CI. The existing `Demo Browser Evidence (Docker Compose / Chromium)` job runs the combined selector and uploads its artifact, but remains advisory and outside required branch-protection contexts. No hosted run or hosted cost is claimed.
+The runner attributes 42,290 ms (0.70483 minutes) to the incremental Phase 175 selection: 20,689 ms cold and 21,471 ms warm, plus checker overhead. This is local incremental wall time, not total combined-workflow time or a hosted runner-minute measurement. It is within the provisional five-minute added PR wall allowance; the provisional ten-minute runner limit has not been measured in hosted CI. The existing `Demo Browser Evidence (Docker Compose / Chromium)` job runs the combined selector and uploads its artifact, but remains advisory and outside required branch-protection contexts. No hosted run or hosted cost is claimed.
 
-The default Demo database had a migration ledger but lacked the Demo schema, so the run used the isolated `mailglass_demo_phase175_05` database. The default database was not repaired or modified. Teardown completed in 2,286 ms and removed owned volumes. Evidence covers the declared Chromium, theme, state, viewport, and selected-action inventory; it does not establish support for all browsers, operating systems, devices, or every viewport/theme combination. No provider delivery is claimed by the durable no-change toast or audit result.
+The default Demo database had a migration ledger but lacked the Demo schema, so the run used the isolated `mailglass_demo_phase175_05` database. The default database was not repaired or modified. Teardown completed in 2,265 ms and removed owned volumes. Evidence covers the declared Chromium, theme, state, viewport, and selected-action inventory; it does not establish support for all browsers, operating systems, devices, or every viewport/theme combination. No provider delivery is claimed by the durable no-change toast or audit result.
 
 Machine-observable acceptance closes under METHODOLOGY D-52 without owner UAT. Eight descriptor-less prohibition-recall flags remain `flagged-unverified`; no check descriptor was invented. Final STORY-07/UIQ ownership remains in Phase 178. No merge, release, publication, or deployment was performed.
 
@@ -220,7 +220,7 @@ The retained current report schema and current source manifest required narrow t
 ## TDD Gate Compliance
 
 - **RED:** `artifacts/phase175/tdd-red-175-06-02.json` preserves the target TAP assertion failure: the validator scaffold did not yet reject an empty expected case set.
-- **GREEN:** `c6037ef7` implemented the Phase 175 receipt checker; the final five checker tests pass against representative actual cold/warm reports and negative controls.
+- **GREEN:** `c6037ef7` implemented the Phase 175 receipt checker; six checker tests now pass, including actual cold/warm receipt shapes, PNG decode, and negative controls.
 - **REFACTOR:** The checker and receipt contracts were aligned with the actual source/asset manifests and report shape without relaxing missing, skipped, failed, zero-case, or wrong-source rejection.
 - Task 3 adds documentation and evidence; all current source suites and the full regression gate passed.
 

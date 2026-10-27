@@ -2,11 +2,11 @@
   "schema_version": "phase175-execution.v1",
   "phase": 175,
   "valid": true,
-  "run_id": "mailglass-evidence-20261027200450-16960-29407",
+  "run_id": "mailglass-evidence-20261027205816-4815-29177",
   "mode": "local",
   "pilot": true,
-  "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-  "source_digest": "77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b",
+  "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+  "source_digest": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb",
   "source": {
     "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
     "input_paths": [
@@ -22,9 +22,15 @@
       "mailglass_admin/e2e/support/storybook-axe.test.cjs",
       "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
       "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
       "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
       "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+      "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex",
       "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
       "mailglass_admin/mix.lock",
       "mailglass_admin/package-lock.json",
       "mailglass_admin/package.json",
@@ -102,8 +108,8 @@
       },
       {
         "path": "mailglass_admin/e2e/flows.spec.js",
-        "bytes": 131152,
-        "sha256": "2b9572845a3b2833ec8bea23d8f61e4c4f9ad8e605bf4a50e5c3d8da6c9f48e8"
+        "bytes": 131270,
+        "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
       },
       {
         "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
@@ -141,9 +147,14 @@
         "sha256": "e04aa4d0043d6233eef9ee963d3f66f052aac37f1b50be1f602e66ea5463695d"
       },
       {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+        "bytes": 6426,
+        "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+      },
+      {
         "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
-        "bytes": 10713,
-        "sha256": "4d90a1892db27d86d7a75f36fc12d59b6eb7523fefff94d6459865000e3cbd5c"
+        "bytes": 10715,
+        "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
       },
       {
         "path": "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
@@ -151,9 +162,34 @@
         "sha256": "d990223fba0b18539bb9bcb20bba9dcd60928ba89a357f425775eaab793b74a1"
       },
       {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+        "bytes": 6250,
+        "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+        "bytes": 101508,
+        "sha256": "7be4f03edf187893b4725087b381f937782a3b7a1fecf08cff1ac9786b848959"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex",
+        "bytes": 1548,
+        "sha256": "463877703385a64b4d87c8aafc0cf77efd0c7062d66ff705c1e9067522843387"
+      },
+      {
         "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
         "bytes": 9324,
         "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex",
+        "bytes": 10104,
+        "sha256": "c00810694caa4c60924e46fcf9040fa79e28ddace0d40bb207a6669fb7edcb4a"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+        "bytes": 12931,
+        "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
       },
       {
         "path": "mailglass_admin/mix.lock",
@@ -182,8 +218,8 @@
       },
       {
         "path": "mailglass_admin/priv/static/app.css",
-        "bytes": 137809,
-        "sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359"
+        "bytes": 137731,
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
       },
       {
         "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
@@ -272,8 +308,8 @@
       },
       {
         "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
-        "bytes": 56832,
-        "sha256": "68bb7e9f5547ae8eeaf5ee321e9d518442ff853d9880ea7f25280fea1a8a4bfd"
+        "bytes": 58022,
+        "sha256": "34199698f894948626ecaf11653f10442d46a40521d6963f3626919a1d9d4c59"
       },
       {
         "path": "reference/demo_app/assets/e2e/storybook-hooks.spec.js",
@@ -377,13 +413,13 @@
       },
       {
         "path": "scripts/check_phase175_evidence.cjs",
-        "bytes": 30471,
-        "sha256": "154bbfbe822e280e6732980dc5477369faa91a67cb184ab0b183320c963529a7"
+        "bytes": 38272,
+        "sha256": "adea2a64be3bdc73755001e32858d244dc2494cd96242a0983a6f5c0fa09bb3a"
       },
       {
         "path": "scripts/check_phase175_evidence.test.cjs",
-        "bytes": 15160,
-        "sha256": "c3fae6733afa5bde5b7ae13f0eb5984f864316c738e209de9540fbef589821e6"
+        "bytes": 20431,
+        "sha256": "e3daa394f88b7874412e3d21ea17446ce45d0af17a14aa7b566dc4f7afbe19d0"
       },
       {
         "path": "scripts/ci_green_policy.sh",
@@ -412,8 +448,8 @@
       },
       {
         "path": "scripts/run_demo_browser_evidence.sh",
-        "bytes": 38724,
-        "sha256": "6cf0979ff7c7c8ed02cba5d83d0bdf9f30a7866d25c222580ca23bae68f68854"
+        "bytes": 39075,
+        "sha256": "997b489467f3deb66484531acb67290d2f2a657384596a23c051843f25cef512"
       },
       {
         "path": "test/fixtures/phase174-overstated-review.cjs",
@@ -421,31 +457,31 @@
         "sha256": "c628af8272d4c0880008a26de7c7063e8159acd47d2e639065408ee9d9cc2c72"
       }
     ],
-    "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-    "source_digest": "77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b"
+    "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+    "source_digest": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb"
   },
-  "phase174_source_digest": "6ee30730cda7c54ebce77fce0561bf6b6f729afb841f326670cb607345435a06",
+  "phase174_source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
   "serial": true,
   "conditions": [
     {
       "condition": "cold",
-      "run_id": "mailglass-evidence-20261027200450-16960-29407-cold",
-      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-      "source_digest": "77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b",
+      "run_id": "mailglass-evidence-20261027205816-4815-29177-cold",
+      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+      "source_digest": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb",
       "expected_case_ids": {
         "demo": [
           "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
           "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
           "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
-          "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
+          "storybook-fidelity.spec.js:862:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
         ],
         "admin": [
           "flows.spec.js:1586:Phase 175 Delivery tracer",
           "flows.spec.js:1689:Phase 175 Delivery recovery",
           "flows.spec.js:1773:Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible",
-          "flows.spec.js:1917:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
-          "flows.spec.js:2113:Phase 175 suppression refresh",
-          "flows.spec.js:2187:Phase 175 suppression policy",
+          "flows.spec.js:1916:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
+          "flows.spec.js:2112:Phase 175 suppression refresh",
+          "flows.spec.js:2186:Phase 175 suppression policy",
           "phase175-inbound.spec.js:121:Phase 175 Inbound full: Escape closes review and returns focus to its detail trigger",
           "phase175-inbound.spec.js:132:Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context",
           "phase175-inbound.spec.js:176:Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom",
@@ -497,15 +533,15 @@
           "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
           "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
           "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
-          "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
+          "storybook-fidelity.spec.js:862:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
         ],
         "admin": [
           "flows.spec.js:1586:Phase 175 Delivery tracer",
           "flows.spec.js:1689:Phase 175 Delivery recovery",
           "flows.spec.js:1773:Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible",
-          "flows.spec.js:1917:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
-          "flows.spec.js:2113:Phase 175 suppression refresh",
-          "flows.spec.js:2187:Phase 175 suppression policy",
+          "flows.spec.js:1916:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
+          "flows.spec.js:2112:Phase 175 suppression refresh",
+          "flows.spec.js:2186:Phase 175 suppression policy",
           "phase175-inbound.spec.js:121:Phase 175 Inbound full: Escape closes review and returns focus to its detail trigger",
           "phase175-inbound.spec.js:132:Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context",
           "phase175-inbound.spec.js:176:Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom",
@@ -568,9 +604,9 @@
       "fidelity": {
         "story_url": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
         "iframe_url": "about:srcdoc",
-        "connected_url": "http://demo:4015/ops/mail?delivery_id=01a17ef9-72a1-750f-8742-94635d40aa92&tenant_id=northstar&window_hours=168",
-        "stylesheet_url": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "stylesheet_sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "connected_url": "http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168",
+        "stylesheet_url": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+        "stylesheet_sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
         "font_urls": [
           "http://demo:4015/dev/mail/fonts/ibm-plex-mono-400.woff2",
           "http://demo:4015/dev/mail/fonts/ibm-plex-mono-700.woff2",
@@ -615,31 +651,31 @@
         }
       },
       "timings_ms": {
-        "demo_scan": 91830,
-        "admin_axe_scan": 46334,
-        "admin_operator": 24219
+        "demo_scan": 93337,
+        "admin_axe_scan": 39143,
+        "admin_operator": 20689
       },
-      "added_cost_ms": 24219
+      "added_cost_ms": 20689
     },
     {
       "condition": "warm",
-      "run_id": "mailglass-evidence-20261027200450-16960-29407-warm",
-      "source_revision": "8cd973774c293cc3d95b1e8f9be489b5e4ca5caa",
-      "source_digest": "77fdd45e830c44b07e1062af584414eb4d2c07f2747a7607aa47866cbf81153b",
+      "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
+      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+      "source_digest": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb",
       "expected_case_ids": {
         "demo": [
           "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
           "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
           "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
-          "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
+          "storybook-fidelity.spec.js:862:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
         ],
         "admin": [
           "flows.spec.js:1586:Phase 175 Delivery tracer",
           "flows.spec.js:1689:Phase 175 Delivery recovery",
           "flows.spec.js:1773:Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible",
-          "flows.spec.js:1917:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
-          "flows.spec.js:2113:Phase 175 suppression refresh",
-          "flows.spec.js:2187:Phase 175 suppression policy",
+          "flows.spec.js:1916:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
+          "flows.spec.js:2112:Phase 175 suppression refresh",
+          "flows.spec.js:2186:Phase 175 suppression policy",
           "phase175-inbound.spec.js:121:Phase 175 Inbound full: Escape closes review and returns focus to its detail trigger",
           "phase175-inbound.spec.js:132:Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context",
           "phase175-inbound.spec.js:176:Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom",
@@ -691,15 +727,15 @@
           "delivery-investigation.spec.js:128:Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
           "delivery-investigation.spec.js:23:Phase 175 retained Delivery scenario inventory and production composition",
           "outbound-replay.spec.js:19:outbound replay from the demo completes and records a durable no-change outcome",
-          "storybook-fidelity.spec.js:859:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
+          "storybook-fidelity.spec.js:862:Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom"
         ],
         "admin": [
           "flows.spec.js:1586:Phase 175 Delivery tracer",
           "flows.spec.js:1689:Phase 175 Delivery recovery",
           "flows.spec.js:1773:Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible",
-          "flows.spec.js:1917:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
-          "flows.spec.js:2113:Phase 175 suppression refresh",
-          "flows.spec.js:2187:Phase 175 suppression policy",
+          "flows.spec.js:1916:Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
+          "flows.spec.js:2112:Phase 175 suppression refresh",
+          "flows.spec.js:2186:Phase 175 suppression policy",
           "phase175-inbound.spec.js:121:Phase 175 Inbound full: Escape closes review and returns focus to its detail trigger",
           "phase175-inbound.spec.js:132:Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context",
           "phase175-inbound.spec.js:176:Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom",
@@ -762,9 +798,9 @@
       "fidelity": {
         "story_url": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
         "iframe_url": "about:srcdoc",
-        "connected_url": "http://demo:4015/ops/mail?delivery_id=01a17efc-8530-7084-a8b2-3fa8f7f10c69&tenant_id=northstar&window_hours=168",
-        "stylesheet_url": "http://demo:4015/dev/mail/css-3cfaf2ff0d2d4bb2c2836397ce8fa6c3",
-        "stylesheet_sha256": "4f971db6dd8efa8d5b8af9f3ab27aac5f5abd6b3ac8cda6db03dc8af603d1359",
+        "connected_url": "http://demo:4015/ops/mail?delivery_id=01a17f2d-45da-7056-bfe7-957135e0b1a7&tenant_id=northstar&window_hours=168",
+        "stylesheet_url": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+        "stylesheet_sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
         "font_urls": [
           "http://demo:4015/dev/mail/fonts/ibm-plex-mono-400.woff2",
           "http://demo:4015/dev/mail/fonts/ibm-plex-mono-700.woff2",
@@ -809,19 +845,19 @@
         }
       },
       "timings_ms": {
-        "demo_scan": 93873,
-        "admin_axe_scan": 40951,
-        "admin_operator": 20937
+        "demo_scan": 93527,
+        "admin_axe_scan": 43001,
+        "admin_operator": 21471
       },
-      "added_cost_ms": 20937
+      "added_cost_ms": 21471
     }
   ],
   "cost": {
-    "observed_phase175_added_ms": 45255,
-    "observed_phase175_added_minutes": 0.75425,
+    "observed_phase175_added_ms": 42290,
+    "observed_phase175_added_minutes": 0.7048333333333333,
     "per_condition_admin_operator_ms": {
-      "cold": 24219,
-      "warm": 20937
+      "cold": 20689,
+      "warm": 21471
     },
     "provisional_pr_wall_minutes": 5,
     "provisional_runner_minutes": 10,
@@ -830,8 +866,8 @@
   },
   "cleanup": {
     "completed": true,
-    "compose_project": "mailglass-evidence-20261027200450-16960-29407",
-    "teardown_ms": 2286,
+    "compose_project": "mailglass-evidence-20261027205816-4815-29177",
+    "teardown_ms": 2265,
     "volumes_removed": true
   }
 }
