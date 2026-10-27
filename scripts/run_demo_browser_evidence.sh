@@ -355,6 +355,15 @@ if [ "${PHASE175_ENABLED:-false}" = true ]; then
   phase175_operator_ms=$(( $(now_ms) - mark ))
   cp "$demo_evidence_dir/playwright-report.json" "$PHASE175_EVIDENCE_DIR/demo-playwright-report.json"
   cp "$PHASE174_EVIDENCE_DIR/axe.json" "$PHASE175_EVIDENCE_DIR/axe.json"
+  for screenshot in \
+    delivery-investigation-320-dark.png \
+    delivery-investigation-1440-dark.png \
+    delivery-investigation-200-browser-zoom.png; do
+    if [ ! -s "$PHASE175_EVIDENCE_DIR/$screenshot" ]; then
+      echo "Phase 175 fidelity screenshot is missing from this run's evidence directory: $screenshot" >&2
+      exit 1
+    fi
+  done
   if [ -d /workspace/mailglass_admin/test-results/phase175-layout ]; then
     cp -a /workspace/mailglass_admin/test-results/phase175-layout "$PHASE175_EVIDENCE_DIR/"
     cp /workspace/mailglass_admin/test-results/phase175-layout/delivery-layout.json "$PHASE175_EVIDENCE_DIR/delivery-layout.json"

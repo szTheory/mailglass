@@ -3,6 +3,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const zlib = require("node:zlib");
 const { execFileSync } = require("node:child_process");
 const test = require("node:test");
 const checker174 = require("./check_phase174_evidence.cjs");
@@ -12,12 +13,69 @@ const checker = require("./check_phase175_evidence.cjs");
 const ROOT = path.resolve(__dirname, "..");
 const REVISION = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
 const hash = (bytes, algorithm = "sha256") => crypto.createHash(algorithm).update(bytes).digest("hex");
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const FIDELITY_SCREENSHOTS = [
+  "delivery-investigation-320-dark.png",
+  "delivery-investigation-1440-dark.png",
+  "delivery-investigation-200-browser-zoom.png"
+];
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function fixturePng() {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(1, 0);
+  header.writeUInt32BE(1, 4);
+  header[8] = 8;
+  header[9] = 2;
+  const chunk = (type, data) => {
+    const typeBytes = Buffer.from(type, "ascii");
+    const value = Buffer.alloc(12 + data.length);
+    value.writeUInt32BE(data.length, 0);
+    typeBytes.copy(value, 4);
+    data.copy(value, 8);
+    value.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 8 + data.length);
+    return value;
+  };
+  return Buffer.concat([
+    PNG_SIGNATURE,
+    chunk("IHDR", header),
+    chunk("IDAT", zlib.deflateSync(Buffer.from([0, 255, 0, 0]))),
+    chunk("IEND", Buffer.alloc(0))
+  ]);
+}
+
+function corruptPngImageData(png) {
+  const chunks = [];
+  let offset = PNG_SIGNATURE.length;
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString("ascii", offset + 4, offset + 8);
+    const data = type === "IDAT" ? Buffer.from("not-zlib") : png.subarray(offset + 8, offset + 8 + length);
+    const typeBytes = Buffer.from(type, "ascii");
+    const chunk = Buffer.alloc(12 + data.length);
+    chunk.writeUInt32BE(data.length, 0);
+    typeBytes.copy(chunk, 4);
+    data.copy(chunk, 8);
+    chunk.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 8 + data.length);
+    chunks.push(chunk);
+    offset += length + 12;
+  }
+  return Buffer.concat([PNG_SIGNATURE, ...chunks]);
+}
 
 function workspaceTemp() {
   return fs.mkdtempSync(path.join(ROOT, ".phase175-checker-test-"));
 }
 
-function phase175FidelityReceipt(root, runRevision = REVISION) {
+function phase175FidelityReceipt(evidenceDir, runRevision = REVISION) {
   const files = checker.fidelitySourcePaths().map(relativePath => {
     const bytes = fs.readFileSync(path.join(ROOT, relativePath));
     return { path: relativePath, bytes: bytes.byteLength, sha256: hash(bytes) };
@@ -34,9 +92,9 @@ function phase175FidelityReceipt(root, runRevision = REVISION) {
     const name = path.basename(relativePath);
     return { path: name, url: `${origin}/dev/mail/fonts/${name}`, status: 200, contentType: "font/woff2", bytes: bytes.byteLength, sha256: hash(bytes) };
   });
-  const screenshotDir = path.relative(ROOT, root);
-  fs.writeFileSync(path.join(root, "zoom.png"), "synthetic screenshot bytes");
-  fs.writeFileSync(path.join(root, "responsive.png"), "synthetic screenshot bytes");
+  const screenshotDir = path.relative(ROOT, evidenceDir);
+  const screenshotPaths = FIDELITY_SCREENSHOTS.map(filename => `${screenshotDir}/${filename}`);
+  for (const filename of FIDELITY_SCREENSHOTS) fs.writeFileSync(path.join(evidenceDir, filename), fixturePng());
   const executedCaseIds = checker.FIDELITY_CASE_IDS;
   const detail = {
     caseId: "fidelity:delivery-investigation:long-unicode",
@@ -61,8 +119,12 @@ function phase175FidelityReceipt(root, runRevision = REVISION) {
       loadedFaces: fonts.map((item, index) => ({ family: ["Inter", "Inter", "Inter Tight", "Inter Tight", "IBM Plex Mono", "IBM Plex Mono"][index], weight: [400, 700, 400, 700, 400, 700][index], status: "loaded" }))
     },
     hooks: { storyHostConnected: true, quickViewClosed: true, exactFocusReturnId: "delivery-opener" },
-    zoom: { tabZoom: { factor: 2 }, effective: { viewportWidth: 320, documentWidth: 320 }, screenshot: `${screenshotDir}/zoom.png` },
-    screenshots: [`${screenshotDir}/responsive.png`]
+    zoom: {
+      tabZoom: { factor: 2 },
+      effective: { viewportWidth: 320, documentWidth: 320 },
+      screenshot: `${screenshotDir}/${FIDELITY_SCREENSHOTS[2]}`
+    },
+    screenshots: screenshotPaths
   };
   return { source, selectedCaseIds: executedCaseIds, executedCaseIds, cases: [detail] };
 }
@@ -126,7 +188,7 @@ function cleanEvidence() {
   const files = {
     "demo-playwright-report.json": playwrightReport(checker.DEMO_CASES, "assets/e2e"),
     "admin-playwright-report.json": playwrightReport(checker.ADMIN_CASES, "e2e"),
-    "fidelity.json": phase175FidelityReceipt(root),
+    "fidelity.json": phase175FidelityReceipt(conditionDir),
     "axe.json": axeReport(`${runId}-single`, REVISION, phase174Source.source_digest),
     "runtime.json": { condition: "single", source_revision: REVISION, source_digest: source.source_digest, admin_operator_ms: 500, admin_operator_exit_code: 0, compose_project: runId, timings_ms: { admin_operator: 500 } },
     "delivery-layout.json": layoutReceipt("delivery"),
@@ -165,22 +227,81 @@ test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes",
   try {
     assert.ok(checker.fidelitySourcePaths().includes("mailglass_admin/priv/static/hooks.js"));
     const valid = phase175FidelityReceipt(temp);
-    assert.equal(checker.validateFidelityReceipt(valid, { root: ROOT, revision: REVISION }).executed_case_ids.length, 10);
+    assert.equal(checker.validateFidelityReceipt(valid, { root: ROOT, revision: REVISION, evidenceDir: temp }).executed_case_ids.length, 10);
     const wrongFrameOrigin = structuredClone(valid);
     wrongFrameOrigin.cases[0].urls.storyIframeParentOrigin = "null";
-    assert.throws(() => checker.validateFidelityReceipt(wrongFrameOrigin, { root: ROOT, revision: REVISION }), /iframe parent access/);
+    assert.throws(() => checker.validateFidelityReceipt(wrongFrameOrigin, { root: ROOT, revision: REVISION, evidenceDir: temp }), /iframe parent access/);
     const missingInlineSource = structuredClone(valid);
     delete missingInlineSource.cases[0].urls.storyIframeSrcdocSha256;
-    assert.throws(() => checker.validateFidelityReceipt(missingInlineSource, { root: ROOT, revision: REVISION }), /inline iframe source proof/);
+    assert.throws(() => checker.validateFidelityReceipt(missingInlineSource, { root: ROOT, revision: REVISION, evidenceDir: temp }), /inline iframe source proof/);
     const stale = structuredClone(valid);
     stale.source.revision = "0".repeat(40);
-    assert.throws(() => checker.validateFidelityReceipt(stale, { root: ROOT, revision: REVISION }), /revision is stale/);
+    assert.throws(() => checker.validateFidelityReceipt(stale, { root: ROOT, revision: REVISION, evidenceDir: temp }), /revision is stale/);
     const wrongCss = structuredClone(valid);
     wrongCss.cases[0].assets.stylesheet.url = "http://demo:4015/dev/mail/css-00000000000000000000000000000000";
-    assert.throws(() => checker.validateFidelityReceipt(wrongCss, { root: ROOT, revision: REVISION }), /bytes or version URL/);
+    assert.throws(() => checker.validateFidelityReceipt(wrongCss, { root: ROOT, revision: REVISION, evidenceDir: temp }), /bytes or version URL/);
     const wrongFont = structuredClone(valid);
     wrongFont.cases[0].assets.fonts[0].url = "http://other:4015/dev/mail/fonts/inter-400.woff2";
-    assert.throws(() => checker.validateFidelityReceipt(wrongFont, { root: ROOT, revision: REVISION }), /wrong-source/);
+    assert.throws(() => checker.validateFidelityReceipt(wrongFont, { root: ROOT, revision: REVISION, evidenceDir: temp }), /wrong-source/);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test("Phase 175 fidelity requires decoded responsive and zoom PNGs inside the current run directory", () => {
+  const temp = workspaceTemp();
+  try {
+    const evidenceDir = path.join(temp, "run-one", "phase175", "single");
+    fs.mkdirSync(evidenceDir, { recursive: true });
+    const valid = phase175FidelityReceipt(evidenceDir);
+    const options = { root: ROOT, revision: REVISION, evidenceDir };
+    assert.doesNotThrow(() => checker.validateFidelityReceipt(valid, options));
+
+    const missingInventory = structuredClone(valid);
+    missingInventory.cases[0].screenshots = missingInventory.cases[0].screenshots.filter(item => !item.endsWith("delivery-investigation-1440-dark.png"));
+    assert.throws(() => checker.validateFidelityReceipt(missingInventory, options), /screenshot inventory/);
+
+    const otherRunDir = path.join(temp, "run-two", "phase175", "single");
+    fs.mkdirSync(otherRunDir, { recursive: true });
+    for (const filename of FIDELITY_SCREENSHOTS) {
+      fs.copyFileSync(path.join(evidenceDir, filename), path.join(otherRunDir, filename));
+    }
+    const wrongRun = structuredClone(valid);
+    wrongRun.cases[0].screenshots = FIDELITY_SCREENSHOTS.map(filename => `${path.relative(ROOT, otherRunDir)}/${filename}`);
+    wrongRun.cases[0].zoom.screenshot = wrongRun.cases[0].screenshots[2];
+    assert.throws(() => checker.validateFidelityReceipt(wrongRun, options), /screenshot inventory/);
+
+    const responsivePng = path.join(evidenceDir, FIDELITY_SCREENSHOTS[0]);
+    const pngBytes = fs.readFileSync(responsivePng);
+    fs.writeFileSync(responsivePng, "arbitrary nonempty file");
+    assert.throws(() => checker.validateFidelityReceipt(valid, options), /PNG signature/);
+    fs.writeFileSync(responsivePng, corruptPngImageData(fixturePng()));
+    assert.throws(() => checker.validateFidelityReceipt(valid, options), /cannot be decoded/);
+    fs.writeFileSync(responsivePng, pngBytes);
+
+    const missingCapture = path.join(evidenceDir, FIDELITY_SCREENSHOTS[1]);
+    fs.unlinkSync(missingCapture);
+    assert.throws(() => checker.validateFidelityReceipt(valid, options), /artifact is missing/);
+    fs.writeFileSync(missingCapture, pngBytes);
+
+    const leafTarget = path.join(temp, "leaf-target.png");
+    fs.writeFileSync(leafTarget, fixturePng());
+    fs.unlinkSync(responsivePng);
+    fs.symlinkSync(leafTarget, responsivePng);
+    assert.throws(() => checker.validateFidelityReceipt(valid, options), /symlink/);
+    fs.unlinkSync(responsivePng);
+    fs.writeFileSync(responsivePng, pngBytes);
+
+    const physicalRoot = path.join(temp, "physical-run");
+    const symlinkRoot = path.join(temp, "run-alias");
+    const aliasedEvidenceDir = path.join(symlinkRoot, "phase175", "single");
+    fs.mkdirSync(path.join(physicalRoot, "phase175", "single"), { recursive: true });
+    fs.symlinkSync(physicalRoot, symlinkRoot, "dir");
+    const aliased = phase175FidelityReceipt(aliasedEvidenceDir);
+    assert.throws(
+      () => checker.validateFidelityReceipt(aliased, { root: ROOT, revision: REVISION, evidenceDir: aliasedEvidenceDir }),
+      /symlink/
+    );
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
   }

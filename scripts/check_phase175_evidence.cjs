@@ -3,6 +3,7 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const zlib = require("node:zlib");
 const { execFileSync } = require("node:child_process");
 const phase174 = require("./check_phase174_evidence.cjs");
 const { selectedCases, compareFindings } = require("../mailglass_admin/e2e/support/storybook-axe.cjs");
@@ -16,7 +17,15 @@ const MD5 = /^[0-9a-f]{32}$/;
 const PHASE175_EXTRA_SOURCE = [
   "scripts/check_phase175_evidence.cjs",
   "scripts/check_phase175_evidence.test.cjs",
+  "scripts/run_demo_browser_evidence.sh",
   "mailglass_admin/e2e/phase175-inbound.spec.js",
+  "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+  "mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex",
+  "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex",
+  "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
   "mailglass_admin/test/support/admin_bootstrap.ex",
   "mailglass_admin/test/support/operator_browser_server.ex",
   "mailglass_admin/test/support/operator_fixtures.ex"
@@ -36,9 +45,12 @@ const FIDELITY_SOURCE_FILES = [
   "mailglass_admin/priv/static/app.css",
   "mailglass_admin/priv/static/hooks.js",
   "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
+  "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
   "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
   "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
   "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
   ...[
     "inter-400.woff2", "inter-700.woff2", "inter-tight-400.woff2",
     "inter-tight-700.woff2", "ibm-plex-mono-400.woff2", "ibm-plex-mono-700.woff2"
@@ -136,6 +148,18 @@ function md5(bytes) {
   return crypto.createHash("md5").update(bytes).digest("hex");
 }
 
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const PNG_CRC32_TABLE = Uint32Array.from({ length: 256 }, (_, value) => {
+  let crc = value;
+  for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+  return crc >>> 0;
+});
+const FIDELITY_SCREENSHOTS = [
+  "delivery-investigation-320-dark.png",
+  "delivery-investigation-1440-dark.png",
+  "delivery-investigation-200-browser-zoom.png"
+];
+
 function selectedSourcePaths(root = ROOT) {
   return [...new Set([
     ...phase174.selectedSourcePaths(root),
@@ -229,17 +253,156 @@ function validateFidelitySource(source, root, revision) {
   return currentFiles;
 }
 
-function safeWorkspaceFile(root, relativePath, label) {
-  requireThat(nonempty(relativePath) && !path.isAbsolute(relativePath) && !relativePath.split(/[\\/]/).includes(".."), `${label} path is unsafe`);
-  const resolved = path.resolve(root, relativePath);
-  requireThat(resolved.startsWith(`${path.resolve(root)}${path.sep}`), `${label} path escapes workspace`);
-  const stat = fs.lstatSync(resolved);
-  requireThat(stat.isFile() && !stat.isSymbolicLink() && stat.size > 0, `${label} artifact is missing or empty`);
+function normalizedRelativePath(relativePath) {
+  return relativePath.split(/[\\/]/).join("/");
+}
+
+function safeWorkspaceDirectory(root, directoryPath, label) {
+  const workspace = path.resolve(root);
+  const directory = path.isAbsolute(directoryPath)
+    ? path.resolve(directoryPath)
+    : path.resolve(workspace, directoryPath);
+  const relative = path.relative(workspace, directory);
+  requireThat(relative && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative), `${label} escapes workspace`);
+
+  let current = workspace;
+  const components = relative.split(path.sep);
+  for (const component of components) {
+    current = path.join(current, component);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch {
+      fail(`${label} is missing: ${current}`);
+    }
+    requireThat(!stat.isSymbolicLink() && stat.isDirectory(), `${label} contains a symlink or non-directory path component: ${current}`);
+  }
+
+  return directory;
+}
+
+function safeWorkspaceFile(root, relativePath, label, { evidenceDir } = {}) {
+  requireThat(nonempty(relativePath) && !path.isAbsolute(relativePath) && !relativePath.split(/[\\/]/).some(part => part === ".." || part === "."), `${label} path is unsafe`);
+  const components = relativePath.split(/[\\/]/);
+  const workspace = path.resolve(root);
+  const resolved = path.resolve(workspace, ...components);
+  const relative = path.relative(workspace, resolved);
+  requireThat(relative && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative), `${label} path escapes workspace`);
+
+  if (evidenceDir) {
+    const runDirectory = safeWorkspaceDirectory(workspace, evidenceDir, `${label} run evidence directory`);
+    requireThat(path.dirname(resolved) === runDirectory, `${label} is outside the current run evidence directory`);
+  }
+
+  let current = workspace;
+  const pathParts = relative.split(path.sep);
+  for (let index = 0; index < pathParts.length; index += 1) {
+    current = path.join(current, pathParts[index]);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch {
+      fail(`${label} artifact is missing: ${current}`);
+    }
+    requireThat(!stat.isSymbolicLink(), `${label} path contains a symlink: ${current}`);
+    if (index < pathParts.length - 1) {
+      requireThat(stat.isDirectory(), `${label} path contains a non-directory component: ${current}`);
+    } else {
+      requireThat(stat.isFile() && stat.size > 0, `${label} artifact is missing or empty`);
+    }
+  }
+
   return resolved;
 }
 
-function validateFidelityReceipt(receipt, { root = ROOT, revision }) {
+function pngCrc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) crc = PNG_CRC32_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function validatePng(filename, label) {
+  const bytes = fs.readFileSync(filename);
+  requireThat(bytes.length >= PNG_SIGNATURE.length && bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE), `${label} does not have the PNG signature`);
+
+  let offset = PNG_SIGNATURE.length;
+  let chunkCount = 0;
+  let header;
+  let hasIdat = false;
+  let idatEnded = false;
+  let ended = false;
+  const idat = [];
+
+  while (offset < bytes.length) {
+    requireThat(offset + 12 <= bytes.length, `${label} has a truncated PNG chunk`);
+    const length = bytes.readUInt32BE(offset);
+    const type = bytes.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const chunkEnd = dataEnd + 4;
+    requireThat(/^[A-Za-z]{4}$/.test(type) && chunkEnd <= bytes.length, `${label} has an invalid PNG chunk`);
+    const chunkData = bytes.subarray(dataStart, dataEnd);
+    const expectedCrc = bytes.readUInt32BE(dataEnd);
+    const actualCrc = pngCrc32(bytes.subarray(offset + 4, dataEnd));
+    requireThat(expectedCrc === actualCrc, `${label} has a PNG chunk integrity error`);
+
+    if (chunkCount === 0) requireThat(type === "IHDR" && length === 13, `${label} is missing a valid PNG header`);
+    if (type === "IHDR") {
+      requireThat(chunkCount === 0 && !header, `${label} has a duplicate or misplaced PNG header`);
+      header = {
+        width: chunkData.readUInt32BE(0),
+        height: chunkData.readUInt32BE(4),
+        bitDepth: chunkData[8],
+        colorType: chunkData[9],
+        compression: chunkData[10],
+        filter: chunkData[11],
+        interlace: chunkData[12]
+      };
+    } else if (type === "IDAT") {
+      requireThat(header && !idatEnded, `${label} has misplaced PNG image data`);
+      hasIdat = true;
+      idat.push(chunkData);
+    } else if (type === "IEND") {
+      requireThat(length === 0 && hasIdat, `${label} has an invalid PNG end chunk`);
+      ended = true;
+      offset = chunkEnd;
+      break;
+    } else {
+      if (hasIdat) idatEnded = true;
+      const critical = type.charCodeAt(0) >= 65 && type.charCodeAt(0) <= 90;
+      requireThat(!critical || type === "PLTE", `${label} uses an unsupported critical PNG chunk`);
+    }
+
+    if (hasIdat && type !== "IDAT") idatEnded = true;
+    chunkCount += 1;
+    offset = chunkEnd;
+  }
+
+  requireThat(ended && offset === bytes.length && header && idat.length > 0, `${label} is incomplete or has trailing PNG data`);
+  requireThat(header.width > 0 && header.height > 0 && header.width <= 32768 && header.height <= 32768, `${label} has invalid PNG dimensions`);
+  requireThat(header.bitDepth === 8 && [2, 6].includes(header.colorType) && header.compression === 0 && header.filter === 0 && header.interlace === 0, `${label} uses an unsupported screenshot PNG encoding`);
+
+  const bytesPerPixel = header.colorType === 2 ? 3 : 4;
+  const rowBytes = header.width * bytesPerPixel;
+  const decodedLength = header.height * (rowBytes + 1);
+  requireThat(Number.isSafeInteger(decodedLength) && decodedLength <= 536870912, `${label} has an excessive decoded image size`);
+
+  let decoded;
+  try {
+    decoded = zlib.inflateSync(Buffer.concat(idat), { maxOutputLength: decodedLength });
+  } catch {
+    fail(`${label} PNG image data cannot be decoded`);
+  }
+  requireThat(decoded.length === decodedLength, `${label} decoded PNG size does not match its dimensions`);
+  for (let row = 0; row < header.height; row += 1) {
+    requireThat(decoded[row * (rowBytes + 1)] <= 4, `${label} has an invalid PNG row filter`);
+  }
+}
+
+function validateFidelityReceipt(receipt, { root = ROOT, revision, evidenceDir }) {
   requireThat(isRecord(receipt), "Phase 175 fidelity receipt is missing");
+  requireThat(nonempty(evidenceDir), "fidelity run evidence directory is missing");
+  const runEvidenceDir = safeWorkspaceDirectory(root, evidenceDir, "fidelity run evidence directory");
   const sourceFiles = validateFidelitySource(receipt.source, root, revision);
   exactStringSet(receipt.selectedCaseIds, FIDELITY_CASE_IDS, "fidelity selected case IDs");
   exactStringSet(receipt.executedCaseIds, FIDELITY_CASE_IDS, "fidelity executed case IDs");
@@ -289,8 +452,17 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision }) {
   requireThat(Array.isArray(detail.assets.loadedFaces) && detail.assets.loadedFaces.length === 6 && detail.assets.loadedFaces.every(item => item.status === "loaded"), "fidelity font face load receipt is incomplete");
   requireThat(detail.hooks?.storyHostConnected === true && detail.hooks.quickViewClosed === true && nonempty(detail.hooks.exactFocusReturnId), "fidelity connected hook/focus receipt is incomplete");
   requireThat(detail.zoom?.tabZoom?.factor === 2 && detail.zoom?.effective?.viewportWidth === 320 && detail.zoom.effective.documentWidth <= 320, "fidelity real 200-percent zoom receipt is incomplete");
-  safeWorkspaceFile(root, detail.zoom?.screenshot, "fidelity zoom screenshot");
-  for (const screenshot of detail.screenshots || []) safeWorkspaceFile(root, screenshot, "fidelity responsive screenshot");
+  const expectedScreenshots = FIDELITY_SCREENSHOTS.map(filename =>
+    path.relative(path.resolve(root), path.join(runEvidenceDir, filename)).split(path.sep).join("/")
+  );
+  const screenshots = Array.isArray(detail.screenshots) ? detail.screenshots : [];
+  exactStringSet(screenshots.map(normalizedRelativePath), expectedScreenshots, "fidelity screenshot inventory");
+  const expectedZoom = expectedScreenshots.find(filename => filename.endsWith("delivery-investigation-200-browser-zoom.png"));
+  requireThat(normalizedRelativePath(detail.zoom?.screenshot || "") === expectedZoom, "fidelity zoom screenshot is missing or outside the run evidence directory");
+  for (const screenshot of screenshots) {
+    const filename = safeWorkspaceFile(root, screenshot, "fidelity screenshot", { evidenceDir: runEvidenceDir });
+    validatePng(filename, "fidelity screenshot");
+  }
 
   return {
     expected_case_ids: FIDELITY_CASE_IDS,
@@ -372,7 +544,11 @@ function validateCondition(evidenceRoot, condition, run) {
   const runtime = loadJson(path.join(conditionDir, "runtime.json"), `${condition} runtime receipt`);
   const demo = selectExpectedTests(demoReport, DEMO_CASES, `${condition} Demo`);
   const admin = selectExpectedTests(adminReport, ADMIN_CASES, `${condition} Admin`, { exactReport: true });
-  const fidelity = validateFidelityReceipt(fidelityReceipt, { root: ROOT, revision: run.source_revision });
+  const fidelity = validateFidelityReceipt(fidelityReceipt, {
+    root: ROOT,
+    revision: run.source_revision,
+    evidenceDir: conditionDir
+  });
   const axe = validateAxeReceipt(axeReport, {
     runId: `${run.run_id}-${condition}`,
     revision: run.source_revision,

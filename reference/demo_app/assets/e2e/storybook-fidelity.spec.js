@@ -1178,6 +1178,19 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
       connectedUrl
     };
     receipt.zoom = zoomEvidence;
+    const expectedPhase175Screenshots = [
+      "delivery-investigation-320-dark.png",
+      "delivery-investigation-1440-dark.png",
+      "delivery-investigation-200-browser-zoom.png"
+    ].map(filename => path.relative(REPO_ROOT, path.join(PHASE175_EVIDENCE_DIR, filename)));
+    expect([...receipt.screenshots].sort(), "the run evidence directory contains every expected responsive and zoom capture")
+      .toEqual([...expectedPhase175Screenshots].sort());
+    for (const screenshot of expectedPhase175Screenshots) {
+      const screenshotPath = path.resolve(REPO_ROOT, screenshot);
+      const stat = fs.lstatSync(screenshotPath);
+      expect(path.dirname(screenshotPath)).toBe(PHASE175_EVIDENCE_DIR);
+      expect(stat.isFile() && !stat.isSymbolicLink() && stat.size > 0).toBe(true);
+    }
     expect(receipt.executedCaseIds).toHaveLength(receipt.expectedCaseCount);
     receipt.completedCaseCount = receipt.executedCaseIds.length;
     appendPhase175FidelityEvidence(receipt);
