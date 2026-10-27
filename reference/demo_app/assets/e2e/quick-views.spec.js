@@ -224,11 +224,11 @@ test("Phase174 delivery retained variants preserve exact scenario facts and boun
   await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/1 of \d+/);
   const firstUnavailable = first.getByRole("dialog").getByTestId("operator-quick-view-prev");
   await expect(firstUnavailable).toContainText("Previous delivery unavailable");
-  expect(await firstUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
+  await expect(firstUnavailable).toHaveJSProperty("tagName", "SPAN");
   await expect(last.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/\d+ of \d+/);
   const lastUnavailable = last.getByRole("dialog").getByTestId("operator-quick-view-next");
   await expect(lastUnavailable).toContainText("Next delivery unavailable");
-  expect(await lastUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
+  await expect(lastUnavailable).toHaveJSProperty("tagName", "SPAN");
   await expect(single.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/1 of 1/);
   await expect(single.getByRole("dialog")).toContainText("Fjordline A/S");
   await expect(single.getByRole("heading", { name: "Welcome to Fjordline A/S" }))
