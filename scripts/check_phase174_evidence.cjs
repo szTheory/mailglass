@@ -68,6 +68,7 @@ const SOURCE_REQUIRED = [
   "scripts/ci_green_policy.sh",
   "scripts/prepare_phase173_baselines.cjs",
   "reference/demo_app/Dockerfile",
+  "reference/demo_app/mix.exs",
   "reference/demo_app/mix.lock",
   "reference/demo_app/assets/package.json",
   "reference/demo_app/assets/package-lock.json",

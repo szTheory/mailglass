@@ -592,6 +592,8 @@ test('source identity includes dirty route and .story.exs bytes at the same revi
   const checker = require('./check_phase174_evidence.cjs');
   const required = [
     'reference/demo_app/lib/mailglass_demo_web/router.ex',
+    'reference/demo_app/Dockerfile',
+    'reference/demo_app/mix.exs',
     'reference/demo_app/storybook/quick_views/delivery.story.exs',
     'reference/demo_app/storybook/quick_views/inbound.story.exs',
     'reference/demo_app/storybook/primitives/theme_picker.story.exs',

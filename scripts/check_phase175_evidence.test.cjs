@@ -425,3 +425,8 @@ test("Phase 175 clean current-source evidence passes while missing and malformed
     fs.rmSync(fixture.root, { recursive: true, force: true });
   }
 });
+
+test("Phase 175 selected source identity binds the Demo Mix dependency manifest", () => {
+  assert.ok(checker.selectedSourcePaths(ROOT).includes("reference/demo_app/mix.exs"));
+  assert.ok(checker.sourceIdentity(ROOT, REVISION).input_paths.includes("reference/demo_app/mix.exs"));
+});
