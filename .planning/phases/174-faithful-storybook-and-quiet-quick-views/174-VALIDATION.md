@@ -6,7 +6,6 @@ nyquist_compliant: false
 wave_0_complete: false
 created: "2026-10-26"
 ---
-
 # Phase 174 — Validation Strategy
 
 ## Test Infrastructure
@@ -32,16 +31,77 @@ Commands are from repository root unless an explicit `cd` appears. Browser check
 
 ## Requirement Verification Map
 
-The planner must replace the provisional rows with concrete plan/task IDs and exact focused commands as plans are written.
+The following commands are planned checks, not evidence of implementation success. New specs and scripts are produced by the named tasks before their commands execute. Admin/Demo commands use their tracked Playwright configs and existing locked dependencies; service startup may exceed 60s, while the pure Node comparator tests supply fast feedback. The inherited prior_verify_commands list was empty.
 
-| Requirement | Test type | Automated command / assertion | Existing file | Status |
+| Requirement | Test type | Automated command / assertion | Plan/task | Status |
 | --- | --- | --- | --- | --- |
-| UXF-11 | Connected browser + geometry | Admin suite: both collections, normal/first/last positions, names, disabled behavior, keyboard/hover/focus, Close and >=44px boxes | `mailglass_admin/e2e/flows.spec.js`, `structural.spec.js`; new focused assertions needed | pending |
-| STORY-03 | Route + connected browser | Demo suite: root/sidebar/theme-picker/direct entry preserve configured prefix and respond successfully | `reference/demo_app/assets/e2e/persona-screenshots.spec.js`; new prefix coverage needed | pending |
-| STORY-04 | Network/font/computed-style receipt | Demo suite: source/revision/URL, CSS byte digest equality, successful font assets, matching loaded faces/weights and UI/display/code roles | Existing CSS receipt; font assertions missing | pending |
-| STORY-05 | Connected browser | Demo suite: explicit Light/Dark and System under both OS schemes, including OS changes while System remains selected; theme owner recorded | New retained story checks needed | pending |
-| STORY-06 | Connected browser on both pinned clients | Admin and Demo suites: shared production hook mount/update/close/focus return; Storybook owns exactly one socket | Existing Admin focus assertions; Demo connected story coverage missing | pending |
-| UIQ-05 | Fresh axe producer + negative comparator tests | Browser sweep plus focused comparator: rule/target/state findings; missing/failed/zero/partial/stale execution fails; incomplete findings separately triaged | `mailglass_admin/e2e/axe-baseline.spec.js`, `mailglass_admin/test/mailglass_admin/axe_baseline_test.exs` | pending |
+| UXF-11 | Connected + geometry | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer\|Phase174 delivery\|Phase174 inbound"` | 174-01 tasks 1/2; 174-02 task 1 | pending execution |
+| STORY-03 | Generated navigation | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer"` | 174-01 task 1 | pending execution |
+| STORY-04 | Asset/font/computed receipt | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 fonts\|Phase174 widths"` | 174-04 task 2 | pending execution |
+| STORY-05 | Live OS/theme response | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 themes"` | 174-04 task 1 | pending execution |
+| STORY-06 | Both clients + Storybook ownership | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-hooks.spec.js --grep "Phase174 hooks"`; `npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase174 client hooks"` | 174-03 tasks 1/2 | pending execution |
+| UIQ-05 | Fresh producer + fail-closed comparator | `node --test mailglass_admin/e2e/support/storybook-axe.test.cjs`; `npm --prefix mailglass_admin run test:storybook-axe -- --grep "Phase174 selected axe"` | 174-05 tasks 1/2/3 | pending execution |
+
+Every command fails on nonzero exit or zero selected tests; detailed immediate `<fails_when>` siblings in the plans define missing/partial/stale/incorrect evidence signals. The axe command requires healthy STORYBOOK_BASE_URL and independent STORYBOOK_AXE_RUN_ID/STORYBOOK_SOURCE_REVISION/STORYBOOK_SOURCE_DIGEST; plan 06 provides them in the isolated wrapper. It must not silently default to an unrelated retained service.
+
+Additional exact commands: `cd mailglass_admin && mix test test/mailglass_admin/quick_view_projection_test.exs` (174-02/2); `cd mailglass_admin && mix test test/mailglass_admin/assets_test.exs` (174-03/1); `cd mailglass_admin && mix mailglass_admin.assets.build && test -s priv/static/app.css` (174-04/2); `node --test scripts/check_phase174_evidence.test.cjs` (174-06/1); `bash scripts/run_demo_browser_evidence.sh --phase174` (174-06/1); `node scripts/check_phase174_evidence.cjs --evidence-dir "$PHASE174_CI_EVIDENCE_DIR" --pilot --require-ci`, `bash scripts/gsd-regression-gate.sh`, and `cd mailglass_admin && mix test test/mailglass_admin/axe_baseline_test.exs` (174-06/2). Nonzero exit, absent expected summary/artifact or zero expected execution fails each; pilot additionally requires cold and warm setup-inclusive cost records.
+
+## Plan dependency and creation map
+
+| Wave | Plan | Needs | Creates/changes | Checkpoints |
+|---|---|---|---|---|
+| 1 | 174-01 | Existing production Delivery, pinned Storybook | Visible tracer, full prefix mount, Delivery story/spec, pure facts and small manifest/dispositions | none |
+| 2 | 174-02 | 174-01 facts/story seam | Quiet Inbound, retained cases, representative persisted projection test | none |
+| 2 | 174-03 | 174-01 routed review | Shared hook-only production source, Demo registration, both-client lifecycle proof | none |
+| 3 | 174-04 | 174-02/03 retained surfaces/hooks | Local Demo theme adapter and font/CSS/theme/width receipts | none |
+| 4 | 174-05 | 174-04 faithful renderings | Admin-targeted Demo axe runner, exact 18-case manifest/comparator and scoped production scroll-focus remediation | Conditional blocking decision only if fresh intentional residual debt exists |
+| 5 | 174-06 | 174-05 complete comparison | Existing advisory CI integration, run-owned complete receipts, cold/warm pilot and review note | none |
+
+Wave 2 file ownership is disjoint. Shared source/manifest/backend edits in later waves have explicit dependencies. All newly named paths/symbols/flags are declared in each plan's “Artifacts this phase produces” section. No source changes or runtime suite execution occurred during planning. Calibration: factor 1, sample_count 0, confidence low; estimates are uncalibrated raw projections.
+
+## Multi-source coverage audit
+
+| Source | Item | Plan(s) | Status |
+|---|---|---|---|
+| GOAL | Restrained both-collection quick views plus faithful navigable Storybook and fresh accessibility | 01–06 | COVERED |
+| REQ | UXF-11 | 01,02,06 | COVERED |
+| REQ | STORY-03 | 01,02,06 | COVERED |
+| REQ | STORY-04 | 04,06 | COVERED |
+| REQ | STORY-05 | 04,06 | COVERED |
+| REQ | STORY-06 | 03,06 | COVERED |
+| REQ | UIQ-05 | 05,06 | COVERED |
+| RESEARCH | Root-scope full pinned mount, matching assets, browser/dev protections | 01 | COVERED |
+| RESEARCH | Both production components, distinct disabled semantics, actual 44px geometry, focus/URL/Account | 01,02,03 | COVERED |
+| RESEARCH | Source/build distinction, built/served parity, six successful font byte/face/weight/role receipts | 04 | COVERED |
+| RESEARCH | Explicit System owner, both OS branches and live change | 04 | COVERED |
+| RESEARCH | Shared production hooks, no duplicate bootstrap, both pinned clients, connected lifecycle | 03 | COVERED |
+| RESEARCH | Existing Admin axe dependency scans external Demo without Demo dependency | 05,06 | COVERED |
+| RESEARCH | Rule/target/scenario-state, independent approvals, nonempty expected/executed integrity, incomplete triage; known focusability defect reproduced/repaired/rescanned | 05 tasks 1–3 | COVERED |
+| RESEARCH | Actual advisory disposition and initial setup-inclusive cold/warm pilot | 06 | COVERED |
+| CONTEXT | No CONTEXT supplied: owner selected approved requirements/research; no inferred D-number decisions | all | COVERED |
+| CONTINUING | Source dispositions/scenario IDs, pure/materializer separation and representative projection agreement start now | 01,02,06 | COVERED |
+| CONTINUING | D-09 Account isolation, D-19 brand, D-41/D-45 gate integrity, D-52 automated acceptance | 01–06 | COVERED |
+| EXCLUDED | Later replay/filter/Health/Preview repairs, real-zoom/final milestone reconciliation, broad catalogue/API/service growth | named owners 175–178 or deferred | outside phase; visible in manifest |
+
+## Spec-less fallback and flagged assumptions
+
+Original edge report: seven surfaced rows, zero initially resolved. Accounting below retains all seven (three partially/explicitly constrained and four unclassified assumptions); it does not auto-dismiss any row.
+
+| Edge | Disposition in plans | Remaining flagged assumption |
+|---|---|---|
+| UXF-11 empty | Explicit truth in 01: no invented selected item, one-item both boundaries unavailable, nil position omitted; 01/02 connected checks | No new policy for impossible/null collection internals is inferred |
+| UXF-11 encoding | Exact long/Unicode rendering checks in 01/02; exact values preserved | UNRESOLVED: requirement does not define Unicode equality/normalization or length metric; no new truncation/equality contract is introduced |
+| STORY-03 unclassified | Prefix navigation tests implement approved acceptance | UNRESOLVED unclassified probe; not claimed auto-resolved |
+| STORY-04 unclassified | Font/asset/role receipts implement approved acceptance | UNRESOLVED unclassified probe; not claimed auto-resolved |
+| STORY-05 unclassified | Explicit owner plus OS flips implement approved acceptance | UNRESOLVED unclassified probe; not claimed auto-resolved |
+| STORY-06 concurrency | Explicit 03 truth/tests: repeated/reconnect lifecycle has one trap/no stale return target | Bound to sequential run-owned host checks; no new cross-run shared reset guarantee; concurrency outside selected transition remains flagged |
+| UIQ-05 unclassified | Exact execution/fingerprint comparator implements approved acceptance | UNRESOLVED unclassified probe; not claimed auto-resolved |
+
+Prohibition recall was performed per requirement before precision filtering. Raw candidates, grouped by requirement: UXF-11 shrinking targets, hidden names, missing focus, broken boundaries, wrong position, broken Close, wrong Account, misleading selection, clipped Unicode, aesthetic approval by score; STORY-03 broken root/sidebar/deep links, wrong asset prefix, stale URLs, exposed production route, lost session, CSRF omission, hidden navigation error, arbitrary redirect, inferred route-removal authority; STORY-04 stale CSS, source/build conflation, failed font fetch, absent face, wrong weight, wrong role, fallback serif, copied fake renderer, customer capture, claimed fidelity without execution; STORY-05 missing owner, conflicting roots, wrong initial System, ignored OS change, explicit-mode drift, host-cookie mutation, selection loss, fake preview Account, misleading preference label, owner approval by score; STORY-06 duplicate socket, copied hooks, wrong client version, listener leak, stale target, failed update, failed close, broken reconnect, shared reset race, claimed static behavior as connected proof; UIQ-05 stale report, missing scan, failed scan, zero cases, partial expected set, flat-count target swap, quiet rebaseline, untriaged incomplete, raw node HTML, advisory claim presented as required approval.
+
+Precision drops routine correctness/engineering candidates (geometry/names/URLs/fonts/lifecycle/count integrity) to their explicit task acceptance and edge/code-review owners. Canon-referral drops: exposed routes/auth/session/CSRF/injection/unsafe redirect and customer-PII/data retention are OWASP/privacy canon, owned by the per-plan ASVS L1 threat models and `$gsd-secure-phase`; no duplicate prohibition minted. One bespoke transparency/value constraint survives: “Review evidence must not present unexecuted or advisory checks as proof of required CI or owner approval.” Serialized with the installed probe-core.cjs `projectProhibitions` function into plan 05 must_haves.prohibitions as status unresolved, without any check_* descriptor. It remains flagged-unverified and cannot silently green. No second serializer or invented wired check was used.
+
+Assumption-delta detector reported pluralization from “second socket.” Decision recorded in 01: no-change to primary production presentation; each legitimate host owns its socket, shared hook implementation is the general representation. No published contract/migration or irreversible gate was inferred from routine UI refactoring. Research Level 1 discovery used pinned installed PhoenixStorybook documentation/router API; no new dependency choice. Graph query returned disabled, so no graph context was claimed.
 
 ## Wave 0 Requirements
 
@@ -76,3 +136,15 @@ All machine-observable acceptance requires automated evidence under D-52. Manual
 - [ ] `nyquist_compliant` and `wave_0_complete` updated only after supporting evidence.
 
 **Approval:** Pending execution evidence; draft strategy only.
+
+
+## Revision 1 — checker resolutions
+
+- Research Open Questions 1–4 are marked RESOLVED for design with exact selected plans; runtime measurements remain pending.
+- 174-05 now has three tasks. Task 3 reproduces fresh scrollable-region-focusable rule/target/scenario/state, applies the smallest accessible production repair to the actual quick-view scroll panel, and reruns keyboard/focus/navigation plus all 18 selected scans. The empty approval input no longer implies zero findings. Existing broader nine-cell baseline remains intact.
+- The added connected command is `npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase174 scroll access|Phase174 client hooks"`; nonzero exit, zero cases, missing either surface or broken scroll/focus/navigation fails. The normal selected axe command still fails on any unapproved residual finding.
+- Intentional residual debt has a conditional execution-time checkpoint:decision with gate=blocking-human, no auto_select, only after an exact fresh evidence packet exists. The executor must pause for scoped repair versus named-fingerprint acceptance and record reviewer/source/date/reason before any approval-file change; a clean result skips it. No unconditional checkpoint or pre-approved rebaseline is introduced. Frontmatter autonomous remains true for the normal repair path; the executor emits the actual blocking checkpoint if that evidence-dependent branch occurs.
+- 174-06 task 1 explicitly provisions Admin's Chromium with `/workspace/mailglass_admin/node_modules/.bin/playwright install chromium` after the existing Admin lockfile restore, before its scan, under the same PLAYWRIGHT_BROWSERS_PATH. Record Admin 1.59.1 CLI/browser revision/cache hit/miss/install time separately from Demo 1.60.0 and include both cold/warm setup cost.
+- The actual existing advisory demo_browser_evidence job invokes `bash scripts/run_demo_browser_evidence.sh --phase174 --pilot`; it records hosted run/attempt/head/job/runner identifiers and retains both conditions. The existing PR trigger or `gh workflow run ci.yml --ref "$PHASE174_CANDIDATE_REF"` executes the candidate during implementation, never during planning. Required aggregate policy is unchanged.
+- Final CI proof uses independently downloaded artifacts and completed run/jobs metadata: `node scripts/check_phase174_evidence.cjs --evidence-dir "$PHASE174_CI_EVIDENCE_DIR" --pilot --require-ci`. Nonzero exit, missing/local/forged/stale identity, absent completed ci-job.json, head/job mismatch, missing condition/setup/browser/case accounting or unapproved findings fails. Local elapsed time is not CI runner evidence.
+- Plan-05 task 1 explicitly creates test:storybook-axe, then re-resolves package script/config/spec and lists 18 cases before its runnable verification; script_missing is a planned-production warning until creation, never an accepted runtime omission.

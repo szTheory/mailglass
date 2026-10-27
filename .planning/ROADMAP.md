@@ -67,10 +67,28 @@ Resolve recorded operator/author friction through integrated repairs with realis
 3. A maintainer can inspect a source/URL-identified receipt showing production CSS bytes/digest, successful font assets, matching loaded faces/weights and computed UI/display/code roles. Light/Dark match production; System follows either OS preference with explicit theme ownership. (STORY-04, STORY-05)
 4. Hook-dependent stories reuse production hook behavior under Storybook's own socket; connected checks demonstrate mount/update/close and focus return on both resolved Admin/demo LiveView clients without a second socket bootstrap. (STORY-06)
 5. Running the selected sweep compares fresh axe rule/target/state findings to approved findings and rejects missing, failed, zero-case or incomplete expected execution. Incomplete findings are separately triaged; the actual required/advisory CI placement and initial cold/warm cost pilot are recorded. (UIQ-05; continuing UIQ-07 obligation)
-**Plans:** TBD
+
+**Plans:** 6 plans in 5 waves — verified; ready to execute.
 **UI hint:** yes
 
 **Planning focus:** Reconcile source and served assets first. Use the pinned Storybook APIs, existing production hooks/CSS and small scenario metadata; prove one repaired area before expanding extraction. No complete catalogue, generic fixture engine, client upgrade or new dependency is a prerequisite.
+
+Plans:
+**Wave 1**
+- [ ] 174-01-PLAN.md — Delivery quick-view tracer and corrected Storybook navigation.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 174-02-PLAN.md — Quiet Inbound quick views, retained scenarios and projection agreement.
+- [ ] 174-03-PLAN.md — Shared production hooks and connected lifecycle on both clients.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 174-04-PLAN.md — Production CSS/font/theme and representative width receipts.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 174-05-PLAN.md — Fresh accessibility comparison, execution integrity and scoped remediation.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 174-06-PLAN.md — Advisory CI evidence, cold/warm pilot and review dispositions.
 
 ### Phase 175: Delivery Investigation and Safe Replay
 
@@ -83,6 +101,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 3. Either quick view and full detail expose replay for the exact eligible selection; unavailable cases explain why before a dialog, with no dead-end primary action. Changed/denied eligibility remains enforced at action time. (REPLAY-04, REPLAY-05)
 4. Outbound and Inbound replay share concise accessible dialog structure with identifiable stored-request evidence, an X named Close, Escape, focus containment/return and a clear primary action. Distinct domain commands and consequences remain intact; use the requested ux-writing guidance. (REPLAY-06)
 5. Connected permitted replay closes the dialog, shows an accessible success toast and updates evidence according to the actual new-work/no-change outcome. Auth-denied and other failures remain visible inside the open dialog with a safe retry or explicit re-review route, without flicker, hidden flash or unexplained disabled review. Preserve exact correlation, revalidation, authorization, idempotency and audit behavior. (REPLAY-07, REPLAY-08)
+
 **Plans:** TBD
 **UI hint:** yes
 
@@ -99,6 +118,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 3. Invalid input preserves a specific visible draft/error and identifiable committed results; failed reads expose truthful error/stale/unavailable feedback without silent fallback queries or misleading empty populations. (FILTER-04)
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
+
 **Plans:** TBD
 **UI hint:** yes
 
@@ -114,6 +134,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 2. The compact Account control visibly scopes Health, Deliveries and Inbound. Navigation and scope remain clear when Preview renders account-independent samples, with no fake Account picker or misleading sample-data claim. (UXF-09)
 3. An operator entering Preview can return to the originating Account through a host-approved local destination. Connected tests cover custom mounts, tampered/external destinations, unauthorized Account targets and direct entry fallback; destination context grants no authority and does not widen Preview auth/session whitelists. (UXF-10)
 4. Retained Health/Account/navigation area scenarios use the production presentation and realistic normal/empty/stale/unavailable/long-content cases where reachable; real routes prove the underlying scope and return behavior. (OUTUX-06, UXF-09, UXF-10)
+
 **Plans:** TBD
 **UI hint:** yes
 
@@ -130,6 +151,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 3. Every named feedback item has a current-source disposition and links to its owning requirement, retained production-component scenario and behavior evidence. Stories cover the selected pattern/area/job states, including the Delivery path delivered in Phase 175, with representative pure-to-persisted projection agreement and no missing/failed/zero-case coverage hidden as success. (STORY-07, UIQ-04)
 4. Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)
 5. The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)
+
 **Plans:** TBD
 **UI hint:** yes
 
@@ -169,7 +191,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 174. Faithful Storybook and Quiet Quick Views | 0/TBD | Not started | — |
+| 174. Faithful Storybook and Quiet Quick Views | 0/6 | Planned | — |
 | 175. Delivery Investigation and Safe Replay | 0/TBD | Not started | — |
 | 176. Direct Filters and Useful Inbound Evidence | 0/TBD | Not started | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
