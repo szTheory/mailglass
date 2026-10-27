@@ -71,6 +71,95 @@ async function openInbound(page, query = `tenant_id=${tenantId}`, subjectId = "o
   await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 }
 
+async function installPhase174HookProbe(page) {
+  await page.addInitScript(() => {
+    const probe = { sockets: [], focusinAdded: [], focusinRemoved: [] };
+    window.__phase174Probe = probe;
+    const NativeWebSocket = window.WebSocket;
+    window.WebSocket = new Proxy(NativeWebSocket, {
+      construct(target, args) {
+        const socket = Reflect.construct(target, args);
+        const record = {
+          url: String(args[0]),
+          opened: false,
+          closed: false,
+          sentFrames: 0,
+          receivedFrames: 0,
+          channelJoins: 0
+        };
+        probe.sockets.push(record);
+        const nativeSend = socket.send.bind(socket);
+        socket.send = data => {
+          record.sentFrames += 1;
+          if (String(data).includes("phx_join")) record.channelJoins += 1;
+          return nativeSend(data);
+        };
+        socket.addEventListener("open", () => { record.opened = true; });
+        socket.addEventListener("message", () => { record.receivedFrames += 1; });
+        socket.addEventListener("close", () => { record.closed = true; });
+        return socket;
+      }
+    });
+    const nativeAdd = EventTarget.prototype.addEventListener;
+    const nativeRemove = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+      if (
+        type === "focusin" &&
+        typeof this.matches === "function" &&
+        this.matches('[phx-hook="ModalFocusTrap"]')
+      ) probe.focusinAdded.push(this.id);
+      return nativeAdd.call(this, type, listener, options);
+    };
+    EventTarget.prototype.removeEventListener = function(type, listener, options) {
+      if (
+        type === "focusin" &&
+        typeof this.matches === "function" &&
+        this.matches('[phx-hook="ModalFocusTrap"]')
+      ) probe.focusinRemoved.push(this.id);
+      return nativeRemove.call(this, type, listener, options);
+    };
+  });
+}
+
+async function phase174DocumentProbe(page) {
+  return page.evaluate(() => {
+    const probe = window.__phase174Probe || {};
+    return {
+      sockets: (probe.sockets || []).map(socket => ({
+        path: new URL(socket.url, location.href).pathname,
+        opened: socket.opened,
+        closed: socket.closed,
+        sentFrames: socket.sentFrames,
+        receivedFrames: socket.receivedFrames,
+        channelJoins: socket.channelJoins
+      })),
+      focusinAdded: probe.focusinAdded || [],
+      focusinRemoved: probe.focusinRemoved || []
+    };
+  });
+}
+
+async function phase174FocusTrapWraps(page, dialogId) {
+  const dialog = page.locator("#" + dialogId);
+  const lastControl = await dialog.evaluate(element => {
+    const controls = [...element.querySelectorAll(
+      "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+    )].filter(control =>
+      !control.hasAttribute("data-focus-trap") &&
+      control.getClientRects().length > 0 &&
+      getComputedStyle(control).visibility !== "hidden"
+    );
+    const last = controls[controls.length - 1];
+    return last?.id || last?.getAttribute("data-testid") || last?.getAttribute("aria-label");
+  });
+  expect(lastControl, "the production quick view has a final tabbable control").toBeTruthy();
+  await dialog.locator('[data-focus-trap="start"]').focus();
+  await expect.poll(() => page.evaluate(() => {
+    const element = document.activeElement;
+    return element?.id || element?.getAttribute("data-testid") || element?.getAttribute("aria-label");
+  })).toBe(lastControl);
+}
+
 async function openPreviewEmpty(page) {
   await page.goto("/ops/browser-preview-empty");
   await expect(page.getByTestId("preview-shell")).toBeVisible();
@@ -1605,6 +1694,124 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     } finally {
       await context.close();
     }
+  });
+
+  test("Phase174 client hooks: Admin focus traps survive patches, reconnects, and removal", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await installPhase174HookProbe(page);
+
+    const actualWebSockets = [];
+    page.on("websocket", socket => actualWebSockets.push(socket.url()));
+    const lock = fs.readFileSync(path.resolve(__dirname, "../mix.lock"), "utf8");
+    const liveViewVersion = lock.match(/^\s+"phoenix_live_view": \{:hex, :phoenix_live_view, "([^"]+)"/m)?.[1];
+    expect(liveViewVersion).toBe("1.2.13");
+
+    const cases = [];
+    await openOperator(page);
+    await expect(page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).resolves.toBe(true);
+    const deliveryRows = page.getByTestId("operator-delivery-row").filter({ visible: true });
+    await expect(deliveryRows.count()).resolves.toBeGreaterThan(1);
+
+    async function runDeliveryCycle(index, closeWithEscape) {
+      const opener = deliveryRows.nth(index).getByRole("button", { name: /Open delivery/ });
+      const openerId = await opener.getAttribute("id");
+      const initialId = await opener.getAttribute("phx-value-id");
+      await opener.click();
+      const quickView = page.getByTestId("operator-quick-view");
+      await expect(quickView).toBeVisible();
+      const initialProbe = await phase174DocumentProbe(page);
+      expect(initialProbe.focusinAdded.filter(id => id === "operator-quick-view").length -
+        initialProbe.focusinRemoved.filter(id => id === "operator-quick-view").length).toBe(1);
+      await phase174FocusTrapWraps(page, "operator-quick-view");
+      const next = quickView.getByRole("link", { name: "Next delivery" });
+      await expect(next).toBeVisible();
+      const nextId = new URL(await next.getAttribute("href"), page.url()).searchParams.get("delivery_id");
+      expect(nextId).toBeTruthy();
+      await next.click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("delivery_id")).toBe(nextId);
+      expect(nextId).not.toBe(initialId);
+      if (closeWithEscape) await page.keyboard.press("Escape");
+      else await quickView.getByRole("link", { name: "Close quick view" }).click();
+      await expect(quickView).toHaveCount(0);
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(openerId);
+      const closedProbe = await phase174DocumentProbe(page);
+      const added = closedProbe.focusinAdded.filter(id => id === "operator-quick-view").length;
+      const removed = closedProbe.focusinRemoved.filter(id => id === "operator-quick-view").length;
+      expect(removed).toBe(added);
+      expect(closedProbe.sockets.some(socket => socket.channelJoins > 0)).toBe(true);
+      cases.push({ surface: "delivery", opened: initialId, navigatedTo: nextId, focusReturnedTo: openerId, focusinAdded: added, focusinRemoved: removed });
+    }
+
+    await runDeliveryCycle(1, true);
+    await runDeliveryCycle(1, false);
+
+    const beforeDrop = await phase174DocumentProbe(page);
+    const beforeDropCount = beforeDrop.sockets.filter(socket => socket.path.includes("/live/websocket")).length;
+    expect(beforeDropCount).toBe(1);
+    const createdBeforeDrop = await page.evaluate(() => window.__phase174Probe.sockets.length);
+    await page.evaluate(() => new Promise(resolve => window.liveSocket.disconnect(resolve)));
+    await page.evaluate(() => window.liveSocket.connect());
+    await expect.poll(async () => {
+      const afterDrop = await phase174DocumentProbe(page);
+      return afterDrop.sockets.length;
+    }).toBeGreaterThan(createdBeforeDrop);
+    await expect(page.locator("[data-phx-main].phx-connected")).toBeVisible();
+    const afterReconnect = await phase174DocumentProbe(page);
+    expect(afterReconnect.sockets.filter(socket => socket.path.includes("/live/websocket") && socket.opened && !socket.closed)).toHaveLength(1);
+    expect(actualWebSockets.length).toBeGreaterThan(0);
+    await runDeliveryCycle(0, true);
+
+    await openInbound(page);
+    await expect(page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).resolves.toBe(true);
+    const inboundRows = page.getByTestId("inbound-records-table")
+      .getByTestId("inbound-record-row").filter({ visible: true });
+    await expect(inboundRows.first()).toBeVisible();
+    expect(await inboundRows.count()).toBeGreaterThan(1);
+
+    async function runInboundCycle(index, closeWithEscape) {
+      const opener = inboundRows.nth(index).getByTestId("inbound-record-open");
+      const openerId = await opener.getAttribute("id");
+      const initialId = await opener.getAttribute("phx-value-id");
+      await opener.click();
+      const quickView = page.getByTestId("inbound-quick-view");
+      await expect(quickView).toBeVisible();
+      const initialProbe = await phase174DocumentProbe(page);
+      expect(initialProbe.focusinAdded.filter(id => id === "inbound-quick-view").length -
+        initialProbe.focusinRemoved.filter(id => id === "inbound-quick-view").length).toBe(1);
+      await phase174FocusTrapWraps(page, "inbound-quick-view");
+      const next = quickView.getByRole("link", { name: "Next inbound record" });
+      await expect(next).toBeVisible();
+      const nextId = new URL(await next.getAttribute("href"), page.url()).searchParams.get("inbound_id");
+      expect(nextId).toBeTruthy();
+      await next.click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id")).toBe(nextId);
+      expect(nextId).not.toBe(initialId);
+      if (closeWithEscape) await page.keyboard.press("Escape");
+      else await quickView.getByRole("link", { name: "Close quick view" }).click();
+      await expect(quickView).toHaveCount(0);
+      const matchingRowId = "inbound-record-open-desktop-" + nextId;
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(matchingRowId);
+      const closedProbe = await phase174DocumentProbe(page);
+      const added = closedProbe.focusinAdded.filter(id => id === "inbound-quick-view").length;
+      const removed = closedProbe.focusinRemoved.filter(id => id === "inbound-quick-view").length;
+      expect(removed).toBe(added);
+      expect(closedProbe.sockets.some(socket => socket.channelJoins > 0)).toBe(true);
+      cases.push({
+        surface: "inbound",
+        opened: initialId,
+        navigatedTo: nextId,
+        focusReturnedTo: matchingRowId,
+        openerBeforeNavigation: openerId,
+        focusinAdded: added,
+        focusinRemoved: removed
+      });
+    }
+
+    await runInboundCycle(1, false);
+    await runInboundCycle(1, true);
+    expect(cases.filter(item => item.surface === "delivery")).toHaveLength(3);
+    expect(cases.filter(item => item.surface === "inbound")).toHaveLength(2);
   });
 
 });
