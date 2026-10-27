@@ -24,6 +24,17 @@ window.MailglassAdminHooks = {
           this.el.removeEventListener("focusin", this.handleFocusIn)
         }
       },
+      SuppressionRefreshFocus: {
+        mounted() {
+          this.handleEvent("mailglass:suppression-refresh-complete", () => {
+            window.requestAnimationFrame(() => {
+              if (this.el.isConnected && !this.el.disabled) {
+                this.el.focus({ preventScroll: true })
+              }
+            })
+          })
+        }
+      },
       PreviewTabs: {
         mounted() {
           this.syncTabStops = () => {

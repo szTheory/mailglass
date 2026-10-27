@@ -488,7 +488,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "recent auth"
     end
 
-    test "suppression read failure retains its last match and historical timeline with retry", %{
+    @tag :phase175
+    test "Phase 175 suppression refresh marks retained evidence stale and recovers on retry", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -528,12 +529,69 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> render_click()
 
       html = render(view)
-      assert html =~ "The current Mailglass suppression read is unavailable."
+      assert html =~ "Couldn’t refresh suppression evidence. Try again."
+      assert html =~ "Stale"
       assert html =~ "last retrieved record and may be out of date"
       assert html =~ "The public Mailglass removal command permits Policy records."
       assert html =~ "Suppressed"
       assert html =~ ~s(data-testid="operator-timeline")
       refute html =~ "No current matching suppression recorded in Mailglass was found"
+
+      view
+      |> element(~s([data-testid="operator-suppression-refresh"]))
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "Current Mailglass match"
+      assert html =~ "ops:review"
+      refute html =~ "Couldn’t refresh suppression evidence. Try again."
+    end
+
+    @tag :phase175
+    test "Phase 175 suppression refresh keeps initial failure unavailable and successful empty distinct without writes",
+         %{conn: conn} do
+      delivery = insert_delivery!(recipient: "empty-refresh@example.com")
+      conn = operator_conn(conn)
+      OperatorFixtures.arm_reader_fault!("operator-1", "delivery_suppression", :known)
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      assert html =~ "Unavailable"
+      assert html =~ "Couldn’t refresh suppression evidence. Try again."
+      refute html =~ "No current Mailglass suppression matches this delivery."
+
+      view
+      |> element(~s([data-testid="operator-suppression-refresh"]))
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "No current Mailglass match"
+      assert html =~ "No current Mailglass suppression matches this delivery."
+      refute html =~ "Couldn’t refresh suppression evidence. Try again."
+
+      before_refresh_counts = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      for _ <- 1..2 do
+        view
+        |> element(~s([data-testid="operator-suppression-refresh"]))
+        |> render_click()
+      end
+
+      after_refresh_counts = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      assert after_refresh_counts == before_refresh_counts
     end
 
     test "full detail keeps exact Unicode labels, provider IDs, and timestamps readable", %{

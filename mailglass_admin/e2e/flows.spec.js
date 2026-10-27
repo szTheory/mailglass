@@ -1686,6 +1686,80 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   });
 
+  test("Phase 175 suppression refresh", async ({ page }) => {
+    const resetResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=one"
+    );
+    expect(resetResponse.ok()).toBeTruthy();
+    const fixture = await resetResponse.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&full=1`;
+
+    await page.context().clearCookies();
+    const loginPath = `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`;
+    await page.goto(loginPath);
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+    await page.goto(detailPath);
+
+    const originalUrl = page.url();
+    const card = page.getByTestId("operator-suppression-card");
+    const refresh = card.getByTestId("operator-suppression-refresh");
+    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("operator review · Ångström");
+    await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
+    await expect(refresh).toHaveClass(/btn-ghost/);
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await refresh.focus();
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=delivery_suppression",
+        {
+          method: "POST",
+          headers: { "x-csrf-token": csrfToken },
+          redirect: "manual"
+        }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    await refresh.click();
+    await expect(card).toContainText("Stale");
+    await expect(card).toContainText("Couldn’t refresh suppression evidence. Try again.");
+    await expect(card).toContainText("last retrieved record and may be out of date");
+    await expect(card).toContainText("operator review · Ångström");
+    await expect(refresh).toBeVisible();
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+    expect(page.url()).toBe(originalUrl);
+
+    const changedResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=many"
+    );
+    expect(changedResponse.ok()).toBeTruthy();
+
+    await refresh.click();
+    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("phase169-address-stream");
+    await expect(card).toContainText("Complaint");
+    await expect(card).not.toContainText("operator review · Ångström");
+    await expect(refresh).toBeVisible();
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+    expect(page.url()).toBe(originalUrl);
+    const selected = new URL(page.url());
+    expect(selected.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(selected.searchParams.get("delivery_id")).toBe(fixture.delivery_id);
+  });
+
   test("Phase 168 confirmation focus", async ({ browser }) => {
     const context = await browser.newContext({
       baseURL,

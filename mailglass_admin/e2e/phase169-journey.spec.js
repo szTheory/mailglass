@@ -250,6 +250,7 @@ test.describe("Phase 169 connected journey", () => {
 
     await page.getByTestId("operator-suppression-refresh").click();
     await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
+    await expect(current).toContainText("Couldn’t refresh suppression evidence. Try again.");
     await expect(current).toContainText("last retrieved record and may be out of date");
     await expect(current).toContainText("The public Mailglass removal command permits Policy records.");
     await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);

@@ -79,6 +79,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:selected_timeline_event, nil)
       |> assign(:suppression_state, nil)
       |> assign(:suppression_read_state, :ready)
+      |> assign(:suppression_scope_key, nil)
       |> assign(:suppression_count, nil)
       |> assign(:support_summary, nil)
       |> assign(:support_state, default_support_state())
@@ -478,6 +479,9 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("retry_suppression", _params, socket) do
+    suppression_scope =
+      suppression_scope_key(socket.assigns.filter_params, socket.assigns.selected_delivery)
+
     case read_suppression(
            socket.assigns.filter_params,
            socket.assigns.selected_delivery,
@@ -487,10 +491,25 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply,
          socket
          |> assign(:suppression_state, suppression)
-         |> assign(:suppression_read_state, :ready)}
+         |> assign(:suppression_read_state, :ready)
+         |> assign(:suppression_scope_key, suppression_scope)
+         |> push_event("mailglass:suppression-refresh-complete", %{})}
 
       {:error, :unavailable} ->
-        {:noreply, assign(socket, :suppression_read_state, :unavailable)}
+        previous_suppression =
+          if socket.assigns[:suppression_scope_key] == suppression_scope do
+            socket.assigns[:suppression_state]
+          end
+
+        read_state =
+          if has_suppression_facts?(previous_suppression), do: :stale, else: :unavailable
+
+        {:noreply,
+         socket
+         |> assign(:suppression_state, previous_suppression)
+         |> assign(:suppression_read_state, read_state)
+         |> assign(:suppression_scope_key, suppression_scope)
+         |> push_event("mailglass:suppression-refresh-complete", %{})}
     end
   end
 
@@ -1200,6 +1219,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_timeline_event, nil)
     |> assign(:suppression_state, nil)
     |> assign(:suppression_read_state, :ready)
+    |> assign(:suppression_scope_key, nil)
     |> assign(:support_summary, nil)
     |> assign(:health_panel_states, default_health_panel_states())
     |> assign(:health_observed_at, nil)
@@ -1419,6 +1439,14 @@ defmodule MailglassAdmin.OperatorLive do
         else: reraise(error, __STACKTRACE__)
   end
 
+  defp suppression_scope_key(_filter_params, nil), do: nil
+
+  defp suppression_scope_key(filter_params, delivery) do
+    {filter_params["tenant_id"], String.downcase(delivery.recipient), delivery.stream}
+  end
+
+  defp has_suppression_facts?(state), do: is_map(state) and map_size(state) > 0
+
   defp find_selected_delivery(_deliveries, nil), do: nil
 
   defp find_selected_delivery(deliveries, delivery_id),
@@ -1571,9 +1599,11 @@ defmodule MailglassAdmin.OperatorLive do
           ),
         else: nil
 
+    current_suppression_scope =
+      if full?, do: suppression_scope_key(filter_params, selected_delivery), else: nil
+
     previous_suppression =
-      if get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]) ==
-           selected_delivery_id do
+      if socket.assigns[:suppression_scope_key] == current_suppression_scope do
         socket.assigns[:suppression_state]
       end
 
@@ -1584,8 +1614,14 @@ defmodule MailglassAdmin.OperatorLive do
                selected_delivery,
                socket.assigns[:operator_read_fault]
              ) do
-          {:ok, state} -> {state, :ready}
-          {:error, :unavailable} -> {previous_suppression, :unavailable}
+          {:ok, state} ->
+            {state, :ready}
+
+          {:error, :unavailable} ->
+            read_state =
+              if has_suppression_facts?(previous_suppression), do: :stale, else: :unavailable
+
+            {previous_suppression, read_state}
         end
       else
         {nil, :ready}
@@ -1618,6 +1654,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_timeline_event, selected_timeline_event)
     |> assign(:suppression_state, suppression)
     |> assign(:suppression_read_state, suppression_read_state)
+    |> assign(:suppression_scope_key, current_suppression_scope)
     |> assign(:support_summary, support_summary)
     |> assign(:suppression_count, suppression_count)
     |> assign(:health_panel_states, health_panel_states)
@@ -1765,6 +1802,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
     |> assign(:suppression_read_state, :ready)
+    |> assign(:suppression_scope_key, nil)
     |> assign(:detail_error, nil)
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])

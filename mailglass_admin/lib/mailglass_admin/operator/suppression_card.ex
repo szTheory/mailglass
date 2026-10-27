@@ -37,14 +37,18 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       </div>
 
       <p
-        :if={@read_state == :unavailable}
+        :if={@read_state in [:stale, :unavailable]}
         role="status"
         data-testid="operator-suppression-unavailable"
+        aria-live="polite"
         class="mb-md text-body text-secondary"
       >
-        The current Mailglass suppression read is unavailable. Other Delivery details and recorded Events remain visible.
-        <span :if={@has_match?}>
+        Couldn’t refresh suppression evidence. Try again.
+        <span :if={@read_state == :stale and @has_match?}>
           The match below is the last retrieved record and may be out of date.
+        </span>
+        <span :if={@read_state == :unavailable}>
+          Other Delivery details and recorded Events remain visible.
         </span>
       </p>
 
@@ -104,15 +108,21 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       <button
         type="button"
         phx-click="retry_suppression"
+        phx-disable-with="Refreshing suppression…"
+        phx-hook="SuppressionRefreshFocus"
+        id="operator-suppression-refresh-action"
         class="btn btn-ghost mt-md min-h-11"
         data-testid="operator-suppression-refresh"
       >
-        {if @read_state == :unavailable, do: "Retry suppression read", else: "Refresh suppression"}
+        {if @read_state in [:stale, :unavailable],
+          do: "Retry suppression read",
+          else: "Refresh suppression"}
       </button>
     </Components.card>
     """
   end
 
+  defp headline(_state, :stale), do: "Stale"
   defp headline(_state, :unavailable), do: "Unavailable"
 
   defp headline(state, _read_state) when is_map(state) and map_size(state) > 0,
