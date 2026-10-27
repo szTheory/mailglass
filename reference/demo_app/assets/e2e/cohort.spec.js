@@ -114,14 +114,12 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     // The recipient renders verbatim (unmasked) in the detail header.
     await expect(detail.getByText(FJORDLINE_RECIPIENT)).toBeVisible();
 
-    // Technical identifiers sit behind the header's native "Technical details"
-    // disclosure (progressive disclosure), collapsed by default. Opening it must
-    // show them verbatim and still keep the page free of horizontal overflow.
-    const technical = detail.locator("details#delivery-detail-technical");
+    // Full detail keeps technical identifiers visible in their dedicated
+    // non-collapsible section. They remain verbatim and must not cause overflow.
+    const technical = detail.locator("#delivery-detail-technical");
     await expect(technical).toHaveCount(1);
-    await expect(technical).not.toHaveAttribute("open", /.*/);
-    await technical.locator("summary", { hasText: "Technical details" }).click();
-    await expect(technical).toHaveAttribute("open", "");
+    await expect(technical).toBeVisible();
+    await expect(technical.locator("summary")).toHaveCount(0);
     await expectNoPageHorizontalOverflow(page);
 
     // The long delivery id (provider_message_id) renders verbatim as its own
