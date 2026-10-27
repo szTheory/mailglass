@@ -120,11 +120,10 @@ defmodule MailglassAdmin.AssetsTest do
 
       response =
         Plug.Test.conn(:get, "/dev/storybook-hooks-#{hooks_hash}")
-        |> MailglassAdmin.Controllers.Assets.call(
-          MailglassAdmin.Controllers.Assets.init(:hooks)
-        )
+        |> MailglassAdmin.Controllers.Assets.call(MailglassAdmin.Controllers.Assets.init(:hooks))
 
       assert response.status == 200
+
       assert get_resp_header(response, "content-type") == [
                "application/javascript; charset=utf-8"
              ]
