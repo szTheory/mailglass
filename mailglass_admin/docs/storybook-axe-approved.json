@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "review_basis": {
-    "run_id": "phase174-05-20261027T041038Z-initial-final",
-    "source_revision": "143ae3d45b25b7975ddf9585e51c1f9782450d17",
-    "source_digest": "18607b9e80d4e8d42b878e4127710c59a69b59a00b14cd5fc4925ff98ffe3f03",
-    "reviewed_at": "2026-10-27T04:32:11.110Z",
+    "run_id": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf",
+    "source_revision": "6a14fcaf153589eedd19d6cddf4e26d56472b216+producer-37e311ae78e89ce846dd2f0b849e15edb01d1a2b",
+    "source_digest": "4449560de6964abe5bfa0b1c8a5102a30c04f40c3f845ca7c22710d560c395c4",
+    "reviewed_at": "2026-10-27T05:07:57.801Z",
     "reviewer": "phase174-05 evidence triage",
-    "source": "Preserved initial selected-story axe report; incomplete results only, no violation approvals"
+    "source": "Fresh 18-case before report reproduced from disposable pre-repair snapshot 6a14fcaf; the original 041038Z raw report was removed by Playwright test-results cleanup and is not represented as preserved or reconstructed. No violation fingerprints are approved."
   },
   "approved_fingerprints": [],
   "incomplete_triage": [
@@ -22,9 +22,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -38,9 +38,73 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -54,9 +118,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -70,9 +294,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -86,9 +310,73 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -102,9 +390,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -118,9 +566,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -134,9 +582,57 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -150,9 +646,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -166,9 +822,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -182,9 +838,57 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -198,9 +902,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -214,9 +1078,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -230,9 +1094,73 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -246,9 +1174,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -262,9 +1350,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -278,9 +1366,73 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -294,9 +1446,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -310,9 +1622,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -326,9 +1638,73 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -342,9 +1718,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -358,9 +1894,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -374,9 +1910,73 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -390,9 +1990,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -406,9 +2166,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -422,9 +2182,73 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -438,9 +2262,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -454,9 +2438,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -470,9 +2454,73 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -486,9 +2534,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -502,9 +2710,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -518,9 +2726,265 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -534,9 +2998,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -550,9 +3014,265 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -566,9 +3286,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -582,9 +3302,249 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -598,9 +3558,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -614,9 +3574,249 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -630,9 +3830,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -646,9 +3846,73 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -662,9 +3926,169 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -678,9 +4102,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -694,9 +4118,73 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -710,9 +4198,169 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
+      "disposition": "retained-incomplete-for-manual-review",
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -726,9 +4374,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -742,9 +4390,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -758,9 +4406,9 @@
       "theme": "light",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -774,9 +4422,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -790,9 +4438,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "The target is a tabindex focus-trap sentinel marked aria-hidden and managed by ModalFocusTrap. Axe returned incomplete, so this triage does not claim a pass.",
+      "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     },
     {
       "rule_id": "color-contrast",
@@ -806,9 +4454,9 @@
       "theme": "dark",
       "impact": "serious",
       "count": 1,
-      "reason": "Axe returned incomplete for this color-contrast target. The result is retained for manual review and does not establish a contrast pass.",
+      "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T041038Z-initial-final"
+      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
     }
   ]
 }
