@@ -223,9 +223,12 @@ defmodule MailglassDemoWeb.PageController do
   defp evidence_project_id do
     case System.get_env("DEMO_EVIDENCE_PROJECT_ID") do
       project_id when is_binary(project_id) ->
-        if Regex.match?(~r/^mailglass-evidence-[0-9]{14}-[0-9]+-[0-9]+$/, project_id),
-          do: {:ok, project_id},
-          else: :error
+        if Regex.match?(
+             ~r/^mailglass-evidence-(?:[0-9]{14}-[0-9]+-[0-9]+|[1-9][0-9]*-[1-9][0-9]*)$/,
+             project_id
+           ),
+           do: {:ok, project_id},
+           else: :error
 
       _ ->
         :error

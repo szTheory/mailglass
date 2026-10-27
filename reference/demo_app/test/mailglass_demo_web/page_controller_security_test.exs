@@ -51,6 +51,7 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
     conn = get(conn, "/health")
 
     assert response(conn, 200) == "ok"
+
     assert get_resp_header(conn, "x-mailglass-evidence-project-id") == [
              "mailglass-evidence-20261010093046-123-456"
            ]
@@ -75,7 +76,9 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
     assert Repo.get!(Delivery, sentinel.id).recipient == "untouched@example.test"
   end
 
-  test "evidence reset denies token-only requests without a disposable project marker", %{conn: conn} do
+  test "evidence reset denies token-only requests without a disposable project marker", %{
+    conn: conn
+  } do
     sentinel = insert_sentinel_delivery!()
 
     conn =
@@ -108,11 +111,14 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
 
     assert %{
              "status" => "ok",
-             "warning" => "Destructive demo reset endpoint: truncates and reseeds demo evidence tables."
+             "warning" =>
+               "Destructive demo reset endpoint: truncates and reseeds demo evidence tables."
            } = json_response(conn, 200)
   end
 
-  test "hosted evidence run and attempt preserve health identity and token-gated reset", %{conn: conn} do
+  test "hosted evidence run and attempt preserve health identity and token-gated reset", %{
+    conn: conn
+  } do
     project_id = "mailglass-evidence-40484284465-1"
     System.put_env("DEMO_EVIDENCE_PROJECT_ID", project_id)
 
@@ -141,8 +147,12 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
   end
 
   test "malformed hosted identities expose no marker and cannot reset", %{conn: conn} do
-    for project_id <- ["mailglass-evidence-40484284465-0", "mailglass-evidence-0-1",
-                       "mailglass-evidence-run-1", "mailglass-evidence-123-1/../other"] do
+    for project_id <- [
+          "mailglass-evidence-40484284465-0",
+          "mailglass-evidence-0-1",
+          "mailglass-evidence-run-1",
+          "mailglass-evidence-123-1/../other"
+        ] do
       System.put_env("DEMO_EVIDENCE_PROJECT_ID", project_id)
       assert get_resp_header(get(conn, "/health"), "x-mailglass-evidence-project-id") == []
 

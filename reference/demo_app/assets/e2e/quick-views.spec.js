@@ -437,7 +437,8 @@ test("Phase174 inbound retained production variations cover normal, boundaries, 
   const unavailable = page.frameLocator('iframe[id*="selected_unavailable"]');
   const normalFrame = page.locator('iframe[id*="northstar_normal"]');
   expect(await normalFrame.count(), "the retained normal Inbound variation has an iframe").toBe(1);
-  expect(await normalFrame.evaluate(frame => frame.clientHeight)).toBeGreaterThanOrEqual(600);
+  await expect.poll(() => normalFrame.evaluate(frame => frame.clientHeight))
+    .toBeGreaterThanOrEqual(600);
   await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("3 of 6");
   await expect(normal.getByRole("heading", { name: "[support] Invite email did not arrive" })).toBeVisible();
   await expect(normal.getByText("support@demo.mailglass.local", { exact: true })).toBeVisible();

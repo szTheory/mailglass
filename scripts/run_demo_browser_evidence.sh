@@ -234,6 +234,10 @@ fi
 
 read -r -d '' PHASE174_CONTAINER_COMMAND <<'CONTAINER' || true
 set -eu
+# The checked-out host workspace is deliberately bind-mounted into this root-run
+# container. Trust that one checkout for receipt queries, without changing host
+# Git configuration or trusting arbitrary repositories.
+export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/workspace
 now_ms() { node -e 'process.stdout.write(String(Number(process.hrtime.bigint() / 1000000n)))'; }
 condition_dir="$PHASE174_EVIDENCE_DIR"
 mkdir -p "$condition_dir"
