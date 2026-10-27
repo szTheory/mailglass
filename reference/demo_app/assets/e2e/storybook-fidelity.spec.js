@@ -102,7 +102,15 @@ function appendPhase175FidelityEvidence(receipt) {
         "Story composition proves rendering only; command authorization, persistence and replay results are checked on connected routes.",
         "Actual zoom is Chromium tab zoom reported by chrome.tabs.getZoom with observed effective CSS viewport and DPR; the device scale factor only keeps screenshot output readable."
       ] };
-  const caseIds = [receipt.caseId, ...(receipt.cases || []).map(item => item.caseId)].filter(Boolean);
+  if (JSON.stringify(evidence.source) !== JSON.stringify(receipt.source)) {
+    evidence.selectedCaseIds = [];
+    evidence.executedCaseIds = [];
+    evidence.cases = [];
+  }
+  evidence.source = receipt.source;
+  const caseIds = receipt.executedCaseIds?.length
+    ? receipt.executedCaseIds
+    : [receipt.caseId, ...(receipt.cases || []).map(item => item.caseId)].filter(Boolean);
   for (const id of caseIds) {
     if (!evidence.selectedCaseIds.includes(id)) evidence.selectedCaseIds.push(id);
     if (!evidence.executedCaseIds.includes(id)) evidence.executedCaseIds.push(id);
@@ -1152,6 +1160,10 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
     expect(receipt.executedCaseIds).toHaveLength(receipt.expectedCaseCount);
     receipt.completedCaseCount = receipt.executedCaseIds.length;
     appendPhase175FidelityEvidence(receipt);
+    const persistedReceipt = JSON.parse(fs.readFileSync(PHASE175_FIDELITY_PATH, "utf8"));
+    expect(persistedReceipt.source, "the persisted Phase 175 receipt names this run's current source").toEqual(source);
+    expect([...persistedReceipt.executedCaseIds].sort(), "the persisted Phase 175 receipt contains the current run's cases")
+      .toEqual([...receipt.executedCaseIds].sort());
     console.log(`PHASE175_FIDELITY_RECEIPT ${JSON.stringify(receipt)}`);
   } finally {
     await context.close();

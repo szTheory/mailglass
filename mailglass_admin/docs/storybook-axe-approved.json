@@ -4472,7 +4472,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4488,7 +4488,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4504,7 +4504,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.13:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4520,7 +4520,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 17.39:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4536,7 +4536,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4552,7 +4552,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4568,7 +4568,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 5.26:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4584,7 +4584,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4600,7 +4600,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4616,7 +4616,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4632,7 +4632,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4648,7 +4648,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4664,7 +4664,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.60:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4680,7 +4680,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.09:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4696,7 +4696,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4712,7 +4712,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4728,7 +4728,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 10.30:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4744,7 +4744,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4760,7 +4760,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4776,7 +4776,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4792,7 +4792,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4808,7 +4808,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4824,7 +4824,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.13:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4840,7 +4840,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 17.39:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4856,7 +4856,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4872,7 +4872,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 5.26:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4888,7 +4888,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4904,7 +4904,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.85:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4920,7 +4920,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.42:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4936,7 +4936,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.42:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4952,7 +4952,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 17.39:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4968,7 +4968,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -4984,7 +4984,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5000,7 +5000,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5016,7 +5016,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5032,7 +5032,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.60:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5048,7 +5048,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.09:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5064,7 +5064,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5080,7 +5080,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 10.30:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5096,7 +5096,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5112,7 +5112,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 9.61:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5128,7 +5128,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5144,7 +5144,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5160,7 +5160,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.09:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5176,7 +5176,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5192,7 +5192,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5208,7 +5208,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.13:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5224,7 +5224,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 17.39:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5240,7 +5240,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5256,7 +5256,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.60:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5272,7 +5272,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.09:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5288,7 +5288,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5304,7 +5304,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5320,7 +5320,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5336,7 +5336,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.13:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5352,7 +5352,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 17.39:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5368,7 +5368,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 4.64:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5384,7 +5384,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 16.74:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5400,7 +5400,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -5416,7 +5416,7 @@
       "count": 1,
       "reason": "Axe retains this exact ModalFocusTrap sentinel as incomplete because it is focusable while aria-hidden. The independent Phase 175 check verified forward and reverse dialog focus wrap; Axe remains incomplete and no hidden-focus verdict is inferred.",
       "disposition": "retained-incomplete-with-focus-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5432,7 +5432,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 7.60:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5448,7 +5448,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 14.09:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5464,7 +5464,7 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 12.98:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     },
     {
       "rule_id": "color-contrast",
@@ -5480,17 +5480,17 @@
       "count": 1,
       "reason": "Axe leaves this exact rendered target incomplete. Independent Phase 175 canvas checks inspected every matching node; the lowest measured ratio was 15.80:1 and met the target-specific computed threshold. Preserve Axe's incomplete result; the supplemental measurement does not relabel it as an Axe pass.",
       "disposition": "retained-incomplete-with-rendered-contrast-supplement",
-      "evidence": "phase175-05-current-digest-review-20261027"
+      "evidence": "phase175-05-persisted-receipt-review-20261027"
     }
   ],
   "evidence_runs": [
     {
-      "run_id": "phase175-05-current-digest-review-20261027",
-      "source_revision": "9eaa586a4bd6d547d4856d570f854e459bf12df3",
-      "source_digest": "799ee281e2e30d8aeec2005014acbb4282864cc66c08eeb1809383b39cd6cf64",
-      "reviewed_at": "2026-10-27T17:57:10.834Z",
+      "run_id": "phase175-05-persisted-receipt-review-20261027",
+      "source_revision": "a65a670ddf64c87affbb5444a35c8a42bad8cb89",
+      "source_digest": "1d20bcbcecd6af9ca1d6d8822c6b902e7a597399dc63ef5598d316c2ab608bbb",
+      "reviewed_at": "2026-10-27T18:02:23.253Z",
       "reviewer": "phase175-05 evidence triage",
-      "source": "Full selected Phase 175 matrix using the latest fidelity source digest: all 26 cases executed and passed, zero Axe violations, and all 64 exact Delivery incomplete fingerprints were reviewed against every matching rendered contrast target and dialog focus receipts. Axe incomplete results remain incomplete."
+      "source": "Full selected Phase 175 matrix against the persisted current-source fidelity receipt: all 26 cases passed, zero Axe violations, and all 64 exact Delivery incomplete fingerprints were reviewed against all rendered contrast targets and dialog focus receipts. Axe incomplete results remain incomplete."
     }
   ]
 }
