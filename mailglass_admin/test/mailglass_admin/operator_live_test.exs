@@ -594,6 +594,207 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert after_refresh_counts == before_refresh_counts
     end
 
+    @tag :phase175
+    test "Phase 175 suppression policy states removal support, unknown expiry, and safe missing values" do
+      future_expiry =
+        DateTime.utc_now()
+        |> DateTime.truncate(:second)
+        |> DateTime.add(3_600, :second)
+
+      supported_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "policy@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "operator review",
+            expires_at: future_expiry,
+            removal_policy: :supported
+          }
+        )
+
+      assert supported_html =~ "Removal policy"
+      assert supported_html =~ "Mailglass allows removal of Manual suppressions."
+      assert supported_html =~
+               "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")} UTC\""
+
+      blocked_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "complaint@example.com",
+            scope: :address,
+            reason: :complaint,
+            source: "provider complaint",
+            expires_at: nil,
+            removal_policy: :blocked
+          }
+        )
+
+      assert blocked_html =~ "Expiry date not recorded"
+      assert blocked_html =~ "Mailglass does not allow removal of Complaint suppressions."
+      refute blocked_html =~ "permanent"
+
+      unknown_policy_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: nil,
+            scope: :unknown,
+            reason: nil,
+            source: "",
+            expires_at: nil,
+            removal_policy: nil
+          }
+        )
+
+      assert unknown_policy_html =~ "Removal policy not recorded."
+      assert unknown_policy_html =~ "Expiry date not recorded"
+      assert unknown_policy_html =~ "Unavailable"
+      assert length(Floki.find(Floki.parse_fragment!(unknown_policy_html), "button")) == 1
+      refute unknown_policy_html =~ "Remove suppression"
+
+      long_source = "東京·Ångström-" <> String.duplicate("配信·é·", 40) <> "<script>alert(1)</script>"
+
+      long_unicode_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "māil+東京@example.com",
+            scope: :address,
+            reason: :manual,
+            source: long_source,
+            expires_at: future_expiry,
+            removal_policy: :supported
+          }
+        )
+
+      assert long_unicode_html =~ "māil+東京@example.com"
+      assert long_unicode_html =~ "東京·Ångström-"
+      assert long_unicode_html =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+      refute long_unicode_html =~ "<script>alert(1)</script>"
+    end
+
+    @tag :phase175
+    test "Phase 175 suppression policy refresh observes external changes, expiry, and Account/stream scope",
+         %{conn: conn} do
+      recipient = "scoped-refresh@example.com"
+      future_expiry = DateTime.add(DateTime.utc_now(), 3_600, :second)
+      expired_at = DateTime.add(DateTime.utc_now(), -3_600, :second)
+
+      delivery =
+        insert_delivery!(
+          recipient: recipient,
+          stream: :transactional,
+          status: :suppressed,
+          last_event_type: :suppressed
+        )
+
+      insert_event!(delivery, %{type: :suppressed, metadata: %{source: "historical event"}})
+
+      insert_suppression!(%{
+        tenant_id: @tenant_id,
+        address: recipient,
+        scope: :address_stream,
+        stream: :transactional,
+        reason: :manual,
+        source: "initial-account-match",
+        expires_at: future_expiry
+      })
+
+      insert_suppression!(%{
+        tenant_id: "foreign-tenant",
+        address: recipient,
+        scope: :address_stream,
+        stream: :transactional,
+        reason: :manual,
+        source: "foreign-account-match",
+        expires_at: future_expiry
+      })
+
+      insert_suppression!(%{
+        tenant_id: @tenant_id,
+        address: recipient,
+        scope: :address_stream,
+        stream: :bulk,
+        reason: :unsubscribe,
+        source: "other-stream-match",
+        expires_at: future_expiry
+      })
+
+      conn = operator_conn(conn)
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      assert html =~ "initial-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+      assert html =~
+               "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")}"
+
+      [external_update] =
+        TestRepo.query!(
+          "UPDATE mailglass_suppressions SET source = $1 WHERE tenant_id = $2 AND address = $3 AND scope = 'address_stream' AND stream = 'transactional' RETURNING id",
+          ["external-account-match", @tenant_id, recipient]
+        ).rows
+
+      assert length(external_update) == 1
+
+      view
+      |> element("[data-testid='operator-suppression-refresh']")
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "external-account-match"
+      refute html =~ "initial-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+
+      [expired_update] =
+        TestRepo.query!(
+          "UPDATE mailglass_suppressions SET expires_at = $1 WHERE tenant_id = $2 AND address = $3 AND scope = 'address_stream' AND stream = 'transactional' RETURNING id",
+          [expired_at, @tenant_id, recipient]
+        ).rows
+
+      assert length(expired_update) == 1
+
+      view
+      |> element("[data-testid='operator-suppression-refresh']")
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "No current Mailglass match"
+      assert html =~ "No current Mailglass suppression matches this delivery."
+      refute html =~ "external-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+
+      before_repeated_reads = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      for _ <- 1..2 do
+        view
+        |> element("[data-testid='operator-suppression-refresh']")
+        |> render_click()
+      end
+
+      after_repeated_reads = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      assert after_repeated_reads == before_repeated_reads
+    end
+
     test "full detail keeps exact Unicode labels, provider IDs, and timestamps readable", %{
       conn: conn
     } do

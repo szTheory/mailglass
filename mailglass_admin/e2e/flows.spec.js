@@ -1760,6 +1760,55 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(selected.searchParams.get("delivery_id")).toBe(fixture.delivery_id);
   });
 
+  test("Phase 175 suppression policy", async ({ page }) => {
+    const resetResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=one"
+    );
+    expect(resetResponse.ok()).toBeTruthy();
+    const fixture = await resetResponse.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&full=1`;
+
+    await page.context().clearCookies();
+    const loginPath = `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`;
+    await page.goto(loginPath);
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+    await page.goto(detailPath);
+
+    const card = page.getByTestId("operator-suppression-card");
+    const refresh = card.getByTestId("operator-suppression-refresh");
+    const actionIsLast = () =>
+      refresh.evaluate(button => button.parentElement?.lastElementChild === button);
+
+    await expect(card).toContainText("Removal policy");
+    await expect(card).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(card.getByText("Expiry date not recorded", { exact: true })).toHaveCount(0);
+    await expect(card.locator("time[data-local-time='true']")).toHaveCount(1);
+    await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
+    await expect(refresh).toHaveClass(/btn-ghost/);
+    await expect(refresh).toHaveCount(1);
+    await expect(card.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
+    expect(await actionIsLast()).toBe(true);
+
+    const changedResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=many"
+    );
+    expect(changedResponse.ok()).toBeTruthy();
+
+    const originalUrl = page.url();
+    await refresh.click();
+    await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+    await expect(card).toContainText("Expiry date not recorded");
+    await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
+    await expect(card).toContainText("Address + stream · Account-local");
+    await expect(card).toContainText("phase169-address-stream");
+    await expect(card.locator("time[data-local-time='true']")).toHaveCount(0);
+    await expect(refresh).toBeVisible();
+    await expect(refresh).toHaveCount(1);
+    expect(await actionIsLast()).toBe(true);
+    await expect(card.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
+    expect(page.url()).toBe(originalUrl);
+  });
+
   test("Phase 168 confirmation focus", async ({ browser }) => {
     const context = await browser.newContext({
       baseURL,
