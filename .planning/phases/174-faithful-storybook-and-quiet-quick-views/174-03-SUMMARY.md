@@ -101,9 +101,9 @@ The browser receipt distinguishes the Storybook explorer from its isolated ifram
 
 ## Task Commits
 
-1. **Task 1 RED: shared hook asset contract coverage** — `b807d06e` (`test`)
-2. **Task 1 GREEN: share production hooks with Storybook** — `ea9fe736` (`feat`)
-3. **Task 1 refactor: format shared hook assertions** — `ec76f3d5` (`style`)
+1. **Task 1: RED — shared hook asset contract coverage** — `b807d06e` (`test`)
+2. **Task 1: GREEN — share production hooks with Storybook** — `ea9fe736` (`feat`)
+3. **Task 1: refactor — format shared hook assertions** — `ec76f3d5` (`style`)
 4. **Task 2: verify hook lifecycle across clients** — `de06c706` (`test`)
 
 The separate plan metadata commit records this summary and the sequential GSD tracking updates.

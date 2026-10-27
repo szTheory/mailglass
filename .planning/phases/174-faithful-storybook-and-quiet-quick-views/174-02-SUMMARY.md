@@ -97,10 +97,10 @@ status: complete
 
 ## Task Commits
 
-1. **Task 1 RED:** `014acc97` — add failing Inbound quick-view browser checks.
-2. **Task 1 GREEN:** `9e5496b9` — retain the quiet Inbound quick view and connected focus return.
-3. **Task 2 RED:** `ecbfc71a` — add failing projection agreement coverage.
-4. **Task 2 GREEN:** `87d18cb7` — prove scoped production projection agreement and record scenario evidence.
+1. **Task 1: RED —** `014acc97` — add failing Inbound quick-view browser checks.
+2. **Task 1: GREEN —** `9e5496b9` — retain the quiet Inbound quick view and connected focus return.
+3. **Task 2: RED —** `ecbfc71a` — add failing projection agreement coverage.
+4. **Task 2: GREEN —** `87d18cb7` — prove scoped production projection agreement and record scenario evidence.
 
 ## Files Created/Modified
 

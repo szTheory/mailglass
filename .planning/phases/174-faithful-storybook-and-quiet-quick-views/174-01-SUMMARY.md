@@ -105,7 +105,8 @@ The captures are 350×600 because the Storybook example column is narrow; they s
 
 1. **Task 1: Repair and retain one real Delivery quick-view path** — `3165b47f` (`feat`)
 2. **Task 2: Retain Delivery boundaries and begin the feedback/scenario ledger** — `f5d2a203` (`feat`)
-3. **Rule 1 fix: Size the retained fixed-overlay Storybook viewport** — `8411a25f` (`fix`)
+3. **Task 2: Size the retained fixed-overlay Storybook viewport** — `8411a25f` (`fix`)
+4. **Task 1: Align existing token-parity assertion with the full mounted prefix** — `c409e654` (`test`)
 
 ## Files Created/Modified
 

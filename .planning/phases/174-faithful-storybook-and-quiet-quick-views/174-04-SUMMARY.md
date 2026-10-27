@@ -80,6 +80,11 @@ The runtime receipt is `reference/demo_app/tmp/demo_browser_evidence/phase174/fi
 - `node --check reference/demo_app/assets/e2e/storybook-fidelity.spec.js` and `git diff --check` — passed.
 - The Task 2 JUnit RED record classified as `RED_EVIDENCE_OK`. Both TDD tasks have a test commit before their implementation commit.
 
+## Task Commits
+
+1. **Task 1: Theme ownership RED and GREEN** — `bed78842`, `03b019d6`.
+2. **Task 2: Font and responsive receipts RED and GREEN** — `c950cb9b`, `a3b3548a`.
+
 ## TDD Gate Compliance
 
 | Task | RED commit | GREEN commit | Result |

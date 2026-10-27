@@ -197,8 +197,8 @@ No new public endpoint, authentication path, persistence schema, or dependency w
 
 ## Task Commits
 
-1. **Task 1: Run complete selected evidence in the existing advisory browser lane** — a06a311b, d01f1b63, b0ea5986, 1b4ace7a, 95fe9b92, be87c9c6, e7553eee, bc52eac7, 79f24834, d46e7e37, fbf7d791.
-2. **Task 2: Record the cold/warm pilot and current-source review disposition** — 86a04b6b.
+1. **Task 1: Run complete selected evidence in the existing advisory browser lane** — `a06a311b`, `d01f1b63`, `b0ea5986`, `1b4ace7a`, `95fe9b92`, `be87c9c6`, `e7553eee`, `bc52eac7`, `79f24834`, `d46e7e37`, `fbf7d791`.
+2. **Task 2: Record the cold/warm pilot and current-source review disposition** — `86a04b6b`.
 
 ## Deviations from Plan
 
