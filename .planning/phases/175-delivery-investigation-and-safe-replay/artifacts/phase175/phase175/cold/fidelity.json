@@ -1,7 +1,7 @@
 {
   "source": {
     "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
-    "revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+    "revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
     "files": [
       {
         "path": "mailglass_admin/assets/css/app.css",
@@ -115,8 +115,8 @@
       },
       {
         "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
-        "bytes": 58022,
-        "sha256": "34199698f894948626ecaf11653f10442d46a40521d6963f3626919a1d9d4c59"
+        "bytes": 60074,
+        "sha256": "8c26ae4beb6afb7f6ce259b07062a85cd34312d5e3ff6a9a9fdf7aa42d500a96"
       },
       {
         "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
@@ -134,7 +134,7 @@
         "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
       }
     ],
-    "digest": "9a2d0bbe34638507de453609c100c43f0683e66ea21445512e04d23ab798f0cd"
+    "digest": "47f1bded2c8c1785d5e18e148bab9ff39496f968d3edb640284cc5001ab1efce"
   },
   "selectedCaseIds": [
     "story:delivery-investigation-fjordline-long-unicode",
@@ -165,7 +165,7 @@
       "caseId": "fidelity:delivery-investigation:long-unicode",
       "source": {
         "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
-        "revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
+        "revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
         "files": [
           {
             "path": "mailglass_admin/assets/css/app.css",
@@ -279,8 +279,8 @@
           },
           {
             "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
-            "bytes": 58022,
-            "sha256": "34199698f894948626ecaf11653f10442d46a40521d6963f3626919a1d9d4c59"
+            "bytes": 60074,
+            "sha256": "8c26ae4beb6afb7f6ce259b07062a85cd34312d5e3ff6a9a9fdf7aa42d500a96"
           },
           {
             "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
@@ -298,7 +298,7 @@
             "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
           }
         ],
-        "digest": "9a2d0bbe34638507de453609c100c43f0683e66ea21445512e04d23ab798f0cd"
+        "digest": "47f1bded2c8c1785d5e18e148bab9ff39496f968d3edb640284cc5001ab1efce"
       },
       "selectedCaseCount": 10,
       "expectedCaseCount": 10,
@@ -344,6 +344,8 @@
           "themeOwner": "delivery-investigation-story",
           "geometry": {
             "viewportWidth": 320,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
             "documentWidth": 320,
             "picker": {
               "left": 8,
@@ -412,7 +414,15 @@
               }
             ]
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase175/cold/delivery-investigation-320-dark.png"
+          "screenshot": ".planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/cold/delivery-investigation-320-dark.png",
+          "captureGeometry": {
+            "viewportWidth": 320,
+            "viewportHeight": 1924,
+            "documentWidth": 320,
+            "contentHeight": 2153,
+            "devicePixelRatio": 1,
+            "screenshotScale": 1
+          }
         },
         {
           "caseId": "fidelity:delivery-investigation:375:light",
@@ -423,6 +433,8 @@
           "themeOwner": "delivery-investigation-story",
           "geometry": {
             "viewportWidth": 375,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
             "documentWidth": 375,
             "picker": {
               "left": 8,
@@ -501,6 +513,8 @@
           "themeOwner": "delivery-investigation-story",
           "geometry": {
             "viewportWidth": 768,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
             "documentWidth": 768,
             "picker": {
               "left": 8,
@@ -579,6 +593,8 @@
           "themeOwner": "delivery-investigation-story",
           "geometry": {
             "viewportWidth": 1280,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
             "documentWidth": 1280,
             "picker": {
               "left": 8,
@@ -657,6 +673,8 @@
           "themeOwner": "delivery-investigation-story",
           "geometry": {
             "viewportWidth": 1440,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
             "documentWidth": 1440,
             "picker": {
               "left": 8,
@@ -725,7 +743,15 @@
               }
             ]
           },
-          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027205816-4815-29177/phase175/cold/delivery-investigation-1440-dark.png"
+          "screenshot": ".planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/cold/delivery-investigation-1440-dark.png",
+          "captureGeometry": {
+            "viewportWidth": 1440,
+            "viewportHeight": 1924,
+            "documentWidth": 1440,
+            "contentHeight": 1363,
+            "devicePixelRatio": 1,
+            "screenshotScale": 1
+          }
         }
       ],
       "screenshots": [
@@ -849,10 +875,10 @@
       "hooks": {
         "caseId": "hook:storybook-host-connected-and-production-quick-view-focus-return",
         "storyHostConnected": true,
-        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168",
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f70-ecca-77aa-88d3-65c0d1ba0d31&tenant_id=northstar&window_hours=168",
         "connectedThemeOwner": null,
         "quickViewClosed": true,
-        "exactFocusReturnId": "operator-delivery-desktop-01a17f2a-5e7f-7708-9df6-cd23387ab35a"
+        "exactFocusReturnId": "operator-delivery-desktop-01a17f70-ecca-77aa-88d3-65c0d1ba0d31"
       },
       "urls": {
         "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
@@ -863,15 +889,15 @@
         "storyIframeMode": "srcdoc",
         "storyIframeHasSrcAttribute": false,
         "storyIframeSrcdocBytes": 22213,
-        "storyIframeSrcdocSha256": "9c21e24f5a53a9dfbfeb9cef0674510e48473ec56cc7c99a266b7375b22ac741",
-        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f2a-5e7f-7708-9df6-cd23387ab35a&tenant_id=northstar&window_hours=168"
+        "storyIframeSrcdocSha256": "c4cc27337a414e960bcf1e9ae4bfe6c7824849a142cdb67a1edaec171a7a734c",
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f70-ecca-77aa-88d3-65c0d1ba0d31&tenant_id=northstar&window_hours=168"
       },
       "zoom": {
         "caseId": "fidelity:delivery-investigation:real-200-percent-zoom",
         "url": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
         "iframeUrl": "about:srcdoc",
         "tabZoom": {
-          "tabId": 88587960,
+          "tabId": 1129909110,
           "factor": 2
         },
         "initial": {
@@ -886,6 +912,14 @@
           "devicePixelRatio": 4,
           "owner": "delivery-investigation-story",
           "theme": "mailglass-dark"
+        },
+        "captureGeometry": {
+          "viewportWidth": 320,
+          "viewportHeight": 2324,
+          "documentWidth": 320,
+          "contentHeight": 2157,
+          "devicePixelRatio": 4,
+          "screenshotScale": 2
         },
         "screenshot": ".planning/phases/175-delivery-investigation-and-safe-replay/artifacts/phase175/phase175/cold/delivery-investigation-200-browser-zoom.png"
       },

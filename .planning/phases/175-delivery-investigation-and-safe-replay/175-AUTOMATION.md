@@ -1,6 +1,6 @@
 # Phase 175 automated proof and reproduction
 
-This record closes the Phase 175 machine-observable requirements against the retained current-source cold/warm run. It does not claim provider delivery, hosted CI execution, or an owner aesthetic verdict. Deterministic acceptance is automated under METHODOLOGY.md D-52.
+This record closes the Phase 175 machine-observable requirements against the retained current-source cold/warm receipts. It does not claim provider delivery, hosted CI execution, or an owner aesthetic verdict. Deterministic acceptance is automated under METHODOLOGY.md D-52.
 
 ## Reproduce and check
 
@@ -20,21 +20,35 @@ The wrapper owns one isolated Compose project and test database, serial cold/war
 ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm --prefix reference/demo_app/assets run test:e2e -- --grep "outbound replay from the demo"
 ```
 
-The current isolated Admin/auth run used `MIX_ENV=test`, `POSTGRES_HOST=demo_db`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, a run-specific `MIX_BUILD_PATH`, and the Phase 175 browser-test database. The focused operator/component/Inbound/auth tests and subsequent correction tests passed; the full counts are in [175-REVIEW-FIXES.md](175-REVIEW-FIXES.md). The complete current-source browser selection and persisted demo outcome are included in the run below. The full regression gate passed Node contracts 41/41, core renderer 81/81, Admin LiveView/component 661 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview browser cases 31/31.
+The current isolated Admin/auth run used `MIX_ENV=test`, `POSTGRES_HOST=demo_db`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, a run-specific `MIX_BUILD_PATH`, and the Phase 175 browser-test database. The focused operator/component/Inbound/auth tests and subsequent correction tests passed; the full counts are in [175-REVIEW-FIXES.md](175-REVIEW-FIXES.md). The complete current-source browser selection and persisted demo outcome are included in the run below. The full regression gate passed Node contracts 42/42, core renderer 81/81, Admin LiveView/component 661 tests (0 failures, 1 excluded), Inbound deterministic 480 tests (0 failures, 3 excluded), and connected Operator/Preview browser cases 31/31.
 
 ## Current-source run identity and coverage
 
 | Field | Cold | Warm |
 | --- | --- | --- |
-| Run ID | `mailglass-evidence-20261027205816-4815-29177-cold` | `mailglass-evidence-20261027205816-4815-29177-warm` |
-| Source revision | `fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8` | same |
-| Phase 175 source digest | `0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb` | same |
-| Phase 174 source digest | `7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae` | same |
+| Run ID | `mailglass-evidence-20261027221513-96275-31939-cold` | `mailglass-evidence-20261027221513-96275-31939-warm` |
+| Source revision | `0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0` | same |
+| Phase 175 source digest | `d01817a07796768cbf874ba35715aa3945a3f59971104b362e82417244901fa7` | same |
+| Phase 174 source digest | `13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c` | same |
 | Expected / executed | Demo 4/4; Admin 10/10; fidelity 10/10; Axe 26/26 | same |
 | Layout checks | Delivery 6/6; Inbound 6/6 | same |
 | Axe outcome | 0 violations; 116 incomplete, separately triaged | same |
 
-The exact selected and executed inventories, including source locations, are in `artifacts/phase175/phase175/execution.json`; the case reports are beside it under `phase175/{cold,warm}/`. The checker requires exact nonempty expected/executed IDs and rejects missing, malformed, duplicate, unexpected, failed, skipped, stale-source, and wrong-source evidence. Its six Node tests pass, including decoded-PNG and adversarial path cases. The independent earlier 116-incomplete report remains retained for triage, and the failed report with two untriaged findings remains marked failed. All current reports are retained after the isolated Compose project and volumes were removed; `phase175/run.json` records completed cleanup and volume removal.
+The exact selected and executed inventories, including source locations, are in `artifacts/phase175/phase175/execution.json`; the case reports are beside it under `phase175/{cold,warm}/`. The checker requires exact nonempty expected/executed IDs and rejects missing, malformed, duplicate, unexpected, failed, skipped, stale-source, and wrong-source evidence. It decodes every required PNG and binds its pixel width and minimum height to the observed viewport, DPR, browser zoom, screenshot scale, document width, and measured body content height. Its seven Phase 175 Node tests pass, including representative 320×2153, 1440×1363, and 640×4316 PNG fixtures plus wrong-width, 1×1, too-short, corrupt-image, and adversarial-path cases. The independent earlier 116-incomplete report remains retained for triage, and the failed report with two untriaged findings remains marked failed. All current reports are retained after the isolated Compose project and volumes were removed; `phase175/run.json` records completed cleanup and volume removal.
+
+### Captured screenshot geometry
+
+Both cold and warm receipts contain the same observed capture geometry:
+
+| Capture | PNG pixels | Observed CSS viewport | DPR / screenshot scale | Document width | Measured body content height |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 320px responsive | 320×2153 | 320×1924 | 1 / 1 | 320 | 2153 |
+| 1440px responsive | 1440×1363 | 1440×1924 | 1 / 1 | 1440 | 1363 |
+| Actual 200% browser zoom | 640×4316 | 320×2324 effective; 1440×900 initial | DPR 2 initial, 4 effective / 2 | 320 | 2157 |
+
+The zoom capture therefore has a minimum required image height of 4314 pixels from the observed content height and scale; its decoded height is 4316. The checker compares these observed receipts instead of relying on hard-coded device-specific dimensions.
+
+The fresh combined runner exited 0 against revision `0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0`; both Phase 174 and Phase 175 cold/warm receipt checkers pass against the durable copies. The monitored `reference/demo_app/mix.lock` SHA-256 stayed `1472692952d9ddbd91df7a116a4b5cf28f717ca3369a7a04bf80cc94b39711d7` before and after the 450.753-second run. A preceding run exposed the cause: Compose started `mix deps.get` against the read/write workspace bind and resolved newer compatible versions of `boundary` and `websock_adapter`, making the final selected-source digest stale. `reference/demo_app/mix.exs` now constrains these already-locked versions with `override: true`, and the Demo startup runs `mix deps.get --check-locked`. An isolated `MIX_ENV=dev mix deps.get --check-locked` probe selected boundary 0.11.0 and websock_adapter 0.6.0 and left the lock byte-identical. The final runner stdout is retained in `artifacts/phase175/runner-success-mailglass-evidence-20261027221513-96275-31939.log`, and the isolated probe transcript is `artifacts/phase175/dependency-resolution-probe.log`. The exact lock delta and historical failure markers remain under `artifacts/phase175/runner-failures/`; those failed runs are history, not current proof.
 
 ### Named Demo and connected Admin cases
 
@@ -161,6 +175,6 @@ The failed 116-incomplete report has exactly two new fingerprints relative to th
 
 The checker tests are in the existing `scripts/gsd-regression-gate.sh` and the existing GitHub Actions `Demo Browser Evidence (Docker Compose / Chromium)` job. That job runs the current combined selector and uploads its owned artifacts; it adds no required branch-protection context. No hosted run or hosted runner-minute measurement was observed for this revision. The provisional ceilings remain five added wall minutes and ten runner minutes, but only the local wall observation below is measured.
 
-The runner records **42,290 ms (0.70483 minutes) of attributable incremental local Phase 175 wall time** across cold/warm selected operator runs: 20,689 ms cold and 21,471 ms warm, including checker overhead. This is within the provisional five-minute added wall allowance. The figure is only the attributable Phase 175 increment; it is not total combined-workflow wall time or a hosted runner-cost estimate. Phase 174 setup, browser installation, Demo/Axe scans, and teardown are retained separately and are not charged again to Phase 175. Teardown for this run completed in 2,265 ms and removed the owned volumes. The local run used the isolated `mailglass_demo_phase175_05` database because the default Demo DB retained a migration ledger without the Demo schema; the default database was not repaired or modified.
+The runner records **44,408 ms (0.74013 minutes) of attributable incremental local Phase 175 wall time** across cold/warm selected operator runs: 23,933 ms cold and 20,358 ms warm, plus checker overhead. This is within the provisional five-minute added wall allowance. The figure is only the attributable Phase 175 increment; it is not total combined-workflow wall time or a hosted runner-cost estimate. Phase 174 setup, browser installation, Demo/Axe scans, and teardown are retained separately and are not charged again to Phase 175. Teardown completed in 2,280 ms and removed the owned volumes. The local run used the isolated `mailglass_demo_phase175_05` database because the default Demo DB retained a migration ledger without the Demo schema; the default database was not repaired or modified.
 
 The selected evidence covers the declared current Chromium/viewport/theme/state inventory, not all browsers, devices, operating systems, or every viewport/theme Cartesian combination. Story rendering proves presentation; connected routes and server tests prove selected actions and recorded outcomes. The CI job remains outside required contexts; no hosted CI execution or hosted runner cost is claimed. Axe incomplete findings remain incomplete, and eight descriptor-less prohibition-recall flags remain flagged-unverified. Phase 178 retains STORY-07/UIQ final ownership.

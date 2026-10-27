@@ -1,22 +1,22 @@
 {
   "condition": "warm",
-  "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
+  "run_id": "mailglass-evidence-20261027221513-96275-31939-warm",
   "job_id": "local",
-  "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-  "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae",
+  "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+  "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c",
   "status": "passed",
-  "started_at": "2026-10-27T21:02:53.637Z",
-  "completed_at": "2026-10-27T21:05:35.320Z",
+  "started_at": "2026-10-27T22:20:03.579Z",
+  "completed_at": "2026-10-27T22:22:41.069Z",
   "timings_ms": {
     "service_start": 0,
-    "demo_lock_audit": 112,
-    "demo_npm_ci": 414,
-    "demo_browser_install": 496,
-    "demo_scan": 93527,
-    "admin_npm_ci": 642,
-    "admin_browser_install": 329,
-    "admin_axe_scan": 43001,
-    "comparison": 78
+    "demo_lock_audit": 95,
+    "demo_npm_ci": 412,
+    "demo_browser_install": 544,
+    "demo_scan": 93233,
+    "admin_npm_ci": 596,
+    "admin_browser_install": 382,
+    "admin_axe_scan": 40272,
+    "comparison": 71
   },
   "expected_counts": {
     "demo": 101,
@@ -199,37 +199,37 @@
     "qv-inbound-unavailable::unavailable::light",
     "qv-inbound-unavailable::unavailable::dark"
   ],
-  "setup_ms": 1993,
-  "execution_ms": 136606,
-  "wall_ms": 161684,
+  "setup_ms": 2029,
+  "execution_ms": 133576,
+  "wall_ms": 157490,
   "admin_browser": {
     "schema_version": "phase174-admin-browser.v1",
     "run_identity": {
-      "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
+      "run_id": "mailglass-evidence-20261027221513-96275-31939-warm",
       "condition": "warm",
-      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-      "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
+      "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c"
     },
     "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
     "version": "1.59.1",
     "chromium_revision": "1217",
     "cache_directory": "/cache/playwright",
     "cache_state": "hit",
-    "installer_ms": 329,
+    "installer_ms": 382,
     "install_exit_code": 0
   },
   "demo_browser": {
     "schema_version": "phase174-demo-browser.v1",
     "run_identity": {
-      "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
+      "run_id": "mailglass-evidence-20261027221513-96275-31939-warm",
       "condition": "warm",
-      "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-      "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
+      "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c"
     },
     "version": "1.60.0",
     "chromium_revision": "1223",
     "cache_directory": "/cache/playwright",
     "cache_state": "hit",
-    "installer_ms": 496
+    "installer_ms": 544
   }
 }

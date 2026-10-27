@@ -1,13 +1,13 @@
 {
   "condition": "warm",
-  "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-  "source_digest": "0700f87bb124f955131e20fd8f69fcf87c0a50a499aa636d954b49dc9400eedb",
-  "compose_project": "mailglass-evidence-20261027205816-4815-29177",
-  "admin_operator_ms": 21471,
+  "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+  "source_digest": "d01817a07796768cbf874ba35715aa3945a3f59971104b362e82417244901fa7",
+  "compose_project": "mailglass-evidence-20261027221513-96275-31939",
+  "admin_operator_ms": 20358,
   "admin_operator_exit_code": 0,
   "timings_ms": {
-    "demo_scan": 93527,
-    "admin_axe_scan": 43001,
-    "admin_operator": 21471
+    "demo_scan": 93233,
+    "admin_axe_scan": 40272,
+    "admin_operator": 20358
   }
 }

@@ -160,47 +160,47 @@
   "demo_route_cases": [
     {
       "surface": "delivery",
-      "opened": "01a17f2d-ba4a-72ad-a9bd-9410eac7c2d1",
-      "navigatedTo": "01a17f2d-ba4e-7789-a4c7-0b01f46c9fcc",
-      "focusReturnedTo": "operator-delivery-desktop-01a17f2d-ba4a-72ad-a9bd-9410eac7c2d1",
+      "opened": "01a17f74-5f18-75eb-b213-227ed6a08cdc",
+      "navigatedTo": "01a17f74-5f1c-7deb-9c81-c132f1e571db",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f74-5f18-75eb-b213-227ed6a08cdc",
       "focusinAdded": 1,
       "focusinRemoved": 1,
       "reducedMotion": true
     },
     {
       "surface": "delivery",
-      "opened": "01a17f2d-ba4a-72ad-a9bd-9410eac7c2d1",
-      "navigatedTo": "01a17f2d-ba4e-7789-a4c7-0b01f46c9fcc",
-      "focusReturnedTo": "operator-delivery-desktop-01a17f2d-ba4a-72ad-a9bd-9410eac7c2d1",
+      "opened": "01a17f74-5f18-75eb-b213-227ed6a08cdc",
+      "navigatedTo": "01a17f74-5f1c-7deb-9c81-c132f1e571db",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f74-5f18-75eb-b213-227ed6a08cdc",
       "focusinAdded": 2,
       "focusinRemoved": 2,
       "reducedMotion": true
     },
     {
       "surface": "delivery",
-      "opened": "01a17f2d-ba4c-7da3-a483-300de7ac7e07",
-      "navigatedTo": "01a17f2d-ba4a-72ad-a9bd-9410eac7c2d1",
-      "focusReturnedTo": "operator-delivery-desktop-01a17f2d-ba4c-7da3-a483-300de7ac7e07",
+      "opened": "01a17f74-5f1a-7b8a-87bb-dd54116c845f",
+      "navigatedTo": "01a17f74-5f18-75eb-b213-227ed6a08cdc",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f74-5f1a-7b8a-87bb-dd54116c845f",
       "focusinAdded": 3,
       "focusinRemoved": 3,
       "reducedMotion": true
     },
     {
       "surface": "inbound",
-      "opened": "01a17f2d-ba5a-7271-9296-b6a2be23ee97",
-      "navigatedTo": "01a17f2d-ba5b-7b30-9913-1f79bed235f9",
-      "focusReturnedTo": "inbound-record-open-desktop-01a17f2d-ba5b-7b30-9913-1f79bed235f9",
-      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f2d-ba5a-7271-9296-b6a2be23ee97",
+      "opened": "01a17f74-5f28-7ead-896e-bd7395e56daf",
+      "navigatedTo": "01a17f74-5f2b-7de8-b884-6eeb17b2f950",
+      "focusReturnedTo": "inbound-record-open-desktop-01a17f74-5f2b-7de8-b884-6eeb17b2f950",
+      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f74-5f28-7ead-896e-bd7395e56daf",
       "focusinAdded": 1,
       "focusinRemoved": 1,
       "reducedMotion": true
     },
     {
       "surface": "inbound",
-      "opened": "01a17f2d-ba5a-7271-9296-b6a2be23ee97",
-      "navigatedTo": "01a17f2d-ba5b-7b30-9913-1f79bed235f9",
-      "focusReturnedTo": "inbound-record-open-desktop-01a17f2d-ba5b-7b30-9913-1f79bed235f9",
-      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f2d-ba5a-7271-9296-b6a2be23ee97",
+      "opened": "01a17f74-5f28-7ead-896e-bd7395e56daf",
+      "navigatedTo": "01a17f74-5f2b-7de8-b884-6eeb17b2f950",
+      "focusReturnedTo": "inbound-record-open-desktop-01a17f74-5f2b-7de8-b884-6eeb17b2f950",
+      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f74-5f28-7ead-896e-bd7395e56daf",
       "focusinAdded": 2,
       "focusinRemoved": 2,
       "reducedMotion": true
@@ -235,9 +235,9 @@
     }
   ],
   "run_identity": {
-    "run_id": "mailglass-evidence-20261027205816-4815-29177-warm",
+    "run_id": "mailglass-evidence-20261027221513-96275-31939-warm",
     "condition": "warm",
-    "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-    "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
+    "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+    "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c"
   }
 }

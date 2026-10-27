@@ -4,7 +4,7 @@
   "cases": [
     {
       "width": 320,
-      "recordId": "32af41cf-7922-4a2b-b2ba-db22c92298a8",
+      "recordId": "41cf1dc0-4193-42af-8a36-d6a77f4c744b",
       "subject": "Browser support — résumé routing diagnostics across multiple accounts",
       "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
       "viewportWidth": 320,
@@ -14,7 +14,7 @@
     },
     {
       "width": 375,
-      "recordId": "32af41cf-7922-4a2b-b2ba-db22c92298a8",
+      "recordId": "41cf1dc0-4193-42af-8a36-d6a77f4c744b",
       "subject": "Browser support — résumé routing diagnostics across multiple accounts",
       "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
       "viewportWidth": 375,
@@ -23,7 +23,7 @@
     },
     {
       "width": 768,
-      "recordId": "32af41cf-7922-4a2b-b2ba-db22c92298a8",
+      "recordId": "41cf1dc0-4193-42af-8a36-d6a77f4c744b",
       "subject": "Browser support — résumé routing diagnostics across multiple accounts",
       "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
       "viewportWidth": 768,
@@ -32,7 +32,7 @@
     },
     {
       "width": 1280,
-      "recordId": "32af41cf-7922-4a2b-b2ba-db22c92298a8",
+      "recordId": "41cf1dc0-4193-42af-8a36-d6a77f4c744b",
       "subject": "Browser support — résumé routing diagnostics across multiple accounts",
       "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
       "viewportWidth": 1280,
@@ -41,7 +41,7 @@
     },
     {
       "width": 1440,
-      "recordId": "32af41cf-7922-4a2b-b2ba-db22c92298a8",
+      "recordId": "41cf1dc0-4193-42af-8a36-d6a77f4c744b",
       "subject": "Browser support — résumé routing diagnostics across multiple accounts",
       "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
       "viewportWidth": 1440,
@@ -52,8 +52,8 @@
   ],
   "realZoom": {
     "caseId": "layout:inbound:real-200-percent-zoom",
-    "url": "http://127.0.0.1:4101/ops/mail/inbound?full=1&inbound_id=aa76c160-294f-4d9e-8e4c-17ad9748a0a3&tenant_id=browser-tenant&window_hours=168",
-    "recordId": "aa76c160-294f-4d9e-8e4c-17ad9748a0a3",
+    "url": "http://127.0.0.1:4101/ops/mail/inbound?full=1&inbound_id=c4011a81-cf9a-4a51-93b1-34a5fdd974dd&tenant_id=browser-tenant&window_hours=168",
+    "recordId": "c4011a81-cf9a-4a51-93b1-34a5fdd974dd",
     "source": {
       "initial": {
         "viewportWidth": 1280,
@@ -67,7 +67,7 @@
         "devicePixelRatio": 4
       },
       "tabZoom": {
-        "tabId": 88362388,
+        "tabId": 1963795018,
         "factor": 2
       }
     },
@@ -77,14 +77,14 @@
       "overflowY": "auto",
       "account": "Account\n        \n          browser-tenant\n        \n      \n      \n    \n    \n      \n        \n          browser-tenant\n          browser-tenant\n        \n      \n        \n          deny-reveal\n          deny-reveal\n        \n      \n    \n  \n  \n  \n    browser-tenant\n  \n  \n    Switching to deny-reveal…",
       "closeTarget": {
-        "width": 53.971466064453125,
-        "height": 43.97676086425781,
+        "width": 53.97148132324219,
+        "height": 43.976776123046875,
         "layoutWidth": 54,
         "layoutHeight": 44
       },
       "primaryTarget": {
-        "width": 135.60018920898438,
-        "height": 43.97674560546875,
+        "width": 135.60025024414062,
+        "height": 43.976806640625,
         "layoutWidth": 136,
         "layoutHeight": 44
       },

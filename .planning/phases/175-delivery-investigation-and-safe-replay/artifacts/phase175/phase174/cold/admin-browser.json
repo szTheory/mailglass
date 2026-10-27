@@ -1,16 +1,16 @@
 {
   "schema_version": "phase174-admin-browser.v1",
   "run_identity": {
-    "run_id": "mailglass-evidence-20261027205816-4815-29177-cold",
+    "run_id": "mailglass-evidence-20261027221513-96275-31939-cold",
     "condition": "cold",
-    "source_revision": "fc262b989c1c38ab86376437ff2dc4b1ef4ea9a8",
-    "source_digest": "7ee933bd225c6f8ae0ddf04aaa6edf2c4b07ebb99cf7cede21972e6e970897ae"
+    "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+    "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c"
   },
   "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
   "version": "1.59.1",
   "chromium_revision": "1217",
   "cache_directory": "/cache/playwright",
   "cache_state": "miss",
-  "installer_ms": 33315,
+  "installer_ms": 33695,
   "install_exit_code": 0
 }
