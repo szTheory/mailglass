@@ -1770,6 +1770,150 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page.getByTestId("copy-toast")).toContainText(/Replay command added .* Event/);
   });
 
+  test("Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdReplayResponse = false;
+    let holdNextReply = false;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    const ambiguousReset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-many");
+    expect(ambiguousReset.ok()).toBeTruthy();
+    const ambiguous = await ambiguousReset.json();
+    const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${ambiguous.tenant_id}`);
+    await page.goto(`/ops/browser-login?tenant_id=${ambiguous.tenant_id}&return_to=${returnTo}`);
+    await page.goto(
+      `/ops/mail?tenant_id=${ambiguous.tenant_id}&delivery_id=${ambiguous.delivery_id}&full=1`
+    );
+    await page.getByTestId("operator-replay-open").click();
+
+    const ambiguousModal = page.getByTestId("operator-replay-modal");
+    await expect(ambiguousModal).toBeVisible();
+    const radios = ambiguousModal.getByRole("radio", { name: "POSTMARK webhook target", exact: true });
+    await expect(radios).toHaveCount(2);
+    await expect(radios.nth(0)).not.toBeChecked();
+    await expect(radios.nth(1)).not.toBeChecked();
+    await expect(ambiguousModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+
+    const selectedRadio = ambiguousModal.locator(
+      `#operator-replay-targets input[type='radio'][value='${ambiguous.candidate_ids[1]}']`
+    );
+    await selectedRadio.check();
+    await expect(selectedRadio).toBeChecked();
+    const exactTargetId = await ambiguousModal
+      .locator("#operator-replay-targets input[type='radio']:checked")
+      .getAttribute("value");
+    expect(exactTargetId).toBe(ambiguous.candidate_ids[1]);
+    const confirm = ambiguousModal.getByTestId("operator-replay-confirm");
+    holdReplayResponse = true;
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(confirm).toHaveText("Replaying…");
+    await expect(selectedRadio).toBeChecked();
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+    holdReplayResponse = false;
+    await expect(ambiguousModal).toHaveCount(0);
+    await expect(page.getByTestId("copy-toast")).toContainText("Replay command added 1 newly normalized Event.");
+
+    const authorized = await page.request.get("/ops/browser-auth-log");
+    expect(authorized.ok()).toBeTruthy();
+    const authorizationLog = await authorized.json();
+    expect(authorizationLog.destructive_actions).toHaveLength(1);
+    expect(authorizationLog.destructive_actions[0].delivery_id).toBe(ambiguous.delivery_id);
+    expect(authorizationLog.destructive_actions[0].webhook_event_id).toBe(exactTargetId);
+
+    const staleAuthAt = "2000-01-01T00:00:00.000Z";
+    await loginOperator(
+      page,
+      `/ops/mail?tenant_id=${tenantId}`,
+      "operator-1",
+      tenantId,
+      null,
+      staleAuthAt
+    );
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const exactRow = page.getByTestId("operator-delivery-row").filter({
+      visible: true,
+      hasText: "browser-exact@example.com"
+    }).first();
+    await selectDeliveryFull(page, exactRow);
+    await page.getByTestId("operator-replay-open").click();
+
+    const deniedModal = page.getByTestId("operator-replay-modal");
+    const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").first().innerText();
+    const deniedConfirm = deniedModal.getByTestId("operator-replay-confirm");
+    const firstReviewId = await deniedConfirm.getAttribute("phx-value-review");
+    await deniedConfirm.click();
+    const denial = deniedModal.getByTestId("operator-replay-feedback");
+    await expect(denial).toContainText(
+      "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+    );
+    await expect(deniedModal).toBeVisible();
+    await expect(deniedModal.getByTestId("operator-replay-target-id").first()).toHaveText(deniedTarget);
+    await expect(deniedConfirm).toBeDisabled();
+    await expect(denial.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+
+    await denial.getByRole("button", { name: "Review again", exact: true }).click();
+    await expect(deniedModal.getByTestId("operator-replay-target-id").first()).toHaveText(deniedTarget);
+    await expect(deniedConfirm).toBeEnabled();
+    expect(await deniedConfirm.getAttribute("phx-value-review")).not.toBe(firstReviewId);
+    await expect(page.getByTestId("operator-replay-command-feedback")).toHaveCount(0);
+
+    await deniedModal.locator("#operator-replay-close").click();
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    const unavailableRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    await selectDeliveryFull(page, unavailableRow);
+    await expect(page.getByTestId("operator-detail-column")).toContainText("Replay is unavailable.");
+    await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+
+    await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const noChangeRow = page.getByTestId("operator-delivery-row").filter({
+      visible: true,
+      hasText: "browser-noop@example.com"
+    }).first();
+    await selectDeliveryFull(page, noChangeRow);
+    await page.getByTestId("operator-replay-open").click();
+    await page.getByTestId("operator-replay-confirm").click();
+    await expect(page.getByTestId("copy-toast")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
+      "Last replay: completed · 0 newly normalized Events"
+    );
+    await expect(page.getByTestId("operator-timeline")).toContainText("no change");
+  });
+
   test("Phase 175 suppression refresh", async ({ page }) => {
     const resetResponse = await page.request.get(
       "/ops/browser-reset?scenario=phase169-suppression&variant=one"

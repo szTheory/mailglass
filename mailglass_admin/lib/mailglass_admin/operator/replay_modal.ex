@@ -80,6 +80,15 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                       reason
                     )}
                   </p>
+                  <button
+                    :if={reason == :read_unavailable}
+                    type="button"
+                    phx-click="review_replay_again"
+                    data-testid="operator-replay-review-again"
+                    class="btn btn-ghost mt-3 min-h-11"
+                  >
+                    Review again
+                  </button>
                 </div>
               </div>
             <% _ -> %>

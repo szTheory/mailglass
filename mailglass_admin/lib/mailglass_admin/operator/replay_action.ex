@@ -66,6 +66,20 @@ defmodule MailglassAdmin.Operator.ReplayAction do
         >
           Review webhook replay
         </button>
+        <button
+          :if={
+            @replay_targets && @replay_targets.status == :unavailable &&
+              @replay_targets.reason == :read_unavailable
+          }
+          id={@button_id}
+          type="button"
+          phx-click="open_replay"
+          phx-value-origin={@origin}
+          data-testid="operator-replay-open"
+          class="btn btn-ghost ml-auto min-h-11 px-md"
+        >
+          Retry replay review
+        </button>
       </div>
     </Components.card>
     """

@@ -399,12 +399,16 @@ defmodule MailglassAdmin.TestOperatorAuth do
         }
       )
       when is_struct(recent_auth_at, DateTime) do
-    record_destructive_call(delivery.id, target.webhook_event_id)
-
-    if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
-      {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
+    if :persistent_term.get({__MODULE__, :delivery_replay_revoked}, false) do
+      {:error, :unauthorized, %{message: "Replay is not authorized."}}
     else
-      {:error, :stale_auth, %{message: "Recent authentication is required."}}
+      record_destructive_call(delivery.id, target.webhook_event_id)
+
+      if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
+        {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
+      else
+        {:error, :stale_auth, %{message: "Recent authentication is required."}}
+      end
     end
   end
 

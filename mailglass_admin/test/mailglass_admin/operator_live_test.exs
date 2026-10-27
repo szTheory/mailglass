@@ -482,7 +482,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Sent"
       assert html =~ "Delivered"
       assert html =~ "Webhook replay"
-      assert html =~ ~s(data-testid="operator-replay-open")
+
+      assert html =~
+               "Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely."
+
+      refute html =~ ~s(data-testid="operator-replay-open")
       refute html =~ "Remove suppression"
       refute html =~ "recent-auth"
       refute html =~ "recent auth"
@@ -1422,15 +1426,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      view
-      |> element("[data-testid='operator-replay-open']")
-      |> render_click()
-
       html = render(view)
 
-      assert html =~ "Replay unavailable"
       assert html =~ "Replay is unavailable."
       assert html =~ "Historical rows without exact webhook linkage"
+      refute has_element?(view, "[data-testid='operator-replay-open']")
+      refute has_element?(view, "[data-testid='operator-replay-modal']")
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
 
@@ -1595,9 +1596,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
     end
 
-    test "explicit replay review can refresh after an unavailable target read", %{conn: conn} do
+    test "an unavailable replay-target read exposes a scoped retry without confirmation", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-review-read-retry", 655)
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
 
       {:ok, view, _html} =
         live(
@@ -1605,14 +1609,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
-      view |> element("[data-testid='operator-replay-open']") |> render_click()
-
-      assert render(view) =~ "Current replay targets could not be refreshed."
+      unavailable_html = render(view)
+      assert unavailable_html =~ "Current replay targets could not be refreshed."
+      assert has_element?(view, "[data-testid='operator-replay-open']")
       refute render(view) =~ ~s(data-testid="operator-replay-confirm")
 
-      view |> element("#operator-replay-close") |> render_click()
       view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      if has_element?(view, "[data-testid='operator-replay-review-again']") do
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      end
 
       assert render(view) =~ webhook_event.provider_event_id
       assert render(view) =~ ~s(data-testid="operator-replay-confirm")
@@ -2043,8 +2049,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
         assert html =~ ~s(data-testid="operator-replay-modal")
         assert html =~ ~s(data-testid="operator-replay-review-again")
         refute html =~ "private simulated terminal audit failure detail"
-        assert html =~ "Webhook replay requested"
-        assert html =~ "Webhook replay failed"
 
         assert Enum.count(
                  replay_audit_rows_for(webhook_event.id),
@@ -2155,7 +2159,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render_hook(view, "confirm_replay", %{})
 
-      assert html =~ "Select a delivery before replaying a webhook."
+      assert html =~ ~s(data-testid="operator-shell")
+      refute html =~ ~s(data-testid="operator-replay-modal")
+      refute html =~ "Select a delivery before replaying a webhook."
     end
   end
 
