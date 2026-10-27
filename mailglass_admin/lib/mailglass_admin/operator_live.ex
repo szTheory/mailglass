@@ -94,6 +94,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_history_read_state, :ready)
       |> assign(:replay_command_feedback, nil)
       |> assign(:replay_modal_open?, false)
+      |> assign(:replay_origin, nil)
+      |> assign(:replay_focus_return_id, nil)
       |> assign(:replay_selected_target_id, nil)
       |> assign(:replay_review_snapshot, nil)
       |> assign(:replay_review_id, nil)
@@ -378,27 +380,41 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
-  def handle_event("open_replay", _params, socket) do
-    replay_targets =
-      load_replay_targets(
-        socket.assigns.filter_params,
-        socket.assigns.selected_delivery,
-        socket.assigns[:operator_read_fault]
-      )
+  def handle_event("open_replay", params, socket) do
+    expected_origin = if socket.assigns.full_detail?, do: "full_detail", else: "quick_view"
 
-    selected_target_id = default_replay_target_id(replay_targets)
-    review_id = Ecto.UUID.generate()
+    if Map.get(params, "origin", expected_origin) == expected_origin do
+      replay_targets =
+        load_replay_targets(
+          socket.assigns.filter_params,
+          socket.assigns.selected_delivery,
+          socket.assigns[:operator_read_fault]
+        )
 
-    {:noreply,
-     socket
-     |> assign(:replay_targets, replay_targets)
-     |> assign(:replay_modal_open?, true)
-     |> assign(:replay_command_feedback, nil)
-     |> assign(:replay_selected_target_id, selected_target_id)
-     |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
-     |> assign(:replay_review_id, review_id)
-     |> assign(:replay_review_consumed?, false)
-     |> assign(:replay_pending?, false)}
+      selected_target_id = default_replay_target_id(replay_targets)
+      review_id = Ecto.UUID.generate()
+      origin = if expected_origin == "full_detail", do: :full_detail, else: :quick_view
+
+      focus_return_id =
+        if origin == :full_detail,
+          do: "replay-open-btn",
+          else: "operator-quick-view-replay-open-btn"
+
+      {:noreply,
+       socket
+       |> assign(:replay_targets, replay_targets)
+       |> assign(:replay_modal_open?, true)
+       |> assign(:replay_origin, origin)
+       |> assign(:replay_focus_return_id, focus_return_id)
+       |> assign(:replay_command_feedback, nil)
+       |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+       |> assign(:replay_review_id, review_id)
+       |> assign(:replay_review_consumed?, false)
+       |> assign(:replay_pending?, false)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("close_replay", _params, socket) do
@@ -550,12 +566,16 @@ defmodule MailglassAdmin.OperatorLive do
              webhook_event_id: target.webhook_event_id,
              actor: socket.assigns.operator_actor
            }) do
+      feedback = RepairState.command_feedback(result)
+      full_detail? = socket.assigns.replay_origin == :full_detail
+
       {:noreply,
        socket
        |> clear_flash()
-       |> assign(:replay_command_feedback, RepairState.command_feedback(result))
-       |> assign_delivery_state(socket.assigns.filter_params, delivery_id, true, false)
-       |> close_replay_modal()}
+       |> assign(:replay_command_feedback, feedback)
+       |> assign_delivery_state(socket.assigns.filter_params, delivery_id, full_detail?, false)
+       |> close_replay_modal()
+       |> push_event("mailglass:toast", %{message: feedback, error: false})}
     else
       {:error, :no_selected_delivery} ->
         {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
@@ -1079,7 +1099,11 @@ defmodule MailglassAdmin.OperatorLive do
               <span
                 :if={@replay_modal_open?}
                 phx-mounted={JS.focus(to: "#operator-replay-close")}
-                phx-remove={JS.focus(to: "#replay-open-btn")}
+                phx-remove={
+                  if @replay_focus_return_id,
+                    do: JS.focus(to: "##{@replay_focus_return_id}"),
+                    else: %JS{}
+                }
               />
               <ReplayModal.replay_modal
                 open?={@replay_modal_open?}
@@ -1987,6 +2011,8 @@ defmodule MailglassAdmin.OperatorLive do
   defp close_replay_modal(socket) do
     socket
     |> assign(:replay_modal_open?, false)
+    |> assign(:replay_origin, nil)
+    |> assign(:replay_focus_return_id, nil)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
     |> assign(:replay_review_snapshot, nil)
     |> assign(:replay_review_id, nil)

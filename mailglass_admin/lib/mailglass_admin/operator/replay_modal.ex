@@ -54,7 +54,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 Review webhook replay
               </h2>
               <p id="replay-modal-description" class="text-body text-secondary">
-                Replay reprocesses the full stored request through current normalization. It may add Events or update Delivery and suppression records for multiple Deliveries in this Account. It does not resend outbound mail or prove provider receipt.
+                Reprocesses this stored webhook through current normalization. It may add Events or update Deliveries and suppressions across this Account. It does not resend mail or prove provider receipt.
               </p>
             </div>
 
@@ -62,9 +62,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               id="operator-replay-close"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost min-h-11 px-4"
+              aria-label="Close"
+              class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 p-0"
             >
-              Close replay review
+              <Components.icon name="hero-x-mark" class="h-5 w-5" />
             </button>
           </div>
 
@@ -122,15 +123,25 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Stored webhook/request ID</dt>
-                <dd class="mono mt-1 break-all text-base-content">{reviewed_target(@replay_targets, @selected_target_id).webhook_event_id}</dd>
+                <dd class="mono mt-1 break-all text-base-content">
+                  {reviewed_target(@replay_targets, @selected_target_id).webhook_event_id}
+                </dd>
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Provider</dt>
-                <dd class="mt-1 break-words text-base-content">{String.upcase(reviewed_target(@replay_targets, @selected_target_id).provider || "unknown")}</dd>
+                <dd class="mt-1 break-words text-base-content">
+                  {String.upcase(
+                    reviewed_target(@replay_targets, @selected_target_id).provider || "unknown"
+                  )}
+                </dd>
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Received</dt>
-                <dd class="mt-1 break-words text-base-content"><Components.timestamp at={reviewed_target(@replay_targets, @selected_target_id).webhook_timestamp} /></dd>
+                <dd class="mt-1 break-words text-base-content">
+                  <Components.timestamp at={
+                    reviewed_target(@replay_targets, @selected_target_id).webhook_timestamp
+                  } />
+                </dd>
               </div>
             </dl>
           </div>
@@ -158,7 +169,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               disabled={@pending? or @consumed?}
               aria-live="polite"
               data-testid="operator-replay-confirm"
-              class="btn btn-error min-h-11 px-5"
+              class="btn btn-primary min-h-11 px-5"
             >
               {if(@pending?, do: "Replaying…", else: "Confirm replay")}
             </button>

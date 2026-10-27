@@ -58,7 +58,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           </div>
         </dl>
         <Components.technical_details
-          collapsible={present?(@delivery.mailable) or present?(@delivery.provider_message_id)}
+          collapsible={false}
           id="delivery-detail-technical"
         >
           <div>

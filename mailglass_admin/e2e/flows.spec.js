@@ -1583,6 +1583,98 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(desktopId);
   });
 
+  test("Phase 175 Delivery tracer", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdNextReply = false;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const selectedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3);
+    await selectDeliveryFull(page, selectedRow);
+
+    const selectedUrl = new URL(page.url());
+    const selectedDeliveryId = selectedUrl.searchParams.get("delivery_id");
+    expect(selectedDeliveryId).toBeTruthy();
+    await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+
+    const technical = page.locator("#delivery-detail-technical");
+    await expect(technical).toBeVisible();
+    expect(await technical.evaluate(element => element.tagName)).toBe("DIV");
+    await expect(technical).toContainText(selectedDeliveryId);
+
+    const suppression = page.getByTestId("operator-suppression-card");
+    await expect(suppression).toBeVisible();
+    await suppression.getByTestId("operator-suppression-refresh").click();
+    await expect(suppression).toContainText(
+      /No current Mailglass suppression matches this delivery|Current Mailglass match|unavailable/i
+    );
+
+    await page.getByTestId("operator-replay-open").click();
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Close", exact: true })).toBeVisible();
+    const requestId = await modal.getByTestId("operator-replay-target-id").innerText();
+    expect(requestId).toMatch(/^[0-9a-f-]{36}$/i);
+    await expect(modal).toContainText("browser-exact-delivery");
+    await expect(modal).toContainText("does not resend mail");
+    await expect(modal).toContainText("across this Account");
+
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    const confirm = modal.getByTestId("operator-replay-confirm");
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(requestId);
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+
+    await expect(modal).toHaveCount(0);
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText(/Replay command added .* Event|Replay added no new Events/);
+
+    const detail = page.getByTestId("operator-detail-column");
+    await expect(detail).toContainText("Webhook replay requested");
+    await expect(detail).toContainText("Webhook replay completed");
+    await expect(detail).toContainText(/Replay command added .* Event|Replay added no new Events/);
+
+    const returnedUrl = new URL(page.url());
+    expect(returnedUrl.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(returnedUrl.searchParams.get("window_hours")).toBe("168");
+    expect(returnedUrl.searchParams.get("delivery_id")).toBe(selectedDeliveryId);
+    expect(returnedUrl.searchParams.get("full")).toBe("1");
+    const backToListUrl = new URL(await page.getByTestId("operator-detail-back").getAttribute("href"), baseURL);
+    expect(backToListUrl.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(backToListUrl.searchParams.get("view")).toBe("deliveries");
+    expect(backToListUrl.searchParams.get("window_hours")).toBe("168");
+    await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+  });
+
   test("Phase 168 confirmation focus", async ({ browser }) => {
     const context = await browser.newContext({
       baseURL,
