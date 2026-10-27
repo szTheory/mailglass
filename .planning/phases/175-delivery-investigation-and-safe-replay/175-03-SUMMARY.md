@@ -45,7 +45,7 @@ key-decisions:
 patterns-established:
   - "Lower the quick-view panel while its replay dialog is open so the modal layer receives pointer input, while preserving the selected record and disabling underlying arrow navigation."
   - "Use the same accessible shell contract with separate recorded Mailbox and stored webhook identities, outcomes and commands."
-requirements-completed: []
+requirements-completed: ["UXF-12","REPLAY-04","REPLAY-06","REPLAY-07","REPLAY-08"]
 coverage:
   - id: D1
     description: Both replay wrappers use the shared accessible dialog shell while retaining distinct domain identity and confirmation semantics.
@@ -204,3 +204,7 @@ The summary path exists; all five task commits are ancestors of the plan head; t
 ---
 *Phase: 175-delivery-investigation-and-safe-replay*
 *Completed: 2026-10-27*
+
+## Orchestrator metadata reconciliation
+
+The declared requirement IDs above match PLAN.md verbatim; shared IDs remain pending until all declaring plans finish. Production/TDD commits used task-suffixed subjects that the installed plan-scope resolver does not match: `41addb1a`, `7e6c8578`, `32484ad8`, `5fd3e730`, and `01216920`. Final code review and verification must explicitly include these commits and the plan-declared paths rather than infer no production changes from that resolver result. No history was rewritten.
