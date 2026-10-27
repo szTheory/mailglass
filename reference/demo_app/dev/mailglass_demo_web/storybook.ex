@@ -22,8 +22,11 @@ defmodule MailglassDemoWeb.Storybook do
   (`mailglass-light`/`mailglass-dark`) is set per-variation at the story template level
   (D-08) — never via a CSS class→data-theme alias, which would trip TokenParityTest.
 
-  `js_path` is intentionally OMITTED (D-07): stories are static markup, so no esbuild
-  watcher is added to `config/dev.exs`.
+  `js_path` serves only the production hook definitions and registers them through
+  PhoenixStorybook's hook extension point. Its response does not load the Admin
+  Phoenix/LiveView bundle or create a second socket; Storybook owns its LiveSocket.
+  The hash route is declared only while the dev-only PhoenixStorybook dependency is
+  available, and no esbuild watcher is added to `config/dev.exs`.
 
   This module and every `*.story.exs` live in the DEMO app, never under
   `mailglass_admin/lib/` (D-06) — the admin package's `:files` glob would otherwise
@@ -36,7 +39,7 @@ defmodule MailglassDemoWeb.Storybook do
     content_path: Path.expand("../../storybook", __DIR__),
     # Remote URL of the served committed admin bundle (D-07). NOT a filesystem path.
     css_path: "/dev/mail/css-" <> MailglassAdmin.Controllers.Assets.css_hash(),
-    # js_path OMITTED on purpose (D-07) — static stories, no esbuild watcher.
+    js_path: "/dev/storybook-hooks-" <> MailglassAdmin.Controllers.Assets.hooks_hash(),
     sandbox_class: "mg-admin-root",
     title: "mailglass admin"
 end

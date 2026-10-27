@@ -6,10 +6,24 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
+        pipeline :storybook_hook_assets do
+          plug(:put_secure_browser_headers)
+        end
+
         # Static Storybook assets share the full mount prefix so generated links
         # and direct story destinations resolve from the deployed dev route.
         scope "/" do
           storybook_assets("/dev/storybook/assets")
+        end
+
+        scope "/" do
+          pipe_through(:storybook_hook_assets)
+
+          get(
+            "/dev/storybook-hooks-:md5",
+            MailglassAdmin.Controllers.Assets,
+            :hooks
+          )
         end
       end
     else
