@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 174
 current_phase_name: Faithful Storybook and Quiet Quick Views
 status: executing
-stopped_at: Completed 174-02-PLAN.md
-last_updated: "2026-10-27T02:48:32.354Z"
-last_activity: 2026-10-26
+stopped_at: Completed 174-03-PLAN.md
+last_updated: "2026-10-27T03:26:42.903Z"
+last_activity: 2026-10-27
 last_activity_desc: Phase 174 execution started
-state_head: 87d18cb73c7633ad60fbd339a91440f60954331f
+state_head: de06c706a25c73f6ecb9399d6c6d14db4f0ddd1c
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 ## Current Position
 
 Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Completed Plan 02; Plan 03 ready to execute
 
@@ -292,6 +292,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 173 P08 | 32min | 2 tasks | 4 files |
 | Phase 174 P01 | 25min | 2 tasks | 6 files |
 | Phase 174 P02 | 26m | 2 tasks | 10 files |
+| Phase 174 P03 | 31min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -524,6 +525,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: Keep Inbound native disabled buttons and compare raw :accept at the production component boundary.
 - [Phase 174]: Normalize only generated selected IDs and documented timestamp precision or anchors; preserve meaningful projection values exactly.
 - [Phase 174]: Keep unavailable and empty cases within their real rendering and route proof boundaries.
+- [Phase 174]: Use one canonical production hooks.js asset and assign it to Storybook's hook registry without socket creation.
+- [Phase 174]: Count sockets by browsing document because the Storybook explorer and preview iframe each own a legitimate transport.
+- [Phase 174]: Keep the pinned Phoenix LiveView and PhoenixStorybook versions; verify both resolved clients instead of upgrading.
 
 ## Quick Tasks Completed
 
@@ -575,8 +579,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T02:48:32.333Z
-Stopped at: Completed 174-02-PLAN.md
+Last session: 2026-10-27T03:26:42.869Z
+Stopped at: Completed 174-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
