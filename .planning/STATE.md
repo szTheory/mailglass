@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 175
 current_phase_name: Delivery Investigation and Safe Replay
 status: executing
-stopped_at: Completed 175-04-PLAN.md
-last_updated: "2026-10-27T16:40:01.867Z"
+stopped_at: Completed 175-05-PLAN.md
+last_updated: "2026-10-27T18:07:40.467Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 175 execution started
-state_head: 6f3fa2fef2db724814766845ffe0fb9fe3a8437c
+state_head: 6ae7e2029d34ea5f1b5ad658837f06bb8d5132c4
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 20
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 175 (Delivery Investigation and Safe Replay) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Phase 175 execution started
 
@@ -301,6 +301,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 175 P02 | 21min | 2 tasks | 8 files |
 | Phase 175 P03 | ~29m (approximate) | 3 tasks | 13 files |
 | Phase 175 P04 | 30min | 2 tasks | 8 files |
+| Phase 175 P05 | 19min 22s | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -559,6 +560,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 175]: Replay failures stay mounted and recovery uses a fresh exact-scope review.
 - [Phase 175]: Unavailable target evidence allows review again without enabling replay confirmation.
 - [Phase 175]: Keep authorization, audit, and idempotency at the existing command boundary; revocation control is test-only.
+- [Phase 175]: Keep empty Helios route-only and never fabricate a selected Delivery record.
+- [Phase 175]: Retain Axe incomplete findings separately from violations and add separately identified review runs.
+- [Phase 175]: Check every current Axe contrast selector match in the story root and keep the lowest ratio per selector.
+- [Phase 175]: Refresh persisted fidelity source identity and executed case inventory when the source changes.
 
 ## Quick Tasks Completed
 
@@ -610,8 +615,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T16:40:01.718Z
-Stopped at: Completed 175-04-PLAN.md
+Last session: 2026-10-27T18:07:40.320Z
+Stopped at: Completed 175-05-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
