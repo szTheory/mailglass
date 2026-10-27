@@ -18,7 +18,7 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 - [ ] **UXF-09**: An operator can use a compact Account control that clearly scopes Health, Deliveries and Inbound without suggesting Account-scoped Preview data.
 - [ ] **UXF-10**: An operator entering Preview can return to the originating Account through a validated host-approved local destination, with a clear direct-entry fallback.
 - [x] **UXF-11**: An operator can use quieter previous/next controls on both quick views with readable position, coherent Close, 44px targets, accessible names, focus and disabled boundaries.
-- [ ] **UXF-12**: An operator opening full Delivery or Inbound detail can read grouped technical evidence below primary facts without first expanding a disclosure.
+- [x] **UXF-12**: An operator opening full Delivery or Inbound detail can read grouped technical evidence below primary facts without first expanding a disclosure.
 
 ### Direct collection filtering
 
@@ -30,8 +30,8 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 ### Health and suppression evidence
 
 - [ ] **OUTUX-06**: An operator can scan Health's actionable issues in a readable composition with grouped period/freshness/Refresh and subordinate activity, retaining specific deep links and truthful populations.
-- [ ] **OUTUX-07**: An operator can refresh suppression evidence and retry a failed read through a consistently placed action with truthful ready, empty, stale and unavailable outcomes.
-- [ ] **OUTUX-08**: An operator can understand suppression expiry and supported removal in plain language, without an invented removal button or treating unknown expiry as never expiring.
+- [x] **OUTUX-07**: An operator can refresh suppression evidence and retry a failed read through a consistently placed action with truthful ready, empty, stale and unavailable outcomes.
+- [x] **OUTUX-08**: An operator can understand suppression expiry and supported removal in plain language, without an invented removal button or treating unknown expiry as never expiring.
 
 ### Useful Inbound evidence
 
@@ -40,11 +40,11 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Replay review and outcomes
 
-- [ ] **REPLAY-04**: An operator can enter replay review from either quick view as well as full detail for the exact selected eligible record.
-- [ ] **REPLAY-05**: An operator can understand why replay is unavailable before opening a dialog, without a dead-end primary replay action.
-- [ ] **REPLAY-06**: An operator can review a concise, identifiable stored request in a shared accessible dialog with X-close, Escape, focus containment/return and a clearly labelled primary action.
-- [ ] **REPLAY-07**: An operator completing a permitted replay sees the dialog close, an accessible success toast and updated evidence reflecting the actual domain outcome.
-- [ ] **REPLAY-08**: An operator whose replay fails sees an inline error in the open dialog and a safe retry or explained re-review path without flicker, hidden errors or an unexplained disabled-review dead end.
+- [x] **REPLAY-04**: An operator can enter replay review from either quick view as well as full detail for the exact selected eligible record.
+- [x] **REPLAY-05**: An operator can understand why replay is unavailable before opening a dialog, without a dead-end primary replay action.
+- [x] **REPLAY-06**: An operator can review a concise, identifiable stored request in a shared accessible dialog with X-close, Escape, focus containment/return and a clearly labelled primary action.
+- [x] **REPLAY-07**: An operator completing a permitted replay sees the dialog close, an accessible success toast and updated evidence reflecting the actual domain outcome.
+- [x] **REPLAY-08**: An operator whose replay fails sees an inline error in the open dialog and a safe retry or explained re-review path without flicker, hidden errors or an unexplained disabled-review dead end.
 
 ### Preview authoring controls
 
@@ -135,21 +135,21 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | UXF-09 | Phase 177 | Pending |
 | UXF-10 | Phase 177 | Pending |
 | UXF-11 | Phase 174 | Complete |
-| UXF-12 | Phase 175 | Pending |
+| UXF-12 | Phase 175 | Complete |
 | FILTER-01 | Phase 176 | Pending |
 | FILTER-02 | Phase 176 | Pending |
 | FILTER-03 | Phase 176 | Pending |
 | FILTER-04 | Phase 176 | Pending |
 | OUTUX-06 | Phase 177 | Pending |
-| OUTUX-07 | Phase 175 | Pending |
-| OUTUX-08 | Phase 175 | Pending |
+| OUTUX-07 | Phase 175 | Complete |
+| OUTUX-08 | Phase 175 | Complete |
 | INUX-05 | Phase 176 | Pending |
 | INUX-06 | Phase 176 | Pending |
-| REPLAY-04 | Phase 175 | Pending |
-| REPLAY-05 | Phase 175 | Pending |
-| REPLAY-06 | Phase 175 | Pending |
-| REPLAY-07 | Phase 175 | Pending |
-| REPLAY-08 | Phase 175 | Pending |
+| REPLAY-04 | Phase 175 | Complete |
+| REPLAY-05 | Phase 175 | Complete |
+| REPLAY-06 | Phase 175 | Complete |
+| REPLAY-07 | Phase 175 | Complete |
+| REPLAY-08 | Phase 175 | Complete |
 | PRVUX-05 | Phase 178 | Pending |
 | PRVUX-06 | Phase 178 | Pending |
 | PRVUX-07 | Phase 178 | Pending |

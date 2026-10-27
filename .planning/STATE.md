@@ -4,17 +4,17 @@ milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
 current_phase: 175
 current_phase_name: Delivery Investigation and Safe Replay
-status: executing
-stopped_at: Completed 175-05-PLAN.md
-last_updated: "2026-10-27T18:07:40.467Z"
+status: verifying
+stopped_at: Completed 175-06-PLAN.md
+last_updated: "2026-10-27T20:18:47.883Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 175 execution started
-state_head: 6ae7e2029d34ea5f1b5ad658837f06bb8d5132c4
+state_head: dc41805a6272e5e43625005ac8aa4e6a634b2ab8
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
   percent: 20
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 Phase: 175 (Delivery Investigation and Safe Replay) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-27 — Phase 175 execution started
 
 Progress: [██░░░░░░░░] 20%
@@ -302,6 +302,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 175 P03 | ~29m (approximate) | 3 tasks | 13 files |
 | Phase 175 P04 | 30min | 2 tasks | 8 files |
 | Phase 175 P05 | 19min 22s | 2 tasks | 18 files |
+| Phase 175 P06 | 121m | 3 tasks | 180 files |
 
 ## Accumulated Context
 
@@ -564,6 +565,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 175]: Retain Axe incomplete findings separately from violations and add separately identified review runs.
 - [Phase 175]: Check every current Axe contrast selector match in the story root and keep the lowest ratio per selector.
 - [Phase 175]: Refresh persisted fidelity source identity and executed case inventory when the source changes.
+- [Phase 175]: Keep Phase 175 selection composable with the existing isolated Phase 174 runner and CI lane.
+- [Phase 175]: Require exact nonempty expected/executed case IDs and current source/asset identity; process exit alone is not evidence.
+- [Phase 175]: Retain Axe incomplete findings as incomplete and preserve failed historical evidence with rendered triage separate.
+- [Phase 175]: Use the isolated mailglass_demo_phase175_05 database because the default Demo database had a migration ledger but lacked the Demo schema; leave default untouched.
 
 ## Quick Tasks Completed
 
@@ -615,8 +620,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T18:07:40.320Z
-Stopped at: Completed 175-05-PLAN.md
+Last session: 2026-10-27T20:18:47.683Z
+Stopped at: Completed 175-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
