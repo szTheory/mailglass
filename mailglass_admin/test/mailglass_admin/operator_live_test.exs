@@ -812,28 +812,230 @@ defmodule MailglassAdmin.OperatorLiveTest do
                live(conn, operator_path(%{"tenant_id" => @tenant_id}))
     end
 
-    test "shows the replay CTA only after a delivery is selected", %{conn: conn} do
+    @tag :phase175
+    test "Phase 175 Delivery entry exposes replay from the selected quick and full detail", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
-      delivery = insert_delivery!(recipient: "cta@example.com", provider_message_id: "pm-cta")
+      {delivery, webhook_event} = insert_exact_replay_fixture!("pm-phase175-entry", 17501)
+
+      filters = %{
+        "tenant_id" => @tenant_id,
+        "view" => "deliveries",
+        "provider" => "postmark",
+        "window_hours" => "168",
+        "delivery_id" => delivery.id
+      }
 
       {:ok, view, html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+        live(conn, operator_path(Map.delete(filters, "delivery_id")))
 
       refute html =~ "Review webhook replay"
 
-      # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
       |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
-      refute render(view) =~ "Review webhook replay"
+      quick_html = render(view)
+      assert quick_html =~ ~s(id="operator-quick-view-replay-open-btn")
+      assert quick_html =~ ~s(phx-value-origin="quick_view")
+      assert quick_html =~ "Replay is ready."
 
-      # Open full detail → the Replay CTA appears.
+      view
+      |> element("#operator-quick-view-replay-open-btn")
+      |> render_click()
+
+      assert render(view) =~ webhook_event.id
+      review_id = replay_review_id(view)
+
+      render_hook(view, "confirm_replay", %{
+        "review" => review_id,
+        "delivery_id" => "forged-delivery-id",
+        "webhook_event_id" => "forged-webhook-id"
+      })
+
+      assert [%{webhook_event_id: replayed_id}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert replayed_id == webhook_event.id
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
+      assert render(view) =~ "Replay command added 1 newly normalized Event."
+      assert render(view) =~ ~s(data-testid="operator-quick-view")
+
       view
       |> element(~s([data-testid="operator-quick-view-full"]))
       |> render_click()
 
-      assert render(view) =~ "Review webhook replay"
+      assert has_element?(
+               view,
+               "[data-testid='operator-replay-open'][phx-value-origin='full_detail']"
+             )
+
+      assert_patch(view, operator_path(Map.put(filters, "full", "1")))
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry keeps same-looking ambiguous requests separate", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      delivery =
+        insert_delivery!(
+          recipient: "same-looking@example.com",
+          provider_message_id: "pm-same-looking"
+        )
+
+      first =
+        insert_webhook_event!(
+          provider_event_id: "same-visible-request-label-1",
+          raw_payload: raw_postmark_payload("pm-same-looking", 17502)
+        )
+
+      second =
+        insert_webhook_event!(
+          provider_event_id: "same-visible-request-label-2",
+          raw_payload: raw_postmark_payload("pm-same-looking", 17503)
+        )
+
+      insert_linked_event!(delivery, first, "child-same-looking-1")
+      insert_linked_event!(delivery, second, "child-same-looking-2")
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id})
+        )
+
+      assert has_element?(view, "#operator-quick-view-replay-open-btn")
+
+      view |> element("#operator-quick-view-replay-open-btn") |> render_click()
+
+      html = render(view)
+      assert html =~ "Replay is choice required."
+
+      labels =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("#operator-replay-targets label")
+        |> Enum.map(&Floki.text/1)
+
+      assert labels == ["POSTMARK webhook target", "POSTMARK webhook target"]
+
+      [first_id, second_id] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-replay-target-id']")
+        |> Enum.map(&Floki.text/1)
+
+      assert MapSet.new([first_id, second_id]) == MapSet.new([first.id, second.id])
+      refute has_element?(view, "#operator-replay-confirm")
+      refute has_element?(view, "#operator-replay-targets input[checked]")
+
+      view
+      |> form("#operator-replay-targets", %{"webhook_event_id" => second.id})
+      |> render_change()
+
+      assert has_element?(view, "#operator-replay-targets input[value='#{second.id}'][checked]")
+      refute has_element?(view, "#operator-replay-targets input[value='#{first.id}'][checked]")
+      assert replay_review_id(view)
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry explains unavailable replay and rejects forged identities", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      historical =
+        insert_delivery!(
+          recipient: "historical-phase175@example.com",
+          provider_message_id: "pm-historical-phase175"
+        )
+
+      insert_event!(historical, %{
+        type: :delivered,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "unlinked-historical-child",
+          "message_id" => historical.provider_message_id
+        }
+      })
+
+      {other, other_webhook} = insert_exact_replay_fixture!("pm-other-phase175", 17504)
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => historical.id})
+        )
+
+      assert html =~ "Historical rows without exact webhook linkage"
+      refute has_element?(view, "#operator-quick-view-replay-open-btn")
+      refute has_element?(view, "#operator-replay-confirm")
+
+      render_hook(view, "open_replay", %{
+        "origin" => "full_detail",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      refute has_element?(view, "[data-testid='operator-replay-modal']")
+
+      render_hook(view, "open_replay", %{
+        "origin" => "quick_view",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      render_hook(view, "confirm_replay", %{
+        "review" => "forged-review-id",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      assert render(view) =~ "Historical rows without exact webhook linkage"
+      refute render(view) =~ other_webhook.id
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+      assert replay_audit_rows_for(other_webhook.id) == []
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry discards a review after the selected delivery changes", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {first, first_webhook} = insert_exact_replay_fixture!("pm-selected-first", 17505)
+      {second, second_webhook} = insert_exact_replay_fixture!("pm-selected-second", 17506)
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => first.id})
+        )
+
+      render_hook(view, "open_replay", %{"origin" => "quick_view"})
+      old_review_id = replay_review_id(view)
+      assert render(view) =~ first_webhook.id
+
+      render_patch(view, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => second.id}))
+
+      assert render(view) =~ second.recipient
+      refute render(view) =~ first_webhook.id
+
+      render_hook(view, "confirm_replay", %{
+        "review" => old_review_id,
+        "webhook_event_id" => second_webhook.id
+      })
+
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+      assert replay_audit_rows_for(first_webhook.id) == []
+      assert replay_audit_rows_for(second_webhook.id) == []
     end
 
     test "auto-populates the replay modal when exactly one target is available", %{conn: conn} do

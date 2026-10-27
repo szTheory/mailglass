@@ -24,6 +24,7 @@ defmodule MailglassAdmin.ComponentsTest do
   alias MailglassAdmin.Operator.DeliveriesList
   alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.QuickView
+  alias MailglassAdmin.Operator.ReplayAction
   alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
 
   test "outcome help distinguishes provider delivery from mailbox processing" do
@@ -429,6 +430,44 @@ defmodule MailglassAdmin.ComponentsTest do
     assert Floki.find(Floki.parse_document!(html), "details, summary") == []
     assert html =~ "exact-record-id"
     refute html =~ "Technical details"
+  end
+
+  @tag :phase175
+  test "Phase 175 Delivery entry component carries quick-view origin with exact identity" do
+    candidate = %{
+      webhook_event_id: "f2bf8e9e-6be2-4d68-a391-dc90e737c340",
+      provider_event_id: "same visible label",
+      provider: "postmark",
+      webhook_timestamp: ~U[2026-10-27 10:00:00Z],
+      delivery_provider_message_id: "pm-component"
+    }
+
+    html =
+      render_component(&ReplayAction.replay_action/1,
+        replay_targets: %{status: :exact, candidate: candidate},
+        origin: "quick_view",
+        button_id: "operator-quick-view-replay-open-btn"
+      )
+
+    assert html =~ ~s(id="operator-quick-view-replay-open-btn")
+    assert html =~ ~s(phx-value-origin="quick_view")
+    assert html =~ "Replay is ready."
+    assert html =~ candidate.webhook_event_id
+  end
+
+  @tag :phase175
+  test "Phase 175 Delivery entry component leaves unavailable replay explanatory and non-actionable" do
+    html =
+      render_component(&ReplayAction.replay_action/1,
+        replay_targets: %{status: :unavailable, reason: :missing_replay_linkage},
+        origin: "quick_view",
+        button_id: "operator-quick-view-replay-open-btn"
+      )
+
+    assert html =~ "Replay is unavailable."
+    assert html =~ "Historical rows without exact webhook linkage"
+    refute html =~ ~s(id="operator-quick-view-replay-open-btn")
+    refute html =~ ~s(data-testid="operator-replay-open")
   end
 
   test "clickable identifiers expose the exact value and shared copy feedback" do
