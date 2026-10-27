@@ -1055,6 +1055,8 @@ jobs:
         run: npm --prefix reference/demo_app/assets audit --package-lock-only --audit-level=high
       - name: Test pinned baseline provisioning
         run: node --test test_js/phase173-baselines.test.cjs
+      - name: Test Storybook evidence and review contracts
+        run: node --test scripts/check_phase174_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs
       - name: Run demo browser evidence
         id: evidence
         run: bash scripts/run_demo_browser_evidence.sh --phase174 --pilot

@@ -1,5 +1,17 @@
 # Phase 174 review: quick views and faithful Storybook evidence
 
+## Automated UAT closure (2026-10-27)
+
+The owner reaffirmed D-52: observable acceptance is automated, with zero routine owner UAT. The three former checkpoints now have executable coverage:
+
+- `storybook-axe.spec.js` retains the unchanged 18-case scan and separate incomplete findings, then checks all 242 retained contrast targets using rendered foreground/background colors and both focus-sentinel wrap directions in every case. Unsupported paint fails closed; the brand's zero-sized noise layer paints no pixels. Contrast thresholds follow [WCAG contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html). These supplemental assertions do not relabel axe results or certify all accessibility.
+- `scripts/phase174-review-claims.cjs` is called by the evidence checker. Its review summary requires complete successful execution and reports the actual advisory placement, `required_ci_proof: false`, and `owner_approval: false`. The wired Node tests reject incomplete execution and overstated authority; GSD independently proves red against a known-bad subject and green against the real implementation.
+- Both story templates reserve a separate theme-control band above the production dialog. The existing 20-case width/theme matrix now asserts non-overlap and container bounds. Selected narrow captures have also been inspected by the agent; this is bounded review, without an owner aesthetic verdict.
+
+The fast checker/comparator/review contract tests run in the existing Demo Browser Evidence job and local GSD regression gate. Browser assertions reuse the existing selected sweep and fidelity tests; no dependency, extra CI lane, or required-context change was introduced. The durable final results and replay command live in `.planning/phases/174-faithful-storybook-and-quiet-quick-views/174-UAT.md` and `174-AUTOMATION.md`. Those records supersede the former human-review queue.
+
+The hosted candidate and cost figures below describe the earlier implementation revision. They remain historical evidence for that revision. Current automation repairs have fresh local source-digest-bound proof; they have not acquired hosted CI or owner-approval authority from the earlier run.
+
 ## Reproduce the selected evidence
 
 Run the isolated cold/warm pilot from the repository root with the pinned local toolchain:
@@ -27,9 +39,9 @@ node scripts/check_phase174_evidence.cjs \
 
 The `--require-ci` check rejects local or caller-labeled evidence. It requires a completed successful workflow and named evidence job, a matching candidate SHA/run/attempt/job/runner, completed required setup and evidence steps, and the full runner duration derived from the job timestamps.
 
-## Current candidate evidence
+## Historical hosted candidate evidence
 
-The current source candidate is `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5` on `gsd/phase-174-evidence`. The exact GitHub Actions run is [40498413906](https://github.com/szTheory/mailglass/actions/runs/40498413906), attempt 1, `workflow_dispatch`, completed/success at `2026-10-27T12:02:39Z` with all 26 jobs successful. The Demo evidence job [122170444350](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170444350), Operator Browser Gate [122170443965](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443965), and Preview Capture Advisory [122170443973](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443973) all completed successfully. The run-owned artifact is `demo-browser-evidence-40498413906-1`, retained under the existing 14-day policy through 2026-11-10.
+The historical hosted source candidate was `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5` on `gsd/phase-174-evidence`. The exact GitHub Actions run is [40498413906](https://github.com/szTheory/mailglass/actions/runs/40498413906), attempt 1, `workflow_dispatch`, completed/success at `2026-10-27T12:02:39Z` with all 26 jobs successful. The Demo evidence job [122170444350](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170444350), Operator Browser Gate [122170443965](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443965), and Preview Capture Advisory [122170443973](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170443973) all completed successfully. The run-owned artifact is `demo-browser-evidence-40498413906-1`, retained under the existing 14-day policy through 2026-11-10.
 
 This run is the fresh hosted proof after the source review repairs. An earlier post-review run, [40496672358](https://github.com/szTheory/mailglass/actions/runs/40496672358), had a successful Demo evidence job but its separate Preview Capture Advisory job [122163829378](https://github.com/szTheory/mailglass/actions/runs/40496672358/job/122163829378) failed its 90-iteration readiness window at `2026-10-27T11:34:55Z` while the cold server was still compiling and seeding fixtures (`stage=sandbox_owner_started`). Its log also records a transient PostgreSQL `role "root" does not exist` connection during startup. The run was later cancelled after the unchanged-candidate retry was queued; its Demo artifact, pre-dispatch and final raw run/job metadata, Preview job metadata, and failure log are retained under `reference/demo_app/tmp/demo_browser_evidence/ci/40496672358-attempt-1/`. The retry did not change the timeout, checker, or CI gate.
 

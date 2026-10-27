@@ -2,30 +2,30 @@
 gsd_state_version: "1.0"
 milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
-current_phase: 174
-current_phase_name: Faithful Storybook and Quiet Quick Views
-status: Awaiting human verification — 3 items in 174-UAT.md
-stopped_at: "Phase 174 executed: 6/6 plans, 20/20 observable truths; awaiting 3 human verification items"
-last_updated: "2026-10-27T12:34:04.867Z"
+current_phase: 175
+current_phase_name: Delivery Investigation and Safe Replay
+status: planning
+stopped_at: "Phase 174 passed automated UAT: 3/3 rows, cold/warm 148/148 each; ready to plan Phase 175. D-52 zero owner UAT default recorded in METHODOLOGY.md."
+last_updated: "2026-10-27T13:33:27.076Z"
 last_activity: 2026-10-27
-last_activity_desc: Phase 174 executed 6/6 plans; 20/20 observable truths verified; awaiting 3 human checks
-state_head: 8b34e03a4256904ae6cf7862676bb74d7b728a4e
+last_activity_desc: Phase 174 complete, transitioned to Phase 175
+state_head: ac34ec4cf3beb2c30095c2283fb38bbce8ff7545
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
   completed_plans: 6
-  percent: 0
+  percent: 20
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-26)
+See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 174 — Faithful Storybook and Quiet Quick Views
+**Current focus:** Phase 175 — Delivery Investigation and Safe Replay
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,12 +39,12 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 
 ## Current Position
 
-Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
-Plan: 6 of 6
-Status: Awaiting human verification — 3 items in 174-UAT.md
-Last activity: 2026-10-27 — Phase 174 executed 6/6 plans; 20/20 observable truths verified; awaiting 3 human checks
+Phase: 175 — Delivery Investigation and Safe Replay
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-27 — Phase 174 complete, transitioned to Phase 175
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -156,7 +156,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 109
+- Total plans completed: 115
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -175,6 +175,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 171 | 4 | - | - |
 | 172 | 3 | - | - |
 | 173.1 | 5 | - | - |
+| 174 | 6 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -544,6 +545,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: Keep Axe violation approvals empty and retain incomplete findings as incomplete even when triage removes them from the untriaged count.
 - [Phase 174]: Keep Delivery's inert boundary and Inbound's native disabled-button boundary semantics distinct.
 - [Phase 174]: Leave non-Phase-174 feedback with its named Phase 175–178 owners; defer set-wide STORY-07 and zoom reconciliation to Phase 178.
+- [Phase 174]: D-52 reaffirmed: target zero owner UAT; automate observable criteria, repair routine defects, and close evidence-backed rows without confirmation. — Owner requested shift-left integration/e2e/smoke/seam proof, justified reuse of existing CI lanes, and durable records that prevent repeated UAT loops; see .planning/METHODOLOGY.md.
 
 ## Quick Tasks Completed
 
@@ -595,10 +597,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T12:33:14.284Z
-Stopped at: Phase 174 executed: 6/6 plans, 20/20 observable truths; awaiting 3 human verification items
-Resume file: .planning/phases/174-faithful-storybook-and-quiet-quick-views/174-UAT.md
+Last session: 2026-10-27T13:32:31.419Z
+Stopped at: Phase 174 passed automated UAT: 3/3 rows, cold/warm 148/148 each; ready to plan Phase 175. D-52 zero owner UAT default recorded in METHODOLOGY.md.
+Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Continue Phase 174 with `$gsd-execute-phase 174` at Plan 3 of 6. Plan 03 owns the shared hook lifecycle and should preserve Plan 02's validated Inbound surface marker and selected-row focus return.
+- Phase 174 is complete: 3/3 automated UAT rows, 148/148 cold and warm acceptance cases, no owner verification outstanding. Durable proof and replay commands: `.planning/phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md`.
+- Next: `$gsd-plan-phase 175`. Apply D-52 and `.planning/METHODOLOGY.md`: target zero owner UAT, automate observable criteria, reuse justified CI coverage and do not reopen already-proved checks without relevant changes or new failures.

@@ -26,7 +26,11 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **Boundaries:** Preserve the shipped brand, domain, authorization, Account, exact replay and rendering contracts. No exhaustive Gallery migration, fully storied app, six-profile quota, generic view/fixture framework, capability/provider growth, custom date ranges, account-aware Preview, interactive unsubscribe submission, Gallery-route removal, rebrand, CI-wide redesign or judge service. F7 token-route mounting remains a named following-envelope candidate. Preview return context needs a narrow validated host-supported seam if admitted; it must not expand auth/session contracts. Prefer existing dependencies and incremental presentation extraction.
 
+**Phase 174 completed 2026-10-27:** All six requirements and 20/20 truths passed; three former UAT checkpoints now have automated proof, with 148/148 acceptance cases in both cold and warm conditions. No owner verification remains. Source identity, replayable receipts and limits are recorded in [174-AUTOMATION.md](phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md). Next: plan Phase 175.
+
 **Verification:** D-52 applies. Use synthetic normal/empty/long-Unicode cohorts, relevant reachable boundary/failure/permission states, representative themes and viewport/container widths, keyboard/focus, and explicit System/reduced-motion/real-zoom ownership. Fresh axe comparisons and expected/executed counts precede ratchet claims. Measure added cold/warm CI cost against provisional ≤5 wall minutes / ≤10 runner-minutes; these are pilot budgets, not measured facts. Existing required gates retain their meaning.
+
+**Automation default (D-52 reaffirmed 2026-10-27):** Target zero owner UAT. Convert observable checks to integration/browser/smoke/seam assertions and finish routine repairs; add CI coverage only where it has recurring value. Record proof and close covered UAT rows without confirmation. Carry forward only an explicit irreducible human decision, with its reason. Missing test wiring and agent-reviewable layout are engineering work. Follow [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default), including its no-repeat-UAT rule.
 
 ## Completed Milestone: v2.9 Operator, Preview & Email UI Refinement
 
@@ -1191,7 +1195,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-26 after approval of all 31 v2.10 requirements and the five-phase roadmap; ready to plan Phase 174.*
+*Last updated: 2026-10-27 after Phase 174 automated acceptance closure and D-52 reaffirmation; ready to plan Phase 175.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

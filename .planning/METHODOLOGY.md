@@ -8,6 +8,10 @@
 
 **Apply when:** Planning, executing, reviewing, or verifying any phase. For recurring acceptance, ensure the test runs in CI and report whether that job is a blocking required check or an advisory check; do not present an advisory green as merge-blocking proof. Keep `human_needed` only for a criterion that remains irreducibly subjective or requires physical-device, legal, policy, or otherwise unavailable human judgment after reasonable automation. If a GSD workflow proposes a generic confirmation summary for criteria already covered by passing tests, record the evidence and continue without an owner checkpoint.
 
+**Reaffirmed by the owner, 2026-10-27 (Phase 174):** Target zero human verification/UAT. Finish the automated verification and routine repairs rather than asking the owner to inspect deterministic receipts, supply a missing test descriptor, or accept avoidable UI defects. Agent visual inspection plus explicit layout/contrast/keyboard assertions can settle bounded UI review; an axe `incomplete` remains an axe `incomplete`, with supplemental proof recorded separately. A missing enforcement check is engineering work, not an owner decision.
+
+**Prevent repeated UAT loops:** Each completed phase records the acceptance-to-test mapping, exact commands, current source identity, retained evidence, CI placement and any real limitations in its UAT/verification artifacts. Close covered rows with `source: automated`, clear stale human-needed state and route GSD to the next phase. Reopen only for a changed relevant implementation/acceptance contract or fresh failing evidence; do not rerun subjective sign-off for already-proved behavior or confuse historical evidence with current-source proof. Add recurring checks to existing CI lanes when their regression value justifies the cost; use one-time agent checks for one-time judgments. Preserve unrelated workspace edits.
+
 ## Decisive-By-Default Research Posture
 
 **Diagnoses:** Workflows that repeatedly surface routine implementation tradeoffs to the user even when the codebase, ecosystem norms, and project goals already point to a coherent default.

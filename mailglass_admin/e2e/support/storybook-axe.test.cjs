@@ -70,6 +70,44 @@ function finding(overrides = {}) {
   };
 }
 
+function supplement() {
+  const bounds = (left, top, width, height) => ({ left, top, right: left + width, bottom: top + height, width, height });
+  return cases.map(item => ({ case_id: item.case_id,
+    chrome: { picker: bounds(8, 8, 240, 76), dialog: bounds(0, 96, 320, 504), viewport: 320,
+      targets: [bounds(12, 32, 64, 44), bounds(80, 32, 64, 44), bounds(148, 32, 80, 44)] },
+    focus_wrap: { forward: true, backward: true, controls: 3 }, contrasts: []
+  }));
+}
+
+test("supplemental proof rejects missing coverage, overlap, clipped controls and broken focus", () => {
+  const report = validReport({ supplemental: supplement() });
+  assert.equal(validateReport(report, { ...context, approval: approvalFor() }).valid, true);
+  for (const change of [
+    report => report.supplemental.pop(),
+    report => report.supplemental[0].chrome.picker.bottom = 120,
+    report => report.supplemental[0].chrome.targets[0].width = 12,
+    report => report.supplemental[0].focus_wrap.forward = false,
+    report => report.supplemental[1].case_id = report.supplemental[0].case_id
+  ]) {
+    const bad = structuredClone(report);
+    change(bad);
+    assertInvalidValidation(bad, context, /supplemental/);
+  }
+});
+
+test("supplemental contrast cannot omit a retained target or relax its threshold", () => {
+  const prior = finding({ target: [[".badge"]], reason: "Unresolved by axe", disposition: "retained-incomplete", evidence: "storybook-run-prior" });
+  const approval = approvalFor([], [prior]);
+  const report = validReport({ supplemental: supplement() });
+  assertInvalidValidation(report, context, /contrast targets/, approval);
+  report.supplemental[0].contrasts = [{ target: ".badge", ratio: 4.6, minimum: 4.5, font_size: 14, font_weight: 400 }];
+  assert.equal(validateReport(report, { ...context, approval }).valid, true);
+  report.supplemental[0].contrasts[0].ratio = 4.499;
+  assertInvalidValidation(report, context, /contrast is insufficient/, approval);
+  report.supplemental[0].contrasts[0].minimum = 3;
+  assertInvalidValidation(report, context, /contrast is insufficient/, approval);
+});
+
 function approvalFor(findings = [], incomplete = []) {
   return {
     schema_version: 1,

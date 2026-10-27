@@ -683,6 +683,7 @@ test.describe("Phase174 widths", () => {
           return {
             viewport: { width: view.innerWidth, height: view.innerHeight },
             panel: panelRect,
+            reviewTheme: bounds(panel.ownerDocument.querySelector('[data-testid="quick-view-review-theme"]')),
             position: bounds(position),
             close: bounds(close),
             targets,
@@ -698,6 +699,9 @@ test.describe("Phase174 widths", () => {
           };
         }, technicalSelector);
         expect(geometry.viewport.width).toBeGreaterThan(0);
+        expect(geometry.reviewTheme.bottom, "theme controls do not obscure the quick view").toBeLessThanOrEqual(geometry.panel.top);
+        expect(geometry.reviewTheme.left).toBeGreaterThanOrEqual(0);
+        expect(geometry.reviewTheme.right).toBeLessThanOrEqual(geometry.viewport.width);
         expect(geometry.panel.left).toBeGreaterThanOrEqual(0);
         expect(geometry.panel.right).toBeLessThanOrEqual(geometry.viewport.width);
         expect(geometry.close.left).toBeGreaterThanOrEqual(geometry.panel.left);
@@ -728,7 +732,8 @@ test.describe("Phase174 widths", () => {
           position: await position.innerText(),
           closeWithinPane: geometry.close.left >= geometry.panel.left && geometry.close.right <= geometry.panel.right,
           technicalWrapping: geometry.technical,
-          controls: geometry.targets
+          controls: geometry.targets,
+          reviewTheme: geometry.reviewTheme
         };
         receipts.push(receipt);
 

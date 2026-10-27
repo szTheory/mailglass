@@ -74,3 +74,8 @@ The retained exact-head hosted run 40491221303 completed all 26 jobs successfull
 - reference/demo_app/assets/e2e/storybook-hooks.spec.js
 - mailglass_admin/docs/phase174-review.md
 - reference/demo_app/tmp/demo_browser_evidence/ci/40491221303-attempt-1/phase174/{cold,warm}/{execution,fidelity,hooks,axe}.json and retained warm PNG captures
+
+
+## Automated UAT Closure — 2026-10-27
+
+The earlier descriptor-less prohibition and pending review-chrome/axe review statements above are historical. The owner reaffirmed D-52 and the three UAT items were automated and closed. `174-AUTOMATION.md` records the current source digest, full cold/warm 148/148 results, 242 supplemental contrast targets and 18 bidirectional focus wraps per condition, 20 responsive cases, the GSD fail-first enforcement proof and replayable raw inputs. Axe incomplete results remain incomplete. Required/advisory authority is unchanged; no owner approval or current hosted success is inferred. The repairs touch only Demo story layout and verification tooling; existing authorization, reset guards, production components, hooks, dependencies and trust boundaries remain intact.

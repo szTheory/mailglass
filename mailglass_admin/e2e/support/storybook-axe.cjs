@@ -274,6 +274,44 @@ function validateReport(report, options = {}) {
   if (options.approval?.review_basis?.run_id === report.run_id) {
     errors.push("report and approved findings use the same evidence run (self-comparison)");
   }
+  // Historical v1 reports remain axe-only evidence. A producer opting into
+  // supplemental evidence must supply the complete set; partial proof is red.
+  if (Object.hasOwn(report, "supplemental")) {
+    const rows = report.supplemental;
+    const seen = new Set();
+    if (!Array.isArray(rows) || rows.length !== manifestCases.length) errors.push("supplemental coverage is missing or partial");
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const item = manifestCases.find(item => item.case_id === row?.case_id);
+      if (!item || seen.has(row.case_id)) errors.push("supplemental case identity is extra or duplicate");
+      seen.add(row?.case_id);
+      const chrome = row?.chrome;
+      const rect = value => isRecord(value) && ["left", "right", "top", "bottom", "width", "height"].every(key => Number.isFinite(value[key])) && value.width > 0 && value.height > 0;
+      if (!rect(chrome?.picker) || !rect(chrome?.dialog) || !Number.isFinite(chrome?.viewport) ||
+          chrome.picker.bottom > chrome.dialog.top || chrome.picker.left < 0 || chrome.picker.right > chrome.viewport ||
+          !Array.isArray(chrome.targets) || chrome.targets.length !== 3 || chrome.targets.some(target =>
+            !rect(target) || target.width < 44 || target.height < 44 || target.left < chrome.picker.left || target.right > chrome.picker.right)) {
+        errors.push("supplemental review chrome overlaps content or clips controls");
+      }
+      if (row?.focus_wrap?.forward !== true || row?.focus_wrap?.backward !== true ||
+          !Number.isInteger(row?.focus_wrap?.controls) || row.focus_wrap.controls < 1) {
+        errors.push("supplemental keyboard focus wrap is unverified");
+      }
+      const expectedTargets = (options.approval?.incomplete_triage || []).filter(finding =>
+        finding.rule_id === "color-contrast" && finding.scenario_id === item?.scenario_id && finding.theme === item?.theme
+      ).flatMap(finding => finding.target.map(chain => chain.length === 1 ? chain[0] : "unsupported-chain")).sort();
+      const contrasts = row?.contrasts;
+      if (!Array.isArray(contrasts) || JSON.stringify(contrasts.map(value => value.target).sort()) !== JSON.stringify(expectedTargets)) {
+        errors.push("supplemental contrast targets are missing or changed");
+      }
+      for (const value of Array.isArray(contrasts) ? contrasts : []) {
+        const minimum = value.font_size >= 24 || (value.font_size >= 56 / 3 && value.font_weight >= 700) ? 3 : 4.5;
+        if (!Number.isFinite(value.ratio) || value.ratio < minimum || value.ratio > 21 || value.minimum !== minimum ||
+            !Number.isFinite(value.font_size) || value.font_size <= 0 || !Number.isFinite(value.font_weight)) {
+          errors.push("supplemental rendered contrast is insufficient or unverified");
+        }
+      }
+    }
+  }
   return { valid: errors.length === 0, errors: [...new Set(errors)], metrics };
 }
 

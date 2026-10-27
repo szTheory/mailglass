@@ -1,0 +1,79 @@
+{
+  "valid": true,
+  "run_id": "mailglass-evidence-20261027131817-50319-18180",
+  "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+  "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef",
+  "conditions": {
+    "cold": {
+      "expected": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "executed": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "axe": {
+        "expected": 18,
+        "executed": 18,
+        "successful": 18,
+        "violations": 0,
+        "unapproved": 0,
+        "incomplete": 50,
+        "untriaged": 0,
+        "supplemental": {
+          "cases": 18,
+          "contrast_targets": 242,
+          "focus_wrap_cases": 18
+        },
+        "valid": true
+      }
+    },
+    "warm": {
+      "expected": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "executed": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "axe": {
+        "expected": 18,
+        "executed": 18,
+        "successful": 18,
+        "violations": 0,
+        "unapproved": 0,
+        "incomplete": 50,
+        "untriaged": 0,
+        "supplemental": {
+          "cases": 18,
+          "contrast_targets": 242,
+          "focus_wrap_cases": 18
+        },
+        "valid": true
+      }
+    }
+  },
+  "hosted_job": null,
+  "review": {
+    "execution": "passed",
+    "environment": "local",
+    "job": "demo_browser_evidence",
+    "tier": "advisory",
+    "required_ci_proof": false,
+    "owner_approval": false
+  }
+}

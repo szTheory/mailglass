@@ -6,6 +6,7 @@ const crypto = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 const { selectedCases, validateReport, compareFindings } = require("../mailglass_admin/e2e/support/storybook-axe.cjs");
 const { collectTests } = require("../reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs");
+const { reviewEvidence } = require("./phase174-review-claims.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const PHASE_DIR = path.join(ROOT, "reference/demo_app/tmp/demo_browser_evidence/phase174");
@@ -60,6 +61,9 @@ const SOURCE_REQUIRED = [
   "scripts/run_demo_browser_evidence.sh",
   "scripts/check_phase174_evidence.cjs",
   "scripts/check_phase174_evidence.test.cjs",
+  "scripts/phase174-review-claims.cjs",
+  "scripts/phase174-review-claims.test.cjs",
+  "test/fixtures/phase174-overstated-review.cjs",
   "scripts/gsd-regression-gate.sh",
   "scripts/ci_green_policy.sh",
   "scripts/prepare_phase173_baselines.cjs",
@@ -357,6 +361,11 @@ function validateAxeReport(report, identity, manifest, approved) {
     unapproved: comparison.metrics.unapproved,
     incomplete: comparison.metrics.incomplete,
     untriaged: comparison.metrics.untriaged,
+    supplemental: Array.isArray(report.supplemental) ? {
+      cases: report.supplemental.length,
+      contrast_targets: report.supplemental.reduce((sum, item) => sum + item.contrasts.length, 0),
+      focus_wrap_cases: report.supplemental.filter(item => item.focus_wrap.forward && item.focus_wrap.backward).length
+    } : null,
     valid: true
   };
 }
@@ -559,7 +568,7 @@ function checkEvidence(evidenceRoot, { pilot = false, requireCi = false } = {}) 
   validateCost(cost, execution, results, pilot, requireCi);
   let hosted = null;
   if (requireCi) hosted = validateCiJob(evidenceRoot, execution, cost);
-  return {
+  const summary = {
     valid: true,
     run_id: execution.run_id,
     source_revision: execution.source_revision,
@@ -571,6 +580,7 @@ function checkEvidence(evidenceRoot, { pilot = false, requireCi = false } = {}) 
     }])),
     hosted_job: hosted
   };
+  return { ...summary, review: reviewEvidence(summary) };
 }
 
 function parseArgs(argv) {

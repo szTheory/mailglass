@@ -69,8 +69,8 @@ coverage:
       - kind: e2e
         ref: "CI 40498413906, head 18c6cf32; --require-ci checker: cold 148/148, warm 148/148, Axe 18/18 each"
         status: pass
-    human_judgment: true
-    rationale: Each condition retains 50 incomplete Axe findings; they are triaged but remain machine-incomplete and are not claimed as passes.
+    human_judgment: false
+    rationale: "2026-10-27 closure adds passing supplemental contrast/focus checks; 50 axe incomplete outcomes remain separate. Current local receipts are under artifacts/automated-uat; the hosted reference remains historical."
   - id: D2
     description: Delivery and Inbound quick views retain quiet, keyboard-usable navigation and truthful boundaries.
     requirement: UXF-11
@@ -115,10 +115,10 @@ coverage:
     description: Current-source review records a bounded visual judgment and all known evidence limits.
     verification:
       - kind: automated_ui
-        ref: "Candidate screenshots retained under ci/40498413906-attempt-1/phase174/; mailglass_admin/docs/phase174-review.md"
+        ref: "174-AUTOMATION.md; artifacts/automated-uat/phase174/{cold,warm}/fidelity.json; current agent captures; mailglass_admin/docs/phase174-review.md"
         status: pass
-    human_judgment: true
-    rationale: The selected Chromium captures received a qualitative review; it is not owner approval, an aesthetic score, or evidence for all browsers and zoom.
+    human_judgment: false
+    rationale: "D-52 authorizes bounded agent review plus deterministic layout assertions; 174-AUTOMATION.md records current captures and limits. No owner approval, aesthetic score or all-browser/zoom claim."
 metrics:
   duration: 5h32m
   completed: 2026-10-27
@@ -278,3 +278,8 @@ Plan 174-06 completes its six assigned requirements and supplies current evidenc
 ## Final Cost Receipt Reconciliation
 
 The enriched `ci/40498413906-attempt-1/phase174/cost.json` now records `added_cost.status: measured` for the **observed** same-profile job comparison, the retained baseline/current raw metadata, +314,000ms / 5.233 runner-minute delta, and the explicit wall-over-by-14s / runner-within-budget disposition. This does not claim causal incremental PR cost. `cost.downloaded.json` remains byte-for-byte original; `cost.before-baseline.json` preserves the intermediate hosted-only enrichment. `cost-baseline-enrichment.json` records the input hashes; `174-COST-DISPOSITION.json` in the phase directory retains the derived disposition/provenance. The strict hosted checker passed again after reconciliation. No execution identity, browser result or measured condition timing changed.
+
+
+## Automated UAT Reconciliation — 2026-10-27
+
+D-52 was reaffirmed by the owner. Former human-judgment flags in coverage are now closed by scoped agent review and executable layout, contrast, keyboard and evidence-authority checks. Historical execution and commit-window facts above are preserved; 174-AUTOMATION.md and the replayable artifacts/automated-uat receipts describe the current repairs. No owner approval or new hosted success is inferred.

@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
 const { selectedCases, normalizeTarget, validateReport, compareFindings } = require("./support/storybook-axe.cjs");
+const { verifyStoryAccessibility } = require("./support/storybook-axe-supplement.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -42,7 +43,8 @@ const freshReport = {
   })),
   executed: [],
   violations: [],
-  incomplete: []
+  incomplete: [],
+  supplemental: []
 };
 
 function readMatchingProgress() {
@@ -94,6 +96,9 @@ async function waitForSelectedStory(page, args) {
     const frames = document.querySelectorAll(frameSelector);
     if (frames.length !== 1) return false;
     const iframe = frames[0];
+    // Scroll within the same parent-document readiness poll so a LiveView
+    // remount cannot leave a stale element handle between wait and action.
+    iframe.scrollIntoView({ block: "center" });
     const frameDocument = iframe?.contentDocument;
     const root = frameDocument?.querySelector(rootSelector);
     if (!iframe || !frameDocument || frameDocument.readyState !== "complete" || !root) {
@@ -129,6 +134,7 @@ async function waitForSelectedStory(page, args) {
       dialog.getBoundingClientRect().height > 0
     );
     if (!visible) return false;
+    if (dialog.getAnimations().some(animation => animation.playState !== "finished")) return false;
 
     if (expectedPosition) {
       if (dialog.querySelector("[aria-live='polite']")?.textContent.trim() !== expectedPosition) return false;
@@ -217,6 +223,7 @@ for (const item of EXPECTED_CASES) {
       failureStage = "story route load";
       const response = await page.goto(storyURL.href, { waitUntil: "load" });
       expect(response?.ok(), "the selected Storybook story route responds successfully").toBe(true);
+      await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
 
       const storyArea = item.story_path.split("/").filter(Boolean).slice(-2).join("_");
       const frameIdPrefix = `iframe-storybook_${storyArea}-variation-${item.variation_id}`;
@@ -253,6 +260,10 @@ for (const item of EXPECTED_CASES) {
           evidence: report.run_id
         }))
       );
+      failureStage = "supplemental contrast, chrome and keyboard checks";
+      const supplemental = await verifyStoryAccessibility(page, frameSelector,
+        APPROVED.incomplete_triage.filter(finding => finding.scenario_id === item.scenario_id && finding.theme === item.theme));
+      report.supplemental.push({ case_id: item.case_id, ...supplemental });
       execution.status = "passed";
     } catch (error) {
       execution.failure_stage = failureStage;

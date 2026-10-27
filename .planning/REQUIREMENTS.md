@@ -2,7 +2,7 @@
 
 **Milestone:** UI Repairs & Faithful Storybook
 **Defined:** 2026-10-26
-**Status:** Approved 2026-10-26; implementation pending
+**Status:** Approved 2026-10-26; Phase 174 verified 2026-10-27, ready to plan Phase 175
 **Core value:** Email you can see, audit, and trust before it ships.
 
 ## Scope authority and admission

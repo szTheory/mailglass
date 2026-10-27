@@ -80,3 +80,8 @@ The first post-review run `40496672358` is retained as an unsuccessful readiness
 ## Post-Review Reconciliation
 
 The independent source review identified three concrete gaps that the initial audit had missed. Commit `18c6cf32` adds symlink-component rejection, no-follow checkpoint writes and preservation of prior retained evidence (CR-01/T-174-16/18); full-detail focus ownership and a connected regression (WR-01); and omitted route/story inputs plus dirty-byte digest controls (WR-02/T-174-17). All 24 focused Node checks and 3 browser cases passed, with an independent clean re-review in `174-REVIEW-FIX.md`. The initial report is retained and all three dispositions are fixed. Current exact-candidate CI proof is tracked separately from these focused checks; no risk acceptance or gate reduction occurred.
+
+
+## Automated UAT Closure — 2026-10-27
+
+The earlier descriptor-less prohibition and pending review-chrome/axe review statements above are historical. The owner reaffirmed D-52 and the three UAT items were automated and closed. `174-AUTOMATION.md` records the current source digest, full cold/warm 148/148 results, 242 supplemental contrast targets and 18 bidirectional focus wraps per condition, 20 responsive cases, the GSD fail-first enforcement proof and replayable raw inputs. Axe incomplete results remain incomplete. Required/advisory authority is unchanged; no owner approval or current hosted success is inferred. The repairs touch only Demo story layout and verification tooling; existing authorization, reset guards, production components, hooks, dependencies and trust boundaries remain intact.

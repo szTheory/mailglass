@@ -63,10 +63,10 @@ coverage:
     description: "Bounded 350×600 light and dark component captures are available for visual review."
     verification:
       - kind: automated_ui
-        ref: "reference/demo_app/tmp/demo_browser_evidence/phase174/delivery-light.png and delivery-dark.png (ignored runtime evidence)"
+        ref: "174-AUTOMATION.md; artifacts/automated-uat/phase174/{cold,warm}/fidelity.json; retained narrow captures"
         status: pass
-    human_judgment: true
-    rationale: "Automation verifies the canvas dimensions and distinct production theme colors, but an owner must judge visual restraint; the Storybook column is 350px wide, so this capture shows the responsive bottom-sheet state."
+    human_judgment: false
+    rationale: "D-52 reaffirmed 2026-10-27: scoped agent visual review and passing responsive/keyboard checks close routine UAT. See 174-AUTOMATION.md; no owner aesthetic verdict is claimed."
 duration: 25min
 completed: 2026-10-27
 status: complete
@@ -181,3 +181,8 @@ Plan 174-02 can wire the declared Inbound assigns to the production component an
 
 - All four implementation artifacts and the summary/deferred-items files exist.
 - All three plan commits are ancestors of the current HEAD.
+
+
+## Automated UAT Reconciliation — 2026-10-27
+
+D-52 was reaffirmed by the owner. Former human-judgment flags in coverage are now closed by scoped agent review and executable layout, contrast, keyboard and evidence-authority checks. Historical execution and commit-window facts above are preserved; 174-AUTOMATION.md and the replayable artifacts/automated-uat receipts describe the current repairs. No owner approval or new hosted success is inferred.

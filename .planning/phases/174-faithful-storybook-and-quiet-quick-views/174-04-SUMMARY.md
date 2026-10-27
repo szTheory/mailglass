@@ -50,6 +50,23 @@ plan_head_before: 159ec9d4602cbc5ead9947bb064fd0da7f64931d
 plan_head_after: a3b3548abe93c19a71a7ee3d43d0390952314826
 status: complete
 requirements-completed: [STORY-04, STORY-05]
+coverage:
+  - id: D1
+    description: Both stories use production CSS and loaded font bytes with matching computed typography roles.
+    requirement: STORY-04
+    verification:
+      - kind: e2e
+        ref: "174-AUTOMATION.md; artifacts/automated-uat/phase174/{cold,warm}/fidelity.json; fonts and 20 responsive cases each"
+        status: pass
+    human_judgment: false
+  - id: D2
+    description: Both stories own Light, Dark and live System preferences without changing the host preference.
+    requirement: STORY-05
+    verification:
+      - kind: e2e
+        ref: "174-AUTOMATION.md; artifacts/automated-uat/phase174/{cold,warm}/fidelity.json theme cases"
+        status: pass
+    human_judgment: false
 ---
 
 # Phase 174 Plan 04: Faithful Storybook Theme and Typography Receipts

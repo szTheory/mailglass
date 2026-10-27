@@ -1,0 +1,17 @@
+{
+  "status": "green",
+  "flagged": false,
+  "tier": "test",
+  "reason": "test-tier prohibition has wired enforcement evidence",
+  "located": true,
+  "kind": "node-test",
+  "evidence": [
+    {
+      "kind": "node-test",
+      "target": "scripts/phase174-review-claims.test.cjs",
+      "failFirst": true,
+      "passed": true,
+      "failFirstProof": "violation-fixture"
+    }
+  ]
+}

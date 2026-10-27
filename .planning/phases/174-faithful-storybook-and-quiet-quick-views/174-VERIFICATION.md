@@ -1,7 +1,7 @@
 ---
 phase: 174-faithful-storybook-and-quiet-quick-views
-verified: 2026-10-27T12:28:43Z
-status: human_needed
+verified: 2026-10-27T13:28:18.642315Z
+status: passed
 score: 20/20 observable truths verified
 covered_files:
   - ".github/workflows/ci.yml"
@@ -17,12 +17,39 @@ covered_files:
   - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-05-SUMMARY.md"
   - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-06-PLAN.md"
   - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-06-SUMMARY.md"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md"
   - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-COST-DISPOSITION.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-SECURITY.md"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-UAT.md"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-UI-REVIEW.md"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/174-VALIDATION.md"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/chrome-red.log"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/delivery-320-dark.png"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/inbound-320-dark.png"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/manifest.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/admin-browser.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/axe.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/demo-browser.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/demo-playwright-report.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/fidelity.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cold/hooks.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/cost.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/execution.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/admin-browser.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/axe.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/demo-browser.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/demo-playwright-report.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/fidelity.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/phase174/warm/hooks.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/prohibition-request.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/prohibition-result.json"
+  - ".planning/phases/174-faithful-storybook-and-quiet-quick-views/artifacts/automated-uat/summary.json"
   - "mailglass_admin/assets/css/app.css"
   - "mailglass_admin/docs/phase174-review.md"
   - "mailglass_admin/docs/storybook-axe-approved.json"
   - "mailglass_admin/e2e/flows.spec.js"
   - "mailglass_admin/e2e/storybook-axe.spec.js"
+  - "mailglass_admin/e2e/support/storybook-axe-supplement.cjs"
   - "mailglass_admin/e2e/support/storybook-axe.cjs"
   - "mailglass_admin/e2e/support/storybook-axe.test.cjs"
   - "mailglass_admin/lib/mailglass_admin/controllers/assets.ex"
@@ -58,57 +85,45 @@ covered_files:
   - "reference/demo_app/storybook/quick_views/delivery.story.exs"
   - "reference/demo_app/storybook/quick_views/inbound.story.exs"
   - "reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/baseline-jobs.raw.json"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/baseline-run.raw.json"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/github-jobs.raw.json"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/github-run.raw.json"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/phase174/cost-baseline-enrichment.json"
-  - "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/phase174/cost.json"
   - "reference/persona_spec/quick_view_scenarios.ex"
   - "reference/persona_spec/quick_view_scenarios.json"
   - "scripts/check_phase174_evidence.cjs"
   - "scripts/check_phase174_evidence.test.cjs"
+  - "scripts/gsd-regression-gate.sh"
+  - "scripts/phase174-review-claims.cjs"
+  - "scripts/phase174-review-claims.test.cjs"
   - "scripts/prepare_phase173_baselines.cjs"
   - "scripts/run_demo_browser_evidence.sh"
-covered_digest: "v3:sha256:644abb1dbe6838f5215a52dc9dcf030a82c858fbbdd441d7b728d3161c885b5d"
+  - "test/fixtures/phase174-overstated-review.cjs"
+covered_digest: "v3:sha256:e830e8521efba35c745d6c4b42c5600470321fe9e54d3436439b9aa56ed3e7aa"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
-  previous_status: gaps_found
-  previous_score: 19/20
+  previous_status: human_needed
+  previous_score: 20/20
   gaps_closed:
-    - "The cold/warm setup-inclusive cost and observed budget disposition are consistently recorded in the final hosted evidence receipt."
+    - "All three former human checkpoints now have passing executable coverage and bounded agent review."
   gaps_remaining: []
   regressions: []
-advisory: []
-unverified_prohibitions:
-  - statement: "Review evidence must not present unexecuted or advisory checks as proof of required CI or owner approval."
-    status: unresolved
-    verification: test
-    evidence_status: unverified
-    reason: "Plan 174-05 declares a test-tier prohibition, but no wired enforcement descriptor/check was found. Keep this flagged; no owner approval is inferred."
-human_verification:
-  - test: "Inspect the 14 current color-contrast incomplete fingerprints and 36 aria-hidden-focus focus-sentinel fingerprints in the cold/warm axe.json receipts against their rendered stories and independent triage entries."
-    expected: "Record a review outcome for the contrast items and focus sentinels; keep all incomplete results distinct from violations and do not mark them as machine passes."
-    why_human: "Axe emitted incomplete results without a machine verdict; 14 are classified for manual review and 36 are retained without a machine verdict."
-  - test: "Provide the existing contract's wired enforcement descriptor/check or an owner-recorded resolution for the Plan 174-05 prohibition."
-    expected: "Evidence continues to distinguish executed required checks from advisory evidence and does not imply owner approval."
-    why_human: "The test-tier prohibition reaches verification without a wired descriptor; no owner resolution was supplied."
-  - test: "Review the 320px Storybook capture where the theme control crowds the top review chrome."
-    expected: "Decide whether the INFO-level crowding is acceptable for this phase's review surface; quick-view content remains readable and scrollable."
-    why_human: "Visual acceptability is a judgment call; the existing UI review covers selected Chromium captures only."
+advisory:
+  - "Current automation repairs have local source-digest-bound proof; hosted CI has not been rerun."
+  - "Phase 178 retains real zoom, catalogue and final STORY-07 reconciliation."
+unverified_prohibitions: []
+human_verification: []
 ---
 
 # Phase 174: Faithful Storybook and Quiet Quick Views Verification Report
 
 **Phase Goal:** Operators can use restrained quick-view navigation on both collections, and maintainers can review those repaired production components in a faithful, navigable Storybook with fresh accessibility results.
-**Verified:** 2026-10-27T12:28:43Z
-**Status:** human_needed
-**Re-verification:** Yes — after closure of the cost-receipt gap
+**Verified:** 2026-10-27T13:28:18.642315Z
+**Status:** passed
+**Re-verification:** Yes — automated closure of the three former UAT checkpoints under reaffirmed D-52
 
 ## Goal Achievement
 
-The implementation candidate remains `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5`. This re-verification checks the sole carried machine gap: the final hosted cost receipt now agrees with the preserved raw job records and the tracked cost disposition. The strict `--pilot --require-ci` checker passes again. The prior UI/browser assessment was not repeated; its three human-review items and unresolved test-tier prohibition remain open.
+The original 20/20 goal assessment is retained and the three former owner checkpoints are now covered by executable checks and scoped agent review. Fresh local isolated run `mailglass-evidence-20261027131817-50319-18180` passed 148/148 acceptance cases in each cold/warm condition. Each selected accessibility sweep also passed 242 rendered contrast measurements and both keyboard wrap directions in all 18 cases. All 50 axe incomplete findings remain separately recorded, without changing their verdicts.
+
+Current source is bound to base revision `bf4baa5fee1ca53be3038daa44cfd1f8b10e737e` plus working-tree digest `71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef`; the digest was recomputed and matched after the run. Historical hosted run 40498413906 still belongs to the prior implementation revision. Current repairs have local proof and recurring advisory CI wiring, without a new hosted or owner-approval claim. See 174-AUTOMATION.md and its durable checker inputs.
 
 ### Observable Truths
 
@@ -139,7 +154,7 @@ The implementation candidate remains `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5`.
 
 ### Re-verification
 
-The previous gap was limited to `phase174/cost.json` retaining an intermediate `unmeasured` / `awaiting-baseline-review` disposition. The final receipt now matches the independently retained baseline and candidate job timestamps and the documented observational budget comparison. `cost.downloaded.json` is still preserved as the original download, and `cost.before-baseline.json` retains the intermediate enrichment. No source execution identity or browser result changed.
+The cost-receipt gap closed in the prior verification. This pass closes the three remaining UAT items through supplementary accessibility checks, an independently fail-first-proven evidence-summary contract and repaired/tested review chrome. Node contracts: 31/31; native selected browser sweep: 18/18; native fidelity tests: 6/6 with 20 width/theme cases; ExUnit CI-wiring contracts: 3/3; isolated cold/warm: 148/148 per condition. No acceptance case or required gate was reduced.
 
 ### Roadmap Success Criteria
 
@@ -201,7 +216,7 @@ The CLI's static matcher verified 3/12 links; its remaining “target not refere
 | Storybook scenarios | displayed facts | Explicit manifest-derived synthetic records | Deterministic sample input, accurately presented as story data | ✓ FLOWING |
 | CSS/font/theme receipts | loaded asset bytes and computed roles | Production source CSS, built bundle, font endpoints, browser network/computed styles | Yes; URL, response bytes, loaded faces, roles, and themes recorded | ✓ FLOWING |
 
-## Behavioral Spot-Checks
+## Historical Hosted Behavioral Spot-Checks
 
 | Behavior | Command/evidence | Result | Status |
 |---|---|---|---|
@@ -230,47 +245,35 @@ All requirement IDs mapped to Phase 174 are claimed in the plans; no additional 
 |---|---:|---|---|---|
 | — | — | No unresolved `TBD`, `FIXME`, or `XXX` marker in the covered phase sources. Placeholder matches are the intentional connection-state CSS skeleton or test/local empty state; none is an unwired product stub. | None | No anti-pattern blocker found. |
 | — | — | No unresolved debt marker or new machine blocker found in this narrow re-verification. | None | The carried cost-receipt mismatch is closed; the previously noted visual review observation remains informational. |
-| `mailglass_admin/docs/phase174-review.md` | — | Narrow Storybook theme control crowds its own review chrome; bounded capture only | Info | Existing review classifies this as review chrome, not quick-view content. No aesthetic score or all-browser claim is made. |
+| Storybook review chrome | — | Former narrow overlap and wrap were reproduced and repaired | Resolved | Fresh 20-case geometry matrix and selected agent-reviewed captures; no aesthetic score or all-browser claim. |
 
 ## Probe Execution
 
 No phase-declared probe or conventional `scripts/*/tests/probe-*.sh` was found; this phase uses executable test/receipt checks instead.
 
-## Unresolved Plan Prohibition
+## Enforced Plan Prohibition
 
-Plan 174-05 includes the test-tier prohibition: “Review evidence must not present unexecuted or advisory checks as proof of required CI or owner approval.” Its status remains unresolved and no enforcement descriptor/check is wired. I did not infer a pass from narrative documentation or from the successful advisory job. This remains a human-verification item after the cost-receipt gap closed.
+The Plan 174-05 transparency prohibition is resolved at the test tier. The real evidence checker calls `scripts/phase174-review-claims.cjs`; its wired Node tests reject unexecuted/partial/failed proof and prevent advisory results from becoming required CI proof or owner approval. GSD returned `status: green`, `located: true`, `failFirst: true`, `passed: true`, with `failFirstProof: violation-fixture`. The known-bad module fails named assertions; the real module is the clean control. Request and result are retained under artifacts/automated-uat.
 
-## Human Verification Required
+## Automated Closure of Former UAT Items
 
-These three items remain open for human adjudication; no owner resolution is recorded.
+| Item | Proof | Disposition |
+| --- | --- | --- |
+| Incomplete accessibility findings | 18 cases per condition, 242 rendered contrast targets, 18 forward/backward keyboard wraps; 50 axe incomplete findings retained separately | Passed supplemental checks; no blanket WCAG or axe-pass claim |
+| Evidence-tier prohibition | Wired negative tests, known-bad fixture, clean control and real checker integration | Green, machine-proven fail-first |
+| Narrow review chrome | Separate theme band, 20 width/theme cases per condition, 44px targets and selected narrow agent captures | Repaired and verified |
 
-### 1. Review retained incomplete axe findings
-
-**Test:** Inspect the 14 current `color-contrast` incomplete fingerprints and 36 `aria-hidden-focus` focus-sentinel fingerprints in the cold/warm `axe.json` receipts against their rendered stories and the independent triage entries.
-**Expected:** Record a review outcome for the contrast items and the focus sentinels; keep all incomplete results distinct from violations and do not mark them as machine passes.
-**Why human:** Axe emitted incomplete results without a machine verdict. The triage record classifies 14 for manual review and 36 as retained without a machine verdict.
-
-### 2. Resolve the test-tier prohibition
-
-**Test:** Provide the existing contract's wired enforcement descriptor/check or an owner-recorded resolution for the Plan 174-05 prohibition.
-**Expected:** Evidence continues to distinguish executed required checks from advisory evidence and does not imply owner approval.
-**Why human:** The prohibition reaches verification without a wired descriptor; this report cannot silently assign its unresolved status or invent enforcement.
-
-### 3. Judge the narrow Storybook review chrome
-
-**Test:** Review the 320px Storybook capture where the theme control crowds the top review chrome.
-**Expected:** Decide whether the INFO-level crowding is acceptable for this phase's review surface; quick-view content itself remains readable and scrollable.
-**Why human:** Visual acceptability is a judgment call; the existing UI review is bounded to selected Chromium captures and does not assign an aesthetic score.
+Human verification required: none. UAT is complete (3/3 automated). D-52 and METHODOLOGY.md prohibit reopening these rows merely to obtain another confirmation; require a relevant implementation/acceptance change or fresh failing evidence.
 
 ## Gaps Summary
 
-The sole machine gap is closed: actual baseline and candidate job timestamps derive a 314,000ms observed delta, and the enriched final receipt plus tracked disposition consistently record the 14-second provisional wall-budget overage, runner-budget compliance, and observational limitation. The strict hosted checker passes. Three human decisions remain: review of incomplete axe results, resolution of the test-tier prohibition, and judgment of the narrow Storybook review-chrome crowding. Status is `human_needed`; no unverified prohibition or incomplete result is counted as passed.
+No unresolved gap remains. Existing 20/20 truths and all six requirements remain satisfied; current isolated cold/warm acceptance passed. Historical hosted cost disposition remains preserved. Current run cost is local (cold 276,262ms, warm 127,562ms, pilot 406,849ms); added hosted cost and runner minutes are unmeasured. No override, owner approval or required-check promotion was inferred.
 
 ## Advisory (New Scope, Unevidenced)
 
-No new-scope findings were raised in this narrow re-verification. It was limited to the carried receipt gap and its regression check; the prior source-file and browser audit was not repeated.
+The closure is limited to the three former UAT items and their recurring checks. Real zoom, catalogue/StatCard feedback and final STORY-07 reconciliation remain with Phase 178. Current automation repairs have not run in hosted CI; the existing Demo evidence job remains advisory.
 
 ---
 
-_Verified: 2026-10-27T12:28:43Z_  
+_Verified: 2026-10-27T13:28:18.642315Z_
 _Verifier: the agent (gsd-verifier)_

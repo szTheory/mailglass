@@ -1,0 +1,3768 @@
+{
+  "schema_version": 1,
+  "run_id": "mailglass-evidence-20261027131817-50319-18180-warm",
+  "producer_execution_token": "mailglass-evidence-20261027131817-50319-18180-warm",
+  "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+  "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef",
+  "started_at": "2026-10-27T13:24:26.593Z",
+  "completed_at": "2026-10-27T13:25:01.626Z",
+  "expected": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark"
+    }
+  ],
+  "excluded": [
+    {
+      "scenario_id": "qv-delivery-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Delivery record or story variation exists for this real absence state."
+    },
+    {
+      "scenario_id": "qv-inbound-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Inbound record or story variation exists for this real absence state."
+    }
+  ],
+  "executed": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:28.767Z"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:30.771Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:32.653Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:34.662Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:36.707Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:38.747Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:40.798Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:42.749Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:44.776Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:46.794Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:48.957Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:51.079Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:53.092Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:55.131Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:57.154Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:24:59.221Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:25:00.438Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T13:25:01.617Z"
+    }
+  ],
+  "violations": [],
+  "incomplete": [
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027131817-50319-18180-warm"
+    }
+  ],
+  "supplemental": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#operator-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(2) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#operator-quick-technical > dl > div > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".mono",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 8
+      }
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 8
+      }
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#inbound-quick-technical > dl > div > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "#inbound-quick-technical > dl > div > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "#inbound-quick-view-title",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 700
+        },
+        {
+          "target": ".px-xs",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(1)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "h3",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700
+        },
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3)",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "p:nth-child(3) > .text-base-content",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": ".mt-md > p",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": "time",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".sm\\:grid-cols-2 > div:nth-child(1) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(2) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": ".break-words",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        },
+        {
+          "target": "div:nth-child(3) > dt",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 700
+        },
+        {
+          "target": "div:nth-child(3) > dd",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "p",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 1
+      }
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "p",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400
+        }
+      ],
+      "focus_wrap": {
+        "forward": true,
+        "backward": true,
+        "controls": 1
+      }
+    }
+  ]
+}

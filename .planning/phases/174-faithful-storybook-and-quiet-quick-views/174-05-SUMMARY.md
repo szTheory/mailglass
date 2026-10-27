@@ -58,13 +58,13 @@ coverage:
     requirement: UIQ-05
     verification:
       - kind: unit
-        ref: "node --test mailglass_admin/e2e/support/storybook-axe.test.cjs (18 tests)"
+        ref: "node --test mailglass_admin/e2e/support/storybook-axe.test.cjs (20 tests after automated closure)"
         status: pass
       - kind: e2e
-        ref: "174-05-final-storybook-axe.json; run phase174-05-final-current-cc9aa419; comparator CLI"
+        ref: "artifacts/automated-uat/phase174/{cold,warm}/axe.json; 18 selected cases and 242 supplemental contrast targets each; 174-AUTOMATION.md"
         status: pass
-    human_judgment: true
-    rationale: Axe returned incomplete color-contrast cases; they remain explicitly retained for manual contrast review and are not reported as passing.
+    human_judgment: false
+    rationale: "2026-10-27 automated closure: 242 rendered contrast targets and 18 bidirectional focus wraps per condition pass separately; axe incomplete outcomes remain incomplete. See 174-AUTOMATION.md."
   - id: D2
     description: Both quick-view dialogs accept keyboard focus and scroll through clipped content while preserving focus and boundary behavior.
     requirement: UIQ-05
@@ -158,3 +158,8 @@ Plan 174-06 can wrap the committed final report using the independent source/run
 ---
 *Phase: 174-faithful-storybook-and-quiet-quick-views*
 *Completed: 2026-10-27*
+
+
+## Automated UAT Reconciliation — 2026-10-27
+
+D-52 was reaffirmed by the owner. Former human-judgment flags in coverage are now closed by scoped agent review and executable layout, contrast, keyboard and evidence-authority checks. Historical execution and commit-window facts above are preserved; 174-AUTOMATION.md and the replayable artifacts/automated-uat receipts describe the current repairs. No owner approval or new hosted success is inferred.
