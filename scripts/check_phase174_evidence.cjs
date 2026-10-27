@@ -352,7 +352,8 @@ function validateAxeReport(report, identity, manifest, approved) {
   const comparison = compareFindings(report, approved);
   const errors = [...validation.errors, ...comparison.errors];
   requireThat(validation.valid && comparison.valid, `Axe comparison rejected: ${errors.join("; ")}`);
-  requireThat(validation.metrics.expected === 18 && validation.metrics.executed === 18 && validation.metrics.successful === 18 && validation.metrics.failed === 0 && validation.metrics.missing === 0, "Axe selected-case count is empty, partial, or failed");
+  const selectedCaseCount = selectedCases(manifest).cases.length;
+  requireThat(validation.metrics.expected === selectedCaseCount && validation.metrics.executed === selectedCaseCount && validation.metrics.successful === selectedCaseCount && validation.metrics.failed === 0 && validation.metrics.missing === 0, "Axe selected-case count is empty, partial, or failed");
   return {
     expected: validation.metrics.expected,
     executed: validation.metrics.executed,

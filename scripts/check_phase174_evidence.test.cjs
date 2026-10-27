@@ -460,8 +460,8 @@ test("checker accepts complete independent local cold/warm evidence", t => {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const summary = JSON.parse(result.stdout.trim());
   assert.equal(summary.valid, true);
-  assert.equal(summary.conditions.cold.axe.successful, 18);
-  assert.equal(summary.conditions.warm.axe.successful, 18);
+  assert.equal(summary.conditions.cold.axe.successful, AXE_CASES.length);
+  assert.equal(summary.conditions.warm.axe.successful, AXE_CASES.length);
 });
 
 test("same test title from different source locations remains separately countable", t => {
