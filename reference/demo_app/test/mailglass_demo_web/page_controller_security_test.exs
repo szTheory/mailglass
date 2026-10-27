@@ -112,6 +112,49 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
            } = json_response(conn, 200)
   end
 
+  test "hosted evidence run and attempt preserve health identity and token-gated reset", %{conn: conn} do
+    project_id = "mailglass-evidence-40484284465-1"
+    System.put_env("DEMO_EVIDENCE_PROJECT_ID", project_id)
+
+    health = get(conn, "/health")
+    assert get_resp_header(health, "x-mailglass-evidence-project-id") == [project_id]
+
+    reset =
+      conn
+      |> put_req_header("x-mailglass-demo-reset-token", "test-demo-reset-token")
+      |> post("/demo/evidence/reset")
+
+    assert %{"status" => "ok"} = json_response(reset, 200)
+  end
+
+  test "hosted identity cannot reset without the configured token", %{conn: conn} do
+    System.put_env("DEMO_EVIDENCE_PROJECT_ID", "mailglass-evidence-40484284465-1")
+    sentinel = insert_sentinel_delivery!()
+
+    denied =
+      conn
+      |> put_req_header("x-mailglass-demo-reset-token", "wrong-token")
+      |> post("/demo/evidence/reset")
+
+    assert json_response(denied, 403) == %{"error" => "forbidden"}
+    assert Repo.get!(Delivery, sentinel.id).recipient == "untouched@example.test"
+  end
+
+  test "malformed hosted identities expose no marker and cannot reset", %{conn: conn} do
+    for project_id <- ["mailglass-evidence-40484284465-0", "mailglass-evidence-0-1",
+                       "mailglass-evidence-run-1", "mailglass-evidence-123-1/../other"] do
+      System.put_env("DEMO_EVIDENCE_PROJECT_ID", project_id)
+      assert get_resp_header(get(conn, "/health"), "x-mailglass-evidence-project-id") == []
+
+      denied =
+        conn
+        |> put_req_header("x-mailglass-demo-reset-token", "test-demo-reset-token")
+        |> post("/demo/evidence/reset")
+
+      assert json_response(denied, 403) == %{"error" => "forbidden"}
+    end
+  end
+
   defp insert_sentinel_delivery! do
     Repo.insert!(
       Delivery.changeset(%{
