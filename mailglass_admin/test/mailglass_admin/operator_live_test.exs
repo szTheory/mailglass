@@ -1572,9 +1572,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
       changed_review_html =
         view |> element("[data-testid='operator-replay-review-again']") |> render_click()
 
-      fresh_review_id = replay_review_id(view)
-      refute fresh_review_id == old_review_id
-
       assert changed_review_html =~
                "This exact request changed. Review the current request before confirming."
 
@@ -1589,6 +1586,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       render_hook(view, "choose_replay_target", %{"webhook_event_id" => replacement.id})
       assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == old_review_id
       render_hook(view, "confirm_replay", %{"review" => fresh_review_id})
 
       assert Enum.count(

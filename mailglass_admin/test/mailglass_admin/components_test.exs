@@ -499,10 +499,9 @@ defmodule MailglassAdmin.ComponentsTest do
       refute html =~ "provider receipt"
       [confirm] = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
 
-      assert Floki.attribute(confirm, "class")
-             |> hd()
-             |> String.split()
-             |> Enum.member?("btn-error")
+      classes = confirm |> Floki.attribute("class") |> hd() |> String.split()
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
     end
 
     test "Delivery wrapper uses the shell and retains stored webhook consequences" do
