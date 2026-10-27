@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 175
 current_phase_name: Delivery Investigation and Safe Replay
 status: executing
-stopped_at: Completed 175-02-PLAN.md
-last_updated: "2026-10-27T15:34:14.484Z"
+stopped_at: Completed 175-03-PLAN.md
+last_updated: "2026-10-27T16:06:53.374Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 175 execution started
-state_head: ca3c51dda468e477488e6865740e7010e9250b53
+state_head: ce5acdcd69864a06255a02a04931869c51095700
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 8
+  completed_plans: 9
   percent: 20
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 175 (Delivery Investigation and Safe Replay) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Phase 175 execution started
 
@@ -299,6 +299,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 174 P06 | 4h29m | 2 tasks | 24 files |
 | Phase 175 P01 | 23m | 2 tasks | 11 files |
 | Phase 175 P02 | 21min | 2 tasks | 8 files |
+| Phase 175 P03 | ~29m (approximate) | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -552,6 +553,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 175]: Quick view and Full detail share ReplayAction, with review entry shown only for exact or explicitly ambiguous target sets.
 - [Phase 175]: Keep suppression refresh on the existing tenant, recipient, and stream-scoped query; prove external changes through fresh reads without changing domain semantics.
 - [Phase 175]: Show only recorded expiry and known reason-based policy; label unknown expiry and policy as not recorded.
+- [Phase 175]: The shared replay shell owns accessible overlay presentation; domain wrappers keep identity, eligibility, commands and outcomes distinct.
+- [Phase 175]: Lower the Inbound quick-view layer while replay review is open so modal pointer actions remain reachable and selected context stays mounted.
 
 ## Quick Tasks Completed
 
@@ -603,8 +606,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T15:34:14.331Z
-Stopped at: Completed 175-02-PLAN.md
+Last session: 2026-10-27T16:06:53.230Z
+Stopped at: Completed 175-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

@@ -129,7 +129,7 @@ Plans:
 4. Outbound and Inbound replay share concise accessible dialog structure with identifiable stored-request evidence, an X named Close, Escape, focus containment/return and a clear primary action. Distinct domain commands and consequences remain intact; use the requested ux-writing guidance. (REPLAY-06)
 5. Connected permitted replay closes the dialog, shows an accessible success toast and updates evidence according to the actual new-work/no-change outcome. Auth-denied and other failures remain visible inside the open dialog with a safe retry or explicit re-review route, without flicker, hidden flash or unexplained disabled review. Preserve exact correlation, revalidation, authorization, idempotency and audit behavior. (REPLAY-07, REPLAY-08)
 
-**Plans:** 2/6 plans executed in 5 waves — planning verification passed; execution in progress.
+**Plans:** 3/6 plans executed in 5 waves — planning verification passed; execution in progress.
 **UI hint:** yes
 
 **Planning focus:** Keep the already-fixed demo grants, auth-action contract guard and replay-success e2e completed. Share presentation, not outbound/inbound command semantics. Isolated stories cannot prove replay execution, authorization or persisted outcomes. Existing list filters can support the early job; new auto-apply behavior follows in Phase 176.
@@ -140,7 +140,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 175-02-PLAN.md — Scoped suppression Refresh/Retry and truthful expiry/removal evidence.
-- [ ] 175-03-PLAN.md — Shared accessible dialog presentation and distinct Inbound replay.
+- [x] 175-03-PLAN.md — Shared accessible dialog presentation and distinct Inbound replay.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 175-04-PLAN.md — Mounted Delivery failure recovery and exact-target safety proof.
@@ -236,7 +236,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
-| 175. Delivery Investigation and Safe Replay | 2/6 | In Progress | — |
+| 175. Delivery Investigation and Safe Replay | 3/6 | In Progress | — |
 | 176. Direct Filters and Useful Inbound Evidence | 0/TBD | Not started | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |

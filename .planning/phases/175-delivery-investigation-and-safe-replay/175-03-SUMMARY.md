@@ -127,6 +127,8 @@ Each task was committed atomically. TDD tasks have a RED evidence/test commit fo
 2. **175-03-02 — Expose Inbound quick replay and grouped full technical facts:** `7e6c8578` (`test(175-03-02): specify quick replay and open technical evidence`), then `32484ad8` (`feat(175-03-02): add quick replay and open technical evidence`).
 3. **175-03-03 — Reuse dialog presentation on Delivery:** `5fd3e730` (`test(175-03-03): add failing shared replay shell contract`), then `01216920` (`feat(175-03-03): use shared shell for Delivery replay`).
 
+**Plan summary commit:** `ce5acdcd` (`docs(175-03): record replay review execution summary`).
+
 **Measured plan commit count:** 5 commits from `3197c1458f00f31a58c31c86ed350a350d749fae` through `012169207246d9d04f81f5b084e362ddad9a0deb`. The summary and GSD metadata commits are separate.
 
 ## Verification
