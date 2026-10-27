@@ -19,6 +19,11 @@ const FIDELITY_SCREENSHOTS = [
   "delivery-investigation-1440-dark.png",
   "delivery-investigation-200-browser-zoom.png"
 ];
+const FIDELITY_CAPTURE_GEOMETRIES = [
+  { filename: FIDELITY_SCREENSHOTS[0], width: 320, height: 2153, viewportWidth: 320, viewportHeight: 900, devicePixelRatio: 1, screenshotScale: 1 },
+  { filename: FIDELITY_SCREENSHOTS[1], width: 1440, height: 1363, viewportWidth: 1440, viewportHeight: 900, devicePixelRatio: 1, screenshotScale: 1 },
+  { filename: FIDELITY_SCREENSHOTS[2], width: 640, height: 4316, viewportWidth: 320, viewportHeight: 2324, devicePixelRatio: 4, screenshotScale: 2 }
+];
 
 function crc32(bytes) {
   let crc = 0xffffffff;
@@ -29,10 +34,10 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-function fixturePng() {
+function fixturePng(width, height) {
   const header = Buffer.alloc(13);
-  header.writeUInt32BE(1, 0);
-  header.writeUInt32BE(1, 4);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
   header[8] = 8;
   header[9] = 2;
   const chunk = (type, data) => {
@@ -47,7 +52,7 @@ function fixturePng() {
   return Buffer.concat([
     PNG_SIGNATURE,
     chunk("IHDR", header),
-    chunk("IDAT", zlib.deflateSync(Buffer.from([0, 255, 0, 0]))),
+    chunk("IDAT", zlib.deflateSync(Buffer.alloc(height * (width * 3 + 1)))),
     chunk("IEND", Buffer.alloc(0))
   ]);
 }
@@ -94,7 +99,9 @@ function phase175FidelityReceipt(evidenceDir, runRevision = REVISION) {
   });
   const screenshotDir = path.relative(ROOT, evidenceDir);
   const screenshotPaths = FIDELITY_SCREENSHOTS.map(filename => `${screenshotDir}/${filename}`);
-  for (const filename of FIDELITY_SCREENSHOTS) fs.writeFileSync(path.join(evidenceDir, filename), fixturePng());
+  for (const capture of FIDELITY_CAPTURE_GEOMETRIES) {
+    fs.writeFileSync(path.join(evidenceDir, capture.filename), fixturePng(capture.width, capture.height));
+  }
   const executedCaseIds = checker.FIDELITY_CASE_IDS;
   const detail = {
     caseId: "fidelity:delivery-investigation:long-unicode",
@@ -119,9 +126,36 @@ function phase175FidelityReceipt(evidenceDir, runRevision = REVISION) {
       loadedFaces: fonts.map((item, index) => ({ family: ["Inter", "Inter", "Inter Tight", "Inter Tight", "IBM Plex Mono", "IBM Plex Mono"][index], weight: [400, 700, 400, 700, 400, 700][index], status: "loaded" }))
     },
     hooks: { storyHostConnected: true, quickViewClosed: true, exactFocusReturnId: "delivery-opener" },
+    widths: FIDELITY_CAPTURE_GEOMETRIES.slice(0, 2).map((capture, index) => ({
+      viewportWidth: capture.viewportWidth,
+      screenshot: screenshotPaths[index],
+      geometry: {
+        viewportWidth: capture.viewportWidth,
+        viewportHeight: capture.viewportHeight,
+        documentWidth: capture.viewportWidth,
+        devicePixelRatio: capture.devicePixelRatio
+      },
+      captureGeometry: {
+        viewportWidth: capture.viewportWidth,
+        viewportHeight: capture.viewportHeight,
+        documentWidth: capture.viewportWidth,
+        contentHeight: capture.height,
+        devicePixelRatio: capture.devicePixelRatio,
+        screenshotScale: capture.screenshotScale
+      }
+    })),
     zoom: {
       tabZoom: { factor: 2 },
-      effective: { viewportWidth: 320, documentWidth: 320 },
+      initial: { viewportWidth: 1440, viewportHeight: 900, devicePixelRatio: 2 },
+      effective: { viewportWidth: 320, viewportHeight: 2324, documentWidth: 320, devicePixelRatio: 4 },
+      captureGeometry: {
+        viewportWidth: 320,
+        viewportHeight: 2324,
+        documentWidth: 320,
+        contentHeight: 2158,
+        devicePixelRatio: 4,
+        screenshotScale: 2
+      },
       screenshot: `${screenshotDir}/${FIDELITY_SCREENSHOTS[2]}`
     },
     screenshots: screenshotPaths
@@ -243,6 +277,12 @@ test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes",
     const wrongFont = structuredClone(valid);
     wrongFont.cases[0].assets.fonts[0].url = "http://other:4015/dev/mail/fonts/inter-400.woff2";
     assert.throws(() => checker.validateFidelityReceipt(wrongFont, { root: ROOT, revision: REVISION, evidenceDir: temp }), /wrong-source/);
+    const wrongResponsiveDpr = structuredClone(valid);
+    wrongResponsiveDpr.cases[0].widths[0].geometry.devicePixelRatio = 2;
+    assert.throws(() => checker.validateFidelityReceipt(wrongResponsiveDpr, { root: ROOT, revision: REVISION, evidenceDir: temp }), /DPR does not match/);
+    const wrongZoomDpr = structuredClone(valid);
+    wrongZoomDpr.cases[0].zoom.effective.devicePixelRatio = 2;
+    assert.throws(() => checker.validateFidelityReceipt(wrongZoomDpr, { root: ROOT, revision: REVISION, evidenceDir: temp }), /effective DPR does not match/);
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
   }
@@ -256,6 +296,21 @@ test("Phase 175 fidelity requires decoded responsive and zoom PNGs inside the cu
     const valid = phase175FidelityReceipt(evidenceDir);
     const options = { root: ROOT, revision: REVISION, evidenceDir };
     assert.doesNotThrow(() => checker.validateFidelityReceipt(valid, options));
+
+    for (const capture of FIDELITY_CAPTURE_GEOMETRIES) {
+      const screenshotPath = path.join(evidenceDir, capture.filename);
+      const validBytes = fs.readFileSync(screenshotPath);
+      const wrongDimensions = [
+        { bytes: fixturePng(capture.width - 1, capture.height), error: /PNG width/ },
+        { bytes: fixturePng(1, 1), error: /PNG width/ },
+        { bytes: fixturePng(capture.width, capture.height - 1), error: /PNG height/ }
+      ];
+      for (const negative of wrongDimensions) {
+        fs.writeFileSync(screenshotPath, negative.bytes);
+        assert.throws(() => checker.validateFidelityReceipt(valid, options), negative.error, capture.filename);
+      }
+      fs.writeFileSync(screenshotPath, validBytes);
+    }
 
     const missingInventory = structuredClone(valid);
     missingInventory.cases[0].screenshots = missingInventory.cases[0].screenshots.filter(item => !item.endsWith("delivery-investigation-1440-dark.png"));
@@ -275,7 +330,7 @@ test("Phase 175 fidelity requires decoded responsive and zoom PNGs inside the cu
     const pngBytes = fs.readFileSync(responsivePng);
     fs.writeFileSync(responsivePng, "arbitrary nonempty file");
     assert.throws(() => checker.validateFidelityReceipt(valid, options), /PNG signature/);
-    fs.writeFileSync(responsivePng, corruptPngImageData(fixturePng()));
+    fs.writeFileSync(responsivePng, corruptPngImageData(fixturePng(320, 2153)));
     assert.throws(() => checker.validateFidelityReceipt(valid, options), /cannot be decoded/);
     fs.writeFileSync(responsivePng, pngBytes);
 
@@ -285,7 +340,7 @@ test("Phase 175 fidelity requires decoded responsive and zoom PNGs inside the cu
     fs.writeFileSync(missingCapture, pngBytes);
 
     const leafTarget = path.join(temp, "leaf-target.png");
-    fs.writeFileSync(leafTarget, fixturePng());
+    fs.writeFileSync(leafTarget, fixturePng(320, 2153));
     fs.unlinkSync(responsivePng);
     fs.symlinkSync(leafTarget, responsivePng);
     assert.throws(() => checker.validateFidelityReceipt(valid, options), /symlink/);

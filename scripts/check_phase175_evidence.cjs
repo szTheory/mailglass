@@ -397,6 +397,35 @@ function validatePng(filename, label) {
   for (let row = 0; row < header.height; row += 1) {
     requireThat(decoded[row * (rowBytes + 1)] <= 4, `${label} has an invalid PNG row filter`);
   }
+
+  return { width: header.width, height: header.height };
+}
+
+function validateCapturePngGeometry(dimensions, geometry, expectedViewportWidth, label, {
+  expectedDevicePixelRatio,
+  expectedScreenshotScale
+} = {}) {
+  requireThat(isRecord(geometry), `${label} capture geometry is missing`);
+  for (const field of ["viewportWidth", "viewportHeight", "documentWidth", "contentHeight", "devicePixelRatio", "screenshotScale"]) {
+    requireThat(Number.isFinite(geometry[field]) && geometry[field] > 0, `${label} capture geometry has invalid ${field}`);
+  }
+  requireThat(geometry.viewportWidth === expectedViewportWidth, `${label} observed viewport width is not ${expectedViewportWidth}px`);
+  requireThat(geometry.documentWidth <= geometry.viewportWidth, `${label} document exceeds its observed viewport width`);
+  if (expectedDevicePixelRatio !== undefined) {
+    requireThat(Math.abs(geometry.devicePixelRatio - expectedDevicePixelRatio) < 0.01, `${label} capture DPR does not match the browser receipt`);
+  }
+  if (expectedScreenshotScale !== undefined) {
+    requireThat(Math.abs(geometry.screenshotScale - expectedScreenshotScale) < 0.01, `${label} screenshot scale does not match the browser receipt`);
+  }
+
+  const expectedPixelWidth = Math.round(geometry.viewportWidth * geometry.screenshotScale);
+  const minimumPixelHeight = Math.ceil(geometry.contentHeight * geometry.screenshotScale);
+  requireThat(Number.isSafeInteger(expectedPixelWidth) && expectedPixelWidth > 0, `${label} expected PNG width is invalid`);
+  requireThat(Number.isSafeInteger(minimumPixelHeight) && minimumPixelHeight > 0, `${label} minimum PNG height is invalid`);
+  requireThat(dimensions.width === expectedPixelWidth,
+    `${label} PNG width ${dimensions.width}px does not match its observed ${geometry.viewportWidth}px viewport at ${geometry.screenshotScale}x (${expectedPixelWidth}px)`);
+  requireThat(dimensions.height >= minimumPixelHeight,
+    `${label} PNG height ${dimensions.height}px is shorter than its observed ${geometry.contentHeight}px capture at ${geometry.screenshotScale}x (${minimumPixelHeight}px minimum)`);
 }
 
 function validateFidelityReceipt(receipt, { root = ROOT, revision, evidenceDir }) {
@@ -428,6 +457,15 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision, evidenceDir }
   requireThat(connectedUrl.origin === storyUrl.origin && connectedUrl.pathname.startsWith("/ops/"), "fidelity connected-route URL is missing or from the wrong source");
   requireThat([storyUrl, connectedUrl].every(url => url.protocol === "http:" && !url.username && !url.password), "fidelity URLs contain an unsupported origin or credentials");
 
+  const zoomFactor = detail.zoom?.tabZoom?.factor;
+  const initialDpr = detail.zoom?.initial?.devicePixelRatio;
+  const effectiveDpr = detail.zoom?.effective?.devicePixelRatio;
+  requireThat(zoomFactor === 2 && detail.zoom?.effective?.viewportWidth === 320 && detail.zoom.effective.documentWidth <= 320,
+    "fidelity real 200-percent zoom receipt is incomplete");
+  requireThat(Number.isFinite(initialDpr) && initialDpr > 0 && Number.isFinite(effectiveDpr) && effectiveDpr > 0,
+    "fidelity zoom DPR receipt is incomplete");
+  requireThat(Math.abs(effectiveDpr / initialDpr - zoomFactor) < 0.01, "fidelity effective DPR does not match the observed tab zoom");
+
   const sourceByPath = new Map(sourceFiles.map(item => [item.path, item]));
   const cssFile = sourceByPath.get("mailglass_admin/priv/static/app.css");
   const stylesheet = detail.assets?.stylesheet;
@@ -451,7 +489,6 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision, evidenceDir }
   }
   requireThat(Array.isArray(detail.assets.loadedFaces) && detail.assets.loadedFaces.length === 6 && detail.assets.loadedFaces.every(item => item.status === "loaded"), "fidelity font face load receipt is incomplete");
   requireThat(detail.hooks?.storyHostConnected === true && detail.hooks.quickViewClosed === true && nonempty(detail.hooks.exactFocusReturnId), "fidelity connected hook/focus receipt is incomplete");
-  requireThat(detail.zoom?.tabZoom?.factor === 2 && detail.zoom?.effective?.viewportWidth === 320 && detail.zoom.effective.documentWidth <= 320, "fidelity real 200-percent zoom receipt is incomplete");
   const expectedScreenshots = FIDELITY_SCREENSHOTS.map(filename =>
     path.relative(path.resolve(root), path.join(runEvidenceDir, filename)).split(path.sep).join("/")
   );
@@ -459,10 +496,42 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision, evidenceDir }
   exactStringSet(screenshots.map(normalizedRelativePath), expectedScreenshots, "fidelity screenshot inventory");
   const expectedZoom = expectedScreenshots.find(filename => filename.endsWith("delivery-investigation-200-browser-zoom.png"));
   requireThat(normalizedRelativePath(detail.zoom?.screenshot || "") === expectedZoom, "fidelity zoom screenshot is missing or outside the run evidence directory");
+  const screenshotDimensions = new Map();
   for (const screenshot of screenshots) {
     const filename = safeWorkspaceFile(root, screenshot, "fidelity screenshot", { evidenceDir: runEvidenceDir });
-    validatePng(filename, "fidelity screenshot");
+    screenshotDimensions.set(normalizedRelativePath(screenshot), validatePng(filename, "fidelity screenshot"));
   }
+
+  const screenshotByName = new Map(expectedScreenshots.map(filename => [path.basename(filename), filename]));
+  for (const width of [320, 1440]) {
+    const captureCase = Array.isArray(detail.widths) && detail.widths.find(item => item?.viewportWidth === width);
+    requireThat(isRecord(captureCase), `fidelity ${width}px responsive capture receipt is missing`);
+    requireThat(captureCase.geometry?.viewportWidth === width, `fidelity ${width}px responsive geometry receipt is stale`);
+    requireThat(Number.isFinite(captureCase.geometry?.devicePixelRatio) && captureCase.geometry.devicePixelRatio > 0,
+      `fidelity ${width}px responsive DPR receipt is missing`);
+    const filename = `delivery-investigation-${width}-dark.png`;
+    const expectedPath = screenshotByName.get(filename);
+    requireThat(normalizedRelativePath(captureCase.screenshot || "") === expectedPath, `fidelity ${width}px screenshot is not bound to its viewport case`);
+    const dimensions = screenshotDimensions.get(expectedPath);
+    requireThat(captureCase.captureGeometry?.viewportHeight === captureCase.geometry.viewportHeight &&
+      captureCase.captureGeometry?.documentWidth === captureCase.geometry.documentWidth,
+    `fidelity ${width}px capture geometry does not match its observed viewport receipt`);
+    validateCapturePngGeometry(dimensions, captureCase.captureGeometry, width, `fidelity ${width}px screenshot`, {
+      expectedDevicePixelRatio: captureCase.geometry.devicePixelRatio,
+      expectedScreenshotScale: captureCase.geometry.devicePixelRatio
+    });
+  }
+
+  const zoomCapturePath = screenshotByName.get("delivery-investigation-200-browser-zoom.png");
+  requireThat(detail.zoom.captureGeometry?.viewportHeight === detail.zoom.effective.viewportHeight &&
+    detail.zoom.captureGeometry?.documentWidth === detail.zoom.effective.documentWidth,
+  "fidelity zoom capture geometry does not match its observed viewport receipt");
+  validateCapturePngGeometry(screenshotDimensions.get(zoomCapturePath), detail.zoom.captureGeometry, 320, "fidelity 200-percent zoom screenshot", {
+    expectedDevicePixelRatio: effectiveDpr,
+    expectedScreenshotScale: effectiveDpr / zoomFactor
+  });
+  requireThat(Math.abs(detail.zoom.captureGeometry.screenshotScale - initialDpr) < 0.01,
+    "fidelity zoom screenshot scale does not match the initial browser DPR");
 
   return {
     expected_case_ids: FIDELITY_CASE_IDS,

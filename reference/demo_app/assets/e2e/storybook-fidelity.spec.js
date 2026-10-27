@@ -979,6 +979,8 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
           const technical = providerEventLabel?.nextElementSibling;
         return {
           viewportWidth: document.defaultView.innerWidth,
+          viewportHeight: document.defaultView.innerHeight,
+          devicePixelRatio: document.defaultView.devicePixelRatio,
           documentWidth: document.documentElement.scrollWidth,
           picker: bounds(picker), main: bounds(main), storyHeader: bounds(storyHeader), dialog: bounds(dialog),
           technical: technical?.textContent.trim() || null,
@@ -1018,10 +1020,27 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
       if ([320, 1440].includes(width)) {
         const screenshot = path.join(PHASE175_EVIDENCE_DIR, `delivery-investigation-${width}-${theme}.png`);
         fs.mkdirSync(PHASE175_EVIDENCE_DIR, { recursive: true });
+        const captureGeometry = await frame.locator("body").evaluate(body => {
+          const document = body.ownerDocument;
+          const view = document.defaultView;
+          return {
+            viewportWidth: view.innerWidth,
+            viewportHeight: view.innerHeight,
+            documentWidth: document.documentElement.scrollWidth,
+            contentHeight: Math.ceil(Math.max(body.scrollHeight, body.getBoundingClientRect().height)),
+            devicePixelRatio: view.devicePixelRatio,
+            screenshotScale: view.devicePixelRatio
+          };
+        });
+        expect(captureGeometry.viewportWidth).toBe(width);
+        expect(captureGeometry.viewportHeight).toBe(geometry.viewportHeight);
+        expect(captureGeometry.documentWidth).toBe(geometry.documentWidth);
+        expect(captureGeometry.devicePixelRatio).toBe(geometry.devicePixelRatio);
         await frame.locator("body").screenshot({ path: screenshot });
         expect(fs.statSync(screenshot).size).toBeGreaterThan(0);
         const relative = path.relative(REPO_ROOT, screenshot);
         item.screenshot = relative;
+        item.captureGeometry = captureGeometry;
         receipt.screenshots.push(relative);
       }
     }
@@ -1139,12 +1158,29 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
       expect(effective.owner).toBe("delivery-investigation-story");
       const screenshot = path.join(PHASE175_EVIDENCE_DIR, "delivery-investigation-200-browser-zoom.png");
       fs.mkdirSync(PHASE175_EVIDENCE_DIR, { recursive: true });
+      const captureGeometry = await zoomFrame.locator("body").evaluate((body, zoomFactor) => {
+        const document = body.ownerDocument;
+        const view = document.defaultView;
+        return {
+          viewportWidth: view.innerWidth,
+          viewportHeight: view.innerHeight,
+          documentWidth: document.documentElement.scrollWidth,
+          contentHeight: Math.ceil(Math.max(body.scrollHeight, body.getBoundingClientRect().height)),
+          devicePixelRatio: view.devicePixelRatio,
+          screenshotScale: view.devicePixelRatio / zoomFactor
+        };
+      }, tabZoom.factor);
+      expect(captureGeometry.viewportWidth).toBe(effective.viewportWidth);
+      expect(captureGeometry.viewportHeight).toBe(effective.viewportHeight);
+      expect(captureGeometry.documentWidth).toBe(effective.documentWidth);
+      expect(captureGeometry.devicePixelRatio).toBe(effective.devicePixelRatio);
+      expect(captureGeometry.screenshotScale).toBe(initial.devicePixelRatio);
       await zoomFrame.locator("body").screenshot({ path: screenshot });
       expect(fs.statSync(screenshot).size).toBeGreaterThan(0);
       zoomEvidence = {
         caseId: "fidelity:delivery-investigation:real-200-percent-zoom",
         url: zoomPage.url(), iframeUrl: await zoomRoot.evaluate(element => element.ownerDocument.URL),
-        tabZoom, initial, effective, screenshot: path.relative(REPO_ROOT, screenshot)
+        tabZoom, initial, effective, captureGeometry, screenshot: path.relative(REPO_ROOT, screenshot)
       };
       receipt.screenshots.push(zoomEvidence.screenshot);
       receipt.executedCaseIds.push(zoomEvidence.caseId);
