@@ -34,6 +34,7 @@ const FIDELITY_SOURCE_FILES = [
   "mailglass_admin/e2e/phase175-inbound.spec.js",
   "mailglass_admin/assets/css/app.css",
   "mailglass_admin/priv/static/app.css",
+  "mailglass_admin/priv/static/hooks.js",
   "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
   "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
   "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",

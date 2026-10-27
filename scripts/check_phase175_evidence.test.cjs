@@ -159,6 +159,7 @@ test("Phase 175 report selection requires named Demo and connected Admin cases t
 test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes", () => {
   const temp = workspaceTemp();
   try {
+    assert.ok(checker.fidelitySourcePaths().includes("mailglass_admin/priv/static/hooks.js"));
     const valid = phase175FidelityReceipt(temp);
     assert.equal(checker.validateFidelityReceipt(valid, { root: ROOT, revision: REVISION }).executed_case_ids.length, 10);
     const stale = structuredClone(valid);
