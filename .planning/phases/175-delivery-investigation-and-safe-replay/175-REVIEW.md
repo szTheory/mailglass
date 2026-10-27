@@ -1,8 +1,8 @@
 ---
 phase: 175-delivery-investigation-and-safe-replay
-reviewed: 2026-10-27T20:38:59Z
+reviewed: 2026-10-27T21:12:43Z
 depth: standard
-files_reviewed: 51
+files_reviewed: 53
 files_reviewed_list:
   - .github/workflows/ci.yml
   - mailglass_admin/docs/phase175-review.md
@@ -23,6 +23,7 @@ files_reviewed_list:
   - mailglass_admin/lib/mailglass_admin/inbound_live.ex
   - mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex
   - mailglass_admin/lib/mailglass_admin/operator/detail_header.ex
+  - mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex
   - mailglass_admin/lib/mailglass_admin/operator/quick_view.ex
   - mailglass_admin/lib/mailglass_admin/operator/repair_state.ex
   - mailglass_admin/lib/mailglass_admin/operator/replay_action.ex
@@ -35,6 +36,7 @@ files_reviewed_list:
   - mailglass_admin/test/mailglass_admin/inbound/components_test.exs
   - mailglass_admin/test/mailglass_admin/inbound/replay_modal_test.exs
   - mailglass_admin/test/mailglass_admin/inbound_live_test.exs
+  - mailglass_admin/test/mailglass_admin/operator/repair_state_test.exs
   - mailglass_admin/test/mailglass_admin/operator/replay_modal_test.exs
   - mailglass_admin/test/mailglass_admin/operator_live_test.exs
   - mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs
@@ -57,47 +59,37 @@ files_reviewed_list:
   - scripts/run_demo_browser_evidence.sh
 findings:
   critical: 0
-  warning: 3
+  warning: 1
   info: 0
-  total: 3
+  total: 1
 status: issues_found
 ---
 
 # Phase 175: Code Review Report
 
-**Reviewed:** 2026-10-27T20:38:59Z  
-**Depth:** standard  
-**Files Reviewed:** 51  
+**Reviewed:** 2026-10-27T21:12:43Z
+**Depth:** standard
+**Files Reviewed:** 53
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the 51 scoped implementation, test, evidence-checker, and CI files. Exact replay scope and action-time authorization are re-read before execution, but the outbound authorization error path loses the distinction between stale authentication and denied access. The recovery dialog also misstates a first-time target review as a changed request, and the fidelity receipt checker accepts arbitrary nonempty files as screenshots.
+Re-reviewed the previous 51-file scope and the two additional authorization files against the iteration-1 changes. WR-01 (stale-auth feedback), WR-02 (missing prior replay target), and the original WR-03 acceptance gap (arbitrary or misplaced screenshot files) are resolved in the current implementation. The screenshot checker now requires the three run-local PNGs and validates their PNG chunks and decoded scanlines, but it accepts a valid 1×1 PNG in each required capture slot without checking that the image dimensions match the declared 320px, 1440px, and real-zoom captures. One new warning remains.
+
+The retained current-source proof records Demo 4/4, Admin 10/10, fidelity 10/10, Axe 26/26, and six layout cases per domain for cold and warm runs. Machine-observable acceptance is covered under D-52; eight descriptor-less prohibition flags remain `flagged-unverified`, and the 116 Axe incomplete findings remain incomplete rather than being described as passing labels.
 
 ## Narrative Findings (AI reviewer)
 
 ## Warnings
 
-### WR-01: [WARNING] Stale outbound authentication is reported as an access denial
+### WR-04: [WARNING] Screenshot validation does not enforce the required capture dimensions
 
-**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:651-652`  
-**Issue:** `DestructiveAction.authorize/4` returns auth failures with their message, including the supported `"Recent authentication is required."` response (`operator/destructive_action.ex:26-27`, `auth.ex:19-25`). This handler discards that message and maps every auth failure to `:denied`, whose dialog tells the operator to ask an Account administrator to review access (`operator/repair_state.ex:129-134`). An operator whose recent-auth check expired is given the wrong recovery step.
-**Fix:** Preserve the normalized auth reason through `DestructiveAction.authorize/4` and route stale-auth failures to the existing `RepairState.authorization_feedback/1` copy (or add a dedicated `:stale_auth` dialog feedback branch); retain the generic denial copy for unauthorized responses.
-
-### WR-02: [WARNING] First successful re-review falsely says the exact request changed
-
-**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:2070-2071`  
-**Issue:** If opening replay failed to read targets, the prior selected target is `nil`. When `Review again` later finds one exact candidate, `reviewed_replay_selection/2` still returns `nil` (`operator_live.ex:2120-2122`), and the exact-target modal branch renders “This exact request changed” whenever the candidate ID differs from that nil selection (`operator/replay_modal.ex:45-47`). No exact request had been selected before, so the recovery message is false and can confuse the operator while requiring them to choose the candidate.
-**Fix:** Distinguish “no prior target was available” from a previously selected target that disappeared or changed. Show the ordinary exact-request review prompt for the former while keeping explicit target selection, and use the changed-request copy only when a prior target ID exists and no longer matches.
-
-### WR-03: [WARNING] Fidelity checker accepts arbitrary files as retained screenshots
-
-**File:** `scripts/check_phase175_evidence.cjs:232-238,292-293`  
-**Issue:** `safeWorkspaceFile` only checks that a path resolves lexically inside the workspace and names a nonempty regular file. The fidelity check then accepts that file as a screenshot without validating image content, requiring it to be under the run's evidence directory, or requiring any responsive screenshots (`detail.screenshots || []`). A receipt can point `zoom.screenshot` at a text file such as `CLAUDE.md` and still satisfy the screenshot check, so a missing or malformed capture can pass the retained-evidence validation.
-**Fix:** Require the expected screenshot artifacts in the run evidence directory and validate their image format (for example, PNG signature plus successful decode); reject symlinked path components as well as symlinked leaf files.
+**File:** `scripts/check_phase175_evidence.cjs:382-396,455-465`
+**Issue:** `validatePng` only requires positive dimensions under a broad 32768px limit and then validates the decompressed scanline length. It never compares those dimensions with the capture represented by each inventory entry. The checker tests build `fixturePng()` as a valid 1×1 image and accept it for all three required screenshot paths (`scripts/check_phase175_evidence.test.cjs:32-52,251-258`). Thus a tiny placeholder can satisfy the responsive and real-zoom screenshot gate even though it cannot show any of the declared viewport layouts. The retained current run artifacts are 320×2153, 1440×1363, and 640×4316, but these widths are not enforced.
+**Fix:** Return the parsed PNG dimensions from `validatePng` and compare each image against the expected capture width: 320px for the narrow capture, 1440px for the desktop capture, and the 320px effective viewport at 200% tab zoom for the zoom capture (640 screenshot pixels in the retained Chromium run). Add rejection cases for valid PNGs with incorrect dimensions.
 
 ---
 
-_Reviewed: 2026-10-27T20:38:59Z_  
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-10-27T21:12:43Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
