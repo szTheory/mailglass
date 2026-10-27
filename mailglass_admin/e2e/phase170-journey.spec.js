@@ -111,13 +111,15 @@ test.describe("Phase 170 connected", () => {
     await expect(modal).toContainText("browser-tenant");
     await expect(modal).toContainText(recordId);
     await expect(modal).toContainText("Recorded Mailbox:");
-    await expect(modal.getByRole("button", { name: "Close replay review" })).toBeFocused();
+    await expect(modal.getByRole("button", { name: "Close", exact: true })).toBeFocused();
     await modal.getByTestId("inbound-replay-confirm").click();
-    const feedback = page.getByTestId("inbound-replay-feedback");
-    await expect(feedback).toContainText(/Replay run recorded|Replay failed|Replay was already submitted/);
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText("Replay run recorded. Mailbox outcome: Accepted.");
+    await expect(toast).not.toContainText(/delivered|sent/i);
     await expect(modal).toHaveCount(0);
     await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
-    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns);
+    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns + 1);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns + 1);
@@ -176,10 +178,14 @@ test.describe("Phase 170 connected", () => {
     expect(mutation.status, mutation.body).toBe(200);
 
     await page.getByTestId("inbound-replay-confirm").click();
+    const modal = page.getByTestId("inbound-replay-modal");
     await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
-      "Replay review is stale. Reopen it to check the recorded Mailbox again."
+      "Replay review is stale. Review again to check the selected record and recorded Mailbox."
     );
-    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
 
@@ -194,7 +200,11 @@ test.describe("Phase 170 connected", () => {
     await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
       "Replay blocked: this action is not authorized for the current operator."
     );
-    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    const modal = page.getByTestId("inbound-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
 
@@ -219,9 +229,9 @@ test.describe("Phase 170 connected", () => {
       click();
     });
 
-    await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
-      /Replay run recorded|Replay was already submitted|Replay is already in progress/
-    );
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText("Replay run recorded. Mailbox outcome: Accepted.");
     await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount + 1);

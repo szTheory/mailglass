@@ -330,7 +330,7 @@ defmodule MailglassAdmin.VoiceTest do
       source = File.read!("lib/mailglass_admin/inbound_live.ex")
 
       assert source =~
-               ~s|"Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."|,
+               ~s|"Select an InboundMessage to review its recorded Mailbox before replay."|,
              "LD-16: no-selection put_flash must use the locked LD-16 string"
     end
   end

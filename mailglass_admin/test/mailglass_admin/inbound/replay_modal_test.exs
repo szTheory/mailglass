@@ -11,6 +11,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
         render_component(&ReplayModal.replay_modal/1,
           open?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}
@@ -46,6 +47,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
         render_component(&ReplayModal.replay_modal/1,
           open?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :ineligible, reason: :execution_history_missing}
@@ -69,6 +71,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
           open?: true,
           busy?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}

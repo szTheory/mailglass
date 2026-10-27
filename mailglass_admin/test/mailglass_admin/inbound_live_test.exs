@@ -2508,19 +2508,6 @@ defmodule MailglassAdmin.InboundLiveTest do
            "expected phrases to appear in order: #{inspect(phrases)}"
   end
 
-  # HEEx HTML-escapes text nodes, so verbatim UI-SPEC copy with an apostrophe
-  # renders as `&#39;`. Decode the handful of entities Phoenix emits so copy
-  # assertions can use the exact UI-SPEC string.
-  defp unescape(html) do
-    html
-    |> String.replace("&#39;", "'")
-    |> String.replace("&#x27;", "'")
-    |> String.replace("&quot;", "\"")
-    |> String.replace("&lt;", "<")
-    |> String.replace("&gt;", ">")
-    |> String.replace("&amp;", "&")
-  end
-
   defp run_count(record_id) do
     ExecutionRun
     |> where([run], run.inbound_record_id == ^record_id)
