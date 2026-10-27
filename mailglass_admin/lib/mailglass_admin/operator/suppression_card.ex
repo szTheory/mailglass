@@ -81,19 +81,19 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
             <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :stream)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold text-secondary">Expires at</dt>
+            <dt class="text-label font-bold text-secondary">Expiry date</dt>
             <dd class="mt-xs break-words text-body text-base-content">
               <Components.timestamp
                 :if={match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}
                 at={@suppression_state.expires_at}
               />
               <span :if={not match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}>
-                Unavailable
+                Expiry date not recorded
               </span>
             </dd>
           </div>
           <div class="sm:col-span-2">
-            <dt class="text-label font-bold text-secondary">Public removal command</dt>
+            <dt class="text-label font-bold text-secondary">Removal policy</dt>
             <dd class="mt-xs text-body text-secondary">{removal_copy(@suppression_state)}</dd>
           </div>
         </dl>
@@ -143,15 +143,17 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   defp scope_label(:address_stream), do: "Address + stream · Account-local"
   defp scope_label(_), do: "Unavailable"
 
-  defp removal_copy(%{removal_policy: :blocked, reason: reason}) do
-    "The public Mailglass removal command blocks #{label(reason)} records."
+  defp removal_copy(%{removal_policy: :blocked, reason: reason})
+       when reason in [:complaint, :unsubscribe] do
+    "Mailglass does not allow removal of #{label(reason)} suppressions."
   end
 
-  defp removal_copy(%{removal_policy: :supported, reason: reason}) do
-    "The public Mailglass removal command permits #{label(reason)} records."
+  defp removal_copy(%{removal_policy: :supported, reason: reason})
+       when reason in [:hard_bounce, :manual, :policy, :invalid_recipient] do
+    "Mailglass allows removal of #{label(reason)} suppressions."
   end
 
-  defp removal_copy(_), do: "Unavailable"
+  defp removal_copy(_), do: "Removal policy not recorded."
 
   defp label(nil), do: "Unavailable"
 

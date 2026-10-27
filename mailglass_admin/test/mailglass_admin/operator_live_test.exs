@@ -476,7 +476,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "pm_123"
       assert html =~ "Current suppression"
       assert html =~ "Address · Account-local"
-      assert html =~ "The public Mailglass removal command permits Manual records."
+      assert html =~ "Mailglass allows removal of Manual suppressions."
       assert html =~ "Other configured stores and provider restrictions are not checked."
 
       assert html =~ "Sent"
@@ -532,7 +532,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Couldn’t refresh suppression evidence. Try again."
       assert html =~ "Stale"
       assert html =~ "last retrieved record and may be out of date"
-      assert html =~ "The public Mailglass removal command permits Policy records."
+      assert html =~ "Mailglass allows removal of Policy suppressions."
       assert html =~ "Suppressed"
       assert html =~ ~s(data-testid="operator-timeline")
       refute html =~ "No current matching suppression recorded in Mailglass was found"
@@ -615,6 +615,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert supported_html =~ "Removal policy"
       assert supported_html =~ "Mailglass allows removal of Manual suppressions."
+
       assert supported_html =~
                "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")} UTC\""
 
@@ -649,7 +650,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert unknown_policy_html =~ "Removal policy not recorded."
       assert unknown_policy_html =~ "Expiry date not recorded"
       assert unknown_policy_html =~ "Unavailable"
-      assert length(Floki.find(Floki.parse_fragment!(unknown_policy_html), "button")) == 1
+
+      assert length(
+               Floki.find(
+                 Floki.parse_fragment!(unknown_policy_html),
+                 "[data-testid='operator-suppression-refresh']"
+               )
+             ) == 1
+
       refute unknown_policy_html =~ "Remove suppression"
 
       long_source = "東京·Ångström-" <> String.duplicate("配信·é·", 40) <> "<script>alert(1)</script>"
@@ -734,6 +742,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "initial-account-match"
       refute html =~ "foreign-account-match"
       refute html =~ "other-stream-match"
+
       assert html =~
                "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")}"
 
@@ -1055,7 +1064,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ "No events are recorded for this Delivery."
-      assert html =~ "The public Mailglass removal command blocks Complaint records."
+      assert html =~ "Mailglass does not allow removal of Complaint suppressions."
       refute html =~ "This Suppression is permanent."
     end
 

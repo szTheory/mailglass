@@ -218,7 +218,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(current).toContainText("Address · Account-local");
     await expect(current).toContainText("Policy");
     await expect(current).toContainText("operator review · Ångström");
-    await expect(current).toContainText("Expires at");
+    await expect(current).toContainText("Expiry date");
     await expect(page.getByTestId("operator-timeline")).toContainText("Suppressed");
     await expect(page.getByTestId("operator-support-cards")).toContainText("Active suppressions: 1");
     // Health no longer carries a suppression metric: intentional suppression policy
@@ -252,7 +252,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
     await expect(current).toContainText("Couldn’t refresh suppression evidence. Try again.");
     await expect(current).toContainText("last retrieved record and may be out of date");
-    await expect(current).toContainText("The public Mailglass removal command permits Policy records.");
+    await expect(current).toContainText("Mailglass allows removal of Policy suppressions.");
     await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);
     await expect(page.locator("body")).not.toContainText("never render");
 
@@ -273,7 +273,7 @@ test.describe("Phase 169 connected journey", () => {
       } else {
         await expect(card).toContainText("Address + stream · Account-local");
         await expect(card).toContainText("Complaint");
-        await expect(card).toContainText("The public Mailglass removal command blocks Complaint records.");
+        await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
         await expect(card).toContainText(nextFixture.recipient);
       }
     }
