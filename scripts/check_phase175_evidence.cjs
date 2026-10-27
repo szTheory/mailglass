@@ -330,7 +330,11 @@ function validateAxeReceipt(report, {
   requireThat(Array.isArray(report.incomplete), "Axe incomplete finding accounting is missing");
   const expectedIdSet = new Set(expectedIds);
   for (const finding of [...report.violations, ...report.incomplete]) {
-    requireThat(isRecord(finding) && expectedIdSet.has(finding.case_id), "Axe finding has missing or unexpected case identity");
+    const caseId = isRecord(finding) && nonempty(finding.scenario_id) && nonempty(finding.state) &&
+      ["light", "dark"].includes(finding.theme)
+      ? `${finding.scenario_id}::${finding.state}::${finding.theme}`
+      : null;
+    requireThat(caseId !== null && expectedIdSet.has(caseId), "Axe finding has missing or unexpected case identity");
   }
   const approval = suppliedApproval ?? loadJson(approvalPath, "approved Axe findings and incomplete triage");
   const comparison = compareFindings(report, approval);

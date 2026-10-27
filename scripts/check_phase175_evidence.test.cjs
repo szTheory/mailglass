@@ -92,10 +92,7 @@ function axeReport(runId, runRevision, sourceDigest) {
     expected,
     executed: expected.map(item => ({ ...item, status: "passed", completed_at: "2026-10-27T00:00:00.000Z" })),
     violations: [],
-    incomplete: approval.incomplete_triage.slice(-2).map(item => ({
-      ...item,
-      case_id: `${item.scenario_id}::${item.state}::${item.theme}`
-    }))
+    incomplete: approval.incomplete_triage.slice(-2).map(item => ({ ...item }))
   };
 }
 
@@ -206,7 +203,6 @@ test("Phase 175 Axe receipt accounts for expected, executed, violation, and sepa
 
   const untriaged = structuredClone(report);
   untriaged.incomplete.push({
-    case_id: "delivery-investigation-northstar-normal::normal-permitted-review::light",
     rule_id: "color-contrast",
     target: [[".not-in-approved-triage"]],
     scenario_id: "delivery-investigation-northstar-normal",
@@ -216,6 +212,9 @@ test("Phase 175 Axe receipt accounts for expected, executed, violation, and sepa
     count: 1
   });
   assert.throws(() => checker.validateAxeReceipt(untriaged, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64) }), /untriaged incomplete/);
+  const wrongFindingIdentity = structuredClone(report);
+  wrongFindingIdentity.incomplete[0].state = "not-in-manifest";
+  assert.throws(() => checker.validateAxeReceipt(wrongFindingIdentity, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64) }), /missing or unexpected case identity/);
 
   const approved = JSON.parse(fs.readFileSync(path.join(ROOT, "mailglass_admin/docs/storybook-axe-approved.json"), "utf8"));
   const missingEvidenceRun = structuredClone(approved);
