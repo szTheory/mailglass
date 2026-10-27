@@ -63,6 +63,12 @@ The strict hosted checker passed during this audit for run40491221303, exact imp
 
 This verifies the planned L1 controls; it does not grant merge/release/deployment approval or certify every possible new threat. The UI descriptorless transparency prohibition remains flagged-unverified in its own evidence contract and is not converted into a security acceptance.
 
+## Fresh exact-candidate evidence — 2026-10-27
+
+The post-review candidate `18c6cf32cc25d531dd8f7c85d62f3b852606e2e5` completed run [40498413906](https://github.com/szTheory/mailglass/actions/runs/40498413906) successfully with all 26 jobs green. The strict hosted checker passed against the independent Demo job [122170444350](https://github.com/szTheory/mailglass/actions/runs/40498413906/job/122170444350), matching the source digest `21542c6a5e3a10a8d6334b902c9cbfbecde06e210aca8ae9c333cbe3054ed1c2`, run and attempt, runner, timestamps, and complete cold/warm receipts. This supersedes the earlier `40491221303` receipt as current-source evidence.
+
+The first post-review run `40496672358` is retained as an unsuccessful readiness attempt: Preview Capture Advisory expired its startup readiness window while compilation and fixture seeding were active, so it is not claimed as proof. Its failed job log and actual run/job metadata were preserved; the unchanged-candidate retry passed without relaxing timeout, checker, isolation, artifact, or branch-protection policy. No new trust boundary or accepted risk was introduced.
+
 ## Sign-Off
 
 - [x] Every planned threat has implemented evidence.
