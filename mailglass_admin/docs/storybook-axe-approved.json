@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "review_basis": {
-    "run_id": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf",
-    "source_revision": "6a14fcaf153589eedd19d6cddf4e26d56472b216+producer-37e311ae78e89ce846dd2f0b849e15edb01d1a2b",
-    "source_digest": "4449560de6964abe5bfa0b1c8a5102a30c04f40c3f845ca7c22710d560c395c4",
-    "reviewed_at": "2026-10-27T05:07:57.801Z",
+    "run_id": "phase174-05-pre-repair-6a14fcaf-repro-r5",
+    "source_revision": "6a14fcaf153589eedd19d6cddf4e26d56472b216+producer-11ffeae9c6c03d242dd951e17434e3bd1c620494",
+    "source_digest": "41abaf96e5402a93d12c4a48334e85332e338a513ab28a8fe234566a1b93df89",
+    "reviewed_at": "2026-10-27T05:14:25.746Z",
     "reviewer": "phase174-05 evidence triage",
-    "source": "Fresh 18-case before report reproduced from disposable pre-repair snapshot 6a14fcaf; the original 041038Z raw report was removed by Playwright test-results cleanup and is not represented as preserved or reconstructed. No violation fingerprints are approved."
+    "source": "Fresh 18-case before report reproduced from the disposable pre-repair git archive at 6a14fcaf. The original 041038Z raw report was removed by Playwright test-results cleanup; this is a newly identified reproduction, not a reconstruction. No violation fingerprints are approved."
   },
   "approved_fingerprints": [],
   "incomplete_triage": [
@@ -24,7 +24,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -40,7 +40,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -56,7 +56,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -72,7 +72,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -88,7 +88,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -104,7 +104,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -120,7 +120,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -136,7 +136,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -152,7 +152,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -168,7 +168,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -184,7 +184,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -200,7 +200,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -216,7 +216,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -232,7 +232,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -248,7 +248,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -264,7 +264,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -280,7 +280,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -296,7 +296,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -312,7 +312,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -328,7 +328,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -344,7 +344,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -360,7 +360,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -376,7 +376,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -392,7 +392,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -408,7 +408,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -424,7 +424,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -440,7 +440,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -456,7 +456,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -472,7 +472,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -488,7 +488,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -504,7 +504,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -520,7 +520,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -536,7 +536,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -552,7 +552,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -568,7 +568,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -584,7 +584,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -600,7 +600,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -616,7 +616,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -632,7 +632,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -648,7 +648,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -664,7 +664,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -680,7 +680,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -696,7 +696,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -712,7 +712,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -728,7 +728,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -744,7 +744,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -760,7 +760,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -776,7 +776,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -792,7 +792,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -808,7 +808,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -824,7 +824,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -840,7 +840,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -856,7 +856,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -872,7 +872,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -888,7 +888,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -904,7 +904,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -920,7 +920,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -936,7 +936,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -952,7 +952,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -968,7 +968,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -984,7 +984,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1000,7 +1000,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1016,7 +1016,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1032,7 +1032,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1048,7 +1048,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1064,7 +1064,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1080,7 +1080,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1096,7 +1096,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1112,7 +1112,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1128,7 +1128,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1144,7 +1144,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1160,7 +1160,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1176,7 +1176,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1192,7 +1192,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1208,7 +1208,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1224,7 +1224,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1240,7 +1240,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1256,7 +1256,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1272,7 +1272,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1288,7 +1288,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1304,7 +1304,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1320,7 +1320,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1336,7 +1336,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1352,7 +1352,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1368,7 +1368,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1384,7 +1384,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1400,7 +1400,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1416,7 +1416,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1432,7 +1432,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1448,7 +1448,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1464,7 +1464,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1480,7 +1480,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1496,7 +1496,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1512,7 +1512,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1528,7 +1528,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1544,7 +1544,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1560,7 +1560,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1576,7 +1576,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1592,7 +1592,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1608,7 +1608,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1624,7 +1624,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1640,7 +1640,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1656,7 +1656,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1672,7 +1672,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1688,7 +1688,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1704,7 +1704,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1720,7 +1720,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1736,7 +1736,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1752,7 +1752,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1768,7 +1768,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1784,7 +1784,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1800,7 +1800,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1816,7 +1816,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1832,7 +1832,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1848,7 +1848,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1864,7 +1864,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1880,7 +1880,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1896,7 +1896,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -1912,7 +1912,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1928,7 +1928,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1944,7 +1944,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1960,7 +1960,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1976,7 +1976,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -1992,7 +1992,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2008,7 +2008,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2024,7 +2024,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2040,7 +2040,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2056,7 +2056,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2072,7 +2072,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2088,7 +2088,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2104,7 +2104,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2120,7 +2120,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2136,7 +2136,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2152,7 +2152,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2168,7 +2168,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2184,7 +2184,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2200,7 +2200,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2216,7 +2216,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2232,7 +2232,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2248,7 +2248,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2264,7 +2264,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2280,7 +2280,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2296,7 +2296,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2312,7 +2312,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2328,7 +2328,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2344,7 +2344,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2360,7 +2360,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2376,7 +2376,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2392,7 +2392,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2408,7 +2408,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2424,7 +2424,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2440,7 +2440,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2456,7 +2456,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2472,7 +2472,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2488,7 +2488,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2504,7 +2504,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2520,7 +2520,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2536,7 +2536,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2552,7 +2552,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2568,7 +2568,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2584,7 +2584,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2600,7 +2600,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2616,7 +2616,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2632,7 +2632,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2648,7 +2648,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2664,7 +2664,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2680,7 +2680,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2696,7 +2696,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2712,7 +2712,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -2728,7 +2728,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2744,7 +2744,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2760,7 +2760,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2776,7 +2776,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2792,7 +2792,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2808,7 +2808,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2824,7 +2824,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2840,7 +2840,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2856,7 +2856,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2872,7 +2872,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2888,7 +2888,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2904,7 +2904,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2920,7 +2920,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2936,7 +2936,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2952,7 +2952,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2968,7 +2968,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -2984,7 +2984,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3000,7 +3000,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3016,7 +3016,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3032,7 +3032,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3048,7 +3048,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3064,7 +3064,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3080,7 +3080,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3096,7 +3096,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3112,7 +3112,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3128,7 +3128,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3144,7 +3144,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3160,7 +3160,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3176,7 +3176,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3192,7 +3192,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3208,7 +3208,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3224,7 +3224,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3240,7 +3240,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3256,7 +3256,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3272,7 +3272,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3288,7 +3288,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3304,7 +3304,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3320,7 +3320,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3336,7 +3336,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3352,7 +3352,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3368,7 +3368,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3384,7 +3384,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3400,7 +3400,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3416,7 +3416,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3432,7 +3432,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3448,7 +3448,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3464,7 +3464,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3480,7 +3480,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3496,7 +3496,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3512,7 +3512,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3528,7 +3528,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3544,7 +3544,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3560,7 +3560,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3576,7 +3576,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3592,7 +3592,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3608,7 +3608,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3624,7 +3624,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3640,7 +3640,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3656,7 +3656,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3672,7 +3672,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3688,7 +3688,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3704,7 +3704,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3720,7 +3720,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3736,7 +3736,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3752,7 +3752,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3768,7 +3768,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3784,7 +3784,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3800,7 +3800,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3816,7 +3816,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3832,7 +3832,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -3848,7 +3848,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3864,7 +3864,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3880,7 +3880,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3896,7 +3896,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3912,7 +3912,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3928,7 +3928,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3944,7 +3944,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3960,7 +3960,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3976,7 +3976,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -3992,7 +3992,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4008,7 +4008,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4024,7 +4024,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4040,7 +4040,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4056,7 +4056,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4072,7 +4072,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4088,7 +4088,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4104,7 +4104,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4120,7 +4120,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4136,7 +4136,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4152,7 +4152,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4168,7 +4168,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4184,7 +4184,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4200,7 +4200,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4216,7 +4216,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4232,7 +4232,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4248,7 +4248,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4264,7 +4264,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4280,7 +4280,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4296,7 +4296,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4312,7 +4312,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4328,7 +4328,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4344,7 +4344,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4360,7 +4360,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4376,7 +4376,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4392,7 +4392,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4408,7 +4408,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4424,7 +4424,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "aria-hidden-focus",
@@ -4440,7 +4440,7 @@
       "count": 1,
       "reason": "Axe marks this ModalFocusTrap focus sentinel incomplete because it is focusable while aria-hidden; retain the exact target for review and do not infer accessibility from an incomplete result.",
       "disposition": "retained-incomplete-no-machine-verdict",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     },
     {
       "rule_id": "color-contrast",
@@ -4456,7 +4456,7 @@
       "count": 1,
       "reason": "Axe could not compute contrast for this exact rendered target. Retain it for manual contrast review; this triage does not assert AA compliance.",
       "disposition": "retained-incomplete-for-manual-review",
-      "evidence": "phase174-05-20261027T051700Z-reproduced-before-6a14fcaf"
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r5"
     }
   ]
 }
