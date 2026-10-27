@@ -655,8 +655,9 @@ function noMatchRow(page) {
   return tableRow.or(cardRow).filter({ visible: true }).first();
 }
 
-// Two-tier inspection: a row click opens the condensed Quick view (peek); the full
-// record (detail-column, replay, timeline) lives behind "Open full detail" (&full=1).
+// Two-tier inspection: a row click opens the condensed Quick view (peek); full
+// technical evidence (detail-column and timeline) lives behind "Open full detail"
+// (&full=1). Inbound replay review can start from either selected-record surface.
 async function selectDeliveryFull(page, row) {
   await row.click();
   await expect(page.getByTestId("operator-quick-view")).toBeVisible();
@@ -1413,7 +1414,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("inbound-record-row")
         .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
-      // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
+      // This case exercises the Full detail trigger; quick-view entry and focus return
+      // are covered by the Phase 175 connected Inbound replay cases.
       await selectInboundFull(page, replayableRow);
 
       // Open the replay modal via the trigger button
