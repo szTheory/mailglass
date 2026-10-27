@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { normalizeTarget, validateReport, compareFindings } = require("./storybook-axe.cjs");
+const { normalizeTarget, selectedCases, validateReport, compareFindings } = require("./storybook-axe.cjs");
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -39,6 +39,18 @@ const context = {
   sourceDigest: "digest-current"
 };
 const stamp = "2026-10-27T04:00:00.000Z";
+
+test("Phase 175 selected Axe inventory executes 13 rendered variants in 26 theme cases", () => {
+  let selected;
+  try {
+    selected = selectedCases(manifest);
+  } catch (error) {
+    assert.fail(`current selected Axe inventory is accepted: ${error.message}`);
+  }
+  assert.equal(selected.cases.length, 26);
+  assert.equal(new Set(selected.cases.map(item => item.case_id)).size, 26);
+  assert.equal(selected.emptyRouteOnly.length, 2);
+});
 
 function validReport(overrides = {}) {
   return {
