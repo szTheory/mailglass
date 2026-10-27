@@ -7,6 +7,8 @@ docs/axe-baseline.json
 docs/compatibility-and-deprecations.md
 docs/design-system.md
 docs/operator-trust.md
+docs/phase174-review.md
+docs/storybook-axe-approved.json
 docs/ui-baseline-scores.json
 hex_metadata.config
 lib/mailglass_admin.ex
@@ -75,4 +77,5 @@ priv/static/fonts/inter-400.woff2
 priv/static/fonts/inter-700.woff2
 priv/static/fonts/inter-tight-400.woff2
 priv/static/fonts/inter-tight-700.woff2
+priv/static/hooks.js
 priv/static/mailglass-logo.svg
