@@ -45,7 +45,12 @@ function phase175FidelityReceipt(root, runRevision = REVISION) {
     executedCaseIds,
     urls: {
       storyUrl: `${origin}/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`,
-      storyIframeUrl: `${origin}/dev/storybook/iframe/delivery_investigation?variation_id=fjordline_long_unicode`,
+      storyIframeUrl: "about:srcdoc",
+      storyIframeOrigin: origin,
+      storyIframeMode: "srcdoc",
+      storyIframeHasSrcAttribute: false,
+      storyIframeSrcdocBytes: Buffer.byteLength("<html></html>\n"),
+      storyIframeSrcdocSha256: hash(Buffer.from("<html></html>\n")),
       connectedUrl: `${origin}/ops/mail/deliveries?tenant_id=browser-tenant`
     },
     assets: {
@@ -162,6 +167,12 @@ test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes",
     assert.ok(checker.fidelitySourcePaths().includes("mailglass_admin/priv/static/hooks.js"));
     const valid = phase175FidelityReceipt(temp);
     assert.equal(checker.validateFidelityReceipt(valid, { root: ROOT, revision: REVISION }).executed_case_ids.length, 10);
+    const wrongFrameOrigin = structuredClone(valid);
+    wrongFrameOrigin.cases[0].urls.storyIframeOrigin = "null";
+    assert.throws(() => checker.validateFidelityReceipt(wrongFrameOrigin, { root: ROOT, revision: REVISION }), /iframe effective origin/);
+    const missingInlineSource = structuredClone(valid);
+    delete missingInlineSource.cases[0].urls.storyIframeSrcdocSha256;
+    assert.throws(() => checker.validateFidelityReceipt(missingInlineSource, { root: ROOT, revision: REVISION }), /inline iframe source proof/);
     const stale = structuredClone(valid);
     stale.source.revision = "0".repeat(40);
     assert.throws(() => checker.validateFidelityReceipt(stale, { root: ROOT, revision: REVISION }), /revision is stale/);

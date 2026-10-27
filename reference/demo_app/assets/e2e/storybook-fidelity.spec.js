@@ -904,6 +904,12 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
       "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG"
     );
     const storyIframeUrl = await root.evaluate(element => element.ownerDocument.URL);
+    const storyIframeSource = await page.locator(`iframe[id*="${variant}"]`).evaluate(iframe => ({
+      hasSrcAttribute: iframe.hasAttribute("src"),
+      srcdoc: iframe.getAttribute("srcdoc"),
+      origin: iframe.contentWindow.location.origin
+    }));
+    const storyIframeMode = storyIframeSource.srcdoc === null ? "url" : "srcdoc";
     receipt.executedCaseIds.push("story:delivery-investigation-fjordline-long-unicode");
 
     const light = frame.getByRole("radio", { name: "Light", exact: true });
@@ -1155,7 +1161,18 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
       exactFocusReturnId: focusReturnId
     };
     receipt.executedCaseIds.push(receipt.hooks.caseId);
-    receipt.urls = { storyUrl, storyIframeUrl, connectedUrl };
+    receipt.urls = {
+      storyUrl,
+      storyIframeUrl,
+      storyIframeOrigin: storyIframeSource.origin,
+      storyIframeMode,
+      storyIframeHasSrcAttribute: storyIframeSource.hasSrcAttribute,
+      ...(storyIframeMode === "srcdoc" ? {
+        storyIframeSrcdocBytes: Buffer.byteLength(storyIframeSource.srcdoc, "utf8"),
+        storyIframeSrcdocSha256: sha256(Buffer.from(storyIframeSource.srcdoc, "utf8"))
+      } : {}),
+      connectedUrl
+    };
     receipt.zoom = zoomEvidence;
     expect(receipt.executedCaseIds).toHaveLength(receipt.expectedCaseCount);
     receipt.completedCaseCount = receipt.executedCaseIds.length;
