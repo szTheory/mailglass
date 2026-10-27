@@ -1,0 +1,65 @@
+{
+  "schema_version": "phase174-cost-enrichment.v1",
+  "source_revision": "18c6cf32cc25d531dd8f7c85d62f3b852606e2e5",
+  "run_id": "40498413906",
+  "input_hashes": {
+    "baseline-run.raw.json": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+    "baseline-jobs.raw.json": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+    "github-run.raw.json": "c78eed9e35903d725249a224972d6832d965fbf9b3f6db1026ef7c2f4c758bb1",
+    "github-jobs.raw.json": "14abd841997d574556c00f1160aa9f2bb6c55ae9b57064ba1155338cc681723e",
+    "phase174/cost.before-baseline.json": "66531bd8ebf5bb4ea5192f847aeab2e16b1f9c4bc549e77ea589e8a6b2f611fa",
+    "phase174/cost.downloaded.json": "b797a8bd33a9372b95c2b2a3acc20e0d2614042a3a8e0c509ae0b77de6feba52"
+  },
+  "observed_delta_ms": 314000,
+  "scope": "independent completed job timestamps; no execution receipt identity or measured browser timing changed",
+  "added_cost": {
+    "status": "measured",
+    "reason": "Observed same-lane single-job comparison on the same ubuntu-latest profile and identical toolchain/Compose/Dockerfile/mix/npm lock pins. One sample; runner/setup variance is included. This is not a causal incremental-PR or critical-path estimate.",
+    "measurement": "observed-same-profile-job-delta",
+    "baseline": {
+      "run_id": "40414024714",
+      "job_database_id": 121891818059,
+      "head_sha": "e326da4dfb59c3a20942acff763d04a79ada974b",
+      "url": "https://github.com/szTheory/mailglass/actions/runs/40414024714",
+      "job_name": "Demo Browser Evidence (Docker Compose / Chromium)",
+      "runner_labels": [
+        "ubuntu-latest"
+      ],
+      "runner_name": "GitHub Actions 1000203454",
+      "runner_count": 1,
+      "started_at": "2026-10-26T22:45:46Z",
+      "completed_at": "2026-10-26T22:49:27Z",
+      "duration_ms": 221000,
+      "runner_minutes": 3.683333333333333,
+      "raw_run": "baseline-run.raw.json",
+      "raw_jobs": "baseline-jobs.raw.json"
+    },
+    "candidate": {
+      "run_id": "40498413906",
+      "job_database_id": 122170444350,
+      "head_sha": "18c6cf32cc25d531dd8f7c85d62f3b852606e2e5",
+      "duration_ms": 535000,
+      "runner_count": 1,
+      "runner_minutes": 8.916666666666666,
+      "raw_run": "github-run.raw.json",
+      "raw_jobs": "github-jobs.raw.json"
+    },
+    "wall_ms": 314000,
+    "wall_minutes": 5.233333333333333,
+    "runner_minutes": 5.233333333333333,
+    "limitation": "Total pilot cost is distinct from added cost. This observed job delta does not establish causal added PR cost or overall workflow latency."
+  },
+  "budget": {
+    "added_wall_minutes": 5,
+    "added_runner_minutes": 10,
+    "disposition": "observed-wall-budget-exceeded-by-14-seconds; observed-runner-budget-within-limit",
+    "comparison": "observed-same-profile-job-delta",
+    "observed_added_wall_minutes": 5.233333333333333,
+    "observed_added_runner_minutes": 5.233333333333333,
+    "wall_within_budget": false,
+    "wall_exceedance_ms": 14000,
+    "runner_within_budget": true,
+    "recommendation": "Retain every acceptance case in both conditions and the existing advisory lane/required gates. Re-measure variance, then optimize shared setup or demonstrate equivalent coverage before reducing duplicated baseline execution."
+  },
+  "final_cost_path": "reference/demo_app/tmp/demo_browser_evidence/ci/40498413906-attempt-1/phase174/cost.json"
+}

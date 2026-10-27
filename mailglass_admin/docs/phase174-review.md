@@ -104,3 +104,8 @@ Current candidate job [122170444350](https://github.com/szTheory/mailglass/actio
 Recommendation: keep the Phase174 pilot integrated into the existing advisory Demo Browser Evidence job rather than add a second CI lane. One lane shares checkout, one isolated Demo/Postgres service, and the cold/warm browser caches while retaining all 148 cases in both conditions. Re-measure the 14-second wall overage on a later run; optimize shared setup before considering any scope adjustment, and preserve every acceptance case and all Phase 174 cases in both conditions. Keep the current required gates.
 
 The exact run was not merged, published or deployed. The completed overall workflow and independent `--require-ci` check are the final candidate proof; CI placement remains advisory.
+
+
+## Final Cost Receipt Reconciliation
+
+The enriched `ci/40498413906-attempt-1/phase174/cost.json` now records `added_cost.status: measured` for the **observed** same-profile job comparison, the retained baseline/current raw metadata, +314,000ms / 5.233 runner-minute delta, and the explicit wall-over-by-14s / runner-within-budget disposition. This does not claim causal incremental PR cost. `cost.downloaded.json` remains byte-for-byte original; `cost.before-baseline.json` preserves the intermediate hosted-only enrichment. `cost-baseline-enrichment.json` records the input hashes; `174-COST-DISPOSITION.json` in the phase directory retains the derived disposition/provenance. The strict hosted checker passed again after reconciliation. No execution identity, browser result or measured condition timing changed.

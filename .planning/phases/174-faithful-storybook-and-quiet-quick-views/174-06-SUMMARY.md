@@ -273,3 +273,8 @@ Plan 174-06 completes its six assigned requirements and supplies current evidenc
 ---
 *Phase: 174-faithful-storybook-and-quiet-quick-views*
 *Completed: 2026-10-27*
+
+
+## Final Cost Receipt Reconciliation
+
+The enriched `ci/40498413906-attempt-1/phase174/cost.json` now records `added_cost.status: measured` for the **observed** same-profile job comparison, the retained baseline/current raw metadata, +314,000ms / 5.233 runner-minute delta, and the explicit wall-over-by-14s / runner-within-budget disposition. This does not claim causal incremental PR cost. `cost.downloaded.json` remains byte-for-byte original; `cost.before-baseline.json` preserves the intermediate hosted-only enrichment. `cost-baseline-enrichment.json` records the input hashes; `174-COST-DISPOSITION.json` in the phase directory retains the derived disposition/provenance. The strict hosted checker passed again after reconciliation. No execution identity, browser result or measured condition timing changed.
