@@ -1,9 +1,9 @@
 ---
 phase: "174"
 slug: "faithful-storybook-and-quiet-quick-views"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-26"
 ---
 # Phase 174 — Validation Strategy
@@ -18,9 +18,9 @@ created: "2026-10-26"
 | Admin connected suite | `cd mailglass_admin && npm run test:operator-browser` |
 | Demo connected suite | `bash scripts/run_demo_browser_evidence.sh` |
 | Repository regression gate | `bash scripts/gsd-regression-gate.sh` |
-| Runtime | Unmeasured; cold startup can exceed 30s. Execution must establish focused feedback time and cold/warm setup-inclusive costs. |
+| Runtime | Cold/warm hosted condition wall: 355.489s / 158.321s; full job 536s. Pure Node checks remain separate from startup. |
 
-Commands are from repository root unless an explicit `cd` appears. Browser checks require working pinned Elixir/OTP, PostgreSQL or Docker, existing npm lockfile dependencies, and Chromium. Research did not run these suites; local asdf shims did not resolve an active Elixir version. Fix environment selection without upgrading the pinned clients. No new testing dependency is required.
+Commands are from repository root unless an explicit `cd` appears. Browser checks require working pinned Elixir/OTP, PostgreSQL or Docker, existing npm lockfile dependencies, and Chromium. Execution selected the existing asdf OTP 27.3.4.13 / Elixir 1.18.4-otp-27 pins and the existing locked browser clients. No new testing dependency is required.
 
 ## Sampling Rate
 
@@ -31,16 +31,16 @@ Commands are from repository root unless an explicit `cd` appears. Browser check
 
 ## Requirement Verification Map
 
-The following commands are planned checks, not evidence of implementation success. New specs and scripts are produced by the named tasks before their commands execute. Admin/Demo commands use their tracked Playwright configs and existing locked dependencies; service startup may exceed 60s, while the pure Node comparator tests supply fast feedback. The inherited prior_verify_commands list was empty.
+The following commands now target implemented checks. All six requirements are covered by passing focused tests and candidate CI 40491221303; the strict downloaded-artifact checker was rerun successfully during this audit. Admin/Demo commands use their tracked Playwright configs and existing locked dependencies; service startup may exceed 60s, while the pure Node comparator tests supply fast feedback. The inherited prior_verify_commands list was empty.
 
 | Requirement | Test type | Automated command / assertion | Plan/task | Status |
 | --- | --- | --- | --- | --- |
-| UXF-11 | Connected + geometry | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer\|Phase174 delivery\|Phase174 inbound"` | 174-01 tasks 1/2; 174-02 task 1 | pending execution |
-| STORY-03 | Generated navigation | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer"` | 174-01 task 1 | pending execution |
-| STORY-04 | Asset/font/computed receipt | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 fonts\|Phase174 widths"` | 174-04 task 2 | pending execution |
-| STORY-05 | Live OS/theme response | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 themes"` | 174-04 task 1 | pending execution |
-| STORY-06 | Both clients + Storybook ownership | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-hooks.spec.js --grep "Phase174 hooks"`; `npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase174 client hooks"` | 174-03 tasks 1/2 | pending execution |
-| UIQ-05 | Fresh producer + fail-closed comparator | `node --test mailglass_admin/e2e/support/storybook-axe.test.cjs`; `npm --prefix mailglass_admin run test:storybook-axe -- --grep "Phase174 selected axe"` | 174-05 tasks 1/2/3 | pending execution |
+| UXF-11 | Connected + geometry | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer\|Phase174 delivery\|Phase174 inbound"` | 174-01 tasks 1/2; 174-02 task 1 | COVERED — CI 40491221303 |
+| STORY-03 | Generated navigation | `npm --prefix reference/demo_app/assets run test:e2e -- quick-views.spec.js --grep "Phase174 tracer"` | 174-01 task 1 | COVERED — CI 40491221303 |
+| STORY-04 | Asset/font/computed receipt | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 fonts\|Phase174 widths"` | 174-04 task 2 | COVERED — CI 40491221303 |
+| STORY-05 | Live OS/theme response | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-fidelity.spec.js --grep "Phase174 themes"` | 174-04 task 1 | COVERED — CI 40491221303 |
+| STORY-06 | Both clients + Storybook ownership | `npm --prefix reference/demo_app/assets run test:e2e -- storybook-hooks.spec.js --grep "Phase174 hooks"`; `npm --prefix mailglass_admin run test:operator-browser -- flows.spec.js --grep "Phase174 client hooks"` | 174-03 tasks 1/2 | COVERED — CI 40491221303 |
+| UIQ-05 | Fresh producer + fail-closed comparator | `node --test mailglass_admin/e2e/support/storybook-axe.test.cjs`; `npm --prefix mailglass_admin run test:storybook-axe -- --grep "Phase174 selected axe"` | 174-05 tasks 1/2/3 | COVERED — CI 40491221303 |
 
 Every command fails on nonzero exit or zero selected tests; detailed immediate `<fails_when>` siblings in the plans define missing/partial/stale/incorrect evidence signals. The axe command requires healthy STORYBOOK_BASE_URL and independent STORYBOOK_AXE_RUN_ID/STORYBOOK_SOURCE_REVISION/STORYBOOK_SOURCE_DIGEST; plan 06 provides them in the isolated wrapper. It must not silently default to an unrelated retained service.
 
@@ -105,12 +105,12 @@ Assumption-delta detector reported pluralization from “second socket.” Decis
 
 ## Wave 0 Requirements
 
-- [ ] Name selected scenario IDs and their expected states before implementing the producer; normal/boundary production quick-view scenarios for both collections.
-- [ ] Add missing targeted assertions within existing runners, with no new package or generic fixture platform.
-- [ ] Select a working existing Admin axe dependency seam against Demo-hosted Storybook and prove it with one real scan before expansion.
-- [ ] Add comparator negative fixtures for missing report, missing/failed scan, zero cases, incomplete expected set, stale identity and changed rule/target/state despite unchanged counts.
-- [ ] Keep synthetic plain facts/builders separate from persistence materialization and check representative projection agreement where consumed.
-- [ ] Update this map with finalized plan/task IDs and runnable focused commands; no nonexistent file may be treated as an already passing check.
+- [x] Name selected scenario IDs and their expected states before implementing the producer; normal/boundary production quick-view scenarios for both collections.
+- [x] Add missing targeted assertions within existing runners, with no new package or generic fixture platform.
+- [x] Select a working existing Admin axe dependency seam against Demo-hosted Storybook and prove it with one real scan before expansion.
+- [x] Add comparator negative fixtures for missing report, missing/failed scan, zero cases, incomplete expected set, stale identity and changed rule/target/state despite unchanged counts.
+- [x] Keep synthetic plain facts/builders separate from persistence materialization and check representative projection agreement where consumed.
+- [x] Update this map with finalized plan/task IDs and runnable focused commands; no nonexistent file may be treated as an already passing check.
 
 ## Evidence and Cost
 
@@ -128,14 +128,14 @@ All machine-observable acceptance requires automated evidence under D-52. Manual
 
 ## Validation Sign-Off
 
-- [ ] Final plan/task map and focused commands recorded.
-- [ ] Every task has automated verification or an explicit earlier test-creation dependency.
-- [ ] No three consecutive tasks lack automated feedback; no watch commands.
-- [ ] Failure-path tests prevent vacuous accessibility passes.
-- [ ] Selected connected checks and initial cost pilot completed with honest CI disposition.
-- [ ] `nyquist_compliant` and `wave_0_complete` updated only after supporting evidence.
+- [x] Final plan/task map and focused commands recorded.
+- [x] Every task has automated verification or an explicit earlier test-creation dependency.
+- [x] No three consecutive tasks lack automated feedback; no watch commands.
+- [x] Failure-path tests prevent vacuous accessibility passes.
+- [x] Selected connected checks and initial cost pilot completed with honest CI disposition.
+- [x] `nyquist_compliant` and `wave_0_complete` updated only after supporting evidence.
 
-**Approval:** Pending execution evidence; draft strategy only.
+**Audit:** Verified 2026-10-27 from the six execution summaries, actual test sources and current candidate receipts. This is test-coverage sign-off, not owner aesthetic approval.
 
 
 ## Revision 1 — checker resolutions
@@ -148,3 +148,38 @@ All machine-observable acceptance requires automated evidence under D-52. Manual
 - The actual existing advisory demo_browser_evidence job invokes `bash scripts/run_demo_browser_evidence.sh --phase174 --pilot`; it records hosted run/attempt/head/job/runner identifiers and retains both conditions. The existing PR trigger or `gh workflow run ci.yml --ref "$PHASE174_CANDIDATE_REF"` executes the candidate during implementation, never during planning. Required aggregate policy is unchanged.
 - Final CI proof uses independently downloaded artifacts and completed run/jobs metadata: `node scripts/check_phase174_evidence.cjs --evidence-dir "$PHASE174_CI_EVIDENCE_DIR" --pilot --require-ci`. Nonzero exit, missing/local/forged/stale identity, absent completed ci-job.json, head/job mismatch, missing condition/setup/browser/case accounting or unapproved findings fails. Local elapsed time is not CI runner evidence.
 - Plan-05 task 1 explicitly creates test:storybook-axe, then re-resolves package script/config/spec and lists 18 cases before its runnable verification; script_missing is a planned-production warning until creation, never an accepted runtime omission.
+
+
+## Execution Coverage Audit — 2026-10-27
+
+No missing or partial automated requirement coverage remains. All 13 tasks have automated checks; no generated test duplicates were needed. The initial connected proof against a reused local seed in Plan 03 is superseded by the isolated hosted cold/warm run.
+
+| Task | Automated behavior/evidence | Result |
+|---|---|---|
+| 174-01/1 | Delivery tracer, full-prefix navigation, actual target geometry | COVERED |
+| 174-01/2 | Normal/boundary/single/Unicode/empty scenarios and feedback manifest | COVERED |
+| 174-02/1 | Connected Inbound navigation, Account, focus return, boundaries | COVERED |
+| 174-02/2 | Independent persisted projection agreement and foreign Account negative | COVERED — 4 ExUnit tests |
+| 174-03/1 | Shared hook definitions, served bytes and single socket ownership | COVERED — assets contract and hosted hooks |
+| 174-03/2 | Repeated patch/remount/reconnect/removal on both locked clients | COVERED — Demo and Operator Browser Gate |
+| 174-04/1 | Light/Dark/System ownership, both initial OS modes and live changes | COVERED |
+| 174-04/2 | Real CSS/font responses, loaded roles, five widths in both themes | COVERED |
+| 174-05/1 | Exact nonempty selected Axe producer, real rendered states | COVERED — 18 cases per condition |
+| 174-05/2 | Negative report/comparison fixtures and independent triage | COVERED — 18 Node comparator tests |
+| 174-05/3 | Keyboard scroll/focus and distinct accessible navigation boundaries | COVERED — 3 focused cases and full Operator gate |
+| 174-06/1 | Isolated runner, malformed/stale/local/partial receipt rejection | COVERED — checker negative controls and actual pilot |
+| 174-06/2 | Independent completed CI metadata, cost and advisory disposition | COVERED — strict --require-ci checker |
+
+Evidence root: `reference/demo_app/tmp/demo_browser_evidence/ci/40491221303-attempt-1/`. Exact candidate `fbf7d791f4f489db8a5d344455a33f0942a434d4`, digest `36ce0049cc50c1e33e5a35f203c99c771a12d55f016d1a830ed24f948e335004`. Cold and warm each execute 148/148 cases (98 Demo, 6 hooks, 26 fidelity, 18 Axe); both have zero violations/unapproved/untriaged, with 50 explicitly triaged incomplete findings. Incomplete findings are not passes.
+
+Fresh final local regression: 81 core tests, 642 Admin tests, 480 Inbound tests plus 3 properties, and 31 connected browser cases passed. Existing nine-cell Axe baseline: 12/12 tests. Final exact-candidate workflow and both browser jobs completed successfully. Original downloaded cost and independent raw GitHub metadata remain retained.
+
+Observed same-profile added cost is 315s versus a 221s prior successful job: 15s over the provisional wall budget and within the 10 runner-minute budget. This is a measured disposition, not a test failure hidden by scope reduction. Manual aesthetic judgment and Phase178 real zoom remain bounded as above. The descriptorless transparency prohibition remains flagged-unverified; no invented check descriptor or owner approval was added.
+
+## Validation Audit 2026-10-27
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
