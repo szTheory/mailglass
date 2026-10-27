@@ -2,9 +2,12 @@ const { test, expect } = require("@playwright/test");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
-const evidencePath = path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174/hooks.json");
+const evidencePath = path.join(resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR ||
+  path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174")), "hooks.json");
 const hookSourcePath = path.resolve(__dirname, "../../../../mailglass_admin/priv/static/hooks.js");
+const sourceMd5 = crypto.createHash("md5").update(fs.readFileSync(hookSourcePath)).digest("hex");
 
 function mixVersion(lockPath, dependency) {
   const lock = fs.readFileSync(lockPath, "utf8");
@@ -193,12 +196,13 @@ test.describe("Phase174 hooks", () => {
     });
     page.on("response", async response => {
       const url = new URL(response.url());
-      if (url.pathname.startsWith("/dev/storybook-hooks-")) {
+      if (url.pathname.startsWith("/dev/storybook-review-js-")) {
         const body = await response.body();
         hookAssetResponses.push({
           url: url.pathname,
           status: response.status(),
           responseMd5: crypto.createHash("md5").update(body).digest("hex"),
+          containsProductionHookSource: body.includes(fs.readFileSync(hookSourcePath, "utf8")),
           hasStorybookRegistration: body.includes("window.storybook.Hooks = window.MailglassAdminHooks"),
           hasSocketConstructor: body.includes("LiveSocket") || body.includes("Phoenix.Socket")
         });
@@ -220,6 +224,10 @@ test.describe("Phase174 hooks", () => {
     await expect(previewFrame.locator("[data-phx-main].phx-connected")).toBeVisible();
     const dialog = previewFrame.locator("#operator-quick-view");
     await expect(dialog).toBeVisible();
+    await expect.poll(() => previewFrame.evaluate(() =>
+      typeof window.storybook?.Hooks?.ModalFocusTrap?.mounted === "function" &&
+      document.querySelector('#operator-quick-view[phx-hook="ModalFocusTrap"]') !== null
+    )).toBe(true);
     const hookIsRegistered = await previewFrame.evaluate(() =>
       typeof window.storybook?.Hooks?.ModalFocusTrap?.mounted === "function" &&
       document.querySelector('#operator-quick-view[phx-hook="ModalFocusTrap"]') !== null
@@ -287,11 +295,10 @@ test.describe("Phase174 hooks", () => {
     expect(remountedEvidence.sockets.filter(socket => socket.path.includes("/live/websocket"))).toHaveLength(1);
     expect(remountedEvidence.sockets[0].channelJoins).toBeGreaterThan(0);
 
-    const hooksSource = fs.readFileSync(hookSourcePath);
-    const sourceMd5 = crypto.createHash("md5").update(hooksSource).digest("hex");
     expect(hookAssetResponses.length).toBeGreaterThan(0);
     expect(hookAssetResponses.every(response => response.status === 200)).toBe(true);
-    expect(hookAssetResponses.every(response => response.url === "/dev/storybook-hooks-" + sourceMd5)).toBe(true);
+    expect(hookAssetResponses.every(response => response.url === "/dev/storybook-review-js-" + response.responseMd5)).toBe(true);
+    expect(hookAssetResponses.every(response => response.containsProductionHookSource)).toBe(true);
     expect(hookAssetResponses.every(response => response.hasStorybookRegistration)).toBe(true);
     expect(hookAssetResponses.every(response => !response.hasSocketConstructor)).toBe(true);
     const documents = await readDocumentSet(page);

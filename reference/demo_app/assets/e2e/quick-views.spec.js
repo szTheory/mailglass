@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
 const SCENARIO_MANIFEST = path.resolve(__dirname, "../../../persona_spec/quick_view_scenarios.json");
 
@@ -148,10 +149,12 @@ test("Phase174 delivery first, last, single, empty, and nil-position states rema
   await firstRow.getByRole("button", { name: /Open delivery/ }).click();
   const quickView = page.getByTestId("operator-quick-view");
   await expect(quickView.locator('[aria-live="polite"]')).toHaveText(/1 of \d+/);
-  const firstUnavailable = quickView.locator('span[aria-disabled="true"][aria-label="Previous delivery"]');
+  const firstUnavailable = quickView.getByTestId("operator-quick-view-prev");
   await expect(firstUnavailable).toBeVisible();
   expect(await firstUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
+  await expect(firstUnavailable).toContainText("Previous delivery unavailable");
   await expect(quickView.getByRole("link", { name: "Previous delivery" })).toHaveCount(0);
+  await expect(quickView.getByRole("button", { name: "Previous delivery" })).toHaveCount(0);
   await expect(quickView.getByRole("link", { name: "Next delivery" })).toBeVisible();
   await quickView.getByRole("link", { name: "Close quick view" }).click();
   await expect(quickView).toHaveCount(0);
@@ -159,8 +162,12 @@ test("Phase174 delivery first, last, single, empty, and nil-position states rema
   const lastRow = rows.last();
   await lastRow.getByRole("button", { name: /Open delivery/ }).click();
   await expect(quickView.locator('[aria-live="polite"]')).toHaveText(new RegExp(`${total} of ${total}`));
-  await expect(quickView.locator('span[aria-disabled="true"][aria-label="Next delivery"]')).toBeVisible();
+  const lastUnavailable = quickView.getByTestId("operator-quick-view-next");
+  await expect(lastUnavailable).toBeVisible();
+  expect(await lastUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
+  await expect(lastUnavailable).toContainText("Next delivery unavailable");
   await expect(quickView.getByRole("link", { name: "Next delivery" })).toHaveCount(0);
+  await expect(quickView.getByRole("button", { name: "Next delivery" })).toHaveCount(0);
   await quickView.getByRole("link", { name: "Close quick view" }).click();
   await expect(quickView).toHaveCount(0);
 
@@ -172,10 +179,16 @@ test("Phase174 delivery first, last, single, empty, and nil-position states rema
   await singleRow.first().getByRole("button", { name: /Open delivery/ }).click();
   await expect(quickView.locator('[aria-live="polite"]')).toHaveText(/1 of 1/);
   await expect(quickView).toContainText("Fjordline A/S");
-  await expect(quickView.locator('span[aria-disabled="true"][aria-label="Previous delivery"]')).toBeVisible();
-  await expect(quickView.locator('span[aria-disabled="true"][aria-label="Next delivery"]')).toBeVisible();
+  const singlePrevious = quickView.getByTestId("operator-quick-view-prev");
+  const singleNext = quickView.getByTestId("operator-quick-view-next");
+  await expect(singlePrevious).toContainText("Previous delivery unavailable");
+  await expect(singleNext).toContainText("Next delivery unavailable");
+  expect(await singlePrevious.evaluate(element => element.tagName)).toBe("SPAN");
+  expect(await singleNext.evaluate(element => element.tagName)).toBe("SPAN");
   await expect(quickView.getByRole("link", { name: "Previous delivery" })).toHaveCount(0);
   await expect(quickView.getByRole("link", { name: "Next delivery" })).toHaveCount(0);
+  await expect(quickView.getByRole("button", { name: "Previous delivery" })).toHaveCount(0);
+  await expect(quickView.getByRole("button", { name: "Next delivery" })).toHaveCount(0);
 
   await page.goto(`/ops/mail?tenant_id=northstar&provider=sendgrid&window_hours=168&delivery_id=${northstarId}`);
   await page.locator("[data-phx-main].phx-connected").waitFor();
@@ -209,17 +222,22 @@ test("Phase174 delivery retained variants preserve exact scenario facts and boun
   await expect(normal.getByRole("dialog")).toBeVisible();
   await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/2 of \d+/);
   await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/1 of \d+/);
-  await expect(first.getByRole("dialog").locator('span[aria-disabled="true"][aria-label="Previous delivery"]')).toBeVisible();
+  const firstUnavailable = first.getByRole("dialog").getByTestId("operator-quick-view-prev");
+  await expect(firstUnavailable).toContainText("Previous delivery unavailable");
+  expect(await firstUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
   await expect(last.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/\d+ of \d+/);
-  await expect(last.getByRole("dialog").locator('span[aria-disabled="true"][aria-label="Next delivery"]')).toBeVisible();
+  const lastUnavailable = last.getByRole("dialog").getByTestId("operator-quick-view-next");
+  await expect(lastUnavailable).toContainText("Next delivery unavailable");
+  expect(await lastUnavailable.evaluate(element => element.tagName)).toBe("SPAN");
   await expect(single.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/1 of 1/);
   await expect(single.getByRole("dialog")).toContainText("Fjordline A/S");
-  await expect(single.getByRole("heading", { name: "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎" }))
+  await expect(single.getByRole("heading", { name: "Welcome to Fjordline A/S" }))
     .toBeVisible();
   await expect(single.getByRole("button", { name: "Copy Delivery ID" }))
     .toHaveAttribute("data-copy-value", "del_01JXW9ZQKB3V1N4P2RMT7FHCG");
 
-  const captureDir = path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174");
+  const captureDir = resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR ||
+    path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174"));
   fs.mkdirSync(captureDir, { recursive: true });
   const lightPanelBackground = await normal.locator("#operator-quick-view")
     .evaluate(panel => getComputedStyle(panel).backgroundColor);

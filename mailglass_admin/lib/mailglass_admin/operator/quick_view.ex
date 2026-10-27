@@ -63,7 +63,7 @@ defmodule MailglassAdmin.Operator.QuickView do
       >
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
-        <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
+        <div class="flex flex-wrap items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="operator-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>
@@ -188,16 +188,15 @@ defmodule MailglassAdmin.Operator.QuickView do
 
   defp nav_button(%{path: nil} = assigns) do
     ~H"""
-    <button
-      type="button"
-      disabled
-      aria-label={@label}
+    <span
+      tabindex="-1"
       title={@label}
       data-testid={"operator-quick-view-#{@dir}"}
       class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
     >
+      <span class="sr-only">{@label} unavailable</span>
       {render_slot(@inner_block)}
-    </button>
+    </span>
     """
   end
 

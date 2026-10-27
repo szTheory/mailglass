@@ -3,10 +3,12 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { execFileSync } = require("child_process");
+const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
 const OWNER = '[data-theme-owner="quick-view-story"]';
 const REPO_ROOT = path.resolve(__dirname, "../../../../");
-const EVIDENCE_DIR = path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174");
+const EVIDENCE_DIR = resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR ||
+  path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174"));
 const FIDELITY_PATH = path.join(EVIDENCE_DIR, "fidelity.json");
 const BASE_URL = process.env.DEMO_BASE_URL || `http://127.0.0.1:${process.env.PORT || "4015"}`;
 const FONT_FILES = [
@@ -70,7 +72,7 @@ function appendFidelityEvidence(section, receipt) {
         evidenceLimits: [
           "Browser zoom reconciliation is owned by Phase 178.",
           "Captures use synthetic Northstar demo records only.",
-          "At 320px, explicit Storybook review theme selection uses the native change event because the full radio group extends beyond the iframe click area; Task 1 verifies physical selection at desktop width."
+          "The width matrix exercises System-resolved light and dark tokens at every viewport; the dedicated theme cases exercise Light/Dark/System radio selection and live preference changes."
         ]
       };
 
@@ -124,6 +126,10 @@ function quickViewFrame(page, variant) {
   return page.frameLocator(`iframe[id*="${variant}"]`);
 }
 
+async function waitForConnectedStoryHost(page) {
+  await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+}
+
 async function themeState(frame) {
   return frame.locator(OWNER).evaluate(root => {
     const style = getComputedStyle(root);
@@ -171,6 +177,7 @@ test.describe("Phase174 themes", () => {
 
       const storyResponse = await page.goto(story.path);
       expect(storyResponse?.ok(), `${story.area} Storybook story loads`).toBe(true);
+      await waitForConnectedStoryHost(page);
 
       const frame = quickViewFrame(page, story.variant);
       const root = frame.locator(OWNER);
@@ -287,6 +294,7 @@ test.describe("Phase174 themes", () => {
 
       await page.emulateMedia({ colorScheme: "light" });
       await page.goto(story.path);
+      await waitForConnectedStoryHost(page);
       const restoredFrame = quickViewFrame(page, story.variant);
       await expect(restoredFrame.locator(OWNER)).toBeVisible();
       await expect.poll(async () => (await themeState(restoredFrame)).dataTheme).toBe("mailglass-light");
@@ -393,6 +401,7 @@ test.describe("Phase174 fonts", () => {
         await page.emulateMedia({ colorScheme: "light" });
         const storyResponse = await page.goto(new URL(story.path, BASE_URL).href);
         expect(storyResponse?.ok(), `${story.area} Storybook story loads`).toBe(true);
+        await waitForConnectedStoryHost(page);
         const frame = page.frameLocator(`iframe[id*="${story.variant}"]`);
         const root = frame.locator(OWNER);
         await expect(root).toBeVisible();
@@ -619,20 +628,15 @@ test.describe("Phase174 widths", () => {
 
       for (const scenario of narrowCases) {
         await page.setViewportSize({ width: scenario.width, height: 900 });
-        await page.emulateMedia({ colorScheme: scenario.theme === "light" ? "dark" : "light" });
+        await page.emulateMedia({ colorScheme: scenario.theme });
         const storyPath = `/dev/storybook/quick_views/${story.area}?variation_id=${scenario.variant}`;
         await page.goto(new URL(storyPath, BASE_URL).href);
+        await waitForConnectedStoryHost(page);
         const frame = page.frameLocator(`iframe[id*="${scenario.variant}"]`);
         const root = frame.locator(OWNER);
         await expect(root).toBeVisible();
-        const themeRadio = frame.getByRole("radio", {
-          name: scenario.theme === "dark" ? "Dark" : "Light"
-        });
-        await themeRadio.evaluate(input => {
-          input.checked = true;
-          input.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-        await expect(themeRadio).toBeChecked();
+        await expect(root).toHaveAttribute("data-theme-preference", "system");
+        await expect(root).toHaveAttribute("data-theme-os", scenario.theme);
         await expect(root).toHaveAttribute("data-theme", scenario.theme === "dark" ? "mailglass-dark" : "mailglass-light");
         const expectedBase100 = scenario.theme === "dark" ? "#0d1b2a" : "#f8fbfd";
         await expect.poll(() =>
@@ -652,6 +656,11 @@ test.describe("Phase174 widths", () => {
         );
         const close = panel.getByRole("link", { name: "Close quick view" });
         await expect(close).toBeVisible();
+        await expect.poll(() =>
+          panel.evaluate(element =>
+            element.getAnimations().every(animation => animation.playState === "finished")
+          )
+        ).toBe(true);
 
         const geometry = await panel.evaluate((panel, technicalSelector) => {
           const view = panel.ownerDocument.defaultView;

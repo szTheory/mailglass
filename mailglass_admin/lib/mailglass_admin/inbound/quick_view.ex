@@ -56,7 +56,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       >
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
-        <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
+        <div class="flex flex-wrap items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="inbound-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>

@@ -3,8 +3,9 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveEvidenceOutputPath } = require("./evidence-output-path.cjs");
 
-const evidenceDir = path.resolve(__dirname, "../../tmp/demo_browser_evidence");
+const evidenceDir = resolveEvidenceOutputPath(process.env.DEMO_BROWSER_EVIDENCE_DIR);
 const reportPath = path.join(evidenceDir, "playwright-report.json");
 const manifestPath = path.join(evidenceDir, "phase173-captures.json");
 const checkpointPath = path.join(evidenceDir, "checkpoint.json");
@@ -76,6 +77,9 @@ function collectTests(suites, acc = []) {
       for (const test of spec.tests || []) {
         acc.push({
           title: spec.title,
+          case_id: Number.isSafeInteger(spec.line) && typeof spec.file === "string"
+            ? `${spec.file}:${spec.line}:${spec.title}`
+            : null,
           outcomes: (test.results || []).map((result) => result.status),
           outcome: test.outcome || test.status
         });

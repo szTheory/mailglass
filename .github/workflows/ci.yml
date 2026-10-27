@@ -1057,15 +1057,15 @@ jobs:
         run: node --test test_js/phase173-baselines.test.cjs
       - name: Run demo browser evidence
         id: evidence
-        run: bash scripts/run_demo_browser_evidence.sh
+        run: bash scripts/run_demo_browser_evidence.sh --phase174 --pilot
       - name: Upload demo browser evidence artifact
-        if: steps.evidence.outcome == 'success'
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
-          name: demo-browser-evidence-${{ github.run_id }}
+          name: demo-browser-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: error
           retention-days: 14
-          path: reference/demo_app/tmp/demo_browser_evidence/retained/
+          path: reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-${{ github.run_id }}-${{ github.run_attempt }}/
 
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)

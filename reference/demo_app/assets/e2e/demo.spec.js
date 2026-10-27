@@ -1,11 +1,14 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
-const phase172EvidenceDir = path.resolve(
-  __dirname,
-  "../../../../.planning/milestones/v2.9-phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
-);
+const phase172EvidenceDir = process.env.PHASE174_EVIDENCE_DIR
+  ? resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR)
+  : path.resolve(
+      __dirname,
+      "../../../../.planning/milestones/v2.9-phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
+    );
 
 test.beforeAll(() => {
   fs.mkdirSync(phase172EvidenceDir, { recursive: true });
