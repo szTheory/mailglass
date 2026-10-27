@@ -55,8 +55,8 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 ### Faithful retained Storybook scenarios
 
 - [x] **STORY-03**: A maintainer can open Storybook and navigate its root, sidebar and deep links under the configured mount prefix without broken destinations.
-- [ ] **STORY-04**: A maintainer can review repaired areas using production CSS and actual loaded production font faces/weights with matching UI, display and code roles.
-- [ ] **STORY-05**: A maintainer can review repaired areas in Light, Dark and System with explicit theme ownership and correct response to OS preference changes in System mode.
+- [x] **STORY-04**: A maintainer can review repaired areas using production CSS and actual loaded production font faces/weights with matching UI, display and code roles.
+- [x] **STORY-05**: A maintainer can review repaired areas in Light, Dark and System with explicit theme ownership and correct response to OS preference changes in System mode.
 - [x] **STORY-06**: A maintainer can exercise hook-dependent retained scenarios through shared production hook behavior while Storybook owns its own socket lifecycle.
 - [ ] **STORY-07**: A maintainer can find retained production-component pattern/area/job scenarios for each repair, including one complete Delivery investigation path and relevant reachable adverse states.
 
@@ -154,8 +154,8 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | PRVUX-06 | Phase 178 | Pending |
 | PRVUX-07 | Phase 178 | Pending |
 | STORY-03 | Phase 174 | Complete |
-| STORY-04 | Phase 174 | Pending |
-| STORY-05 | Phase 174 | Pending |
+| STORY-04 | Phase 174 | Complete |
+| STORY-05 | Phase 174 | Complete |
 | STORY-06 | Phase 174 | Complete |
 | STORY-07 | Phase 178 | Pending |
 | UIQ-04 | Phase 178 | Pending |

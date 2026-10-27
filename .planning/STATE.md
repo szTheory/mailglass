@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 174
 current_phase_name: Faithful Storybook and Quiet Quick Views
 status: executing
-stopped_at: Completed 174-03-PLAN.md
-last_updated: "2026-10-27T03:26:42.903Z"
+stopped_at: Completed 174-04-PLAN.md
+last_updated: "2026-10-27T04:08:14.198Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 174 execution started
-state_head: de06c706a25c73f6ecb9399d6c6d14db4f0ddd1c
+state_head: a3b3548abe93c19a71a7ee3d43d0390952314826
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 ## Current Position
 
 Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Completed Plan 02; Plan 03 ready to execute
 
@@ -293,6 +293,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 174 P01 | 25min | 2 tasks | 6 files |
 | Phase 174 P02 | 26m | 2 tasks | 10 files |
 | Phase 174 P03 | 31min | 2 tasks | 7 files |
+| Phase 174 P04 | 33m43s | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -528,6 +529,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: Use one canonical production hooks.js asset and assign it to Storybook's hook registry without socket creation.
 - [Phase 174]: Count sockets by browsing document because the Storybook explorer and preview iframe each own a legitimate transport.
 - [Phase 174]: Keep the pinned Phoenix LiveView and PhoenixStorybook versions; verify both resolved clients instead of upgrading.
+- [Phase 174]: Keep Light/Dark/System preference and OS resolution on the retained story root; do not write the authenticated host preference or create another socket.
+- [Phase 174]: Serve production hooks plus the local theme adapter from a Demo-only versioned route. The pinned PhoenixStorybook macro evaluates use options before module attributes, so js_path uses the computed literal hash with a compile-time equality guard.
+- [Phase 174]: Scope Inter, Inter Tight, and IBM Plex Mono to the production .mg-admin-root, display, and code roles while retaining existing global defaults.
+- [Phase 174]: Keep source CSS, compiled bundle, and served response digests as separate receipt fields; assert byte equality only for built and served CSS.
 
 ## Quick Tasks Completed
 
@@ -579,8 +584,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T03:26:42.869Z
-Stopped at: Completed 174-03-PLAN.md
+Last session: 2026-10-27T04:08:14.164Z
+Stopped at: Completed 174-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

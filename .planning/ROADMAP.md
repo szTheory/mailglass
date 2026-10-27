@@ -95,7 +95,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 4. Hook-dependent stories reuse production hook behavior under Storybook's own socket; connected checks demonstrate mount/update/close and focus return on both resolved Admin/demo LiveView clients without a second socket bootstrap. (STORY-06)
 5. Running the selected sweep compares fresh axe rule/target/state findings to approved findings and rejects missing, failed, zero-case or incomplete expected execution. Incomplete findings are separately triaged; the actual required/advisory CI placement and initial cold/warm cost pilot are recorded. (UIQ-05; continuing UIQ-07 obligation)
 
-**Plans:** 3/6 plans executed in 5 waves — verified; ready to execute.
+**Plans:** 4/6 plans executed in 5 waves — verified; ready to execute.
 **UI hint:** yes
 
 **Planning focus:** Reconcile source and served assets first. Use the pinned Storybook APIs, existing production hooks/CSS and small scenario metadata; prove one repaired area before expanding extraction. No complete catalogue, generic fixture engine, client upgrade or new dependency is a prerequisite.
@@ -109,7 +109,7 @@ Plans:
 - [x] 174-03-PLAN.md — Shared production hooks and connected lifecycle on both clients.
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 174-04-PLAN.md — Production CSS/font/theme and representative width receipts.
+- [x] 174-04-PLAN.md — Production CSS/font/theme and representative width receipts.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 174-05-PLAN.md — Fresh accessibility comparison, execution integrity and scoped remediation.
@@ -218,7 +218,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 174. Faithful Storybook and Quiet Quick Views | 3/6 | In Progress | — |
+| 174. Faithful Storybook and Quiet Quick Views | 4/6 | In Progress | — |
 | 175. Delivery Investigation and Safe Replay | 0/TBD | Not started | — |
 | 176. Direct Filters and Useful Inbound Evidence | 0/TBD | Not started | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
