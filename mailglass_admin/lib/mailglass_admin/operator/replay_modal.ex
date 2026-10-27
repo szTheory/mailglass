@@ -21,54 +21,18 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   def replay_modal(assigns) do
     ~H"""
     <%= if @open? and @delivery do %>
-      <div
-        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 flex items-center justify-center overflow-hidden p-4"
-        phx-remove={
-          JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
-        }
+      <Components.replay_dialog
+        id="operator-replay-modal"
+        title_id="replay-modal-title"
+        description_id="replay-modal-description"
+        close_id="operator-replay-close"
+        close_event="close_replay"
       >
-        <div
-          id="operator-replay-modal"
-          data-testid="operator-replay-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="replay-modal-title"
-          aria-describedby="replay-modal-description"
-          phx-hook="ModalFocusTrap"
-          phx-mounted={JS.focus(to: "#operator-replay-close")}
-          phx-key="Escape"
-          phx-window-keydown="close_replay"
-          class="motion-overlay mg-layer-overlay-panel mg-inbound-replay-dialog relative my-md w-full shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-lg shadow-overlay"
-          phx-remove={
-            JS.hide(
-              time: 150,
-              transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"}
-            )
-          }
-        >
-          <%!-- Wrap to the last currently focusable action: Confirm when enabled, otherwise Cancel. --%>
-          <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
-          <div class="flex items-start justify-between gap-md">
-            <div class="space-y-1">
-              <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
-                Review webhook replay
-              </h2>
-              <p id="replay-modal-description" class="text-body text-secondary">
-                Reprocesses this stored webhook through current normalization. It may add Events or update Deliveries and suppressions across this Account. It does not resend mail or prove provider receipt.
-              </p>
-            </div>
-
-            <button
-              id="operator-replay-close"
-              type="button"
-              phx-click="close_replay"
-              aria-label="Close"
-              class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 p-0"
-            >
-              <Components.icon name="hero-x-mark" class="h-5 w-5" />
-            </button>
-          </div>
-
+        <:title>Review webhook replay</:title>
+        <:description>
+          Reprocesses this stored webhook through current normalization. It may add Events or update Deliveries and suppressions across this Account. It does not resend mail or prove provider receipt.
+        </:description>
+        <:body>
           <%= case @replay_targets do %>
             <% %{status: :exact, candidate: candidate} -> %>
               <div class="mt-6 space-y-4">
@@ -149,13 +113,14 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <p :if={@pending?} role="status" aria-live="polite" class="mt-4 text-body text-secondary">
             Replaying the reviewed request…
           </p>
-
+        </:body>
+        <:actions>
           <div class="mt-6 flex flex-wrap justify-end gap-sm">
             <button
               id="operator-replay-cancel"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost min-h-11 px-5"
+              class="btn btn-ghost min-h-11 px-md"
             >
               Cancel
             </button>
@@ -169,15 +134,13 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               disabled={@pending? or @consumed?}
               aria-live="polite"
               data-testid="operator-replay-confirm"
-              class="btn btn-primary min-h-11 px-5"
+              class="btn btn-primary min-h-11 px-md"
             >
               {if(@pending?, do: "Replaying…", else: "Confirm replay")}
             </button>
           </div>
-          <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
-          <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
-        </div>
-      </div>
+        </:actions>
+      </Components.replay_dialog>
     <% end %>
     """
   end

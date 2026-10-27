@@ -710,13 +710,16 @@ async function firstReplayableInboundRecordId(page) {
 
 async function openOperatorReplayModal(page) {
   await openOperator(page);
-  // operator-delivery-row exists in both the desktop <table> and mobile card <ul>
-  // (Phase 113 DATA-01). Filter to the visible presentation so the click targets
-  // the rendered row at the current viewport instead of the hidden one.
+  // Select the seeded exact-linkage delivery. The leading browser-selected row
+  // intentionally has unavailable replay and must not be treated as actionable.
   await selectDeliveryFull(
     page,
-    page.getByTestId("operator-delivery-row").filter({ visible: true }).first()
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-exact@example.com", visible: true })
+      .first()
   );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -725,32 +728,22 @@ async function openOperatorReplayModal(page) {
 
 async function openAmbiguousOperatorReplayModal(page) {
   await openOperator(page);
+  // This fixture has two distinct exact webhook candidates; unavailable rows
+  // deliberately render explanatory copy without a dead-end review control.
+  await selectDeliveryFull(
+    page,
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-ambiguous@example.com", visible: true })
+      .first()
+  );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+  await page.getByTestId("operator-replay-open").click();
 
-  const count = await page
-    .getByTestId("operator-delivery-row")
-    .filter({ visible: true })
-    .count();
-
-  for (let index = 0; index < count; index += 1) {
-    // Return to the list each iteration (Full detail replaces it), then drill row N.
-    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await selectDeliveryFull(
-      page,
-      page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(index)
-    );
-    await page.getByTestId("operator-replay-open").click();
-
-    const modal = page.getByTestId("operator-replay-modal");
-    await expect(modal).toBeVisible();
-
-    if (await modal.locator("#operator-replay-targets").count()) {
-      return modal;
-    }
-
-    await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
-  }
-
-  throw new Error("Ambiguous operator replay modal was not found");
+  const modal = page.getByTestId("operator-replay-modal");
+  await expect(modal).toBeVisible();
+  await expect(modal.locator("#operator-replay-targets")).toBeVisible();
+  return modal;
 }
 
 async function openInboundReplayModal(page) {
@@ -817,7 +810,14 @@ async function openOperatorReplayModalThemed(page, theme) {
   ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
-  await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").first());
+  await selectDeliveryFull(
+    page,
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-exact@example.com", visible: true })
+      .first()
+  );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -3443,7 +3443,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
         // Close via the modal's Close button (routes to close_replay; the
         // :if span's phx-remove fires JS.focus(to:"#replay-open-btn")).
-        await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
+        await modal.getByRole("button", { name: "Close", exact: true }).click();
         await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
 
         const activeId = await page.evaluate(

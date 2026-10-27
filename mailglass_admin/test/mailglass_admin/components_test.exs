@@ -481,6 +481,7 @@ defmodule MailglassAdmin.ComponentsTest do
           open?: true,
           record: %{id: "inbound-東京", tenant_id: "tenant-東京"},
           review: %{
+            review_id: "review-inbound-東京",
             record_id: "inbound-東京",
             tenant_id: "tenant-東京",
             eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.箱"}
@@ -496,6 +497,12 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "inbound-東京"
       assert html =~ "Recorded Mailbox: MyApp.Mailboxes.箱"
       refute html =~ "provider receipt"
+      [confirm] = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
+
+      assert Floki.attribute(confirm, "class")
+             |> hd()
+             |> String.split()
+             |> Enum.member?("btn-error")
     end
 
     test "Delivery wrapper uses the shell and retains stored webhook consequences" do
@@ -529,6 +536,12 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "may add Events or update Deliveries and suppressions across this Account"
       refute html =~ "Recorded Mailbox"
       refute html =~ "redeliver through the provider"
+      [confirm] = Floki.find(Floki.parse_document!(html), "#operator-replay-confirm")
+
+      assert Floki.attribute(confirm, "class")
+             |> hd()
+             |> String.split()
+             |> Enum.member?("btn-primary")
     end
   end
 
@@ -1558,11 +1571,6 @@ defmodule MailglassAdmin.ComponentsTest do
     assert Floki.find(document, ~s([data-focus-trap="end"])) != []
     assert Floki.attribute(close, "aria-label") == ["Close"]
     assert Floki.attribute(close, "phx-click") == ["close_replay"]
-
-    assert Floki.attribute(confirm, "class")
-           |> hd()
-           |> String.split()
-           |> Enum.member?("btn-primary")
 
     assert Floki.text(confirm) =~ "Confirm replay"
   end
