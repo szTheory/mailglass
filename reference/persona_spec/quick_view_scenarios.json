@@ -148,6 +148,9 @@
     {
       "id": "delivery-investigation-northstar-normal",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "northstar_complete",
       "role_job": "An operator reads one Account-scoped Delivery, its current suppression evidence, and one exact stored webhook request.",
       "source": ["mailglass_admin/test/support/operator_fixtures.ex#seed_persona_cohort!/0", "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex#detail_header/1", "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator/replay_action.ex#replay_action/1", "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1"],
@@ -172,6 +175,9 @@
     {
       "id": "delivery-investigation-fjordline-long-unicode",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "fjordline_long_unicode",
       "role_job": "An operator reads a long Delivery identity and exact request without losing Account or action context.",
       "source": ["reference/persona_spec/quick_view_scenarios.json#qv-delivery-single-unicode", "reference/persona_spec/personas.ex#spec/0", "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex#detail_header/1", "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1"],
@@ -196,6 +202,9 @@
     {
       "id": "delivery-investigation-suppression-stale",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "suppression_stale",
       "role_job": "An operator sees that the last suppression match is retained but may be out of date after a failed refresh.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator_live.ex#retry_suppression/2"],
@@ -212,12 +221,16 @@
         "suppression_read_state": "stale",
         "suppression_state": {"address": "ops@northstar.example", "scope": "address_stream", "reason": "complaint", "source": "provider_event", "stream": "transactional", "expires_at": "2026-11-03T12:00:00Z", "removal_policy": "blocked"},
         "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_story_delivery_01", "provider_event_id": "evt_story_delivery_01", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}},
-        "selected_target_id": "wh_evt_story_delivery_01"
+        "selected_target_id": "wh_evt_story_delivery_01",
+        "modal_open?": false
       }
     },
     {
       "id": "delivery-investigation-suppression-unavailable",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "suppression_unavailable",
       "role_job": "An operator sees that the scoped suppression read failed and no prior match is available to show.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator_live.ex#retry_suppression/2"],
@@ -240,6 +253,9 @@
     {
       "id": "delivery-investigation-unknown-expiry",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "unknown_expiry",
       "role_job": "An operator distinguishes an unrecorded suppression expiry from a permanent rule.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1"],
@@ -262,6 +278,9 @@
     {
       "id": "delivery-investigation-replay-ambiguous",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "replay_ambiguous",
       "role_job": "An operator reviews an ambiguous exact target set and must choose one stored request deliberately.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "lib/mailglass/operator/replay_targets.ex#for_delivery/2"],
@@ -286,6 +305,9 @@
     {
       "id": "delivery-investigation-replay-unavailable",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "replay_unavailable",
       "role_job": "An operator sees why a Delivery without exact webhook linkage cannot be replayed.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "lib/mailglass/operator/replay_targets.ex#for_delivery/2"],
@@ -308,6 +330,9 @@
     {
       "id": "delivery-investigation-replay-denied",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "replay_denied",
       "role_job": "An operator reads a safe denied replay outcome while the exact request remains identifiable.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex#dialog_feedback/1"],
@@ -334,6 +359,9 @@
     {
       "id": "delivery-investigation-replay-failed",
       "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
       "variation_id": "replay_failed",
       "role_job": "An operator reads a safe replay failure and fresh-review action before trying again.",
       "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex#dialog_feedback/1"],

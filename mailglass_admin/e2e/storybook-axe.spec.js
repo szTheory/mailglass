@@ -13,7 +13,7 @@ const REPORT_PATH = process.env.STORYBOOK_AXE_REPORT
   ? path.isAbsolute(process.env.STORYBOOK_AXE_REPORT)
     ? process.env.STORYBOOK_AXE_REPORT
     : path.resolve(__dirname, "..", process.env.STORYBOOK_AXE_REPORT)
-  : path.resolve(__dirname, "..", "test-results", "phase174-storybook-axe.json");
+  : path.resolve(__dirname, "..", "test-results", "phase175-storybook-axe.json");
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const EXECUTION_TOKEN = process.env.STORYBOOK_AXE_EXECUTION_TOKEN || null;
 const MANIFEST = JSON.parse(fs.readFileSync(SCENARIO_PATH, "utf8"));
@@ -92,7 +92,8 @@ function safeFindings(results, item, collection) {
 }
 
 async function waitForSelectedStory(page, args) {
-  const ready = await page.waitForFunction(({ frameSelector, rootSelector, theme, expectedPosition, errorSelector }) => {
+  const ready = await page.waitForFunction(({ frameSelector, rootSelector, theme, expectedPosition,
+    errorSelector, expectedUnavailable, owner, pickerTestId, dialogTitle, dialogRequired }) => {
     const frames = document.querySelectorAll(frameSelector);
     if (frames.length !== 1) return false;
     const iframe = frames[0];
@@ -106,7 +107,7 @@ async function waitForSelectedStory(page, args) {
       return false;
     }
 
-    const themeGroup = root.querySelector('[data-testid="quick-view-review-theme"]');
+    const themeGroup = root.querySelector(`[data-testid="${pickerTestId}"]`);
     const radio = [...(themeGroup?.querySelectorAll('input[type="radio"]') || [])]
       .find(input => input.value === theme);
     if (!radio) return false;
@@ -127,18 +128,19 @@ async function waitForSelectedStory(page, args) {
     const style = dialog && frameDocument.defaultView.getComputedStyle(dialog);
     const visible = Boolean(
       dialog &&
-      title?.textContent.trim() === "Quick view" &&
+      title?.textContent.trim() === dialogTitle &&
       style.display !== "none" &&
       style.visibility !== "hidden" &&
       dialog.getBoundingClientRect().width > 0 &&
       dialog.getBoundingClientRect().height > 0
     );
-    if (!visible) return false;
-    if (dialog.getAnimations().some(animation => animation.playState !== "finished")) return false;
+    if (dialogRequired ? !visible : visible) return false;
+    if (!dialogRequired && !root.querySelector("main")) return false;
+    if (dialogRequired && dialog.getAnimations().some(animation => animation.playState !== "finished")) return false;
 
     if (expectedPosition) {
       if (dialog.querySelector("[aria-live='polite']")?.textContent.trim() !== expectedPosition) return false;
-    } else if (!dialog.querySelector(errorSelector)) {
+    } else if (expectedUnavailable && !dialog.querySelector(errorSelector)) {
       return false;
     }
 
@@ -183,7 +185,7 @@ test.afterAll(() => {
   const errors = [...validation.errors, ...comparison.errors];
   if (errors.length > 0) {
     throw new Error(
-      `Phase174 selected axe report rejected (${validation.metrics.expected} expected, ` +
+        `Phase 175 selected axe report rejected (${validation.metrics.expected} expected, ` +
         `${validation.metrics.successful} successful, ${comparison.metrics.unapproved} unapproved, ` +
         `${comparison.metrics.untriaged} untriaged): ${errors.join("; ")}`
     );
@@ -191,7 +193,7 @@ test.afterAll(() => {
 });
 
 for (const item of EXPECTED_CASES) {
-  test(`Phase174 selected axe / ${item.scenario_id} / ${item.theme}`, async ({ page }) => {
+  test(`Phase 175 selected Axe / ${item.scenario_id} / ${item.theme}`, async ({ page }) => {
     const execution = {
       case_id: item.case_id,
       scenario_id: item.scenario_id,
@@ -225,22 +227,31 @@ for (const item of EXPECTED_CASES) {
       expect(response?.ok(), "the selected Storybook story route responds successfully").toBe(true);
       await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
 
-      const storyArea = item.story_path.split("/").filter(Boolean).slice(-2).join("_");
+      const storyArea = item.story_path.replace(/^\/dev\/storybook\//, "").split("/").join("_");
       const frameIdPrefix = `iframe-storybook_${storyArea}-variation-${item.variation_id}`;
       const frameSelector = `iframe[id^="${frameIdPrefix}"]`;
-      const productionRootSelector =
-        `${item.root_selector}[data-theme-owner="quick-view-story"]`;
+      const scenario = SCENARIOS.get(item.scenario_id);
+      const owner = scenario.theme_owner || "quick-view-story";
+      const pickerTestId = scenario.theme_picker_testid || "quick-view-review-theme";
+      const dialogTitle = scenario.dialog_title || "Quick view";
+      const dialogRequired = scenario.projection?.["modal_open?"] !== false;
+      const productionRootSelector = `${item.root_selector}[data-theme-owner="${owner}"]`;
       failureStage = "selected iframe readiness";
-      const position = SCENARIOS.get(item.scenario_id).projection?.position;
+      const position = owner === "quick-view-story" ? scenario.projection?.position : null;
       failureStage = "production root, theme and quick-view state verification";
       const storyState = await waitForSelectedStory(page, {
         frameSelector,
         rootSelector: productionRootSelector,
         theme: item.theme,
         expectedPosition: position ? `${position.index} of ${position.total}` : null,
-        errorSelector: '[data-testid="inbound-quick-view-error"]'
+        errorSelector: '[data-testid="inbound-quick-view-error"]',
+        expectedUnavailable: owner === "quick-view-story" && !position,
+        owner,
+        pickerTestId,
+        dialogTitle,
+        dialogRequired
       });
-      expect(storyState.owner, "the selected production root owns its local theme").toBe("quick-view-story");
+      expect(storyState.owner, "the selected production root owns its local theme").toBe(owner);
       expect(storyState.themePreference, "the selected radio preference is applied locally").toBe(item.theme);
       expect(storyState.theme, "the selected production theme resolves correctly").toBe(`mailglass-${item.theme}`);
       failureStage = "selected iframe runtime check";
@@ -262,7 +273,8 @@ for (const item of EXPECTED_CASES) {
       );
       failureStage = "supplemental contrast, chrome and keyboard checks";
       const supplemental = await verifyStoryAccessibility(page, frameSelector,
-        APPROVED.incomplete_triage.filter(finding => finding.scenario_id === item.scenario_id && finding.theme === item.theme));
+        report.incomplete.filter(finding => finding.scenario_id === item.scenario_id && finding.theme === item.theme),
+        { owner, pickerTestId, dialogTitle, dialogRequired });
       report.supplemental.push({ case_id: item.case_id, ...supplemental });
       execution.status = "passed";
     } catch (error) {

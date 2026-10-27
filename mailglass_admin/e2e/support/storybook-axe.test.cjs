@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { normalizeTarget, selectedCases, validateReport, compareFindings } = require("./storybook-axe.cjs");
+const { aggregateContrast } = require("./storybook-axe-supplement.cjs");
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -24,7 +25,7 @@ const cases = manifest.axe_selection
     }))
   );
 const excluded = manifest.axe_selection
-  .filter(selection => selection.selected === false)
+  .filter(selection => selection.selected === false && selection.proof_boundary === "connected-real-route-only")
   .map(selection => ({
     scenario_id: selection.scenario_id,
     state: selection.state,
@@ -50,6 +51,14 @@ test("Phase 175 selected Axe inventory executes 13 rendered variants in 26 theme
   assert.equal(selected.cases.length, 26);
   assert.equal(new Set(selected.cases.map(item => item.case_id)).size, 26);
   assert.equal(selected.emptyRouteOnly.length, 2);
+});
+
+test("supplemental contrast aggregates every selector match conservatively", () => {
+  assert.deepEqual(aggregateContrast([
+    { ratio: 7.2, minimum: 3, font_size: 24, font_weight: 400 },
+    { ratio: 5.1, minimum: 4.5, font_size: 16, font_weight: 500 }
+  ]), { ratio: 5.1, minimum: 4.5, font_size: 16, font_weight: 500, matches: 2 });
+  assert.throws(() => aggregateContrast([]), /at least one rendered match/);
 });
 
 function validReport(overrides = {}) {
@@ -84,11 +93,17 @@ function finding(overrides = {}) {
 
 function supplement() {
   const bounds = (left, top, width, height) => ({ left, top, right: left + width, bottom: top + height, width, height });
-  return cases.map(item => ({ case_id: item.case_id,
-    chrome: { picker: bounds(8, 8, 240, 76), dialog: bounds(0, 96, 320, 504), viewport: 320,
+  return cases.map(item => {
+    const scenario = manifest.scenarios.find(entry => entry.id === item.scenario_id);
+    const dialogPresent = scenario.projection?.["modal_open?"] !== false;
+    return { case_id: item.case_id,
+    chrome: { picker: bounds(8, 8, 240, 76), dialog: bounds(0, 96, 320, 504), dialog_present: dialogPresent, viewport: 320,
       targets: [bounds(12, 32, 64, 44), bounds(80, 32, 64, 44), bounds(148, 32, 80, 44)] },
-    focus_wrap: { forward: true, backward: true, controls: 3 }, contrasts: []
-  }));
+    focus_wrap: dialogPresent
+      ? { mode: "trapped", forward: true, backward: true, controls: 3 }
+      : { mode: "not-applicable", controls: 2 }, contrasts: []
+    };
+  });
 }
 
 test("supplemental proof rejects missing coverage, overlap, clipped controls and broken focus", () => {
@@ -110,7 +125,7 @@ test("supplemental proof rejects missing coverage, overlap, clipped controls and
 test("supplemental contrast cannot omit a retained target or relax its threshold", () => {
   const prior = finding({ target: [[".badge"]], reason: "Unresolved by axe", disposition: "retained-incomplete", evidence: "storybook-run-prior" });
   const approval = approvalFor([], [prior]);
-  const report = validReport({ supplemental: supplement() });
+  const report = validReport({ supplemental: supplement(), incomplete: [prior] });
   assertInvalidValidation(report, context, /contrast targets/, approval);
   report.supplemental[0].contrasts = [{ target: ".badge", ratio: 4.6, minimum: 4.5, font_size: 14, font_weight: 400 }];
   assert.equal(validateReport(report, { ...context, approval }).valid, true);
@@ -118,6 +133,17 @@ test("supplemental contrast cannot omit a retained target or relax its threshold
   assertInvalidValidation(report, context, /contrast is insufficient/, approval);
   report.supplemental[0].contrasts[0].minimum = 3;
   assertInvalidValidation(report, context, /contrast is insufficient/, approval);
+});
+
+test("supplemental contrast covers new Axe incompletes before triage", () => {
+  const current = finding({
+    target: [[".new-delivery-target"]],
+    reason: "Axe returned an incomplete result requiring triage.",
+    disposition: "untriaged",
+    evidence: context.runId
+  });
+  const report = validReport({ supplemental: supplement(), incomplete: [current] });
+  assertInvalidValidation(report, context, /supplemental contrast targets/);
 });
 
 function approvalFor(findings = [], incomplete = []) {
@@ -220,9 +246,14 @@ test("normalizeTarget removes only a volatile Storybook host iframe selector", (
   assert.deepEqual(
     normalizeTarget([
       ["span[data-focus-trap=\"start\"]"],
-      ["#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"]
+      ["#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"],
+      ["#iframe-storybook_delivery_investigation-variation-northstar_complete-light"]
     ]),
     [["span[data-focus-trap=\"start\"]"]]
+  );
+  assert.deepEqual(
+    normalizeTarget([["#iframe-storybook_delivery_investigation-light", "span[data-focus-trap=\"start\"]"]]),
+    [["#iframe-storybook_delivery_investigation-light", "span[data-focus-trap=\"start\"]"]]
   );
   assert.deepEqual(normalizeTarget([[".badge"]]), [[".badge"]]);
 });
@@ -257,7 +288,28 @@ test("compareFindings requires exact triage for every incomplete fingerprint", (
     evidence: "storybook-run-prior"
   };
   assert.equal(compareFindings(report, approvalFor([], [triage])).valid, true);
-  assertInvalidComparison(report, approvalFor([], [{ ...triage, evidence: "unrelated-run" }]), /review_basis/i);
+  assertInvalidComparison(report, approvalFor([], [{ ...triage, evidence: "unrelated-run" }]), /independent reviewed run/i);
+});
+
+test("compareFindings retains independently identified historical and current triage runs", () => {
+  const incomplete = finding({ rule_id: "color-contrast" });
+  const triage = {
+    ...incomplete,
+    reason: "Axe remains incomplete; a separate current-run rendered contrast check passed.",
+    disposition: "retained-incomplete-with-supplemental-proof",
+    evidence: "phase175-review-run"
+  };
+  const approval = approvalFor([], [triage]);
+  approval.evidence_runs = [{
+    run_id: "phase175-review-run",
+    source_revision: "revision-175",
+    source_digest: "digest-175",
+    reviewed_at: stamp,
+    reviewer: "phase175-05 evidence triage",
+    source: "Full selected 26-case current-source Axe report with supplemental contrast and keyboard receipts."
+  }];
+  assert.equal(compareFindings(validReport({ incomplete: [incomplete] }), approval).valid, true);
+  assertInvalidComparison(validReport({ run_id: "phase175-review-run", incomplete: [incomplete] }), approval, /self|same.*run/i);
 });
 
 test("compareFindings rejects a report used as its own approval evidence", () => {
@@ -299,9 +351,9 @@ test("CLI prints execution counts and rejects a missing report file", () => {
     const success = spawnSync(process.execPath, args, { encoding: "utf8" });
     assert.equal(success.status, 0, success.stderr);
     assert.deepEqual(JSON.parse(success.stdout), {
-      expected: 18,
-      executed: 18,
-      successful: 18,
+      expected: 26,
+      executed: 26,
+      successful: 26,
       failed: 0,
       missing: 0,
       incomplete: 0,

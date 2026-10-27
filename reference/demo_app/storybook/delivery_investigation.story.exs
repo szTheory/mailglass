@@ -14,6 +14,11 @@ defmodule Storybook.DeliveryInvestigation do
   def template do
     """
     <div data-theme-owner="delivery-investigation-story" data-theme-preference="system" data-theme-resolved="light" data-theme-os="light" data-theme="mailglass-light" style="min-height: 900px" class="mg-admin-root bg-base-100 p-md text-base-content">
+      <style>
+        [data-theme-owner="delivery-investigation-story"] .mg-overlay-scrim { inset-block-start: 96px; }
+        [data-theme-owner="delivery-investigation-story"] .mg-inbound-replay-dialog { max-height: calc(100% - 112px); }
+        [data-theme-owner="delivery-investigation-story"] .delivery-investigation-story-content { padding-block-start: 104px; }
+      </style>
       <fieldset aria-label="Review theme" data-testid="delivery-investigation-review-theme" style="position: fixed; top: 8px; left: 8px; z-index: 1000; display: flex; flex-wrap: wrap; max-width: calc(100% - 16px); gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content); box-shadow: 0 2px 8px rgb(13 27 42 / 18%);">
         <legend style="padding: 0 4px;">Review theme</legend>
         <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 6px; cursor: pointer;"><input type="radio" name="delivery-investigation-review-theme" value="light" style="width: 16px; height: 16px;">Light</label>
@@ -47,7 +52,7 @@ defmodule Storybook.DeliveryInvestigation do
       data-testid="delivery-investigation-story"
       data-scenario-id={@scenario_id}
       data-state={@state}
-      class="mx-auto max-w-6xl space-y-md p-md"
+      class="delivery-investigation-story-content mx-auto max-w-6xl space-y-md px-md pb-md"
     >
       <header class="space-y-xs">
         <p class="text-label font-bold text-secondary">Retained production composition</p>

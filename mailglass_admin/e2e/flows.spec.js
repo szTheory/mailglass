@@ -1914,6 +1914,202 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
   });
 
+  test("Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom", async ({ page }) => {
+    const expectedWidths = [320, 375, 768, 1280, 1440];
+    const expectedMailable = "Mailables.TransactionalEmailWithVeryLongModuleName";
+    const artifactDir = path.resolve(__dirname, "../test-results/phase175-layout");
+    fs.mkdirSync(artifactDir, { recursive: true });
+
+    const openFjordlineDetail = async targetPage => {
+      await loginOperator(
+        targetPage,
+        "/ops/mail?tenant_id=northstar",
+        "operator-1",
+        "northstar",
+        "accounts"
+      );
+      await targetPage.goto("/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168");
+      await targetPage.getByTestId("operator-account-switcher").click();
+      await targetPage
+        .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
+        .click();
+      await expect(targetPage).toHaveURL(/tenant_id=fjordline-aps/);
+      const row = targetPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+      const deliveryId = await row.getAttribute("phx-value-id");
+      expect(deliveryId, "selected Delivery exposes its complete exact ID").toBeTruthy();
+      await selectDeliveryFull(targetPage, row);
+      return { deliveryId, detail: targetPage.getByTestId("operator-detail-header") };
+    };
+
+    const { deliveryId, detail } = await openFjordlineDetail(page);
+    const mailable = page.locator("#delivery-detail-mailable-trigger");
+    const copyId = detail.getByRole("button", { name: "Copy Delivery ID", exact: true });
+    const widthReceipts = [];
+    for (const width of expectedWidths) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText("fjordline-aps");
+      await assertZoomReadableValue(copyId, `Delivery ID at ${width}px`, deliveryId, width);
+      await assertZoomReadableValue(mailable, `Mailable at ${width}px`, expectedMailable, width);
+      const geometry = await page.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        horizontalOverflow: [...document.querySelectorAll("body *")]
+          .filter(element => {
+            const rect = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            return rect.width > 0 && style.display !== "none" && style.visibility !== "hidden" &&
+              Number(style.opacity) > 0 && (rect.left < -1 || rect.right > window.innerWidth + 1);
+          })
+          .slice(0, 8)
+          .map(element => `${element.tagName.toLowerCase()}#${element.id}.${String(element.className).slice(0, 48)}`)
+      }));
+      expect(geometry.documentWidth, `Delivery page has no horizontal overflow at ${width}px`)
+        .toBeLessThanOrEqual(width);
+      expect(geometry.horizontalOverflow, `visible Delivery geometry fits at ${width}px`)
+        .toEqual([]);
+      widthReceipts.push({ width, deliveryId, account: "fjordline-aps", mailable: expectedMailable, ...geometry });
+      if ([320, 1440].includes(width)) {
+        const screenshot = path.join(artifactDir, `delivery-${width}.png`);
+        await page.screenshot({ path: screenshot, fullPage: true });
+        expect(fs.statSync(screenshot).size, `Delivery ${width}px screenshot is retained`).toBeGreaterThan(0);
+        widthReceipts.at(-1).screenshot = path.relative(path.resolve(__dirname, "../.."), screenshot);
+      }
+    }
+    expect(widthReceipts).toHaveLength(5);
+
+    await openOperator(page);
+    await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+    const trigger = page.getByTestId("operator-replay-open");
+    await expect(trigger).toBeVisible();
+    const triggerId = await trigger.getAttribute("id");
+    const selectedUrl = page.url();
+    await trigger.click();
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("heading", { name: "Review webhook replay", exact: true })).toBeVisible();
+    const modalTargetId = await modal.getByTestId("operator-replay-target-id").innerText();
+    expect(modalTargetId, "the review names its exact stored request").toBeTruthy();
+    await expect(page.getByTestId("operator-account-context")).toContainText("browser-tenant");
+    expect(page.url()).toBe(selectedUrl);
+
+    const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+    const zoomContext = await chromium.launchPersistentContext("", {
+      channel: "chromium",
+      headless: true,
+      viewport: { width: 1440, height: 900 },
+      deviceScaleFactor: 2,
+      args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+    });
+    let zoomReceipt;
+    try {
+      const zoomPage = zoomContext.pages()[0] || await zoomContext.newPage();
+      const selected = await openFjordlineDetail(zoomPage);
+      const initial = await zoomPage.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio
+      }));
+      const serviceWorker = zoomContext.serviceWorkers()[0] || await zoomContext.waitForEvent("serviceworker");
+      const zoom = await serviceWorker.evaluate(async () => {
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (!tab?.id) throw new Error("Active Chromium tab is unavailable");
+        await chrome.tabs.setZoom(tab.id, 2);
+        return { tabId: tab.id, factor: await chrome.tabs.getZoom(tab.id) };
+      });
+      expect(zoom.factor, "actual browser tabs.setZoom applies a real 200% zoom").toBe(2);
+      await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(720);
+      await zoomPage.setViewportSize({ width: 640, height: 900 });
+      await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+      const effective = await zoomPage.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        documentWidth: document.documentElement.scrollWidth,
+        devicePixelRatio: window.devicePixelRatio
+      }));
+      expect(effective.devicePixelRatio / initial.devicePixelRatio, "real tab zoom doubles effective DPR").toBe(2);
+      expect(effective.documentWidth, "Delivery page has no overflow under real 200% zoom").toBeLessThanOrEqual(320);
+      const zoomId = zoomPage.getByTestId("operator-detail-header").getByRole("button", {
+        name: "Copy Delivery ID", exact: true
+      });
+      await assertZoomReadableValue(zoomId, "Delivery ID at real 200% zoom", selected.deliveryId, 320);
+      await assertZoomReadableValue(
+        zoomPage.locator("#delivery-detail-mailable-trigger"),
+        "Mailable at real 200% zoom",
+        expectedMailable,
+        320
+      );
+      const zoomTextEvidence = { url: zoomPage.url(), deliveryId: selected.deliveryId, mailable: expectedMailable };
+      const longTextScreenshot = path.join(artifactDir, "delivery-200-browser-zoom-long-text.png");
+      await zoomPage.screenshot({ path: longTextScreenshot, fullPage: true, scale: "device" });
+      expect(fs.statSync(longTextScreenshot).size).toBeGreaterThan(0);
+      await openOperator(zoomPage);
+      await selectDeliveryFull(
+        zoomPage,
+        zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3)
+      );
+      const replayTrigger = zoomPage.getByTestId("operator-replay-open");
+      const originId = await replayTrigger.getAttribute("id");
+      await replayTrigger.click();
+      const zoomModal = zoomPage.getByTestId("operator-replay-modal");
+      await expect(zoomModal).toBeVisible();
+      const zoomTargetId = await zoomModal.getByTestId("operator-replay-target-id").innerText();
+      expect(zoomTargetId).toBeTruthy();
+      const scroll = await zoomModal.evaluate(element => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+        overflowY: getComputedStyle(element).overflowY,
+        scrollTop: element.scrollTop,
+        accountContext: document.querySelector('[data-testid="operator-account-context"]')?.textContent.trim()
+      }));
+      expect(scroll.overflowY).toBe("auto");
+      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+      expect(scroll.accountContext).toContain("browser-tenant");
+      const close = zoomModal.getByRole("button", { name: "Close", exact: true });
+      const confirm = zoomModal.getByTestId("operator-replay-confirm");
+      await expect(close).toBeVisible();
+      await expect(confirm).toBeVisible();
+      const targets = await Promise.all([close, confirm].map(control => control.boundingBox()));
+      for (const target of targets) {
+        expect(target.width).toBeGreaterThanOrEqual(44);
+        expect(target.height).toBeGreaterThanOrEqual(44);
+      }
+      await zoomModal.evaluate(element => { element.scrollTop = element.scrollHeight; });
+      await expect(confirm).toBeInViewport();
+      await zoomModal.evaluate(element => { element.scrollTop = 0; });
+      await expect(close).toBeInViewport();
+      await confirm.focus();
+      await zoomPage.keyboard.press("Tab");
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
+      await zoomPage.keyboard.press("Shift+Tab");
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe("operator-replay-confirm");
+      await zoomPage.keyboard.press("Escape");
+      await expect(zoomModal).toHaveCount(0);
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe(originId);
+      zoomReceipt = {
+        caseId: "layout:delivery:real-200-percent-zoom",
+        longTextEvidence: zoomTextEvidence,
+        url: zoomPage.url(),
+        source: { initial, effective, tabZoom: zoom },
+        dialog: { ...scroll, exactTargetId: zoomTargetId, closeTarget: targets[0], primaryTarget: targets[1], focusWrap: true, originId }
+      };
+      const screenshot = path.join(artifactDir, "delivery-200-browser-zoom.png");
+      await zoomPage.screenshot({ path: screenshot, fullPage: true, scale: "device" });
+      expect(fs.statSync(screenshot).size, "real 200% zoom screenshot is retained").toBeGreaterThan(0);
+      zoomReceipt.screenshot = path.relative(path.resolve(__dirname, "../.."), screenshot);
+    } finally {
+      await zoomContext.close();
+    }
+    const evidence = {
+      expectedCaseCount: expectedWidths.length + 1,
+      executedCaseCount: widthReceipts.length + Number(Boolean(zoomReceipt)),
+      cases: widthReceipts,
+      realZoom: zoomReceipt
+    };
+    expect(evidence.executedCaseCount).toBe(evidence.expectedCaseCount);
+    fs.writeFileSync(path.join(artifactDir, "delivery-layout.json"), `${JSON.stringify(evidence, null, 2)}\n`);
+  });
+
   test("Phase 175 suppression refresh", async ({ page }) => {
     const resetResponse = await page.request.get(
       "/ops/browser-reset?scenario=phase169-suppression&variant=one"

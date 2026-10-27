@@ -18,13 +18,15 @@ defmodule MailglassDemoWeb.Storybook do
 
   `sandbox_class: "mg-admin-root"` matches the class the admin shell roots carry
   (`operator/shell.ex`, `preview_live.ex`), so component CSS scoped under `.mg-admin-root`
-  resolves inside the explorer. Retained quick-view stories explicitly own their local
+  resolves inside the explorer. Retained quick-view and Delivery investigation stories
+  explicitly own their local
   `data-theme` (`mailglass-light`/`mailglass-dark`) and selected preference; they never
   write the authenticated host preference or use a CSS class→data-theme alias.
 
   `js_path` combines production hook definitions with a Demo-only adapter that gives
-  each retained quick-view iframe root explicit Light/Dark/System ownership. The adapter
-  uses `matchMedia` locally and creates no socket or host preference. Its guarded hash
+  each retained quick-view and Delivery investigation iframe root explicit
+  Light/Dark/System ownership. The adapter uses `matchMedia` locally and creates no
+  socket or host preference. Its guarded hash
   route is declared only while the dev-only PhoenixStorybook dependency is available;
   no Admin bootstrap or esbuild watcher is added to `config/dev.exs`.
 
@@ -39,8 +41,11 @@ defmodule MailglassDemoWeb.Storybook do
   window.storybook.Hooks = window.MailglassAdminHooks
 
   ;(() => {
-    const ownerSelector = '[data-theme-owner="quick-view-story"]'
-    const preferenceName = "quick-view-review-theme"
+    const ownerSelectors = [
+      '[data-theme-owner="quick-view-story"]',
+      '[data-theme-owner="delivery-investigation-story"]'
+    ]
+    const ownerSelector = ownerSelectors.join(",")
     const media = window.matchMedia("(prefers-color-scheme: dark)")
     const activeRoots = new Map()
 
@@ -61,6 +66,9 @@ defmodule MailglassDemoWeb.Storybook do
     function initialize(root) {
       if (activeRoots.has(root)) return
 
+      const preferenceName = root.dataset.themeOwner === "delivery-investigation-story"
+        ? "delivery-investigation-review-theme"
+        : "quick-view-review-theme"
       const selectedRadio = root.querySelector('input[name="' + preferenceName + '"]:checked')
       const initialPreference = selectedRadio?.value || root.dataset.themePreference || "system"
       const onChange = event => {
@@ -116,7 +124,7 @@ defmodule MailglassDemoWeb.Storybook do
   @review_hooks MailglassAdmin.Controllers.Assets.hooks_body()
   @review_js @review_hooks <> "\n" <> @theme_adapter_js
   @review_js_hash Base.encode16(:crypto.hash(:md5, @review_js), case: :lower)
-  @configured_review_js_hash "c0affb820f8b0688fbb9f8d1a0488a8b"
+  @configured_review_js_hash "571f26622aab3f8464962fb22bda3296"
 
   if @review_js_hash != @configured_review_js_hash do
     raise "Update the Storybook review JS path hash to #{@review_js_hash}"
@@ -127,7 +135,7 @@ defmodule MailglassDemoWeb.Storybook do
     content_path: Path.expand("../../storybook", __DIR__),
     # Remote URL of the served committed admin bundle (D-07). NOT a filesystem path.
     css_path: "/dev/mail/css-" <> MailglassAdmin.Controllers.Assets.css_hash(),
-    js_path: "/dev/storybook-review-js-c0affb820f8b0688fbb9f8d1a0488a8b",
+    js_path: "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
     sandbox_class: "mg-admin-root",
     title: "mailglass admin"
 

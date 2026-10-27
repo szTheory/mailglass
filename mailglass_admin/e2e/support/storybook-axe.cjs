@@ -4,8 +4,8 @@ const fs = require("node:fs");
 
 const REPORT_SCHEMA_VERSION = 1;
 const APPROVAL_SCHEMA_VERSION = 1;
-const SELECTED_VARIANTS = 9;
-const SELECTED_CASES = 18;
+const SELECTED_VARIANTS = 13;
+const SELECTED_CASES = 26;
 const EMPTY_ROUTE_ONLY_CASES = 2;
 
 const CASE_KEYS = ["case_id", "scenario_id", "state", "theme"];
@@ -44,7 +44,7 @@ function normalizeTarget(target) {
     // Storybook's host-generated iframe id can gain or lose a theme suffix
     // across equivalent mounts. The report already carries scenario/state/theme
     // identity, so retain the stable selector inside the story document.
-    .filter(candidate => !candidate.every(selector => /^#iframe-storybook_quick_views_/.test(selector)))
+    .filter(candidate => !(candidate.length === 1 && /^#iframe-storybook_/.test(candidate[0])))
     .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
   return normalized.length > 0 ? normalized : candidates.map(candidate => (Array.isArray(candidate) ? candidate : [candidate]));
 }
@@ -149,6 +149,13 @@ function fingerprint(item) {
     state: item.state,
     theme: item.theme
   });
+}
+
+function reviewedRunIds(approval) {
+  return new Set([
+    approval?.review_basis?.run_id,
+    ...(Array.isArray(approval?.evidence_runs) ? approval.evidence_runs.map(run => run?.run_id) : [])
+  ].filter(nonempty));
 }
 
 function findingShape(item, collection, errors, expectedIds) {
@@ -271,7 +278,7 @@ function validateReport(report, options = {}) {
     }
   }
 
-  if (options.approval?.review_basis?.run_id === report.run_id) {
+  if (reviewedRunIds(options.approval).has(report.run_id)) {
     errors.push("report and approved findings use the same evidence run (self-comparison)");
   }
   // Historical v1 reports remain axe-only evidence. A producer opting into
@@ -286,17 +293,22 @@ function validateReport(report, options = {}) {
       seen.add(row?.case_id);
       const chrome = row?.chrome;
       const rect = value => isRecord(value) && ["left", "right", "top", "bottom", "width", "height"].every(key => Number.isFinite(value[key])) && value.width > 0 && value.height > 0;
-      if (!rect(chrome?.picker) || !rect(chrome?.dialog) || !Number.isFinite(chrome?.viewport) ||
+      if (!rect(chrome?.picker) || !rect(chrome?.dialog) || typeof chrome?.dialog_present !== "boolean" || !Number.isFinite(chrome?.viewport) ||
           chrome.picker.bottom > chrome.dialog.top || chrome.picker.left < 0 || chrome.picker.right > chrome.viewport ||
           !Array.isArray(chrome.targets) || chrome.targets.length !== 3 || chrome.targets.some(target =>
             !rect(target) || target.width < 44 || target.height < 44 || target.left < chrome.picker.left || target.right > chrome.picker.right)) {
         errors.push("supplemental review chrome overlaps content or clips controls");
       }
-      if (row?.focus_wrap?.forward !== true || row?.focus_wrap?.backward !== true ||
-          !Number.isInteger(row?.focus_wrap?.controls) || row.focus_wrap.controls < 1) {
-        errors.push("supplemental keyboard focus wrap is unverified");
+      if (chrome?.dialog_present) {
+        if (row?.focus_wrap?.mode !== "trapped" || row.focus_wrap.forward !== true || row.focus_wrap.backward !== true ||
+            !Number.isInteger(row.focus_wrap.controls) || row.focus_wrap.controls < 1) {
+          errors.push("supplemental dialog keyboard focus wrap is unverified");
+        }
+      } else if (row?.focus_wrap?.mode !== "not-applicable" ||
+          !Number.isInteger(row.focus_wrap.controls) || row.focus_wrap.controls < 1) {
+        errors.push("supplemental non-dialog keyboard sequence is unverified");
       }
-      const expectedTargets = (options.approval?.incomplete_triage || []).filter(finding =>
+      const expectedTargets = (report.incomplete || []).filter(finding =>
         finding.rule_id === "color-contrast" && finding.scenario_id === item?.scenario_id && finding.theme === item?.theme
       ).flatMap(finding => finding.target.map(chain => chain.length === 1 ? chain[0] : "unsupported-chain")).sort();
       const contrasts = row?.contrasts;
@@ -326,6 +338,21 @@ function validateApproval(approval) {
     !nonempty(approval.review_basis.source_digest)
   ) {
     errors.push("approved findings need independent review_basis run, revision and digest");
+  }
+  const evidenceRuns = Array.isArray(approval.evidence_runs) ? approval.evidence_runs : [];
+  if (Object.hasOwn(approval, "evidence_runs") && !Array.isArray(approval.evidence_runs)) {
+    errors.push("evidence_runs must be an array when present");
+  }
+  const knownRunIds = new Set([approval.review_basis?.run_id].filter(nonempty));
+  for (const run of evidenceRuns) {
+    if (!exactKeys(run, ["run_id", "source_revision", "source_digest", "reviewed_at", "reviewer", "source"]) ||
+        !nonempty(run.run_id) || !nonempty(run.source_revision) || !nonempty(run.source_digest) ||
+        !isTimestamp(run.reviewed_at) || !nonempty(run.reviewer) || !nonempty(run.source)) {
+      errors.push("additional evidence run has an invalid review record");
+      continue;
+    }
+    if (knownRunIds.has(run.run_id)) errors.push("evidence run ids must be unique and distinct from review_basis");
+    knownRunIds.add(run.run_id);
   }
   if (!Array.isArray(approval.approved_fingerprints)) errors.push("approved_fingerprints must be an array");
   if (!Array.isArray(approval.incomplete_triage)) errors.push("incomplete_triage must be an array");
@@ -366,8 +393,8 @@ function validateApproval(approval) {
     if (!nonempty(reason) || !nonempty(disposition) || disposition === "untriaged" || !nonempty(evidence)) {
       errors.push("incomplete triage needs a reason, reviewed disposition and evidence");
     }
-    if (approval.review_basis?.run_id && evidence !== approval.review_basis.run_id) {
-      errors.push("incomplete triage evidence must name the independent review_basis run");
+    if (!knownRunIds.has(evidence)) {
+      errors.push("incomplete triage evidence must name an independent reviewed run");
     }
   }
   return [...new Set(errors)];
@@ -376,7 +403,7 @@ function validateApproval(approval) {
 function compareFindings(report, approval) {
   const errors = validateApproval(approval);
   if (!isRecord(report)) return { valid: false, errors: [...errors, "report is missing or is not an object"], metrics: { violations: 0, unapproved: 0, incomplete: 0, untriaged: 0 } };
-  if (approval?.review_basis?.run_id === report.run_id) errors.push("report and approved findings use the same evidence run (self-comparison)");
+  if (reviewedRunIds(approval).has(report.run_id)) errors.push("report and approved findings use the same evidence run (self-comparison)");
 
   const approved = new Map(
     (Array.isArray(approval?.approved_fingerprints) ? approval.approved_fingerprints : []).map(item => [fingerprint(item), item])
