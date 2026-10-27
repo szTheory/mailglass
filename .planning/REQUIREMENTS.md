@@ -17,7 +17,7 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 - [ ] **UXF-09**: An operator can use a compact Account control that clearly scopes Health, Deliveries and Inbound without suggesting Account-scoped Preview data.
 - [ ] **UXF-10**: An operator entering Preview can return to the originating Account through a validated host-approved local destination, with a clear direct-entry fallback.
-- [ ] **UXF-11**: An operator can use quieter previous/next controls on both quick views with readable position, coherent Close, 44px targets, accessible names, focus and disabled boundaries.
+- [x] **UXF-11**: An operator can use quieter previous/next controls on both quick views with readable position, coherent Close, 44px targets, accessible names, focus and disabled boundaries.
 - [ ] **UXF-12**: An operator opening full Delivery or Inbound detail can read grouped technical evidence below primary facts without first expanding a disclosure.
 
 ### Direct collection filtering
@@ -134,7 +134,7 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | --- | --- | --- |
 | UXF-09 | Phase 177 | Pending |
 | UXF-10 | Phase 177 | Pending |
-| UXF-11 | Phase 174 | Pending |
+| UXF-11 | Phase 174 | Complete |
 | UXF-12 | Phase 175 | Pending |
 | FILTER-01 | Phase 176 | Pending |
 | FILTER-02 | Phase 176 | Pending |
