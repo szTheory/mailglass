@@ -99,16 +99,16 @@
       "source": ["reference/persona_spec/personas.ex#spec/0"],
       "cohort": "fjordline-aps",
       "state": "single-unicode",
-      "reason": "Exercises the real Fjordline persona's exact long identifier, recipient and contact-name literals without truncation.",
+      "reason": "Exercises the real Fjordline persona's exact long identifier and canonical subject; Unicode sender names remain source metadata and are not exposed by this quick view.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
-      "proof_boundary": "story-render-and-connected-route",
+      "proof_boundary": "story-render-connected-route-and-persisted-projection",
       "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": true,
       "projection": {
         "delivery": {
           "id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
           "recipient": "bjorn.hansen@fjordline-aps.example",
-          "subject": "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎",
+          "subject": "Welcome to Fjordline A/S",
           "status": "sent",
           "last_event_type": "delivered",
           "last_event_at": "2026-10-26T12:00:00Z",
@@ -119,6 +119,16 @@
         "position": {"index": 1, "total": 1},
         "previous_id": null,
         "next_id": null
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "Mailglass.Operator.Deliveries.list_recent_deliveries_page/2",
+        "materializer": "MailglassAdmin.TestSupport.OperatorFixtures.seed_persona_cohort!/0",
+        "component": "MailglassAdmin.Operator.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "recipient", "subject", "provider", "provider_message_id", "mailable", "status", "last_event_type", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "last_event_at uses independent materializer anchors and is checked as a DateTime"],
+        "source_only_facts": ["The canonical delivered Event reject_reason is nil; it is not part of the list projection or quick-view component."]
       }
     },
     {
@@ -145,7 +155,7 @@
       "state": "normal",
       "reason": "Retains an ordinary account-scoped message and a reachable position between both navigation controls.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
-      "proof_boundary": "story-render-only",
+      "proof_boundary": "story-render-and-persisted-projection",
       "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": true,
       "projection": {
@@ -154,14 +164,24 @@
           "tenant_id": "northstar",
           "envelope_recipient": "support@demo.mailglass.local",
           "subject": "[support] Invite email did not arrive",
-          "outcome": "matched",
+          "outcome": "accept",
           "received_at": "2026-10-26T12:00:00Z",
           "provider": "mailgun",
-          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+          "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox"
         },
         "position": {"index": 3, "total": 6},
         "previous_id": "phase174-inbound-previous",
         "next_id": "phase174-inbound-next"
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "MailglassAdmin.OptionalDeps.MailglassInbound.list_records_page/2",
+        "materializer": "MailglassAdmin.TestSupport.InboundFixtures.seed_matched!/2",
+        "component": "MailglassAdmin.Inbound.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "envelope_recipient", "subject", "provider", "outcome", "mailbox", "received_at", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "received_at is compared at second precision to remove database subsecond precision"],
+        "rendered_exactly": ["recipient", "subject", "accepted outcome", "provider", "Account", "mailbox label", "position", "record id"]
       }
     },
     {
@@ -232,7 +252,7 @@
       "state": "single-unicode",
       "reason": "Carries the canonical Fjordline recipient and contact-name literals into a synthetic Inbound projection without claiming the Demo seed materializes that cohort.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
-      "proof_boundary": "story-render-only",
+      "proof_boundary": "story-render-and-persisted-projection",
       "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": true,
       "projection": {
@@ -241,14 +261,25 @@
           "tenant_id": "fjordline-aps",
           "envelope_recipient": "bjorn.hansen@fjordline-aps.example",
           "subject": "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎",
-          "outcome": "matched",
+          "outcome": "accept",
           "received_at": "2026-10-26T12:00:00Z",
           "provider": "postmark",
-          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+          "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox"
         },
         "position": {"index": 1, "total": 1},
         "previous_id": null,
         "next_id": null
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "MailglassAdmin.OptionalDeps.MailglassInbound.list_records_page/2",
+        "materializer": "MailglassAdmin.TestSupport.InboundFixtures.seed_matched!/2",
+        "component": "MailglassAdmin.Inbound.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "envelope_recipient", "subject", "provider", "outcome", "mailbox", "received_at", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "received_at is compared at second precision to remove database subsecond precision"],
+        "rendered_exactly": ["recipient", "subject", "accepted outcome", "provider", "Account", "mailbox label", "record id"],
+        "foreign_account": "A matched record for other-account is absent from the fjordline-aps scoped page."
       }
     },
     {
@@ -373,7 +404,13 @@
       "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
       "status": "resolved",
       "disposition": "Both production quick views use unoutlined ghost arrows with visible hover and focus states, readable position, accessible names, and 44px targets. Inbound keeps its native disabled buttons at the first/last boundaries.",
-      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound."
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound.",
+      "projection_evidence": {
+        "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
+        "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],
+        "connected_real_route_only": ["qv-delivery-empty", "qv-inbound-empty"],
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs"
+      }
     },
     {
       "id": "fb-raw-source-hierarchy",
@@ -422,7 +459,13 @@
       "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
       "status": "partial",
       "disposition": "The generated root, Theme Picker, sidebar, direct story and internal assets now retain /dev/storybook; production Delivery and Inbound quick-view stories are retained. The serif stat-card defect remains, while production font/theme receipts, hook lifecycle, axe execution integrity, and final catalogue dispositions remain pending.",
-      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets. Pending phases are listed explicitly."
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets. Pending phases are listed explicitly.",
+      "projection_evidence": {
+        "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
+        "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],
+        "connected_real_route_only": ["qv-delivery-empty", "qv-inbound-empty"],
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs"
+      }
     },
     {
       "id": "fb-replay-review",

@@ -750,7 +750,11 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         last_event_type: payload.event_type,
         last_event_at: hours_ago(1),
         mailable: payload.long_mailable,
-        metadata: %{"persona" => name, "from" => payload.from}
+        metadata: %{
+          "persona" => name,
+          "subject" => "Welcome to Fjordline A/S",
+          "from" => payload.from
+        }
       })
 
     # One :delivered event with reject_reason: nil (the legitimate null branch).

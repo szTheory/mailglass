@@ -105,6 +105,7 @@ defmodule MailglassDemo.QuickViewScenarios do
   end
 
   defp inbound_outcome("matched"), do: :matched
+  defp inbound_outcome("accept"), do: :accept
   defp inbound_outcome("unavailable"), do: :unavailable
 
   defp inbound_error(nil), do: nil

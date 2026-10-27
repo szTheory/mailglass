@@ -121,6 +121,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_matched!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
+    mailbox = Keyword.get(opts, :mailbox, @fixture_mailbox)
 
     evidence =
       insert_evidence!(
@@ -128,13 +129,13 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         record.id,
         opts
         |> Keyword.get(:evidence, [])
-        |> Keyword.put_new(:route_binding, {:matched, @fixture_mailbox})
+        |> Keyword.put_new(:route_binding, {:matched, mailbox})
       )
 
     fresh =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :fresh,
-        mailbox: mailbox_name(),
+        mailbox: mailbox_name(mailbox),
         outcome: :accept,
         executed_at: hours_ago(2)
       )
@@ -142,7 +143,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
     replay =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :replay,
-        mailbox: mailbox_name(),
+        mailbox: mailbox_name(mailbox),
         outcome: :accept,
         executed_at: hours_ago(1)
       )
@@ -214,7 +215,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   defp default_mailbox(:no_match), do: nil
   defp default_mailbox(_outcome), do: mailbox_name()
 
-  defp mailbox_name, do: Atom.to_string(@fixture_mailbox)
+  defp mailbox_name(mailbox \\ @fixture_mailbox), do: Atom.to_string(mailbox)
 
   defp default_reason(outcome) when outcome in [:reject, :bounce], do: "fixture reason"
   defp default_reason(_outcome), do: nil
