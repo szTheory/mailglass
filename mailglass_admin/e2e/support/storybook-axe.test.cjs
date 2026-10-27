@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { validateReport, compareFindings } = require("./storybook-axe.cjs");
+const { normalizeTarget, validateReport, compareFindings } = require("./storybook-axe.cjs");
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -164,6 +164,17 @@ test("validateReport rejects the same evidence run on both sides of a comparison
   const approval = approvalFor();
   approval.review_basis.run_id = report.run_id;
   assertInvalidValidation(report, context, /self|same.*run/i, approval);
+});
+
+test("normalizeTarget removes only a volatile Storybook host iframe selector", () => {
+  assert.deepEqual(
+    normalizeTarget([
+      ["span[data-focus-trap=\"start\"]"],
+      ["#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"]
+    ]),
+    [["span[data-focus-trap=\"start\"]"]]
+  );
+  assert.deepEqual(normalizeTarget([[".badge"]]), [[".badge"]]);
 });
 
 test("compareFindings rejects changed rules at a flat finding count", () => {

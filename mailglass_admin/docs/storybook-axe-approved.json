@@ -14,9 +14,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -32,9 +29,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -53,9 +47,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-light"
         ]
       ],
       "scenario_id": "qv-delivery-normal",
@@ -70,9 +61,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -89,9 +77,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -110,9 +95,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_normal-dark"
         ]
       ],
       "scenario_id": "qv-delivery-normal",
@@ -128,9 +110,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -146,9 +125,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -167,9 +143,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-light"
         ]
       ],
       "scenario_id": "qv-delivery-first",
@@ -184,9 +157,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -203,9 +173,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -224,9 +191,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_first-dark"
         ]
       ],
       "scenario_id": "qv-delivery-first",
@@ -242,9 +206,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -260,9 +221,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -281,9 +239,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-light"
         ]
       ],
       "scenario_id": "qv-delivery-last",
@@ -298,9 +253,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -317,9 +269,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -338,9 +287,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-northstar_last-dark"
         ]
       ],
       "scenario_id": "qv-delivery-last",
@@ -356,9 +302,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -374,9 +317,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -395,9 +335,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-light"
         ]
       ],
       "scenario_id": "qv-delivery-single-unicode",
@@ -412,9 +349,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -431,9 +365,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -452,9 +383,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_delivery-variation-fjordline_single_unicode-dark"
         ]
       ],
       "scenario_id": "qv-delivery-single-unicode",
@@ -470,9 +398,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -488,9 +413,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -509,9 +431,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-light"
         ]
       ],
       "scenario_id": "qv-inbound-normal",
@@ -526,9 +445,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -545,9 +461,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -566,9 +479,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_normal-dark"
         ]
       ],
       "scenario_id": "qv-inbound-normal",
@@ -583,9 +493,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_first-light"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -603,9 +510,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_first-light"
-        ],
-        [
           "span[data-focus-trap=\"end\"]"
         ]
       ],
@@ -621,9 +525,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_first-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -641,9 +542,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_first-dark"
-        ],
-        [
           "span[data-focus-trap=\"end\"]"
         ]
       ],
@@ -660,9 +558,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_last-light"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -678,9 +573,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_last-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -698,9 +590,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_last-dark"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -717,9 +606,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-northstar_last-dark"
-        ],
-        [
           "span[data-focus-trap=\"end\"]"
         ]
       ],
@@ -735,9 +621,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -754,9 +637,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -775,9 +655,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-light"
         ]
       ],
       "scenario_id": "qv-inbound-single-unicode",
@@ -792,9 +669,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -811,9 +685,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
-        ],
         [
           "span[data-focus-trap=\"end\"]"
         ]
@@ -832,9 +703,6 @@
       "target": [
         [
           ".badge"
-        ],
-        [
-          "#iframe-storybook_quick_views_inbound-variation-fjordline_single_unicode-dark"
         ]
       ],
       "scenario_id": "qv-inbound-single-unicode",
@@ -849,9 +717,6 @@
     {
       "rule_id": "aria-hidden-focus",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
-        ],
         [
           "span[data-focus-trap=\"start\"]"
         ]
@@ -869,9 +734,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
-        ],
-        [
           "span[data-focus-trap=\"end\"]"
         ]
       ],
@@ -887,9 +749,6 @@
     {
       "rule_id": "color-contrast",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-light"
-        ],
         [
           "p"
         ]
@@ -907,9 +766,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
-        ],
-        [
           "span[data-focus-trap=\"start\"]"
         ]
       ],
@@ -926,9 +782,6 @@
       "rule_id": "aria-hidden-focus",
       "target": [
         [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
-        ],
-        [
           "span[data-focus-trap=\"end\"]"
         ]
       ],
@@ -944,9 +797,6 @@
     {
       "rule_id": "color-contrast",
       "target": [
-        [
-          "#iframe-storybook_quick_views_inbound-variation-selected_unavailable-dark"
-        ],
         [
           "p"
         ]

@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
-const { selectedCases, validateReport, compareFindings } = require("./support/storybook-axe.cjs");
+const { selectedCases, normalizeTarget, validateReport, compareFindings } = require("./support/storybook-axe.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -66,18 +66,6 @@ function readMatchingProgress() {
 
 const report = readMatchingProgress() || freshReport;
 
-function normalizeTarget(target) {
-  const candidates = Array.isArray(target) ? target : [target];
-  return candidates
-    .map(candidate =>
-      (Array.isArray(candidate) ? candidate : [candidate])
-        .map(selector => String(selector).trim())
-        .filter(Boolean)
-    )
-    .filter(candidate => candidate.length > 0)
-    .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
-}
-
 function safeFindings(results, item, collection) {
   const findings = [];
   for (const violation of results[collection] || []) {
@@ -99,6 +87,75 @@ function safeFindings(results, item, collection) {
     findings.push(...targets.values());
   }
   return findings;
+}
+
+async function waitForSelectedStory(page, args) {
+  const ready = await page.waitForFunction(async ({ frameSelector, rootSelector, theme, expectedPosition, errorSelector }) => {
+    const frames = document.querySelectorAll(frameSelector);
+    if (frames.length !== 1) return false;
+    const iframe = frames[0];
+    const frameDocument = iframe?.contentDocument;
+    const root = frameDocument?.querySelector(rootSelector);
+    if (!iframe || !frameDocument || frameDocument.readyState !== "complete" || !root) {
+      window.__phase174StableStoryFrame = null;
+      return false;
+    }
+
+    const themeGroup = root.querySelector('[data-testid="quick-view-review-theme"]');
+    const radio = [...(themeGroup?.querySelectorAll('input[type="radio"]') || [])]
+      .find(input => input.value === theme);
+    if (!radio) return false;
+    if (
+      !radio.checked ||
+      root.dataset.themePreference !== theme ||
+      root.dataset.theme !== `mailglass-${theme}`
+    ) {
+      radio.checked = true;
+      radio.dispatchEvent(new frameDocument.defaultView.Event("change", { bubbles: true }));
+      window.__phase174StableStoryFrame = null;
+      return false;
+    }
+
+    const dialog = root.querySelector('[role="dialog"]');
+    const titleId = dialog?.getAttribute("aria-labelledby");
+    const title = titleId && frameDocument.getElementById(titleId);
+    const style = dialog && frameDocument.defaultView.getComputedStyle(dialog);
+    const visible = Boolean(
+      dialog &&
+      title?.textContent.trim() === "Quick view" &&
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      dialog.getBoundingClientRect().width > 0 &&
+      dialog.getBoundingClientRect().height > 0
+    );
+    if (!visible) return false;
+
+    if (expectedPosition) {
+      if (dialog.querySelector("[aria-live='polite']")?.textContent.trim() !== expectedPosition) return false;
+    } else if (!dialog.querySelector(errorSelector)) {
+      return false;
+    }
+
+    if (frameDocument.fonts) await frameDocument.fonts.ready;
+    const currentFrames = document.querySelectorAll(frameSelector);
+    if (currentFrames.length !== 1 || currentFrames[0] !== iframe || iframe.contentDocument !== frameDocument) {
+      window.__phase174StableStoryFrame = null;
+      return false;
+    }
+    const previous = window.__phase174StableStoryFrame;
+    if (previous?.iframe !== iframe || previous?.frameDocument !== frameDocument) {
+      window.__phase174StableStoryFrame = { iframe, frameDocument };
+      return false;
+    }
+
+    return {
+      owner: root.dataset.themeOwner,
+      themePreference: root.dataset.themePreference,
+      theme: root.dataset.theme,
+      runtimeErrorCount: frameDocument.defaultView.__phase174RuntimeErrorCount || 0
+    };
+  }, args, { timeout: 30_000 });
+  return ready.jsonValue();
 }
 
 function persistReport(complete = false) {
@@ -161,57 +218,26 @@ for (const item of EXPECTED_CASES) {
       const response = await page.goto(storyURL.href, { waitUntil: "load" });
       expect(response?.ok(), "the selected Storybook story route responds successfully").toBe(true);
 
-      const frameSelector = `iframe[id*="${item.variation_id}"]`;
+      const storyArea = item.story_path.split("/").filter(Boolean).slice(-2).join("_");
+      const frameIdPrefix = `iframe-storybook_${storyArea}-variation-${item.variation_id}`;
+      const frameSelector = `iframe[id^="${frameIdPrefix}"]`;
       const productionRootSelector =
         `${item.root_selector}[data-theme-owner="quick-view-story"]`;
       failureStage = "selected iframe readiness";
-      await page.waitForFunction(
-        ({ selector, rootSelector }) => {
-          const iframe = document.querySelector(selector);
-          const frameDocument = iframe?.contentDocument;
-          return Boolean(
-            frameDocument?.readyState === "complete" &&
-              frameDocument.querySelector(rootSelector)
-          );
-        },
-        { selector: frameSelector, rootSelector: productionRootSelector }
-      );
-      const storyFrame = page.frameLocator(frameSelector);
-      const root = storyFrame.locator(productionRootSelector);
-      failureStage = "production root verification";
-      await expect(root).toBeVisible();
-      await expect(root).toHaveAttribute("data-theme-owner", "quick-view-story");
-      await expect(root).toHaveAttribute("data-theme", `mailglass-${item.theme}`);
-      const theme = storyFrame.getByRole("radio", { name: item.theme === "light" ? "Light" : "Dark", exact: true });
-      failureStage = "story theme readiness";
-      await expect.poll(
-        () => theme.evaluate(input => {
-          input.checked = true;
-          input.dispatchEvent(new Event("change", { bubbles: true }));
-          return input.closest('[data-theme-owner="quick-view-story"]')?.dataset.themePreference;
-        }),
-        { message: "the story-local theme owner handles the selected preference" }
-      ).toBe(item.theme);
-      await expect(root).toHaveAttribute("data-theme", `mailglass-${item.theme}`);
-      const dialog = root.getByRole("dialog", { name: "Quick view" });
-      failureStage = "quick-view state verification";
-      await expect(dialog).toBeVisible();
       const position = SCENARIOS.get(item.scenario_id).projection?.position;
-      if (position) {
-        await expect(dialog.locator("[aria-live='polite']")).toHaveText(
-          `${position.index} of ${position.total}`
-        );
-      } else {
-        await expect(dialog.locator('[data-testid="inbound-quick-view-error"]')).toBeVisible();
-      }
-      await root.evaluate(async element => {
-        await element.ownerDocument.fonts.ready;
+      failureStage = "production root, theme and quick-view state verification";
+      const storyState = await waitForSelectedStory(page, {
+        frameSelector,
+        rootSelector: productionRootSelector,
+        theme: item.theme,
+        expectedPosition: position ? `${position.index} of ${position.total}` : null,
+        errorSelector: '[data-testid="inbound-quick-view-error"]'
       });
+      expect(storyState.owner, "the selected production root owns its local theme").toBe("quick-view-story");
+      expect(storyState.themePreference, "the selected radio preference is applied locally").toBe(item.theme);
+      expect(storyState.theme, "the selected production theme resolves correctly").toBe(`mailglass-${item.theme}`);
       failureStage = "selected iframe runtime check";
-      const frameRuntimeErrorCount = await root.evaluate(
-        element => element.ownerDocument.defaultView.__phase174RuntimeErrorCount || 0
-      );
-      expect(frameRuntimeErrorCount, "the selected story iframe has no runtime errors").toBe(0);
+      expect(storyState.runtimeErrorCount, "the selected story iframe has no runtime errors").toBe(0);
 
       failureStage = "axe analysis";
       const results = await new AxeBuilder({ page })

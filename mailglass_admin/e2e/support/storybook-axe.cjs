@@ -32,6 +32,23 @@ function caseId(item) {
   return `${item.scenario_id}::${item.state}::${item.theme}`;
 }
 
+function normalizeTarget(target) {
+  const candidates = Array.isArray(target) ? target : [target];
+  const normalized = candidates
+    .map(candidate =>
+      (Array.isArray(candidate) ? candidate : [candidate])
+        .map(selector => String(selector).trim())
+        .filter(Boolean)
+    )
+    .filter(candidate => candidate.length > 0)
+    // Storybook's host-generated iframe id can gain or lose a theme suffix
+    // across equivalent mounts. The report already carries scenario/state/theme
+    // identity, so retain the stable selector inside the story document.
+    .filter(candidate => !candidate.every(selector => /^#iframe-storybook_quick_views_/.test(selector)))
+    .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+  return normalized.length > 0 ? normalized : candidates.map(candidate => (Array.isArray(candidate) ? candidate : [candidate]));
+}
+
 function selectedCases(manifest) {
   if (!isRecord(manifest) || !Array.isArray(manifest.scenarios) || !Array.isArray(manifest.axe_selection)) {
     throw new Error("manifest must contain scenario and axe_selection arrays");
@@ -428,4 +445,4 @@ function cli(argv = process.argv.slice(2)) {
 
 if (require.main === module) cli();
 
-module.exports = { selectedCases, validateReport, compareFindings };
+module.exports = { selectedCases, normalizeTarget, validateReport, compareFindings };
