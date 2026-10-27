@@ -680,10 +680,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex", "symbol": "MailglassAdmin.Operator.SuppressionCard"}],
       "owner_requirements": ["OUTUX-07", "OUTUX-08"],
       "owner_phase": "175",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Refresh remains below the card facts and copy still exposes internal terms. Keep the real retry read, distinguish unavailable evidence, and do not imply unknown expiry is permanent.",
-      "evidence_pointer": "Pending Phase 175 ready/empty/stale/unavailable suppression evidence."
+      "scenario_ids": ["delivery-investigation-suppression-stale", "delivery-investigation-suppression-unavailable", "delivery-investigation-unknown-expiry"],
+      "status": "automated",
+      "disposition": "Account-scoped Refresh uses a real retry and preserves retained evidence as stale on failure; unavailable evidence and unknown expiry remain distinct, and unknown expiry is not described as permanent.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08"
     },
     {
       "id": "fb-inbound-addresses",
@@ -723,10 +723,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/replay_action.ex", "symbol": "MailglassAdmin.Operator.ReplayAction"}, {"path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex", "symbol": "MailglassAdmin.Operator.ReplayModal"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex", "symbol": "MailglassAdmin.Inbound.ReplayModal"}],
       "owner_requirements": ["REPLAY-04", "REPLAY-05", "REPLAY-06", "REPLAY-07", "REPLAY-08"],
       "owner_phase": "175",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Replay remains a full-detail entry point, and the owner-requested concise close/success and inline retry behavior is unchanged by this quick-view navigation plan.",
-      "evidence_pointer": "Pending Phase 175 connected permitted, unavailable, denied, success, and retry outcomes."
+      "scenario_ids": ["delivery-investigation-northstar-normal", "delivery-investigation-replay-ambiguous", "delivery-investigation-replay-unavailable", "delivery-investigation-replay-denied", "delivery-investigation-replay-failed"],
+      "status": "automated",
+      "disposition": "Exact target, no-fallback, permitted/unavailable/ambiguous/denied/failed outcomes, shared dialog keyboard/focus behavior, visible failure recovery, accessible success toast, and durable actual audit outcome are covered. Provider delivery is not claimed.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#replay-path-replay-04-through-replay-08"
     },
     {
       "id": "fb-technical-details",
@@ -735,10 +735,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex", "symbol": "MailglassAdmin.Operator.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}],
       "owner_requirements": ["UXF-12"],
       "owner_phase": "175",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Full-detail technical identifiers are still collapsed behind details/summary; quick-view technical details remain a distinct compact presentation.",
-      "evidence_pointer": "Pending Phase 175 production story and connected full-detail evidence on both surfaces."
+      "scenario_ids": ["delivery-investigation-northstar-normal", "delivery-investigation-fjordline-long-unicode"],
+      "status": "automated",
+      "disposition": "Grouped Delivery and Inbound full-detail technical fields are visible without expansion. Current connected-route assertions verify exact identity, bounded values, and no horizontal overflow; compact quick-view technical details remain a distinct presentation.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#technical-evidence-uxf-12"
     }
   ]
 }
