@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 175
 current_phase_name: Delivery Investigation and Safe Replay
 status: executing
-stopped_at: Completed 175-01-PLAN.md
-last_updated: "2026-10-27T15:12:20.911Z"
+stopped_at: Completed 175-02-PLAN.md
+last_updated: "2026-10-27T15:34:14.484Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 175 execution started
-state_head: 54266c4bd2344edd936284f67ed267a2f7f2c1db
+state_head: ca3c51dda468e477488e6865740e7010e9250b53
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 7
+  completed_plans: 8
   percent: 20
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 175 (Delivery Investigation and Safe Replay) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-10-27 — Phase 175 execution started
 
@@ -298,6 +298,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 174 P05 | 86m | 3 tasks | 17 files |
 | Phase 174 P06 | 4h29m | 2 tasks | 24 files |
 | Phase 175 P01 | 23m | 2 tasks | 11 files |
+| Phase 175 P02 | 21min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -549,6 +550,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: D-52 reaffirmed: target zero owner UAT; automate observable criteria, repair routine defects, and close evidence-backed rows without confirmation. — Owner requested shift-left integration/e2e/smoke/seam proof, justified reuse of existing CI lanes, and durable records that prevent repeated UAT loops; see .planning/METHODOLOGY.md.
 - [Phase 175]: Replay target identity remains server-owned; browser events supply only the validated entry origin.
 - [Phase 175]: Quick view and Full detail share ReplayAction, with review entry shown only for exact or explicitly ambiguous target sets.
+- [Phase 175]: Keep suppression refresh on the existing tenant, recipient, and stream-scoped query; prove external changes through fresh reads without changing domain semantics.
+- [Phase 175]: Show only recorded expiry and known reason-based policy; label unknown expiry and policy as not recorded.
 
 ## Quick Tasks Completed
 
@@ -600,8 +603,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T15:12:20.762Z
-Stopped at: Completed 175-01-PLAN.md
+Last session: 2026-10-27T15:34:14.331Z
+Stopped at: Completed 175-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
