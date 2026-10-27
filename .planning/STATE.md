@@ -4,17 +4,17 @@ milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
 current_phase: 174
 current_phase_name: Faithful Storybook and Quiet Quick Views
-status: executing
-stopped_at: Completed 174-05-PLAN.md
-last_updated: "2026-10-27T05:35:35.285Z"
+status: verifying
+stopped_at: Completed 174-06-PLAN.md
+last_updated: "2026-10-27T11:09:54.626Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 174 execution started
-state_head: cc9aa419be6ac59f9970221ac08e041080e50d4f
+state_head: 86a04b6bdbbd0e860953a4a1e1486cd95a846b60
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 
 Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-27 — Completed Plan 02; Plan 03 ready to execute
 
 Progress: [░░░░░░░░░░] 0%
@@ -295,6 +295,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 174 P03 | 31min | 2 tasks | 7 files |
 | Phase 174 P04 | 33m43s | 2 tasks | 10 files |
 | Phase 174 P05 | 86m | 3 tasks | 17 files |
+| Phase 174 P06 | 4h29m | 2 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -538,6 +539,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 174]: Require independent report identity and exact rule/target/scenario/state/theme fingerprint comparison.
 - [Phase 174]: Keep incomplete Axe results explicitly triaged against a reproduced pre-repair report; approve no violations.
 - [Phase 174]: Make each quick-view dialog focusable and use native disabled Delivery boundary buttons.
+- [Phase 174]: Keep the selected Phase 174 sweep in the existing advisory Demo Browser Evidence job; do not promote it to a protected required context.
+- [Phase 174]: Measure the full hosted job against a same-profile successful baseline; report the observed 15-second wall-budget overage without implying causality or critical-path latency.
+- [Phase 174]: Keep Axe violation approvals empty and retain incomplete findings as incomplete even when triage removes them from the untriaged count.
+- [Phase 174]: Keep Delivery's inert boundary and Inbound's native disabled-button boundary semantics distinct.
+- [Phase 174]: Leave non-Phase-174 feedback with its named Phase 175–178 owners; defer set-wide STORY-07 and zoom reconciliation to Phase 178.
 
 ## Quick Tasks Completed
 
@@ -589,8 +595,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T05:35:35.263Z
-Stopped at: Completed 174-05-PLAN.md
+Last session: 2026-10-27T11:09:54.590Z
+Stopped at: Completed 174-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
