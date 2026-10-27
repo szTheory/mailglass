@@ -50,9 +50,12 @@ const PHASE175_SOURCE_FILES = [
   "mailglass_admin/priv/static/app.css",
   "mailglass_admin/priv/static/hooks.js",
   "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
+  "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
   "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
   "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
   "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
   ...FONT_FILES.map(filename => `mailglass_admin/priv/static/fonts/${filename}`)
 ];
 
@@ -900,6 +903,8 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
     const picker = frame.getByTestId("delivery-investigation-review-theme");
     await expect(main).toHaveAttribute("data-scenario-id", "delivery-investigation-fjordline-long-unicode");
     await expect(root).toBeVisible();
+    expect(await picker.evaluate(element => element.style.boxShadow)).toBe("var(--shadow-overlay)");
+    expect(await picker.evaluate(element => getComputedStyle(element).boxShadow)).not.toBe("none");
     await expect(frame.getByTestId("operator-replay-reviewed-target")).toContainText(
       "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG"
     );

@@ -110,9 +110,9 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           phx-value-origin="full"
           data-testid="inbound-replay-open"
           disabled={replay_disabled?(@outcome)}
-          class={["btn btn-error min-h-11 px-md", replay_disabled?(@outcome) && "btn-disabled"]}
+          class={["btn btn-primary min-h-11 px-md", replay_disabled?(@outcome) && "btn-disabled"]}
         >
-          Review replay
+          Review inbound replay
         </button>
       </div>
     </Components.card>

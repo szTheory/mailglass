@@ -185,6 +185,32 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   end
 
   describe "DetailHeader.detail_header/1" do
+    @tag :phase175
+    test "eligible full-detail replay uses the primary accent and approved label" do
+      detail = %{
+        record: %{
+          id: "rec-primary-replay",
+          tenant_id: "tenant-a",
+          provider: "postmark",
+          envelope_recipient: "alice@example.com",
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      button = Floki.find(Floki.parse_document!(html), "#inbound-replay-open-btn")
+      classes = button |> Floki.attribute("class") |> List.first() |> String.split()
+
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
+      assert button |> Floki.text() |> String.trim() == "Review inbound replay"
+    end
+
     test "renders without raising for a record that has NO :suppression_flagged field" do
       detail = %{
         record: %{
@@ -807,6 +833,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert Floki.attribute(button, "phx-click") == ["open_replay"]
       assert Floki.attribute(button, "phx-value-origin") == ["quick"]
       assert Floki.attribute(button, "data-testid") == ["inbound-quick-replay-open"]
+      classes = button |> Floki.attribute("class") |> List.first() |> String.split()
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
       assert html =~ "Review inbound replay"
       assert html =~ "rec-quick-175"
 

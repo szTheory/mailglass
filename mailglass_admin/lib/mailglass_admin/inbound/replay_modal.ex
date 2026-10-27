@@ -109,7 +109,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               disabled={@busy? or not eligible?(@review.eligibility)}
               aria-live="polite"
               data-testid="inbound-replay-confirm"
-              class="btn btn-error min-h-11 px-md"
+              class="btn btn-primary min-h-11 px-md"
             >
               {if(@busy?, do: "Replaying…", else: "Confirm replay")}
             </button>

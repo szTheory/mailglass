@@ -37,7 +37,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
         <:body>
           <%= case @replay_targets do %>
             <% %{status: :exact, candidate: candidate} -> %>
-              <div class="mt-6 space-y-4">
+              <div class="mt-lg space-y-4">
                 <%= if candidate.webhook_event_id == @selected_target_id do %>
                   <p class="text-body text-base-content">
                     Review the exact stored request before confirming.
@@ -61,7 +61,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 <% end %>
               </div>
             <% %{status: :ambiguous, candidates: candidates} -> %>
-              <div class="mt-6 space-y-4">
+              <div class="mt-lg space-y-4">
                 <p class="text-body text-base-content">
                   Replay is <span class="font-bold">{RepairState.availability_label(:ambiguous)}</span>.
                   Choose the exact stored request to review. No request is selected for you.
@@ -77,8 +77,8 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 </form>
               </div>
             <% %{status: :unavailable, reason: reason} -> %>
-              <div class="mt-6 space-y-4">
-                <div class="rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
+              <div class="mt-lg space-y-4">
+                <div class="rounded-box border border-warning bg-warning/10 p-md text-body text-base-content">
                   <p class="font-bold">Replay unavailable</p>
                   <p class="mt-1">
                     Replay is <span class="font-bold">{RepairState.availability_label(:unavailable)}</span>. {RepairState.unavailable_reason_copy(
@@ -97,14 +97,14 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 </div>
               </div>
             <% _ -> %>
-              <div class="mt-6 rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
+              <div class="mt-lg rounded-box border border-warning bg-warning/10 p-md text-body text-base-content">
                 Replay target resolution is still loading for this delivery.
               </div>
           <% end %>
 
           <div
             :if={reviewed_target(@replay_targets, @selected_target_id)}
-            class="mt-6 rounded-box border border-base-300 bg-base-200 p-4"
+            class="mt-lg rounded-box border border-base-300 bg-base-200 p-md"
             data-testid="operator-replay-reviewed-target"
           >
             <p class="mb-3 text-label font-bold text-base-content">Reviewed request</p>
@@ -143,7 +143,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             role="status"
             aria-live="polite"
             data-testid="operator-replay-feedback"
-            class="mt-6 rounded-box border border-error/40 bg-error/10 p-4 text-body text-base-content"
+            class="mt-lg rounded-box border border-error/40 bg-error/10 p-md text-body text-base-content"
           >
             <p>{@feedback.text}</p>
             <button
@@ -162,7 +162,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           </p>
         </:body>
         <:actions>
-          <div class="mt-6 flex flex-wrap justify-end gap-sm">
+          <div class="mt-lg flex flex-wrap justify-end gap-sm">
             <button
               id="operator-replay-cancel"
               type="button"
@@ -308,7 +308,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
   defp target_card_class(selected) do
     [
-      "rounded-box border p-4",
+      "rounded-box border p-md",
       selected && "border-error bg-error/5",
       !selected && "border-base-300 bg-base-200"
     ]

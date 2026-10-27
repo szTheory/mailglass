@@ -167,7 +167,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
               phx-click="open_replay"
               phx-value-origin="quick"
               data-testid="inbound-quick-replay-open"
-              class="btn btn-error min-h-11 px-md"
+              class="btn btn-primary min-h-11 px-md"
             >
               Review inbound replay
             </button>

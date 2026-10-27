@@ -19,7 +19,7 @@ defmodule Storybook.DeliveryInvestigation do
         [data-theme-owner="delivery-investigation-story"] .mg-inbound-replay-dialog { max-height: calc(100% - 112px); }
         [data-theme-owner="delivery-investigation-story"] .delivery-investigation-story-content { padding-block-start: 104px; }
       </style>
-      <fieldset aria-label="Review theme" data-testid="delivery-investigation-review-theme" style="position: fixed; top: 8px; left: 8px; z-index: 1000; display: flex; flex-wrap: wrap; max-width: calc(100% - 16px); gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content); box-shadow: 0 2px 8px rgb(13 27 42 / 18%);">
+      <fieldset aria-label="Review theme" data-testid="delivery-investigation-review-theme" style="position: fixed; top: 8px; left: 8px; z-index: 1000; display: flex; flex-wrap: wrap; max-width: calc(100% - 16px); gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content); box-shadow: var(--shadow-overlay);">
         <legend style="padding: 0 4px;">Review theme</legend>
         <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 6px; cursor: pointer;"><input type="radio" name="delivery-investigation-review-theme" value="light" style="width: 16px; height: 16px;">Light</label>
         <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 6px; cursor: pointer;"><input type="radio" name="delivery-investigation-review-theme" value="dark" style="width: 16px; height: 16px;">Dark</label>
