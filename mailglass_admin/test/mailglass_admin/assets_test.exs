@@ -102,4 +102,42 @@ defmodule MailglassAdmin.AssetsTest do
       end
     end
   end
+
+  describe "shared hook JavaScript" do
+    test "serves the same production hook bytes without an Admin socket bootstrap" do
+      admin_js = MailglassAdmin.Controllers.Assets.js_body()
+
+      assert admin_js =~ "window.MailglassAdminHooks",
+             "Admin JS should register and use the shared production hook asset"
+
+      hooks_body = MailglassAdmin.Controllers.Assets.hooks_body()
+      hooks_hash = MailglassAdmin.Controllers.Assets.hooks_hash()
+
+      assert length(:binary.matches(admin_js, hooks_body)) == 1
+      assert admin_js =~ "new LiveView.LiveSocket"
+      assert admin_js =~ "liveSocket.connect()"
+      assert hooks_hash == Base.encode16(:crypto.hash(:md5, hooks_body), case: :lower)
+
+      response =
+        Plug.Test.conn(:get, "/dev/storybook-hooks-#{hooks_hash}")
+        |> MailglassAdmin.Controllers.Assets.call(
+          MailglassAdmin.Controllers.Assets.init(:hooks)
+        )
+
+      assert response.status == 200
+      assert get_resp_header(response, "content-type") == [
+               "application/javascript; charset=utf-8"
+             ]
+
+      assert get_resp_header(response, "cache-control") == [
+               "public, max-age=31536000, immutable"
+             ]
+
+      assert response.resp_body =~ hooks_body
+      assert response.resp_body =~ "window.storybook.Hooks"
+      refute response.resp_body =~ "new LiveView.LiveSocket"
+      refute response.resp_body =~ "Phoenix.Socket"
+      refute response.resp_body =~ "phoenix_live_view.js"
+    end
+  end
 end
