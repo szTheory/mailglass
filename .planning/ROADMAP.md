@@ -38,6 +38,33 @@
 - ✅ **v2.9 Operator, Preview & Email UI Refinement** — Phases 168-173, 173.1 (shipped 2026-10-26) — [archive](milestones/v2.9-ROADMAP.md)
 - 🚧 **v2.10 UI Repairs & Faithful Storybook** — Phases 174-178 (requirements and roadmap approved 2026-10-26)
 
+## Archived phases
+
+<details>
+<summary>✅ v2.9 Operator, Preview & Email UI Refinement (Phases 168-173, 173.1) — SHIPPED 2026-10-26</summary>
+
+- [x] Phase 168: Shared Workspace and Usable Baseline (10/10 plans) — completed 2026-10-08
+- [x] Phase 169: Outbound Investigation and Recovery (5/5 plans) — completed 2026-10-07
+- [x] Phase 170: Inbound Investigation and Recovery (8/8 plans) — completed 2026-10-09
+- [x] Phase 171: Developer Preview (4/4 plans) — completed 2026-10-09
+- [x] Phase 172: Recipient Output and Built-in Pages (3/3 plans) — completed 2026-10-09
+- [x] Phase 173: Consistency and Delivery Evidence (8/8 plans) — completed 2026-10-25
+- [x] Phase 173.1: Address tech debt: demo auth + browser evidence (INSERTED) (5/5 plans) — completed 2026-10-25
+
+Full phase detail: [milestones/v2.9-ROADMAP.md](milestones/v2.9-ROADMAP.md) · phase artifacts: `milestones/v2.9-phases/` · audit: [milestones/v2.9-MILESTONE-AUDIT.md](milestones/v2.9-MILESTONE-AUDIT.md)
+
+</details>
+
+<details>
+<summary>✅ v2.8 Truthful Repo (Phases 166-167) — SHIPPED 2026-09-19</summary>
+
+- [x] Phase 166: Earned Greens and Controls That Can Pass (6/6 plans) — completed 2026-09-19
+- [x] Phase 167: Truthful Documentation and the Standing Control (4/4 plans) — completed 2026-09-19
+
+Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/`
+
+</details>
+
 ## v2.10 — UI Repairs & Faithful Storybook
 
 **Roadmap status:** Approved 2026-10-26. All 31 requirements approved; ready to plan Phase 174. Implementation has not started.
@@ -68,14 +95,14 @@ Resolve recorded operator/author friction through integrated repairs with realis
 4. Hook-dependent stories reuse production hook behavior under Storybook's own socket; connected checks demonstrate mount/update/close and focus return on both resolved Admin/demo LiveView clients without a second socket bootstrap. (STORY-06)
 5. Running the selected sweep compares fresh axe rule/target/state findings to approved findings and rejects missing, failed, zero-case or incomplete expected execution. Incomplete findings are separately triaged; the actual required/advisory CI placement and initial cold/warm cost pilot are recorded. (UIQ-05; continuing UIQ-07 obligation)
 
-**Plans:** 6 plans in 5 waves — verified; ready to execute.
+**Plans:** 1/6 plans executed in 5 waves — verified; ready to execute.
 **UI hint:** yes
 
 **Planning focus:** Reconcile source and served assets first. Use the pinned Storybook APIs, existing production hooks/CSS and small scenario metadata; prove one repaired area before expanding extraction. No complete catalogue, generic fixture engine, client upgrade or new dependency is a prerequisite.
 
 Plans:
 **Wave 1**
-- [ ] 174-01-PLAN.md — Delivery quick-view tracer and corrected Storybook navigation.
+- [x] 174-01-PLAN.md — Delivery quick-view tracer and corrected Storybook navigation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 174-02-PLAN.md — Quiet Inbound quick views, retained scenarios and projection agreement.
@@ -191,37 +218,10 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 174. Faithful Storybook and Quiet Quick Views | 0/6 | Planned | — |
+| 174. Faithful Storybook and Quiet Quick Views | 1/6 | In Progress | — |
 | 175. Delivery Investigation and Safe Replay | 0/TBD | Not started | — |
 | 176. Direct Filters and Useful Inbound Evidence | 0/TBD | Not started | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
-
-## Archived phases
-
-<details>
-<summary>✅ v2.9 Operator, Preview & Email UI Refinement (Phases 168-173, 173.1) — SHIPPED 2026-10-26</summary>
-
-- [x] Phase 168: Shared Workspace and Usable Baseline (10/10 plans) — completed 2026-10-08
-- [x] Phase 169: Outbound Investigation and Recovery (5/5 plans) — completed 2026-10-07
-- [x] Phase 170: Inbound Investigation and Recovery (8/8 plans) — completed 2026-10-09
-- [x] Phase 171: Developer Preview (4/4 plans) — completed 2026-10-09
-- [x] Phase 172: Recipient Output and Built-in Pages (3/3 plans) — completed 2026-10-09
-- [x] Phase 173: Consistency and Delivery Evidence (8/8 plans) — completed 2026-10-25
-- [x] Phase 173.1: Address tech debt: demo auth + browser evidence (INSERTED) (5/5 plans) — completed 2026-10-25
-
-Full phase detail: [milestones/v2.9-ROADMAP.md](milestones/v2.9-ROADMAP.md) · phase artifacts: `milestones/v2.9-phases/` · audit: [milestones/v2.9-MILESTONE-AUDIT.md](milestones/v2.9-MILESTONE-AUDIT.md)
-
-</details>
-
-<details>
-<summary>✅ v2.8 Truthful Repo (Phases 166-167) — SHIPPED 2026-09-19</summary>
-
-- [x] Phase 166: Earned Greens and Controls That Can Pass (6/6 plans) — completed 2026-09-19
-- [x] Phase 167: Truthful Documentation and the Standing Control (4/4 plans) — completed 2026-09-19
-
-Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/`
-
-</details>
