@@ -43,6 +43,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
         role="dialog"
         aria-modal="true"
         aria-labelledby="inbound-quick-view-title"
+        tabindex="0"
         phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"

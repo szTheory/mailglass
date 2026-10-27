@@ -50,6 +50,7 @@ defmodule MailglassAdmin.Operator.QuickView do
         role="dialog"
         aria-modal="true"
         aria-labelledby="operator-quick-view-title"
+        tabindex="0"
         phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
@@ -187,14 +188,16 @@ defmodule MailglassAdmin.Operator.QuickView do
 
   defp nav_button(%{path: nil} = assigns) do
     ~H"""
-    <span
-      aria-disabled="true"
+    <button
+      type="button"
+      disabled
       aria-label={@label}
       title={@label}
-      class="btn btn-ghost min-h-11 min-w-11 opacity-40"
+      data-testid={"operator-quick-view-#{@dir}"}
+      class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
     >
       {render_slot(@inner_block)}
-    </span>
+    </button>
     """
   end
 

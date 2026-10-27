@@ -1743,23 +1743,25 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await assertPhase174QuickViewScrollAccess(page, quickView, "operator-quick-view");
 
     const position = quickView.locator('[aria-live="polite"]');
-    await expect(position).toHaveText(/^1 of \d+$/);
-    const [current, total] = (await position.textContent()).split(" of ").map(Number);
+    await expect(position).toHaveText(/^\s*1 of \d+\s*$/);
+    const [current, total] = (await position.textContent()).trim().split(" of ").map(Number);
     expect(current).toBe(1);
 
     const previous = quickView.getByRole("button", { name: "Previous delivery", exact: true });
     await expect(previous).toBeDisabled();
+    const previousBox = await previous.boundingBox();
     for (let index = 1; index < total; index += 1) {
       await quickView.getByRole("link", { name: "Next delivery", exact: true }).click();
       await expect(position).toHaveText(`${index + 1} of ${total}`);
     }
     const next = quickView.getByRole("button", { name: "Next delivery", exact: true });
     await expect(next).toBeDisabled();
+    const nextBox = await next.boundingBox();
+    const closeBox = await quickView.getByRole("link", { name: "Close quick view", exact: true }).boundingBox();
 
-    for (const control of [previous, next, quickView.getByRole("link", { name: "Close quick view", exact: true })]) {
-      const box = await control.boundingBox();
-      expect(box?.width, `${await control.getAttribute("aria-label")} keeps a 44px width`).toBeGreaterThanOrEqual(44);
-      expect(box?.height, `${await control.getAttribute("aria-label")} keeps a 44px height`).toBeGreaterThanOrEqual(44);
+    for (const [label, box] of [["Previous", previousBox], ["Next", nextBox], ["Close", closeBox]]) {
+      expect(box?.width, `${label} delivery control keeps a 44px width`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `${label} delivery control keeps a 44px height`).toBeGreaterThanOrEqual(44);
     }
   });
 
@@ -1775,23 +1777,25 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await assertPhase174QuickViewScrollAccess(page, quickView, "inbound-quick-view");
 
     const position = quickView.locator('[aria-live="polite"]');
-    await expect(position).toHaveText(/^1 of \d+$/);
-    const [current, total] = (await position.textContent()).split(" of ").map(Number);
+    await expect(position).toHaveText(/^\s*1 of \d+\s*$/);
+    const [current, total] = (await position.textContent()).trim().split(" of ").map(Number);
     expect(current).toBe(1);
 
     const previous = quickView.getByRole("button", { name: "Previous inbound record", exact: true });
     await expect(previous).toBeDisabled();
+    const previousBox = await previous.boundingBox();
     for (let index = 1; index < total; index += 1) {
       await quickView.getByRole("link", { name: "Next inbound record", exact: true }).click();
       await expect(position).toHaveText(`${index + 1} of ${total}`);
     }
     const next = quickView.getByRole("button", { name: "Next inbound record", exact: true });
     await expect(next).toBeDisabled();
+    const nextBox = await next.boundingBox();
+    const closeBox = await quickView.getByRole("link", { name: "Close quick view", exact: true }).boundingBox();
 
-    for (const control of [previous, next, quickView.getByRole("link", { name: "Close quick view", exact: true })]) {
-      const box = await control.boundingBox();
-      expect(box?.width, "Inbound navigation and Close keep a 44px width").toBeGreaterThanOrEqual(44);
-      expect(box?.height, "Inbound navigation and Close keep a 44px height").toBeGreaterThanOrEqual(44);
+    for (const [label, box] of [["Previous", previousBox], ["Next", nextBox], ["Close", closeBox]]) {
+      expect(box?.width, `Inbound ${label} control keeps a 44px width`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `Inbound ${label} control keeps a 44px height`).toBeGreaterThanOrEqual(44);
     }
   });
 
