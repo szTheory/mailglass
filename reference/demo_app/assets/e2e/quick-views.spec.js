@@ -203,6 +203,9 @@ test("Phase174 delivery retained variants preserve exact scenario facts and boun
   const first = page.frameLocator('iframe[id*="northstar_first"]');
   const last = page.frameLocator('iframe[id*="northstar_last"]');
   const single = page.frameLocator('iframe[id*="fjordline_single_unicode"]');
+  const normalFrame = page.locator('iframe[id*="northstar_normal"]');
+  await expect.poll(() => normalFrame.evaluate(frame => frame.clientHeight))
+    .toBeGreaterThanOrEqual(600);
   await expect(normal.getByRole("dialog")).toBeVisible();
   await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/2 of \d+/);
   await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText(/1 of \d+/);
@@ -218,11 +221,23 @@ test("Phase174 delivery retained variants preserve exact scenario facts and boun
 
   const captureDir = path.resolve(__dirname, "../../tmp/demo_browser_evidence/phase174");
   fs.mkdirSync(captureDir, { recursive: true });
-  await page.screenshot({ path: path.join(captureDir, "delivery-light.png"), fullPage: false });
+  const lightPanelBackground = await normal.locator("#operator-quick-view")
+    .evaluate(panel => getComputedStyle(panel).backgroundColor);
   await page.locator('iframe[id*="northstar_normal"]').evaluate(frame => {
-    frame.contentDocument.querySelector(".mg-admin-root").dataset.theme = "mailglass-dark";
+    frame.contentDocument.documentElement.dataset.theme = "mailglass-dark";
+    frame.contentDocument.querySelector("#psb-iframe-container > .mg-admin-root").dataset.theme = "mailglass-dark";
   });
-  await page.screenshot({ path: path.join(captureDir, "delivery-dark.png"), fullPage: false });
+  const darkPanelBackground = await normal.locator("#operator-quick-view")
+    .evaluate(panel => getComputedStyle(panel).backgroundColor);
+  expect(darkPanelBackground, "dark capture uses the dark production theme").not.toBe(lightPanelBackground);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await normalFrame.screenshot({ path: path.join(captureDir, "delivery-dark.png") });
+  await page.locator('iframe[id*="northstar_normal"]').evaluate(frame => {
+    frame.contentDocument.documentElement.dataset.theme = "mailglass-light";
+    frame.contentDocument.querySelector("#psb-iframe-container > .mg-admin-root").dataset.theme = "mailglass-light";
+  });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await normalFrame.screenshot({ path: path.join(captureDir, "delivery-light.png") });
 });
 
 test("Phase174 delivery scenario manifest accounts for rendered and real-route-only cases", async () => {

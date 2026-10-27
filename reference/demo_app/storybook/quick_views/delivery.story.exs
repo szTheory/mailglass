@@ -9,7 +9,7 @@ defmodule Storybook.QuickViews.Delivery do
 
   def template do
     """
-    <div data-theme="mailglass-light" class="mg-admin-root bg-base-100 text-base-content p-md">
+    <div data-theme="mailglass-light" style="min-height: 600px" class="mg-admin-root bg-base-100 text-base-content p-md">
       <.psb-variation/>
     </div>
     """
