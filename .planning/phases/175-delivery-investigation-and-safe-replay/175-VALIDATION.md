@@ -222,7 +222,7 @@ All29 approved element/category acceptance strings remain independently mapped t
 
 ## Descriptor-less Prohibition Recall (Flagged-Unverified)
 
-The spec-less recall ran per exact requirement, then a precision pass dropped routine engineering and referred canonical injection/access/privacy concerns to the STRIDE/security review rather than minting duplicate prohibitions. Raw candidate groups are retained below; eight bespoke intent items survive, one per requirement. Each was projected through the installed `projectProhibitions` serializer into its owning plan's `must_haves.prohibitions`, lifecycle unresolved, with no wired-check descriptor. Their deterministic disposition is flagged-unverified. No fabricated enforcement or automatic dismissal is claimed; positive behavior tests do not silently turn these flags green.
+The spec-less recall ran per exact requirement, then a precision pass dropped routine engineering and referred canonical injection/access/privacy concerns to the STRIDE/security review rather than minting duplicate prohibitions. Raw candidate groups are retained below; eight bespoke intent items survive, one per requirement. Each was projected through the installed `projectProhibitions` serializer into its owning plan's `must_haves.prohibitions`. Independent source and negative-path review upheld all eight as resolved/judgment; no wired-check descriptor was added because these are judgment-tier constraints. The autonomous result remains `unverified-prohibition — human review recommended`; no fabricated mechanical enforcement or automatic dismissal is claimed.
 
 | Requirement | Raw recall candidates (~10, terse) | Precision outcome |
 | --- | --- | --- |

@@ -231,7 +231,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 
 ## Progress
 
-**Execution order:** 174 → 175 → 176 → 177 → 178. Phase 174 is complete; Phase 175 has six verified plans ready for execution. Later phase plan counts remain TBD.
+**Execution order:** 174 → 175 → 176 → 177 → 178. Phase 174 is complete; Phase 175 has executed all six plans; 58/58 positive truths and all eight assigned requirements are verified, with eight judgment-tier recommendations pending disposition before phase completion. Later phase plan counts remain TBD.
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
