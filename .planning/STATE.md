@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 174
 current_phase_name: Faithful Storybook and Quiet Quick Views
 status: executing
-stopped_at: Phase 174 planning complete; six verified plans ready for $gsd-execute-phase 174
-last_updated: "2026-10-27T01:42:33.132Z"
+stopped_at: Completed 174-01-PLAN.md
+last_updated: "2026-10-27T02:14:09.255Z"
 last_activity: 2026-10-26
-last_activity_desc: "Phase 174 planned: 6 plans in 5 waves; independent verification passed; ready to execute"
-state_head: 81b2b70387260b4b04461d92c2a518e67620d010
+last_activity_desc: Phase 174 execution started
+state_head: 8411a25fbc5531113749f25677822ae258ba0476
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -39,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 
 ## Current Position
 
-Phase: 174 (Faithful Storybook and Quiet Quick Views) — READY TO EXECUTE
-Plan: —
+Phase: 174 (Faithful Storybook and Quiet Quick Views) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-10-26 — Phase 174 planned: 6 plans in 5 waves; independent verification passed; ready to execute
+Last activity: 2026-10-26 — Phase 174 execution started
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -288,6 +288,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 173 P06 | 7m | 1 tasks | 2 files |
 | Phase 173 P07 | 21min | 2 tasks | 16 files |
 | Phase 173 P08 | 32min | 2 tasks | 4 files |
+| Phase 174 P01 | 25min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -515,6 +516,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 173]: Install only lockfile-pinned Mix/npm dependencies in the detached candidate and restore only candidate-generated demo lock drift.
 - [Phase 173]: Keep delivery incomplete until required exact-SHA CI Green and protected owner acceptance are verified.
 - [Phase ?]: v2.10 reuses the supplied ui-quality-engine scope and focused research; no additional milestone ecosystem pass and no change to workflow.research. — Owner chose reuse; upstream stopping rule says implementation research belongs at actual phase uncertainties.
+- [Phase 174]: The retained Delivery Storybook variations use the compile-time JSON scenario manifest through a pure projection builder; empty Helios remains connected-route-only.
+- [Phase 174]: Fixed-overlay component stories keep a 600px iframe canvas so Storybook content-height sizing does not clip them.
 
 ## Quick Tasks Completed
 
@@ -566,9 +569,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-27T01:42:33.111Z
-Stopped at: Phase 174 planning complete; six verified plans ready for $gsd-execute-phase 174
-Resume file: .planning/phases/174-faithful-storybook-and-quiet-quick-views/174-01-PLAN.md
+Last session: 2026-10-27T02:14:09.230Z
+Stopped at: Completed 174-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
