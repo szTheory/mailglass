@@ -20,11 +20,14 @@ defmodule MailglassAdmin.Operator.QuickView do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.ReplayAction
   alias Phoenix.LiveView.JS
 
   attr(:delivery, :map, default: nil)
   attr(:detail_error, :atom, default: nil)
   attr(:account_labels, :map, default: %{})
+  attr(:replay_targets, :map, default: nil)
+  attr(:replay_command_feedback, :string, default: nil)
   attr(:full_path, :string, required: true)
   attr(:close_path, :string, required: true)
   attr(:previous_path, :string, default: nil)
@@ -42,8 +45,7 @@ defmodule MailglassAdmin.Operator.QuickView do
         tabindex="-1"
         data-testid="operator-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
         id="operator-quick-view"
         data-testid="operator-quick-view"
@@ -162,6 +164,12 @@ defmodule MailglassAdmin.Operator.QuickView do
                   </dd>
                 </div>
               </Components.technical_details>
+              <ReplayAction.replay_action
+                replay_targets={@replay_targets}
+                origin="quick_view"
+                button_id="operator-quick-view-replay-open-btn"
+                replay_command_feedback={@replay_command_feedback}
+              />
             </div>
         <% end %>
 

@@ -1093,6 +1093,8 @@ defmodule MailglassAdmin.OperatorLive do
                 position={record_position(@deliveries, @selected_delivery, @deliveries_page_meta)}
                 keyboard?={not @replay_modal_open?}
                 focus_return_id={@quick_view_focus_return_id}
+                replay_targets={@replay_targets}
+                replay_command_feedback={@replay_command_feedback}
               />
 
               <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
@@ -1536,14 +1538,11 @@ defmodule MailglassAdmin.OperatorLive do
       )
 
     replay_targets =
-      if full?,
-        do:
-          load_replay_targets(
-            filter_params,
-            selected_delivery,
-            socket.assigns[:operator_read_fault]
-          ),
-        else: nil
+      load_replay_targets(
+        filter_params,
+        selected_delivery,
+        socket.assigns[:operator_read_fault]
+      )
 
     {replay_history, replay_history_read_state} =
       if full?,

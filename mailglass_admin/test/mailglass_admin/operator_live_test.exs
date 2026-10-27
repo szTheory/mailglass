@@ -876,7 +876,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
                "[data-testid='operator-replay-open'][phx-value-origin='full_detail']"
              )
 
-      assert_patch(view, operator_path(Map.put(filters, "full", "1")))
+      assert_patch(view, operator_path(filters |> Map.delete("view") |> Map.put("full", "1")))
+
+      view
+      |> element("[data-testid='operator-replay-open'][phx-value-origin='full_detail']")
+      |> render_click()
+
+      assert render(view) =~ webhook_event.id
+      view |> element("#operator-replay-close") |> render_click()
     end
 
     @tag :phase175
@@ -921,7 +928,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         html
         |> Floki.parse_document!()
         |> Floki.find("#operator-replay-targets label")
-        |> Enum.map(&Floki.text/1)
+        |> Enum.map(&(Floki.text(&1) |> String.trim()))
 
       assert labels == ["POSTMARK webhook target", "POSTMARK webhook target"]
 
@@ -929,7 +936,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         html
         |> Floki.parse_document!()
         |> Floki.find("[data-testid='operator-replay-target-id']")
-        |> Enum.map(&Floki.text/1)
+        |> Enum.map(&(Floki.text(&1) |> String.trim()))
 
       assert MapSet.new([first_id, second_id]) == MapSet.new([first.id, second.id])
       refute has_element?(view, "#operator-replay-confirm")
@@ -965,7 +972,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
         }
       })
 
-      {other, other_webhook} = insert_exact_replay_fixture!("pm-other-phase175", 17504)
+      other =
+        insert_delivery!(
+          tenant_id: "foreign-tenant",
+          recipient: "foreign-phase175@example.com",
+          provider_message_id: "pm-other-phase175"
+        )
+
+      other_webhook =
+        insert_webhook_event!(
+          tenant_id: "foreign-tenant",
+          provider_event_id: "postmark-webhook-phase175-foreign",
+          raw_payload: raw_postmark_payload(other.provider_message_id, 17504)
+        )
+
+      insert_linked_event!(other, other_webhook, "seed-link-phase175-foreign")
       MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
 
       {:ok, view, html} =

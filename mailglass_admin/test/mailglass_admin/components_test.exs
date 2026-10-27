@@ -452,7 +452,7 @@ defmodule MailglassAdmin.ComponentsTest do
     assert html =~ ~s(id="operator-quick-view-replay-open-btn")
     assert html =~ ~s(phx-value-origin="quick_view")
     assert html =~ "Replay is ready."
-    assert html =~ candidate.webhook_event_id
+    refute html =~ ~s(phx-value-webhook_event_id="#{candidate.webhook_event_id}")
   end
 
   @tag :phase175
