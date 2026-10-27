@@ -435,7 +435,9 @@ function validateCost(cost, execution, results, pilot, requireCi) {
     const executionCondition = execution.conditions.find(item => item.condition === conditionName);
     requireThat(JSON.stringify(receipt.admin_browser) === JSON.stringify(executionCondition.admin_browser) && JSON.stringify(receipt.demo_browser) === JSON.stringify(executionCondition.demo_browser), `${conditionName} cost browser install details do not match execution receipts`);
     requireThat(receipt.runner_count === 1, `${conditionName} runner count must identify the single actual executor`);
-    if (requireCi) {
+    // The producer runs before GitHub can expose completed job metadata.
+    // Validate its condition timings here; only --require-ci establishes hosted proof.
+    if (requireCi || execution.github?.actions === true) {
       requireThat(Number.isFinite(receipt.runner_minutes) && receipt.runner_minutes > 0 && receipt.runner_minutes_status === "wrapper-condition-elapsed", `${conditionName} hosted runner time is missing`);
       requireThat(Math.abs(receipt.runner_minutes - receipt.wall_ms / 60000) < 0.001, `${conditionName} hosted runner minutes do not match measured condition wall time`);
     } else {
