@@ -103,9 +103,9 @@ defmodule MailglassDemoWeb.Router do
     )
   end
 
-  # Dev-only interactive component review surface (PROJECT D-06). Mounted strictly
-  # inside this dev-only /dev scope so it is never prod-reachable (V4 access-control
-  # mitigation T-118-01). Its sandbox CSS is the committed admin bundle served by
+  # Dev-only interactive component review surface (PROJECT D-06). The macro keeps
+  # its dependency-availability guard and full /dev/storybook mount at root scope.
+  # Its sandbox CSS is the committed admin bundle served by
   # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
   MailglassDemoWeb.StorybookRoutes.maybe_live_storybook()
 
