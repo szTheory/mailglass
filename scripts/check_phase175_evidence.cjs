@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const phase174 = require("./check_phase174_evidence.cjs");
-const { selectedCases } = require("../mailglass_admin/e2e/support/storybook-axe.cjs");
+const { selectedCases, compareFindings } = require("../mailglass_admin/e2e/support/storybook-axe.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const PHASE_DIR_NAME = "phase175";
@@ -296,7 +296,14 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision }) {
   };
 }
 
-function validateAxeReceipt(report, { runId, revision, sourceDigest, manifestPath = path.join(ROOT, "reference/persona_spec/quick_view_scenarios.json") }) {
+function validateAxeReceipt(report, {
+  runId,
+  revision,
+  sourceDigest,
+  manifestPath = path.join(ROOT, "reference/persona_spec/quick_view_scenarios.json"),
+  approvalPath = path.join(ROOT, "mailglass_admin/docs/storybook-axe-approved.json"),
+  approval: suppliedApproval
+}) {
   requireThat(isRecord(report), "Axe report is missing");
   const manifest = loadJson(manifestPath, "current quick-view manifest");
   const expectedRows = selectedCases(manifest).cases;
@@ -312,6 +319,9 @@ function validateAxeReceipt(report, { runId, revision, sourceDigest, manifestPat
   for (const finding of [...report.violations, ...report.incomplete]) {
     requireThat(isRecord(finding) && expectedIdSet.has(finding.case_id), "Axe finding has missing or unexpected case identity");
   }
+  const approval = suppliedApproval ?? loadJson(approvalPath, "approved Axe findings and incomplete triage");
+  const comparison = compareFindings(report, approval);
+  requireThat(comparison.valid, `Axe findings are not fully accounted for: ${comparison.errors.join("; ")}`);
   return {
     expected_case_ids: expectedIds,
     executed_case_ids: executedIds,
@@ -319,7 +329,9 @@ function validateAxeReceipt(report, { runId, revision, sourceDigest, manifestPat
     executed_count: executedIds.length,
     violation_count: report.violations.length,
     incomplete_count: report.incomplete.length,
-    incomplete_disposition: "retained and separately triaged; never counted as violations or as a clean pass"
+    unapproved_violation_count: comparison.metrics.unapproved,
+    untriaged_incomplete_count: comparison.metrics.untriaged,
+    incomplete_disposition: "retained and independently triaged; never counted as violations or as a clean pass"
   };
 }
 

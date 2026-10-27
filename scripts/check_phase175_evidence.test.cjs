@@ -77,6 +77,7 @@ function playwrightReport(declarations, prefix) {
 function axeReport(runId, runRevision, sourceDigest) {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "reference/persona_spec/quick_view_scenarios.json"), "utf8"));
   const expected = selectedCases(manifest).cases;
+  const approval = JSON.parse(fs.readFileSync(path.join(ROOT, "mailglass_admin/docs/storybook-axe-approved.json"), "utf8"));
   return {
     run_id: runId,
     source_revision: runRevision,
@@ -84,7 +85,10 @@ function axeReport(runId, runRevision, sourceDigest) {
     expected,
     executed: expected.map(item => ({ ...item, status: "passed", completed_at: "2026-10-27T00:00:00.000Z" })),
     violations: [],
-    incomplete: expected.slice(0, 2).map(item => ({ case_id: item.case_id, rule: "color-contrast", reason: "insufficient evidence", disposition: "separately triaged", evidence: "synthetic receipt test" }))
+    incomplete: approval.incomplete_triage.slice(-2).map(item => ({
+      ...item,
+      case_id: `${item.scenario_id}::${item.state}::${item.theme}`
+    }))
   };
 }
 
@@ -178,13 +182,31 @@ test("Phase 175 Axe receipt accounts for expected, executed, violation, and sepa
   assert.equal(summary.executed_count, 26);
   assert.equal(summary.violation_count, 0);
   assert.equal(summary.incomplete_count, 2);
-  assert.match(summary.incomplete_disposition, /separately triaged/);
+  assert.match(summary.incomplete_disposition, /independently triaged/);
   const missing = structuredClone(report);
   delete missing.incomplete;
   assert.throws(() => checker.validateAxeReceipt(missing, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64) }), /incomplete finding accounting/);
   const wrongSource = structuredClone(report);
   wrongSource.source_digest = "b".repeat(64);
   assert.throws(() => checker.validateAxeReceipt(wrongSource, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64) }), /source identity/);
+
+  const untriaged = structuredClone(report);
+  untriaged.incomplete.push({
+    case_id: "delivery-investigation-northstar-normal::normal-permitted-review::light",
+    rule_id: "color-contrast",
+    target: [[".not-in-approved-triage"]],
+    scenario_id: "delivery-investigation-northstar-normal",
+    state: "normal-permitted-review",
+    theme: "light",
+    impact: "serious",
+    count: 1
+  });
+  assert.throws(() => checker.validateAxeReceipt(untriaged, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64) }), /untriaged incomplete/);
+
+  const approved = JSON.parse(fs.readFileSync(path.join(ROOT, "mailglass_admin/docs/storybook-axe-approved.json"), "utf8"));
+  const missingEvidenceRun = structuredClone(approved);
+  missingEvidenceRun.evidence_runs = missingEvidenceRun.evidence_runs.filter(run => !report.incomplete.some(item => item.evidence === run.run_id));
+  assert.throws(() => checker.validateAxeReceipt(report, { runId: "fixture-cold", revision: REVISION, sourceDigest: "a".repeat(64), approval: missingEvidenceRun }), /independent reviewed run/);
 });
 
 test("Phase 175 clean current-source evidence passes while missing and malformed reports fail", () => {

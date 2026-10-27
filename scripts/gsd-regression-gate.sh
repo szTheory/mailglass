@@ -99,6 +99,7 @@ trap restore_artifacts EXIT
 
 echo "== Storybook evidence and review contracts =="
 node --test "$ROOT_DIR/scripts/check_phase174_evidence.test.cjs" \
+  "$ROOT_DIR/scripts/check_phase175_evidence.test.cjs" \
   "$ROOT_DIR/scripts/phase174-review-claims.test.cjs" \
   "$ROOT_DIR/mailglass_admin/e2e/support/storybook-axe.test.cjs"
 

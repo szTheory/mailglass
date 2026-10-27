@@ -4,16 +4,22 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/reference/demo_app/tmp/demo_browser_evidence"
 PHASE174=false
+PHASE175=false
 PILOT=false
 for argument in "$@"; do
   case "$argument" in
     --phase174) PHASE174=true ;;
+    --phase175) PHASE175=true ;;
     --pilot) PILOT=true ;;
     *) echo "Unknown option: $argument" >&2; exit 2 ;;
   esac
 done
 if [[ "$PILOT" == true && "$PHASE174" != true ]]; then
   echo "--pilot requires --phase174" >&2
+  exit 2
+fi
+if [[ "$PHASE175" == true && "$PHASE174" != true ]]; then
+  echo "--phase175 requires --phase174" >&2
   exit 2
 fi
 
@@ -37,6 +43,7 @@ if [[ "$PHASE174" == true ]]; then
     exit 1
   fi
   mkdir -p "$RUN_EVIDENCE_ROOT/phase174"
+  if [[ "$PHASE175" == true ]]; then mkdir -p "$RUN_EVIDENCE_ROOT/phase175"; fi
 fi
 
 read -r HTTP_PORT DB_PORT < <(
@@ -92,6 +99,8 @@ export DEMO_EVIDENCE_PROJECT_ID="$COMPOSE_PROJECT"
 
 SOURCE_IDENTITY_JSON=""
 SOURCE_DIGEST=""
+PHASE175_SOURCE_IDENTITY_JSON=""
+PHASE175_SOURCE_DIGEST=""
 if [[ "$PHASE174" == true ]]; then
   if [[ "$GITHUB_ACTIONS" == true && "$GITHUB_SHA" != "$DEMO_CANDIDATE_REVISION" ]]; then
     echo "GITHUB_SHA does not match the checked out candidate revision" >&2
@@ -104,10 +113,29 @@ if [[ "$PHASE174" == true ]]; then
     echo "Could not compute the selected-source digest" >&2
     exit 1
   fi
+  if [[ "$PHASE175" == true ]]; then
+    PHASE175_SOURCE_IDENTITY_JSON="$(node -e 'const checker=require(process.argv[1]); process.stdout.write(JSON.stringify(checker.sourceIdentity(process.argv[2],process.argv[3])));' \
+      "$ROOT_DIR/scripts/check_phase175_evidence.cjs" "$ROOT_DIR" "$DEMO_CANDIDATE_REVISION")"
+    PHASE175_SOURCE_DIGEST="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).source_digest);' "$PHASE175_SOURCE_IDENTITY_JSON")"
+    if [[ ! "$PHASE175_SOURCE_DIGEST" =~ ^[0-9a-f]{64}$ ]]; then
+      echo "Could not compute the selected Phase175 source digest" >&2
+      exit 1
+    fi
+  fi
+fi
+
+PHASE175_COMPOSE_OVERRIDE=""
+if [[ "$PHASE175" == true ]]; then
+  PHASE175_COMPOSE_OVERRIDE="$RUN_EVIDENCE_ROOT/phase175-compose.override.yml"
+  node -e 'require("node:fs").writeFileSync(process.argv[1], "services:\n  demo:\n    environment:\n      PGDATABASE: mailglass_demo_phase175_05\n");' "$PHASE175_COMPOSE_OVERRIDE"
 fi
 
 compose() {
-  docker compose -p "$COMPOSE_PROJECT" -f "$ROOT_DIR/compose.demo.yml" "$@"
+  if [[ -n "$PHASE175_COMPOSE_OVERRIDE" ]]; then
+    docker compose -p "$COMPOSE_PROJECT" -f "$ROOT_DIR/compose.demo.yml" -f "$PHASE175_COMPOSE_OVERRIDE" "$@"
+  else
+    docker compose -p "$COMPOSE_PROJECT" -f "$ROOT_DIR/compose.demo.yml" "$@"
+  fi
 }
 
 now_ms() {
@@ -309,6 +337,36 @@ if [ -d /workspace/mailglass_admin/test-results ]; then
   mkdir -p "$condition_dir/admin-test-results"
   cp -a /workspace/mailglass_admin/test-results/. "$condition_dir/admin-test-results/"
 fi
+phase175_operator_ms=0
+phase175_operator_status=0
+if [ "${PHASE175_ENABLED:-false}" = true ]; then
+  mkdir -p "$PHASE175_EVIDENCE_DIR"
+  mark=$(now_ms)
+  if (cd /workspace/mailglass_admin && \
+    MIX_ENV=test POSTGRES_HOST=demo_db POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres mix mailglass_admin.assets.build && \
+    POSTGRES_HOST=demo_db POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres BROWSER_SERVER_PORT=4101 CI=true \
+      ./node_modules/.bin/playwright test --config=playwright.config.cjs --workers=1 \
+        e2e/flows.spec.js e2e/phase175-inbound.spec.js --grep "Phase 175" --reporter=json \
+        > "$PHASE175_EVIDENCE_DIR/admin-playwright-report.json"); then
+    phase175_operator_status=0
+  else
+    phase175_operator_status=$?
+  fi
+  phase175_operator_ms=$(( $(now_ms) - mark ))
+  cp "$demo_evidence_dir/playwright-report.json" "$PHASE175_EVIDENCE_DIR/demo-playwright-report.json"
+  cp "$PHASE174_EVIDENCE_DIR/axe.json" "$PHASE175_EVIDENCE_DIR/axe.json"
+  if [ -d /workspace/mailglass_admin/test-results/phase175-layout ]; then
+    cp -a /workspace/mailglass_admin/test-results/phase175-layout "$PHASE175_EVIDENCE_DIR/"
+    cp /workspace/mailglass_admin/test-results/phase175-layout/delivery-layout.json "$PHASE175_EVIDENCE_DIR/delivery-layout.json"
+    cp /workspace/mailglass_admin/test-results/phase175-layout/inbound-layout.json "$PHASE175_EVIDENCE_DIR/inbound-layout.json"
+  fi
+  PHASE175_OPERATOR_MS="$phase175_operator_ms" PHASE175_OPERATOR_STATUS="$phase175_operator_status" \
+    PHASE175_CONDITION="$PHASE174_CONDITION" PHASE175_SOURCE_REVISION="$PHASE174_SOURCE_REVISION" \
+    PHASE175_SOURCE_DIGEST="$PHASE175_SOURCE_DIGEST" PHASE175_COMPOSE_PROJECT="$DEMO_EVIDENCE_PROJECT_ID" \
+    DEMO_SCAN_MS="$demo_scan_ms" ADMIN_AXE_SCAN_MS="$admin_axe_scan_ms" \
+    node -e 'const fs=require("node:fs"); const data={condition:process.env.PHASE175_CONDITION,source_revision:process.env.PHASE175_SOURCE_REVISION,source_digest:process.env.PHASE175_SOURCE_DIGEST,compose_project:process.env.PHASE175_COMPOSE_PROJECT,admin_operator_ms:Number(process.env.PHASE175_OPERATOR_MS),admin_operator_exit_code:Number(process.env.PHASE175_OPERATOR_STATUS),timings_ms:{demo_scan:Number(process.env.DEMO_SCAN_MS),admin_axe_scan:Number(process.env.ADMIN_AXE_SCAN_MS),admin_operator:Number(process.env.PHASE175_OPERATOR_MS)}};fs.writeFileSync(process.env.PHASE175_EVIDENCE_DIR+"/runtime.json",JSON.stringify(data,null,2)+"\n");'
+  if [ "$phase175_operator_status" -ne 0 ]; then exit "$phase175_operator_status"; fi
+fi
 ADMIN_NPM_CI_MS="$admin_npm_ci_ms" ADMIN_BROWSER_INSTALL_MS="$admin_browser_install_ms" ADMIN_AXE_SCAN_MS="$admin_axe_scan_ms" DEMO_LOCK_AUDIT_MS="$demo_lock_audit_ms" DEMO_NPM_CI_MS="$demo_npm_ci_ms" DEMO_BROWSER_INSTALL_MS="$demo_browser_install_ms" DEMO_SCAN_MS="$demo_scan_ms" node -e 'const fs=require("node:fs"); const data={demo_lock_audit_ms:Number(process.env.DEMO_LOCK_AUDIT_MS),demo_npm_ci_ms:Number(process.env.DEMO_NPM_CI_MS),demo_browser_install_ms:Number(process.env.DEMO_BROWSER_INSTALL_MS),demo_scan_ms:Number(process.env.DEMO_SCAN_MS),admin_npm_ci_ms:Number(process.env.ADMIN_NPM_CI_MS),admin_browser_install_ms:Number(process.env.ADMIN_BROWSER_INSTALL_MS),admin_axe_scan_ms:Number(process.env.ADMIN_AXE_SCAN_MS)}; fs.writeFileSync(process.env.PHASE174_EVIDENCE_DIR+"/container-timings.json",JSON.stringify(data,null,2)+"\n");'
 exit "$admin_scan_status"
 CONTAINER
@@ -355,6 +413,12 @@ for condition in "${CONDITIONS[@]}"; do
         exit 1
       fi
     done
+    if [[ "$PHASE175" == true ]]; then
+      test_db_exists="$(compose exec -T demo_db psql -U postgres -Atc "SELECT 1 FROM pg_database WHERE datname = 'mailglass_test'")"
+      if [[ "$test_db_exists" != 1 ]]; then
+        compose exec -T demo_db createdb -U postgres mailglass_test
+      fi
+    fi
   else
     SERVICE_START_MS=0
     condition_started_at="$(now_iso)"
@@ -363,12 +427,16 @@ for condition in "${CONDITIONS[@]}"; do
 
   CONDITION_RUN_ID="$RUN_ID-$condition"
   PHASE174_CONDITION_DIR="/workspace/reference/demo_app/tmp/demo_browser_evidence/$COMPOSE_PROJECT/phase174/$condition"
+  PHASE175_CONDITION_DIR="/workspace/reference/demo_app/tmp/demo_browser_evidence/$COMPOSE_PROJECT/phase175/$condition"
   COMPOSE_BUILD_ARGS=()
   if [[ "$condition" == cold || "$condition" == single ]]; then COMPOSE_BUILD_ARGS+=(--build); fi
   if compose run "${COMPOSE_BUILD_ARGS[@]}" --no-deps --rm \
     "${PHASE174_ENV_ARGS[@]}" \
     --env PHASE174_CONDITION="$condition" \
     --env PHASE174_EVIDENCE_DIR="$PHASE174_CONDITION_DIR" \
+    --env PHASE175_ENABLED="$PHASE175" \
+    --env PHASE175_EVIDENCE_DIR="$PHASE175_CONDITION_DIR" \
+    --env PHASE175_SOURCE_DIGEST="$PHASE175_SOURCE_DIGEST" \
     --env DEMO_BROWSER_EVIDENCE_DIR="$PHASE174_CONDITION_DIR" \
     --env PHASE174_RUN_ID="$CONDITION_RUN_ID" \
     --env PHASE174_SOURCE_REVISION="$DEMO_CANDIDATE_REVISION" \
@@ -405,6 +473,16 @@ for condition in "${CONDITIONS[@]}"; do
     cp "$phase173_output_dir/playwright-report.json" "$condition_dir/demo-playwright-report.json"
     cp "$phase173_output_dir/phase173-captures.json" "$condition_dir/phase173-captures.json"
     cp "$phase173_output_dir/checkpoint.json" "$condition_dir/phase173-checkpoint.json"
+  fi
+
+  if [[ "$PHASE175" == true ]]; then
+    p175_condition_dir="$RUN_EVIDENCE_ROOT/phase175/$condition"
+    mkdir -p "$p175_condition_dir"
+    cp "$condition_dir/demo-playwright-report.json" "$p175_condition_dir/demo-playwright-report.json"
+    cp "$condition_dir/axe.json" "$p175_condition_dir/axe.json"
+    if [[ -d "$condition_dir/admin-test-results/phase175-layout" ]]; then
+      cp -a "$condition_dir/admin-test-results/phase175-layout" "$p175_condition_dir/"
+    fi
   fi
 
   node -e 'const fs=require("node:fs"); const path=require("node:path"); const dir=process.argv[1]; const identity={run_id:process.argv[2],condition:process.argv[3],source_revision:process.argv[4],source_digest:process.argv[5]}; for(const file of ["hooks.json","fidelity.json"]){const p=path.join(dir,file); const data=JSON.parse(fs.readFileSync(p,"utf8")); data.run_identity=identity; fs.writeFileSync(p,JSON.stringify(data,null,2)+"\n");}' \
@@ -597,8 +675,85 @@ cost.teardown_completed_at=new Date().toISOString();
 fs.writeFileSync(file,JSON.stringify(cost,null,2)+"\n");
 NODE
 
+if [[ "$PHASE175" == true ]]; then
+  node - "$ROOT_DIR" "$RUN_EVIDENCE_ROOT" "$RUN_ID" "$PILOT" "$PHASE175_SOURCE_IDENTITY_JSON" "$SOURCE_DIGEST" "$GITHUB_ACTIONS" "$TEARDOWN_MS" "${CONDITIONS[@]}" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const root = process.argv[2];
+const evidenceRoot = process.argv[3];
+const runId = process.argv[4];
+const pilot = process.argv[5] === "true";
+const source = JSON.parse(process.argv[6]);
+const phase174SourceDigest = process.argv[7];
+const mode = process.argv[8] === "true" ? "ci" : "local";
+const teardownMs = Number(process.argv[9]);
+const conditions = process.argv.slice(10);
+const phaseDir = path.join(evidenceRoot, "phase175");
+const conditionRuntime = conditions.map(condition => JSON.parse(fs.readFileSync(path.join(phaseDir, condition, "runtime.json"), "utf8")));
+const run = {
+  schema_version: "phase175-run.v1",
+  phase: 175,
+  run_id: runId,
+  compose_project: runId,
+  mode,
+  pilot,
+  source_revision: source.source_revision,
+  source_digest: source.source_digest,
+  source,
+  phase174_source_digest: phase174SourceDigest,
+  serial: true,
+  conditions,
+  checker_ms: 1,
+  condition_runtime: conditionRuntime,
+  reset: {
+    compose_project: process.env.DEMO_EVIDENCE_PROJECT_ID,
+    host_http_port: process.env.MAILGLASS_DEMO_HTTP_PORT,
+    host_db_port: process.env.MAILGLASS_DEMO_DB_PORT,
+    demo_database: "mailglass_demo_phase175_05",
+    admin_database: "mailglass_test",
+    reset_credential_recorded: false
+  },
+  cleanup: {
+    completed: true,
+    compose_project: runId,
+    teardown_ms: teardownMs,
+    volumes_removed: true
+  }
+};
+fs.writeFileSync(path.join(phaseDir, "run.json"), JSON.stringify(run, null, 2) + "\n");
+NODE
+  CHECKER_START_MS="$(now_ms)"
+  PHASE175_CHECK_ARGS=(--evidence-dir "$RUN_EVIDENCE_ROOT")
+  if [[ "$PILOT" == true ]]; then PHASE175_CHECK_ARGS+=(--pilot); fi
+  node "$ROOT_DIR/scripts/check_phase175_evidence.cjs" "${PHASE175_CHECK_ARGS[@]}"
+  CHECKER_MS=$(( $(now_ms) - CHECKER_START_MS ))
+  if [[ "$CHECKER_MS" -lt 1 ]]; then CHECKER_MS=1; fi
+  node -e 'const fs=require("node:fs");const file=process.argv[1];const data=JSON.parse(fs.readFileSync(file,"utf8"));data.checker_ms=Number(process.argv[2]);fs.writeFileSync(file,JSON.stringify(data,null,2)+"\n");' \
+    "$RUN_EVIDENCE_ROOT/phase175/run.json" "$CHECKER_MS"
+  node "$ROOT_DIR/scripts/check_phase175_evidence.cjs" "${PHASE175_CHECK_ARGS[@]}"
+  node - "$RUN_EVIDENCE_ROOT/phase174/cost.json" "$RUN_EVIDENCE_ROOT/phase175/execution.json" <<'NODE'
+const fs=require("node:fs");
+const costFile=process.argv[2];
+const phase175=JSON.parse(fs.readFileSync(process.argv[3],"utf8"));
+const cost=JSON.parse(fs.readFileSync(costFile,"utf8"));
+cost.added_cost={
+  status:"measured",
+  added_ms:phase175.cost.observed_phase175_added_ms,
+  added_minutes:phase175.cost.observed_phase175_added_minutes,
+  reason:"The Phase 174 Demo/fidelity/Axe run already includes the selected Phase 175 Demo cases. Incremental Phase 175 work is the connected Admin browser scope plus Phase 175 receipt validation; hosted runner minutes remain tied to the existing advisory job's complete duration."
+};
+cost.budget.disposition=phase175.cost.budget_status;
+cost.budget.phase175_added_ms=phase175.cost.observed_phase175_added_ms;
+cost.budget.phase175_added_runner_minutes=phase175.cost.observed_phase175_added_minutes;
+fs.writeFileSync(costFile,JSON.stringify(cost,null,2)+"\n");
+NODE
+fi
+
 CHECK_ARGS=(--evidence-dir "$RUN_EVIDENCE_ROOT")
 if [[ "$PILOT" == true ]]; then CHECK_ARGS+=(--pilot); fi
 node "$ROOT_DIR/scripts/check_phase174_evidence.cjs" "${CHECK_ARGS[@]}"
+if [[ "$PHASE175" == true ]]; then
+  node "$ROOT_DIR/scripts/check_phase175_evidence.cjs" "${PHASE175_CHECK_ARGS[@]}"
+fi
 
 echo "Phase174 evidence retained at $RUN_EVIDENCE_ROOT"
