@@ -907,7 +907,9 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
     const storyIframeSource = await page.locator(`iframe[id*="${variant}"]`).evaluate(iframe => ({
       hasSrcAttribute: iframe.hasAttribute("src"),
       srcdoc: iframe.getAttribute("srcdoc"),
-      origin: iframe.contentWindow.location.origin
+      documentOrigin: iframe.contentWindow.location.origin,
+      ownerOrigin: iframe.ownerDocument.defaultView.location.origin,
+      parentAccessOrigin: iframe.contentWindow.eval("parent.location.origin")
     }));
     const storyIframeMode = storyIframeSource.srcdoc === null ? "url" : "srcdoc";
     receipt.executedCaseIds.push("story:delivery-investigation-fjordline-long-unicode");
@@ -1164,7 +1166,9 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
     receipt.urls = {
       storyUrl,
       storyIframeUrl,
-      storyIframeOrigin: storyIframeSource.origin,
+      storyIframeDocumentOrigin: storyIframeSource.documentOrigin,
+      storyIframeOwnerOrigin: storyIframeSource.ownerOrigin,
+      storyIframeParentOrigin: storyIframeSource.parentAccessOrigin,
       storyIframeMode,
       storyIframeHasSrcAttribute: storyIframeSource.hasSrcAttribute,
       ...(storyIframeMode === "srcdoc" ? {

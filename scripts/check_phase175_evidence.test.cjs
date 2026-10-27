@@ -46,7 +46,9 @@ function phase175FidelityReceipt(root, runRevision = REVISION) {
     urls: {
       storyUrl: `${origin}/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode`,
       storyIframeUrl: "about:srcdoc",
-      storyIframeOrigin: origin,
+      storyIframeDocumentOrigin: "null",
+      storyIframeOwnerOrigin: origin,
+      storyIframeParentOrigin: origin,
       storyIframeMode: "srcdoc",
       storyIframeHasSrcAttribute: false,
       storyIframeSrcdocBytes: Buffer.byteLength("<html></html>\n"),
@@ -168,8 +170,8 @@ test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes",
     const valid = phase175FidelityReceipt(temp);
     assert.equal(checker.validateFidelityReceipt(valid, { root: ROOT, revision: REVISION }).executed_case_ids.length, 10);
     const wrongFrameOrigin = structuredClone(valid);
-    wrongFrameOrigin.cases[0].urls.storyIframeOrigin = "null";
-    assert.throws(() => checker.validateFidelityReceipt(wrongFrameOrigin, { root: ROOT, revision: REVISION }), /iframe effective origin/);
+    wrongFrameOrigin.cases[0].urls.storyIframeParentOrigin = "null";
+    assert.throws(() => checker.validateFidelityReceipt(wrongFrameOrigin, { root: ROOT, revision: REVISION }), /iframe parent access/);
     const missingInlineSource = structuredClone(valid);
     delete missingInlineSource.cases[0].urls.storyIframeSrcdocSha256;
     assert.throws(() => checker.validateFidelityReceipt(missingInlineSource, { root: ROOT, revision: REVISION }), /inline iframe source proof/);

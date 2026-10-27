@@ -256,11 +256,11 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision }) {
   const inlineStoryIframe = detail.urls?.storyIframeMode === "srcdoc" && iframeUrl.href === "about:srcdoc";
   const routedStoryIframe = detail.urls?.storyIframeMode === "url" && iframeUrl.origin === storyUrl.origin && iframeUrl.pathname.startsWith("/dev/storybook/iframe/");
   requireThat(inlineStoryIframe || routedStoryIframe, "fidelity iframe URL is missing or from the wrong source");
-  requireThat(detail.urls?.storyIframeOrigin === storyUrl.origin, "fidelity iframe effective origin is missing or from the wrong source");
+  requireThat(detail.urls?.storyIframeOwnerOrigin === storyUrl.origin && detail.urls?.storyIframeParentOrigin === storyUrl.origin, "fidelity iframe parent access is missing or from the wrong source");
   if (inlineStoryIframe) {
-    requireThat(typeof detail.urls.storyIframeHasSrcAttribute === "boolean" && Number.isInteger(detail.urls.storyIframeSrcdocBytes) && detail.urls.storyIframeSrcdocBytes > 0 && SHA256.test(detail.urls.storyIframeSrcdocSha256 || ""), "fidelity inline iframe source proof is incomplete");
+    requireThat(detail.urls.storyIframeDocumentOrigin === "null" && typeof detail.urls.storyIframeHasSrcAttribute === "boolean" && Number.isInteger(detail.urls.storyIframeSrcdocBytes) && detail.urls.storyIframeSrcdocBytes > 0 && SHA256.test(detail.urls.storyIframeSrcdocSha256 || ""), "fidelity inline iframe source proof is incomplete");
   } else {
-    requireThat(detail.urls?.storyIframeHasSrcAttribute === true, "fidelity routed iframe source proof is incomplete");
+    requireThat(detail.urls?.storyIframeDocumentOrigin === storyUrl.origin && detail.urls?.storyIframeHasSrcAttribute === true, "fidelity routed iframe source proof is incomplete");
   }
   requireThat(connectedUrl.origin === storyUrl.origin && connectedUrl.pathname.startsWith("/ops/"), "fidelity connected-route URL is missing or from the wrong source");
   requireThat([storyUrl, connectedUrl].every(url => url.protocol === "http:" && !url.username && !url.password), "fidelity URLs contain an unsupported origin or credentials");
@@ -298,7 +298,9 @@ function validateFidelityReceipt(receipt, { root = ROOT, revision }) {
     story_url: storyUrl.href,
     iframe_url: iframeUrl.href,
     iframe_mode: detail.urls.storyIframeMode,
-    iframe_origin: detail.urls.storyIframeOrigin,
+    iframe_document_origin: detail.urls.storyIframeDocumentOrigin,
+    iframe_owner_origin: detail.urls.storyIframeOwnerOrigin,
+    iframe_parent_access_origin: detail.urls.storyIframeParentOrigin,
     connected_url: connectedUrl.href,
     stylesheet_url: stylesheetUrl.href,
     stylesheet_sha256: stylesheet.sha256,
