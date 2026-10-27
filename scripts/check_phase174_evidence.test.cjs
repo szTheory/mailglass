@@ -571,3 +571,19 @@ test("require-ci accepts matching completed job and derives full runner duration
   assert.equal(summary.hosted_job.duration_ms, 60000);
   assert.equal(summary.hosted_job.runner_minutes, 1);
 });
+
+test("CI producer validates condition timings before completed job metadata exists", t => {
+  const evidenceDir = createFixture();
+  t.after(() => fs.rmSync(evidenceDir, { recursive: true, force: true }));
+  const { cost } = addCiJob(evidenceDir);
+  delete cost.hosted_job;
+  fs.writeFileSync(path.join(evidenceDir, "phase174/cost.json"), JSON.stringify(cost));
+  fs.rmSync(path.join(evidenceDir, "ci-job.json"));
+
+  const preflight = runChecker(evidenceDir);
+  assert.equal(preflight.status, 0, preflight.stderr || preflight.stdout);
+  assert.equal(JSON.parse(preflight.stdout).hosted_job, null,
+    "producer preflight must not claim independent hosted proof");
+  assert.notEqual(runChecker(evidenceDir, ["--require-ci"]).status, 0,
+    "the final gate must still require completed independent job metadata");
+});
