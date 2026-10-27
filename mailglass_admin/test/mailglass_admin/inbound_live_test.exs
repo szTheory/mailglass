@@ -1691,7 +1691,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Refresh history"
     end
 
-    test "a failed manual refresh keeps command feedback and identifies history as unavailable",
+    test "a failed manual refresh keeps the replay toast and identifies history as unavailable",
          %{conn: conn} do
       conn = operator_conn(conn)
       %{record: record} = InboundFixtures.seed_matched!(@tenant_id)
@@ -1703,8 +1703,12 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       render_click(view, "open_replay", %{})
-      command_html = render_click(view, "confirm_replay", %{})
-      assert command_html =~ "Replay run recorded. Mailbox outcome: Accepted."
+      render_click(view, "confirm_replay", %{})
+
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
       previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
       Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundTimelineFailingRepo)
@@ -1714,8 +1718,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render_click(view, "refresh_inbound_timeline", %{})
 
       assert html =~ ~s(data-testid="inbound-timeline-unavailable")
-      assert html =~ ~s(data-testid="inbound-replay-feedback")
-      assert html =~ "Replay run recorded. Mailbox outcome: Accepted."
       assert html =~ "Last updated"
       refute html =~ "No execution runs have been recorded for this InboundMessage yet."
       assert html =~ record.id
@@ -2162,7 +2164,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       render_click(view1, "open_replay", %{})
       success_html = render_click(view1, "confirm_replay", %{})
 
-      assert unescape(success_html) =~ "Replay run recorded. Mailbox outcome: Accepted."
+      assert_push_event(view1, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
       refute_banned(success_html)
 

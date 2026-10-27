@@ -744,6 +744,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       }
 
       review = %{
+        review_id: "review-1",
         record_id: "rec-1",
         tenant_id: "tenant-a",
         eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.Support"}
