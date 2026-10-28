@@ -18,13 +18,14 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     * `:empty` — no records (no-data / filtered / page-boundary distinction preserved)
     * `:error` — data unavailable
     * `:permission_denied` — access restricted
-    * `:stale` — data may be out of date
+    * `:stale` — a same-query re-read failed; rows are kept under a labelled panel
   """
 
   use Phoenix.Component
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.ResultsStatus
 
   attr(:records, :list, required: true)
   attr(:heading, :string, default: nil)
@@ -49,6 +50,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   # :empty | :error | :permission_denied | :stale | nil
   # nil means "normal flow": render records or the legacy empty branches
   attr(:data_state, :atom, default: nil)
+  attr(:retry_event, :string, default: "retry_inbound")
+  # When the rows shown were last read successfully (UTC); nil when unknown.
+  attr(:loaded_at, :any, default: nil)
   attr(:first_page_path, :string, default: nil)
 
   def records_list(assigns) do
@@ -62,6 +66,29 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       data-testid="inbound-collection-header"
     />
     <div class="min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200">
+      <%!-- A stale read keeps its rows: the panel sits above the list, never instead of it. --%>
+      <div :if={@data_state == :stale} data-testid="inbound-stale-results">
+        <Components.data_state
+          kind={:stale}
+          title={ResultsStatus.stale_title(@loaded_at)}
+          body="Mailglass couldn't re-read these results. Retry to check for updates."
+        />
+        <p
+          :if={@loaded_at}
+          data-testid="inbound-stale-loaded-at"
+          class="mt-sm text-label text-secondary"
+        >
+          Results loaded <Components.timestamp at={@loaded_at} />
+        </p>
+        <button
+          type="button"
+          phx-click={@retry_event}
+          data-testid="inbound-retry-messages"
+          class="btn btn-ghost min-h-11 mt-sm mx-auto block"
+        >
+          Retry messages
+        </button>
+      </div>
       <%= cond do %>
         <% @data_state == :error -> %>
           <Components.data_state
@@ -81,21 +108,23 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           <div data-testid="inbound-read-unavailable">
             <Components.data_state
               kind={:error}
-              title="Inbound records unavailable"
-              body="Inbound records could not be loaded. Refresh the page or adjust the filters, then try again."
+              title="Couldn't load inbound messages for these filters"
+              body="The read failed. Your filters are unchanged. Retry, or change a filter."
             />
+            <button
+              type="button"
+              phx-click={@retry_event}
+              data-testid="inbound-retry-messages"
+              class="btn btn-ghost min-h-11 mt-sm mx-auto block"
+            >
+              Retry messages
+            </button>
           </div>
         <% @data_state == :permission_denied -> %>
           <Components.data_state
             kind={:permission_denied}
             title="Access restricted"
             body="You do not have access to this account's inbound routing. Ask an administrator to grant access."
-          />
-        <% @data_state == :stale -> %>
-          <Components.data_state
-            kind={:stale}
-            title="This view may be out of date."
-            body="Refresh the view to check for updates."
           />
         <% @data_state == :empty or (@data_state == nil and @records == []) -> %>
           <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No messages" copy --%>

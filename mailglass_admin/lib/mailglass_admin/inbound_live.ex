@@ -37,6 +37,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.Timeline
   alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.FilterCommit
+  alias MailglassAdmin.Operator.ResultsStatus
   alias MailglassAdmin.Operator.Tenants, as: TenantSelector
   alias Phoenix.LiveView.JS
 
@@ -142,6 +143,10 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:filter_params, default_filter_params())
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
      |> assign(:filter_errors, %{})
+     |> assign(:filter_error_source, nil)
+     |> assign(:inbound_loaded_for, nil)
+     |> assign(:inbound_loaded_at, nil)
+     |> assign(:results_status_text, initial_results_status_text())
      |> assign(:pending_commit_kind, nil)
      |> assign(:last_commit_kind, nil)
      |> assign(:page_title, "mailglass — Inbound")}
@@ -216,6 +221,7 @@ defmodule MailglassAdmin.InboundLive do
           to_form(filter_draft_params(params, filter_params, filter_errors), as: :filters)
         )
         |> assign(:filter_errors, filter_errors)
+        |> assign(:filter_error_source, if(map_size(filter_errors) > 0, do: :url))
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_options_state, tenant_options_state)
         |> assign(:tenant_state, tenant_state)
@@ -354,7 +360,8 @@ defmodule MailglassAdmin.InboundLive do
       {:noreply,
        socket
        |> assign(:filter_form, to_form(socket.assigns.filter_params, as: :filters))
-       |> assign(:filter_errors, %{})}
+       |> assign(:filter_errors, %{})
+       |> assign(:filter_error_source, nil)}
     else
       {:noreply, push_commit(socket, path, :clear)}
     end
@@ -420,6 +427,17 @@ defmodule MailglassAdmin.InboundLive do
 
   def handle_event("close_replay", _params, socket) do
     {:noreply, close_replay_modal(socket)}
+  end
+
+  # Retry re-reads the committed filters in place: no patch, no history entry (D-14).
+  def handle_event("retry_inbound", _params, socket) do
+    {:noreply,
+     assign_inbound_state(
+       socket,
+       socket.assigns.filter_params,
+       requested_inbound_id(socket),
+       socket.assigns.full_detail?
+     )}
   end
 
   def handle_event("refresh_inbound_timeline", _params, socket) do
@@ -574,6 +592,18 @@ defmodule MailglassAdmin.InboundLive do
           />
         <% end %>
       <% else %>
+        <%!-- One persistent status region: it exists from first render and its text changes
+            only when a read settles, never on drafts. --%>
+        <div
+          id="inbound-results-status"
+          data-testid="inbound-results-status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          class="sr-only"
+        >
+          {@results_status_text}
+        </div>
         <%= cond do %>
           <% @records == [] and @records_read_state == :ok and @empty_state == :truly_empty and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
             <%!-- Genuine no-data: a single calm pane only — inbound-empty-truly + orientation strip.
@@ -743,6 +773,23 @@ defmodule MailglassAdmin.InboundLive do
                     </div>
                   </.form>
                 </div>
+
+                <%!-- Outside the collapsible panel so the label stays visible when the mobile
+                    panel is closed. Not live-announced: the invalid field already is (D-12/D-13). --%>
+                <p
+                  :if={@filter_error_source == :draft}
+                  data-testid="filters-draft-pending-note"
+                  class="mt-sm text-label text-secondary"
+                >
+                  Showing results for your previous filters until the highlighted field is fixed.
+                </p>
+                <p
+                  :if={@filter_error_source == :url}
+                  data-testid="filters-url-invalid-note"
+                  class="mt-sm text-label text-secondary"
+                >
+                  <span :for={note <- url_invalid_notes(@filter_errors)} class="block">{note}</span>
+                </p>
               </section>
 
               <%= if @summary_read_state == :ok do %>
@@ -793,6 +840,7 @@ defmodule MailglassAdmin.InboundLive do
                     selected_record={@selected_record}
                     empty_state={@empty_state}
                     data_state={@data_state}
+                    loaded_at={@inbound_loaded_at}
                   />
                 </aside>
               </section>
@@ -890,13 +938,35 @@ defmodule MailglassAdmin.InboundLive do
   # Selecting (or re-selecting) a record collapses the evidence card back to redacted —
   # reveal is a per-view capability action, never sticky across selections.
   defp assign_inbound_state(socket, filter_params, selected_inbound_id, full?) do
-    {records_page, records_read_state} = load_inbound_records_page(filter_params)
+    query_key = inbound_query_key(filter_params)
+
+    {records_page, records_read_state} =
+      case load_inbound_records_page(filter_params) do
+        {_page, :read_unavailable}
+        when socket.assigns.records != [] and socket.assigns.inbound_loaded_for == query_key ->
+          # Same query, failed re-read: keep the rows on screen under a labelled stale panel.
+          {Map.put(socket.assigns.records_page_meta, :entries, socket.assigns.records), :stale}
+
+        result ->
+          result
+      end
+
     records = Map.get(records_page, :entries, [])
 
     {empty_state, records_read_state} =
       empty_state_for(filter_params, records_page, records_read_state)
 
     {summary, summary_read_state} = load_inbound_summary(filter_params)
+
+    # The load time belongs to the rows on screen: stamped only by a successful read and
+    # carried unchanged through a failed one (a new-query failure shows no rows at all).
+    inbound_loaded_at =
+      if records_read_state == :ok,
+        do: DateTime.utc_now() |> DateTime.truncate(:second),
+        else: socket.assigns.inbound_loaded_at
+
+    inbound_loaded_for =
+      if records_read_state == :ok, do: query_key, else: socket.assigns.inbound_loaded_for
 
     socket =
       socket
@@ -905,6 +975,18 @@ defmodule MailglassAdmin.InboundLive do
       |> assign(:records_page_meta, page_meta_without_entries(records_page))
       |> assign(:inbound_summary, summary)
       |> assign(:records_read_state, records_read_state)
+      |> assign(:inbound_loaded_for, inbound_loaded_for)
+      |> assign(:inbound_loaded_at, inbound_loaded_at)
+      |> assign(
+        :results_status_text,
+        ResultsStatus.text(%{
+          collection: :inbound,
+          state: results_status_state(records_read_state),
+          count: Map.get(records_page, :total_count),
+          filters_active?: filters_active?(filter_params),
+          loaded_at: inbound_loaded_at
+        })
+      )
       |> assign(:summary_read_state, summary_read_state)
       |> assign(:empty_state, empty_state)
       |> assign(:reveal_state, :redacted)
@@ -1736,6 +1818,52 @@ defmodule MailglassAdmin.InboundLive do
   defp records_data_state(:ok), do: nil
   defp records_data_state(:package_unavailable), do: :package_unavailable
   defp records_data_state(:read_unavailable), do: :read_unavailable
+  defp records_data_state(:stale), do: :stale
+
+  defp results_status_state(:ok), do: :ready
+  defp results_status_state(:stale), do: :stale
+  defp results_status_state(_unavailable), do: :error
+
+  defp initial_results_status_text do
+    ResultsStatus.text(%{
+      collection: :inbound,
+      state: :ready,
+      count: 0,
+      filters_active?: false,
+      loaded_at: nil
+    })
+  end
+
+  # The committed query a successful read belongs to. A failed re-read of the same key
+  # keeps its rows as stale; any other key is a new query and shows an error instead.
+  defp inbound_query_key(filter_params),
+    do:
+      Map.take(filter_params, [
+        "tenant_id",
+        "provider",
+        "outcome",
+        "search",
+        "window_hours",
+        "page"
+      ])
+
+  defp requested_inbound_id(socket) do
+    with %URI{query: query} when is_binary(query) <- URI.parse(socket.assigns.page_uri),
+         id when is_binary(id) <- URI.decode_query(query)["inbound_id"] do
+      blank_to_nil(id)
+    else
+      _ -> nil
+    end
+  end
+
+  defp url_invalid_notes(filter_errors) do
+    [
+      {"outcome", "Showing results without the Mailbox outcome filter."},
+      {"window_hours", "Showing results for the default time window instead."}
+    ]
+    |> Enum.filter(fn {field, _note} -> Map.has_key?(filter_errors, field) end)
+    |> Enum.map(&elem(&1, 1))
+  end
 
   defp selected_record_struct(nil), do: nil
   defp selected_record_struct(%{record: record}), do: record
@@ -1966,7 +2094,8 @@ defmodule MailglassAdmin.InboundLive do
            :filter_form,
            to_form(filter_draft_params(filters, normalized, filter_errors), as: :filters)
          )
-         |> assign(:filter_errors, %{})}
+         |> assign(:filter_errors, %{})
+         |> assign(:filter_error_source, nil)}
       else
         {:noreply, push_commit(socket, path, kind)}
       end
@@ -1977,7 +2106,8 @@ defmodule MailglassAdmin.InboundLive do
          :filter_form,
          to_form(filter_draft_params(filters, normalized, filter_errors), as: :filters)
        )
-       |> assign(:filter_errors, filter_errors)}
+       |> assign(:filter_errors, filter_errors)
+       |> assign(:filter_error_source, :draft)}
     end
   end
 

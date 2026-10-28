@@ -281,7 +281,7 @@ test.describe("Phase 170 connected", () => {
 
     const unavailable = page.getByTestId("inbound-read-unavailable");
     await expect(unavailable).toBeVisible();
-    await expect(unavailable).toContainText("Inbound records could not be loaded.");
+    await expect(unavailable).toContainText("The read failed. Your filters are unchanged.");
     await expect(unavailable).not.toContainText("synthetic browser inbound connection failure");
     await expect(page.getByTestId("inbound-empty-truly")).toHaveCount(0);
     await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(0);
