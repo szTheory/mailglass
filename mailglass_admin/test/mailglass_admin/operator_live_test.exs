@@ -3481,6 +3481,80 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute has_element?(view, "#operator-filters [disabled]")
     end
 
+    test "Phase 176 Search is debounced and carries the search-field attributes only on Search",
+         %{
+           conn: conn
+         } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+      [search] = Floki.find(form, "#filters_search")
+
+      assert Floki.attribute(search, "phx-debounce") == ["300"]
+      assert Floki.attribute(search, "autocomplete") == ["off"]
+      assert Floki.attribute(search, "enterkeyhint") == ["search"]
+      assert Floki.attribute(search, "data-committed") == [""]
+      assert Floki.attribute(search, "disabled") == []
+      assert Floki.attribute(search, "readonly") == []
+
+      for select <- Floki.find(form, "select") do
+        assert Floki.attribute(select, "phx-debounce") == []
+      end
+    end
+
+    test "Phase 176 the filter form has exactly one implicit-submission text field", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+
+      text_like =
+        ~w(text search email url tel password number date datetime-local month time week)
+
+      text_inputs =
+        form
+        |> Floki.find("input")
+        |> Enum.filter(fn input ->
+          case Floki.attribute(input, "type") do
+            [] -> true
+            [type] -> type in text_like
+          end
+        end)
+
+      assert length(text_inputs) == 1
+      assert Floki.find(form, "button[type='submit'], input[type='submit']") == []
+    end
+
+    test "Phase 176 data-committed follows the committed search while a draft differs", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert search_attr(view, "data-committed") == ["foo"]
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "foobar draft", "event" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert search_attr(view, "data-committed") == ["foo"]
+    end
+
     test "Phase 176 an invalid draft stays a draft with a pending note outside the filter panel",
          %{conn: conn} do
       insert_delivery!(recipient: "previous@example.com", last_event_type: :sent)
@@ -3729,6 +3803,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
     %{proxy: {ref, topic, _pid}} = view
     assert_receive {^ref, {:patch, ^topic, %{kind: ^kind, to: to}}}
     to
+  end
+
+  defp search_attr(view, name) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#operator-filters #filters_search")
+    |> Floki.attribute(name)
   end
 
   defp refute_patch(view) do

@@ -972,6 +972,7 @@ defmodule MailglassAdmin.OperatorLive do
                         event_values={@event_values}
                         window_options={@window_options}
                         errors={@filter_errors}
+                        committed_search={@filter_params["search"] || ""}
                       />
 
                       <div class="flex flex-wrap gap-2">

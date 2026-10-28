@@ -44,6 +44,42 @@ test.describe("Phase 176 direct filters", () => {
     await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");
     await expect(page.locator("#filters_event")).toHaveValue("failed");
   });
+  test("Phase 176 search: one history entry per search edit and Enter commits immediately", async ({ page }) => {
+    await openBrowserTenant(page);
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+
+    const search = page.locator("#filters_search");
+    await expect(search).toHaveAttribute("phx-debounce", "300");
+    await expect(search).toHaveAttribute("autocomplete", "off");
+    await expect(search).toHaveAttribute("enterkeyhint", "search");
+    await expect(page.locator("#filters_event")).not.toHaveAttribute("phx-debounce", /.*/);
+
+    const searchParam = () => new URL(page.url()).searchParams.get("search");
+    const historyBefore = await page.evaluate(() => window.history.length);
+
+    // One edit: type, let the debounce commit, type more, let it commit again.
+    await search.click();
+    await search.pressSequentially("ab", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "ab");
+    await search.pressSequentially("c", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "abc");
+
+    // Focus and caret survive the commits; the input is never disabled or re-keyed.
+    await expect(search).toBeFocused();
+    await expect(search).toBeEnabled();
+    await expect(search).toHaveValue("abc");
+    expect(await page.evaluate(() => window.history.length) - historyBefore).toBe(1);
+
+    // Enter commits without waiting for the 300 ms debounce.
+    await search.pressSequentially("d", { delay: 10 });
+    const startedAt = Date.now();
+    await search.press("Enter");
+    await page.waitForURL(() => searchParam() === "abcd", { timeout: 250 });
+    expect(Date.now() - startedAt).toBeLessThan(250);
+    await expect(search).toBeFocused();
+    expect(await page.evaluate(() => window.history.length) - historyBefore).toBe(1);
+  });
   test("Phase 176 Deliveries failed read shows error and Retry", async ({ page }) => {
     await openBrowserTenant(page);
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);

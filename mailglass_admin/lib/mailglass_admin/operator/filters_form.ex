@@ -12,6 +12,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
   attr(:event_values, :list, required: true)
   attr(:window_options, :list, required: true)
   attr(:errors, :map, default: %{})
+  attr(:committed_search, :string, default: "")
 
   def fields(assigns) do
     ~H"""
@@ -26,6 +27,10 @@ defmodule MailglassAdmin.Operator.FiltersForm do
         help="Find deliveries by recipient email address or subject."
         help_display={:tooltip}
         placeholder="Subject or recipient"
+        autocomplete="off"
+        enterkeyhint="search"
+        data-committed={@committed_search}
+        phx-debounce="300"
       />
 
       <Components.filter_field
