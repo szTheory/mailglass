@@ -28,6 +28,7 @@ defmodule MailglassAdmin.OperatorLive do
     DeliveriesList,
     DetailHeader,
     DestructiveAction,
+    FilterCommit,
     FiltersForm,
     HealthOverview,
     QuickView,
@@ -247,30 +248,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    if map_size(filter_errors) == 0 do
-      path =
-        if socket.assigns[:view] == :deliveries do
-          build_path_with_view(socket.assigns.base_path, normalized, socket.assigns.dark_chrome)
-        else
-          build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-        end
-
-      # Applying filters that don't change the location is a no-op: push_patch to the
-      # current URL would still re-run handle_params and re-render (reloading the list
-      # and re-localizing timestamps) for no reason — the visible "flicker on Apply".
-      if same_location?(socket.assigns.page_uri, path) do
-        {:noreply, socket}
-      else
-        {:noreply, push_patch(socket, to: path)}
-      end
-    else
-      {:noreply,
-       socket
-       |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-       |> assign(:filter_errors, filter_errors)}
-    end
+    commit_filters(socket, filters, :enter)
   end
 
   def handle_event("set_theme", %{"theme" => theme}, socket) do
@@ -280,14 +258,8 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
-  def handle_event("validate_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    {:noreply,
-     socket
-     |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-     |> assign(:filter_errors, filter_errors)
-     |> assign(:provider_options, load_provider_options(normalized))}
+  def handle_event("validate_filters", %{"filters" => filters} = params, socket) do
+    commit_filters(socket, filters, FilterCommit.kind_for_target(params["_target"]))
   end
 
   def handle_event("select_delivery", %{"id" => delivery_id} = params, socket) do
@@ -945,12 +917,6 @@ defmodule MailglassAdmin.OperatorLive do
                       phx-submit="apply_filters"
                       class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                     >
-                      <input
-                        id="filters_tenant_id"
-                        type="hidden"
-                        name={@filter_form[:tenant_id].name}
-                        value={@filter_form[:tenant_id].value}
-                      />
                       <FiltersForm.fields
                         form={@filter_form}
                         provider_options={@provider_options}
@@ -961,16 +927,9 @@ defmodule MailglassAdmin.OperatorLive do
 
                       <div class="flex flex-wrap gap-2">
                         <button
-                          type="submit"
-                          phx-disable-with="Applying filters…"
-                          class="btn btn-primary min-h-11 w-40 px-5"
-                        >
-                          Apply filters
-                        </button>
-                        <button
                           type="button"
                           phx-click="clear_filters"
-                          class="btn btn-ghost min-h-11 px-5"
+                          class="btn btn-ghost min-h-11 px-md"
                         >
                           Clear filters
                         </button>
@@ -1268,6 +1227,47 @@ defmodule MailglassAdmin.OperatorLive do
        {"event", event_error},
        {"window_hours", window_error}
      ])}
+  end
+
+  # Every filter change is a commit (D-01). The Account comes from the server, never the
+  # payload (D-09); an invalid draft stays a draft and never patches; a commit that
+  # resolves to the current location is a no-op.
+  defp commit_filters(socket, filters, _kind) do
+    filters = FilterCommit.commit_params(filters, socket.assigns.selected_tenant_id)
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
+
+    if map_size(filter_errors) == 0 do
+      path = commit_path(socket, normalized)
+
+      # A commit that lands on the current URL would still re-run handle_params and
+      # re-render for nothing; skip it and just keep the draft in step.
+      if same_location?(socket.assigns.page_uri, path) do
+        {:noreply,
+         socket
+         |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
+         |> assign(:filter_errors, %{})}
+      else
+        {:noreply, push_patch(socket, to: path)}
+      end
+    else
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
+       |> assign(:filter_errors, filter_errors)}
+    end
+  end
+
+  defp commit_path(socket, normalized) do
+    if socket.assigns[:view] == :deliveries do
+      build_path_with_view(
+        socket.assigns.base_path,
+        normalized,
+        socket.assigns.dark_chrome,
+        socket.assigns.support_state
+      )
+    else
+      build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+    end
   end
 
   defp filter_draft_params(params, normalized) do
@@ -2216,13 +2216,8 @@ defmodule MailglassAdmin.OperatorLive do
       filter_params
       |> Map.merge(%{"delivery_id" => delivery_id})
       |> Map.merge(support_state_to_params(support_state))
-      |> Enum.reject(fn
-        {"page", "1"} -> true
-        {_key, value} -> is_nil(blank_to_nil(value))
-      end)
-      |> Map.new()
 
-    case URI.encode_query(params) do
+    case FilterCommit.encode_query(params) do
       "" -> base_path
       query -> base_path <> "?" <> query
     end
@@ -2321,13 +2316,26 @@ defmodule MailglassAdmin.OperatorLive do
     current = URI.parse(current_uri)
     target = URI.parse(target_path)
 
+    # Entry URLs often omit window_hours while every commit target carries it, so the
+    # current query is canonicalized (default window filled) before the comparison.
+    current_query =
+      (current.query || "")
+      |> URI.decode_query()
+      |> FilterCommit.canonical_current_query()
+      |> URI.decode_query()
+
     (current.path || "/") == (target.path || "/") and
-      URI.decode_query(current.query || "") == URI.decode_query(target.query || "")
+      current_query == URI.decode_query(target.query || "")
   end
 
-  defp build_path_with_view(base_path, filter_params, _dark_chrome) do
+  defp build_path_with_view(
+         base_path,
+         filter_params,
+         _dark_chrome,
+         support_state \\ default_support_state()
+       ) do
     filter_params_with_view = Map.put(filter_params, "view", "deliveries")
-    build_path(base_path, filter_params_with_view, nil, false)
+    build_path(base_path, filter_params_with_view, nil, false, support_state)
   end
 
   defp unmatched_events_path(base_path, filter_params, dark_chrome, support_summary) do

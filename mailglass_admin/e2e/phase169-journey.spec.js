@@ -567,8 +567,6 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
     await page.locator("#filters_event").selectOption("failed");
-    await expect(page).not.toHaveURL(/event=failed/);
-    await page.getByRole("button", { name: "Apply filters" }).click();
     await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");
 
     await page.goBack();

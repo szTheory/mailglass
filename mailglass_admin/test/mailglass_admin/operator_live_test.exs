@@ -181,15 +181,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Postmark"
       assert html =~ ~s(<option value="sendgrid")
       assert html =~ "SendGrid"
-      assert html =~ "Apply filters"
-      assert html =~ ~s(phx-disable-with="Applying filters…")
-      assert html =~ "w-40"
+      refute html =~ "Apply filters"
+      refute html =~ "phx-disable-with"
       assert html =~ "Open delivery"
 
       view
       |> form("#operator-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "postmark",
           "event" => "delivered",
           "window_hours" => "168"
@@ -361,6 +359,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       unsafe_html =
         render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "window_hours"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -378,6 +377,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       empty_html =
         render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "window_hours"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -2747,6 +2747,356 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       refute html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
     end
+  end
+
+  describe "Phase 176 Deliveries direct filters" do
+    @describetag :phase176
+
+    test "Phase 176 select change commits one sorted canonical push patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+
+      path = assert_patch_kind(view, :push)
+
+      assert path ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "event" => "failed",
+                 "window_hours" => "168"
+               })
+
+      assert selected_filter_value(render(view), "#filters_event") == "failed"
+    end
+
+    test "Phase 176 the same payload twice yields exactly one patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      payload = filter_change("event", %{"event" => "failed"})
+
+      render_hook(view, "validate_filters", payload)
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", payload)
+      refute_patch(view)
+    end
+
+    test "Phase 176 a select equal to the committed value is a no-op", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 an unchanged commit from a bare entry URL is a no-op, a changing one pushes",
+         %{conn: conn} do
+      # Bare entry URL: no window_hours key (the shape other tests deep-link with).
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => ""}))
+      refute_patch(view)
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      path = assert_patch_kind(view, :push)
+
+      assert %{"event" => "failed", "window_hours" => "168", "tenant_id" => @tenant_id} =
+               path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+    end
+
+    test "Phase 176 a foreign tenant_id never changes the Account on change or submit", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"event" => "failed", "tenant_id" => "foreign-tenant"})
+      )
+
+      change_path = assert_patch_kind(view, :push)
+      change_query = change_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert change_query["tenant_id"] == @tenant_id
+      refute change_path =~ "foreign-tenant"
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "event" => "failed",
+          "search" => "foo ",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      submit_path = assert_patch_kind(view, :push)
+      submit_query = submit_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert submit_query["tenant_id"] == @tenant_id
+      assert submit_query["search"] == "foo"
+      refute submit_path =~ "foreign-tenant"
+    end
+
+    test "Phase 176 commits drop page and selection keys but carry support state", %{conn: conn} do
+      delivery = insert_delivery!(last_event_type: :sent)
+      support_event_id = Ecto.UUID.generate()
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "delivery_id" => delivery.id,
+            "full" => "1",
+            "page" => "2",
+            "support_focus" => "failed_ingest",
+            "support_event_id" => support_event_id
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("provider", %{
+          "provider" => "postmark",
+          "page" => "2",
+          "delivery_id" => delivery.id,
+          "inbound_id" => "inb-1",
+          "full" => "1"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+
+      for dropped <- ["page", "delivery_id", "inbound_id", "full"] do
+        refute Map.has_key?(query, dropped), "#{dropped} must not survive a filter commit"
+      end
+
+      assert query["support_focus"] == "failed_ingest"
+      assert query["support_event_id"] == support_event_id
+      assert query["window_hours"] == "168"
+      assert query["provider"] == "postmark"
+    end
+
+    test "Phase 176 choosing the blank All option drops that key from the URL", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => ""}))
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "event")
+      assert query["window_hours"] == "168"
+    end
+
+    test "Phase 176 payload key order never changes the canonical URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", %{
+        "filters" => %{
+          "window_hours" => "720",
+          "provider" => "postmark",
+          "event" => "failed",
+          "search" => ""
+        },
+        "_target" => ["filters", "provider"]
+      })
+
+      first = assert_patch_kind(view, :push)
+      assert first == URI.parse(first).path <> "?" <> sorted_query(first)
+    end
+
+    test "Phase 176 Enter trims search and commits it to the URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo ",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :push)
+
+      assert path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "foo"
+    end
+
+    test "Phase 176 a 500-character search round-trips through the canonical URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      long = String.duplicate("a", 500)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => long,
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["search"] == long
+      assert render(view) =~ long
+    end
+
+    test "Phase 176 a commit starting on page 2 patches to page 1 and renders page 1", %{
+      conn: conn
+    } do
+      for index <- 1..21 do
+        insert_delivery!(
+          recipient: "reset-#{index}@example.com",
+          provider_message_id: "pm-reset-#{index}",
+          last_event_type: :sent,
+          last_event_at: hours_ago(index)
+        )
+      end
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "sent",
+            "page" => "2"
+          })
+        )
+
+      assert html =~ "Page 2 of 2"
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"event" => "sent", "provider" => "postmark"})
+      )
+
+      path = assert_patch_kind(view, :push)
+
+      refute path
+             |> URI.parse()
+             |> Map.fetch!(:query)
+             |> URI.decode_query()
+             |> Map.has_key?("page")
+
+      assert render(view) =~ "Page 1 of 2"
+    end
+
+    test "Phase 176 pagination links keep the committed filters and only change page", %{
+      conn: conn
+    } do
+      for index <- 1..21 do
+        insert_delivery!(
+          recipient: "links-#{index}@example.com",
+          provider_message_id: "pm-links-#{index}",
+          last_event_type: :sent,
+          last_event_at: hours_ago(index)
+        )
+      end
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("provider", %{"event" => "sent", "provider" => "postmark"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      [href] =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-pagination-next']")
+        |> Floki.attribute("href")
+
+      query = href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["event"] == "sent"
+      assert query["provider"] == "postmark"
+      assert query["tenant_id"] == @tenant_id
+      assert query["page"] == "2"
+    end
+
+    test "Phase 176 the filter form has no Apply, submit, loading or tenant control", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+      assert form != []
+      assert Floki.find(form, "[type='submit']") == []
+      assert Floki.find(form, "[phx-disable-with]") == []
+      assert Floki.find(form, "#filters_tenant_id") == []
+      refute Floki.text(form) =~ "Apply"
+
+      assert has_element?(
+               view,
+               "#operator-filters button[phx-click='clear_filters']",
+               "Clear filters"
+             )
+
+      refute has_element?(view, "#operator-filters [disabled]")
+    end
+  end
+
+  defp deliveries_path do
+    operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"})
+  end
+
+  # A phx-change payload as the browser sends it: the changed field in `_target`.
+  defp filter_change(field, overrides) do
+    %{
+      "_target" => ["filters", field],
+      "filters" =>
+        Map.merge(
+          %{"search" => "", "window_hours" => "168", "event" => "", "provider" => ""},
+          overrides
+        )
+    }
+  end
+
+  defp assert_patch_kind(view, kind) do
+    %{proxy: {ref, topic, _pid}} = view
+    assert_receive {^ref, {:patch, ^topic, %{kind: ^kind, to: to}}}
+    to
+  end
+
+  defp refute_patch(view) do
+    %{proxy: {ref, topic, _pid}} = view
+    refute_receive {^ref, {:patch, ^topic, _opts}}, 50
+  end
+
+  defp sorted_query(path) do
+    path
+    |> URI.parse()
+    |> Map.fetch!(:query)
+    |> URI.decode_query()
+    |> Enum.sort()
+    |> URI.encode_query()
   end
 
   defp operator_path(params) do
