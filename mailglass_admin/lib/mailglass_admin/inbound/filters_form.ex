@@ -46,7 +46,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         help="Limit results to recently received messages."
         help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
-        options={@window_options}
+        options={window_options(@window_options, @form[:window_hours].value)}
       />
 
       <Components.filter_field
@@ -72,6 +72,18 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
       />
     </Components.filter_section>
     """
+  end
+
+  # A rejected window stays selected as a custom option so the select never contradicts
+  # its error message (D-12).
+  defp window_options(options, value) do
+    value = to_string(value || "")
+
+    if Enum.any?(options, fn {_label, hours} -> to_string(hours) == value end) do
+      options
+    else
+      [{"Custom period (#{value} hours)", value} | options]
+    end
   end
 
   defp label(nil), do: "Unknown"

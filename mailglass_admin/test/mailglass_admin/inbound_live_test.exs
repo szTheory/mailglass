@@ -767,11 +767,17 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ matching.id
       refute html =~ foreign.id
-      assert html =~ ~s(value="168" selected)
 
+      # The rejected window stays in the draft: the select shows "Custom period (bogus
+      # hours)" selected next to its error instead of silently selecting 168 (D-12).
       document = Floki.parse_document!(html)
       assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
-      assert Floki.find(document, "#filters_window_hours option[value='bogus']") == []
+      assert selected_filter_value(html, "#filters_window_hours") == "bogus"
+
+      assert document
+             |> Floki.find("#filters_window_hours option[value='bogus']")
+             |> Floki.text()
+             |> String.trim() == "Custom period (bogus hours)"
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -2994,6 +3000,87 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute_patch(view)
       assert html =~ "Mailbox outcome was not applied."
       assert html =~ ~s(id="filters_provider")
+    end
+  end
+
+  describe "Phase 176 Inbound draft retention" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound invalid URL values stay in the draft next to their errors", %{
+      conn: conn
+    } do
+      %{record: matching} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "match@example.com")
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant, recipient: "foreign@example.com")
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "not-real",
+            "window_hours" => "bogus"
+          })
+        )
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert html =~ matching.id
+      refute html =~ foreign.id
+
+      assert selected_filter_value(html, "#filters_window_hours") == "bogus"
+      assert html =~ "Custom period (bogus hours)"
+
+      assert html
+             |> Floki.parse_document!()
+             |> Floki.find("#filters_outcome option[value='not-real']") == []
+    end
+
+    test "Phase 176 Inbound an invalid form window stays in the draft without a patch", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("window_hours", %{"window_hours" => "-5", "outcome" => "accept"})
+        )
+
+      refute_patch(view)
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert selected_filter_value(html, "#filters_window_hours") == "-5"
+      assert html =~ "Custom period (-5 hours)"
+    end
+
+    test "Phase 176 Inbound a blank window normalizes quietly without a Custom period option", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => ""})
+        )
+
+      refute html =~ "Custom period"
+
+      assert selected_filter_value(html, "#filters_window_hours") == "168"
+    end
+
+    test "Phase 176 Inbound a listed window never adds a Custom period option", %{conn: conn} do
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "720"})
+        )
+
+      refute html =~ "Custom period"
+      assert selected_filter_value(html, "#filters_window_hours") == "720"
     end
   end
 

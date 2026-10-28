@@ -211,7 +211,10 @@ defmodule MailglassAdmin.InboundLive do
         |> assign(:dark_chrome, theme_choice == :dark)
         |> assign(:theme_choice, theme_choice)
         |> assign(:filter_params, filter_params)
-        |> assign(:filter_form, to_form(filter_params, as: :filters))
+        |> assign(
+          :filter_form,
+          to_form(filter_draft_params(params, filter_params, filter_errors), as: :filters)
+        )
         |> assign(:filter_errors, filter_errors)
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_options_state, tenant_options_state)
@@ -1804,6 +1807,17 @@ defmodule MailglassAdmin.InboundLive do
     }
   end
 
+  # A rejected outcome or window stays in the draft so the select never contradicts its
+  # error (D-12). Only a field that actually carries an error keeps its raw value, so a
+  # blank or zero-padded value normalizes quietly instead of becoming a "Custom period".
+  defp filter_draft_params(params, normalized, filter_errors) do
+    Enum.reduce(["outcome", "window_hours"], normalized, fn key, draft ->
+      if Map.has_key?(filter_errors, key) and Map.has_key?(params, key),
+        do: Map.put(draft, key, normalize_string(Map.get(params, key))),
+        else: draft
+    end)
+  end
+
   defp normalize_filter_params_with_errors(params) do
     defaults = default_filter_params()
 
@@ -1948,7 +1962,10 @@ defmodule MailglassAdmin.InboundLive do
       if same_location?(socket.assigns.page_uri, path) do
         {:noreply,
          socket
-         |> assign(:filter_form, to_form(normalized, as: :filters))
+         |> assign(
+           :filter_form,
+           to_form(filter_draft_params(filters, normalized, filter_errors), as: :filters)
+         )
          |> assign(:filter_errors, %{})}
       else
         {:noreply, push_commit(socket, path, kind)}
@@ -1956,7 +1973,10 @@ defmodule MailglassAdmin.InboundLive do
     else
       {:noreply,
        socket
-       |> assign(:filter_form, to_form(normalized, as: :filters))
+       |> assign(
+         :filter_form,
+         to_form(filter_draft_params(filters, normalized, filter_errors), as: :filters)
+       )
        |> assign(:filter_errors, filter_errors)}
     end
   end
