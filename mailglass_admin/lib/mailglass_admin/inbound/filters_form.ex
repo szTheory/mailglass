@@ -17,6 +17,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   attr(:outcome_values, :list, required: true)
   attr(:window_options, :list, required: true)
   attr(:errors, :map, default: %{})
+  attr(:committed_search, :string, default: "")
 
   def fields(assigns) do
     ~H"""
@@ -31,6 +32,11 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         help_display={:tooltip}
         error={field_error(@errors, "search")}
         placeholder="Subject or recipient"
+        autocomplete="off"
+        enterkeyhint="search"
+        data-committed={@committed_search}
+        phx-debounce="300"
+        phx-hook="FilterSearchSync"
       />
 
       <Components.filter_field

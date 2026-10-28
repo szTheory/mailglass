@@ -2997,6 +2997,183 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "Phase 176 Inbound search and toggle" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound Search is debounced and carries the search-field attributes only on Search",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#inbound-filters")
+      [search] = Floki.find(form, "#filters_search")
+
+      assert Floki.attribute(search, "phx-debounce") == ["300"]
+      assert Floki.attribute(search, "phx-hook") == ["FilterSearchSync"]
+      assert Floki.attribute(search, "autocomplete") == ["off"]
+      assert Floki.attribute(search, "enterkeyhint") == ["search"]
+      assert Floki.attribute(search, "data-committed") == [""]
+      assert Floki.attribute(search, "disabled") == []
+      assert Floki.attribute(search, "readonly") == []
+
+      for select <- Floki.find(form, "select") do
+        assert Floki.attribute(select, "phx-debounce") == []
+      end
+    end
+
+    test "Phase 176 Inbound the filter form has exactly one implicit-submission text field", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#inbound-filters")
+
+      text_like =
+        ~w(text search email url tel password number date datetime-local month time week)
+
+      text_inputs =
+        form
+        |> Floki.find("input")
+        |> Enum.filter(fn input ->
+          case Floki.attribute(input, "type") do
+            [] -> true
+            [type] -> type in text_like
+          end
+        end)
+
+      assert length(text_inputs) == 1
+      assert Floki.find(form, "button[type='submit'], input[type='submit']") == []
+    end
+
+    test "Phase 176 Inbound data-committed follows the committed search while a draft differs", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo",
+          "outcome" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert inbound_search_attr(view, "data-committed") == ["foo"]
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"search" => "foobar draft", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert inbound_search_attr(view, "data-committed") == ["foo"]
+    end
+
+    test "Phase 176 Inbound search history: first commit pushes, next replaces, settled Enter is a no-op",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "ab"}))
+      assert_patch_kind(view, :push)
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      second = assert_patch_kind(view, :replace)
+      assert second =~ "search=abc"
+      # Enter after a settled commit with an unchanged value does nothing.
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "outcome" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound mobile Filters toggle is labelled, controls the panel and starts collapsed",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      toggle =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-filters-toggle']")
+
+      assert Floki.attribute(toggle, "aria-controls") == ["inbound-filter-panel"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["false"]
+      assert inbound_toggle_label(view) == "Filters"
+      assert has_element?(view, "#inbound-filter-panel")
+    end
+
+    test "Phase 176 Inbound mobile Filters toggle counts committed filters only", %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "search" => "match",
+            "window_hours" => "720"
+          })
+        )
+
+      assert inbound_toggle_label(view) == "Filters (3 applied)"
+
+      {:ok, default_view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"})
+        )
+
+      assert inbound_toggle_label(default_view) == "Filters"
+
+      # An invalid draft is not committed, so the label does not move.
+      render_hook(
+        default_view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "not-real"})
+      )
+
+      refute_patch(default_view)
+      assert inbound_toggle_label(default_view) == "Filters"
+
+      render_hook(
+        default_view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "accept"})
+      )
+
+      assert_patch_kind(default_view, :push)
+    end
+  end
+
+  defp inbound_search_attr(view, name) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#inbound-filters #filters_search")
+    |> Floki.attribute(name)
+  end
+
+  defp inbound_toggle_label(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='inbound-filters-toggle']")
+    |> Floki.text()
+    |> String.split()
+    |> Enum.join(" ")
+  end
+
   defp inbound_change(field, overrides) do
     %{
       "_target" => ["filters", field],

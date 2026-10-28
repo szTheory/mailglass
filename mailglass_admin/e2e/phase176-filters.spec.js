@@ -168,6 +168,68 @@ test.describe("Phase 176 direct filters", () => {
     await expect(page.locator("#filters_outcome")).toHaveValue("accept");
   });
 
+  test("Phase 176 Inbound search: one history entry per edit and Enter commits", async ({ page }) => {
+    await openBrowserTenant(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
+
+    const search = page.locator("#filters_search");
+    await expect(search).toHaveAttribute("phx-debounce", "300");
+    await expect(search).toHaveAttribute("autocomplete", "off");
+    await expect(search).toHaveAttribute("enterkeyhint", "search");
+    await expect(page.locator("#filters_outcome")).not.toHaveAttribute("phx-debounce", /.*/);
+    await expect(page.locator("#filters_window_hours")).not.toHaveAttribute("phx-debounce", /.*/);
+
+    const searchParam = () => new URL(page.url()).searchParams.get("search");
+    const historyBefore = await page.evaluate(() => window.history.length);
+
+    await search.click();
+    await search.pressSequentially("ab", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "ab");
+    await search.pressSequentially("c", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "abc");
+
+    await expect(search).toBeFocused();
+    await expect(search).toBeEnabled();
+    await expect(search).toHaveValue("abc");
+    expect((await page.evaluate(() => window.history.length)) - historyBefore).toBe(1);
+
+    // Enter commits without waiting for the 300 ms debounce.
+    await search.pressSequentially("d", { delay: 10 });
+    const startedAt = Date.now();
+    await search.press("Enter");
+    await page.waitForURL(() => searchParam() === "abcd", { timeout: 250 });
+    expect(Date.now() - startedAt).toBeLessThan(250);
+    await expect(search).toBeFocused();
+    expect((await page.evaluate(() => window.history.length)) - historyBefore).toBe(1);
+  });
+
+  test("Phase 176 Inbound search restores on Back with focus", async ({ page }) => {
+    await openBrowserTenant(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
+
+    const search = page.locator("#filters_search");
+    const searchParam = () => new URL(page.url()).searchParams.get("search");
+
+    await search.click();
+    await search.pressSequentially("abc", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "abc");
+    await page.locator("#filters_outcome").selectOption("accept");
+    await page.waitForURL((url) => new URL(url).searchParams.get("outcome") === "accept");
+
+    await search.click();
+    await search.pressSequentially("d", { delay: 30 });
+    await page.waitForURL(() => searchParam() === "abcd");
+    await expect(search).toBeFocused();
+    await expect(search).toHaveValue("abcd");
+
+    await page.goBack();
+    await page.waitForURL(() => searchParam() === "abc");
+    await expect(search).toBeFocused();
+    await expect(search).toHaveValue("abc");
+  });
+
   test("Phase 176 Deliveries failed read shows error and Retry", async ({ page }) => {
     await openBrowserTenant(page);
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);

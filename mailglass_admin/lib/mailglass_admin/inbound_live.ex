@@ -697,7 +697,11 @@ defmodule MailglassAdmin.InboundLive do
                   aria-expanded="false"
                   class="btn btn-ghost !h-11 min-h-11 md:hidden"
                 >
-                  Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
+                  Filters
+                  <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
+                    ({applied_filter_count(@filter_params)} applied)
+                  </span>
+                  <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                 </button>
 
                 <div id="inbound-filter-panel" class="hidden md:block">
@@ -722,6 +726,7 @@ defmodule MailglassAdmin.InboundLive do
                       outcome_values={@outcome_values}
                       window_options={@window_options}
                       errors={@filter_errors}
+                      committed_search={@filter_params["search"] || ""}
                     />
 
                     <div class="flex flex-wrap gap-sm">
@@ -1408,6 +1413,16 @@ defmodule MailglassAdmin.InboundLive do
     end) or
       non_default_window?(Map.get(filter_params, "window_hours")) or
       non_default_window?(Map.get(filter_params, "recent_window_hours"))
+  end
+
+  # Committed filters only (the URL-backed params, never the draft), so the mobile toggle
+  # tells the truth about what the list is narrowed by. The default window is not a filter.
+  defp applied_filter_count(filter_params) do
+    window_applied? = non_default_window?(Map.get(filter_params, "window_hours"))
+
+    ["search", "outcome", "provider"]
+    |> Enum.count(&(not is_nil(blank_to_nil(Map.get(filter_params, &1)))))
+    |> Kernel.+(if window_applied?, do: 1, else: 0)
   end
 
   defp non_default_window?(nil), do: false
