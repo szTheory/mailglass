@@ -640,7 +640,7 @@
       "owner_phase": "176",
       "scenario_ids": [],
       "status": "pending",
-      "disposition": "Both live lists still render Apply filters after draft validation; URL-backed immediate select and debounced text behavior remain open.",
+      "disposition": "Both live lists commit select changes and Enter straight to the canonical URL with no Apply control; debounced Search and the FILTER-04 read-state cases remain open.",
       "evidence_pointer": "Pending Phase 176 connected filter, URL/history, and Back/Forward cases."
     },
     {

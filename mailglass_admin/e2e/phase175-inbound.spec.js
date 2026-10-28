@@ -134,7 +134,6 @@ test("Phase 175 Inbound quick: review preserves Account, filters, selection and 
   await openInbound(page);
   await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
   await page.getByLabel("Time window", { exact: true }).selectOption("24");
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/outcome=accept/);
   await expect(page).toHaveURL(/window_hours=24/);
   const routeContext = new URL(page.url());

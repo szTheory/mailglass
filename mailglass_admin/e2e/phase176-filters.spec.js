@@ -133,6 +133,41 @@ test.describe("Phase 176 direct filters", () => {
     await expect(search).toHaveValue("abcx");
     await expect(search).toBeFocused();
   });
+  test("Phase 176 Inbound select applies without Apply", async ({ page }) => {
+    await openBrowserTenant(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
+    await expect(page.locator("#inbound-filters")).toBeVisible();
+
+    // D-01: the Inbound form has no Apply or submit control either.
+    await expect(page.getByRole("button", { name: /apply/i })).toHaveCount(0);
+    await expect(page.locator("#inbound-filters [type=submit]")).toHaveCount(0);
+
+    const initialUrl = page.url();
+    const historyBefore = await page.evaluate(() => window.history.length);
+
+    await page.locator("#filters_outcome").selectOption("accept");
+    await page.waitForURL(url => {
+      const params = new URL(url).searchParams;
+      return params.get("outcome") === "accept" && !params.has("page") && !params.has("inbound_id");
+    });
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
+    await expect(page.locator("#filters_outcome")).toHaveValue("accept");
+    expect(new URL(page.url()).searchParams.get("tenant_id")).toBe(tenantId);
+
+    // FILTER-03: one select intent is exactly one history entry.
+    expect((await page.evaluate(() => window.history.length)) - historyBefore).toBe(1);
+
+    await page.goBack();
+    await page.waitForURL(url => new URL(url).searchParams.get("outcome") !== "accept");
+    expect(page.url()).toBe(initialUrl);
+    await expect(page.locator("#filters_outcome")).toHaveValue("");
+
+    await page.goForward();
+    await page.waitForURL(url => new URL(url).searchParams.get("outcome") === "accept");
+    await expect(page.locator("#filters_outcome")).toHaveValue("accept");
+  });
+
   test("Phase 176 Deliveries failed read shows error and Retry", async ({ page }) => {
     await openBrowserTenant(page);
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);

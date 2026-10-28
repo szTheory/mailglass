@@ -36,6 +36,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.FilterCommit
   alias MailglassAdmin.Operator.Tenants, as: TenantSelector
   alias Phoenix.LiveView.JS
 
@@ -141,6 +142,8 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:filter_params, default_filter_params())
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
      |> assign(:filter_errors, %{})
+     |> assign(:pending_commit_kind, nil)
+     |> assign(:last_commit_kind, nil)
      |> assign(:page_title, "mailglass — Inbound")}
   end
 
@@ -202,6 +205,7 @@ defmodule MailglassAdmin.InboundLive do
 
       socket =
         socket
+        |> settle_commit_kind()
         |> assign(:base_path, URI.parse(uri).path || "/inbound")
         |> assign(:page_uri, uri)
         |> assign(:dark_chrome, theme_choice == :dark)
@@ -247,25 +251,17 @@ defmodule MailglassAdmin.InboundLive do
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    if map_size(filter_errors) == 0 do
-      path = build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-
-      # No-op when the filters don't change the location — avoids a needless re-render
-      # (and timestamp re-localization flicker) on Apply.
-      if same_location?(socket.assigns.page_uri, path) do
-        {:noreply, socket}
-      else
-        {:noreply, push_patch(socket, to: path)}
-      end
-    else
-      {:noreply,
-       socket
-       |> assign(:filter_form, to_form(normalized, as: :filters))
-       |> assign(:filter_errors, filter_errors)}
-    end
+    commit_filters(socket, filters, :enter)
   end
+
+  # phx-auto-recover: after a reconnect the browser resends the form it still holds. Treat
+  # it as a commit that never adds history (D-11): valid and different restores the URL
+  # with replace, invalid stays a draft, identical is a no-op.
+  def handle_event("recover_filters", %{"filters" => filters}, socket) do
+    commit_filters(socket, filters, :recover)
+  end
+
+  def handle_event("recover_filters", _params, socket), do: {:noreply, socket}
 
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
@@ -274,14 +270,8 @@ defmodule MailglassAdmin.InboundLive do
      )}
   end
 
-  def handle_event("validate_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    {:noreply,
-     socket
-     |> assign(:filter_form, to_form(normalized, as: :filters))
-     |> assign(:filter_errors, filter_errors)
-     |> assign_provider_options(normalized)}
+  def handle_event("validate_filters", %{"filters" => filters} = params, socket) do
+    commit_filters(socket, filters, FilterCommit.kind_for_target(params["_target"]))
   end
 
   def handle_event("select_inbound", %{"id" => inbound_id} = params, socket) do
@@ -347,16 +337,24 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   def handle_event("clear_filters", _params, socket) do
-    {:noreply,
-     push_patch(socket,
-       to:
-         build_path(
-           socket.assigns.base_path,
-           %{"tenant_id" => socket.assigns.selected_tenant_id || ""},
-           nil,
-           socket.assigns.dark_chrome
-         )
-     )}
+    path =
+      build_path(
+        socket.assigns.base_path,
+        %{"tenant_id" => socket.assigns.selected_tenant_id || ""},
+        nil,
+        socket.assigns.dark_chrome
+      )
+
+    # Clear with nothing applied changes nothing: no patch, no history entry. It still
+    # resets a draft that was typed but never committed.
+    if same_location?(socket.assigns.page_uri, path) do
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(socket.assigns.filter_params, as: :filters))
+       |> assign(:filter_errors, %{})}
+    else
+      {:noreply, push_commit(socket, path, :clear)}
+    end
   end
 
   def handle_event("open_replay", params, socket) do
@@ -508,7 +506,8 @@ defmodule MailglassAdmin.InboundLive do
 
     {:noreply,
      push_patch(socket,
-       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id)
+       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id),
+       replace: true
      )}
   end
 
@@ -707,6 +706,7 @@ defmodule MailglassAdmin.InboundLive do
                     id="inbound-filters"
                     phx-change="validate_filters"
                     phx-submit="apply_filters"
+                    phx-auto-recover="recover_filters"
                     class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                   >
                     <p
@@ -716,12 +716,6 @@ defmodule MailglassAdmin.InboundLive do
                     >
                       Provider options could not be loaded. The current account and filters are unchanged.
                     </p>
-                    <input
-                      id="filters_tenant_id"
-                      type="hidden"
-                      name={@filter_form[:tenant_id].name}
-                      value={@filter_form[:tenant_id].value}
-                    />
                     <FiltersForm.fields
                       form={@filter_form}
                       provider_options={@provider_options}
@@ -731,13 +725,6 @@ defmodule MailglassAdmin.InboundLive do
                     />
 
                     <div class="flex flex-wrap gap-sm">
-                      <button
-                        type="submit"
-                        phx-disable-with="Applying filters…"
-                        class="btn btn-primary min-h-11 px-md"
-                      >
-                        Apply filters
-                      </button>
                       <button
                         type="button"
                         phx-click="clear_filters"
@@ -975,6 +962,8 @@ defmodule MailglassAdmin.InboundLive do
 
   defp clear_surface_state(socket) do
     socket
+    |> assign(:pending_commit_kind, nil)
+    |> assign(:last_commit_kind, nil)
     |> assign(:full_detail?, false)
     |> assign(:records, [])
     |> assign(:records_page_meta, empty_page_meta())
@@ -1539,14 +1528,6 @@ defmodule MailglassAdmin.InboundLive do
     {options, state}
   end
 
-  defp assign_provider_options(socket, filter_params) do
-    {provider_options, state} = load_provider_options(filter_params)
-
-    socket
-    |> assign(:provider_options, provider_options)
-    |> assign(:provider_options_state, state)
-  end
-
   defp provider_label("sendgrid"), do: "SendGrid"
   defp provider_label("postmark"), do: "Postmark"
   defp provider_label("mailgun"), do: "Mailgun"
@@ -1924,8 +1905,64 @@ defmodule MailglassAdmin.InboundLive do
     current = URI.parse(current_uri)
     target = URI.parse(target_path)
 
+    # Entry URLs often omit window_hours while commit targets carry it, so both queries are
+    # canonicalized (default window filled) before the comparison.
     (current.path || "/") == (target.path || "/") and
-      URI.decode_query(current.query || "") == URI.decode_query(target.query || "")
+      canonical_location_query(current.query) == canonical_location_query(target.query)
+  end
+
+  defp canonical_location_query(query) do
+    (query || "")
+    |> URI.decode_query()
+    |> FilterCommit.canonical_current_query()
+    |> URI.decode_query()
+  end
+
+  # Every filter change is a commit (D-01). The Account comes from the server, never the
+  # payload (D-09); an invalid draft stays a draft and never patches; a commit that
+  # resolves to the current location is a no-op.
+  defp commit_filters(socket, filters, kind) do
+    filters = FilterCommit.commit_params(filters, socket.assigns.selected_tenant_id)
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
+
+    if map_size(filter_errors) == 0 do
+      path = build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+
+      # A commit that lands on the current URL would still re-run handle_params and
+      # re-render for nothing; skip it and just keep the draft in step.
+      if same_location?(socket.assigns.page_uri, path) do
+        {:noreply,
+         socket
+         |> assign(:filter_form, to_form(normalized, as: :filters))
+         |> assign(:filter_errors, %{})}
+      else
+        {:noreply, push_commit(socket, path, kind)}
+      end
+    else
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(normalized, as: :filters))
+       |> assign(:filter_errors, filter_errors)}
+    end
+  end
+
+  # The only place a commit patch is pushed. The pending kind is assigned here and nowhere
+  # else, so a no-op or invalid commit can never mislabel the next non-commit patch.
+  defp push_commit(socket, path, kind) do
+    replace? = FilterCommit.history_kind(kind, socket.assigns.last_commit_kind) == :replace
+
+    socket
+    |> assign(:pending_commit_kind, kind)
+    |> push_patch(to: path, replace: replace?)
+  end
+
+  # Moves the kind of the commit that produced this patch into last_commit_kind. A patch
+  # that arrives without a pending kind (Back/Forward, pagination links, the Account
+  # canonicalization) is not a commit and ends any in-flight search edit.
+  defp settle_commit_kind(socket) do
+    socket
+    |> assign(:last_commit_kind, socket.assigns.pending_commit_kind)
+    |> assign(:pending_commit_kind, nil)
   end
 
   defp build_path(base_path, filter_params, inbound_id, _dark_chrome) do
@@ -1938,7 +1975,7 @@ defmodule MailglassAdmin.InboundLive do
       end)
       |> Map.new()
 
-    case URI.encode_query(params) do
+    case FilterCommit.encode_query(params) do
       "" -> base_path
       query -> base_path <> "?" <> query
     end

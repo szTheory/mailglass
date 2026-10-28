@@ -169,19 +169,16 @@ test("outcome filters hide all-outcome stats and clearing restores them", async 
   const before = await accepted.innerText();
 
   await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
-  await expect(summary).toBeVisible();
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/outcome=accept/);
   await expect(summary).toHaveCount(0);
   await expect(page.getByTestId("inbound-result-count")).toBeVisible();
   await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
 
   await page.getByLabel("Time window", { exact: true }).selectOption("24");
-  await expect(summary).toHaveCount(0);
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/window_hours=24/);
+  await expect(summary).toHaveCount(0);
   await page.getByLabel("Search", { exact: true }).fill("no-matching-message-7f2a");
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(page).toHaveURL(/search=no-matching-message-7f2a/);
   await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(1);
 
   await page.getByTestId("inbound-filters").getByRole("button", { name: "Clear filters", exact: true }).click();

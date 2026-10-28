@@ -480,11 +480,11 @@ defmodule MailglassAdmin.InboundLiveTest do
       # these IA hooks are withheld in genuine no-data (Phase 121 D-02/D-03).
       InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
 
-      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      {:ok, view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-filters")
       assert html =~ ~s(data-testid="inbound-filters-toggle")
-      assert html =~ ~s(phx-disable-with="Applying filters…")
+      refute view |> element("#inbound-filters") |> render() =~ "phx-disable-with"
       assert html =~ ~s(aria-controls="inbound-filter-panel")
       assert html =~ ~s(aria-expanded="false")
       assert html =~ "toggle"
@@ -634,7 +634,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "mailgun",
           "outcome" => "accept",
           "window_hours" => "168",
@@ -783,7 +782,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       html =
-        render_hook(view, "apply_filters", %{
+        render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "outcome"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -1012,7 +1012,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "no_change",
           "window_hours" => "168",
@@ -1063,7 +1062,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -1089,7 +1087,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -1119,7 +1116,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -2664,6 +2660,374 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       refute html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
     end
+  end
+
+  describe "Phase 176 Inbound direct filters" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound select change commits one sorted canonical push patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      path = assert_patch_kind(view, :push)
+
+      assert path ==
+               inbound_path(%{
+                 "tenant_id" => @tenant_id,
+                 "outcome" => "accept",
+                 "window_hours" => "168"
+               })
+
+      assert path == @base_path <> "?outcome=accept&tenant_id=#{@tenant_id}&window_hours=168"
+      assert selected_filter_value(render(view), "#filters_outcome") == "accept"
+    end
+
+    test "Phase 176 Inbound the same payload twice yields exactly one patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      payload = inbound_change("outcome", %{"outcome" => "accept"})
+
+      render_hook(view, "validate_filters", payload)
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", payload)
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound a select equal to the committed value is a no-op", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound an unchanged commit from a bare entry URL is a no-op, a changing one pushes",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => ""}))
+      refute_patch(view)
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      path = assert_patch_kind(view, :push)
+
+      assert %{"outcome" => "accept", "window_hours" => "168", "tenant_id" => @tenant_id} =
+               path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+    end
+
+    test "Phase 176 Inbound a foreign tenant_id never changes the Account on change, submit or recover",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "accept", "tenant_id" => "foreign-tenant"})
+      )
+
+      change_path = assert_patch_kind(view, :push)
+      refute change_path =~ "foreign-tenant"
+      assert change_path =~ "tenant_id=#{@tenant_id}"
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "outcome" => "bounce",
+          "search" => "foo ",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      submit_path = assert_patch_kind(view, :push)
+      refute submit_path =~ "foreign-tenant"
+      submit_query = submit_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert submit_query["tenant_id"] == @tenant_id
+      assert submit_query["search"] == "foo"
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "outcome" => "reject",
+          "search" => "",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      recover_path = assert_patch_kind(view, :replace)
+      refute recover_path =~ "foreign-tenant"
+      assert recover_path =~ "tenant_id=#{@tenant_id}"
+    end
+
+    test "Phase 176 Inbound a commit drops inbound_id, full and page", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{
+          "outcome" => "accept",
+          "inbound_id" => "abc",
+          "full" => "1",
+          "page" => "3"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "inbound_id")
+      refute Map.has_key?(query, "full")
+      refute Map.has_key?(query, "page")
+    end
+
+    test "Phase 176 Inbound Account canonicalization replaces history", %{conn: conn} do
+      InboundFixtures.seed_matched!("solo-inbound", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), @base_path)
+      render(view)
+
+      path = assert_patch_kind(view, :replace)
+      assert path == inbound_path(%{"tenant_id" => "solo-inbound"})
+    end
+
+    test "Phase 176 Inbound recover restores a valid differing draft with replace, keeps an invalid one",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "outcome" => "accept",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+      assert path =~ "outcome=accept"
+
+      html =
+        render_hook(view, "recover_filters", %{
+          "filters" => %{
+            "outcome" => "not-real",
+            "search" => "",
+            "provider" => "",
+            "window_hours" => "168"
+          }
+        })
+
+      refute_patch(view)
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+    end
+
+    test "Phase 176 Inbound Clear with nothing applied produces no patch and stays enabled", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert has_element?(view, "#inbound-filters button[phx-click='clear_filters']")
+      refute has_element?(view, "#inbound-filters button[phx-click='clear_filters'][disabled]")
+
+      view |> element("#inbound-filters button[phx-click='clear_filters']") |> render_click()
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound the filter form has no Apply, submit, loading or tenant control", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form_html = view |> element("#inbound-filters") |> render()
+      document = Floki.parse_fragment!(form_html)
+
+      assert Floki.find(document, "[type='submit']") == []
+      assert Floki.find(document, "[phx-disable-with]") == []
+      assert Floki.find(document, "#filters_tenant_id") == []
+      refute form_html =~ "Apply filters"
+      assert Floki.attribute(document, "form", "phx-auto-recover") == ["recover_filters"]
+    end
+
+    test "Phase 176 Inbound Back via render_patch restores the earlier committed filters", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      assert_patch_kind(view, :push)
+
+      render_patch(view, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_outcome") in [nil, ""]
+    end
+
+    test "Phase 176 Inbound trailing whitespace canonicalizes to the same search URL", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "search" => "foo", "window_hours" => "168"})
+        )
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "foo "}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound pagination links preserve the committed filters", %{conn: conn} do
+      for index <- 1..21 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "paged-#{index}@example.com",
+          provider_message_id: "p176-page-#{index}"
+        )
+      end
+
+      InboundFixtures.seed_no_match!(@tenant_id, recipient: "unrouted@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      committed = assert_patch_kind(view, :push)
+      render_patch(view, committed)
+
+      next_href =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-pagination-next']")
+        |> Floki.attribute("href")
+        |> List.first()
+
+      assert next_href
+      query = next_href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["outcome"] == "accept"
+      assert query["tenant_id"] == @tenant_id
+      assert query["page"] == "2"
+      refute Map.has_key?(query, "inbound_id")
+      refute Map.has_key?(query, "full")
+
+      render_patch(view, next_href)
+      html = render(view)
+      assert selected_filter_value(html, "#filters_outcome") == "accept"
+      assert html =~ "21 messages"
+    end
+
+    test "Phase 176 Inbound a select commit from page 2 patches to a path without page and renders page 1",
+         %{conn: conn} do
+      for index <- 1..21 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "reset-#{index}@example.com",
+          provider_message_id: "p176-reset-#{index}"
+        )
+      end
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "window_hours" => "168",
+            "page" => "2"
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{
+          "outcome" => "accept",
+          "window_hours" => "720"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "page")
+      assert query["window_hours"] == "720"
+
+      render_patch(view, path)
+      html = render(view)
+      refute html =~ ~s(data-testid="inbound-pagination-prev-link")
+      assert html =~ "21 messages"
+    end
+
+    test "Phase 176 Inbound a no-op does not leak a pending kind into the next non-commit patch",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      earlier = inbound_path(%{"tenant_id" => @tenant_id})
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      refute_patch(view)
+
+      render_patch(view, earlier)
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "xyz"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Inbound the change handler does not reload provider options", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # An invalid outcome is a draft only; it must neither patch nor disturb the provider
+      # select, which only handle_params may rebuild (D-04).
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("outcome", %{"outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert html =~ "Mailbox outcome was not applied."
+      assert html =~ ~s(id="filters_provider")
+    end
+  end
+
+  defp inbound_change(field, overrides) do
+    %{
+      "_target" => ["filters", field],
+      "filters" =>
+        Map.merge(
+          %{"search" => "", "window_hours" => "168", "outcome" => "", "provider" => ""},
+          overrides
+        )
+    }
+  end
+
+  defp assert_patch_kind(view, kind) do
+    %{proxy: {ref, topic, _pid}} = view
+    assert_receive {^ref, {:patch, ^topic, %{kind: ^kind, to: to}}}
+    to
+  end
+
+  defp refute_patch(view) do
+    %{proxy: {ref, topic, _pid}} = view
+    refute_receive {^ref, {:patch, ^topic, _opts}}, 50
+  end
+
+  defp selected_filter_value(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("#{selector} option")
+    |> Enum.find_value(fn option ->
+      if option |> Floki.attribute("selected") |> Enum.any?() do
+        option |> Floki.attribute("value") |> List.first()
+      end
+    end)
   end
 
   defp inbound_path(params) do
