@@ -28,8 +28,9 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
       and the "May contain personal information." caption stand in for them.
     - `:revealed` — capability granted; raw payload rendered in a read-only
       `<pre class="mono text-label">` scroll region.
-    - `:denied` — reveal attempted and denied; raw bytes stay absent + a
-      `role="status"` brand-voice line.
+    - `:denied` — reveal attempted and denied; raw bytes stay absent and the
+      denial is announced from the persistent `role="status"` region (its text
+      changes; no second live region is inserted).
 
   The header is one group: heading, caption and ONE persistent disclosure button
   ("Reveal raw source" / "Hide raw source", same element id, `aria-expanded`
@@ -143,27 +144,25 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
                 aria-label="Raw provider source, read-only"
                 class="mg-focus-ring mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
               ><%= raw_payload_text(@evidence) %></pre>
-            <% :denied -> %>
-              <p
-                data-testid="inbound-evidence-denied"
-                role="status"
-                class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
-              >
-                You don't have permission to reveal raw source.
-              </p>
-            <% _redacted -> %>
+            <% _redacted_or_denied -> %>
           <% end %>
 
           <%!-- Reveal-state change is announced in TEXT, never the warning border
               color alone (WCAG 1.4.1, D-11). The region is always present so the
-              announcement is perceived on the :revealed -> :redacted collapse too. --%>
+              announcement is perceived on the :revealed -> :redacted collapse too,
+              and a denied reveal changes this region's text (D-26, WR-03) instead
+              of inserting a second live region. --%>
           <p
             data-testid="inbound-evidence-status"
             role="status"
             aria-live="polite"
-            class={["mt-sm text-body text-secondary", @reveal_state != :revealed && "sr-only"]}
+            class={status_region_class(@reveal_state)}
           >
-            {reveal_status_text(@reveal_state)}
+            <%= if @reveal_state == :denied do %>
+              <span data-testid="inbound-evidence-denied">{reveal_status_text(:denied)}</span>
+            <% else %>
+              {reveal_status_text(@reveal_state)}
+            <% end %>
           </p>
         <% end %>
       <% end %>
@@ -283,5 +282,15 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   defp reveal_status_text(:revealed),
     do: "Raw source revealed. It may contain personal information."
 
-  defp reveal_status_text(_redacted_or_denied), do: "Raw source hidden."
+  defp reveal_status_text(:denied), do: "You don't have permission to reveal raw source."
+  defp reveal_status_text(_redacted), do: "Raw source hidden."
+
+  # One complete class list per state so no base list leaks across states.
+  # :denied is the visible UI-SPEC box (`border` draws it; `border-warning` only
+  # colours it) in a single text colour; :redacted is announced but not shown.
+  defp status_region_class(:denied),
+    do: "mt-sm rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
+
+  defp status_region_class(:revealed), do: "mt-sm text-body text-secondary"
+  defp status_region_class(_redacted), do: "mt-sm text-body text-secondary sr-only"
 end

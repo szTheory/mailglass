@@ -169,9 +169,9 @@ Structure, in order, inside `card padding={:lg}` (existing `data-testid` values 
 | Redacted (default) | Nothing further (the caption already states the privacy risk; no "hidden by default" paragraph) |
 | Revealed, payload present | `<pre id="inbound-evidence-raw" data-testid="inbound-evidence-raw" tabindex="0" aria-label="Raw provider source, read-only" class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content">` (keyboard-scrollable, `mg-focus-ring` on focus) |
 | Revealed, empty payload | Same `<pre>` region with "Provider sent an empty payload." (not "(empty)") |
-| Denied | `<p data-testid="inbound-evidence-denied" role="status" class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content">You don't have permission to reveal raw source.</p>` — text, not border colour alone |
+| Denied | The denial copy "You don't have permission to reveal raw source." rendered inside the always-present `inbound-evidence-status` region, wrapped in an inline element with `data-testid="inbound-evidence-denied"` and no role of its own; the region takes the classes `mt-sm rounded-box border border-warning bg-base-100 p-sm text-body text-base-content` in that state — text, not border colour alone. (Superseded by 176-11 per D-26 / WR-03.) |
 
-5. **Status region**: keep the always-present `role="status" aria-live="polite"` paragraph (`sr-only` unless revealed). Texts: "Raw source revealed. It may contain personal information." / "Raw source hidden." Denied is announced through the denied paragraph's `role="status"`.
+5. **Status region**: keep the always-present `role="status" aria-live="polite"` paragraph (`sr-only` unless revealed). Texts: "Raw source revealed. It may contain personal information." / "Raw source hidden." Denied: the same region shows "You don't have permission to reveal raw source.", visible, with the row-4 denied box classes; no second live region is inserted. (Superseded by 176-11 per D-26 / WR-03.)
 6. **Unchanged**: authorization at action time, `:redacted`/`:revealed`/`:denied` atoms, reset-on-selection, PII-free telemetry. Remove the dead `can_reveal?` attr. Revealed bytes must never appear in any denied/unauthorized rendered HTML (sentinel-byte test).
 
 ## Copywriting Contract
