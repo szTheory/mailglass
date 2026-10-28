@@ -1095,12 +1095,15 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
-### Verification policy (locked 2026-10-27, owner directive)
+### D-52 extension: judgment-tier prohibitions (2026-10-27, Phase 175)
 
-- **Zero owner UAT is the default.** Claude runs and records all verification. UAT rows are disposed `source: automated` with the covering test. Operational detail lives in `CLAUDE.md` § "Verification Policy — Shift Left, Zero Human UAT"; this entry records the decision so it is not relitigated.
-- **Prohibitions are authored test-tier.** Must-NOT copy/control constraints get a negative assertion over every copy branch and rendered state, proven red by source mutation. `judgment` tier is reserved for constraints that truly can't be mechanized, and Claude disposes those too before anything reaches the owner. Precedent: Phase 175's eight `human_needed` judgment items became `phase175_prohibition_contract_test.exs` (16 tests, 9 mutations red).
-- **Recurring checks go to merge-blocking CI.** One-off evidence stays local.
-- **Owner hand-off is limited to** ship/no-ship, brand/visual identity, secrets/credentials/interactive login, the `hex-publish` approval, and physical devices.
+- D-52 (zero owner UAT) now explicitly covers must-NOT prohibitions. Author them `verification: test`. The GSD verifier's judgment-tier `human_needed` rows are disposed by a mutation-proven contract test, not an owner review. Precedent: `phase175_prohibition_contract_test.exs` (16 tests; a detector self-test plus one red mutation per prohibition). Rule text: [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default). `CLAUDE.md` mirrors it so every GSD agent loads it.
+
+### Phase 175 implementation decisions
+
+- Keep outbound webhook replay and Inbound Mailbox replay as distinct commands with distinct consequence copy. Neither claims resend, provider receipt, or delivery.
+- Show suppression as one current Account-local Mailglass match. Name unchecked stores, keep stale facts visibly stale, never call missing expiry permanent, and keep the card read-only.
+- Never preselect an ambiguous replay target. Failures keep the dialog open with an explicit fresh "Review again" and no automatic retry.
 
 ### Phase 170 implementation decisions
 
@@ -1202,7 +1205,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-27 after Phase 174 automated acceptance closure and D-52 reaffirmation; ready to plan Phase 175.*
+*Last updated: 2026-10-27 after Phase 175 automated acceptance closure (judgment-tier prohibitions mechanized under D-52); ready to plan Phase 176.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

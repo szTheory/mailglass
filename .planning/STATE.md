@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
-current_phase: 175
-current_phase_name: Delivery Investigation and Safe Replay
-status: verifying
-stopped_at: "Phase 175: 6/6 plans executed, 58/58 positive truths verified; 8 judgment-tier review items pending"
-last_updated: "2026-10-27T22:55:11.955Z"
+current_phase: 176
+current_phase_name: Direct Filters and Useful Inbound Evidence
+status: planning
+stopped_at: Phase 175 complete, ready to plan Phase 176
+last_updated: "2026-10-28T02:44:15.625Z"
 last_activity: 2026-10-27
-last_activity_desc: Phase 175 implemented and tested; verification human_needed for eight judgment-tier review recommendations
-state_head: ef8b4b9db4b484e23b8e49a9314d1084bbcd951d
+last_activity_desc: Phase 175 complete, transitioned to Phase 176
+state_head: 56f1a4949008fb14bd6f94cd99a895c030eea4c7
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
   completed_plans: 12
-  percent: 20
+  percent: 40
 ---
 
 # Project State
@@ -28,23 +28,19 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 **Current focus:** Phase 175 — Delivery Investigation and Safe Replay
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
-> has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
-> as undiagnosed (fixed in `f733fc22`/`d65a1aa8`, both merged to `main`) and PR #222 as open (it is
-> closed). PR #129, the replay-copy redesign once suspected of causing those reds, is also closed.
-> Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an open-PR or
-> open-issue count or identity anywhere below — that is permanently non-permanent information. For
-> current open PRs and issues, run `gh pr list --state open` and `gh issue list --state open` against
-> `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh` machine-checks every `#NNN` reference in
-> this file against live GitHub state.
+> has since been corrected — `## Operator Next Steps
+
+- Phase 175 is complete: 8/8 UAT rows closed `source: automated` by `mailglass_admin/test/mailglass_admin/phase175_prohibition_contract_test.exs` (16 tests, one red mutation per prohibition). Full admin suite 677/0 under `--seed 0`; VERIFICATION `passed`; security has 0 open threats. No owner verification is outstanding.
+- Next: `/gsd-discuss-phase 176` (no CONTEXT.md yet). D-52 and `.planning/METHODOLOGY.md` apply, including the 2026-10-27 judgment-tier prohibition clause: author must-NOT items as `verification: test`.
 
 ## Current Position
 
-Phase: 175 (Delivery Investigation and Safe Replay) — EXECUTING
-Plan: 6 of 6
-Status: Phase complete — ready for verification
-Last activity: 2026-10-27 — Phase 175 execution started
+Phase: 176 — Direct Filters and Useful Inbound Evidence
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-27 — Phase 175 complete, transitioned to Phase 176
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -156,7 +152,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 115
+- Total plans completed: 121
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -176,6 +172,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 172 | 3 | - | - |
 | 173.1 | 5 | - | - |
 | 174 | 6 | - | - |
+| 175 | 6 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -569,6 +566,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 175]: Require exact nonempty expected/executed case IDs and current source/asset identity; process exit alone is not evidence.
 - [Phase 175]: Retain Axe incomplete findings as incomplete and preserve failed historical evidence with rendered triage separate.
 - [Phase 175]: Use the isolated mailglass_demo_phase175_05 database because the default Demo database had a migration ledger but lacked the Demo schema; leave default untouched.
+- [Phase 175]: The eight judgment-tier prohibitions (UXF-12, OUTUX-07/08, REPLAY-04..08) are machine-checked by `phase175_prohibition_contract_test.exs` (mutation-proven) and closed as automated UAT. D-52 now covers prohibitions; see METHODOLOGY.md.
 
 ## Quick Tasks Completed
 
@@ -621,8 +619,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-10-27T22:55:11.554Z
-Stopped at: Phase 175: 6/6 plans executed, 58/58 positive truths verified; 8 judgment-tier review items pending
-Resume file: .planning/phases/175-delivery-investigation-and-safe-replay/175-UAT.md
+Stopped at: Phase 175 complete, ready to plan Phase 176
+Resume file: None
 
 ## Operator Next Steps
 
