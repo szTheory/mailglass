@@ -872,7 +872,7 @@ defmodule MailglassAdmin.GalleryLive do
        type: :select,
        label: "Status",
        help: "Filter by delivery status.",
-       error: "Status was not applied. Choose a listed status.",
+       error: "Latest recorded event was not applied. Choose a listed event.",
        prompt: "Any status",
        options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
      }},
@@ -981,7 +981,7 @@ defmodule MailglassAdmin.GalleryLive do
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
-       errors: %{"event" => "Status was not applied. Choose a listed status."}
+       errors: %{"event" => "Latest recorded event was not applied. Choose a listed event."}
      }},
 
     # STATE-LD-14: support_cards — tier1-shown and tier1-hidden

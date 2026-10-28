@@ -2280,7 +2280,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             label: "Status",
             controlSelector: "select",
             helpText: "Filter by delivery status.",
-            errorText: "Status was not applied. Choose a listed status."
+            errorText: "Latest recorded event was not applied. Choose a listed event."
           });
 
           await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "disabled", theme), {
@@ -2327,7 +2327,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
           const invalidWrapper = primitiveWrapper(page, "filters_form", "invalid", theme);
           await expect(invalidWrapper, `gallery filters_form invalid ${theme}`).toBeVisible();
-          await expect(invalidWrapper).toContainText("Status was not applied. Choose a listed status.");
+          await expect(invalidWrapper).toContainText("Latest recorded event was not applied. Choose a listed event.");
           await expect(invalidWrapper).toContainText("Action needed");
         }
       }
@@ -2342,6 +2342,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Provider is now a <select> populated from Deliveries.list_providers/2 — pick the
       // first real option (index 1, past the "All providers" placeholder) instead of fill().
       await operatorProvider.selectOption({ index: 1 });
+      // The select auto-applies; measure focus across a settled patch.
+      await page.waitForURL(url => new URL(url).searchParams.get("provider"));
       await operatorProvider.focus();
       const operatorBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
       await page.evaluate(() => document.getElementById("operator-filters").requestSubmit());
@@ -2353,6 +2355,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const inboundFilters = page.getByTestId("inbound-filters");
       const inboundSearch = inboundFilters.getByLabel("Search", { exact: true }).first();
       await inboundSearch.fill("browser");
+      // The debounced Search commit lands before the focus assertion.
+      await page.waitForURL(url => new URL(url).searchParams.get("search") === "browser");
       await inboundSearch.focus();
       const inboundBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
       await page.evaluate(() => document.getElementById("inbound-filters").requestSubmit());

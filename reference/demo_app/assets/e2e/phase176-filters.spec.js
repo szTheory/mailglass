@@ -58,3 +58,62 @@ test.describe("Phase 176 direct filters on the demo client", () => {
     await expect(search).toBeFocused();
   });
 });
+
+const connectedCollections = [
+  {
+    name: "Deliveries",
+    target: "/ops/mail?tenant_id=northstar&view=deliveries",
+    select: "#filters_event",
+    value: "failed",
+    param: "event"
+  },
+  {
+    name: "Inbound",
+    target: "/ops/mail/inbound?tenant_id=northstar",
+    select: "#filters_outcome",
+    value: "accept",
+    param: "outcome"
+  }
+];
+
+test.describe("Phase 176 connected on the demo client (LV 1.1.33)", () => {
+  for (const c of connectedCollections) {
+    test(`Phase 176 connected (LV 1.1.33): ${c.name} search history, Enter and focused Back`, async ({ page }) => {
+      await loginTo(page, c.target);
+      const search = page.locator("#filters_search");
+      await expect(search).toBeVisible();
+      const searchParam = () => new URL(page.url()).searchParams.get("search");
+      const historyLength = () => page.evaluate(() => window.history.length);
+      const before = await historyLength();
+
+      // One edit is one history entry, however many debounced commits it spans.
+      await search.click();
+      await search.pressSequentially("ab", { delay: 30 });
+      await page.waitForURL(() => searchParam() === "ab");
+      await search.pressSequentially("c", { delay: 30 });
+      await page.waitForURL(() => searchParam() === "abc");
+      expect((await historyLength()) - before).toBe(1);
+
+      // A select commit starts a new entry; the next Search edit starts another.
+      await page.locator(c.select).selectOption(c.value);
+      await page.waitForURL(url => new URL(url).searchParams.get(c.param) === c.value);
+      expect((await historyLength()) - before).toBe(2);
+
+      await search.click();
+      await search.pressSequentially("d", { delay: 10 });
+      const startedAt = Date.now();
+      await search.press("Enter");
+      await page.waitForURL(() => searchParam() === "abcd", { timeout: 250 });
+      expect(Date.now() - startedAt, "Enter commits before the 300 ms debounce").toBeLessThan(250);
+      await page.waitForTimeout(500);
+      expect((await historyLength()) - before, "Enter adds one entry and no extra later").toBe(3);
+      await expect(search).toBeFocused();
+
+      // Focused Back restores the committed text with focus kept.
+      await page.goBack();
+      await page.waitForURL(() => searchParam() === "abc");
+      await expect(search).toBeFocused();
+      await expect(search).toHaveValue("abc");
+    });
+  }
+});
