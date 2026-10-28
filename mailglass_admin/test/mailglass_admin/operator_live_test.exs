@@ -331,9 +331,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       end
     end
 
-    test "retains custom positive window links and rejects unsafe or empty window drafts", %{
-      conn: conn
-    } do
+    test "retains custom positive window links, rejects unsafe window drafts and normalizes a blank window quietly",
+         %{conn: conn} do
       conn = operator_conn(conn)
 
       insert_delivery!(
@@ -386,8 +385,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         })
 
-      assert empty_html =~ "Time window was not applied. Choose a positive listed time window."
-      assert selected_filter_value(empty_html, "#filters_window_hours") == ""
+      # A blank window means "no window chosen" (absent), not an invalid value (bounded D-13).
+      refute empty_html =~ "Time window was not applied"
+      refute empty_html =~ "Custom period"
+      assert selected_filter_value(empty_html, "#filters_window_hours") == "168"
       assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
@@ -3762,6 +3763,191 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "retried@example.com"
       assert has_element?(view, "[data-testid='operator-result-count']")
       refute html =~ "Couldn&#39;t load deliveries for these filters"
+    end
+
+    test "Phase 176 gap: an empty narrower window keeps the toolbar and a way back", %{conn: conn} do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert html =~ "older@example.com"
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      to = assert_patch_kind(view, :push)
+      assert to =~ "window_hours=24"
+
+      html = render(view)
+      assert has_element?(view, "[data-testid='operator-filters']")
+      assert has_element?(view, "#operator-filters")
+      assert selected_filter_value(html, "#filters_window_hours") == "24"
+      assert has_element?(view, "[data-testid='operator-empty-filtered']")
+      assert html =~ "No deliveries match the current filters."
+      assert has_element?(view, "[data-testid='operator-empty-reset']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      refute html =~ "No deliveries in this time window"
+      assert status_text(view) =~ "No deliveries match the current filters"
+    end
+
+    test "Phase 176 gap: a direct URL with an empty narrower window keeps the toolbar", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "24"
+          })
+        )
+
+      assert has_element?(view, "#operator-filters")
+      assert has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      assert selected_filter_value(html, "#filters_window_hours") == "24"
+    end
+
+    test "Phase 176 gap: the default window written out explicitly is not a filter", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "168"
+          })
+        )
+
+      assert has_element?(view, "[data-testid='operator-empty-truly']")
+      refute has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-filters']")
+    end
+
+    test "Phase 176 gap: the toggle count and the empty-state branch agree on the window", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "720"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (1 applied)"
+    end
+
+    test "Phase 176 gap: the mobile Filters toggle switches a class, never an inline display", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      doc = view |> render() |> Floki.parse_document!()
+
+      [command] =
+        doc
+        |> Floki.find("[data-testid='operator-filters-toggle']")
+        |> Floki.attribute("phx-click")
+
+      ops = command |> Jason.decode!() |> Enum.map(fn [op, args] -> {op, args} end)
+      op_names = Enum.map(ops, &elem(&1, 0))
+
+      refute "toggle" in op_names
+      assert {"toggle_class", class_args} = Enum.find(ops, &(elem(&1, 0) == "toggle_class"))
+      assert class_args["names"] == ["mg-inbound-filters-open"]
+      assert class_args["to"] == "#operator-filter-panel"
+
+      assert Enum.find_index(op_names, &(&1 == "toggle_class")) <
+               Enum.find_index(op_names, &(&1 == "toggle_attr"))
+
+      assert doc |> Floki.find("#operator-filter-panel") |> Floki.attribute("class") ==
+               ["hidden md:block"]
+    end
+
+    test "Phase 176 gap: a PubSub refresh does not rewrite the status region", %{conn: conn} do
+      insert_delivery!(recipient: "first@example.com", provider_message_id: "pm_first")
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      assert status_text(view) == "1 delivery matches"
+
+      second =
+        insert_delivery!(recipient: "second@example.com", provider_message_id: "pm_second")
+
+      broadcast = fn ->
+        Phoenix.PubSub.broadcast(
+          Mailglass.PubSub,
+          Mailglass.PubSub.Topics.events(@tenant_id),
+          {:delivery_updated, second.id, :sent, %{tenant_id: @tenant_id}}
+        )
+
+        render(view)
+      end
+
+      html = broadcast.()
+      assert html =~ "first@example.com"
+      assert html =~ "second@example.com"
+      assert status_text(view) == "1 delivery matches"
+
+      third =
+        insert_delivery!(recipient: "third@example.com", provider_message_id: "pm_third")
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(@tenant_id),
+        {:delivery_updated, third.id, :sent, %{tenant_id: @tenant_id}}
+      )
+
+      assert render(view) =~ "third@example.com"
+      assert status_text(view) == "1 delivery matches"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      assert status_text(view) == "3 deliveries match"
+    end
+
+    test "Phase 176 gap: a blank window normalizes quietly without a Custom period option", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => ""
+          })
+        )
+
+      refute html =~ "Custom period"
+      refute html =~ "Time window was not applied"
+      assert selected_filter_value(html, "#filters_window_hours") == "168"
+      assert has_element?(view, "#operator-filters")
+
+      # D-13 stays for non-blank invalid values: blank is absent, not invalid.
+      {:ok, _view, invalid_html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "abc"
+          })
+        )
+
+      assert invalid_html =~ "Time window was not applied"
     end
   end
 
