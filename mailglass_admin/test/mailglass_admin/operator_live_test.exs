@@ -292,7 +292,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           })
         )
 
-      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ "match@example.com"
       assert selected_filter_value(html, "#filters_window_hours") == "0"
@@ -322,7 +322,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         })
 
-      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert selected_filter_value(html, "#filters_window_hours") == "-5"
 
@@ -3321,7 +3321,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         })
 
       refute_patch(view)
-      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
     end
 
     test "Phase 176 recover ignores a foreign tenant_id and an identical draft", %{conn: conn} do
@@ -3479,6 +3479,93 @@ defmodule MailglassAdmin.OperatorLiveTest do
              )
 
       refute has_element?(view, "#operator-filters [disabled]")
+    end
+
+    test "Phase 176 an invalid draft stays a draft with a pending note outside the filter panel",
+         %{conn: conn} do
+      insert_delivery!(recipient: "previous@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+
+      refute_patch(view)
+      document = Floki.parse_document!(html)
+
+      [select] = Floki.find(document, "#filters_event")
+      assert Floki.attribute(select, "aria-invalid") == ["true"]
+      [described_by] = Floki.attribute(select, "aria-describedby")
+      assert "filters_event-error" in String.split(described_by)
+
+      assert Floki.find(document, "#filters_event-error") |> Floki.text() =~
+               "Latest recorded event was not applied. Choose a listed event."
+
+      note = Floki.find(document, "[data-testid='filters-draft-pending-note']")
+
+      assert Floki.text(note) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert Floki.find(
+               document,
+               "#operator-filter-panel [data-testid='filters-draft-pending-note']"
+             ) ==
+               []
+
+      assert Floki.find(document, "[data-testid='filters-url-invalid-note']") == []
+      assert html =~ "previous@example.com"
+      assert toggle_label(view) == "Filters"
+
+      # A later valid commit clears the note.
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+      refute has_element?(view, "#filters_event-error")
+    end
+
+    test "Phase 176 an invalid URL value is labelled as excluded, never an unlabelled fallback",
+         %{conn: conn} do
+      insert_delivery!(recipient: "fallback@example.com", last_event_type: :sent)
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
+      assert html =~ "fallback@example.com"
+
+      note =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='filters-url-invalid-note']")
+
+      assert Floki.text(note) =~ "Showing results without the Latest recorded event filter."
+      refute Floki.text(note) =~ "default time window"
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "bogus"
+          })
+        )
+
+      note =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='filters-url-invalid-note']")
+
+      assert Floki.text(note) =~ "Showing results for the default time window instead."
+      refute Floki.text(note) =~ "Latest recorded event"
+
+      # A later valid commit removes the URL note.
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-url-invalid-note']")
     end
 
     test "Phase 176 Deliveries new-query read failure shows a truthful error, no count and no empty copy",

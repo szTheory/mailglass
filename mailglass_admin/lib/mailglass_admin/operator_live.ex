@@ -50,7 +50,7 @@ defmodule MailglassAdmin.OperatorLive do
   # timestamp arithmetic comfortably inside their supported ranges.
   @max_window_hours 1_000_000
   @deliveries_per_page 20
-  @event_filter_error "Status was not applied. Choose a listed status."
+  @event_filter_error "Latest recorded event was not applied. Choose a listed event."
   @window_filter_error "Time window was not applied. Choose a positive listed time window."
   @window_options [
     {"Last 24 hours", "24"},
@@ -129,6 +129,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_params, default_filter_params())
       |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
       |> assign(:filter_errors, %{})
+      |> assign(:filter_error_source, nil)
       |> assign(:page_title, "mailglass — Operator")
 
     {:ok, socket}
@@ -187,6 +188,7 @@ defmodule MailglassAdmin.OperatorLive do
         |> assign(:filter_params, filter_params)
         |> assign(:filter_form, to_form(filter_draft_params(params, filter_params), as: :filters))
         |> assign(:filter_errors, filter_errors)
+        |> assign(:filter_error_source, if(map_size(filter_errors) > 0, do: :url))
         |> assign(:support_state, support_state)
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_state, tenant_state)
@@ -346,7 +348,8 @@ defmodule MailglassAdmin.OperatorLive do
       {:noreply,
        socket
        |> assign(:filter_form, to_form(socket.assigns.filter_params, as: :filters))
-       |> assign(:filter_errors, %{})}
+       |> assign(:filter_errors, %{})
+       |> assign(:filter_error_source, nil)}
     else
       {:noreply, push_commit(socket, path, :clear)}
     end
@@ -982,6 +985,23 @@ defmodule MailglassAdmin.OperatorLive do
                       </div>
                     </.form>
                   </div>
+
+                  <%!-- Outside the collapsible panel so the label stays visible when the mobile
+                      panel is closed. Not live-announced: the invalid field already is (D-12/D-13). --%>
+                  <p
+                    :if={@filter_error_source == :draft}
+                    data-testid="filters-draft-pending-note"
+                    class="mt-sm text-label text-secondary"
+                  >
+                    Showing results for your previous filters until the highlighted field is fixed.
+                  </p>
+                  <p
+                    :if={@filter_error_source == :url}
+                    data-testid="filters-url-invalid-note"
+                    class="mt-sm text-label text-secondary"
+                  >
+                    <span :for={note <- url_invalid_notes(@filter_errors)} class="block">{note}</span>
+                  </p>
                 </section>
 
                 <%!-- LIST PAGE: filters lead the collection; supporting evidence follows.
@@ -1264,6 +1284,16 @@ defmodule MailglassAdmin.OperatorLive do
     |> Kernel.+(if window_applied?, do: 1, else: 0)
   end
 
+  # One label per filter the URL carried invalid, so fallback results are never unlabelled.
+  defp url_invalid_notes(filter_errors) do
+    [
+      {"event", "Showing results without the Latest recorded event filter."},
+      {"window_hours", "Showing results for the default time window instead."}
+    ]
+    |> Enum.filter(fn {field, _note} -> Map.has_key?(filter_errors, field) end)
+    |> Enum.map(&elem(&1, 1))
+  end
+
   defp initial_results_status_text do
     ResultsStatus.text(%{
       collection: :deliveries,
@@ -1320,7 +1350,8 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply,
          socket
          |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-         |> assign(:filter_errors, %{})}
+         |> assign(:filter_errors, %{})
+         |> assign(:filter_error_source, nil)}
       else
         {:noreply, push_commit(socket, path, kind)}
       end
@@ -1328,7 +1359,8 @@ defmodule MailglassAdmin.OperatorLive do
       {:noreply,
        socket
        |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-       |> assign(:filter_errors, filter_errors)}
+       |> assign(:filter_errors, filter_errors)
+       |> assign(:filter_error_source, :draft)}
     end
   end
 
