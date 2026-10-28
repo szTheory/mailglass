@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-05-PLAN.md
-last_updated: "2026-10-28T14:45:32.840Z"
+stopped_at: Completed 176-06-PLAN.md
+last_updated: "2026-10-28T15:00:32.329Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: be169c4aedf1b346ccb4c69ea75075600c8d17df
+state_head: f7f8fc064b222d2227eff39f234a265778ef0c86
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 17
+  completed_plans: 18
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 6 of 10
+Plan: 7 of 10
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -305,6 +305,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P03 | 14min | 2 tasks | 10 files |
 | Phase 176 P04 | 10 min | 3 tasks | 7 files |
 | Phase 176 P05 | 14 min | 2 tasks | 6 files |
+| Phase 176 P06 | 16 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -581,6 +582,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-04: stale count hidden (D-15); stale title carries HH:MM UTC load time with a Components.timestamp line
 - [Phase 176]: 176-04: persistent sr-only status region text is a pure function of settled read state (ResultsStatus.text/1); drafts never change it
 - [Phase 176]: 176-05: checksum stays out of the five evidence facts as a scope choice (InboundEvidence stores raw_mime_sha256/fingerprint); payload size/header count are nil when unknown and render Unavailable, never 0
+- [Phase 176]: 176-06: FilterSearchSync updated() hook path ships (demo LV 1.1.33 spike 2 passed, admin LV 1.2.13 3 passed); no push_event fallback
+- [Phase 176]: 176-06: any hooks.js body change must re-pin the demo Storybook review-JS md5 in reference/demo_app/dev/mailglass_demo_web/storybook.ex
 
 ## Quick Tasks Completed
 
@@ -632,8 +635,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T14:45:32.500Z
-Stopped at: Completed 176-05-PLAN.md
+Last session: 2026-10-28T15:00:32.091Z
+Stopped at: Completed 176-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
