@@ -22,10 +22,10 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Direct collection filtering
 
-- [x] **FILTER-01**: An operator changing a select filter on either collection sees valid filters apply immediately without a visible Apply button.
-- [x] **FILTER-02**: An operator searching either collection gets debounced URL-backed results while retaining typed input, focus and an immediate Enter commit.
-- [x] **FILTER-03**: An operator can use Back/Forward, Clear and pagination with canonical filter state, useful history, page reset on changed filters and preserved Account isolation.
-- [x] **FILTER-04**: An operator encountering invalid filters or a failed read sees specific draft/error or stale-result feedback without silent fallback results or misleading empty states.
+- [ ] **FILTER-01**: An operator changing a select filter on either collection sees valid filters apply immediately without a visible Apply button.
+- [ ] **FILTER-02**: An operator searching either collection gets debounced URL-backed results while retaining typed input, focus and an immediate Enter commit.
+- [ ] **FILTER-03**: An operator can use Back/Forward, Clear and pagination with canonical filter state, useful history, page reset on changed filters and preserved Account isolation.
+- [ ] **FILTER-04**: An operator encountering invalid filters or a failed read sees specific draft/error or stale-result feedback without silent fallback results or misleading empty states.
 
 ### Health and suppression evidence
 
@@ -35,8 +35,8 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Useful Inbound evidence
 
-- [x] **INUX-05**: An authorized operator can read complete ordinary Inbound sender/recipient addresses, with truthful missing, multiple-address and Unicode presentation and distinct envelope/header meanings.
-- [x] **INUX-06**: An operator can read a coherent Raw provider source card with grouped title/reveal/privacy controls and compact facts while existing reveal authorization and safe evidence projections remain enforced.
+- [ ] **INUX-05**: An authorized operator can read complete ordinary Inbound sender/recipient addresses, with truthful missing, multiple-address and Unicode presentation and distinct envelope/header meanings.
+- [ ] **INUX-06**: An operator can read a coherent Raw provider source card with grouped title/reveal/privacy controls and compact facts while existing reveal authorization and safe evidence projections remain enforced.
 
 ### Replay review and outcomes
 
@@ -136,15 +136,15 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | UXF-10 | Phase 177 | Pending |
 | UXF-11 | Phase 174 | Complete |
 | UXF-12 | Phase 175 | Complete |
-| FILTER-01 | Phase 176 | Complete |
-| FILTER-02 | Phase 176 | Complete |
-| FILTER-03 | Phase 176 | Complete |
-| FILTER-04 | Phase 176 | Complete |
+| FILTER-01 | Phase 176 | Gaps Found |
+| FILTER-02 | Phase 176 | Gaps Found |
+| FILTER-03 | Phase 176 | Gaps Found |
+| FILTER-04 | Phase 176 | Gaps Found |
 | OUTUX-06 | Phase 177 | Pending |
 | OUTUX-07 | Phase 175 | Complete |
 | OUTUX-08 | Phase 175 | Complete |
-| INUX-05 | Phase 176 | Complete |
-| INUX-06 | Phase 176 | Complete |
+| INUX-05 | Phase 176 | Gaps Found |
+| INUX-06 | Phase 176 | Gaps Found |
 | REPLAY-04 | Phase 175 | Complete |
 | REPLAY-05 | Phase 175 | Complete |
 | REPLAY-06 | Phase 175 | Complete |
