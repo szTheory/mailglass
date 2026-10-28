@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Phase 176 UI-SPEC approved
-last_updated: "2026-10-28T14:07:02.303Z"
-last_activity: 2026-10-27
-last_activity_desc: Phase 175 complete, transitioned to Phase 176
-state_head: 20489056c0db788b01a6d899b6d6ea282bcc2009
+stopped_at: Completed 176-01-PLAN.md
+last_updated: "2026-10-28T14:23:09.221Z"
+last_activity: 2026-10-28
+last_activity_desc: Phase 176 execution started
+state_head: cce25d9c7a2bc1bbc2c72bc4fd26f336ce075899
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 12
+  completed_plans: 13
   percent: 40
 ---
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 175 — Delivery Investigation and Safe Replay
+**Current focus:** Phase 176 — Direct Filters and Useful Inbound Evidence
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps
@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 176 (Direct Filters and Useful Inbound Evidence) — READY TO EXECUTE
-Plan: Not started
+Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
+Plan: 2 of 10
 Status: Ready to execute
-Last activity: 2026-10-27 — Phase 175 complete, transitioned to Phase 176
+Last activity: 2026-10-28 — Phase 176 execution started
 
 Progress: [████░░░░░░] 40%
 
@@ -300,6 +300,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 175 P04 | 30min | 2 tasks | 8 files |
 | Phase 175 P05 | 19min 22s | 2 tasks | 18 files |
 | Phase 175 P06 | 121m | 3 tasks | 180 files |
+| Phase 176 P01 | 12 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -567,6 +568,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 175]: Retain Axe incomplete findings as incomplete and preserve failed historical evidence with rendered triage separate.
 - [Phase 175]: Use the isolated mailglass_demo_phase175_05 database because the default Demo database had a migration ledger but lacked the Demo schema; leave default untouched.
 - [Phase 175]: The eight judgment-tier prohibitions (UXF-12, OUTUX-07/08, REPLAY-04..08) are machine-checked by `phase175_prohibition_contract_test.exs` (mutation-proven) and closed as automated UAT. D-52 now covers prohibitions; see METHODOLOGY.md.
+- [Phase 176]: Phase 176-01: window_hours=168 stays in committed filter URLs; only blanks and page=1 are dropped, query keys sorted
+- [Phase 176]: Phase 176-01: filter commits read the Account only from socket.assigns.selected_tenant_id; hidden filters_tenant_id input deleted
+- [Phase 176]: Phase 176-01: search edit history = push first commit, replace later ones, tracked via pending/last commit kind settled in handle_params; canonicalize and recover replace
 
 ## Quick Tasks Completed
 
@@ -618,9 +622,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T11:45:21.893Z
-Stopped at: Phase 176 UI-SPEC approved
-Resume file: .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-UI-SPEC.md
+Last session: 2026-10-28T14:23:09.002Z
+Stopped at: Completed 176-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
