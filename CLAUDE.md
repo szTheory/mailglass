@@ -99,6 +99,16 @@ This project uses GSD (Get Shit Done) for planning + execution. Common entry poi
 
 Other phases (1, 3, 6, 7) plan directly from synthesis — patterns are 4-of-4 convergent across prior libs.
 
+## Verification Policy — Shift Left, Zero Human UAT
+
+The target is **zero owner verification**. Applies to every GSD stage (spec, plan, execute, verify-work) and to ad-hoc work. Locked as a Key Decision in `.planning/PROJECT.md` ("Verification policy"). Do not re-ask this.
+
+1. **Claude verifies, the owner doesn't.** In `/gsd-verify-work`, run the evidence yourself: scoped suites with `--seed 0`, LiveView/component tests, and Playwright e2e. Record each UAT row as `result: pass` + `source: automated` + the covering test. Never present a "does this match? reply yes" checkpoint for anything a machine can observe.
+2. **Judgment-tier is a last resort, not a default.** Copy, framing, and "must NOT" prohibitions (no resend framing, no blame, no all-clear claims, no retry pressure, no invented controls) almost always reduce to forbidden wording or forbidden controls over a closed set of copy branches and rendered states. Author them as `verification: test`, not `judgment`, with a negative assertion. If a verifier still emits `human_needed` judgment items, convert them to a contract test (see `mailglass_admin/test/mailglass_admin/phase175_prohibition_contract_test.exs`) and dispose them as automated. Don't hand them to the owner.
+3. **Prove fail-first.** A negative test counts only after a source mutation that injects the violation turns it red; restore the source afterwards. A detector self-test (known-bad strings) catches patterns with no teeth. Measured gap: Phase 175's first contract pass missed an unrendered state, and only the mutation check caught it.
+4. **Put it on CI when it recurs.** A check that guards a regression class belongs in a merge-blocking lane. Admin tests run in the full `mix verify.support_contract.admin`, so a new file under `mailglass_admin/test/` is gated automatically. Don't build a one-off script for evidence that won't be re-checked.
+5. **Hand off only what's truly human:** a ship/no-ship call, brand or visual identity, secrets or credentials, an interactive login, the `hex-publish` environment approval, or physical-device checks. When you do hand off, give a runbook with full URLs.
+
 ## Decision Policy — Research-First, Decide, Escalate Rarely
 
 This applies in **every** context — discuss/plan/spec phases **and** mid-execution, debugging, and release ceremonies. It is not limited to scoping workflows.

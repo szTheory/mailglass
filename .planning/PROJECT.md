@@ -1095,6 +1095,13 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
+### Verification policy (locked 2026-10-27, owner directive)
+
+- **Zero owner UAT is the default.** Claude runs and records all verification. UAT rows are disposed `source: automated` with the covering test. Operational detail lives in `CLAUDE.md` § "Verification Policy — Shift Left, Zero Human UAT"; this entry records the decision so it is not relitigated.
+- **Prohibitions are authored test-tier.** Must-NOT copy/control constraints get a negative assertion over every copy branch and rendered state, proven red by source mutation. `judgment` tier is reserved for constraints that truly can't be mechanized, and Claude disposes those too before anything reaches the owner. Precedent: Phase 175's eight `human_needed` judgment items became `phase175_prohibition_contract_test.exs` (16 tests, 9 mutations red).
+- **Recurring checks go to merge-blocking CI.** One-off evidence stays local.
+- **Owner hand-off is limited to** ship/no-ship, brand/visual identity, secrets/credentials/interactive login, the `hex-publish` approval, and physical devices.
+
 ### Phase 170 implementation decisions
 
 - Persist `:no_change` only when Mailbox explicitly returns it; keep it distinct from `:ignore`, no match, and failure.
