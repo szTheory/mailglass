@@ -1,8 +1,8 @@
 ---
 phase: 176-direct-filters-and-useful-inbound-evidence
-verified: 2026-10-28T17:00:00Z
-status: gaps_found
-score: 3/5 must-haves verified
+verified: 2026-10-28T18:00:00Z
+status: passed
+score: 5/5 must-haves verified
 covered_files:
   - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-01-PLAN.md
   - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-01-SUMMARY.md
@@ -24,8 +24,17 @@ covered_files:
   - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-09-SUMMARY.md
   - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-10-PLAN.md
   - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-10-SUMMARY.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-11-PLAN.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-11-SUMMARY.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-12-PLAN.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-12-SUMMARY.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-13-PLAN.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-13-SUMMARY.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-14-PLAN.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-14-SUMMARY.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-15-PLAN.md
+  - .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-15-SUMMARY.md
   - mailglass_admin/lib/mailglass_admin/components.ex
-  - mailglass_admin/lib/mailglass_admin/gallery_live.ex
   - mailglass_admin/lib/mailglass_admin/inbound/address_list.ex
   - mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex
   - mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex
@@ -39,126 +48,98 @@ covered_files:
   - mailglass_admin/lib/mailglass_admin/operator_live.ex
   - mailglass_admin/priv/static/hooks.js
   - mailglass_admin/test/mailglass_admin/phase176_prohibition_contract_test.exs
-covered_digest: "v4:sha256:80a8f553f79a6ea5f105fa6c6e249c53ab3e9aa16cb790363371c66f936478ec"
+covered_digest: "v4:sha256:0b8bf3a7df87702b51c9510d74c904c68bf8abc98cb4d5a292626c3b2bfbdc12"
 behavior_unverified: 0
 overrides_applied: 0
-gaps:
-  - truth: "SC5 / INUX-06: Raw provider source facts are truthful and consistent with what the reveal shows (D-26 truth fixes)"
-    status: partial
-    reason: "Payload size reads raw_mime first, but the revealed <pre> renders raw_payload first. SES persists both (mailglass_inbound ses.ex:118-120), so the card states the byte size of one stored field and then reveals a different one. Phase regression: before 176 both used raw_payload first. The only new test feeds raw_mime with raw_payload %{}, so the suite never sees both set."
-    artifacts:
-      - path: "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex"
-        issue: "payload_byte_size/1 (lines 166-183) is raw_mime-first; raw_payload_text/1 (lines 205-212) is raw_payload-first"
-    missing:
-      - "One shared source selector used by both payload_byte_size/1 and raw_payload_text/1"
-      - "Test with raw_mime AND raw_payload both non-empty asserting the size equals the byte size of the text actually revealed (or an explicit documented label for which field is measured)"
-  - truth: "SC4 / INUX-05: An authorized operator can read complete ordinary Inbound sender/recipient addresses"
-    status: partial
-    reason: "Every From/Reply-To/To/Cc/Delivered-to address and unparseable original is rendered only through Components.copy_value, whose aria-label (\"Copy <label>\") replaces the visible address as the accessible name. Screen-reader users hear \"Copy To address, button\" per recipient and never the address (WCAG 2.5.3 Label in Name, level A). The display name is a plain span, so only the address itself is hidden."
-    artifacts:
-      - path: "mailglass_admin/lib/mailglass_admin/components.ex"
-        issue: "copy_value/1 line 1605: aria-label={\"Copy \" <> @label} drops @value from the accessible name"
-      - path: "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex"
-        issue: "lines 96-100, 223, 232 use copy_value as the sole address presentation"
-    missing:
-      - "Accessible name that contains the address, e.g. aria-label={\"Copy #{@label}: #{@value}\"} (or sr-only prefix text)"
-      - "Test asserting the address text is part of the accessible name of each contact button"
-  - truth: "SC1 / FILTER-01: Select filters commit immediately on Deliveries and the operator keeps a way to change them"
-    status: partial
-    reason: "Operator filters_active?/1 ignores window_hours, so choosing a narrower time window that has no deliveries commits immediately and renders the genuine no-data pane, which withholds the whole filter toolbar. Focus falls to <body> and the only recovery is browser Back. Inbound counts a non-default window (inbound_live.ex:1495-1501) and does not trap. The condition predates the phase, but auto-apply turns it into a one-change trap and the phase owns the select-commit path; the empty pane also claims no data when data exists outside the window."
-    artifacts:
-      - path: "mailglass_admin/lib/mailglass_admin/operator_live.ex"
-        issue: "lines 821-823 branch on not filters_active?(@filter_params); lines 1308-1311 filters_active?/1 drops window_hours"
-    missing:
-      - "Count a non-default window_hours as an active filter (match Inbound)"
-      - "LiveView test: select window_hours=24 where deliveries exist only outside it, assert #operator-filters still renders"
-  - truth: "SC1 / FILTER-01 (mobile): Deliveries filter panel remains usable across viewport widths"
-    status: partial
-    reason: "Deliveries mobile toggle uses JS.toggle (inline display:none) on a panel classed hidden md:block. Closing the panel on a narrow viewport leaves inline display:none that md:block cannot override, and the toggle is md:hidden, so at >=768px the filters are gone with no control until reload. Inbound already uses JS.toggle_class(\"mg-inbound-filters-open\") with a CSS comment documenting exactly this failure. Origin is Phase 98 (not introduced by 176), but plan 176-01 task 3 rewired this toggle (added aria-controls/aria-expanded via toggle_attribute) and kept JS.toggle. Verified in source."
-    artifacts:
-      - path: "mailglass_admin/lib/mailglass_admin/operator_live.ex"
-        issue: "lines 944-947 JS.toggle(to: \"#operator-filter-panel\"); line 960 class=\"hidden md:block\""
-    missing:
-      - "Use JS.toggle_class(\"mg-inbound-filters-open\", to: \"#operator-filter-panel\") (class already ships in the committed bundle; no CSS change)"
-      - "Browser or LiveView-level assertion that the panel is visible at desktop width after a toggle-close on mobile"
+re_verification:
+  previous_status: gaps_found
+  previous_score: 3/5
+  gaps_closed:
+    - "SC5 / INUX-06: Payload size and revealed raw source describe the same stored field"
+    - "SC4 / INUX-05: Contact addresses are part of the copy control's accessible name"
+    - "SC1 / FILTER-01: A non-default time window keeps the Deliveries toolbar"
+    - "SC1 / FILTER-01 (mobile): Deliveries filter panel survives a mobile close at desktop width"
+  gaps_remaining: []
+  regressions: []
+advisory:
+  - finding: "GR-WR-01: the sr-only Deliveries status region is frozen on a PubSub refresh even when the read state changes (ready to stale/error, error/stale to ready, empty to non-empty)"
+    category: other
+    reason: "Visible results and visible stale/error/empty panels are driven by read state and stay truthful; only the assistive-technology-only announcement text lags. No stated success criterion requires announcing another actor's activity (D-16 forbids it). Follow-up: freeze the text only when the settled state class is unchanged."
+    evidence_status: "code-read of operator_live.ex refresh_visible_state/1 and assign_delivery_state/5; no failing criterion"
 ---
 
 # Phase 176: Direct Filters and Useful Inbound Evidence Verification Report
 
 **Phase Goal:** Operators can find records directly in either collection and inspect useful ordinary Inbound contact/raw-source evidence while URL, Account and private-disclosure contracts remain truthful.
 **Verified:** 2026-10-28
-**Status:** gaps_found
-**Re-verification:** No, initial verification
+**Status:** passed
+**Re-verification:** Yes, after gap-closure plans 176-11..15. Previous status `gaps_found` (3/5).
 
 ## Goal Achievement
 
-The core mechanism is real and wired: both collections auto-apply selects, debounce search (300 ms, search input only), have no Apply control, commit through `FilterCommit` (server-held Account, page/selection dropped, canonical sorted query), and patch Account canonicalization with `replace: true`. The contract tests have teeth. Five defects remain that make a success criterion untrue in a specific, source-verified state. Each fix is small and local.
+All four gaps recorded by the initial verification are closed in source, each with a regression test and a mutation-proven contract describe (P9..P13). SC2 and SC3 were re-checked for regressions and still hold. The one new review finding (GR-WR-01) is judged advisory and does not break any stated criterion (see below).
 
 ### Observable Truths (ROADMAP success criteria)
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Select filters commit immediately, search is debounced, no Apply, Enter commits, results follow canonical URL (FILTER-01, FILTER-02) | PARTIAL (gaps below) | `phx-debounce="300"` on search only (`operator/filters_form.ex:33`, `inbound/filters_form.ex:38`); no Apply/submit/disable-with in either form (P1 contract tests pass); `FilterCommit` in `operator/filter_commit.ex`; `FilterSearchSync` hook in committed `priv/static/hooks.js`. Defects: Deliveries window select can remove the toolbar (WR-02); Deliveries mobile toggle can strand filters at desktop width. |
-| 2 | Back/Forward, Clear during debounce, rapid edits, reconnect, page reset, pagination preserve filters; history not flooded; Account/selection isolation (FILTER-03) | VERIFIED | `history_kind/2` pure policy (unit-tested); `replace: true` at `operator_live.ex:237`, `inbound_live.ex:531`; `commit_params/2` drops `page`, `delivery_id`, `inbound_id`, `full` and takes `tenant_id` only from the server; `filters_tenant_id` absent; 73 targeted + 331 LiveView tests pass at `--seed 0`. |
-| 3 | Invalid input keeps visible draft/error and identifiable committed results; failed reads show error/stale/unavailable, no silent fallback, no misleading empty population (FILTER-04) | VERIFIED | Draft vs committed split with `filter_error_source`; P7 (failed new-query read: no count, no empty copy) and P8 (URL-invalid filter labelled as excluded) contract tests pass on both collections; Retry is patch-free. Residual rough edges are advisory (WR-05, WR-06, IN-07). |
-| 4 | Ordinary authorized Inbound contacts show complete addresses (long/Unicode/missing/multiple), envelope vs header distinct, diagnostics/raw/telemetry protections intact (INUX-05) | PARTIAL (gap) | `detail_header.ex` `<dl>` order From, Reply-To, To, Cc, Delivered to; P3 binds "Delivered to" to `envelope_recipient` and "To" to header `to`; `mask_recipient/1`/`mask_value/1` kept and routing trace still masked (P2). Defect: addresses are not exposed to assistive technology (WR-04). |
-| 5 | Raw provider source groups heading/reveal/privacy and compact facts; permitted/denied reveal and unavailable evidence truthful; retained scenarios reproduce layouts (INUX-06) | PARTIAL (gap) | One header group, one persistent disclosure (`aria-expanded`/`aria-controls`), five-fact `<dl>`, nil-not-zero (P6), denied path leaks no sentinel bytes (P4), telemetry PII-free (P5). Defect: size and revealed bytes can describe different stored fields (WR-01). |
+| 1 | Select filters commit immediately, search debounced, no Apply, Enter commits, results follow canonical URL (FILTER-01, FILTER-02) | VERIFIED | `phx-debounce="300"` on search only; no Apply/submit control (P1 contract). Previously failing paths now closed: `filters_active?/1` (`operator_live.ex:1328-1332`) ORs in `non_default_window?/1` (`:1299`), so an empty narrower window keeps the toolbar and renders the filtered-empty pane (P11, both commit and URL paths); toggle is `JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")` (`operator_live.ex:951`), no inline display written (P12, asserts a `toggle_class` op and no style); the class is defined in source `assets/css/app.css:375` and the committed `priv/static/app.css`. Browser spec "filter panel is visible at desktop width after a mobile close" exists for both collections and passed in the orchestrator gate (Playwright 31 passed). |
+| 2 | Back/Forward, Clear during debounce, rapid edits, reconnect, page reset, pagination preserve filters; history not flooded; Account/selection isolation (FILTER-03) | VERIFIED (no regression) | `FilterCommit`, `replace: true` canonicalization and `FilterSearchSync` unchanged by the gap round except for the additive `non_default_window?` and class toggle; full LiveView suites pass (below); connected browser specs pass in the orchestrator gate. |
+| 3 | Invalid input keeps visible draft/error and identifiable committed results; failed reads show error/stale/unavailable with no silent fallback or misleading empty population (FILTER-04) | VERIFIED (strengthened) | P7 (failed new-query read: no count, no empty copy) and P8 (URL-invalid filter labelled) still pass; 176-15 adds P13 (URL-invalid note survives a later Search edit and a reconnect, on both collections) and the "Not applied" option so a rejected enum value is still shown beside its error. Read states `:stale`/`:error` come from `assign_delivery_state/5` (`operator_live.ex:1705-1716`): same-query failure keeps prior rows under the stale panel, a first-query failure shows the error panel with no rows. GR-WR-01 does not weaken this (see judgment). |
+| 4 | Ordinary authorized Inbound contacts show complete addresses (long/Unicode/missing/multiple); envelope vs header distinct; diagnostics/raw/telemetry protections intact (INUX-05) | VERIFIED | `Components.copy_value/1` now `aria-label={"Copy #{@label}: #{@value}"}` (`components.ex:1609-1625`), so the visible address is in the accessible name (WCAG 2.5.3). `inbound/components_test.exs:661-668` asserts every contact button's name is `"Copy " <> label <> ": " <> value`, including the Unicode address `用户@例子.广告`; `components_test.exs:605,615` pin the Delivery ID and To-address names. P10 live tests seed From/To/Cc/envelope and assert all four values are present and `copy_name_violations/1 == []`. P2/P3/P4/P5 (masked routing trace, envelope vs header, no raw bytes in redacted/denied HTML, PII-free telemetry) still pass. |
+| 5 | Raw provider source groups heading/reveal/privacy and compact facts; permitted/denied reveal and unavailable evidence truthful; retained scenarios reproduce layouts (INUX-06) | VERIFIED | One selector `raw_source/1` (`evidence_card.ex:177-189`) drives both `payload_byte_size/1` and `raw_payload_text/1`; precedence payload map then raw_mime, matching the pre-phase reveal order so revealed bytes are unchanged (D-27). `evidence_card_test.exs:241-262` stores BOTH fields (the exact case the first verification found untested) and asserts the size equals `byte_size` of the revealed text and that the raw_mime marker is not shown. P9 repeats this at component level (including a >1.7 KB payload) and on a live authorized reveal of a record seeded with both fields. Denial is announced from the persistent `role="status"` region (`evidence_card.ex:133-146`), and a record with nothing stored shows only the static "was not stored" sentence with no reveal control (IN-04). Unknown size/headers render "Unavailable", never 0 (P6). |
 
-**Score:** 3/5 truths verified (SC2, SC3 fully; SC1, SC4, SC5 partial)
+**Score:** 5/5 truths verified (0 present, behavior-unverified)
 
-### Adjudication of review findings
+### Judgment: GR-WR-01 (frozen Operator status region after a background refresh)
 
-| Finding | Verdict | Source evidence |
-|---------|---------|-----------------|
-| REVIEW WR-01 | GAP (phase regression) | `evidence_card.ex:166-183` size is raw_mime-first; `:205-212` reveal is raw_payload-first; pre-phase (`c96c8a4f`) both were raw_payload-first. SES stores both (`mailglass_inbound/.../ses.ex:118-120`). |
-| REVIEW WR-02 | GAP | `operator_live.ex:821-823`, `:1308-1311`; Inbound counts window (`inbound_live.ex:1495-1501`). Default window is 168 h, so any narrower option with no recent traffic triggers it. |
-| REVIEW WR-03 | Advisory (D-26 wording deviation) | Pre-phase denial was a plain `<p>` (never announced). Phase added `role="status"` to the inserted denial paragraph (`evidence_card.ex:133-140`); the persistent region still reads "Raw source hidden." for `:denied` (`:249-250`). Visible text is truthful; announcement reliability is imperfect. Recommend using the persistent region as D-26 states. |
-| REVIEW WR-04 | GAP | `components.ex:1605` aria-label replaces the address; sole address presentation in `detail_header.ex`. |
-| REVIEW WR-05 | Advisory | Enum select shows the prompt ("Any outcome"/"Any status") beside "was not applied". That agrees with the effective filter (none applied); the next edit posting `""` clears an already-ignored value, so results do not change. Cosmetic against D-12's wording. |
-| REVIEW WR-06 | Advisory | Confirmed mechanism (`inbound_live.ex:2080-2110`): a re-posted invalid window keeps committing blocked and swaps the URL note for the draft note. D-12 explicitly says an invalid draft never commits, the highlighted field is the invalid window, and results still reflect the committed URL. The loss of the "excluded" label is a polish miss, not a silent fallback. |
-| REVIEW WR-07 | Advisory (D-16 deviation) | `refresh_visible_state/1` (`operator_live.ex:1221-1229`) reruns `assign_delivery_state/5`, which rewrites `results_status_text` (`:1791-1801`) on PubSub refresh; Inbound does not. Unsolicited polite announcements on busy Accounts. Recommend confining the assign to commit-driven reads. |
-| REVIEW WR-08 | Advisory | Wall-clock 250 ms assertions are in the advisory browser lane (D-29), not merge-blocking. |
-| UI-REVIEW BLOCKER (mobile toggle) | GAP, pre-existing origin | Verified at `operator_live.ex:944-960`; fix pattern already shipped for Inbound. Counted because 176-01 rewired this exact control. |
-| Blank `window_hours` / IN-07 | Advisory | `normalize_window_filter` treats a present-blank key as an error (`operator_live.ex:2609-2613`) and `window_options/2` emits "Custom period ( hours)". Reachable only by hand-editing the URL; error copy is still specific. Fix with the WR-02 round. |
-| Envelope recipient duplicated / subject-less Quick view | Advisory | Subject-less messages use the recipient as the heading (`components.ex:564`), so it is not dropped. The full detail repeating "Delivered to" in the identity line and the contact row is redundancy, not a false statement. |
-| Pre-existing, not counted | Noted | `aria-selected` on `<button>` rows (Phase 113, axe critical, baseline-compared in 176-10); 10 unformatted files untouched by 176; `assign_delivery_state/5` complexity 24. |
+Mechanism confirmed in source: `refresh_visible_state/1` (`operator_live.ex:1230-1244`) re-runs `assign_delivery_state/5` and then restores the previous `results_status_text` unconditionally. The review's three scenarios are real: ready to stale/error, error/stale to ready, and empty to non-empty on a PubSub `:delivery_updated`.
+
+Why it does not break a success criterion:
+
+- The status region is `class="sr-only"` (`operator_live.ex:809-821`). It is a supplementary announcement channel; the authoritative UI is the visible list and the stale/error/empty panels, which render from `deliveries_read_state` and the row data, not from `results_status_text`. After a background refresh, rows, stale panel (with "Results loaded ..." time and Retry), error panel and empty pane are all current and truthful. SC3 / FILTER-04 require "truthful error/stale/unavailable feedback" and "no silent fallback queries or misleading empty populations": a failed refresh keeps the prior rows under the stale panel (`operator_live.ex:1710-1712`), no fallback query runs, and the visible empty state is not misrepresented.
+- The freeze is the intended D-16 behavior: the polite region speaks after a commit or Retry, never on another actor's background activity. The ready-to-ready case (the common one) is correct and tested. The ready-to-stale case is also self-consistent for AT: the retained text describes the stale rows still on screen.
+- The incongruent cases (error to ready, empty to non-empty) require a PubSub-driven state recovery with an AT user reading the region by navigation rather than the page. That is a real polish defect but a narrow one, and no truth in the ROADMAP contract mentions announcing background refreshes.
+
+Verdict: advisory (recorded in `advisory:` frontmatter), not a gap and not a human-verification item. Suggested follow-up: freeze the text only when the settled state class (ready/stale/error, empty vs non-empty) is unchanged, with tests for ready-to-stale and error-to-ready. Other open info items (GR-IN-01..04, IN-01/02/03/05/06, deferred WR-08) are quality notes with no criterion impact; GR-IN-02 ("Payload size" measures the pretty-printed text) is consistent with the revealed bytes and is documented in the function comment.
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `operator/filter_commit.ex` | Pure commit/history/canonical-query helpers | VERIFIED | Substantive and wired from both LiveViews; unit tests pass. |
-| `operator/results_status.ex` | Persistent status text per collection | VERIFIED | Wired in both LiveViews, rendered in `role="status"` from first paint. |
-| `inbound/address_list.ex` | Dedupe, split >5, spoof cue, unparseable | VERIFIED | Wired in `detail_header.ex`; tests pass. |
-| `inbound/evidence_card.ex` | Single-disclosure card + five facts | PARTIAL | Wired; size/reveal source mismatch (WR-01). |
-| `priv/static/hooks.js` (`FilterSearchSync`) | Back/Forward sync hook, committed bundle | VERIFIED | Referenced by `phx-hook` on both search inputs; working tree clean. |
-| `phase176_prohibition_contract_test.exs` | Mutation-proven must-NOT contracts (D-30) | VERIFIED | 8 prohibitions with fail-first detector tests; passes. |
+| `operator/filter_commit.ex`, `operator/results_status.ex` | Commit/history policy; persistent status text | VERIFIED | Wired in both LiveViews. |
+| `inbound/address_list.ex`, `inbound/detail_header.ex` | Dedupe, split, spoof cue, complete addresses | VERIFIED | Wired; contact buttons carry value-bearing names. |
+| `inbound/evidence_card.ex` | Single-disclosure card, five facts, one source selector | VERIFIED | `raw_source/1` shared by size and reveal. |
+| `components.ex` `copy_value/1` | Copy control with value in accessible name | VERIFIED | `components.ex:1620`. |
+| `operator_live.ex` | Window-aware `filters_active?`, class toggle | VERIFIED | `:1328`, `:951`. |
+| `priv/static/hooks.js`, `priv/static/app.css` | Committed bundles | VERIFIED | hooks.js present; `.mg-inbound-filters-open` in committed app.css; no uncommitted changes under `mailglass_admin`. |
+| `phase176_prohibition_contract_test.exs` | Mutation-proven must-NOT contracts | VERIFIED | P1..P13 plus a "detectors have teeth" describe; passes. |
 
 ### Key Link Verification
 
 | From | To | Via | Status |
 |------|----|-----|--------|
 | Filter form `phx-change` | `FilterCommit.commit_params/2` then `push_patch` | `commit_filters/3` | WIRED |
-| `handle_params` | Read + `ResultsStatus.text/1` | `assign_delivery_state/5`, inbound equivalent | WIRED (see WR-07 for PubSub path) |
-| Search input | `FilterSearchSync` hook | `phx-hook` + `data-committed` | WIRED |
-| Detail header contacts | `AddressList` | `contact_entries/2` | WIRED |
-| Reveal button | `reveal_raw`/`re_redact_raw` auth at action time | `inbound_live.ex` | WIRED, unchanged |
+| `handle_params` | Read + `ResultsStatus.text/1` | `assign_delivery_state/5` | WIRED |
+| Mobile toggle | `#operator-filter-panel` class `mg-inbound-filters-open` | `JS.toggle_class` | WIRED |
+| Contact entries | `copy_value/1` accessible name | `aria-label` includes `@value` | WIRED |
+| `payload_byte_size/1` and `raw_payload_text/1` | `raw_source/1` | shared selector | WIRED |
+| Reveal button | `reveal_raw` auth at action time | `inbound_live.ex` | WIRED, unchanged |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Variable | Source | Real data | Status |
 |----------|----------|--------|-----------|--------|
-| `detail_header.ex` contacts | `from/to/cc/reply_to` arrays | `InboundRecord` schema via operator read model | Yes | FLOWING |
-| `evidence_card.ex` facts | `raw_mime`/`raw_payload`/`raw_headers` | `InboundEvidence` | Yes | FLOWING (size/source mismatch noted) |
-| Deliveries/Inbound lists | rows, `total_count` | Tenant-scoped read models | Yes | FLOWING |
+| Contact rows | `from/to/cc/reply_to` | `InboundRecord` via read model | Yes | FLOWING |
+| Evidence facts | `raw_payload`/`raw_mime`/`raw_headers` | `InboundEvidence` | Yes, P9 live reveal seeds both fields | FLOWING |
+| Deliveries/Inbound lists | rows, `total_count` | Tenant-scoped reads | Yes | FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
-| Prohibition contracts + commit/status/address/evidence units | `mix test` on 5 phase files, `--seed 0` | 73 tests, 0 failures | PASS |
-| Connected LiveView behavior | `mix test operator_live_test inbound_live_test inbound/components_test`, `--seed 0` | 331 tests, 0 failures | PASS |
-| Orchestrator gate (not re-run by verifier) | `scripts/gsd-regression-gate.sh` | core 81/0, admin 842/0, inbound 480/0, browser 31, node 42/0 | reported by orchestrator |
+| Contract, evidence card, components (both), Operator and Inbound LiveViews | `cd mailglass_admin && mix test --seed 0 test/mailglass_admin/phase176_prohibition_contract_test.exs test/mailglass_admin/inbound/evidence_card_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/components_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs` | 526 tests, 0 failures (logged error is an injected read-fault test) | PASS |
+| Orchestrator post-merge gate at HEAD (not re-run by verifier) | `scripts/gsd-regression-gate.sh` | exit 0: core 81/0, admin 878/0, inbound 480/0, Playwright 31 passed, node storybook tests pass | reported |
 
 ### Probe Execution
 
@@ -168,43 +149,30 @@ SKIPPED: the phase declares no probe scripts.
 
 | Requirement | Source Plans | Status | Evidence |
 |-------------|--------------|--------|----------|
-| FILTER-01 | 01, 07, 10 | PARTIAL | Auto-apply works on both; Deliveries window-select toolbar trap and mobile-toggle strand (gaps). |
-| FILTER-02 | 01, 06, 07, 10 | SATISFIED | Debounce 300 on search only, Enter via implicit submission, hook for Back focus. |
-| FILTER-03 | 01, 06, 07, 10 | SATISFIED | History policy, `replace: true` canonicalization, page/selection drop, server-held tenant. |
-| FILTER-04 | 04, 07, 09, 10 | SATISFIED | P7/P8 contracts; stale vs error separation; residual polish advisory. |
-| INUX-05 | 02, 08, 10 | PARTIAL | Complete addresses visually and by data; not exposed to AT (WR-04). |
-| INUX-06 | 03, 05, 08, 10 | PARTIAL | Card hierarchy done; size/reveal mismatch (WR-01). |
+| FILTER-01 | 01, 07, 10, 13 | SATISFIED | Auto-apply on both; window toolbar trap and mobile strand closed (P11, P12). |
+| FILTER-02 | 01, 06, 07, 10 | SATISFIED | Debounce 300 ms on search only; Enter commits; Back focus hook. |
+| FILTER-03 | 01, 06, 07, 10 | SATISFIED | History policy, `replace: true`, page/selection drop, server-held tenant. |
+| FILTER-04 | 04, 07, 09, 10, 13, 15 | SATISFIED | P7, P8, P13, "Not applied" option; read-state-driven visible feedback. GR-WR-01 advisory only. |
+| INUX-05 | 02, 08, 10, 12 | SATISFIED | Complete addresses visually, by data and in the accessible name (P10). |
+| INUX-06 | 03, 05, 08, 10, 11 | SATISFIED | One source selector (P9); denial announced from persistent region; unavailable never zero. |
 
-All six phase requirement IDs appear in plan frontmatter and in REQUIREMENTS.md (checked complete there). No orphaned requirements. REQUIREMENTS.md currently marks FILTER-01, INUX-05, INUX-06 as complete; that should be treated as provisional until the gaps close.
-
-### Locked-decision spot audit
-
-D-01/D-02 (change commits, 300 ms search only), D-03/D-04 (no Apply, no hidden submit), D-07 (`replace: true`), D-08/D-09 (page and selection dropped, server tenant), D-10 (hook in committed bundle, no `phx-patch-focused`), D-17 to D-22 (contact `<dl>`, `AddressList`), D-23 (`mask_recipient/1`, `mask_value/1` retained, trace masked), D-24 to D-27 (single disclosure, `<pre tabindex>`, `can_reveal?` removed), D-28 to D-31 (tests present and passing; coupled specs updated per 176-10) are honored. Deviations: D-16 (WR-07), D-26 denial wiring (WR-03), D-06 Enter replaces when finalizing an in-flight search edit (a deliberate refinement consistent with one entry per intent; accepted).
+All six IDs appear in plan frontmatter and in REQUIREMENTS.md; none orphaned. Note for the orchestrator: REQUIREMENTS.md still shows the six checkboxes unticked and the traceability table "Gaps Found" for FILTER-01..04, INUX-05, INUX-06. Per instructions the verifier did not edit it; it should move to Complete now that status is `passed`.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `operator_live.ex` | 944-947 | `JS.toggle` on a `md:block` panel | Blocker (gap) | Filters unreachable at desktop width |
-| `evidence_card.ex` | 166 vs 205 | Divergent field precedence | Warning (gap) | Size and revealed bytes disagree |
-| `components.ex` | 1605 | `aria-label` hides visible text | Warning (gap) | Addresses unreadable to AT |
-| `deliveries_list.ex`, `records_list.ex` | 116-121, 137-167 | Test ids carried by hidden `display:none` divs | Info | Not production markup; no user impact |
-| Debt markers | n/a | No unreferenced TBD/FIXME/XXX found in changed implementation files | None | n/a |
+| `operator_live.ex` | 1230-1244 | Unconditional status-text freeze on PubSub refresh | Advisory (GR-WR-01) | AT-only text can lag a background state change |
+| `operator_live.ex`, `inbound_live.ex` | 192, 225 | `filter_error_source` can no longer be `:url` | Info (GR-IN-01) | Dead state |
+| Debt markers | n/a | No TBD/FIXME/XXX in changed implementation files | None | n/a |
 
 ### Human Verification Required
 
-None. Per D-52 every item above is machine-observable and is routed to a gap or advisory.
+None. Per D-52 every item above is machine-observable and was either verified by automated test or recorded as an advisory. Brand/visual identity, secrets and physical devices are not involved in this phase's criteria.
 
 ### Gaps Summary
 
-Close in one small gap round (all single-file edits):
-
-1. `evidence_card.ex`: unify the source selector for size and reveal; add a both-fields test.
-2. `components.ex:1605`: include the value in the `copy_value` accessible name; add an accessible-name test.
-3. `operator_live.ex:1308`: count a non-default window as active; add the toolbar-persists test.
-4. `operator_live.ex:944`: switch the Deliveries toggle to `JS.toggle_class("mg-inbound-filters-open", ...)`; add a desktop-width assertion.
-
-Recommended to bundle (advisory, cheap): WR-07 confine `results_status_text` to commit-driven reads; WR-03 announce denial from the persistent region; IN-07 skip the custom option for a blank window value.
+No gaps. Previous gaps (SC5 size/reveal source, SC4 accessible name, SC1 window toolbar trap, SC1 mobile toggle) are closed with tests and mutation-proven contracts. Recommended non-blocking follow-ups: GR-WR-01 (conditional status-text freeze), then the remaining open info items.
 
 ---
 

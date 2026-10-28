@@ -77,7 +77,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 
 - [x] **Phase 174: Faithful Storybook and Quiet Quick Views** — Repair both quick-view navigation controls and make their retained stories trustworthy. (completed 2026-10-27)
 - [x] **Phase 175: Delivery Investigation and Safe Replay** — Complete an early Delivery investigation/recovery path and repair replay review/outcomes on both operator surfaces. (completed 2026-10-27)
-- [ ] **Phase 176: Direct Filters and Useful Inbound Evidence** — Auto-apply both collections and make ordinary Inbound evidence useful without widening private disclosure.
+- [x] **Phase 176: Direct Filters and Useful Inbound Evidence** — Auto-apply both collections and make ordinary Inbound evidence useful without widening private disclosure. (completed 2026-10-28)
 - [ ] **Phase 177: Readable Health and Coherent Account Navigation** — Recompose Health and preserve truthful Account context through the workspace and Preview return.
 - [ ] **Phase 178: Preview Authoring and Milestone Review** — Repair author controls and deliver the complete bounded, reproducible review preview.
 
@@ -163,7 +163,7 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 15/15 plans executed (10 executed in 6 waves; 5 gap-closure plans 176-11..15 in 5 sequential waves)
+**Plans:** 15/15 plans complete (10 executed in 6 waves; 5 gap-closure plans 176-11..15 in 5 sequential waves)
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
@@ -275,7 +275,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | --- | --- | --- | --- |
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
-| 176. Direct Filters and Useful Inbound Evidence | 15/15 | In Progress | — |
+| 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
