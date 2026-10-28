@@ -52,7 +52,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
         help_display={:tooltip}
         error={field_error(@errors, "event")}
         prompt="Any status"
-        options={enum_options(@event_values)}
+        options={enum_options(@event_values, @form[:event].value)}
       />
 
       <Components.filter_field
@@ -86,6 +86,21 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     |> Atom.to_string()
     |> String.replace("_", " ")
     |> String.capitalize()
+  end
+
+  # A rejected enum value stays selected as a "Not applied" option so the select never
+  # shows its prompt beside its "was not applied" error (D-12). The option is enabled on
+  # purpose: a disabled option is left out of form submission, so the next change event
+  # would post no value and silently clear the filter.
+  defp enum_options(values, current) do
+    listed = enum_options(values)
+    current = current |> to_string() |> String.trim()
+
+    if current != "" and not Enum.any?(listed, fn {_label, value} -> value == current end) do
+      [{"Not applied: " <> current, current} | listed]
+    else
+      listed
+    end
   end
 
   defp enum_options(values) do
