@@ -163,7 +163,7 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 13/15 plans executed (10 executed in 6 waves; 5 gap-closure plans 176-11..15 in 5 sequential waves)
+**Plans:** 14/15 plans executed (10 executed in 6 waves; 5 gap-closure plans 176-11..15 in 5 sequential waves)
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
@@ -201,7 +201,7 @@ Plans:
 - [x] 176-13-PLAN.md — Deliveries: window counts as a filter (WR-02), class-based mobile toggle, PubSub status quiet (WR-07), blank window (IN-07) (FILTER-01).
 
 **Gap closure — Wave 4** *(blocked on 176-11 and 176-13)*
-- [ ] 176-15-PLAN.md — URL-invalid results stay labelled after an edit or reconnect, beside the draft note (WR-06, D-12/D-13); rejected enum stays selected as "Not applied" (WR-05, D-12) (FILTER-04).
+- [x] 176-15-PLAN.md — URL-invalid results stay labelled after an edit or reconnect, beside the draft note (WR-06, D-12/D-13); rejected enum stays selected as "Not applied" (WR-05, D-12) (FILTER-04).
 
 **Gap closure — Wave 5** *(blocked on 176-15)*
 - [ ] 176-14-PLAN.md — Contract P9..P13 mutation-proven; full Phase 176 gate re-run; review disposition (WR-08 and eight UI-review warnings deferred, one reconciled).
@@ -275,7 +275,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | --- | --- | --- | --- |
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
-| 176. Direct Filters and Useful Inbound Evidence | 13/15 | In Progress | — |
+| 176. Direct Filters and Useful Inbound Evidence | 14/15 | In Progress | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
