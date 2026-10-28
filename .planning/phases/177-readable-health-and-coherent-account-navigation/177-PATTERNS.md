@@ -42,7 +42,7 @@ Reading order for the planner: File Classification -> Shared Patterns (apply to 
 | `test/mailglass_admin/router_test.exs` (MOD, add ThemeController cases + `refute return_*`) | test | request-response | itself (`:83-152`, `:195-293`) | exact (self) |
 | Coupled-assertion edits: `shell_test.exs:216`, `preview_live_test.exs:358-365`, `voice_test.exs:65`, `operator_live_test.exs` (4639-40, 4761, 5713/5736/5782/5799, 5737, 5756, 5791, 2728), `persona_cohort_test.exs:116` (MOD) | test | n/a | themselves | exact (self) |
 | `test/mailglass_admin/quick_view_projection_test.exs` (MOD, add `@tag :phase177` table) | test | transform | itself `@tag :phase176` test (`:310-348`) | exact (self) |
-| `e2e/phase177-health-account.spec.js` (NEW) | test (Playwright) | request-response | `e2e/phase176-filters.spec.js` (1-20, AxeBuilder) + `e2e/phase169-journey.spec.js` (350-366, geometry) | role-match |
+| `e2e/phase177-return-navigation.spec.js`, `e2e/phase177-account.spec.js`, `e2e/phase177-health.spec.js` (NEW; planned as three specs, plans 177-01/06/08) | test (Playwright) | request-response | `e2e/phase176-filters.spec.js` (1-20, AxeBuilder) + `e2e/phase169-journey.spec.js` (350-366, geometry) | role-match |
 | `e2e/support/account.cjs` (NEW, visible-only Account locator helper) | test support | n/a | `e2e/support/storybook-axe-supplement.cjs` (CommonJS helper under `e2e/support`) | role-match |
 | e2e edits: `phase169-journey.spec.js:52,357,367`; `flows.spec.js`; `structural.spec.js`; `inbound-layout.spec.js`; `phase170-journey.spec.js`; `phase175-inbound.spec.js` (MOD) | test | n/a | themselves | exact (self) |
 
@@ -52,7 +52,7 @@ Reading order for the planner: File Classification -> Shared Patterns (apply to 
 |---|---|---|---|---|
 | `reference/demo_app/lib/mailglass_demo_web/router.ex` (MOD, Preview `navigation`) | config | n/a | itself (`:104-148`) | exact (self) |
 | `reference/demo_app/lib/mailglass_demo_web/admin_auth.ex` (MOD, logged-out `to:`) | middleware (auth adapter) | request-response | itself + `mailglass_admin/test/support/endpoint_case.ex` `TestOperatorAuth` first clause (`:368-371`) | role-match |
-| `reference/demo_app/test/mailglass_demo_web/admin_auth_test.exs` (NEW) | test | request-response | `reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs` | role-match |
+| `reference/demo_app/test/mailglass_demo_web/phase177_navigation_test.exs` (NEW; plan 177-10) | test | request-response | `reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs` | role-match |
 | `reference/demo_app/assets/e2e/phase177-return.spec.js` (NEW) | test (Playwright) | request-response | `reference/demo_app/assets/e2e/phase176-filters.spec.js` (`loginTo`, 1-8) | exact |
 | `reference/demo_app/storybook/health_overview.story.exs` (NEW) | story | transform | `reference/demo_app/storybook/delivery_investigation.story.exs` | exact |
 | `reference/demo_app/storybook/account_scope.story.exs` (NEW) | story | transform | `reference/demo_app/storybook/inbound_evidence.story.exs` | exact |
@@ -801,7 +801,7 @@ Per RESEARCH "Existing assertions that WILL break" (the "five" in CONTEXT is a f
 
 ---
 
-### `mailglass_admin/e2e/phase177-health-account.spec.js` (NEW; Playwright)
+### `mailglass_admin/e2e/phase177-{return-navigation,account,health}.spec.js` (NEW; Playwright; the single planned spec was split into three, see plans 177-01, 177-06/07, 177-08)
 
 **Analogs:** `e2e/phase176-filters.spec.js` (login/seed helper `:8-20`, `AxeBuilder`, `WCAG_TAGS`) and `e2e/phase169-journey.spec.js` (`page.evaluate` geometry capture `:350-366`; reader-fault arming `:38-47`).
 
@@ -859,11 +859,11 @@ async function loginTo(page, target) {
 }
 ```
 
-Journey: log in at `/ops/mail?tenant_id=fjordline-aps&view=deliveries`, click Preview, assert "Back to Deliveries" returns to the Fjordline Deliveries view (dynamic return, not static Northstar), Browser Back from operator returns to Preview; logged-out direct entry to `/ops/mail...` ends at `/demo/login`. Advisory lane (project convention).
+Journey: log in at `/ops/mail?tenant_id=fjordline-aps&view=deliveries`, click Preview, assert "Back to Deliveries" returns to the Fjordline Deliveries view (dynamic return, not static Northstar), Browser Back from operator returns to Preview; logged-out direct entry to `/ops/mail...` goes to `/demo/login?return_to=<encoded arrival path?query>` and, after login, lands on the requested Account and surface (D-07; plan 177-10). Advisory lane (project convention).
 
 ---
 
-### `reference/demo_app/lib/mailglass_demo_web/router.ex` (MOD) and `admin_auth.ex` (MOD) and `test/.../admin_auth_test.exs` (NEW)
+### `reference/demo_app/lib/mailglass_demo_web/router.ex` (MOD) and `admin_auth.ex` (MOD) and `test/mailglass_demo_web/phase177_navigation_test.exs` (NEW)
 
 **Router** (`router.ex:104-148`), Preview `navigation` today wraps each target in a static Northstar login redirect:
 
@@ -885,14 +885,15 @@ def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
   {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
 end
 
-# demo, new clause (RESEARCH Open Question 1 recommendation; reversible)
+# demo, new clause: SUPERSEDED. The plain "/demo/login" form below contradicts locked D-07.
+# Plan 177-10 uses to: "/demo/login?return_to=" <> URI.encode_www_form(path_and_query) instead.
 def authorize(:operator_access, %{actor: %{subject_id: nil}}),
   do: {:error, :unauthorized, %{message: "demo operator login required", to: "/demo/login"}}
 ```
 
-The auth context carries `params` but not the request path, so `/demo/login` (whose `safe_return_to/1` defaults to `/ops/mail?tenant_id=northstar`, `page_controller.ex:155-185`) is the simplest correct redirect (assumption A1: a logged-out "Back to Inbound" lands on Health). Record this trade-off.
+**Superseded (revision BLOCKER 1):** the claim that the auth context lacks the request path is wrong. The context carries `socket`, and `Phoenix.LiveView.get_connect_info(socket, :uri)` returns `%URI{path: conn.request_path, query: conn.query_string}` on the disconnected render (LV 1.1.33 and 1.2.13 `conn_connect_info/2`), which is the only render a logged-out request reaches. Plan 177-10 builds `return_to` from it, falling back to `/ops/mail` plus the `tenant_id`/`view` params. The existing `safe_return_to/1` (`page_controller.ex:155-185`) validates it, so a logged-out Fjordline or Inbound return lands on the requested Account and surface (D-07). RESEARCH A1 is marked RESOLVED/REFUTED.
 
-**Demo ExUnit test** for the new clause: pure `AdminAuth.authorize(:operator_access, %{actor: %{subject_id: nil}, params: %{}})` assertion; if a conn-level test is wanted, use `use MailglassDemo.ConnCase, async: false` as in `page_controller_security_test.exs:1-4`:
+**Demo ExUnit test** (`phase177_navigation_test.exs`) for the new clause: a pure `AdminAuth.authorize(:operator_access, %{actor: %{subject_id: nil}, params: %{...}})` fallback assertion plus conn-level logged-out Fjordline return rows (plan 177-10), use `use MailglassDemo.ConnCase, async: false` as in `page_controller_security_test.exs:1-4`:
 
 ```elixir
 test "login only redirects to local operator paths", %{conn: conn} do

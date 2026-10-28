@@ -217,7 +217,35 @@ Plans:
 3. An operator entering Preview can return to the originating Account through a host-approved local destination. Connected tests cover custom mounts, tampered/external destinations, unauthorized Account targets and direct entry fallback; destination context grants no authority and does not widen Preview auth/session whitelists. (UXF-10)
 4. Retained Health/Account/navigation area scenarios use the production presentation and realistic normal/empty/stale/unavailable/long-content cases where reachable; real routes prove the underlying scope and return behavior. (OUTUX-06, UXF-09, UXF-10)
 
-**Plans:** TBD
+**Plans:** 11 plans
+
+Plans:
+**Wave 1**
+- [ ] 177-01-PLAN.md — Return seam tracer: ReturnContext validator, Preview-link minting, Back link, ThemeController segment boundary (UXF-10)
+- [ ] 177-02-PLAN.md — Pre-refactor Health population golden (OUTUX-06)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 177-03-PLAN.md — Return context through every Preview builder, custom mounts, host-denied Accounts, truthful Preview subtitle (UXF-10, UXF-09)
+- [ ] 177-04-PLAN.md — Health structure: one 42rem column, observation group, fixed-order 44px issue rows with tertiary help, subordinate activity, bundle (OUTUX-06)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 177-05-PLAN.md — Health copy, copy-coupled assertions and design-system amendment (OUTUX-06)
+- [ ] 177-10-PLAN.md — Demo dynamic return for a non-default Account (incl. logged-out D-07 return_to) and router docs note (UXF-10)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 177-06-PLAN.md — Account control as scope-group header, picker only with a choice, Preview outside scope (UXF-09)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 177-07-PLAN.md — Visible-only Account selectors across coupled specs, keyboard/axe/reduced-motion/Preview browser proof (UXF-09)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 177-08-PLAN.md — Bounded Health A vs B comparison and retained geometry/link-landing/help-tier gates (OUTUX-06)
+
+**Wave 7** *(blocked on Wave 6 completion)*
+- [ ] 177-09-PLAN.md — Retained Health/Account/Preview-chrome stories and closed feedback entries (OUTUX-06, UXF-09, UXF-10)
+
+**Wave 8** *(blocked on Wave 7 completion)*
+- [ ] 177-11-PLAN.md — Mutation-proven prohibition contract and phase gate (OUTUX-06, UXF-09, UXF-10)
 **UI hint:** yes
 
 **Planning focus:** Implement the expressly admitted navigation-only return capability with a narrow host-friendly contract. Current static Northstar destinations do not prove same-Account return. Preserve host configuration compatibility, Browser Back and independent Preview rendering. Do not add global current-Account state or broaden session/auth pass-through.
