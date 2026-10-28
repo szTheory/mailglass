@@ -782,3 +782,47 @@ test.describe("Phase 176 gap closure", () => {
     });
   }
 });
+
+// -----------------------------------------------------------------------------
+// Phase 176 gap closure (plan 176-15, WR-06 / D-12 / D-13). While the committed URL
+// still carries an invalid filter value, the URL note stays on screen after a
+// reconnect (phx-auto-recover re-posts the invalid value) and after a Search edit
+// that never commits. The D-12 draft note shows beside it once a change event
+// leaves the draft invalid. One test per collection, generated at describe level.
+// -----------------------------------------------------------------------------
+
+test.describe("Phase 176 URL-invalid labelling", () => {
+  for (const key of ["deliveries", "inbound"]) {
+    const c = collections[key];
+
+    test(`Phase 176 URL-invalid labelling: ${key} keeps the URL note after reconnect and Search`, async ({ page }) => {
+      await openCollection(page, key, { query: "&window_hours=abc" });
+
+      const urlNote = page.getByTestId("filters-url-invalid-note");
+      const draftNote = page.getByTestId("filters-draft-pending-note");
+      const windowParam = () => new URL(page.url()).searchParams.get("window_hours");
+
+      // First render: URL note only.
+      await expect(urlNote).toBeVisible();
+      await expect(urlNote).toContainText("Showing results for the default time window instead.");
+      await expect(draftNote).toHaveCount(0);
+
+      // Reconnect: phx-auto-recover re-posts window_hours=abc; no commit, both notes show.
+      await page.evaluate(() => window.liveSocket.disconnect());
+      await page.evaluate(() => window.liveSocket.connect());
+      await expect(page.locator("[data-phx-main].phx-connected")).toBeVisible();
+      await expect(urlNote).toBeVisible();
+      await expect(urlNote).toContainText("Showing results for the default time window instead.");
+      await expect(draftNote).toBeVisible();
+      expect(windowParam()).toBe("abc");
+
+      // Search edit: the invalid draft never commits; the URL note stays.
+      await page.locator("#filters_search").fill("zz");
+      await page.waitForTimeout(800);
+      expect(searchParamOf(page)).toBeNull();
+      expect(windowParam()).toBe("abc");
+      await expect(urlNote).toBeVisible();
+      await expect(draftNote).toBeVisible();
+    });
+  }
+});
