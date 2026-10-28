@@ -64,6 +64,16 @@ created: "2026-10-28"
 | T-176-24 | Information disclosure | Facts list in redacted state | low | mitigate | Facts `<dl>` exposes sizes, counts, provider, time and `safe_verification_status/1` only (`evidence_card.ex:~100-121`); raw `<pre>` `:revealed`-only (T-176-08) | closed |
 | T-176-25 | Denial of service | Debounced search commits | low | accept | See Accepted Risks AR-176-02 | closed |
 | T-176-26 | Information disclosure | Reveal telemetry (re-proves T-176-10 from plan 176-03) | medium | mitigate | P5 (`phase176_prohibition_contract_test.exs:312-334`) for `:granted` and `:denied`; `telemetry_violations/1` (:531) requires keys exactly `[:outcome, :record_id, :tenant_id]` and no `@` in any value | closed |
+| T-176-27 | Information disclosure | `evidence_card.ex` raw_source/1 selector (gap 176-11) | medium | mitigate | `defp raw_source/1` (`inbound/evidence_card.ex:196`) keeps raw_payload first, so revealed bytes are unchanged; `<pre>` still `:revealed`-only; P4/P5 green | closed |
+| T-176-28 | Tampering | Payload size fact integrity (gap 176-11) | low | mitigate | `payload_byte_size/1` and `raw_payload_text/1` both derive from `raw_source/1` (:186, :243); P9 (`phase176_prohibition_contract_test.exs:525`) mutation-proven (176-14) | closed |
+| T-176-29 | Tampering | `copy_value/1` aria-label interpolation (gap 176-12) | medium | mitigate | `aria-label={"Copy #{@label}: #{@value}"}` is a HEEx-escaped attribute (`components.ex:1615`); hostile-value test (`components_test.exs:609`); P10 | closed |
+| T-176-30 | Information disclosure | Address in the accessible name (gap 176-12) | low | accept | See Accepted Risks AR-176-03 | closed |
+| T-176-31 | Tampering | `normalize_window_filter/2` blank branch (gap 176-13) | low | mitigate | Only blank values default to 168; positive-integer parse and `@max_window_hours` bound kept (`operator_live.ex:51,2630`); oversized-draft error asserted; P11 | closed |
+| T-176-32 | Information disclosure | PubSub-driven status announcements (gap 176-13) | low | mitigate | `refresh_visible_state/1` restores `results_status_text` (`operator_live.ex:1233-1243`); PubSub status test in `operator_live_test.exs` | closed |
+| T-176-33 | Repudiation | P9..P13 contract vacuity (gap 176-14) | medium | mitigate | Teeth case per detector plus one recorded red source mutation per prohibition (176-14 SUMMARY); describes at `phase176_prohibition_contract_test.exs:525-690` | closed |
+| T-176-34 | Tampering | Mutations left in library source (gap 176-14) | medium | mitigate | `git status --porcelain mailglass_admin/lib` empty at audit time (2026-10-28, after the gap round) | closed |
+| T-176-35 | Tampering | `enum_options/2` reflecting a raw URL value (gap 176-15) | medium | mitigate | "Not applied: " option built as HEEx option text/value (`operator/filters_form.ex:100`, `inbound/filters_form.ex:115`); encoding tests (`operator_live_test.exs:4144`, `inbound_live_test.exs:3179`) | closed |
+| T-176-36 | Repudiation | URL note provenance labelling (gap 176-15) | medium | mitigate | `filter_url_invalid` assigned only in `handle_params/3` (`operator_live.ex:193`, `inbound_live.ex:226`) and drives the note (:1009, :792); P13 mutation-proven | closed |
 | T-176-SC | Tampering | npm/hex installs (all plans) | high | mitigate | No `mix.lock`, `package.json` or `package-lock.json` in any `(176-NN)` commit (`git log --grep="(176-"` file sweep empty); `@axe-core/playwright` pre-existing dev dep | closed |
 
 *Status: open · closed · open — below high threshold (non-blocking)*
@@ -78,6 +88,7 @@ created: "2026-10-28"
 |---------|------------|-----------|-------------|------|
 | AR-176-01 | T-176-03 | Search values round-trip unchanged per UI-SPEC; the existing tenant-scoped read model bounds the query; no new length limit added silently. Low severity, accepted at plan time (176-01-PLAN). | Plan-time disposition (176-01) | 2026-10-28 |
 | AR-176-02 | T-176-25 | At most one synchronous tenant-scoped read per 300 ms debounce window per operator; D-04 removed the extra provider-options read from the change path. Low severity, accepted at plan time (176-06-PLAN). | Plan-time disposition (176-06) | 2026-10-28 |
+| AR-176-03 | T-176-30 | The address in the accessible name is already the visible text on the same authorized page (INUX-05); DOM-only, no telemetry path (P5 green). Low severity, accepted at plan time (176-12-PLAN). | Plan-time disposition (176-12) | 2026-10-28 |
 
 ---
 
@@ -97,3 +108,11 @@ created: "2026-10-28"
 - [x] `status: verified` set in frontmatter
 
 **Approval:** verified 2026-10-28
+
+## Security Audit 2026-10-28
+
+| Metric | Count |
+|---|---|
+| Threats found | 37 |
+| Closed | 37 |
+| Open | 0 |
