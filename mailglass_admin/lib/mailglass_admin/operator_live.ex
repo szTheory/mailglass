@@ -740,33 +740,6 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="grid grid-cols-[1fr_auto] items-center gap-x-sm gap-y-xs text-label text-secondary sm:flex sm:flex-wrap sm:gap-sm">
-                  <div class="inline-flex items-center gap-xs">
-                    <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
-                    <Components.field_help
-                      id="operator-health-window-help"
-                      label="observation period"
-                      text={health_window_description(@health_window)}
-                    />
-                  </div>
-                  <div class="contents sm:ml-auto sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-sm">
-                    <p
-                      data-testid="operator-health-last-checked"
-                      class="order-3 col-span-2 text-right sm:order-none"
-                    >
-                      Last checked <Components.timestamp at={@health_observed_at} />
-                    </p>
-                    <button
-                      type="button"
-                      phx-click="retry_health"
-                      class="btn btn-ghost order-2 min-h-11 sm:order-none"
-                    >
-                      <Components.icon name="hero-arrow-path" class="h-4 w-4" />
-                      <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
-                      <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
-                    </button>
-                  </div>
-                </div>
                 <HealthOverview.overview
                   issues={
                     health_issues(
@@ -785,6 +758,9 @@ defmodule MailglassAdmin.OperatorLive do
                     build_path_with_view(@base_path, health_filters(@filter_params), @dark_chrome)
                   }
                   inbound_path={health_inbound_path(@inbound_path, @filter_params)}
+                  window_copy={health_window_copy(@health_window)}
+                  window_description={health_window_description(@health_window)}
+                  observed_at={@health_observed_at}
                 />
               </div>
             <% else %>

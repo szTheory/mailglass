@@ -680,6 +680,17 @@ code, pre, .mono {
   container-type: inline-size;
 }
 
+/* Health reads as one left-aligned column. The cap is a named 42rem rule:
+   max-w-2xl resolves to --spacing-2xl (48px) in this design system. Above the
+   cap the rest of the row is intentionally empty. */
+.operator-health-layout {
+  container-type: inline-size;
+}
+
+.operator-health-column {
+  max-width: 42rem;
+}
+
 .operator-deliveries-table {
   display: none;
 }

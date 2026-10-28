@@ -354,7 +354,7 @@ test.describe("Phase 169 connected journey", () => {
         bodyFont: Number.parseFloat(getComputedStyle(document.querySelector(".text-body")).fontSize),
         labels: [...document.querySelectorAll(".text-label")].map(el => Number.parseFloat(getComputedStyle(el).fontSize)),
         decorativeIcons: document.querySelectorAll('span[aria-hidden="true"][class*="hero-"]').length,
-        metricColumns: getComputedStyle(document.querySelector('[data-testid="operator-overview-health"] > div:nth-child(2)')).gridTemplateColumns.split(" ").length
+        columnWidth: document.querySelector('[data-testid="operator-health-column"]').getBoundingClientRect().width
       }));
       expect(healthGeometry.viewport).toBe(width);
       expect(healthGeometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
@@ -362,9 +362,8 @@ test.describe("Phase 169 connected journey", () => {
       expect(healthGeometry.labels.length).toBeGreaterThan(0);
       expect(Math.min(...healthGeometry.labels)).toBe(14);
       expect(healthGeometry.decorativeIcons).toBeGreaterThan(0);
-      // Health is a status column (verdict + issue rows) beside a Recent activity
-      // column from the lg breakpoint; below it the two stack in one column.
-      expect(healthGeometry.metricColumns).toBe(width < 1024 ? 1 : 2);
+      // Health is one left-aligned reading column capped at 42rem at every width.
+      expect(healthGeometry.columnWidth, `Health column width at ${width}px`).toBeLessThanOrEqual(42 * 16 + 1);
       geometryByWidth.push({ width, ...healthGeometry });
       await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
       await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
@@ -483,6 +482,20 @@ test.describe("Phase 169 connected journey", () => {
       screenshots: widths.flatMap(width => ["health", "deliveries", "quick-view", "detail", "replay-review"].map(state => `artifacts/after/${state}-${width}.png`)),
       geometryByWidth
     })}`);
+  });
+
+  test("Phase 177 Health column stays capped at landmark widths", async ({ page }) => {
+    for (const width of [320, 375, 390, 768, 1024, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await openBrowserTenant(page);
+      await expect(page.getByTestId("operator-health-column")).toBeVisible();
+      const geometry = await page.evaluate(() => ({
+        columnWidth: document.querySelector('[data-testid="operator-health-column"]').getBoundingClientRect().width,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }));
+      expect(geometry.columnWidth, `Health column width at ${width}px`).toBeLessThanOrEqual(42 * 16 + 1);
+      expect(geometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
+    }
   });
 
   test("Phase 169 connected Health, exact support, aged-out Delivery, replay, and return", async ({ page }) => {
