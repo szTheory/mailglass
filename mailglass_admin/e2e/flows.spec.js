@@ -973,7 +973,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     }
 
     const detail = zoomPage.getByTestId("operator-detail-header");
-    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID", expectedDeliveryId, 720);
+    await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID", expectedDeliveryId, 720);
     await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
@@ -992,7 +992,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     const expectedRecordedTimestamp = (await recordedTimestamp.textContent()).trim();
     expect(expectedRecordedTimestamp, "the fixture timestamp exposes its canonical UTC value").toBeTruthy();
     await assertZoomReadableValue(
-      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      timelineEvent.getByRole("button", { name: /^Copy Event ID: / }),
       "Timeline Event ID",
       expectedEventId,
       720
@@ -1052,7 +1052,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     for (const [label, control] of topbarControls) {
       await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
     }
-    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
+    await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
     await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
     await assertZoomReadableValue(
@@ -1062,7 +1062,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       320
     );
     await assertZoomReadableValue(
-      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      timelineEvent.getByRole("button", { name: /^Copy Event ID: / }),
       "Timeline Event ID at 320 CSS px",
       expectedEventId,
       320
@@ -1571,7 +1571,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.keyboard.press("Shift+Tab");
     await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBe("operator-quick-view-full");
 
-    const idField = quickView.getByRole("button", { name: "Copy Delivery ID", exact: true });
+    const idField = quickView.getByRole("button", { name: /^Copy Delivery ID: / });
     const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
     expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
 
@@ -1960,7 +1960,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     const { deliveryId, detail } = await openFjordlineDetail(page);
     const mailable = page.locator("#delivery-detail-mailable-trigger");
-    const copyId = detail.getByRole("button", { name: "Copy Delivery ID", exact: true });
+    const copyId = detail.getByRole("button", { name: `Copy Delivery ID: ${deliveryId}`, exact: true });
     const widthReceipts = [];
     for (const width of expectedWidths) {
       await page.setViewportSize({ width, height: 900 });
@@ -2047,7 +2047,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       expect(effective.devicePixelRatio / initial.devicePixelRatio, "real tab zoom doubles effective DPR").toBe(2);
       expect(effective.documentWidth, "Delivery page has no overflow under real 200% zoom").toBeLessThanOrEqual(320);
       const zoomId = zoomPage.getByTestId("operator-detail-header").getByRole("button", {
-        name: "Copy Delivery ID", exact: true
+        name: `Copy Delivery ID: ${selected.deliveryId}`, exact: true
       });
       await assertZoomReadableValue(zoomId, "Delivery ID at real 200% zoom", selected.deliveryId, 320);
       await assertZoomReadableValue(

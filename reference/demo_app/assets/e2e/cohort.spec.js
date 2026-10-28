@@ -124,7 +124,7 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
 
     // The long delivery id (provider_message_id) renders verbatim as its own
     // copy control in the "Provider message ID" field.
-    const providerId = technical.getByRole("button", { name: "Copy Provider message ID", exact: true });
+    const providerId = technical.getByRole("button", { name: /^Copy Provider message ID: / });
     await expect(providerId).toBeVisible();
     await expect(providerId).toHaveText(LONG_DELIVERY_ID);
 

@@ -201,7 +201,7 @@ test("Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and repl
   const { detail, recordId } = await openUnicodeDetail(page);
   const detailHeader = page.getByTestId("inbound-detail-header");
   const subjectText = detailHeader.getByText(subject, { exact: true });
-  const recordIdControl = detailHeader.getByRole("button", { name: "Copy Record ID", exact: true });
+  const recordIdControl = detailHeader.getByRole("button", { name: /^Copy Record ID: / });
   const mailboxIdentity = detailHeader.locator("#inbound-detail-mailbox");
   await expect(mailboxIdentity).toContainText("InboundTestMailbox");
   await expect(recordIdControl).toContainText(recordId);
@@ -280,7 +280,7 @@ test("Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and repl
       .toBeLessThanOrEqual(320);
     const zoomHeader = zoomPage.getByTestId("inbound-detail-header");
     await expect(zoomHeader.getByText(subject, { exact: true })).toBeVisible();
-    await expect(zoomHeader.getByRole("button", { name: "Copy Record ID", exact: true }))
+    await expect(zoomHeader.getByRole("button", { name: /^Copy Record ID: / }))
       .toContainText(selected.recordId);
     await expect(zoomHeader.locator("#inbound-detail-mailbox")).toContainText("InboundTestMailbox");
     const trigger = zoomPage.getByTestId("inbound-replay-open");

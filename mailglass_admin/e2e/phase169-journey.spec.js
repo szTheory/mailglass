@@ -140,7 +140,7 @@ test.describe("Phase 169 connected journey", () => {
     // The visible Event ID is itself the copy control; feedback uses the shared
     // copy toast (role=status, aria-live=polite) instead of an adjacent status node.
     const selected = page.getByTestId("operator-timeline-selected-event");
-    const eventId = selected.getByRole("button", { name: "Copy Event ID", exact: true });
+    const eventId = selected.getByRole("button", { name: /^Copy Event ID: / });
     const copyToast = page.getByTestId("copy-toast");
     await expect(copyToast).toHaveAttribute("role", "status");
     await expect(copyToast).toHaveAttribute("aria-live", "polite");
@@ -417,7 +417,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(quickView).toContainText("Updated");
       await expect(quickView.locator("time[data-local-time]").first()).toBeVisible();
       await expect(quickView).toContainText("Delivery ID");
-      await expect(quickView.getByRole("button", { name: "Copy Delivery ID", exact: true })).toBeVisible();
+      await expect(quickView.getByRole("button", { name: /^Copy Delivery ID: / })).toBeVisible();
       // Recipients are readable (not masked) in inspection views: the Quick view
       // identity names the same exact recipient the Full detail header shows.
       await expect(quickView).toContainText("browser-exact@example.com");

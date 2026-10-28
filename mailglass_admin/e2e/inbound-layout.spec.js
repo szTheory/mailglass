@@ -212,7 +212,7 @@ for (const width of [1440, 390]) {
     const quick = page.getByTestId("inbound-quick-view");
     await expect(quick.getByText("Subject", { exact: true })).toBeVisible();
     await expect(quick.locator("#inbound-quick-technical details, #inbound-quick-technical summary")).toHaveCount(0);
-    const copy = quick.getByRole("button", { name: "Copy Record ID", exact: true });
+    const copy = quick.getByRole("button", { name: /^Copy Record ID: / });
     const expected = await copy.getAttribute("data-copy-value");
     await copy.click();
     await expect(page.getByTestId("copy-toast")).toContainText("Record ID copied.");
@@ -225,8 +225,8 @@ for (const width of [1440, 390]) {
     const next = quick.getByRole("link", { name: "Next inbound record", exact: true });
     await expect(next.locator(".hero-chevron-down")).toHaveCSS("mask-image", /url\(/);
     await next.click();
-    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).not.toHaveAttribute("data-copy-value", expected);
+    await expect(quick.getByRole("button", { name: /^Copy Record ID: / })).not.toHaveAttribute("data-copy-value", expected);
     await quick.getByRole("link", { name: "Previous inbound record", exact: true }).click();
-    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).toHaveAttribute("data-copy-value", expected);
+    await expect(quick.getByRole("button", { name: /^Copy Record ID: / })).toHaveAttribute("data-copy-value", expected);
   });
 }
