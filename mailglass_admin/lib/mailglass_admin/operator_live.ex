@@ -1223,6 +1223,10 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp refresh_visible_state(%{assigns: %{view: :deliveries}} = socket) do
+    # D-16: the polite status region speaks after a commit (handle_params) or a Retry, never
+    # on another actor's background activity. The rows refresh; the announced text is kept.
+    status_text = socket.assigns.results_status_text
+
     socket
     |> assign(:provider_options, load_provider_options(socket.assigns.filter_params))
     |> assign_delivery_state(
@@ -1231,6 +1235,7 @@ defmodule MailglassAdmin.OperatorLive do
       socket.assigns.full_detail?,
       support_focus?(socket.assigns.support_state)
     )
+    |> assign(:results_status_text, status_text)
   end
 
   defp refresh_visible_state(socket) do
@@ -1409,10 +1414,13 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp filter_draft_params(params, normalized) do
+    # A blank value is "nothing chosen", not a draft to preserve: the select shows the
+    # normalized default rather than an empty Custom period.
     Enum.reduce(["event", "window_hours"], normalized, fn key, draft ->
-      if Map.has_key?(params, key),
-        do: Map.put(draft, key, normalize_string(Map.get(params, key))),
-        else: draft
+      case normalize_string(Map.get(params, key)) do
+        "" -> draft
+        value -> Map.put(draft, key, value)
+      end
     end)
   end
 
@@ -2617,7 +2625,9 @@ defmodule MailglassAdmin.OperatorLive do
       integer when is_integer(integer) and integer <= @max_window_hours ->
         {Integer.to_string(integer), nil}
 
-      _ when raw_string == "" and not is_map_key(params, "window_hours") ->
+      # A blank window (key absent or present-but-empty) is "no window chosen", read as the
+      # default exactly as Inbound does; only a non-blank invalid value is an error (D-13).
+      _ when raw_string == "" ->
         {Integer.to_string(@default_window_hours), nil}
 
       _ ->
