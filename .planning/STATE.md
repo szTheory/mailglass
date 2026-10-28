@@ -4,17 +4,17 @@ milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
-status: executing
-stopped_at: Completed 176-15-PLAN.md
-last_updated: "2026-10-28T19:36:08.326Z"
+status: verifying
+stopped_at: Completed 176-14-PLAN.md
+last_updated: "2026-10-28T19:50:04.235Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: f4526f3b7db47e89a1429e0d5dbcb334e900d00e
+state_head: 696a4003f55a7c8cff1d387fc9aa1fda097af1c7
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
   percent: 40
 ---
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
 Plan: 15 of 15
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-28 — Phase 176 execution started
 
 Progress: [████░░░░░░] 40%
@@ -314,6 +314,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P12 | 10 min | 2 tasks | 8 files |
 | Phase 176 P13 | 25min | 3 tasks | 3 files |
 | Phase 176 P15 | 9 min | 2 tasks | 8 files |
+| Phase 176 P14 | 25 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -603,6 +604,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-13: Deliveries treats a non-default window as a filter (non_default_window?/1); mobile toggle uses mg-inbound-filters-open class; PubSub refresh keeps status text (D-16); blank window_hours = absent (bounded D-13)
 - [Phase 176]: 176-15: Draft note unchanged (D-12 as written); it co-occurs with the URL note, which is keyed on filter_url_invalid (assigned only in handle_params)
 - [Phase 176]: 176-15: WR-05 fixed in product: rejected enum value stays selected as an enabled 'Not applied: <value>' option (enabled so re-post does not silently clear the filter)
+- [Phase 176]: 176-14: P9..P13 gap prohibitions are mutation-proven contract describes; P13 asserts the URL note present and never the draft note absent (D-12/D-13)
 
 ## Quick Tasks Completed
 
@@ -654,8 +656,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T19:36:07.913Z
-Stopped at: Completed 176-15-PLAN.md
+Last session: 2026-10-28T19:50:03.806Z
+Stopped at: Completed 176-14-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
