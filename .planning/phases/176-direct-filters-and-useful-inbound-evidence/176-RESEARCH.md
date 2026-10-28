@@ -599,17 +599,23 @@ Tag new ExUnit cases `@tag :phase176` (Phase 175 precedent) so `--only phase176 
 - [ ] Scenario manifest entries + `inbound_evidence.story.exs` (D-32); re-run `scripts/check_phase174_evidence.test.cjs` and `check_phase175_evidence.test.cjs` after editing `quick_view_scenarios.json`/`.ex`
 
 ### Coupled Test Inventory (must be updated, not just D-31's list)
+Planner sweep (checker iteration 2, at cf98cc0b): `grep -rn` over `mailglass_admin/test`, `mailglass_admin/e2e`, `reference/demo_app/assets/e2e`, `reference/demo_app/test` and `reference/persona_spec` for every testid and copy string the phase removes or rewords (evidence-card testids and copy, "Verification facts", `inbound-evidence-verification`, the old no-evidence sentence, "(empty)", `can_reveal`, the Apply control and hidden tenant input, masked From forms and "Unavailable" From copy, the Deliveries/Inbound error and stale copy, the old event error). Every hit is listed below with its owning plan. Hits that need no change: `components_test.exs:1272-1448` (pass their own error strings), the status-region "Raw source revealed." assertions (text unchanged), `phase168-plan03-acceptance.spec.js:119` (gallery `data_state` specimen default copy, not the Deliveries stale panel), and the `fb-auto-apply-filters` disposition prose in `quick_view_scenarios.json` (a feedback-ledger note, not an assertion).
 | File | Why |
 |------|-----|
 | `test/mailglass_admin/operator_live_test.exs:184,318,363,380` (and `:200-209` canonical URL shape) | assert Apply, `apply_filters`/`validate_filters` payloads, `w-40` class |
 | `test/mailglass_admin/inbound_live_test.exs:786` (+ the `apply_filters` hook test ~:775-795) | invalid-submit does not patch; now invalid change does not patch |
 | `test/mailglass_admin/inbound/components_test.exs:327-374` | assert masked From (`b**@s*****.test`) |
+| `test/mailglass_admin/inbound/components_test.exs:376-418` | assert the From cell reads "Unavailable" for an empty and a malformed `from`; becomes "No From header" / "Unparseable address" (owner: plan 176-02 Task 1) |
+| `test/mailglass_admin/inbound/components_test.exs:642-670` (describe "EvidenceCard.evidence_card/1") | asserts testid `inbound-evidence-redacted` (:657), "Raw source locked" (:659) and "Raw source is hidden by default" (:664) — owner plan 176-03 Task 1; asserts "Verification facts" (:663) — owner plan 176-05 Task 1, which removes that heading |
+| `test/mailglass_admin/inbound_live_test.exs:1288-1297` | selects `[data-testid='inbound-evidence-verification']` to prove verification keys/values are withheld; plan 176-05 keeps that testid on the Provider authentication cell when it merges the two facts lists |
 | `test/mailglass_admin/inbound/evidence_card_test.exs`, `inbound_live_test.exs` (~1259-1285, 2211-2227, 2359) | assert `Raw source is hidden by default…`, `inbound-evidence-redacted`, `You do not have permission to reveal…`, `inbound-evidence-re-redact`, "Raw source revealed" |
 | `e2e/inbound-layout.spec.js:173,181,184`; `phase175-inbound.spec.js:137`; `phase169-journey.spec.js:569-571` (also asserts the URL does **not** change after a select, `not.toHaveURL(/event=failed/)`) | click "Apply filters" |
-| `e2e/structural.spec.js:~2330` asserts the old copy "Status was not applied. Choose a listed status."; `:~2344-2362` uses `requestSubmit()` | UI-SPEC rewords the event error to name "Latest recorded event"; submit test must keep focus semantics |
+| `e2e/structural.spec.js:2283,2330` assert the old copy "Status was not applied. Choose a listed status."; `:~2344-2362` uses `requestSubmit()` | UI-SPEC rewords the event error to name "Latest recorded event"; submit test must keep focus semantics. The two copy assertions read gallery specimens hard-coded at `lib/mailglass_admin/gallery_live.ex:869,978` (not `@event_filter_error`), so the spec and the gallery literals change together (owner: plan 176-10 Task 3) |
 | `e2e/phase168-plan03-acceptance.spec.js:171` | depends on Open Question 2 |
 | `e2e/phase170-journey.spec.js`, `flows.spec.js`, `operator.spec.js` | assert evidence-card strings/testids (grep list in Sources) |
 | `lib/mailglass_admin/gallery_live.ex:597,1279-1311` | masked fixtures (D-32) |
+| `test/mailglass_admin/inbound_live_test.exs:384`, `:2009-2010`; `e2e/phase170-journey.spec.js:284` | Inbound read-unavailable and stale copy (owner: plan 176-09) |
+| `test/mailglass_admin/operator_live_test.exs:297,327,2385,4055-4058,4101-4104` | Deliveries event-error, error and stale copy (owner: plan 176-04) |
 | `test/mailglass_admin/bucket_a_coverage_test.exs` | fail-closed on renamed cited e2e titles; grep found no citation of the titles above, re-grep before renaming any e2e test |
 
 ## Security Domain
