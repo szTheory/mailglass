@@ -954,8 +954,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // candidates (those are tracked as GAP rows in RATCHET-GAP-REGISTER.md, not as test
       // failures here — per the plan's gate-now vs record-as-GAP split).
       //
-      // The primary filter CTA is inside the mobile disclosure; open it before measuring.
-      await page.getByTestId("operator-filters-toggle").click();
+      // Phase 176 removed the filter Apply button (selects and Enter commit directly),
+      // so the primary CTA is now the replay review action on the exact-replay
+      // Delivery's Quick view (Phase 175).
+      await page
+        .getByTestId("operator-delivery-row")
+        .filter({ hasText: "browser-exact@example.com", visible: true })
+        .first()
+        .click();
+      await expect(page.getByTestId("operator-quick-view")).toBeVisible();
       const primaryBtn = page.locator(".btn-primary:visible").first();
       await expect(primaryBtn).toBeVisible();
       const box = await primaryBtn.boundingBox();

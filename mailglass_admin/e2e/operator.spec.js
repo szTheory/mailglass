@@ -117,7 +117,9 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toContainText("ops:review");
-    await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+    // Phase 175 (REPLAY-05): an unavailable, non-recoverable target explains itself
+    // and offers no dead-end primary action.
+    await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
     await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is unavailable.");
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
 
@@ -206,7 +208,7 @@ test.describe("operator browser gate", () => {
     const modal = page.getByTestId("operator-replay-modal");
     await expect(modal).toBeVisible();
     await expect(modal).toContainText("Review the exact stored request before confirming.");
-    await expect(modal).toContainText("does not resend outbound mail or prove provider receipt");
+    await expect(modal).toContainText("does not resend mail or prove provider receipt");
     await expect(modal).toContainText("Reviewed request");
     await expect(modal).toContainText("Account");
     await expect(modal).toContainText("browser-exact-delivery");
@@ -252,7 +254,7 @@ test.describe("operator browser gate", () => {
 
       await modal.getByTestId("operator-replay-confirm").click();
       await expect(page.locator("body")).toContainText(
-        "This webhook request changed or is no longer eligible."
+        "Eligibility changed. Review the current request again."
       );
       await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(reviewedId);
 
@@ -273,20 +275,24 @@ test.describe("operator browser gate", () => {
       await page.goto(
         `/ops/mail?tenant_id=${scenario.tenant_id}&delivery_id=${scenario.delivery_id}&full=1`
       );
+
+      if (variant === "zero") {
+        // Phase 175 (REPLAY-05): no linked webhook events is not recoverable, so the
+        // action explains why and offers no review button or dialog.
+        await expect(page.getByTestId("operator-replay-action")).toContainText(
+          "This delivery does not yet have any linked webhook events to replay."
+        );
+        await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+        await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
+        continue;
+      }
+
       await page.getByTestId("operator-replay-open").click();
       const modal = page.getByTestId("operator-replay-modal");
 
-      if (variant === "zero") {
-        await expect(modal).toContainText("Replay unavailable");
-        await expect(modal).toContainText(
-          "This delivery does not yet have any linked webhook events to replay."
-        );
-        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
-      } else {
-        await expect(modal).toContainText("Choose the exact stored request to review.");
-        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
-        await expect(modal.getByRole("radio")).toHaveCount(2);
-      }
+      await expect(modal).toContainText("Choose the exact stored request to review.");
+      await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+      await expect(modal.getByRole("radio")).toHaveCount(2);
     }
   });
 

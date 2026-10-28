@@ -456,7 +456,7 @@ test.describe("Phase 169 connected journey", () => {
       const review = page.getByTestId("operator-replay-modal");
       await expect(review).toBeVisible();
       await expect(review).toHaveAttribute("aria-modal", "true");
-      await expect(review).toContainText("does not resend outbound mail or prove provider receipt");
+      await expect(review).toContainText("does not resend mail or prove provider receipt");
       expect(await review.evaluate(el => el.contains(document.activeElement)), `Replay focus remains inside at ${width}px`).toBeTruthy();
       await page.screenshot({ path: path.join(afterDir, `replay-review-${width}.png`), animations: "disabled" });
       routes.push({ width, state: "Replay review", url: new URL(page.url()).pathname + new URL(page.url()).search });

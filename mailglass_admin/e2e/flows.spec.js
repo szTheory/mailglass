@@ -541,16 +541,21 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoRootOverflow(page, "operator happy");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator happy master-detail");
 
-    // At 320 the table is hidden — select from the card presentation.
+    // At 320 the table is hidden — select from the card presentation. Phase 175
+    // (REPLAY-05) renders the replay CTA only for a replayable target, so open the
+    // seeded exact-replay delivery rather than whichever row is first.
     await selectDeliveryFull(
       page,
-      page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+      page
+        .getByTestId("operator-deliveries-cards")
+        .getByTestId("operator-delivery-row")
+        .filter({ hasText: "browser-exact@example.com" })
+        .first()
     );
 
     // The single obvious top action for Operator: the replay CTA (the one
-    // destructive/dominant action in the detail header). It must be visible and
-    // be the dominant action button at 320px. Live copy is "Review webhook replay"
-    // (btn-error); the planner's prose label "Replay delivery" approximates it.
+    // dominant action in the detail). It must be visible and be the dominant
+    // action button at 320px. Live copy is "Review webhook replay" (btn-primary).
     const replayCta = page.getByTestId("operator-replay-open");
     await expect(replayCta).toBeVisible();
     const box = await replayCta.boundingBox();
@@ -758,9 +763,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await selectInboundFull(page, noMatchRow(page));
     const evidenceCard = page.getByTestId("inbound-evidence-card");
     await expect(evidenceCard).toBeVisible();
-    const revealStack = evidenceCard.locator(".flex.flex-col.items-end");
-    const revealStackRowGap = await revealStack.evaluate(element => getComputedStyle(element).rowGap);
-    expect(revealStackRowGap, "Inbound evidence reveal row gap").toBe("4px");
+    // Phase 176 replaced the right-aligned reveal stack with one header group: the
+    // heading sits above its caption in a 4px (space-y-xs) text stack.
+    const headingStack = evidenceCard.getByRole("heading", { name: "Raw provider source" });
+    const headingGap = await headingStack.evaluate(element => getComputedStyle(element).marginBottom);
+    expect(headingGap, "Inbound evidence heading-to-caption gap").toBe("4px");
 
     await openPreviewIndex(page);
     await page.getByTestId("preview-email-menu-trigger").click();
@@ -844,7 +851,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
   const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
   await selectDeliveryFull(page, row);
-  await page.locator("#delivery-detail-technical > summary").click();
+  // Technical details are always expanded since Phase 175 (no disclosure summary).
+  await expect(page.locator("#delivery-detail-technical")).toBeVisible();
   const mailableElement = page.locator("#delivery-detail-mailable-trigger");
   await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
   await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
@@ -926,7 +934,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
     const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-    await zoomPage.locator("#delivery-detail-technical > summary").click();
+    // Technical details are always expanded since Phase 175 (no disclosure summary).
+    await expect(zoomPage.locator("#delivery-detail-technical")).toBeVisible();
     const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
     await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
@@ -1222,9 +1231,14 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
         expect(await page.locator("html").getAttribute("data-theme"), "system root has no data-theme").toBeNull();
       }
 
+      // Phase 175 (REPLAY-05): only a replayable target renders the replay CTA.
       await selectDeliveryFull(
         page,
-        page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+        page
+          .getByTestId("operator-deliveries-cards")
+          .getByTestId("operator-delivery-row")
+          .filter({ hasText: "browser-exact@example.com" })
+          .first()
       );
       await page.getByTestId("operator-replay-open").click();
       const modal = page.getByTestId("operator-replay-modal");
