@@ -3949,6 +3949,122 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert invalid_html =~ "Time window was not applied"
     end
+
+    test "Phase 176 gap: a URL-invalid filter stays labelled as excluded after a later edit or a reconnect",
+         %{conn: conn} do
+      insert_delivery!(recipient: "kept@example.com", last_event_type: :sent)
+
+      url_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-url-invalid-note']")
+      end
+
+      draft_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-draft-pending-note']")
+      end
+
+      window_path =
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "window_hours" => "abc"
+        })
+
+      # First render (unchanged): the URL note shows, the draft note does not.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+      assert draft_note.(view) == []
+
+      # Search edit that re-posts the URL's own invalid value (D-12 + D-13 together).
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "ada", "window_hours" => "abc"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert render(view) =~ "Time window was not applied. Choose a positive listed time window."
+
+      # Reconnect: phx-auto-recover re-posts the same invalid value.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "abc",
+          "event" => "",
+          "provider" => ""
+        }
+      })
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      # Enum: URL event=bogus, then a Search change that posts event=bogus.
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "ada", "event" => "bogus"})
+      )
+
+      refute_patch(view)
+
+      assert Floki.text(url_note.(view)) =~
+               "Showing results without the Latest recorded event filter."
+
+      assert draft_note.(view) != []
+
+      # A second field that is invalid only in the draft is not named by the URL note.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"window_hours" => "abc", "event" => "bogus"})
+      )
+
+      refute_patch(view)
+      note_text = Floki.text(url_note.(view))
+      assert note_text =~ "default time window"
+      refute note_text =~ "Latest recorded event"
+      assert draft_note.(view) != []
+
+      # Recovery: a valid commit clears both notes.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      assert_patch_kind(view, :push)
+      assert url_note.(view) == []
+      assert draft_note.(view) == []
+    end
   end
 
   defp status_text(view) do

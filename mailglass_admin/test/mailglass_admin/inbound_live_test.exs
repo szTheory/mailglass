@@ -3552,6 +3552,111 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert size_dd == "#{byte_size(text)} bytes"
     end
+
+    test "Phase 176 Inbound gap: a URL-invalid filter stays labelled as excluded after a later edit or a reconnect",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "kept-inbound@example.com")
+
+      url_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-url-invalid-note']")
+      end
+
+      draft_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-draft-pending-note']")
+      end
+
+      window_path =
+        inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "bogus"})
+
+      # First render (unchanged): the URL note shows, the draft note does not.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+      assert draft_note.(view) == []
+
+      # Search edit that re-posts the URL's own invalid value (D-12 + D-13 together).
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("search", %{"search" => "ada", "window_hours" => "bogus"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert render(view) =~ "Time window was not applied. Choose a positive listed time window."
+
+      # Reconnect: phx-auto-recover re-posts the same invalid value.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "bogus",
+          "outcome" => "",
+          "provider" => ""
+        }
+      })
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      # Enum: URL outcome=not-real, then a Search change that posts outcome=not-real.
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "not-real"})
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("search", %{"search" => "ada", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results without the Mailbox outcome filter."
+      assert draft_note.(view) != []
+
+      # A second field that is invalid only in the draft is not named by the URL note.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"window_hours" => "bogus", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      note_text = Floki.text(url_note.(view))
+      assert note_text =~ "default time window"
+      refute note_text =~ "Mailbox outcome"
+      assert draft_note.(view) != []
+
+      # Recovery: a valid commit clears both notes.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      assert_patch_kind(view, :push)
+      assert url_note.(view) == []
+      assert draft_note.(view) == []
+    end
   end
 
   defp swap_inbound_repo(repo) do
