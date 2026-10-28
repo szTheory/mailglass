@@ -88,6 +88,93 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
     end
   end
 
+  describe "facts list (INUX-06, D-25/D-26)" do
+    defp facts_doc(evidence, extra \\ []) do
+      assigns = Keyword.merge([evidence: evidence, reveal_state: :redacted], extra)
+
+      (&EvidenceCard.evidence_card/1)
+      |> render_component(assigns)
+      |> Floki.parse_document!()
+    end
+
+    defp fact_pairs(doc) do
+      assert [dl] = Floki.find(doc, "dl[data-testid='inbound-evidence-facts']")
+
+      dl
+      |> Floki.find("div")
+      |> Enum.map(fn cell ->
+        {cell |> Floki.find("dt") |> Floki.text() |> String.trim(),
+         cell |> Floki.find("dd") |> Floki.text() |> String.trim()}
+      end)
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: one list with five facts in order and the shared grid classes" do
+      received_at = ~U[2026-10-01 12:30:00Z]
+      doc = facts_doc(@evidence, received_at: received_at)
+
+      assert [dl] = Floki.find(doc, "dl")
+      [classes] = Floki.attribute(dl, "class")
+      assert classes =~ "grid gap-md sm:grid-cols-2 lg:grid-cols-4"
+
+      assert Enum.map(Floki.find(doc, "dt"), &(&1 |> Floki.text() |> String.trim())) == [
+               "Provider",
+               "Received",
+               "Payload size",
+               "Header count",
+               "Provider authentication"
+             ]
+
+      assert Floki.find(doc, "[data-testid='inbound-evidence-verification']") != []
+      refute Floki.raw_html(doc) =~ "Verification facts"
+      refute Floki.raw_html(doc) =~ "checksum"
+
+      # D-25: no fact cell is monospace.
+      assert Floki.find(dl, ".mono") == []
+
+      pairs = fact_pairs(doc)
+      assert {"Received", received} = Enum.at(pairs, 1)
+      assert received =~ "2026-10-01 12:30:00 UTC"
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: raw_mime backs the payload size (3 bytes, not 2)" do
+      evidence = %{@evidence | raw_payload: %{}} |> Map.put(:raw_mime, "abc")
+      assert {"Payload size", "3 bytes"} = doc_pair(evidence, "Payload size")
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: unknown size, count and received time render Unavailable, never 0" do
+      evidence = %{provider: "mailgun", verification_facts: nil}
+      doc = facts_doc(evidence, received_at: nil)
+      pairs = fact_pairs(doc)
+
+      assert {"Payload size", "Unavailable"} in pairs
+      assert {"Header count", "Unavailable"} in pairs
+      assert {"Received", "Unavailable"} in pairs
+
+      for {_label, value} <- pairs do
+        refute value in ["0", "0 bytes"]
+      end
+
+      # nil / non-map fields are unknown too, not empty.
+      for evidence <- [
+            %{provider: "mailgun", raw_payload: nil, raw_mime: nil, raw_headers: nil},
+            %{provider: "mailgun", raw_payload: "not-a-map", raw_headers: "nope"}
+          ] do
+        pairs = fact_pairs(facts_doc(evidence))
+        assert {"Payload size", "Unavailable"} in pairs
+        assert {"Header count", "Unavailable"} in pairs
+      end
+    end
+
+    defp doc_pair(evidence, label) do
+      pairs = fact_pairs(facts_doc(evidence))
+      assert {^label, _value} = pair = Enum.find(pairs, &(elem(&1, 0) == label))
+      pair
+    end
+  end
+
   describe "aria-live status region (WCAG 1.4.1, D-11)" do
     test "a role=status aria-live=polite region announces the reveal grant in text" do
       html = render_state(:revealed)

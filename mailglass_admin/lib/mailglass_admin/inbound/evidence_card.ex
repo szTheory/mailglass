@@ -5,8 +5,14 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   NET-NEW chrome reuse. PII handling is determined by the schema: `raw_payload`
   and `raw_mime` are `redact: true` on `MailglassInbound.InboundRecords.InboundEvidence`
   (T-48-12). This card NEVER renders those bytes by default — it shows
-  a provider-aware safe verification summary plus a redacted summary (provider,
-  payload byte size, header count) and a masked placeholder for the raw body.
+  one compact facts list of five truthful facts (provider, received time, payload
+  size, header count, provider authentication) and withholds the raw body.
+
+  Size and count are derived from stored evidence and are `nil` (rendered
+  "Unavailable") when unknown, never "0". The checksum is deliberately not one of
+  the five facts: `InboundEvidence` does store `raw_mime_sha256` and
+  `raw_mime_fingerprint`, but the Phase 176 contract asks for five compact facts,
+  so it is a scope choice, not an absence.
 
   Revealing the raw payload requires the `:reveal_raw` capability (the same
   `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface).
@@ -28,11 +34,10 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
   use Phoenix.Component
 
-  import MailglassAdmin.Components, only: [card: 1]
+  import MailglassAdmin.Components, only: [card: 1, timestamp: 1]
 
   attr(:evidence, :map, default: nil)
   attr(:reveal_state, :atom, default: :redacted)
-  attr(:can_reveal?, :boolean, default: true)
   attr(:received_at, :any, default: nil)
 
   def evidence_card(assigns) do
@@ -80,32 +85,41 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           No raw provider source has been stored for this message.
         </p>
       <% else %>
-        <dl class="mb-md grid gap-md text-body text-secondary sm:grid-cols-3">
+        <dl
+          data-testid="inbound-evidence-facts"
+          class="mb-md grid gap-md sm:grid-cols-2 lg:grid-cols-4"
+        >
           <div class="min-w-0">
             <dt class="text-label font-bold text-secondary">Provider</dt>
-            <dd class="mono text-label text-base-content">{provider_label(@evidence.provider)}</dd>
+            <dd class="mt-xs text-body text-base-content [overflow-wrap:anywhere] tabular-nums">
+              {provider_label(@evidence.provider)}
+            </dd>
+          </div>
+          <div class="min-w-0">
+            <dt class="text-label font-bold text-secondary">Received</dt>
+            <dd class="mt-xs text-body text-base-content [overflow-wrap:anywhere] tabular-nums">
+              <.timestamp at={@received_at} />
+            </dd>
           </div>
           <div class="min-w-0">
             <dt class="text-label font-bold text-secondary">Payload size</dt>
-            <dd class="mono text-label text-base-content">{payload_byte_size(@evidence)} bytes</dd>
+            <dd class="mt-xs text-body text-base-content [overflow-wrap:anywhere] tabular-nums">
+              {format_bytes(payload_byte_size(@evidence))}
+            </dd>
           </div>
           <div class="min-w-0">
             <dt class="text-label font-bold text-secondary">Header count</dt>
-            <dd class="mono text-label text-base-content">{header_count(@evidence)}</dd>
+            <dd class="mt-xs text-body text-base-content [overflow-wrap:anywhere] tabular-nums">
+              {format_count(header_count(@evidence))}
+            </dd>
+          </div>
+          <div class="min-w-0" data-testid="inbound-evidence-verification">
+            <dt class="text-label font-bold text-secondary">Provider authentication</dt>
+            <dd class="mt-xs text-body text-base-content [overflow-wrap:anywhere] tabular-nums">
+              {safe_verification_status(@evidence)}
+            </dd>
           </div>
         </dl>
-
-        <div class="mb-md space-y-xs" data-testid="inbound-evidence-verification">
-          <p class="text-label font-bold text-secondary">
-            Verification facts
-          </p>
-          <dl class="grid gap-sm text-body sm:grid-cols-2">
-            <div class="min-w-0">
-              <dt class="text-label text-secondary">Provider authentication</dt>
-              <dd class="text-body text-base-content">{safe_verification_status(@evidence)}</dd>
-            </div>
-          </dl>
-        </div>
 
         <%= case @reveal_state do %>
           <% :revealed -> %>
@@ -143,19 +157,40 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
     """
   end
 
-  # Byte size of the stored raw payload (the JSON-encoded map). Computed from the
-  # redacted field's structure WITHOUT exposing its contents — only a count.
-  defp payload_byte_size(%{raw_payload: payload}) when is_map(payload) do
-    payload |> Jason.encode!() |> byte_size()
+  # Byte size of the stored evidence, or nil when it cannot be known (D-26).
+  # Non-empty raw_mime wins (it is the stored source for MIME-backed providers),
+  # then a non-empty raw_payload map (its JSON-encoded size). Known-empty storage
+  # (empty map and no mime) is 0; anything else, including a failed encode, is nil
+  # so unknown never reads as zero. Only a count is derived, never the contents.
+  @spec payload_byte_size(map()) :: non_neg_integer() | nil
+  defp payload_byte_size(%{raw_mime: mime}) when is_binary(mime) and mime != "",
+    do: byte_size(mime)
+
+  defp payload_byte_size(%{raw_payload: payload})
+       when is_map(payload) and map_size(payload) > 0 do
+    case Jason.encode(payload) do
+      {:ok, json} -> byte_size(json)
+      {:error, _reason} -> nil
+    end
   rescue
-    _ -> 0
+    _ -> nil
   end
 
-  defp payload_byte_size(%{raw_mime: mime}) when is_binary(mime), do: byte_size(mime)
-  defp payload_byte_size(_evidence), do: 0
+  defp payload_byte_size(%{raw_payload: payload} = evidence) when payload == %{} do
+    if Map.get(evidence, :raw_mime) in [nil, ""], do: 0, else: nil
+  end
 
+  defp payload_byte_size(_evidence), do: nil
+
+  @spec header_count(map()) :: non_neg_integer() | nil
   defp header_count(%{raw_headers: headers}) when is_map(headers), do: map_size(headers)
-  defp header_count(_evidence), do: 0
+  defp header_count(_evidence), do: nil
+
+  defp format_bytes(nil), do: "Unavailable"
+  defp format_bytes(size) when is_integer(size), do: "#{size} bytes"
+
+  defp format_count(nil), do: "Unavailable"
+  defp format_count(count) when is_integer(count), do: Integer.to_string(count)
 
   defp raw_payload_text(%{raw_payload: payload}) when is_map(payload) and map_size(payload) > 0 do
     Jason.encode!(payload, pretty: true)

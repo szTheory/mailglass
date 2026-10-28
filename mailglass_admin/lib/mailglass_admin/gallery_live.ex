@@ -402,7 +402,6 @@ defmodule MailglassAdmin.GalleryLive do
     <EvidenceCard.evidence_card
       evidence={@assigns_map[:evidence]}
       reveal_state={@assigns_map[:reveal_state]}
-      can_reveal?={Map.get(@assigns_map, :can_reveal?, true)}
     />
     """
   end
@@ -579,7 +578,7 @@ defmodule MailglassAdmin.GalleryLive do
     ~H"""
     <div data-region class="space-y-4">
       <RoutingTrace.routing_trace trace={[]} />
-      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} can_reveal?={true} />
+      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} />
     </div>
     """
   end
@@ -1117,7 +1116,7 @@ defmodule MailglassAdmin.GalleryLive do
      }},
 
     # STATE-LD-19: evidence_card — no-evidence, redacted, revealed, denied
-    {:evidence_card, "no-evidence", %{evidence: nil, reveal_state: :redacted, can_reveal?: true}},
+    {:evidence_card, "no-evidence", %{evidence: nil, reveal_state: :redacted}},
     {:evidence_card, "redacted",
      %{
        evidence: %{
@@ -1126,20 +1125,18 @@ defmodule MailglassAdmin.GalleryLive do
          raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
-       reveal_state: :redacted,
-       can_reveal?: true
+       reveal_state: :redacted
      }},
     {:evidence_card, "revealed",
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload:
+         raw_payload: %{},
+         raw_mime:
            "Received: from mail.sendgrid.net\r\nFrom: sender@example.com\r\nTo: recipient@example.com\r\n\r\nBody here.",
-         raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
-       reveal_state: :revealed,
-       can_reveal?: true
+       reveal_state: :revealed
      }},
     {:evidence_card, "denied",
      %{
@@ -1149,8 +1146,7 @@ defmodule MailglassAdmin.GalleryLive do
          raw_mime: nil,
          verification_facts: %{"dkim" => true}
        },
-       reveal_state: :denied,
-       can_reveal?: false
+       reveal_state: :denied
      }},
 
     # STATE-LD-20: device_frame — inactive-btn (static assigns, no phx-click)

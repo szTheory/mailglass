@@ -872,7 +872,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert redacted_html =~ "Provider"
       assert redacted_html =~ "Payload size"
       assert redacted_html =~ "Header count"
-      assert redacted_html =~ "Verification facts"
+      refute redacted_html =~ "Verification facts"
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-facts")
       assert redacted_html =~ "May contain personal information."
       assert redacted_html =~ "min-h-11"
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
