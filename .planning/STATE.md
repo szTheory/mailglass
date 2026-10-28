@@ -4,17 +4,17 @@ milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
-status: executing
-stopped_at: Completed 176-09-PLAN.md
-last_updated: "2026-10-28T15:37:21.973Z"
+status: verifying
+stopped_at: Completed 176-10-PLAN.md
+last_updated: "2026-10-28T16:15:45.677Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: 3dd367f2fabfacc162ad4b67b93732087ca8952b
+state_head: dd0a0e78463f0a36a5e28b85a8667ba7906aed01
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
   percent: 40
 ---
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
 Plan: 10 of 10
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-28 — Phase 176 execution started
 
 Progress: [████░░░░░░] 40%
@@ -309,6 +309,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P07 | 40 min | 3 tasks | 7 files |
 | Phase 176 P08 | 25 min | 3 tasks | 6 files |
 | Phase 176 P09 | 15 min | 3 tasks | 4 files |
+| Phase 176 P10 | 35 min | 4 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -592,6 +593,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-08: inbound-evidence-* scenarios stay out of axe_selection (20); a11y for revealed/denied/invalid proven on connected routes in 176-10
 - [Phase 176]: Inbound retry_inbound derives the selected record id from the page URI so Retry after a failed detail read keeps the URL selection
 - [Phase 176]: Inbound stale retention keys on tenant/provider/outcome/search/window/page; only a same-key failed read is :stale, any other key is an error with no rows
+- [Phase 176]: 176-10: coupled browser reds were Phase 175 and plan 176-03 spec drift, fixed in specs only; axe 'no new violations' measured against a per-collection, per-theme neutral baseline because Deliveries row buttons carry a Phase 113 aria-selected-on-button defect
 
 ## Quick Tasks Completed
 
@@ -643,8 +645,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T15:37:21.716Z
-Stopped at: Completed 176-09-PLAN.md
+Last session: 2026-10-28T16:15:45.254Z
+Stopped at: Completed 176-10-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
