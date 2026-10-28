@@ -2719,13 +2719,31 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
     end
 
+    @tag :phase177
     test "rendered Inbound nav target preserves the current tenant", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ "/ops/mail/inbound?tenant_id=#{@tenant_id}"
       assert html =~ "/ops/mail?tenant_id=#{@tenant_id}&amp;view=deliveries"
-      assert html =~ ~s(href="/dev/mail")
+
+      # Phase 177: with an Account selected the Preview link carries the
+      # closed-set return context (and no top-level tenant_id).
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      [preview_href | _] =
+        doc
+        |> Floki.find(~s([data-testid="surface-nav-sidebar"] a))
+        |> Enum.filter(fn link -> link |> Floki.text() |> String.trim() == "Preview" end)
+        |> Enum.flat_map(&Floki.attribute(&1, "href"))
+
+      uri = URI.parse(preview_href)
+      assert uri.path == "/dev/mail"
+
+      assert uri.query |> URI.query_decoder() |> Enum.sort() == [
+               {"return_surface", "overview"},
+               {"return_tenant_id", @tenant_id}
+             ]
     end
   end
 

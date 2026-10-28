@@ -30,6 +30,7 @@ defmodule MailglassAdmin.Operator.Shell do
   alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Preview.ReturnContext
   alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Theme
   alias Phoenix.LiveView.JS
@@ -174,6 +175,17 @@ defmodule MailglassAdmin.Operator.Shell do
   Renders the operator shell around a surface's body (passed as the inner block).
   """
   def shell(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :preview_href,
+        ReturnContext.operator_preview_href(
+          assigns.preview_path,
+          assigns.active,
+          assigns.selected_tenant_id
+        )
+      )
+
     ~H"""
     <AdminShell.shell
       testid="operator-shell"
@@ -193,7 +205,7 @@ defmodule MailglassAdmin.Operator.Shell do
       <:sidebar>
         <SurfaceNav.nav
           active={@active}
-          preview_path={@preview_path}
+          preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}
@@ -204,7 +216,7 @@ defmodule MailglassAdmin.Operator.Shell do
         <SurfaceNav.nav
           active={@active}
           layout={:mobile}
-          preview_path={@preview_path}
+          preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}

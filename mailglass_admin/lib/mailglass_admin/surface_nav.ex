@@ -19,6 +19,8 @@ defmodule MailglassAdmin.SurfaceNav do
   attr(:inbound_path, :string, default: nil)
   attr(:inbound_available?, :boolean, default: false)
   attr(:layout, :atom, values: [:sidebar, :mobile], default: :sidebar)
+  attr(:return_href, :string, default: nil)
+  attr(:return_label, :string, default: nil)
 
   def nav(assigns) do
     assigns = assign(assigns, :items, visible_items(assigns))
@@ -29,6 +31,16 @@ defmodule MailglassAdmin.SurfaceNav do
       aria-label="Mailglass sections"
       data-testid={"surface-nav-#{@layout}"}
     >
+      <.link
+        :if={@return_href && @return_label}
+        href={@return_href}
+        data-testid="preview-return-link"
+        data-layout={@layout}
+        class="mg-focus-ring inline-flex min-h-11 items-center gap-xs rounded-field px-sm text-body text-secondary transition-colors hover:text-base-content"
+      >
+        <Components.icon name="hero-arrow-uturn-left" class="h-4 w-4 shrink-0" />
+        <span>{@return_label}</span>
+      </.link>
       <%= for item <- @items do %>
         <Components.nav_link
           :if={@layout == :sidebar}
