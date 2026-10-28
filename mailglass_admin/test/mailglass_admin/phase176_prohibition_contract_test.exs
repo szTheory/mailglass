@@ -12,8 +12,10 @@ end
 
 defmodule MailglassAdmin.Phase176ProhibitionContractTest do
   @moduledoc """
-  Machine-checked form of the eight Phase 176 must-NOT prohibitions
-  (FILTER-01..04, INUX-05, INUX-06; D-30).
+  Machine-checked form of the thirteen Phase 176 must-NOT prohibitions
+  (FILTER-01..04, INUX-05, INUX-06; D-30). P1..P8 are the original set; P9..P13
+  close the verification gaps: P9 (INUX-06), P10 (INUX-05), P11 and P12
+  (FILTER-01) and P13 (FILTER-04, D-13).
 
   Each prohibition reduces to a forbidden control, a forbidden value or a
   forbidden claim on a closed set of rendered states, so this file enumerates
@@ -144,6 +146,67 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
                ~s(<p data-testid="filters-url-invalid-note">Showing results without the Latest recorded event filter.</p>),
                "Latest recorded event"
              ) == []
+    end
+
+    test "the P9 detector reports a Payload size that disagrees with the revealed bytes" do
+      pre = fn bytes ->
+        ~s(<pre id="inbound-evidence-raw">#{String.duplicate("x", bytes)}</pre>)
+      end
+
+      assert payload_size_violations(facts_html("3 bytes", "1") <> pre.(40)) != []
+      assert payload_size_violations(facts_html("40 bytes", "1") <> pre.(40)) == []
+      assert payload_size_violations(facts_html("1,500 bytes", "1") <> pre.(1_500)) == []
+      assert payload_size_violations(facts_html("1 byte", "1") <> pre.(1)) == []
+      assert payload_size_violations(facts_html("40 bytes", "1")) != []
+    end
+
+    test "the P10 detector reports a copy control whose accessible name omits its value" do
+      unnamed =
+        ~s(<button type="button" data-copy-value="a@example.com" aria-label="Copy To address">a@example.com</button>)
+
+      named =
+        ~s(<button type="button" data-copy-value="a@example.com" aria-label="Copy To address: a@example.com">a@example.com</button>)
+
+      assert copy_name_violations(unnamed) != []
+      assert copy_name_violations(named) == []
+    end
+
+    test "the P11 detector reports an empty Deliveries pane that withholds the filter toolbar" do
+      without_toolbar = ~s(<section><p data-testid="operator-empty-filtered">None.</p></section>)
+
+      assert toolbar_violations(without_toolbar) != []
+
+      assert toolbar_violations(
+               ~s(<section><p data-testid="operator-empty-truly">None.</p></section>)
+             ) != []
+
+      with_toolbar =
+        ~s(<section><form id="operator-filters"></form><p data-testid="operator-empty-filtered">None.</p></section>)
+
+      assert toolbar_violations(with_toolbar) == []
+    end
+
+    test "the P12 detector reports a display-toggle op or an inline style on the filter panel" do
+      toggle_json = fn name ->
+        [
+          [name, %{"to" => "#operator-filter-panel"}],
+          ["toggle_attr", %{"attr" => ["aria-expanded", "true", "false"]}]
+        ]
+        |> Jason.encode!()
+        |> Plug.HTML.html_escape()
+      end
+
+      toggle_html = fn name ->
+        ~s(<button data-testid="operator-filters-toggle" phx-click="#{toggle_json.(name)}">Filters</button><div id="operator-filter-panel" class="hidden"></div>)
+      end
+
+      assert toggle_op_violations(toggle_html.("toggle")) != []
+      assert toggle_op_violations(toggle_html.("toggle_class")) == []
+
+      styled =
+        ~s(<button data-testid="operator-filters-toggle" phx-click="#{toggle_json.("toggle_class")}">Filters</button><div id="operator-filter-panel" style="display: none"></div>)
+
+      assert Enum.any?(toggle_op_violations(styled), &(&1 =~ "style"))
     end
   end
 
@@ -459,6 +522,236 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
     end
   end
 
+  describe "P9 Payload size describes the bytes the reveal shows" do
+    test "the component with both fields stored sizes the exact revealed text" do
+      for payload <- [
+            %{"marker" => "P9-COMPONENT-176"},
+            %{"marker" => String.duplicate("p9", 900)}
+          ] do
+        html =
+          render_component(&EvidenceCard.evidence_card/1,
+            evidence: evidence(raw_payload: payload, raw_mime: "MIME-P9-COMPONENT-176"),
+            reveal_state: :revealed,
+            received_at: ~U[2026-05-24 10:00:00Z]
+          )
+
+        assert html =~ ~s(id="inbound-evidence-raw")
+        assert payload_size_violations(html) == []
+      end
+    end
+
+    test "the component sizes a mime-only source from the same bytes" do
+      html =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: evidence(raw_payload: %{}, raw_mime: "MIME-ONLY-P9-176"),
+          reveal_state: :revealed,
+          received_at: ~U[2026-05-24 10:00:00Z]
+        )
+
+      assert html =~ "MIME-ONLY-P9-176"
+      assert payload_size_violations(html) == []
+    end
+
+    test "the live authorized reveal of a record seeded with both fields agrees", %{conn: conn} do
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "p9-both@example.com",
+          evidence: [raw_payload: %{"body" => "P9-LIVE-176"}, raw_mime: "MIME-P9-LIVE-176"]
+        )
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      html = render_click(view, "reveal_raw", %{})
+
+      assert html =~ "P9-LIVE-176"
+      assert payload_size_violations(html) == []
+    end
+  end
+
+  describe "P10 copy controls name the value they copy" do
+    test "the full Inbound detail names every contact and record copy control", %{conn: conn} do
+      from = "p10-from@example.com"
+      to = "p10-to@example.com"
+      cc = "p10-cc@example.com"
+      envelope = "p10-envelope@example.com"
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: envelope,
+          from: [%{address: from, name: "P10 Sender"}],
+          to: [%{address: to}],
+          cc: [%{address: cc}]
+        )
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      buttons = html |> Floki.parse_document!() |> Floki.find("button[data-copy-value]")
+      values = Enum.flat_map(buttons, &Floki.attribute(&1, "data-copy-value"))
+
+      # One From, one To, one Cc and the envelope recipient: a vacuous loop over a
+      # missing list must fail before the containment check runs.
+      assert length(buttons) >= 4
+      for address <- [from, to, cc, envelope], do: assert(address in values)
+      assert copy_name_violations(html) == []
+    end
+
+    test "the full Deliveries detail names the provider message id control", %{conn: conn} do
+      delivery = insert_delivery!(provider_message_id: "pm_p10_copy_176")
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          "/ops/mail?" <>
+            URI.encode_query(%{
+              "tenant_id" => @tenant_id,
+              "delivery_id" => delivery.id,
+              "full" => "1"
+            })
+        )
+
+      buttons = html |> Floki.parse_document!() |> Floki.find("button[data-copy-value]")
+      values = Enum.flat_map(buttons, &Floki.attribute(&1, "data-copy-value"))
+
+      assert buttons != []
+      assert "pm_p10_copy_176" in values
+      assert copy_name_violations(html) == []
+    end
+  end
+
+  describe "P11 a committed filter never removes the Deliveries toolbar" do
+    test "a narrower time window that matches nothing keeps the toolbar (commit)", %{conn: conn} do
+      insert_delivery!(recipient: "p11-old@example.com", last_event_at: hours_ago(48))
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert html =~ "p11-old@example.com"
+
+      render_hook(view, "validate_filters", %{
+        "_target" => ["filters", "window_hours"],
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "24",
+          "event" => "",
+          "provider" => ""
+        }
+      })
+
+      assert assert_patch_kind(view, :push) =~ "window_hours=24"
+      html = render(view)
+
+      assert html =~ "operator-empty-filtered"
+      assert toolbar_violations(html) == []
+    end
+
+    test "a narrower time window that matches nothing keeps the toolbar (URL)", %{conn: conn} do
+      insert_delivery!(recipient: "p11-old-url@example.com", last_event_at: hours_ago(48))
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          "/ops/mail?" <>
+            URI.encode_query(%{
+              "tenant_id" => @tenant_id,
+              "view" => "deliveries",
+              "window_hours" => "24"
+            })
+        )
+
+      assert html =~ "operator-empty-filtered"
+      assert toolbar_violations(html) == []
+    end
+  end
+
+  describe "P12 the Deliveries filter panel is never hidden by an inline display" do
+    test "the mobile toggle switches a class and the panel carries no style", %{conn: conn} do
+      insert_delivery!(recipient: "p12@example.com")
+      {:ok, _view, html} = live(operator_conn(conn), deliveries_path())
+
+      [toggle] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-filters-toggle']")
+
+      [json] = Floki.attribute(toggle, "phx-click")
+      ops = Jason.decode!(json)
+
+      # The toggle must still do its job through a class, so an empty op list cannot pass.
+      assert "toggle_class" in Enum.map(ops, &hd/1)
+      assert toggle_op_violations(html) == []
+    end
+  end
+
+  describe "P13 an invalid URL filter stays labelled after a later edit or a reconnect" do
+    test "Deliveries keeps the event note when Search re-posts the invalid value", %{conn: conn} do
+      insert_delivery!(recipient: "p13-fallback@example.com")
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          "/ops/mail?" <>
+            URI.encode_query(%{
+              "tenant_id" => @tenant_id,
+              "view" => "deliveries",
+              "event" => "bogus"
+            })
+        )
+
+      assert note_violations(html, "Latest recorded event") == []
+
+      render_hook(view, "validate_filters", %{
+        "_target" => ["filters", "search"],
+        "filters" => %{
+          "search" => "ada",
+          "window_hours" => "168",
+          "event" => "bogus",
+          "provider" => ""
+        }
+      })
+
+      html = render(view)
+
+      assert html =~ "p13-fallback@example.com"
+      assert note_violations(html, "Latest recorded event") == []
+      # D-12: the draft note sits beside the URL note. P13 never asserts its absence.
+      assert draft_note_present?(html)
+    end
+
+    test "Inbound keeps the outcome note when a reconnect re-posts the invalid value", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "p13-fallback@example.com")
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "not-real"})
+        )
+
+      assert note_violations(html, "Mailbox outcome") == []
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "168",
+          "outcome" => "not-real",
+          "provider" => ""
+        }
+      })
+
+      html = render(view)
+
+      assert html =~ "p13-fallback@example.com"
+      assert note_violations(html, "Mailbox outcome") == []
+      assert draft_note_present?(html)
+    end
+  end
+
   # -- detectors ---------------------------------------------------------------
 
   # P1: violations found inside the given form HTML.
@@ -620,6 +913,92 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
     end
   end
 
+  defp draft_note_present?(html) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='filters-draft-pending-note']")
+    |> Kernel.!=([])
+  end
+
+  # P9: the Payload size fact must equal the byte size of the exact text inside the
+  # revealed <pre>. A revealed card with no <pre> or an unparseable size is a violation
+  # too, so a pass always compares two real numbers.
+  defp payload_size_violations(html) do
+    doc = Floki.parse_document!(html)
+    size = doc |> dd_for("Payload size") |> Floki.text() |> String.trim()
+
+    case {Floki.find(doc, "pre#inbound-evidence-raw"), Regex.run(~r/^([\d,]+) bytes?$/, size)} do
+      {[], _size} ->
+        ["no revealed <pre> to compare the Payload size against"]
+
+      {_pre, nil} ->
+        ["Payload size is not a byte count: #{inspect(size)}"]
+
+      {[pre | _], [_whole, digits]} ->
+        shown = digits |> String.replace(",", "") |> String.to_integer()
+        revealed = byte_size(Floki.text(pre))
+
+        if shown == revealed,
+          do: [],
+          else: ["Payload size states #{shown} bytes, the revealed text is #{revealed} bytes"]
+    end
+  end
+
+  # P10: every copy control's accessible name must contain the value it copies.
+  defp copy_name_violations(html) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("button[data-copy-value]")
+    |> Enum.flat_map(fn button ->
+      [value] = Floki.attribute(button, "data-copy-value")
+      name = button |> Floki.attribute("aria-label") |> List.first("")
+
+      if String.contains?(name, value),
+        do: [],
+        else: ["copy control name #{inspect(name)} omits its value #{inspect(value)}"]
+    end)
+  end
+
+  # P11: on a Deliveries state with a committed filter, an empty pane (filtered or
+  # genuine) must not appear without the #operator-filters toolbar.
+  defp toolbar_violations(html) do
+    doc = Floki.parse_document!(html)
+
+    empty? =
+      Floki.find(doc, "[data-testid='operator-empty-filtered']") != [] or
+        Floki.find(doc, "[data-testid='operator-empty-truly']") != []
+
+    if empty? and Floki.find(doc, "#operator-filters") == [],
+      do: ["an empty Deliveries pane renders without the #operator-filters toolbar"],
+      else: []
+  end
+
+  # P12: the toggle's phx-click must hold no "toggle" (display) op aimed at the filter
+  # panel, and the panel must carry no inline style a breakpoint cannot override.
+  defp toggle_op_violations(html) do
+    doc = Floki.parse_document!(html)
+
+    op_hits =
+      doc
+      |> Floki.find("[data-testid='operator-filters-toggle']")
+      |> Enum.flat_map(&Floki.attribute(&1, "phx-click"))
+      |> Enum.flat_map(&Jason.decode!/1)
+      |> Enum.filter(fn
+        ["toggle", %{"to" => "#operator-filter-panel"}] -> true
+        _op -> false
+      end)
+      |> Enum.map(fn _ -> "toggle op writes an inline display on #operator-filter-panel" end)
+
+    style_hits =
+      for panel <- Floki.find(doc, "#operator-filter-panel"),
+          style <- Floki.attribute(panel, "style"),
+          String.trim(style) != "" do
+        "#operator-filter-panel carries inline style #{inspect(style)}"
+      end
+
+    op_hits ++ style_hits
+  end
+
   # -- rendering helpers ---------------------------------------------------------
 
   defp form_html(html, selector) do
@@ -703,6 +1082,8 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
     |> Delivery.changeset()
     |> TestRepo.insert!()
   end
+
+  defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours * 3_600, :second)
 
   defp operator_conn(conn, session \\ %{}) do
     now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
