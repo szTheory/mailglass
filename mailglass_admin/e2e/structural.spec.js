@@ -1293,7 +1293,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
       await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
       await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
-      await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+      await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
       await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
 
       const source = await page.request.get("/ops/mail/inbound?tenant_id=browser-tenant");
@@ -1361,7 +1361,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertNonTextContrastAA(selectedBoundary, `${theme.name} ${viewport.width} selected/detail flow`);
 
           await assertTextContrastAA(page.getByTestId("inbound-evidence-card"), `${theme.name} ${viewport.width} inbound-evidence-card`);
-          await assertTextContrastAA(page.getByTestId("inbound-evidence-redacted"), `${theme.name} ${viewport.width} inbound-evidence-redacted`);
+          await assertTextContrastAA(page.getByTestId("inbound-evidence-caption"), `${theme.name} ${viewport.width} inbound-evidence-caption`);
           await page.getByTestId("inbound-evidence-reveal").click();
           await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-raw`);
 

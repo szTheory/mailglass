@@ -90,7 +90,7 @@ test.describe("Phase 170 connected", () => {
     await expect(detail).toContainText(recordId);
     await expect(detail).toContainText("browser-tenant");
     await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Initial processing");
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
     const reveal = page.getByTestId("inbound-evidence-reveal");
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
@@ -98,7 +98,7 @@ test.describe("Phase 170 connected", () => {
     await page.keyboard.press("Enter");
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByTestId("inbound-evidence-raw")).toBeVisible();
-    await page.getByTestId("inbound-evidence-re-redact").click();
+    await reveal.click();
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
 
     const snapshot = page.getByTestId("inbound-timeline-snapshot");
@@ -344,7 +344,7 @@ test.describe("Phase 170 rendered", () => {
     await page.keyboard.press("Enter");
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator("[data-testid=\"inbound-evidence-status\"]")).toContainText("Raw source revealed");
-    await page.getByTestId("inbound-evidence-re-redact").focus();
+    await reveal.focus();
     await page.keyboard.press("Enter");
     await expect(reveal).toBeFocused();
 

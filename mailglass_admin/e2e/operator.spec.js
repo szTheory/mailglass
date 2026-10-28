@@ -489,7 +489,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
     await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
     await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
   });
 
