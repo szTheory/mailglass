@@ -3378,6 +3378,84 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute path =~ "event="
     end
 
+    test "Phase 176 mobile Filters toggle is labelled, controls the panel and starts collapsed",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      toggle =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-filters-toggle']")
+
+      assert Floki.attribute(toggle, "aria-controls") == ["operator-filter-panel"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["false"]
+      assert toggle_label(view) == "Filters"
+      assert has_element?(view, "#operator-filter-panel")
+    end
+
+    test "Phase 176 mobile Filters toggle counts committed filters only", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "sent",
+            "provider" => "postmark"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (2 applied)"
+    end
+
+    test "Phase 176 mobile Filters toggle counts search and a non-default window, not the default window",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "match",
+            "window_hours" => "720"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (2 applied)"
+
+      {:ok, default_view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "168"
+          })
+        )
+
+      assert toggle_label(default_view) == "Filters"
+    end
+
+    test "Phase 176 mobile Filters toggle ignores an invalid draft and follows the committed URL",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+      refute_patch(view)
+      assert toggle_label(view) == "Filters"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+      assert toggle_label(view) == "Filters (1 applied)"
+    end
+
     test "Phase 176 the filter form has no Apply, submit, loading or tenant control", %{
       conn: conn
     } do
@@ -3399,6 +3477,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       refute has_element?(view, "#operator-filters [disabled]")
     end
+  end
+
+  defp toggle_label(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='operator-filters-toggle']")
+    |> Floki.text()
+    |> String.split()
+    |> Enum.join(" ")
   end
 
   defp deliveries_path do

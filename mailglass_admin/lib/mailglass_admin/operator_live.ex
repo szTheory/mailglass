@@ -923,11 +923,20 @@ defmodule MailglassAdmin.OperatorLive do
                 >
                   <button
                     type="button"
-                    phx-click={JS.toggle(to: "#operator-filter-panel")}
+                    phx-click={
+                      JS.toggle(to: "#operator-filter-panel")
+                      |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                    }
                     data-testid="operator-filters-toggle"
+                    aria-controls="operator-filter-panel"
+                    aria-expanded="false"
                     class="btn btn-ghost !h-11 min-h-11 md:hidden"
                   >
-                    Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
+                    Filters
+                    <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
+                      ({applied_filter_count(@filter_params)} applied)
+                    </span>
+                    <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                   </button>
 
                   <div id="operator-filter-panel" class="hidden md:block">
@@ -1221,6 +1230,20 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])
     |> assign(:replay_selected_target_id, nil)
+  end
+
+  # Committed filters only (the URL-backed params, never the draft), so the mobile toggle
+  # tells the truth about what the list is narrowed by. The default window is not a filter.
+  defp applied_filter_count(filter_params) do
+    window_applied? =
+      case blank_to_nil(filter_params["window_hours"]) do
+        nil -> false
+        window -> window != Integer.to_string(@default_window_hours)
+      end
+
+    ["search", "event", "provider"]
+    |> Enum.count(&(not is_nil(blank_to_nil(filter_params[&1]))))
+    |> Kernel.+(if window_applied?, do: 1, else: 0)
   end
 
   defp filters_active?(filter_params) do
