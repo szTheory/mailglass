@@ -185,8 +185,13 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
                  "Payload size"
                )
 
-      # Map payload: the JSON-encoded size.
-      assert {"Payload size", "7 bytes"} =
+      # Map payload: the size is the byte size of the pretty JSON the reveal
+      # renders (176-11 measurement decision), not the compact encoding.
+      pretty_size = byte_size(Jason.encode!(%{"a" => 1}, pretty: true))
+
+      expected_pretty = "#{pretty_size} bytes"
+
+      assert {"Payload size", ^expected_pretty} =
                doc_pair(Map.put(base, :raw_payload, %{"a" => 1}), "Payload size")
 
       # A payload that cannot be encoded is unknown, not zero.
@@ -231,6 +236,134 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
 
       assert Floki.text(pre) == "Provider sent an empty payload."
       refute html =~ "(empty)"
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: both stored, the size is the byte size of the revealed text" do
+      payload = %{"Type" => "Notification", "marker" => "PAYLOAD-176-11"}
+
+      evidence = %{
+        provider: "ses",
+        raw_payload: payload,
+        raw_mime: "From: a@example.com\r\n\r\nMIME-176-11 body",
+        raw_headers: %{}
+      }
+
+      revealed = render_state_with(evidence, :revealed)
+      text = raw_pre_text(revealed)
+
+      assert text =~ "PAYLOAD-176-11"
+      refute text =~ "MIME-176-11"
+      assert text == Jason.encode!(payload, pretty: true)
+
+      expected = "#{delimit_for_test(byte_size(text))} bytes"
+      assert {"Payload size", ^expected} = size_pair(revealed)
+
+      # The fact never depends on the reveal state.
+      assert size_pair(render_state_with(evidence, :redacted)) == {"Payload size", expected}
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: sizes count UTF-8 bytes, not characters" do
+      base = %{provider: "mailgun", raw_headers: %{}}
+      payload = %{"name" => "Zoë 用户"}
+      text = Jason.encode!(payload, pretty: true)
+
+      assert byte_size(text) > String.length(text)
+      expected = "#{byte_size(text)} bytes"
+
+      assert {"Payload size", ^expected} =
+               doc_pair(Map.put(base, :raw_payload, payload), "Payload size")
+
+      assert {"Payload size", "4 bytes"} =
+               doc_pair(Map.merge(base, %{raw_payload: %{}, raw_mime: "Zoë"}), "Payload size")
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: an empty payload map falls through to the MIME for size and reveal" do
+      evidence = %{provider: "ses", raw_payload: %{}, raw_mime: "abc", raw_headers: %{}}
+      html = render_state_with(evidence, :revealed)
+
+      assert raw_pre_text(html) == "abc"
+      assert {"Payload size", "3 bytes"} = size_pair(html)
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: an unencodable payload stays the source, size Unavailable, never the MIME" do
+      evidence = %{
+        provider: "ses",
+        raw_payload: %{"a" => {:not, :json}, "marker" => "UNENC-176-11"},
+        raw_mime: "MIME-UNENC-176-11",
+        raw_headers: %{}
+      }
+
+      for state <- [:redacted, :revealed] do
+        html = render_state_with(evidence, state)
+        assert {"Payload size", "Unavailable"} = size_pair(html)
+      end
+
+      text = evidence |> render_state_with(:revealed) |> raw_pre_text()
+      assert text =~ "UNENC-176-11"
+      refute text =~ "MIME-UNENC-176-11"
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: nothing stored, no reveal control and the size is Unavailable" do
+      for evidence <- [
+            %{provider: "ses", raw_payload: nil, raw_mime: nil, raw_headers: %{}},
+            %{provider: "ses", raw_payload: nil, raw_mime: "", raw_headers: %{}},
+            %{provider: "ses", raw_payload: "not-a-map", raw_headers: %{}}
+          ],
+          state <- [:redacted, :revealed, :denied] do
+        html = render_state_with(evidence, state)
+        doc = Floki.parse_document!(html)
+
+        assert Floki.find(doc, "[data-testid='inbound-evidence-reveal']") == []
+        assert Floki.find(doc, "#inbound-evidence-reveal-btn") == []
+        assert Floki.find(doc, "[data-testid='inbound-evidence-caption']") == []
+        assert Floki.find(doc, "#inbound-evidence-raw") == []
+        assert Floki.find(doc, "[data-testid='inbound-evidence-status']") == []
+
+        assert [not_stored] = Floki.find(doc, "[data-testid='inbound-evidence-not-stored']")
+
+        assert not_stored |> Floki.text() |> String.trim() ==
+                 "No raw provider source was stored for this message."
+
+        assert {"Payload size", "Unavailable"} = size_pair(html)
+        refute html =~ "Provider sent an empty payload."
+      end
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: a known-empty payload keeps its reveal control" do
+      evidence = %{provider: "ses", raw_payload: %{}, raw_mime: nil, raw_headers: %{}}
+
+      redacted = render_state_with(evidence, :redacted)
+      doc = Floki.parse_document!(redacted)
+      assert [_button] = Floki.find(doc, "#inbound-evidence-reveal-btn")
+      assert Floki.find(doc, "[data-testid='inbound-evidence-not-stored']") == []
+
+      revealed = render_state_with(evidence, :revealed)
+      assert raw_pre_text(revealed) == "Provider sent an empty payload."
+      assert {"Payload size", "0 bytes"} = size_pair(revealed)
+    end
+
+    defp raw_pre_text(html) do
+      assert [pre] = html |> Floki.parse_document!() |> Floki.find("pre#inbound-evidence-raw")
+      Floki.text(pre)
+    end
+
+    defp size_pair(html) do
+      pairs = html |> Floki.parse_document!() |> fact_pairs()
+      Enum.find(pairs, &(elem(&1, 0) == "Payload size"))
+    end
+
+    defp delimit_for_test(size) do
+      size
+      |> Integer.to_string()
+      |> String.reverse()
+      |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+      |> String.reverse()
     end
 
     defp render_state_with(evidence, state) do

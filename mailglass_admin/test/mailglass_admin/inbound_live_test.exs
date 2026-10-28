@@ -3514,6 +3514,41 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert_patch_kind(view, :push)
       refute has_element?(view, "[data-testid='filters-url-invalid-note']")
     end
+
+    test "Phase 176 Inbound reveal: with both fields stored, Payload size is the byte size of the revealed text",
+         %{conn: conn} do
+      payload = %{"marker" => "PAYLOAD-LIVE-176-11"}
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "both-stored@example.com",
+          evidence: [provider: "ses", raw_payload: payload, raw_mime: "MIME-LIVE-176-11"]
+        )
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      revealed_html = render_click(view, "reveal_raw", %{})
+      doc = Floki.parse_document!(revealed_html)
+
+      assert [pre] = Floki.find(doc, "pre#inbound-evidence-raw")
+      text = Floki.text(pre)
+      assert text =~ "PAYLOAD-LIVE-176-11"
+      refute text =~ "MIME-LIVE-176-11"
+
+      size_dd =
+        doc
+        |> Floki.find("[data-testid='inbound-evidence-facts'] div")
+        |> Enum.find(&(&1 |> Floki.find("dt") |> Floki.text() |> String.trim() == "Payload size"))
+        |> Floki.find("dd")
+        |> Floki.text()
+        |> String.trim()
+
+      assert size_dd == "#{byte_size(text)} bytes"
+    end
   end
 
   defp swap_inbound_repo(repo) do

@@ -66,6 +66,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         inbound_record_id: record_id,
         provider: Keyword.get(opts, :provider, "mailgun"),
         raw_payload: Keyword.get(opts, :raw_payload, %{"ok" => true}),
+        raw_mime: Keyword.get(opts, :raw_mime),
         raw_headers: Keyword.get(opts, :raw_headers, %{}),
         verification_facts: verification_facts,
         parse_warnings: Keyword.get(opts, :parse_warnings, %{})
