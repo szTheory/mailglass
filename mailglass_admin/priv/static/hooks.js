@@ -111,5 +111,36 @@ window.MailglassAdminHooks = {
         destroyed() {
           this.el.removeEventListener("keydown", this.handleKeydown)
         }
+      },
+      FilterSearchSync: {
+        mounted() {
+          this.pending = false
+          this.pendingTimer = null
+          this.clearPending = () => {
+            this.pending = false
+            clearTimeout(this.pendingTimer)
+          }
+          this.handlePopstate = () => {
+            this.pending = true
+            clearTimeout(this.pendingTimer)
+            this.pendingTimer = setTimeout(this.clearPending, 1500)
+          }
+          window.addEventListener("popstate", this.handlePopstate)
+          this.el.addEventListener("input", this.clearPending)
+        },
+        updated() {
+          if (!this.pending) return
+          this.clearPending()
+          const committed = this.el.dataset.committed ?? ""
+          if (this.el.value !== committed) {
+            this.el.value = committed
+            this.el.setSelectionRange?.(committed.length, committed.length)
+          }
+        },
+        destroyed() {
+          window.removeEventListener("popstate", this.handlePopstate)
+          this.el.removeEventListener("input", this.clearPending)
+          clearTimeout(this.pendingTimer)
+        }
       }
     }

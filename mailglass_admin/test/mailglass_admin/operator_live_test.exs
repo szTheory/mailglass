@@ -3492,6 +3492,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       [search] = Floki.find(form, "#filters_search")
 
       assert Floki.attribute(search, "phx-debounce") == ["300"]
+      assert Floki.attribute(search, "phx-hook") == ["FilterSearchSync"]
       assert Floki.attribute(search, "autocomplete") == ["off"]
       assert Floki.attribute(search, "enterkeyhint") == ["search"]
       assert Floki.attribute(search, "data-committed") == [""]

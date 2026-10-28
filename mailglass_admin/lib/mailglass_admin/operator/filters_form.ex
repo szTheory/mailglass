@@ -31,6 +31,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
         enterkeyhint="search"
         data-committed={@committed_search}
         phx-debounce="300"
+        phx-hook="FilterSearchSync"
       />
 
       <Components.filter_field

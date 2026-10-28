@@ -124,7 +124,7 @@ defmodule MailglassDemoWeb.Storybook do
   @review_hooks MailglassAdmin.Controllers.Assets.hooks_body()
   @review_js @review_hooks <> "\n" <> @theme_adapter_js
   @review_js_hash Base.encode16(:crypto.hash(:md5, @review_js), case: :lower)
-  @configured_review_js_hash "571f26622aab3f8464962fb22bda3296"
+  @configured_review_js_hash "d7201408b8ccd6015cc463b47b90d8b1"
 
   if @review_js_hash != @configured_review_js_hash do
     raise "Update the Storybook review JS path hash to #{@review_js_hash}"
@@ -135,7 +135,7 @@ defmodule MailglassDemoWeb.Storybook do
     content_path: Path.expand("../../storybook", __DIR__),
     # Remote URL of the served committed admin bundle (D-07). NOT a filesystem path.
     css_path: "/dev/mail/css-" <> MailglassAdmin.Controllers.Assets.css_hash(),
-    js_path: "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+    js_path: "/dev/storybook-review-js-d7201408b8ccd6015cc463b47b90d8b1",
     sandbox_class: "mg-admin-root",
     title: "mailglass admin"
 
