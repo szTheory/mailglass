@@ -309,9 +309,27 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
 
   @tag :phase176
   test "Phase 176 retained Inbound evidence scenarios render through production components" do
-    ids = [:normal_contacts]
+    long_local =
+      "very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com"
 
-    for id <- ids do
+    # {scenario, markup the header must contain, markup the card must contain}
+    table = [
+      {:normal_contacts, ["Alex Rivera", "alex.rivera@example.com", "Northstar Billing"],
+       ["Reveal raw source", "Raw provider source"]},
+      {:long_local_part, [long_local], []},
+      {:unicode, ["用户@例子.广告", "Zoë Ångström-Łukasiewicz", "zoe@example.com"], []},
+      {:spoofed_display_name,
+       ["billing@paypal.example", "sender@mailer.example", "inbound-address-spoof-cue"], []},
+      {:many_recipients, ["Show 2 more", "recipient5@example.com", "recipient7@example.com"], []},
+      {:missing_headers, ["No From header", "No To header", "Not recorded by provider"], []},
+      {:unparseable, ["Unparseable address", "not an address"], []},
+      {:evidence_unknown, [], ["Payload size", "Header count"]},
+      {:evidence_empty_revealed, [], ["Provider sent an empty payload.", "Hide raw source"]},
+      {:evidence_large_revealed, [], ["inbound-evidence-raw", "Line 40: synthetic body text"]},
+      {:evidence_denied, [], ["permission to reveal raw source."]}
+    ]
+
+    for {id, header_needles, card_needles} <- table do
       scenario = QuickViewScenarios.inbound_evidence(id)
 
       header =
@@ -327,17 +345,93 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
           received_at: scenario.received_at
         )
 
-      assert header =~ ~s(data-testid="inbound-detail-header")
-      assert header =~ ~s(data-testid="inbound-contact-from")
-      assert header =~ ~s(data-testid="inbound-contact-delivered-to")
-      assert header =~ "Provider message ID"
-      assert card =~ ~s(data-testid="inbound-evidence-card")
+      assert header =~ ~s(data-testid="inbound-detail-header"), "#{id} header"
+      assert header =~ ~s(data-testid="inbound-contact-delivered-to"), "#{id} delivered-to"
+      assert card =~ ~s(data-testid="inbound-evidence-card"), "#{id} card"
       assert scenario.proof_boundary == "story-render-only"
+      assert scenario.scenario_id == "inbound-evidence-" <> String.replace("#{id}", "_", "-")
+
+      for needle <- header_needles do
+        assert header =~ needle, "#{id}: header should contain #{inspect(needle)}"
+      end
+
+      for needle <- card_needles do
+        assert card =~ needle, "#{id}: card should contain #{inspect(needle)}"
+      end
+
+      # No retained fixture may show a masked-looking address.
+      refute header =~ ~r/\w\*{2,}@/, "#{id}: masked-looking address in header"
     end
+
+    # Defining facts that need more than a substring.
+    assert render_scenario(:normal_contacts).header =~ "Provider message ID"
+    assert render_scenario(:normal_contacts).header =~ "mg-176-normal-contacts"
+    assert render_scenario(:spoofed_display_name).header =~ "inbound-address-spoof-cue"
+    refute render_scenario(:normal_contacts).header =~ "inbound-address-spoof-cue"
+
+    assert scenario_header_text(:many_recipients) |> count("@example.com") >= 7
+
+    # Unknown size and count read Unavailable, never 0 bytes.
+    unknown = render_scenario(:evidence_unknown).card
+    assert fact(unknown, "Payload size") == "Unavailable"
+    assert fact(unknown, "Header count") == "Unavailable"
+    refute rendered_text(unknown) =~ "0 bytes"
+    refute unknown =~ ~s(data-testid="inbound-evidence-raw")
+
+    # A genuinely empty payload is a known zero, revealed with its own copy.
+    empty = render_scenario(:evidence_empty_revealed).card
+    assert fact(empty, "Payload size") == "0 bytes"
+    assert empty =~ ~s(aria-expanded="true")
+    assert empty =~ ~s(data-testid="inbound-evidence-raw")
+
+    # Multi-KB revealed source: scrollable focusable <pre> and a thousands-separated size.
+    large = render_scenario(:evidence_large_revealed).card
+    assert large =~ ~r/<pre[^>]*tabindex="0"/
+    assert fact(large, "Payload size") =~ ~r/^\d{1,3}(,\d{3})+ bytes$/
+
+    # Denied: the denied copy shows and no payload byte reaches the markup.
+    denied = render_scenario(:evidence_denied).card
+    assert denied =~ ~s(data-testid="inbound-evidence-denied")
+    refute denied =~ "DENIED-SENTINEL-176-08"
+    refute denied =~ ~s(data-testid="inbound-evidence-raw")
 
     assert_raise ArgumentError, ~r/unknown retained Inbound evidence scenario/, fn ->
       QuickViewScenarios.inbound_evidence(:no_such_scenario)
     end
+  end
+
+  defp render_scenario(id) do
+    scenario = QuickViewScenarios.inbound_evidence(id)
+
+    %{
+      header:
+        render_component(&InboundDetailHeader.detail_header/1,
+          detail: scenario.detail,
+          account_labels: scenario.account_labels
+        ),
+      card:
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: scenario.evidence,
+          reveal_state: scenario.reveal_state,
+          received_at: scenario.received_at
+        )
+    }
+  end
+
+  defp scenario_header_text(id),
+    do: id |> render_scenario() |> Map.fetch!(:header) |> rendered_text()
+
+  defp count(text, needle), do: length(String.split(text, needle)) - 1
+
+  # The value of one fact in the evidence card's <dl>, whitespace-collapsed.
+  defp fact(card_html, label) do
+    [_, value] =
+      Regex.run(
+        ~r/<dt[^>]*>\s*#{Regex.escape(label)}\s*<\/dt>\s*<dd[^>]*>(.*?)<\/dd>/s,
+        card_html
+      )
+
+    value |> rendered_text() |> String.split() |> Enum.join(" ")
   end
 
   defp rendered_text(html), do: Regex.replace(~r/<[^>]*>/, html, "")

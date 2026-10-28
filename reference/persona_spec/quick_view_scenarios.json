@@ -625,6 +625,605 @@
         },
         "reveal_state": "redacted"
       }
+    },
+    {
+      "id": "inbound-evidence-long-local-part",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "long_local_part",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "long-local-part",
+      "reason": "Keeps one unbreakable dotted local part visible untruncated beside its copy control at narrow widths.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-long-local-part",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-long-local-part",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-unicode",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "unicode",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "unicode",
+      "reason": "Keeps Unicode local parts, domains and display names exact in the sender and To lists.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-unicode",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-unicode",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {"address": "用户@例子.广告"}
+          ],
+          "to": [
+            {
+              "address": "zoe@example.com",
+              "name": "Zoë Ångström-Łukasiewicz"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-spoofed-display-name",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "spoofed_display_name",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "spoofed-display-name",
+      "reason": "Shows the spoof cue when the display name embeds a different address than the real sender.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-spoofed-display-name",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-spoofed-display-name",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "sender@mailer.example",
+              "name": "billing@paypal.example"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-many-recipients",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "many_recipients",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "many-recipients",
+      "reason": "Collapses seven To addresses to five and offers Show 2 more.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-many-recipients",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-many-recipients",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "recipient1@example.com",
+              "name": "Recipient 1"
+            },
+            {
+              "address": "recipient2@example.com",
+              "name": "Recipient 2"
+            },
+            {
+              "address": "recipient3@example.com",
+              "name": "Recipient 3"
+            },
+            {
+              "address": "recipient4@example.com",
+              "name": "Recipient 4"
+            },
+            {
+              "address": "recipient5@example.com",
+              "name": "Recipient 5"
+            },
+            {
+              "address": "recipient6@example.com",
+              "name": "Recipient 6"
+            },
+            {
+              "address": "recipient7@example.com",
+              "name": "Recipient 7"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-missing-headers",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "missing_headers",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "missing-headers",
+      "reason": "Says plainly that the From header, To header and envelope recipient were not recorded.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-missing-headers",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-missing-headers",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": null,
+          "from": [],
+          "to": [],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-unparseable",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "unparseable",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "unparseable",
+      "reason": "Labels a sender value that is not an address as unparseable while keeping the original text copyable.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-unparseable",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-unparseable",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {"address": "not an address"}
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-unknown",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_unknown",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-unknown",
+      "reason": "Renders Unavailable, never 0 bytes, when stored evidence cannot say its payload size or header count.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-unknown",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-unknown",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": null,
+          "raw_headers": null,
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-empty-revealed",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_empty_revealed",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-empty-revealed",
+      "reason": "Reveals a provider payload that was genuinely empty and says so.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-empty-revealed",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-empty-revealed",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {},
+          "raw_headers": {},
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "revealed"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-large-revealed",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_large_revealed",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-large-revealed",
+      "reason": "Reveals a multi-kilobyte raw source in a scrollable, focusable region with a thousands-separated size.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-large-revealed",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-large-revealed",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {},
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": "From: Alex Rivera <alex.rivera@example.com>\r\nTo: Northstar Support <support@northstar.example>\r\nSubject: Synthetic multi-kilobyte message for the revealed raw-source state\r\nMessage-ID: <176-large@mail-gateway.example.com>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nLine 01: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 02: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 03: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 04: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 05: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 06: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 07: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 08: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 09: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 10: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 11: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 12: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 13: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 14: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 15: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 16: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 17: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 18: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 19: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 20: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 21: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 22: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 23: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 24: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 25: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 26: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 27: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 28: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 29: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 30: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 31: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 32: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 33: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 34: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 35: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 36: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 37: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 38: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 39: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 40: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\n",
+          "verification_facts": {}
+        },
+        "reveal_state": "revealed"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-denied",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_denied",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-denied",
+      "reason": "Shows the denied reveal copy and keeps every raw byte absent.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-denied",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-denied",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {"body-plain": "DENIED-SENTINEL-176-08-must-never-render"},
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": "DENIED-SENTINEL-176-08-raw-mime-must-never-render",
+          "verification_facts": {}
+        },
+        "reveal_state": "denied"
+      }
     }
   ],
   "axe_selection": [

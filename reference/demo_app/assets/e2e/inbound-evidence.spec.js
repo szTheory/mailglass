@@ -4,7 +4,17 @@ const path = require("node:path");
 
 const SCENARIO_MANIFEST = path.resolve(__dirname, "../../../persona_spec/quick_view_scenarios.json");
 const RETAINED_IDS = [
-  "inbound-evidence-normal-contacts"
+  "inbound-evidence-normal-contacts",
+  "inbound-evidence-long-local-part",
+  "inbound-evidence-unicode",
+  "inbound-evidence-spoofed-display-name",
+  "inbound-evidence-many-recipients",
+  "inbound-evidence-missing-headers",
+  "inbound-evidence-unparseable",
+  "inbound-evidence-evidence-unknown",
+  "inbound-evidence-evidence-empty-revealed",
+  "inbound-evidence-evidence-large-revealed",
+  "inbound-evidence-evidence-denied"
 ];
 
 test("Phase 176 retained Inbound evidence inventory and production composition", async ({ page }) => {
@@ -13,7 +23,7 @@ test("Phase 176 retained Inbound evidence inventory and production composition",
     scenario.id.startsWith("inbound-evidence-")
   );
   expect(scenarios.map(scenario => scenario.id).sort()).toEqual([...RETAINED_IDS].sort());
-  expect(new Set(scenarios.map(scenario => scenario.id)).size).toBe(RETAINED_IDS.length);
+  expect(new Set(scenarios.map(scenario => scenario.id)).size).toBe(11);
 
   for (const scenario of scenarios) {
     expect(scenario.story_path).toBe("/dev/storybook/inbound_evidence");

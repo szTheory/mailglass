@@ -27,7 +27,19 @@ defmodule Storybook.InboundEvidence do
   end
 
   def variations do
-    for id <- [:normal_contacts] do
+    for id <- [
+          :normal_contacts,
+          :long_local_part,
+          :unicode,
+          :spoofed_display_name,
+          :many_recipients,
+          :missing_headers,
+          :unparseable,
+          :evidence_unknown,
+          :evidence_empty_revealed,
+          :evidence_large_revealed,
+          :evidence_denied
+        ] do
       %Variation{id: id, attributes: QuickViewScenarios.inbound_evidence(id)}
     end
   end
