@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-11-PLAN.md
-last_updated: "2026-10-28T19:13:45.748Z"
+stopped_at: Completed 176-12-PLAN.md
+last_updated: "2026-10-28T19:20:41.814Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: 2e6a9aa74367b825abca9e761ae175f1971d3ee1
+state_head: 5aedb76775404b80a6ba0625007b4a4965e570b7
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 27
-  completed_plans: 23
+  completed_plans: 24
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 12 of 15
+Plan: 13 of 15
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -311,6 +311,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P09 | 15 min | 3 tasks | 4 files |
 | Phase 176 P10 | 35 min | 4 tasks | 9 files |
 | Phase 176 P11 | 6 min | 2 tasks | 6 files |
+| Phase 176 P12 | 10 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -596,6 +597,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: Inbound stale retention keys on tenant/provider/outcome/search/window/page; only a same-key failed read is :stale, any other key is an error with no rows
 - [Phase 176]: 176-10: coupled browser reds were Phase 175 and plan 176-03 spec drift, fixed in specs only; axe 'no new violations' measured against a per-collection, per-theme neutral baseline because Deliveries row buttons carry a Phase 113 aria-selected-on-button defect
 - [Phase 176]: 176-11: Evidence card size and reveal share raw_source/1 (raw_payload first, then raw_mime); size is byte size of the revealed text; unencodable payload stays the source (Unavailable); nothing stored hides the reveal control; denial announced from the persistent status region (UI-SPEC rows superseded per D-26).
+- [Phase 176]: 176-12: copy_value accessible name is "Copy <label>: <value>" (WCAG 2.5.3), fixed in the shared component for all 13 call sites; browser locators use full exact name where value in scope, anchored regex elsewhere
 
 ## Quick Tasks Completed
 
@@ -647,8 +649,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T19:13:45.464Z
-Stopped at: Completed 176-11-PLAN.md
+Last session: 2026-10-28T19:20:41.528Z
+Stopped at: Completed 176-12-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
