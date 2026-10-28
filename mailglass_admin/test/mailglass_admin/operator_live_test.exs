@@ -2382,8 +2382,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "This view could not be updated."
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
       assert html =~ "Retry deliveries"
+      refute html =~ ~s(data-testid="operator-result-count")
       refute html =~ "No deliveries in this time window"
       refute html =~ "synthetic transient operator read failure"
     end
@@ -3476,6 +3477,52 @@ defmodule MailglassAdmin.OperatorLiveTest do
              )
 
       refute has_element?(view, "#operator-filters [disabled]")
+    end
+
+    test "Phase 176 Deliveries new-query read failure shows a truthful error, no count and no empty copy",
+         %{conn: conn} do
+      insert_delivery!(recipient: "readable@example.com", last_event_type: :sent)
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert html =~ "readable@example.com"
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      path = assert_patch_kind(view, :push)
+      assert path =~ "event=sent"
+
+      html = render(view)
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+      refute has_element?(view, "[data-testid='operator-result-count']")
+      refute has_element?(view, "[data-testid='operator-delivery-row']")
+      refute has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      refute html =~ "No deliveries match the current filters."
+      refute html =~ "readable@example.com"
+      refute html =~ "synthetic"
+      assert selected_filter_value(html, "#filters_event") == "sent"
+    end
+
+    test "Phase 176 Deliveries Retry adds no history and re-reads the committed filters", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "retried@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']")
+
+      view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
+
+      refute_patch(view)
+      html = render(view)
+      assert html =~ "retried@example.com"
+      assert has_element?(view, "[data-testid='operator-result-count']")
+      refute html =~ "Couldn&#39;t load deliveries for these filters"
     end
   end
 
@@ -4828,10 +4875,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-error")
-      assert html =~ "This view could not be updated."
-
-      assert html =~
-               "Refresh to try again. If it continues, contact your Mailglass host administrator."
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
+      refute html =~ ~s(data-testid="operator-result-count")
 
       refute html =~ ~s(data-testid="data-state-empty")
     end
