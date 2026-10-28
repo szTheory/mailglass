@@ -25,6 +25,7 @@ defmodule MailglassAdmin.Inbound.AddressList do
     list
     |> List.wrap()
     |> Enum.map(&entry/1)
+    |> Enum.uniq_by(&dedupe_key/1)
   end
 
   @doc """
@@ -39,7 +40,15 @@ defmodule MailglassAdmin.Inbound.AddressList do
 
     case parse(address) do
       {:ok, addr_spec} ->
-        %{kind: :address, address: addr_spec, name: name, spoof?: false, original: nil}
+        name = display_name(name, addr_spec)
+
+        %{
+          kind: :address,
+          address: addr_spec,
+          name: name,
+          spoof?: spoof?(name, addr_spec),
+          original: nil
+        }
 
       :error ->
         %{kind: :unparseable, address: nil, name: nil, spoof?: false, original: address || name}
@@ -69,6 +78,43 @@ defmodule MailglassAdmin.Inbound.AddressList do
     case String.trim(value) do
       "" -> nil
       trimmed -> trimmed
+    end
+  end
+
+  # Duplicates are exact within one field: the domain is case-insensitive, the local
+  # part is byte-exact. Values are displayed as stored; nothing is normalized or
+  # punycoded. Unparseable entries collapse only on their exact original.
+  defp dedupe_key(%{kind: :address, address: address}), do: {:address, address_key(address)}
+  defp dedupe_key(%{kind: :unparseable, original: original}), do: {:unparseable, original}
+
+  defp address_key(address) do
+    [local, domain] = String.split(address, "@")
+    {local, String.downcase(domain)}
+  end
+
+  # A name that is blank or just repeats the address adds nothing to show.
+  defp display_name(nil, _address), do: nil
+  defp display_name(address, address), do: nil
+  defp display_name(name, _address), do: name
+
+  # A display name carrying its own address that differs from the real addr-spec can
+  # make a sender look like someone else; the caller renders both plus a cue.
+  @embedded_address ~r/[^\s<>"',;()\[\]]+@[^\s<>"',;()\[\]]+/u
+
+  defp spoof?(nil, _address), do: false
+
+  defp spoof?(name, address) do
+    case Regex.run(@embedded_address, name) do
+      [token] ->
+        embedded = String.trim_trailing(token, ".")
+
+        case parse(embedded) do
+          {:ok, embedded} -> address_key(embedded) != address_key(address)
+          :error -> false
+        end
+
+      nil ->
+        false
     end
   end
 

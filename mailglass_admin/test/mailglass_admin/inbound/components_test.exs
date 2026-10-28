@@ -448,6 +448,187 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
     end
   end
 
+  describe "Phase 176 contact display" do
+    @describetag :phase176
+
+    defp contact_doc(overrides) do
+      record =
+        Map.merge(
+          %{
+            id: "rec-1",
+            tenant_id: "tenant-a",
+            provider: "mailgun",
+            envelope_recipient: "support@example.com",
+            from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+            to: [%{address: "team@example.com"}],
+            subject: "Hello",
+            received_at: ~U[2026-05-24 10:00:00Z]
+          },
+          Map.new(overrides)
+        )
+
+      detail = %{
+        record: record,
+        mailbox: nil,
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      {html, Floki.parse_document!(html)}
+    end
+
+    defp cell(doc, testid), do: Floki.find(doc, "[data-testid='#{testid}']")
+
+    test "From missing renders 'No From header', To missing 'No To header', envelope nil 'Not recorded by provider'" do
+      {_html, doc} = contact_doc(from: [], to: [], envelope_recipient: nil)
+
+      assert doc |> cell("inbound-contact-from") |> Floki.text() =~ "No From header"
+      assert doc |> cell("inbound-contact-to") |> Floki.text() =~ "No To header"
+
+      assert doc |> cell("inbound-contact-delivered-to") |> Floki.text() =~
+               "Not recorded by provider"
+    end
+
+    test "empty Cc and Reply-To rows are hidden; populated ones render in order" do
+      {_html, doc} = contact_doc(cc: [], reply_to: [])
+      assert cell(doc, "inbound-contact-cc") == []
+      assert cell(doc, "inbound-contact-reply-to") == []
+
+      {_html, doc} =
+        contact_doc(
+          cc: [%{address: "cc@example.com"}],
+          reply_to: [%{address: "reply@example.com"}]
+        )
+
+      labels =
+        doc
+        |> Floki.find("dt")
+        |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+        |> Enum.filter(&(&1 in ["From", "Reply-To", "To", "Cc", "Delivered to", "Provider"]))
+
+      assert labels == ["From", "Reply-To", "To", "Cc", "Delivered to", "Provider"]
+      assert doc |> cell("inbound-contact-cc") |> Floki.text() =~ "cc@example.com"
+      assert doc |> cell("inbound-contact-reply-to") |> Floki.text() =~ "reply@example.com"
+    end
+
+    test "Delivered to is bound to envelope_recipient and To to the header list, never swapped" do
+      {_html, doc} =
+        contact_doc(
+          envelope_recipient: "envelope@example.com",
+          to: [%{address: "header-to@example.com"}]
+        )
+
+      delivered = doc |> cell("inbound-contact-delivered-to") |> Floki.text()
+      to = doc |> cell("inbound-contact-to") |> Floki.text()
+
+      assert delivered =~ "envelope@example.com"
+      refute delivered =~ "header-to@example.com"
+      assert delivered =~ "SMTP envelope recipient (RCPT TO), used for routing."
+      assert to =~ "header-to@example.com"
+      refute to =~ "envelope@example.com"
+    end
+
+    test "5 addresses render without overflow; 6 render a 'Show 1 more' details; 7 'Show 2 more'" do
+      many = fn n -> for i <- 1..n, do: %{address: "to#{i}@example.com"} end
+
+      {_html, doc} = contact_doc(to: many.(5))
+      assert doc |> cell("inbound-contact-to") |> Floki.find("li") |> length() == 5
+      assert doc |> cell("inbound-contact-to") |> Floki.find("details") == []
+
+      {_html, doc} = contact_doc(to: many.(6))
+      to = cell(doc, "inbound-contact-to")
+      assert [details] = Floki.find(to, "details")
+      assert details |> Floki.find("summary") |> Floki.text() =~ "Show 1 more"
+
+      {_html, doc} = contact_doc(to: many.(7))
+      to = cell(doc, "inbound-contact-to")
+      assert [details] = Floki.find(to, "details")
+      assert details |> Floki.find("summary") |> Floki.text() =~ "Show 2 more"
+      assert Floki.find(to, "ul[role='list']") |> length() == 2
+      assert Floki.find(details, "li") |> length() == 2
+      assert Floki.text(to) =~ "to7@example.com"
+    end
+
+    test "a single address renders one <li> and no <details>" do
+      {_html, doc} = contact_doc([])
+      to = cell(doc, "inbound-contact-to")
+      assert length(Floki.find(to, "li")) == 1
+      assert Floki.find(to, "details") == []
+    end
+
+    test "exact duplicates collapse within one field" do
+      {_html, doc} =
+        contact_doc(
+          to: [
+            %{address: "dup@example.com"},
+            %{address: "dup@EXAMPLE.com"},
+            %{address: "other@example.com"}
+          ]
+        )
+
+      assert doc |> cell("inbound-contact-to") |> Floki.find("li") |> length() == 2
+    end
+
+    test "unparseable entries render 'Unparseable address' plus the escaped original" do
+      {html, doc} = contact_doc(to: ["not an address", "<b>bold</b>"])
+      to = cell(doc, "inbound-contact-to")
+
+      assert Floki.text(to) =~ "Unparseable address"
+      assert Floki.text(to) =~ "not an address"
+      assert Floki.text(to) =~ "<b>bold</b>"
+      refute html =~ "<b>bold</b>"
+    end
+
+    test "a spoofed display name shows the name, the real address and the cue" do
+      {_html, doc} =
+        contact_doc(from: [%{address: "sender@mailer.example", name: "billing@paypal.example"}])
+
+      from = cell(doc, "inbound-contact-from")
+      assert Floki.text(from) =~ "billing@paypal.example"
+      assert Floki.text(from) =~ "sender@mailer.example"
+
+      assert doc |> cell("inbound-address-spoof-cue") |> Floki.text() =~
+               "Display name contains a different address."
+    end
+
+    test "an ordinary display name shows no spoof cue" do
+      {_html, doc} = contact_doc([])
+      assert cell(doc, "inbound-address-spoof-cue") == []
+    end
+
+    test "Unicode addresses and names render verbatim, long values are never truncated" do
+      long_local = String.duplicate("l", 70)
+      long_domain = String.duplicate("d", 210) <> ".example"
+      long = "#{long_local}@#{long_domain}"
+
+      {html, doc} =
+        contact_doc(
+          from: [%{address: "zoe@example.com", name: "Zoë Ångström-Łukasiewicz"}],
+          to: [%{address: "用户@例子.广告"}, %{address: long}]
+        )
+
+      assert Floki.text(cell(doc, "inbound-contact-from")) =~ "Zoë Ångström-Łukasiewicz"
+      to = Floki.text(cell(doc, "inbound-contact-to"))
+      assert to =~ "用户@例子.广告"
+      assert to =~ long
+      assert html =~ "[overflow-wrap:anywhere]"
+      refute html =~ "line-clamp"
+      refute html =~ "truncate"
+    end
+
+    test "a script display name renders escaped and never as an element" do
+      {html, doc} =
+        contact_doc(from: [%{address: "x@example.com", name: "<script>alert(1)</script>"}])
+
+      assert Floki.find(doc, "script") == []
+      assert Floki.text(cell(doc, "inbound-contact-from")) =~ "<script>alert(1)</script>"
+      assert html =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+      refute html =~ "<script>alert(1)</script>"
+    end
+  end
+
   describe "Timeline.timeline/1" do
     test "renders ExecutionRun rows with Fresh/Replay source badges and outcome dots" do
       runs = [
