@@ -163,7 +163,7 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 14 plans (10 executed in 6 waves; 4 gap-closure plans 176-11..14 in 2 waves)
+**Plans:** 15 plans (10 executed in 6 waves; 5 gap-closure plans 176-11..15 in 5 sequential waves)
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
@@ -192,12 +192,19 @@ Plans:
 - [x] 176-10-PLAN.md — Mutation-proven prohibition contract, connected proof on both clients, final gates.
 
 **Gap closure — Wave 1**
-- [ ] 176-11-PLAN.md — Evidence card: one raw-source selector for size and reveal (WR-01, INUX-06); denial via persistent status region (WR-03).
+- [ ] 176-11-PLAN.md — Evidence card: one raw-source selector for size and reveal (WR-01, INUX-06); no reveal control when nothing is stored (IN-04, D-26); denial via persistent status region (WR-03).
+
+**Gap closure — Wave 2** *(blocked on 176-11)*
 - [ ] 176-12-PLAN.md — copy_value accessible name includes the copied value (WR-04, INUX-05); browser locators updated.
+
+**Gap closure — Wave 3** *(blocked on 176-12)*
 - [ ] 176-13-PLAN.md — Deliveries: window counts as a filter (WR-02), class-based mobile toggle, PubSub status quiet (WR-07), blank window (IN-07) (FILTER-01).
 
-**Gap closure — Wave 2** *(blocked on gap Wave 1 completion)*
-- [ ] 176-14-PLAN.md — Contract P9..P12 mutation-proven; full Phase 176 gate re-run.
+**Gap closure — Wave 4** *(blocked on 176-11 and 176-13)*
+- [ ] 176-15-PLAN.md — URL-invalid results stay labelled after an edit or reconnect, beside the draft note (WR-06, D-12/D-13); rejected enum stays selected as "Not applied" (WR-05, D-12) (FILTER-04).
+
+**Gap closure — Wave 5** *(blocked on 176-15)*
+- [ ] 176-14-PLAN.md — Contract P9..P13 mutation-proven; full Phase 176 gate re-run; review disposition (WR-08 and eight UI-review warnings deferred, one reconciled).
 
 ### Phase 177: Readable Health and Coherent Account Navigation
 
