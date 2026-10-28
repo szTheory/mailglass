@@ -163,7 +163,7 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 10/10 plans executed in 6 waves
+**Plans:** 14 plans (10 executed in 6 waves; 4 gap-closure plans 176-11..14 in 2 waves)
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
@@ -190,6 +190,14 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 - [x] 176-10-PLAN.md — Mutation-proven prohibition contract, connected proof on both clients, final gates.
+
+**Gap closure — Wave 1**
+- [ ] 176-11-PLAN.md — Evidence card: one raw-source selector for size and reveal (WR-01, INUX-06); denial via persistent status region (WR-03).
+- [ ] 176-12-PLAN.md — copy_value accessible name includes the copied value (WR-04, INUX-05); browser locators updated.
+- [ ] 176-13-PLAN.md — Deliveries: window counts as a filter (WR-02), class-based mobile toggle, PubSub status quiet (WR-07), blank window (IN-07) (FILTER-01).
+
+**Gap closure — Wave 2** *(blocked on gap Wave 1 completion)*
+- [ ] 176-14-PLAN.md — Contract P9..P12 mutation-proven; full Phase 176 gate re-run.
 
 ### Phase 177: Readable Health and Coherent Account Navigation
 
