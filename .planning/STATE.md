@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-12-PLAN.md
-last_updated: "2026-10-28T19:20:41.814Z"
+stopped_at: Completed 176-13-PLAN.md
+last_updated: "2026-10-28T19:25:48.964Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: 5aedb76775404b80a6ba0625007b4a4965e570b7
+state_head: 29afeff68fd744b6e79f2a37251616c2a7f7ce20
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 27
-  completed_plans: 24
+  completed_plans: 25
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 13 of 15
+Plan: 14 of 15
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -312,6 +312,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P10 | 35 min | 4 tasks | 9 files |
 | Phase 176 P11 | 6 min | 2 tasks | 6 files |
 | Phase 176 P12 | 10 min | 2 tasks | 8 files |
+| Phase 176 P13 | 25min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -598,6 +599,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-10: coupled browser reds were Phase 175 and plan 176-03 spec drift, fixed in specs only; axe 'no new violations' measured against a per-collection, per-theme neutral baseline because Deliveries row buttons carry a Phase 113 aria-selected-on-button defect
 - [Phase 176]: 176-11: Evidence card size and reveal share raw_source/1 (raw_payload first, then raw_mime); size is byte size of the revealed text; unencodable payload stays the source (Unavailable); nothing stored hides the reveal control; denial announced from the persistent status region (UI-SPEC rows superseded per D-26).
 - [Phase 176]: 176-12: copy_value accessible name is "Copy <label>: <value>" (WCAG 2.5.3), fixed in the shared component for all 13 call sites; browser locators use full exact name where value in scope, anchored regex elsewhere
+- [Phase 176]: 176-13: Deliveries treats a non-default window as a filter (non_default_window?/1); mobile toggle uses mg-inbound-filters-open class; PubSub refresh keeps status text (D-16); blank window_hours = absent (bounded D-13)
 
 ## Quick Tasks Completed
 
@@ -649,8 +651,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T19:20:41.528Z
-Stopped at: Completed 176-12-PLAN.md
+Last session: 2026-10-28T19:25:48.641Z
+Stopped at: Completed 176-13-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
