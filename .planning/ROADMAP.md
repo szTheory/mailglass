@@ -163,7 +163,7 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 3/10 plans executed in 6 waves
+**Plans:** 4/10 plans executed in 6 waves
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
@@ -175,7 +175,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 176-03-PLAN.md — Raw provider source card: one persistent Reveal/Hide disclosure and coupled specs.
-- [ ] 176-04-PLAN.md — Deliveries invalid-input and failed-read truthfulness with results status region.
+- [x] 176-04-PLAN.md — Deliveries invalid-input and failed-read truthfulness with results status region.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 176-05-PLAN.md — Raw provider source facts: five truthful facts, nil-not-zero, can_reveal? removal.
@@ -260,7 +260,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | --- | --- | --- | --- |
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
-| 176. Direct Filters and Useful Inbound Evidence | 3/10 | In Progress | — |
+| 176. Direct Filters and Useful Inbound Evidence | 4/10 | In Progress | — |
 | 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
