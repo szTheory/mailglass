@@ -35,6 +35,7 @@ defmodule MailglassAdmin.OperatorLive do
     RepairState,
     ReplayAction,
     ReplayModal,
+    ResultsStatus,
     SupportCards,
     SuppressionCard
   }
@@ -72,6 +73,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:deliveries_page_meta, empty_page_meta())
       |> assign(:deliveries_read_state, :ready)
       |> assign(:deliveries_loaded_for, nil)
+      |> assign(:deliveries_loaded_at, nil)
+      |> assign(:results_status_text, initial_results_status_text())
       |> assign(:pending_commit_kind, nil)
       |> assign(:last_commit_kind, nil)
       |> assign(:selected_delivery, nil)
@@ -799,6 +802,18 @@ defmodule MailglassAdmin.OperatorLive do
             <% end %>
           </div>
         <% else %>
+          <%!-- One persistent status region for the Deliveries surface: it exists from first
+              render and its text changes only when a read settles, never on drafts. --%>
+          <div
+            id="operator-results-status"
+            data-testid="operator-results-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            class="sr-only"
+          >
+            {@results_status_text}
+          </div>
           <%= cond do %>
             <% @deliveries == [] and @deliveries_read_state == :ready and
                 is_nil(@requested_delivery_id) and @deliveries_page_meta.total_count == 0 and
@@ -1020,6 +1035,7 @@ defmodule MailglassAdmin.OperatorLive do
                       }
                       selected_delivery={@selected_delivery}
                       data_state={@deliveries_read_state}
+                      loaded_at={@deliveries_loaded_at}
                       filters_active?={filters_active?(@filter_params)}
                     />
                   </aside>
@@ -1211,6 +1227,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:deliveries, [])
     |> assign(:deliveries_page_meta, empty_page_meta())
     |> assign(:deliveries_read_state, :ready)
+    |> assign(:deliveries_loaded_at, nil)
+    |> assign(:results_status_text, initial_results_status_text())
     |> assign(:selected_delivery, nil)
     |> assign(:requested_delivery_id, nil)
     |> assign(:timeline_events, [])
@@ -1244,6 +1262,16 @@ defmodule MailglassAdmin.OperatorLive do
     ["search", "event", "provider"]
     |> Enum.count(&(not is_nil(blank_to_nil(filter_params[&1]))))
     |> Kernel.+(if window_applied?, do: 1, else: 0)
+  end
+
+  defp initial_results_status_text do
+    ResultsStatus.text(%{
+      collection: :deliveries,
+      state: :ready,
+      count: 0,
+      filters_active?: false,
+      loaded_at: nil
+    })
   end
 
   defp filters_active?(filter_params) do
@@ -1630,6 +1658,13 @@ defmodule MailglassAdmin.OperatorLive do
           {[], page_meta_without_entries(empty_page_meta()), :error}
       end
 
+    # The load time belongs to the rows on screen: stamped only by a successful read and
+    # carried unchanged through a failed one (an :error read shows no rows at all).
+    deliveries_loaded_at =
+      if deliveries_read_state == :ready,
+        do: DateTime.utc_now() |> DateTime.truncate(:second),
+        else: socket.assigns[:deliveries_loaded_at]
+
     {selected_delivery, detail_error} =
       resolve_selected_delivery(
         deliveries,
@@ -1719,6 +1754,17 @@ defmodule MailglassAdmin.OperatorLive do
         do: query_key,
         else: socket.assigns[:deliveries_loaded_for]
       )
+    )
+    |> assign(:deliveries_loaded_at, deliveries_loaded_at)
+    |> assign(
+      :results_status_text,
+      ResultsStatus.text(%{
+        collection: :deliveries,
+        state: deliveries_read_state,
+        count: Map.get(page_meta, :total_count),
+        filters_active?: filters_active?(filter_params),
+        loaded_at: deliveries_loaded_at
+      })
     )
     |> assign(:selected_delivery, selected_delivery)
     |> assign(:requested_delivery_id, selected_delivery_id)

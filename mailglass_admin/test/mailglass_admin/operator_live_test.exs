@@ -2408,7 +2408,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Delivery details are temporarily unavailable."
       assert html =~ "Retry details"
       assert html =~ "Back to deliveries"
-      refute html =~ "No deliveries in this time window"
+      # The sr-only status region may state the settled list read; no visible empty pane renders.
+      refute html =~ ~s(data-testid="operator-empty-truly")
+      refute html =~ ~s(data-testid="data-state-empty")
     end
   end
 
@@ -3505,6 +3507,81 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert selected_filter_value(html, "#filters_event") == "sent"
     end
 
+    test "Phase 176 results status region exists at first render and announces the settled count",
+         %{conn: conn} do
+      insert_delivery!(
+        recipient: "one@example.com",
+        last_event_type: :sent,
+        provider_message_id: "pm_status_one"
+      )
+
+      insert_delivery!(
+        recipient: "two@example.com",
+        last_event_type: :sent,
+        provider_message_id: "pm_status_two"
+      )
+
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+
+      region =
+        html |> Floki.parse_document!() |> Floki.find("#operator-results-status")
+
+      assert [_] = region
+      assert Floki.attribute(region, "role") == ["status"]
+      assert Floki.attribute(region, "aria-live") == ["polite"]
+      assert Floki.attribute(region, "aria-atomic") == ["true"]
+      assert Floki.attribute(region, "class") |> List.first() =~ "sr-only"
+      assert status_text(view) == "2 deliveries match"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+      assert status_text(view) == "No deliveries match the current filters"
+    end
+
+    test "Phase 176 results status text ignores invalid drafts and identical re-reads", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "steady@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      settled = status_text(view)
+      assert settled == "1 delivery matches"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+      refute_patch(view)
+      assert status_text(view) == settled
+
+      render_hook(view, "retry_deliveries", %{})
+      assert status_text(view) == settled
+    end
+
+    test "Phase 176 a same-query failed read keeps rows under the stale panel with the load time",
+         %{conn: conn} do
+      insert_delivery!(recipient: "kept@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      assert has_element?(view, "[data-testid='operator-result-count']")
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+      render_hook(view, "retry_deliveries", %{})
+
+      html = render(view)
+      assert html =~ "kept@example.com"
+      assert has_element?(view, "[data-testid='operator-delivery-row']")
+      assert has_element?(view, "[data-testid='data-state-stale']")
+      assert html =~ ~r/Showing results from \d{2}:\d{2} UTC; refresh failed/
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert has_element?(view, "[data-testid='operator-stale-loaded-at']", "Results loaded")
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+      refute has_element?(view, "[data-testid='operator-result-count']")
+      refute html =~ "synthetic"
+      assert status_text(view) =~ ~r/^Showing results from \d{2}:\d{2} UTC; refresh failed$/
+
+      # The next successful read settles back to the count and drops the stale panel.
+      view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
+      refute has_element?(view, "[data-testid='data-state-stale']")
+      assert has_element?(view, "[data-testid='operator-result-count']")
+      assert status_text(view) == "1 delivery matches"
+    end
+
     test "Phase 176 Deliveries Retry adds no history and re-reads the committed filters", %{
       conn: conn
     } do
@@ -3524,6 +3601,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(view, "[data-testid='operator-result-count']")
       refute html =~ "Couldn&#39;t load deliveries for these filters"
     end
+  end
+
+  defp status_text(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#operator-results-status")
+    |> Floki.text()
+    |> String.trim()
   end
 
   defp toggle_label(view) do
@@ -4920,12 +5006,35 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
-      assert html =~ "This view may be out of date."
-
-      assert html =~
-               "The latest read was unavailable. Showing the last results loaded for this Account."
-
+      assert html =~ "Showing earlier results; refresh failed"
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "Retry deliveries"
+      refute html =~ ~s(data-testid="operator-stale-loaded-at")
       refute html =~ "14:32"
+      refute html =~ ~s(data-testid="operator-result-count")
+    end
+
+    @tag :phase176
+    test "Phase 176 stale signal with a load time names it in the title and a timestamp line" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :stale,
+          loaded_at: ~U[2026-10-28 14:05:09Z],
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ "Showing results from 14:05 UTC; refresh failed"
+      assert html =~ ~s(data-testid="operator-stale-loaded-at")
+      assert html =~ ~s(datetime="2026-10-28T14:05:09Z")
     end
 
     test "no two states share a testid — the legacy filtered/truly-empty distinction is preserved within :empty" do

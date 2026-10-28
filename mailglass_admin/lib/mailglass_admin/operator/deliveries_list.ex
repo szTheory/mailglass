@@ -23,6 +23,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.ResultsStatus
 
   attr(:heading, :string, default: "Deliveries")
   attr(:deliveries, :list, required: true)
@@ -44,6 +45,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   # nil means "normal flow": render deliveries or the legacy empty branches
   attr(:data_state, :atom, default: nil)
   attr(:retry_event, :string, default: "retry_deliveries")
+  # When the rows shown were last read successfully (UTC); nil when unknown.
+  attr(:loaded_at, :any, default: nil)
 
   def deliveries_list(assigns) do
     ~H"""
@@ -54,12 +57,28 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
       count_testid="operator-result-count"
     />
     <div class="min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200">
-      <Components.data_state
-        :if={@data_state == :stale}
-        kind={:stale}
-        title="This view may be out of date."
-        body="The latest read was unavailable. Showing the last results loaded for this Account."
-      />
+      <div :if={@data_state == :stale} data-testid="operator-stale-results">
+        <Components.data_state
+          kind={:stale}
+          title={ResultsStatus.stale_title(@loaded_at)}
+          body="Mailglass couldn't re-read these results. Retry to check for updates."
+        />
+        <p
+          :if={@loaded_at}
+          data-testid="operator-stale-loaded-at"
+          class="mt-sm text-label text-secondary"
+        >
+          Results loaded <Components.timestamp at={@loaded_at} />
+        </p>
+        <button
+          type="button"
+          phx-click={@retry_event}
+          data-testid="operator-retry-deliveries"
+          class="btn btn-ghost min-h-11 mt-sm mx-auto block"
+        >
+          Retry deliveries
+        </button>
+      </div>
       <%= cond do %>
         <% @data_state == :error -> %>
           <Components.data_state
