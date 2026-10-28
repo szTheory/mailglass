@@ -354,8 +354,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-topbar")
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
-      assert html =~
-               "See how your emails look in HTML and plain text."
+      assert preview_subtitle(html) ==
+               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      assert [_] =
+               Floki.find(
+                 doc,
+                 ~s([data-testid="admin-shell-page-header"] p code.mono)
+               )
+
+      # D-12: no provenance claim. Whole-word, case-insensitive; "Deliveries"
+      # contains the substring "live" and must not trip the check.
+      refute preview_subtitle(html) =~ ~r/\b(sample|demo|fake)\b/i
+      refute preview_subtitle(html) =~ ~r/\blive\b/i
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -1166,5 +1179,16 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert render(view) =~ "Reloaded: user_mailer.ex",
              "LiveReload broadcast must surface a 'Reloaded: <file>' flash"
     end
+  end
+
+  defp preview_subtitle(html) do
+    {:ok, doc} = Floki.parse_fragment(html)
+
+    doc
+    |> Floki.find(~s([data-testid="admin-shell-page-header"] p))
+    |> hd()
+    |> Floki.text()
+    |> String.replace(~r/\s+/, " ")
+    |> String.trim()
   end
 end

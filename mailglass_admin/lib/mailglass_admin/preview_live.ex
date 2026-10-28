@@ -356,7 +356,7 @@ defmodule MailglassAdmin.PreviewLive do
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          See how your emails look in HTML and plain text.
+          Renders the scenarios in each Mailable's <code class="mono">preview_props/0</code>. It doesn't read Deliveries or Inbound messages from any Account.
         </p>
       </:page_header>
 

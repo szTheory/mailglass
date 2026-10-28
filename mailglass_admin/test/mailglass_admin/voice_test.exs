@@ -61,8 +61,21 @@ defmodule MailglassAdmin.VoiceTest do
       # Shared shell page header
       assert html =~ "Preview"
 
-      assert html =~
-               "See how your emails look in HTML and plain text."
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      subtitle =
+        doc
+        |> Floki.find(~s([data-testid="admin-shell-page-header"] p))
+        |> hd()
+        |> Floki.text()
+        |> String.replace(~r/\s+/, " ")
+        |> String.trim()
+
+      assert subtitle ==
+               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+
+      refute subtitle =~ ~r/\b(sample|demo|fake)\b/i
+      refute subtitle =~ ~r/\blive\b/i
 
       # Compact preview picker label
       assert html =~ "Email preview"
