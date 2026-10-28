@@ -82,7 +82,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
       <%= if is_nil(@evidence) do %>
         <p class="text-body text-secondary">
-          No raw provider source has been stored for this message.
+          No raw provider source was stored for this message.
         </p>
       <% else %>
         <dl
@@ -187,7 +187,17 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   defp header_count(_evidence), do: nil
 
   defp format_bytes(nil), do: "Unavailable"
-  defp format_bytes(size) when is_integer(size), do: "#{size} bytes"
+  defp format_bytes(1), do: "1 byte"
+  defp format_bytes(size) when is_integer(size), do: "#{delimit(size)} bytes"
+
+  # Thousands separators for readability: 1234 -> "1,234".
+  defp delimit(size) do
+    size
+    |> Integer.to_string()
+    |> String.reverse()
+    |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+    |> String.reverse()
+  end
 
   defp format_count(nil), do: "Unavailable"
   defp format_count(count) when is_integer(count), do: Integer.to_string(count)
@@ -199,7 +209,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   end
 
   defp raw_payload_text(%{raw_mime: mime}) when is_binary(mime) and mime != "", do: mime
-  defp raw_payload_text(_evidence), do: "(empty)"
+  defp raw_payload_text(_evidence), do: "Provider sent an empty payload."
 
   defp provider_label(provider) when provider in [:mailgun, "mailgun"], do: "MAILGUN"
   defp provider_label(provider) when provider in [:postmark, "postmark"], do: "POSTMARK"

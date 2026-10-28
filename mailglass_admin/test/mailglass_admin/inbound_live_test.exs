@@ -1300,6 +1300,35 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "evidence card without stored evidence (INUX-06)" do
+    @tag :phase176
+    test "Phase 176 Inbound detail without stored evidence says so and offers no reveal", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      record = InboundFixtures.insert_record!(@tenant_id, recipient: "no-evidence@example.com")
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      assert [card] =
+               html
+               |> Floki.parse_document!()
+               |> Floki.find("[data-testid='inbound-evidence-card']")
+
+      card_text = Floki.text(card)
+      assert card_text =~ "Raw provider source"
+      assert card_text =~ "No raw provider source was stored for this message."
+      assert Floki.find(card, "[data-testid='inbound-evidence-reveal']") == []
+      assert Floki.find(card, "[data-testid='inbound-evidence-facts']") == []
+      # Unknown is never shown as zero.
+      refute card_text =~ "0 bytes"
+    end
+  end
+
   describe "replay confirm flow (IADM-03)" do
     @describetag :phase175
     test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{

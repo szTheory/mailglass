@@ -168,6 +168,75 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       end
     end
 
+    @tag :phase176
+    test "Phase 176 facts: sizes format as 0 bytes, 1 byte and thousands-separated bytes" do
+      base = %{provider: "mailgun", raw_headers: %{}}
+
+      # Known-empty storage is a real zero.
+      assert {"Payload size", "0 bytes"} =
+               doc_pair(Map.merge(base, %{raw_payload: %{}, raw_mime: nil}), "Payload size")
+
+      assert {"Payload size", "1 byte"} =
+               doc_pair(Map.merge(base, %{raw_payload: %{}, raw_mime: "x"}), "Payload size")
+
+      assert {"Payload size", "1,234 bytes"} =
+               doc_pair(
+                 Map.merge(base, %{raw_payload: %{}, raw_mime: String.duplicate("a", 1234)}),
+                 "Payload size"
+               )
+
+      # Map payload: the JSON-encoded size.
+      assert {"Payload size", "7 bytes"} =
+               doc_pair(Map.put(base, :raw_payload, %{"a" => 1}), "Payload size")
+
+      # A payload that cannot be encoded is unknown, not zero.
+      assert {"Payload size", "Unavailable"} =
+               doc_pair(Map.put(base, :raw_payload, %{"a" => {:not, :json}}), "Payload size")
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: header count renders 0, 1 and N as integers" do
+      for {headers, expected} <- [
+            {%{}, "0"},
+            {%{"a" => "1"}, "1"},
+            {%{"a" => "1", "b" => "2", "c" => "3"}, "3"}
+          ] do
+        evidence = %{provider: "mailgun", raw_payload: %{}, raw_headers: headers}
+        assert {"Header count", ^expected} = doc_pair(evidence, "Header count")
+      end
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: no stored evidence says so with no button and no facts" do
+      html = render_component(&EvidenceCard.evidence_card/1, evidence: nil)
+      doc = Floki.parse_document!(html)
+
+      assert html =~ "Raw provider source"
+      assert html =~ "No raw provider source was stored for this message."
+      assert Floki.find(doc, "button") == []
+      assert Floki.find(doc, "[data-testid='inbound-evidence-reveal']") == []
+      assert Floki.find(doc, "[data-testid='inbound-evidence-facts']") == []
+      refute html =~ "bytes"
+    end
+
+    @tag :phase176
+    test "Phase 176 facts: a revealed empty payload says the provider sent an empty payload" do
+      evidence = %{provider: "mailgun", raw_payload: %{}, raw_mime: nil, raw_headers: %{}}
+      html = render_state_with(evidence, :revealed)
+
+      assert [pre] =
+               html
+               |> Floki.parse_document!()
+               |> Floki.find("pre#inbound-evidence-raw")
+
+      assert Floki.text(pre) == "Provider sent an empty payload."
+      refute html =~ "(empty)"
+    end
+
+    defp render_state_with(evidence, state) do
+      render_component(&EvidenceCard.evidence_card/1, evidence: evidence, reveal_state: state)
+    end
+
     defp doc_pair(evidence, label) do
       pairs = fact_pairs(facts_doc(evidence))
       assert {^label, _value} = pair = Enum.find(pairs, &(elem(&1, 0) == label))
