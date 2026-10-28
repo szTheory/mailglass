@@ -825,7 +825,9 @@ defmodule MailglassAdmin.OperatorLive do
                   The filters toolbar, the Open-delivery CTA, and the entire master-detail grid (and
                   therefore the "Select a delivery…" helper nested inside it) are all withheld.
                   An in-progress invalid filter submission (@filter_errors non-empty) is NOT genuine
-                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
+                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters.
+                  A non-default time window is a filter too (filters_active?/1), so a window that
+                  contains nothing keeps the toolbar and the way back. --%>
               <div class="space-y-lg">
                 <section
                   data-testid="operator-deliveries-empty-pane"
@@ -1272,17 +1274,21 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   # Committed filters only (the URL-backed params, never the draft), so the mobile toggle
-  # tells the truth about what the list is narrowed by. The default window is not a filter.
+  # tells the truth about what the list is narrowed by. The default window is not a filter;
+  # any other window is (it shares non_default_window?/1 with filters_active?/1).
   defp applied_filter_count(filter_params) do
-    window_applied? =
-      case blank_to_nil(filter_params["window_hours"]) do
-        nil -> false
-        window -> window != Integer.to_string(@default_window_hours)
-      end
-
     ["search", "event", "provider"]
     |> Enum.count(&(not is_nil(blank_to_nil(filter_params[&1]))))
-    |> Kernel.+(if window_applied?, do: 1, else: 0)
+    |> Kernel.+(if non_default_window?(filter_params["window_hours"]), do: 1, else: 0)
+  end
+
+  # A present, non-blank window different from the default is a filter; the default 168 h
+  # (written out or implied) is not.
+  defp non_default_window?(window_hours) do
+    case blank_to_nil(window_hours) do
+      nil -> false
+      window -> window != Integer.to_string(@default_window_hours)
+    end
   end
 
   # One label per filter the URL carried invalid, so fallback results are never unlabelled.
@@ -1305,9 +1311,12 @@ defmodule MailglassAdmin.OperatorLive do
     })
   end
 
+  # A non-default time window narrows the list, so it is a filter (as on Inbound): an empty
+  # window must keep the toolbar and the filtered-empty pane, not the genuine no-data pane.
   defp filters_active?(filter_params) do
     Map.drop(filter_params, ["tenant_id", "window_hours", "page"]) !=
-      Map.drop(default_filter_params(), ["tenant_id", "window_hours", "page"])
+      Map.drop(default_filter_params(), ["tenant_id", "window_hours", "page"]) or
+      non_default_window?(filter_params["window_hours"])
   end
 
   defp normalize_filter_params_with_errors(params) do
