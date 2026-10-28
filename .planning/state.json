@@ -21,7 +21,7 @@
     {
       "number": "177",
       "name": "Readable Health and Coherent Account Navigation",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "178",
@@ -34,5 +34,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 4 of 5 · 60% · executing"
   },
-  "updated_at": "2026-10-28T23:34:18.107Z"
+  "updated_at": "2026-10-28T23:39:14.654Z"
 }

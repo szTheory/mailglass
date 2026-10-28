@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 177
 current_phase_name: Readable Health and Coherent Account Navigation
 status: executing
-stopped_at: Completed 177-01-PLAN.md
-last_updated: "2026-10-28T23:34:20.027Z"
+stopped_at: Completed 177-02-PLAN.md
+last_updated: "2026-10-28T23:39:16.449Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 177 execution started
-state_head: d00dac0851104f144bea9700e0b53b2d6581b4b3
+state_head: 9ed1b1eca69ad7cfb379e2495968b7ccd1be7136
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 38
-  completed_plans: 28
+  completed_plans: 29
   percent: 60
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 177 (Readable Health and Coherent Account Navigation) — EXECUTING
-Plan: 2 of 11
+Plan: 3 of 11
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 177 execution started
 
@@ -317,6 +317,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P15 | 9 min | 2 tasks | 8 files |
 | Phase 176 P14 | 25 min | 2 tasks | 3 files |
 | Phase 177 P01 | 6 min | 3 tasks | 11 files |
+| Phase 177 P02 | 25min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -608,6 +609,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-15: WR-05 fixed in product: rejected enum value stays selected as an enabled 'Not applied: <value>' option (enabled so re-post does not silently clear the filter)
 - [Phase 176]: 176-14: P9..P13 gap prohibitions are mutation-proven contract describes; P13 asserts the URL note present and never the draft note absent (D-12/D-13)
 - [Phase 177]: 177-01: Preview Back destination is rebuilt only from host navigation plus a closed-set surface and opaque id (ReturnContext); minting skipped for non-local preview_path (A3); theme sanitizer rejects dot segments (A2)
+- [Phase 177]: 177-02: Health goldens are issues/activity keyword blocks; seeded ids masked as {key} in hrefs; quiet seed used for the empty state
 
 ## Quick Tasks Completed
 
@@ -659,8 +661,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T23:34:19.690Z
-Stopped at: Completed 177-01-PLAN.md
+Last session: 2026-10-28T23:39:16.125Z
+Stopped at: Completed 177-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
