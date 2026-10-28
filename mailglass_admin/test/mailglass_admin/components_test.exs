@@ -602,8 +602,22 @@ defmodule MailglassAdmin.ComponentsTest do
     [button] = Floki.find(Floki.parse_document!(html), "button")
     assert Floki.attribute(button, "data-copy-value") == ["exact-record-id"]
     assert Floki.attribute(button, "data-copy-toast") == ["Delivery ID copied."]
-    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID"]
+    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID: exact-record-id"]
     assert Floki.text(button) =~ "exact-record-id"
+  end
+
+  test "a copy control's accessible name carries a hostile value as one escaped attribute" do
+    value = ~s(a"b<c>d' onclick="x">)
+
+    html = render_component(&Components.copy_value/1, value: value, label: "To address")
+
+    assert [button] = Floki.find(Floki.parse_document!(html), "button")
+    assert Floki.attribute(button, "aria-label") == ["Copy To address: " <> value]
+    assert Floki.attribute(button, "data-copy-value") == [value]
+
+    {"button", attrs, _children} = button
+    names = attrs |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "title", "type"]
   end
 
   describe "timestamp/1" do

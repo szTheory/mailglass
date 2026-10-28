@@ -627,6 +627,54 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
       refute html =~ "<script>alert(1)</script>"
     end
+
+    test "Phase 176 every contact copy button's accessible name contains its address" do
+      {_html, doc} =
+        contact_doc(
+          from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+          reply_to: [%{address: "reply@example.com"}],
+          to: [
+            %{address: "to1@example.com"},
+            %{address: "用户@例子.广告", name: "用户"},
+            %{address: "to3@example.com"}
+          ],
+          cc: for(i <- 1..6, do: %{address: "cc#{i}@example.com"}),
+          envelope_recipient: "support@example.com"
+        )
+
+      cells =
+        ~w(from reply-to to cc delivered-to)
+        |> Enum.flat_map(&cell(doc, "inbound-contact-" <> &1))
+
+      buttons = Floki.find(cells, "button[data-copy-value]")
+
+      # Seeded parseable contacts: 1 From, 1 Reply-To, 3 To, 6 Cc (the sixth sits behind
+      # "Show 1 more"), 1 envelope. A vacuous loop over a truncated list must fail.
+      assert length(buttons) >= 12
+
+      for button <- buttons do
+        [value] = Floki.attribute(button, "data-copy-value")
+        [toast] = Floki.attribute(button, "data-copy-toast")
+        [name] = Floki.attribute(button, "aria-label")
+        label = String.replace_suffix(toast, " copied.", "")
+
+        assert name == "Copy " <> label <> ": " <> value
+        assert name =~ String.trim(Floki.text(button))
+      end
+
+      names = Enum.flat_map(buttons, &Floki.attribute(&1, "aria-label"))
+      assert "Copy To address: 用户@例子.广告" in names
+      assert "Copy Cc address: cc6@example.com" in names
+      assert "Copy Delivered to address: support@example.com" in names
+    end
+
+    test "Phase 176 missing contacts render no copy button" do
+      {_html, doc} = contact_doc(from: [], to: [], envelope_recipient: nil)
+
+      for testid <- ~w(from to delivered-to) do
+        assert doc |> cell("inbound-contact-" <> testid) |> Floki.find("button") == []
+      end
+    end
   end
 
   describe "Timeline.timeline/1" do
