@@ -1598,7 +1598,11 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  @doc "A visible identifier doubles as its copy control, using the shared toast."
+  @doc """
+  A visible identifier doubles as its copy control, using the shared toast. The
+  accessible name is "Copy <label>: <value>", so the visible text is part of the
+  name (WCAG 2.5.3 Label in Name), matching the timestamp copy control.
+  """
   attr(:value, :string, required: true)
   attr(:label, :string, required: true)
 
@@ -1608,7 +1612,7 @@ defmodule MailglassAdmin.Components do
       type="button"
       data-copy-value={@value}
       data-copy-toast={@label <> " copied."}
-      aria-label={"Copy " <> @label}
+      aria-label={"Copy #{@label}: #{@value}"}
       title="Click to copy"
       class="mg-timestamp-copy-trigger mg-focus-ring mono max-w-full break-all text-left text-label text-secondary"
     >
