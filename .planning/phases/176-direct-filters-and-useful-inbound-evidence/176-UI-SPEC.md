@@ -165,6 +165,7 @@ Structure, in order, inside `card padding={:lg}` (existing `data-testid` values 
 | State | Content |
 |-------|---------|
 | No evidence stored (`evidence == nil`) | `<p class="text-body text-secondary">No raw provider source was stored for this message.</p>`; header button and facts hidden; heading stays |
+| Nothing stored (no reveal control): evidence row present, `raw_payload` nil or not a map, and no `raw_mime` | `<p data-testid="inbound-evidence-not-stored" class="text-body text-secondary">No raw provider source was stored for this message.</p>` below the facts in every reveal state; no reveal button, no caption, no `<pre>` and no status region (D-26 "hide the button"); the facts stay and Payload size reads "Unavailable". (Added by 176-11 per IN-04 / D-26.) |
 | Redacted (default) | Nothing further (the caption already states the privacy risk; no "hidden by default" paragraph) |
 | Revealed, payload present | `<pre id="inbound-evidence-raw" data-testid="inbound-evidence-raw" tabindex="0" aria-label="Raw provider source, read-only" class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content">` (keyboard-scrollable, `mg-focus-ring` on focus) |
 | Revealed, empty payload | Same `<pre>` region with "Provider sent an empty payload." (not "(empty)") |

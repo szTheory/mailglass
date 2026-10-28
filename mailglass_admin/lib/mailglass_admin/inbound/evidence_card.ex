@@ -14,6 +14,12 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   `raw_mime_fingerprint`, but the Phase 176 contract asks for five compact facts,
   so it is a scope choice, not an absence.
 
+  The Payload size fact and the revealed source come from ONE selector,
+  `raw_source/1`: a non-empty `raw_payload` map wins, then a non-empty `raw_mime`
+  binary. Size is the UTF-8 byte size of the exact text the reveal renders, so the
+  fact and the `<pre>` always describe the same stored field. A record with
+  nothing stored shows no reveal control, only the not-stored sentence (D-26).
+
   Revealing the raw payload requires the `:reveal_raw` capability (the same
   `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface).
   The InboundLive owns the authorization decision and passes `reveal_state` here:
@@ -57,7 +63,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
         <div class="min-w-0 space-y-xs">
           <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
           <p
-            :if={@evidence}
+            :if={@evidence && not nothing_stored?(@evidence)}
             id="inbound-evidence-caption"
             data-testid="inbound-evidence-caption"
             class="text-label text-secondary"
@@ -66,7 +72,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           </p>
         </div>
         <button
-          :if={@evidence}
+          :if={@evidence && not nothing_stored?(@evidence)}
           id="inbound-evidence-reveal-btn"
           type="button"
           phx-click={if @reveal_state == :revealed, do: "re_redact_raw", else: "reveal_raw"}
@@ -121,66 +127,99 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           </div>
         </dl>
 
-        <%= case @reveal_state do %>
-          <% :revealed -> %>
-            <pre
-              id="inbound-evidence-raw"
-              data-testid="inbound-evidence-raw"
-              tabindex="0"
-              aria-label="Raw provider source, read-only"
-              class="mg-focus-ring mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
-            ><%= raw_payload_text(@evidence) %></pre>
-          <% :denied -> %>
-            <p
-              data-testid="inbound-evidence-denied"
-              role="status"
-              class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
-            >
-              You don't have permission to reveal raw source.
-            </p>
-          <% _redacted -> %>
-        <% end %>
+        <%= if nothing_stored?(@evidence) do %>
+          <%!-- D-26 "Not stored": nothing to disclose, so no reveal control, no
+                caption, no <pre> and no status region; only the static sentence. --%>
+          <p data-testid="inbound-evidence-not-stored" class="text-body text-secondary">
+            No raw provider source was stored for this message.
+          </p>
+        <% else %>
+          <%= case @reveal_state do %>
+            <% :revealed -> %>
+              <pre
+                id="inbound-evidence-raw"
+                data-testid="inbound-evidence-raw"
+                tabindex="0"
+                aria-label="Raw provider source, read-only"
+                class="mg-focus-ring mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
+              ><%= raw_payload_text(@evidence) %></pre>
+            <% :denied -> %>
+              <p
+                data-testid="inbound-evidence-denied"
+                role="status"
+                class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
+              >
+                You don't have permission to reveal raw source.
+              </p>
+            <% _redacted -> %>
+          <% end %>
 
-        <%!-- Reveal-state change is announced in TEXT, never the warning border
+          <%!-- Reveal-state change is announced in TEXT, never the warning border
               color alone (WCAG 1.4.1, D-11). The region is always present so the
               announcement is perceived on the :revealed -> :redacted collapse too. --%>
-        <p
-          data-testid="inbound-evidence-status"
-          role="status"
-          aria-live="polite"
-          class={["mt-sm text-body text-secondary", @reveal_state != :revealed && "sr-only"]}
-        >
-          {reveal_status_text(@reveal_state)}
-        </p>
+          <p
+            data-testid="inbound-evidence-status"
+            role="status"
+            aria-live="polite"
+            class={["mt-sm text-body text-secondary", @reveal_state != :revealed && "sr-only"]}
+          >
+            {reveal_status_text(@reveal_state)}
+          </p>
+        <% end %>
       <% end %>
     </.card>
     """
   end
 
-  # Byte size of the stored evidence, or nil when it cannot be known (D-26).
-  # Non-empty raw_mime wins (it is the stored source for MIME-backed providers),
-  # then a non-empty raw_payload map (its JSON-encoded size). Known-empty storage
-  # (empty map and no mime) is 0; anything else, including a failed encode, is nil
-  # so unknown never reads as zero. Only a count is derived, never the contents.
+  # Byte size of the raw source the reveal shows, or nil when it cannot be known
+  # (D-26). One selector, raw_source/1, drives both this size and the revealed
+  # text, so the fact and the <pre> describe the same stored field.
+  #
+  # Precedence: a non-empty raw_payload map wins, then a non-empty raw_mime binary
+  # (the pre-phase order, c96c8a4f, so the revealed bytes are unchanged, D-27).
+  # Measurement: the UTF-8 byte size of the exact revealed text, i.e.
+  # Jason.encode(payload, pretty: true) for a map and the binary itself for
+  # raw_mime. Known-empty storage (empty map, no mime) is 0. Unknown storage and an
+  # unencodable payload are nil ("Unavailable"), never 0: an unencodable payload
+  # stays the selected source even beside a raw_mime, and its size is not measured
+  # from the inspect/2 debugging text. Only a count is derived, never the contents.
   @spec payload_byte_size(map()) :: non_neg_integer() | nil
-  defp payload_byte_size(%{raw_mime: mime}) when is_binary(mime) and mime != "",
-    do: byte_size(mime)
+  defp payload_byte_size(evidence) do
+    case evidence |> raw_source() |> raw_source_text() do
+      {:ok, text} -> byte_size(text)
+      :empty -> 0
+      _unencodable_or_unknown -> nil
+    end
+  end
 
-  defp payload_byte_size(%{raw_payload: payload})
-       when is_map(payload) and map_size(payload) > 0 do
-    case Jason.encode(payload) do
-      {:ok, json} -> byte_size(json)
-      {:error, _reason} -> nil
+  @spec raw_source(map()) ::
+          {:payload, map()} | {:mime, binary()} | :empty | :unknown
+  defp raw_source(evidence) do
+    payload = Map.get(evidence, :raw_payload)
+    mime = Map.get(evidence, :raw_mime)
+
+    cond do
+      is_map(payload) and map_size(payload) > 0 -> {:payload, payload}
+      is_binary(mime) and mime != "" -> {:mime, mime}
+      payload == %{} and mime in [nil, ""] -> :empty
+      true -> :unknown
+    end
+  end
+
+  defp raw_source_text({:payload, payload}) do
+    case Jason.encode(payload, pretty: true) do
+      {:ok, json} -> {:ok, json}
+      {:error, _reason} -> :unencodable
     end
   rescue
-    _ -> nil
+    _ -> :unencodable
   end
 
-  defp payload_byte_size(%{raw_payload: payload} = evidence) when payload == %{} do
-    if Map.get(evidence, :raw_mime) in [nil, ""], do: 0, else: nil
-  end
+  defp raw_source_text({:mime, mime}), do: {:ok, mime}
+  defp raw_source_text(:empty), do: :empty
+  defp raw_source_text(:unknown), do: :unknown
 
-  defp payload_byte_size(_evidence), do: nil
+  defp nothing_stored?(evidence), do: raw_source(evidence) == :unknown
 
   @spec header_count(map()) :: non_neg_integer() | nil
   defp header_count(%{raw_headers: headers}) when is_map(headers), do: map_size(headers)
@@ -202,14 +241,26 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   defp format_count(nil), do: "Unavailable"
   defp format_count(count) when is_integer(count), do: Integer.to_string(count)
 
-  defp raw_payload_text(%{raw_payload: payload}) when is_map(payload) and map_size(payload) > 0 do
-    Jason.encode!(payload, pretty: true)
-  rescue
-    _ -> inspect(payload, pretty: true)
-  end
+  defp raw_payload_text(evidence) do
+    source = raw_source(evidence)
 
-  defp raw_payload_text(%{raw_mime: mime}) when is_binary(mime) and mime != "", do: mime
-  defp raw_payload_text(_evidence), do: "Provider sent an empty payload."
+    case raw_source_text(source) do
+      {:ok, text} ->
+        text
+
+      :unencodable ->
+        {:payload, payload} = source
+        inspect(payload, pretty: true)
+
+      :empty ->
+        "Provider sent an empty payload."
+
+      # Markup renders the <pre> only when something is stored; this clause keeps
+      # unknown storage from ever claiming an empty payload.
+      :unknown ->
+        "No raw provider source was stored for this message."
+    end
+  end
 
   defp provider_label(provider) when provider in [:mailgun, "mailgun"], do: "MAILGUN"
   defp provider_label(provider) when provider in [:postmark, "postmark"], do: "POSTMARK"

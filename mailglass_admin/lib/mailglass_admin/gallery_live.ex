@@ -1128,7 +1128,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload: nil,
+         raw_payload: %{"body" => "Gallery specimen payload"},
          raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
@@ -1149,7 +1149,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload: nil,
+         raw_payload: %{"body" => "Gallery specimen payload"},
          raw_mime: nil,
          verification_facts: %{"dkim" => true}
        },
