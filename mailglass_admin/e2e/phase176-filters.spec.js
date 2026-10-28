@@ -745,3 +745,40 @@ test.describe("Phase 176 connected axe states", () => {
     });
   }
 });
+
+// -----------------------------------------------------------------------------
+// Phase 176 gap closure (plan 176-13). The mobile Filters toggle must switch a
+// class, never write an inline display style: after a close at a narrow width the
+// panel has to be visible again once the viewport reaches the md breakpoint.
+// One test per collection so a Deliveries failure never hides the Inbound control.
+// -----------------------------------------------------------------------------
+
+test.describe("Phase 176 gap closure", () => {
+  const panelIds = { deliveries: "operator-filter-panel", inbound: "inbound-filter-panel" };
+
+  for (const key of ["deliveries", "inbound"]) {
+    const c = collections[key];
+
+    test(`Phase 176 gap: ${key} filter panel is visible at desktop width after a mobile close`, async ({ page }) => {
+      await page.setViewportSize({ width: 360, height: 800 });
+      await openCollection(page, key);
+
+      const toggle = page.getByTestId(c.toggle);
+      const panel = page.locator(`#${panelIds[key]}`);
+      await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+      await expect(page.locator(c.select)).toBeVisible();
+
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "false");
+      await expect(panel).toBeHidden();
+
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await expect(panel).toBeVisible();
+      await expect(page.locator(c.select)).toBeVisible();
+      await expect(toggle).toBeHidden();
+    });
+  }
+});

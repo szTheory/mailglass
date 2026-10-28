@@ -941,10 +941,12 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-filters"
                   class="border-b border-base-300 pb-md"
                 >
+                  <%!-- The class (shared with Inbound, already in the committed bundle) keeps the
+                      desktop breakpoint working after a mobile close; no inline display is written. --%>
                   <button
                     type="button"
                     phx-click={
-                      JS.toggle(to: "#operator-filter-panel")
+                      JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
                       |> JS.toggle_attribute({"aria-expanded", "true", "false"})
                     }
                     data-testid="operator-filters-toggle"
