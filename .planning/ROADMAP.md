@@ -217,11 +217,11 @@ Plans:
 3. An operator entering Preview can return to the originating Account through a host-approved local destination. Connected tests cover custom mounts, tampered/external destinations, unauthorized Account targets and direct entry fallback; destination context grants no authority and does not widen Preview auth/session whitelists. (UXF-10)
 4. Retained Health/Account/navigation area scenarios use the production presentation and realistic normal/empty/stale/unavailable/long-content cases where reachable; real routes prove the underlying scope and return behavior. (OUTUX-06, UXF-09, UXF-10)
 
-**Plans:** 11 plans
+**Plans:** 1/11 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 177-01-PLAN.md — Return seam tracer: ReturnContext validator, Preview-link minting, Back link, ThemeController segment boundary (UXF-10)
+- [x] 177-01-PLAN.md — Return seam tracer: ReturnContext validator, Preview-link minting, Back link, ThemeController segment boundary (UXF-10)
 - [ ] 177-02-PLAN.md — Pre-refactor Health population golden (OUTUX-06)
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -304,7 +304,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
-| 177. Readable Health and Coherent Account Navigation | 0/TBD | Not started | — |
+| 177. Readable Health and Coherent Account Navigation | 1/11 | In Progress | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
