@@ -393,21 +393,75 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       assert html =~ ~s(aria-live="polite")
       refute html =~ "Raw source revealed. It may contain personal information."
     end
+
+    @tag :phase176
+    test "Phase 176 denial is announced from the persistent status region" do
+      region = fn state ->
+        assert [region] =
+                 state
+                 |> render_state()
+                 |> Floki.parse_document!()
+                 |> Floki.find("[data-testid='inbound-evidence-status']")
+
+        assert Floki.attribute(region, "role") == ["status"]
+        assert Floki.attribute(region, "aria-live") == ["polite"]
+
+        classes = region |> Floki.attribute("class") |> hd() |> String.split()
+        {region, Enum.sort(classes)}
+      end
+
+      {redacted, redacted_classes} = region.(:redacted)
+      {denied, denied_classes} = region.(:denied)
+      {revealed, revealed_classes} = region.(:revealed)
+
+      assert redacted |> Floki.text() |> String.trim() == "Raw source hidden."
+
+      assert denied |> Floki.text() |> String.trim() ==
+               "You don't have permission to reveal raw source."
+
+      assert revealed |> Floki.text() |> String.trim() ==
+               "Raw source revealed. It may contain personal information."
+
+      assert redacted_classes == Enum.sort(~w(mt-sm text-body text-secondary sr-only))
+      assert revealed_classes == Enum.sort(~w(mt-sm text-body text-secondary))
+
+      assert denied_classes ==
+               Enum.sort(
+                 ~w(mt-sm rounded-box border border-warning bg-base-100 p-sm text-body text-base-content)
+               )
+
+      refute "text-secondary" in denied_classes
+      refute "sr-only" in denied_classes
+
+      # No second, freshly inserted live region in any state.
+      for state <- [:redacted, :denied, :revealed] do
+        doc = state |> render_state() |> Floki.parse_document!()
+        assert length(Floki.find(doc, "[role='status']")) == 1
+      end
+
+      refute redacted |> Floki.raw_html() |> String.contains?("inbound-evidence-denied")
+    end
   end
 
   describe "frozen denied/redacted copy + redacted-by-default (D-10)" do
-    test "the :denied body is byte-frozen, role=status, and the raw payload is absent" do
+    test "the :denied copy is byte-frozen, announced from the persistent status region, and the raw payload is absent" do
       html = render_state(:denied)
+      doc = Floki.parse_document!(html)
 
       assert html =~ "You don&#39;t have permission to reveal raw source." or
                html =~ "You don't have permission to reveal raw source."
 
-      assert [denied] =
-               html
-               |> Floki.parse_document!()
-               |> Floki.find("[data-testid='inbound-evidence-denied']")
+      # Exactly one live region, and it is the persistent status element.
+      assert [region] = Floki.find(doc, "[role='status']")
+      assert Floki.attribute(region, "data-testid") == ["inbound-evidence-status"]
 
-      assert Floki.attribute(denied, "role") == ["status"]
+      assert region |> Floki.text() |> String.trim() ==
+               "You don't have permission to reveal raw source."
+
+      # The denied marker sits inside that region and carries no role of its own.
+      assert [denied] = Floki.find(region, "[data-testid='inbound-evidence-denied']")
+      assert Floki.attribute(denied, "role") == []
+      assert [_only] = Floki.find(doc, "[data-testid='inbound-evidence-denied']")
 
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"

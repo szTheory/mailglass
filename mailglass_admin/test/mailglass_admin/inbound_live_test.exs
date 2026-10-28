@@ -2267,8 +2267,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert denied_html
              |> Floki.parse_document!()
-             |> Floki.find("[data-testid='inbound-evidence-denied'][role='status']")
-             |> Enum.count() == 1
+             |> Floki.find("[data-testid='inbound-evidence-status'][role='status']")
+             |> Floki.text()
+             |> String.trim() == "You don't have permission to reveal raw source."
+
+      refute denied_html =~ ~s(id="inbound-evidence-raw")
 
       refute denied_html =~ "SECRET-BYTES"
       refute_banned(denied_html)
