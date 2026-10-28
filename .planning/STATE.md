@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-01-PLAN.md
-last_updated: "2026-10-28T14:23:09.221Z"
+stopped_at: Completed 176-02-PLAN.md
+last_updated: "2026-10-28T14:29:40.818Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: cce25d9c7a2bc1bbc2c72bc4fd26f336ce075899
+state_head: 57e10944411a87f5e19eb57f0af8271672555a60
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 13
+  completed_plans: 14
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -301,6 +301,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 175 P05 | 19min 22s | 2 tasks | 18 files |
 | Phase 175 P06 | 121m | 3 tasks | 180 files |
 | Phase 176 P01 | 12 min | 3 tasks | 6 files |
+| Phase 176 P02 | 10 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -571,6 +572,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: Phase 176-01: window_hours=168 stays in committed filter URLs; only blanks and page=1 are dropped, query keys sorted
 - [Phase 176]: Phase 176-01: filter commits read the Account only from socket.assigns.selected_tenant_id; hidden filters_tenant_id input deleted
 - [Phase 176]: Phase 176-01: search edit history = push first commit, replace later ones, tracked via pending/last commit kind settled in handle_params; canonicalize and recover replace
+- [Phase 176]: Inbound contacts: dedupe key is {local part exact, domain downcased}; unparseable = not exactly one @ with non-empty sides; spoof flagged when display name embeds a different address
+- [Phase 176]: message_identity derives its recipient label from context (:inbound -> Delivered to) with no new public attr; Inbound Quick view projection unwidened
 
 ## Quick Tasks Completed
 
@@ -622,8 +625,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T14:23:09.002Z
-Stopped at: Completed 176-01-PLAN.md
+Last session: 2026-10-28T14:29:40.583Z
+Stopped at: Completed 176-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
