@@ -66,6 +66,12 @@ defmodule MailglassAdmin.TestAdopter.Router do
         :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
         :"Elixir.MailglassAdmin.Fixtures.StubMailer",
         :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
+      ],
+      # Phase 177 D-18: the alt Preview mount returns to the alt operator mount.
+      navigation: [
+        overview_path: "/secure/console",
+        deliveries_path: "/secure/console?view=deliveries",
+        inbound_path: "/secure/console/inbound"
       ]
     )
   end
@@ -120,7 +126,11 @@ defmodule MailglassAdmin.TestAdopter.Router do
       unauthorized_path: "/login",
       # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
       # routing-trace card has declared inbound routes to reflect.
-      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
+      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter,
+      # Phase 177 D-18: the alt operator mount links to the alt Preview mount.
+      navigation: [
+        preview_path: "/alt/dev/console"
+      ]
     )
   end
 end
@@ -371,6 +381,12 @@ defmodule MailglassAdmin.TestOperatorAuth do
   end
 
   def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do
+    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
+  end
+
+  # Phase 177 D-05: the host owns Account authorization. A sentinel Account id
+  # lets tests prove a crafted `tenant_id` is denied by the host on arrival.
+  def authorize(:operator_access, %{params: %{"tenant_id" => "forbidden-account"}}) do
     {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
   end
 

@@ -331,6 +331,148 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
     end
   end
 
+  describe "Phase 177 custom mounts route the context through each mount's own navigation" do
+    test "Phase 177 custom mount operator alt mints a Preview href under the alt Preview mount",
+         %{conn: conn} do
+      {:ok, _view, html} = live(operator_conn(conn), "/secure/console?tenant_id=tenant-b")
+
+      for layout <- ["sidebar", "mobile"] do
+        {path, pairs} = decode(preview_href(html, layout))
+        assert path == "/alt/dev/console"
+
+        assert Enum.sort(pairs) == [
+                 {"return_surface", "overview"},
+                 {"return_tenant_id", "tenant-b"}
+               ]
+      end
+    end
+
+    test "Phase 177 custom mount alt Preview redirects keeping context and Back stays on the operator alt",
+         %{conn: conn} do
+      conn = preview_conn(conn)
+
+      assert {:error, {:redirect, %{to: to}}} =
+               live(
+                 conn,
+                 "/alt/dev/console?return_surface=overview&return_tenant_id=tenant-b"
+               )
+
+      {path, pairs} = decode(to)
+      assert String.starts_with?(path, "/alt/dev/console/")
+      assert {"return_surface", "overview"} in pairs
+      assert {"return_tenant_id", "tenant-b"} in pairs
+
+      {:ok, view, html} = live(conn, to)
+
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      [back] =
+        Floki.find(
+          doc,
+          ~s([data-testid="surface-nav-sidebar"] [data-testid="preview-return-link"])
+        )
+
+      assert Floki.attribute(back, "href") == ["/secure/console?tenant_id=tenant-b"]
+
+      {deliveries_path, deliveries_pairs} = decode(nav_href(html, "sidebar", "Deliveries"))
+      assert deliveries_path == "/secure/console"
+      assert Enum.sort(deliveries_pairs) == [{"tenant_id", "tenant-b"}, {"view", "deliveries"}]
+
+      assert nav_href(html, "sidebar", "Inbound") == "/secure/console/inbound?tenant_id=tenant-b"
+
+      render_click(view, "set_device", %{"width" => "1024"})
+      patched = assert_patch(view)
+      {patched_path, patched_pairs} = decode(patched)
+      assert String.starts_with?(patched_path, "/alt/dev/console/")
+      assert {"return_surface", "overview"} in patched_pairs
+      assert {"return_tenant_id", "tenant-b"} in patched_pairs
+      assert has_element?(view, ~s([data-testid="preview-return-link"]))
+    end
+  end
+
+  describe "Phase 177 host-denied Accounts are never honored on arrival" do
+    test "Phase 177 forbidden Account arrival on Health is the host redirect", %{conn: conn} do
+      assert {:error, {:redirect, %{to: "/login"}}} =
+               live(operator_conn(conn), "/ops/mail?tenant_id=forbidden-account")
+    end
+
+    test "Phase 177 forbidden Account arrival on Inbound is the host redirect", %{conn: conn} do
+      assert {:error, {:redirect, %{to: "/login"}}} =
+               live(operator_conn(conn), "/ops/mail/inbound?tenant_id=forbidden-account")
+    end
+
+    test "Phase 177 forbidden Account arrival on the alt operator mount is the host redirect", %{
+      conn: conn
+    } do
+      assert {:error, {:redirect, %{to: "/login"}}} =
+               live(operator_conn(conn), "/secure/console?tenant_id=forbidden-account")
+    end
+
+    test "Phase 177 a permitted Account still arrives", %{conn: conn} do
+      assert {:ok, _view, _html} = live(operator_conn(conn), "/ops/mail?tenant_id=tenant-b")
+    end
+  end
+
+  describe "Phase 177 tampered input renders chrome identical to direct entry" do
+    test "Phase 177 tampered return params match direct-entry nav and echo nothing", %{
+      conn: conn
+    } do
+      conn = preview_conn(conn)
+      {:ok, _view, direct} = live(conn, @scenario_base <> "?width=768")
+
+      for query <- [
+            "return_surface=evil&return_tenant_id=tenant-evil",
+            "return_surface[]=overview&return_tenant_id=tenant-evil",
+            "return_surface=overview&return_tenant_id[]=tenant-evil",
+            "return_surface=overview&return_tenant_id=tenant-evil%0Aextra"
+          ] do
+        {:ok, _view, html} = live(conn, @scenario_base <> "?width=768&" <> query)
+
+        refute html =~ "preview-return-link"
+        refute html =~ "tenant-evil"
+        refute html =~ "return_surface"
+
+        for label <- ["Health", "Deliveries", "Inbound", "Preview"] do
+          assert nav_href(html, "sidebar", label) == nav_href(direct, "sidebar", label)
+          assert nav_href(html, "mobile", label) == nav_href(direct, "mobile", label)
+        end
+      end
+    end
+  end
+
+  describe "Phase 177 Preview rendering does not depend on the context" do
+    test "Phase 177 frame HTML is identical with and without return params", %{conn: conn} do
+      conn = preview_conn(conn)
+      {:ok, _view, direct} = live(conn, @scenario_base <> "?width=768")
+      {:ok, _view, with_context} = live(conn, @scenario_base <> "?width=768&" <> @return_query)
+
+      assert frame(direct) != nil
+      assert frame(direct) == frame(with_context)
+    end
+
+    test "Phase 177 not-found scenario with a valid context keeps the Back link", %{conn: conn} do
+      {:ok, view, html} =
+        live(
+          preview_conn(conn),
+          "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/no_such_scenario?width=768&" <>
+            @return_query
+        )
+
+      assert html =~ "preview-return-link"
+      assert has_element?(view, ~s([data-testid="preview-return-link"]))
+    end
+
+    test "Phase 177 raising preview_props keeps the Back link", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          preview_conn(conn),
+          "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__?width=768&" <> @return_query
+        )
+
+      assert has_element?(view, ~s([data-testid="preview-return-link"]))
+    end
+  end
+
   # -- helpers ---------------------------------------------------------------
 
   defp preview_conn(conn) do
@@ -368,6 +510,17 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
     |> Enum.find(fn link -> link |> Floki.text() |> String.trim() == label end)
     |> Floki.attribute("href")
     |> hd()
+  end
+
+  # The rendered email frame: iframe srcdoc and sizing, without the per-mount
+  # render nonce in the element id.
+  defp frame(html) do
+    {:ok, doc} = Floki.parse_fragment(html)
+
+    case Floki.find(doc, ~s([data-testid="preview-pane"] iframe)) do
+      [iframe | _] -> {Floki.attribute(iframe, "srcdoc"), Floki.attribute(iframe, "style")}
+      [] -> nil
+    end
   end
 
   defp decode(href) do
