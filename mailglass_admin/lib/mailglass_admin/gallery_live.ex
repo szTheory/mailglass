@@ -593,7 +593,14 @@ defmodule MailglassAdmin.GalleryLive do
           id: "rec-1",
           tenant_id: "tenant-a",
           provider: "mailgun",
-          envelope_recipient: "a****@e******.com",
+          envelope_recipient: "support@northstar.example",
+          from: [%{address: "alex.rivera@example.com", name: "Alex Rivera"}],
+          to: [
+            %{address: "support@northstar.example", name: "Northstar Support"},
+            %{address: "billing@northstar.example"},
+            %{address: "ops@northstar.example"}
+          ],
+          cc: [%{address: "team.lead@example.com", name: "Team Lead"}],
           subject: "Hello",
           received_at: ~U[2026-05-24 10:00:00Z]
         },
@@ -1272,7 +1279,7 @@ defmodule MailglassAdmin.GalleryLive do
        records: [
          %{
            id: "inb_01JXABCDEF",
-           envelope_recipient: "s*@m***.io",
+           envelope_recipient: "support@northstar.example",
            outcome: :accepted,
            mailbox: "MyApp.SupportMailbox",
            tenant_id: "acme-corp",
@@ -1281,7 +1288,7 @@ defmodule MailglassAdmin.GalleryLive do
          },
          %{
            id: "inb_01JXGHIJKL",
-           envelope_recipient: "b*@e******.com",
+           envelope_recipient: "billing@northstar.example",
            outcome: :no_match,
            mailbox: nil,
            tenant_id: "acme-corp",
@@ -1304,7 +1311,8 @@ defmodule MailglassAdmin.GalleryLive do
        records: [
          %{
            id: "inb_01JXWIDEVALUE000000000000000000000000000000000000",
-           envelope_recipient: "b*****@enterprise-example-company-name.co.uk",
+           envelope_recipient:
+             "very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com",
            outcome: :accepted,
            mailbox: "MyApp.VeryLongSupportMailbox.HandlesAllIncomingMessages",
            tenant_id: "tenant_01JXWIDEVALUE000000000000000000000000",
