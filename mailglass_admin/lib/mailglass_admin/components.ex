@@ -574,12 +574,21 @@ defmodule MailglassAdmin.Components do
         <.outcome_badge id={@id} status={@status} context={@context} />
       </div>
       <p :if={not is_nil(@subject)} class="text-body text-secondary [overflow-wrap:anywhere]">
-        To <span class="text-base-content">{@recipient || "Recipient not recorded"}</span>
+        {recipient_label(@context)}
+        <span class="text-base-content">{@recipient || recipient_missing(@context)}</span>
       </p>
       <p :if={is_nil(@subject)} class="text-label text-secondary">Subject not recorded</p>
     </div>
     """
   end
+
+  # Inbound messages carry only the SMTP envelope recipient here; the header To list
+  # lives on the full detail, so the line says "Delivered to" rather than "To".
+  defp recipient_label(:inbound), do: "Delivered to"
+  defp recipient_label(_context), do: "To"
+
+  defp recipient_missing(:inbound), do: "Not recorded by provider"
+  defp recipient_missing(_context), do: "Recipient not recorded"
 
   @doc "Technical identifiers remain available without dominating message inspection."
   attr(:id, :string, required: true)

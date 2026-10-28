@@ -2329,6 +2329,32 @@ defmodule MailglassAdmin.InboundLiveTest do
                ["From", "To", "Delivered to"]
     end
 
+    @tag :phase176
+    test "Phase 176 Inbound Quick view labels the envelope recipient 'Delivered to'", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "support@example.com",
+          to: [%{address: "team@example.com"}],
+          cc: [%{address: "cc@example.com"}]
+        )
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      [quick] =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-quick-view']")
+
+      text = quick |> Floki.text() |> String.replace(~r/\s+/, " ")
+      assert text =~ "Delivered to support@example.com"
+      refute text =~ "team@example.com"
+      refute text =~ "cc@example.com"
+      refute text =~ "Recipient not recorded"
+    end
+
     test "raw evidence bytes are absent until :reveal_raw is granted (V5)", %{conn: conn} do
       secret = "RAW-SECRET-#{System.unique_integer([:positive])}"
 

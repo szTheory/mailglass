@@ -408,6 +408,57 @@ defmodule MailglassAdmin.ComponentsTest do
     assert html =~ ~s(id="inspection-outcome-trigger")
   end
 
+  describe "Phase 176 message_identity recipient label" do
+    @describetag :phase176
+
+    defp identity_line(context, recipient) do
+      html =
+        render_component(&Components.message_identity/1,
+          subject: "Hello",
+          recipient: recipient,
+          status: :accept,
+          context: context,
+          id: "identity-#{context}"
+        )
+
+      [line] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("p.text-body.text-secondary")
+
+      {line |> Floki.text() |> String.replace(~r/\s+/, " ") |> String.trim(),
+       line |> Floki.find("span.text-base-content") |> Floki.text()}
+    end
+
+    test "context :inbound labels the recipient 'Delivered to'" do
+      {text, value} = identity_line(:inbound, "support@example.com")
+      assert String.starts_with?(text, "Delivered to")
+      assert value == "support@example.com"
+      refute String.starts_with?(text, "To ")
+    end
+
+    test "context :delivery keeps 'To'" do
+      {text, value} = identity_line(:delivery, "billing@northstar.example")
+      assert String.starts_with?(text, "To ")
+      assert value == "billing@northstar.example"
+      refute text =~ "Delivered to"
+    end
+
+    test "a missing Inbound recipient reads 'Delivered to' then 'Not recorded by provider'" do
+      {text, value} = identity_line(:inbound, nil)
+      assert String.starts_with?(text, "Delivered to")
+      assert value == "Not recorded by provider"
+      refute text =~ "Recipient not recorded"
+    end
+
+    test "a missing Delivery recipient keeps 'Recipient not recorded'" do
+      {text, value} = identity_line(:delivery, nil)
+      assert String.starts_with?(text, "To ")
+      assert value == "Recipient not recorded"
+      refute text =~ "Not recorded by provider"
+    end
+  end
+
   test "technical details disclose exact IDs without opening by default" do
     html =
       render_component(&Components.technical_details/1,
