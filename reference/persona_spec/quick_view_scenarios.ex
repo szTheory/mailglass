@@ -6,7 +6,9 @@ defmodule MailglassDemo.QuickViewScenarios do
 
   `inbound/1` builds retained Inbound production-component stories from the
   same declarative facts exposed by `scenarios/0`. `delivery_investigation/1`
-  projects the bounded Phase 175 job scenarios through the same source.
+  projects the bounded Phase 175 job scenarios through the same source, and
+  `inbound_evidence/1` projects the Phase 176 Inbound contact and raw-source
+  scenarios (production `DetailHeader` and `EvidenceCard` assigns only).
   """
 
   @manifest_path Path.expand("quick_view_scenarios.json", __DIR__)
@@ -125,6 +127,78 @@ defmodule MailglassDemo.QuickViewScenarios do
       consumed?: projection["consumed?"] || false
     }
   end
+
+  @doc """
+  Builds the retained Inbound contact and raw-source story assigns for a scenario id.
+
+  Returns only the assigns the production `MailglassAdmin.Inbound.DetailHeader` and
+  `MailglassAdmin.Inbound.EvidenceCard` already accept. The contact lists keep the
+  stored string-keyed address maps (the components read both key kinds).
+  """
+  def inbound_evidence(scenario_id) when is_atom(scenario_id) do
+    variation_id = Atom.to_string(scenario_id)
+
+    scenario =
+      Enum.find(@manifest["scenarios"], fn entry ->
+        entry["rendered"] == true and entry["variation_id"] == variation_id and
+          String.starts_with?(entry["id"], "inbound-evidence-")
+      end)
+
+    if is_nil(scenario),
+      do: raise(ArgumentError, "unknown retained Inbound evidence scenario #{variation_id}")
+
+    projection = scenario["projection"]
+    record = evidence_record(projection["record"])
+
+    %{
+      scenario_id: scenario["id"],
+      variation_id: variation_id,
+      role_job: scenario["role_job"],
+      state: scenario["state"],
+      proof_boundary: scenario["proof_boundary"],
+      detail: %{
+        record: record,
+        mailbox: projection["mailbox"],
+        outcome: inbound_outcome(projection["outcome"])
+      },
+      evidence: evidence_map(projection["evidence"]),
+      reveal_state: reveal_state(projection["reveal_state"]),
+      received_at: record.received_at,
+      account_labels: MailglassDemo.Personas.account_labels()
+    }
+  end
+
+  defp evidence_record(record) do
+    %{
+      id: record["id"],
+      tenant_id: record["tenant_id"],
+      provider: record["provider"],
+      provider_message_id: record["provider_message_id"],
+      subject: record["subject"],
+      received_at: datetime(record["received_at"]),
+      envelope_recipient: record["envelope_recipient"],
+      from: record["from"],
+      to: record["to"],
+      cc: record["cc"],
+      reply_to: record["reply_to"]
+    }
+  end
+
+  defp evidence_map(nil), do: nil
+
+  defp evidence_map(evidence) do
+    %{
+      provider: evidence["provider"],
+      raw_payload: evidence["raw_payload"],
+      raw_headers: evidence["raw_headers"],
+      raw_mime: evidence["raw_mime"],
+      verification_facts: evidence["verification_facts"]
+    }
+  end
+
+  defp reveal_state("redacted"), do: :redacted
+  defp reveal_state("revealed"), do: :revealed
+  defp reveal_state("denied"), do: :denied
 
   defp investigation_delivery(delivery, tenant_id) do
     %{

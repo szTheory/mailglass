@@ -6,6 +6,8 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   alias Mailglass.Operator.Deliveries
   alias Mailglass.Events.Event
   alias Mailglass.Tenancy
+  alias MailglassAdmin.Inbound.DetailHeader, as: InboundDetailHeader
+  alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.QuickView, as: InboundQuickView
   alias MailglassAdmin.OptionalDeps.MailglassInbound
   alias MailglassAdmin.Operator.DetailHeader
@@ -303,6 +305,39 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
     assert html =~ "temporarily unavailable"
     refute html =~ "SupportMailbox"
     refute html =~ "Record ID"
+  end
+
+  @tag :phase176
+  test "Phase 176 retained Inbound evidence scenarios render through production components" do
+    ids = [:normal_contacts]
+
+    for id <- ids do
+      scenario = QuickViewScenarios.inbound_evidence(id)
+
+      header =
+        render_component(&InboundDetailHeader.detail_header/1,
+          detail: scenario.detail,
+          account_labels: scenario.account_labels
+        )
+
+      card =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: scenario.evidence,
+          reveal_state: scenario.reveal_state,
+          received_at: scenario.received_at
+        )
+
+      assert header =~ ~s(data-testid="inbound-detail-header")
+      assert header =~ ~s(data-testid="inbound-contact-from")
+      assert header =~ ~s(data-testid="inbound-contact-delivered-to")
+      assert header =~ "Provider message ID"
+      assert card =~ ~s(data-testid="inbound-evidence-card")
+      assert scenario.proof_boundary == "story-render-only"
+    end
+
+    assert_raise ArgumentError, ~r/unknown retained Inbound evidence scenario/, fn ->
+      QuickViewScenarios.inbound_evidence(:no_such_scenario)
+    end
   end
 
   defp rendered_text(html), do: Regex.replace(~r/<[^>]*>/, html, "")

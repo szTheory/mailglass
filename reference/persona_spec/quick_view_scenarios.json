@@ -558,6 +558,73 @@
       "proof_boundary": "connected-real-route-only",
       "feedback_ids": ["fb-quiet-quick-view-arrows"],
       "rendered": false
+    },
+    {
+      "id": "inbound-evidence-normal-contacts",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "normal_contacts",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "normal-contacts",
+      "reason": "Retains an ordinary message: display-named sender, two To, one Cc, a distinct Delivered to recipient and redacted raw source.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-normal-contacts",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-normal-contacts",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            },
+            {
+              "address": "billing@northstar.example",
+              "name": "Northstar Billing"
+            }
+          ],
+          "cc": [
+            {"address": "team.lead@example.com", "name": "Team Lead"}
+          ],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
     }
   ],
   "axe_selection": [
