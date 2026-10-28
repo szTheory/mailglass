@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-02-PLAN.md
-last_updated: "2026-10-28T14:29:40.818Z"
+stopped_at: Completed 176-03-PLAN.md
+last_updated: "2026-10-28T14:33:51.655Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: 57e10944411a87f5e19eb57f0af8271672555a60
+state_head: cdcebee185315c0722f28879a761021c8c806217
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 14
+  completed_plans: 15
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 3 of 10
+Plan: 4 of 10
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -302,6 +302,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 175 P06 | 121m | 3 tasks | 180 files |
 | Phase 176 P01 | 12 min | 3 tasks | 6 files |
 | Phase 176 P02 | 10 min | 3 tasks | 8 files |
+| Phase 176 P03 | 14min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -574,6 +575,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: Phase 176-01: search edit history = push first commit, replace later ones, tracked via pending/last commit kind settled in handle_params; canonicalize and recover replace
 - [Phase 176]: Inbound contacts: dedupe key is {local part exact, domain downcased}; unparseable = not exactly one @ with non-empty sides; spoof flagged when display name embeds a different address
 - [Phase 176]: message_identity derives its recipient label from context (:inbound -> Delivered to) with no new public attr; Inbound Quick view projection unwidened
+- [Phase 176]: Evidence card: one persistent disclosure toggle; caption and toggle render only when evidence is present; reveal handlers/telemetry unchanged
 
 ## Quick Tasks Completed
 
@@ -625,8 +627,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T14:29:40.583Z
-Stopped at: Completed 176-02-PLAN.md
+Last session: 2026-10-28T14:33:51.400Z
+Stopped at: Completed 176-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
