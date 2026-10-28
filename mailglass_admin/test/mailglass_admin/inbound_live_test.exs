@@ -772,7 +772,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       # The rejected window stays in the draft: the select shows "Custom period (bogus
       # hours)" selected next to its error instead of silently selecting 168 (D-12).
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
+
       assert selected_filter_value(html, "#filters_window_hours") == "bogus"
 
       assert document
@@ -804,7 +810,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Time window was not applied. Choose a positive listed time window."
 
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
@@ -3038,9 +3049,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert selected_filter_value(html, "#filters_window_hours") == "bogus"
       assert html =~ "Custom period (bogus hours)"
 
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
       assert html
              |> Floki.parse_document!()
-             |> Floki.find("#filters_outcome option[value='not-real']") == []
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
     end
 
     test "Phase 176 Inbound an invalid form window stays in the draft without a patch", %{
@@ -3086,6 +3101,106 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       refute html =~ "Custom period"
       assert selected_filter_value(html, "#filters_window_hours") == "720"
+    end
+
+    test "Phase 176 Inbound gap: a rejected outcome stays selected as a Not applied option", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      options = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#filters_outcome option")
+      end
+
+      not_applied = fn html ->
+        html
+        |> options.()
+        |> Enum.filter(
+          &(&1
+            |> Floki.text()
+            |> String.trim()
+            |> String.starts_with?("Not applied"))
+        )
+      end
+
+      {:ok, _view, baseline} =
+        live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(baseline, "#filters_outcome") in [nil, ""]
+      assert not_applied.(baseline) == []
+
+      # URL-backed rejected value.
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "not-real"})
+        )
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == ["not-real"]
+      assert option |> Floki.text() |> String.trim() == "Not applied: not-real"
+      # Enabled: a disabled option is left out of submission and would clear the filter.
+      assert Floki.attribute(option, "disabled") == []
+      # Directly after the prompt.
+      assert [_prompt, ^option | _] = options.(html)
+
+      # A change event that posts the rejected value keeps it selected and never patches.
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("search", %{"search" => "x", "outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+      assert [_] = not_applied.(html)
+
+      # Draft-only rejected value.
+      {:ok, view, _html} =
+        live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("outcome", %{"outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+      assert [option] = not_applied.(html)
+      assert option |> Floki.text() |> String.trim() == "Not applied: not-real"
+
+      # Encoding: quotes and angle brackets are escaped, one extra option, nothing injected.
+      raw = ~s(a"b<c>)
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => raw})
+        )
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == [raw]
+      assert option |> Floki.text() |> String.trim() == "Not applied: " <> raw
+      assert length(options.(html)) == length(options.(baseline)) + 1
+      assert Floki.find(Floki.parse_document!(html), "#filters_outcome option *") == []
+
+      # Blank: the prompt is selected and no Not applied option appears.
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => ""})
+        )
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(html, "#filters_outcome") in [nil, ""]
+      assert not_applied.(html) == []
     end
   end
 

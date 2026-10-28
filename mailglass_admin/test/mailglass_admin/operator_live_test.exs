@@ -301,7 +301,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # Inspect the filter's option selection directly: the full LiveView document
       # includes the Phoenix client bundle, which contains this test value as code.
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_event option[value='not-real']") == []
+      # The rejected value stays selected as a "Not applied" option (D-12): the select
+      # never shows its prompt beside the "was not applied" error.
+      assert selected_filter_value(html, "#filters_event") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_event option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -4064,6 +4071,101 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert_patch_kind(view, :push)
       assert url_note.(view) == []
       assert draft_note.(view) == []
+    end
+
+    test "Phase 176 gap: a rejected event stays selected as a Not applied option", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      options = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#filters_event option")
+      end
+
+      not_applied = fn html ->
+        html
+        |> options.()
+        |> Enum.filter(
+          &(&1
+            |> Floki.text()
+            |> String.trim()
+            |> String.starts_with?("Not applied"))
+        )
+      end
+
+      {:ok, _view, baseline} = live(operator_conn(conn), deliveries_path())
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(baseline, "#filters_event") in [nil, ""]
+      assert not_applied.(baseline) == []
+
+      # URL-backed rejected value.
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == ["bogus"]
+      assert option |> Floki.text() |> String.trim() == "Not applied: bogus"
+      # Enabled: a disabled option is left out of submission and would clear the filter.
+      assert Floki.attribute(option, "disabled") == []
+      # Directly after the prompt.
+      assert [_prompt, ^option | _] = options.(html)
+
+      # A change event that posts the rejected value keeps it selected and never patches.
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          filter_change("search", %{"search" => "x", "event" => "bogus"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+      assert [_] = not_applied.(html)
+
+      # Draft-only rejected value.
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "validate_filters", filter_change("event", %{"event" => "bogus"}))
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+      assert [option] = not_applied.(html)
+      assert option |> Floki.text() |> String.trim() == "Not applied: bogus"
+
+      # Encoding: quotes and angle brackets are escaped, one extra option, nothing injected.
+      raw = ~s(a"b<c>)
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "event" => raw})
+        )
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == [raw]
+      assert option |> Floki.text() |> String.trim() == "Not applied: " <> raw
+      assert length(options.(html)) == length(options.(baseline)) + 1
+      assert Floki.find(Floki.parse_document!(html), "#filters_event option *") == []
+
+      # Blank: the prompt is selected and no Not applied option appears.
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "event" => ""})
+        )
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(html, "#filters_event") in [nil, ""]
+      assert not_applied.(html) == []
     end
   end
 
