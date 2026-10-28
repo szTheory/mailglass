@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: executing
-stopped_at: Completed 176-07-PLAN.md
-last_updated: "2026-10-28T15:17:18.318Z"
+stopped_at: Completed 176-08-PLAN.md
+last_updated: "2026-10-28T15:30:59.016Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 176 execution started
-state_head: a818ae571337fe5b204901303110d5ba276d353d
+state_head: 490bcc5cd5d75afbcc60fd2219e0aa1c56c1baa2
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 22
-  completed_plans: 19
+  completed_plans: 20
   percent: 40
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 176 (Direct Filters and Useful Inbound Evidence) — EXECUTING
-Plan: 8 of 10
+Plan: 9 of 10
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 176 execution started
 
@@ -307,6 +307,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 176 P05 | 14 min | 2 tasks | 6 files |
 | Phase 176 P06 | 16 min | 2 tasks | 7 files |
 | Phase 176 P07 | 40 min | 3 tasks | 7 files |
+| Phase 176 P08 | 25 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -587,6 +588,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-06: any hooks.js body change must re-pin the demo Storybook review-JS md5 in reference/demo_app/dev/mailglass_demo_web/storybook.ex
 - [Phase 176]: Plan 07: Inbound filter_draft_params retains a rejected outcome/window only for a field in error, so a blank window never becomes a Custom period option
 - [Phase 176]: Plan 07: Inbound same_location? canonicalizes both queries; committed Inbound URLs keep window_hours=168
+- [Phase 176]: 176-08: inbound-evidence-* scenarios stay out of axe_selection (20); a11y for revealed/denied/invalid proven on connected routes in 176-10
 
 ## Quick Tasks Completed
 
@@ -638,8 +640,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T15:17:17.980Z
-Stopped at: Completed 176-07-PLAN.md
+Last session: 2026-10-28T15:30:58.769Z
+Stopped at: Completed 176-08-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
