@@ -375,6 +375,7 @@ defmodule MailglassAdmin.PreviewLive do
                   device_width={@device_width}
                   admin_chrome_theme={@admin_chrome_theme}
                   mount_path={@mount_path}
+                  return_query={ReturnContext.query_pairs(@return_context)}
                 />
               </div>
 
@@ -494,6 +495,7 @@ defmodule MailglassAdmin.PreviewLive do
                     device_width={@device_width}
                     admin_chrome_theme={@admin_chrome_theme}
                     mount_path={@mount_path}
+                    return_query={ReturnContext.query_pairs(@return_context)}
                   />
                   <div
                     data-testid="preview-header-controls"
@@ -749,6 +751,21 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp session_navigation(_session), do: %{}
 
+  defp preview_surface_paths(%{return_context: %{tenant_id: tenant_id} = context} = assigns) do
+    navigation = assigns[:admin_navigation] || %{}
+
+    %{
+      preview:
+        ReturnContext.append_query(
+          current_preview_path(assigns),
+          ReturnContext.query_pairs(context)
+        ),
+      overview: surface_href(navigation, "overview", :overview_path, tenant_id),
+      deliveries: surface_href(navigation, "deliveries", :deliveries_path, tenant_id),
+      inbound: surface_href(navigation, "inbound", :inbound_path, tenant_id)
+    }
+  end
+
   defp preview_surface_paths(assigns) do
     navigation = assigns[:admin_navigation] || %{}
 
@@ -758,6 +775,12 @@ defmodule MailglassAdmin.PreviewLive do
       deliveries: navigation_path(navigation, :deliveries_path),
       inbound: navigation_path(navigation, :inbound_path)
     }
+  end
+
+  # A configured path that is not a local absolute path cannot carry the Account
+  # id, so it falls back to the static host path exactly as direct entry does.
+  defp surface_href(navigation, surface, key, tenant_id) do
+    ReturnContext.surface_href(navigation, surface, tenant_id) || navigation_path(navigation, key)
   end
 
   defp current_preview_path(assigns) do
@@ -796,7 +819,8 @@ defmodule MailglassAdmin.PreviewLive do
         to:
           build_capture_url(
             socket.assigns.base_path,
-            Integer.to_string(socket.assigns.device_width)
+            Integer.to_string(socket.assigns.device_width),
+            ReturnContext.query_pairs(socket.assigns.return_context)
           )
       )
     else
@@ -804,7 +828,7 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
-  defp build_capture_url(base_path, width, query_pairs \\ []) do
+  defp build_capture_url(base_path, width, query_pairs) do
     ReturnContext.append_query(base_path <> "?width=" <> width, query_pairs)
   end
 

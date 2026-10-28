@@ -23,6 +23,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Preview.ReturnContext
 
   attr(:mailables, :list, required: true)
   attr(:current_mailable, :atom, default: nil)
@@ -30,6 +31,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
   attr(:testid, :string, default: "preview-mailables-picker")
 
   @doc """
@@ -68,6 +70,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
               device_width={@device_width}
               admin_chrome_theme={@admin_chrome_theme}
               mount_path={@mount_path}
+              return_query={@return_query}
             />
           </li>
         <% end %>
@@ -82,6 +85,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
   attr(:testid, :string, default: "preview-mailables-picker")
 
   @doc """
@@ -154,6 +158,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
                   device_width={@device_width}
                   admin_chrome_theme={@admin_chrome_theme}
                   mount_path={@mount_path}
+                  return_query={@return_query}
                 />
               </li>
             <% end %>
@@ -174,6 +179,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
 
   def mailable_menu_entry(%{reflection: list} = assigns) when is_list(list) do
     ~H"""
@@ -184,7 +190,14 @@ defmodule MailglassAdmin.Preview.Sidebar do
           <li>
             <.link
               patch={
-                scenario_path(@mount_path, @mod, scenario_name, @device_width, @admin_chrome_theme)
+                scenario_path(
+                  @mount_path,
+                  @mod,
+                  scenario_name,
+                  @device_width,
+                  @admin_chrome_theme,
+                  @return_query
+                )
               }
               aria-current={
                 scenario_selected?(@current_mailable, @current_scenario, @mod, scenario_name) &&
@@ -234,7 +247,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
       <.mailable_menu_label mod={@mod} />
       <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <.link
-          patch={broken_path(@mount_path, @mod)}
+          patch={broken_path(@mount_path, @mod, @return_query)}
           title="This Mailable raised while rendering"
           class="mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 hover:text-base-content"
         >
@@ -269,6 +282,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
 
   # Function component dispatched by reflection shape. Phoenix.Component
   # requires `def` (not `defp`) for `<.mailable_entry ... />` invocation.
@@ -283,7 +297,14 @@ defmodule MailglassAdmin.Preview.Sidebar do
           <li>
             <.link
               patch={
-                scenario_path(@mount_path, @mod, scenario_name, @device_width, @admin_chrome_theme)
+                scenario_path(
+                  @mount_path,
+                  @mod,
+                  scenario_name,
+                  @device_width,
+                  @admin_chrome_theme,
+                  @return_query
+                )
               }
               class={[
                 "mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors",
@@ -312,7 +333,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: {:error, _msg}} = assigns) do
     ~H"""
     <.link
-      patch={broken_path(@mount_path, @mod)}
+      patch={broken_path(@mount_path, @mod, @return_query)}
       title="This Mailable raised while rendering"
       class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
@@ -391,14 +412,22 @@ defmodule MailglassAdmin.Preview.Sidebar do
   # relative (`./`) reference would resolve against the parent directory and
   # drop the mount's final segment (e.g. `/dev/mail` -> `/dev/<Mailable>`),
   # 404-ing the `/:mailable/:scenario` route. Build absolute paths instead.
-  defp scenario_path(mount_path, mod, scenario, width, _admin_chrome_theme) do
-    scenario_base_path(mount_path, mod, scenario) <>
-      "?width=" <>
-      Integer.to_string(width)
+  #
+  # `return_query` carries the validated Phase 177 return context
+  # (`return_surface`, `return_tenant_id`) across Preview-internal links. An
+  # empty list appends nothing, so direct-entry URLs stay byte-identical.
+  defp scenario_path(mount_path, mod, scenario, width, _admin_chrome_theme, return_query) do
+    ReturnContext.append_query(
+      scenario_base_path(mount_path, mod, scenario) <> "?width=" <> Integer.to_string(width),
+      return_query
+    )
   end
 
-  defp broken_path(mount_path, mod) do
-    scenario_base_path(mount_path, mod, "__error__")
+  defp broken_path(mount_path, mod, return_query) do
+    ReturnContext.append_query(
+      scenario_base_path(mount_path, mod, "__error__"),
+      return_query
+    )
   end
 
   # Active-item highlight: matches current mailable AND scenario.
