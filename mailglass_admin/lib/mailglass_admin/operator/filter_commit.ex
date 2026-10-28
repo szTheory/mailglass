@@ -14,6 +14,26 @@ defmodule MailglassAdmin.Operator.FilterCommit do
   # filter leaves the previous page and the previously selected record behind.
   @dropped_on_commit ~w(page delivery_id inbound_id full)
 
+  @typedoc """
+  What caused a filter commit. Drives the browser-history decision.
+  """
+  @type kind :: :search | :select | :enter | :clear | :page | :recover | :canonicalize
+
+  @doc """
+  Decides whether a commit adds a history entry or replaces the current one.
+
+  One intent is one entry: the first commit of a search edit pushes and later
+  commits of the same edit replace it. Enter replaces only when it finalizes an
+  in-flight search edit (the previous commit was `:search`), otherwise it
+  pushes. Selects, Clear and paging always push. Recovery after a reconnect and
+  Account canonicalization are not user intents, so they always replace.
+  """
+  @spec history_kind(kind(), kind() | nil) :: :push | :replace
+  def history_kind(:search, :search), do: :replace
+  def history_kind(:enter, :search), do: :replace
+  def history_kind(kind, _last_kind) when kind in [:recover, :canonicalize], do: :replace
+  def history_kind(_kind, _last_kind), do: :push
+
   @doc """
   Reduces a browser filter payload to the params a commit may carry.
 

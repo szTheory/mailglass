@@ -72,6 +72,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:deliveries_page_meta, empty_page_meta())
       |> assign(:deliveries_read_state, :ready)
       |> assign(:deliveries_loaded_for, nil)
+      |> assign(:pending_commit_kind, nil)
+      |> assign(:last_commit_kind, nil)
       |> assign(:selected_delivery, nil)
       |> assign(:requested_delivery_id, nil)
       |> assign(:quick_view_focus_return_id, nil)
@@ -174,6 +176,7 @@ defmodule MailglassAdmin.OperatorLive do
 
       socket =
         socket
+        |> settle_commit_kind()
         |> assign(:base_path, URI.parse(uri).path || "/operator")
         |> assign(:page_uri, uri)
         |> assign(:dark_chrome, theme_choice == :dark)
@@ -225,7 +228,8 @@ defmodule MailglassAdmin.OperatorLive do
 
     {:noreply,
      push_patch(socket,
-       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id)
+       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id),
+       replace: true
      )}
   end
 
@@ -250,6 +254,15 @@ defmodule MailglassAdmin.OperatorLive do
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
     commit_filters(socket, filters, :enter)
   end
+
+  # phx-auto-recover: after a reconnect the browser resends the form it still holds. Treat
+  # it as a commit that never adds history (D-11): valid and different restores the URL
+  # with replace, invalid stays a draft, identical is a no-op.
+  def handle_event("recover_filters", %{"filters" => filters}, socket) do
+    commit_filters(socket, filters, :recover)
+  end
+
+  def handle_event("recover_filters", _params, socket), do: {:noreply, socket}
 
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
@@ -322,10 +335,18 @@ defmodule MailglassAdmin.OperatorLive do
       "view" => "deliveries"
     }
 
-    {:noreply,
-     push_patch(socket,
-       to: build_path(socket.assigns.base_path, filter_params, nil, socket.assigns.dark_chrome)
-     )}
+    path = build_path(socket.assigns.base_path, filter_params, nil, socket.assigns.dark_chrome)
+
+    # Clear with nothing applied changes nothing: no patch, no history entry. It still
+    # resets a draft the operator typed but never committed.
+    if same_location?(socket.assigns.page_uri, path) do
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(socket.assigns.filter_params, as: :filters))
+       |> assign(:filter_errors, %{})}
+    else
+      {:noreply, push_commit(socket, path, :clear)}
+    end
   end
 
   def handle_event("open_support_exemplar", params, socket) do
@@ -915,6 +936,7 @@ defmodule MailglassAdmin.OperatorLive do
                       id="operator-filters"
                       phx-change="validate_filters"
                       phx-submit="apply_filters"
+                      phx-auto-recover="recover_filters"
                       class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                     >
                       <FiltersForm.fields
@@ -1173,6 +1195,8 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp clear_surface_state(socket) do
     socket
+    |> assign(:pending_commit_kind, nil)
+    |> assign(:last_commit_kind, nil)
     |> assign(:view, :overview)
     |> assign(:full_detail?, false)
     |> assign(:deliveries, [])
@@ -1232,7 +1256,7 @@ defmodule MailglassAdmin.OperatorLive do
   # Every filter change is a commit (D-01). The Account comes from the server, never the
   # payload (D-09); an invalid draft stays a draft and never patches; a commit that
   # resolves to the current location is a no-op.
-  defp commit_filters(socket, filters, _kind) do
+  defp commit_filters(socket, filters, kind) do
     filters = FilterCommit.commit_params(filters, socket.assigns.selected_tenant_id)
     {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
 
@@ -1247,7 +1271,7 @@ defmodule MailglassAdmin.OperatorLive do
          |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
          |> assign(:filter_errors, %{})}
       else
-        {:noreply, push_patch(socket, to: path)}
+        {:noreply, push_commit(socket, path, kind)}
       end
     else
       {:noreply,
@@ -1255,6 +1279,25 @@ defmodule MailglassAdmin.OperatorLive do
        |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
        |> assign(:filter_errors, filter_errors)}
     end
+  end
+
+  # The only place a commit patch is pushed. The pending kind is assigned here and nowhere
+  # else, so a no-op or invalid commit can never mislabel the next non-commit patch.
+  defp push_commit(socket, path, kind) do
+    replace? = FilterCommit.history_kind(kind, socket.assigns.last_commit_kind) == :replace
+
+    socket
+    |> assign(:pending_commit_kind, kind)
+    |> push_patch(to: path, replace: replace?)
+  end
+
+  # Moves the kind of the commit that produced this patch into last_commit_kind. A patch
+  # that arrives without a pending kind (Back/Forward, pagination links, the Account
+  # canonicalization) is not a commit and ends any in-flight search edit.
+  defp settle_commit_kind(socket) do
+    socket
+    |> assign(:last_commit_kind, socket.assigns.pending_commit_kind)
+    |> assign(:pending_commit_kind, nil)
   end
 
   defp commit_path(socket, normalized) do
@@ -2316,16 +2359,17 @@ defmodule MailglassAdmin.OperatorLive do
     current = URI.parse(current_uri)
     target = URI.parse(target_path)
 
-    # Entry URLs often omit window_hours while every commit target carries it, so the
-    # current query is canonicalized (default window filled) before the comparison.
-    current_query =
-      (current.query || "")
-      |> URI.decode_query()
-      |> FilterCommit.canonical_current_query()
-      |> URI.decode_query()
-
+    # Entry URLs often omit window_hours while commit targets carry it, so both queries are
+    # canonicalized (default window filled) before the comparison.
     (current.path || "/") == (target.path || "/") and
-      current_query == URI.decode_query(target.query || "")
+      canonical_location_query(current.query) == canonical_location_query(target.query)
+  end
+
+  defp canonical_location_query(query) do
+    (query || "")
+    |> URI.decode_query()
+    |> FilterCommit.canonical_current_query()
+    |> URI.decode_query()
   end
 
   defp build_path_with_view(

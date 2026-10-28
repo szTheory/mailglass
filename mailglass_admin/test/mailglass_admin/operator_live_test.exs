@@ -3040,6 +3040,344 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert query["page"] == "2"
     end
 
+    test "Phase 176 search pushes the first commit of an edit, replaces later ones, a select ends it",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "a"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "ab"}))
+      assert_patch_kind(view, :replace)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "ab", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "abc", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 successive search commits end at the latest value with kinds push then replace",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "ab"}))
+      first = assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      final = assert_patch_kind(view, :replace)
+
+      assert first |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "ab"
+
+      assert final |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "abc"
+    end
+
+    test "Phase 176 clearing Search or whitespace-only Search drops the search key", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "abc",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "   "}))
+      path = assert_patch_kind(view, :push)
+
+      refute path
+             |> URI.parse()
+             |> Map.fetch!(:query)
+             |> URI.decode_query()
+             |> Map.has_key?("search")
+
+      assert path ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "window_hours" => "168"
+               })
+    end
+
+    test "Phase 176 trailing whitespace canonicalizes to the same search URL", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "foo",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "foo "}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 rapid select, search and Enter end at the last URL with push, push, replace",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"event" => "failed", "search" => "abc"})
+      )
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "abcd",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert_patch_kind(view, :push)
+      final = assert_patch_kind(view, :replace)
+      refute_patch(view)
+
+      assert final ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "event" => "failed",
+                 "search" => "abcd",
+                 "window_hours" => "168"
+               })
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_event") == "failed"
+      assert html =~ ~s(value="abcd")
+    end
+
+    test "Phase 176 a no-op commit does not leak a pending kind into the next non-commit patch",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      # Same value again: a no-op, no patch, nothing pending.
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      refute_patch(view)
+
+      # Back to the earlier location is a non-commit patch and ends the search edit.
+      render_patch(view, deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "xyz"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Back ends the search edit and restores the earlier filter state", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+
+      render_patch(view, deliveries_path())
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_event") in [nil, ""]
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "q"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Enter after an unchanged search commit is a no-op", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Enter with a changed value finalizes a search edit with replace", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abcd",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :replace)
+    end
+
+    test "Phase 176 Enter without an in-flight search edit pushes", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "abc", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abcd",
+          "event" => "failed",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Account canonicalization replaces history", %{conn: conn} do
+      insert_delivery!(tenant_id: "solo-tenant", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), @base_path)
+      render(view)
+
+      path = assert_patch_kind(view, :replace)
+      assert path == operator_path(%{"tenant_id" => "solo-tenant"})
+    end
+
+    test "Phase 176 recover restores a valid differing draft with replace", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+
+      assert path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("event") ==
+               "failed"
+    end
+
+    test "Phase 176 recover keeps an invalid draft as a draft and never patches", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "recover_filters", %{
+          "filters" => %{
+            "event" => "not-real",
+            "search" => "",
+            "provider" => "",
+            "window_hours" => "168"
+          }
+        })
+
+      refute_patch(view)
+      assert html =~ "Status was not applied. Choose a listed status."
+    end
+
+    test "Phase 176 recover ignores a foreign tenant_id and an identical draft", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+      refute path =~ "foreign-tenant"
+      assert path =~ "tenant_id=#{@tenant_id}"
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Clear with nothing applied produces no patch and stays enabled", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      assert has_element?(view, "#operator-filters button[phx-click='clear_filters']")
+      refute has_element?(view, "#operator-filters button[phx-click='clear_filters'][disabled]")
+
+      view |> element("#operator-filters button[phx-click='clear_filters']") |> render_click()
+      refute_patch(view)
+    end
+
+    test "Phase 176 Clear with filters applied pushes", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "clear_filters", %{})
+      path = assert_patch_kind(view, :push)
+      refute path =~ "event="
+    end
+
     test "Phase 176 the filter form has no Apply, submit, loading or tenant control", %{
       conn: conn
     } do
