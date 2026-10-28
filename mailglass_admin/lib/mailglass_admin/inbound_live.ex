@@ -664,6 +664,7 @@ defmodule MailglassAdmin.InboundLive do
                     <EvidenceCard.evidence_card
                       evidence={@detail[:evidence]}
                       reveal_state={@reveal_state}
+                      received_at={Map.get(@detail[:record] || %{}, :received_at)}
                     />
                   </div>
                 <% else %>

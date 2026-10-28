@@ -1278,9 +1278,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-evidence-card")
       assert html =~ "Raw provider source"
-      # Redacted-by-default copy (verbatim).
-      assert html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      # Collapsed: one persistent disclosure plus the always-visible caption.
+      assert html =~ ~s(data-testid="inbound-evidence-caption")
+      assert html =~ "May contain personal information."
+      assert html =~ "Reveal raw source"
+      refute html =~ "Raw source is hidden by default"
 
       # The raw payload bytes MUST be absent from the HTML by default.
       refute html =~ secret
@@ -2223,13 +2225,17 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
-      assert html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      assert html =~ "May contain personal information."
+      refute html =~ "Raw source is hidden by default"
 
       denied_html = render_click(view, "reveal_raw", %{})
 
-      assert denied_html =~
-               "You do not have permission to reveal raw source."
+      assert denied_html =~ "t have permission to reveal raw source."
+
+      assert denied_html
+             |> Floki.parse_document!()
+             |> Floki.find("[data-testid='inbound-evidence-denied'][role='status']")
+             |> Enum.count() == 1
 
       refute denied_html =~ "SECRET-BYTES"
       refute_banned(denied_html)
@@ -2416,13 +2422,105 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert revealed_html =~ ~s(data-testid="inbound-evidence-raw")
       assert revealed_html =~ secret
 
-      # Re-redact collapses back: raw bytes absent, redacted body present.
+      # Re-redact collapses back: raw bytes absent, caption + toggle present.
       redacted_html = render_click(view, "re_redact_raw", %{})
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ secret
 
-      assert redacted_html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-caption")
+      refute redacted_html =~ "Raw source is hidden by default"
+    end
+
+    @tag :phase176
+    test "one persistent toggle keeps its id across collapse -> reveal -> collapse", %{
+      conn: conn
+    } do
+      secret = "PT-SECRET-#{System.unique_integer([:positive])}"
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "pt@example.com",
+          evidence: [raw_payload: %{"body" => secret}]
+        )
+
+      {:ok, view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      toggle = fn html ->
+        assert [btn] =
+                 html
+                 |> Floki.parse_document!()
+                 |> Floki.find("#inbound-evidence-reveal-btn")
+
+        {Floki.text(btn) |> String.trim(), Floki.attribute(btn, "aria-expanded"),
+         Floki.attribute(btn, "phx-click")}
+      end
+
+      assert toggle.(html) == {"Reveal raw source", ["false"], ["reveal_raw"]}
+      refute html =~ secret
+
+      revealed_html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+      assert toggle.(revealed_html) == {"Hide raw source", ["true"], ["re_redact_raw"]}
+
+      assert [pre] =
+               revealed_html |> Floki.parse_document!() |> Floki.find("pre#inbound-evidence-raw")
+
+      assert Floki.attribute(pre, "tabindex") == ["0"]
+      assert revealed_html =~ secret
+
+      collapsed_html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+      assert toggle.(collapsed_html) == {"Reveal raw source", ["false"], ["reveal_raw"]}
+      refute collapsed_html =~ secret
+      refute collapsed_html =~ ~s(id="inbound-evidence-raw")
+    end
+
+    @tag :phase176
+    test "denied reveal on the live route renders status copy and no raw sentinel bytes", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn, %{"current_user_id" => "deny-reveal"})
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "pd@example.com",
+          evidence: [raw_payload: %{"body" => "SENTINEL-176-03-RAW"}]
+        )
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+
+      assert html =~ "have permission to reveal raw source."
+      refute html =~ "SENTINEL-176-03-RAW"
+      refute html =~ ~s(id="inbound-evidence-raw")
+    end
+
+    @tag :phase176
+    test "reveal telemetry metadata keys are exactly outcome, record_id, tenant_id", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "tk@example.com",
+          evidence: [raw_payload: %{"body" => "KEYS-BYTES"}]
+        )
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      meta = attach_and_reveal(view)
+
+      assert meta |> Map.keys() |> Enum.sort() == [:outcome, :record_id, :tenant_id]
     end
 
     test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{

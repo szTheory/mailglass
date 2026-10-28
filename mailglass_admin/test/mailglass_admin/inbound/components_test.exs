@@ -865,14 +865,15 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
           reveal_state: :redacted
         )
 
-      assert redacted_html =~ ~s(data-testid="inbound-evidence-redacted")
+      refute redacted_html =~ ~s(data-testid="inbound-evidence-redacted")
       assert redacted_html =~ ~s(data-testid="inbound-evidence-reveal")
-      assert redacted_html =~ "Raw source locked"
+      refute redacted_html =~ "Raw source locked"
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-caption")
       assert redacted_html =~ "Provider"
       assert redacted_html =~ "Payload size"
       assert redacted_html =~ "Header count"
       assert redacted_html =~ "Verification facts"
-      assert redacted_html =~ "Raw source is hidden by default"
+      assert redacted_html =~ "May contain personal information."
       assert redacted_html =~ "min-h-11"
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ "secret-raw-payload-99-03"

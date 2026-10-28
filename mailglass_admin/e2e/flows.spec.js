@@ -1333,8 +1333,8 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
 //
 // Only-forward evidence for the three new a11y behaviors built in Plans 02 & 03:
 //   - Reveal disclosure (Plan 02): aria-expanded false->true, aria-controls=
-//     "inbound-evidence-raw", a "Re-redact raw source" collapse returning the raw
-//     bytes to count 0, and a role="status" aria-live="polite" region.
+//     "inbound-evidence-raw", the same toggle relabelled "Hide raw source" collapsing
+//     back and returning the raw bytes to count 0, and a role="status" aria-live="polite" region.
 //   - Replay-modal Tab focus-trap (Plan 03): Tab off the last control wraps focus
 //     back inside the dialog, on BOTH the inbound and operator replay modals.
 //   - Replay-modal double-submit lock (Plan 03): Confirm carries phx-disable-with
@@ -1360,12 +1360,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
     await expect(reveal).toHaveAttribute("aria-controls", "inbound-evidence-raw");
     // Redacted-by-default PII boundary (D-10): raw bytes absent before reveal.
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
 
     // Grant the reveal — aria-expanded flips true and the raw payload renders.
     await reveal.click();
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
+    await expect(reveal).toHaveText("Hide raw source");
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(1);
 
     // aria-live status region announces the grant in TEXT (WCAG 1.4.1, never color alone).
@@ -1375,10 +1376,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(status).toContainText("Raw source revealed.");
 
     // Re-redact collapses back to redacted: raw bytes return to count 0, aria-expanded false.
-    await page.getByTestId("inbound-evidence-re-redact").click();
+    // The SAME persistent toggle collapses it; focus stays on that one element.
+    await reveal.click();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
+    await expect(reveal).toHaveText("Reveal raw source");
+    await expect(reveal).toBeFocused();
   });
 
   test("Inbound replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({

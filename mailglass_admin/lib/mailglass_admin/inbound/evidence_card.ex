@@ -12,10 +12,16 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface).
   The InboundLive owns the authorization decision and passes `reveal_state` here:
 
-    - `:redacted` — default; raw bytes absent, redacted placeholder shown.
+    - `:redacted` — default; raw bytes absent, nothing but the disclosure button
+      and the "May contain personal information." caption stand in for them.
     - `:revealed` — capability granted; raw payload rendered in a read-only
       `<pre class="mono text-label">` scroll region.
-    - `:denied` — reveal attempted and denied; placeholder stays + brand-voice line.
+    - `:denied` — reveal attempted and denied; raw bytes stay absent + a
+      `role="status"` brand-voice line.
+
+  The header is one group: heading, caption and ONE persistent disclosure button
+  ("Reveal raw source" / "Hide raw source", same element id, `aria-expanded`
+  flips). The revealed `<pre>` is keyboard-scrollable (focusable).
 
   Raw source, once revealed, is read-only and never editable.
   """
@@ -27,6 +33,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   attr(:evidence, :map, default: nil)
   attr(:reveal_state, :atom, default: :redacted)
   attr(:can_reveal?, :boolean, default: true)
+  attr(:received_at, :any, default: nil)
 
   def evidence_card(assigns) do
     ~H"""
@@ -35,34 +42,37 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
       data-testid="inbound-evidence-card"
       data-group-card="inbound-evidence-card"
     >
-      <div class="mb-md flex flex-wrap items-center justify-between gap-sm">
-        <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
-        <%!-- True ARIA disclosure (D-11): the reveal trigger PERSISTS across the
-              redacted -> revealed transition, toggling aria-expanded rather than
-              being swapped out. aria-controls points at the raw region it governs;
-              the re-redact control inside the revealed payload collapses it back.
-              The "Raw source locked" badge + PII caption only show while collapsed. --%>
-        <div :if={@evidence} class="flex flex-wrap items-center gap-sm">
-          <span :if={@reveal_state != :revealed} class="badge badge-outline text-label">
-            Raw source locked
-          </span>
-          <div class="flex flex-col items-end gap-xs">
-            <button
-              id="inbound-evidence-reveal-btn"
-              type="button"
-              phx-click="reveal_raw"
-              data-testid="inbound-evidence-reveal"
-              aria-expanded={if @reveal_state == :revealed, do: "true", else: "false"}
-              aria-controls="inbound-evidence-raw"
-              class="mg-focus-ring btn btn-ghost min-h-11 px-md"
-            >
-              {if @reveal_state == :revealed, do: "Raw source revealed", else: "Reveal raw source"}
-            </button>
-            <span :if={@reveal_state != :revealed} class="text-label text-secondary">
-              May contain personal information.
-            </span>
-          </div>
+      <%!-- One header group (D-24): heading, caption and a single PERSISTENT ARIA
+            disclosure button. The button keeps the same id across collapsed and
+            revealed so focus never moves; only its label, aria-expanded and
+            phx-click change. Collapsed dispatches reveal_raw (authorized on the
+            server at action time); revealed dispatches re_redact_raw (collapse
+            only, never widens access). --%>
+      <div class="mb-md flex flex-wrap items-start gap-sm">
+        <div class="min-w-0 space-y-xs">
+          <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
+          <p
+            :if={@evidence}
+            id="inbound-evidence-caption"
+            data-testid="inbound-evidence-caption"
+            class="text-label text-secondary"
+          >
+            May contain personal information.
+          </p>
         </div>
+        <button
+          :if={@evidence}
+          id="inbound-evidence-reveal-btn"
+          type="button"
+          phx-click={if @reveal_state == :revealed, do: "re_redact_raw", else: "reveal_raw"}
+          data-testid="inbound-evidence-reveal"
+          aria-expanded={if @reveal_state == :revealed, do: "true", else: "false"}
+          aria-controls="inbound-evidence-raw"
+          aria-describedby="inbound-evidence-caption"
+          class="mg-focus-ring btn btn-ghost min-h-11 px-md border border-base-300 w-full sm:ml-auto sm:w-auto"
+        >
+          {if @reveal_state == :revealed, do: "Hide raw source", else: "Reveal raw source"}
+        </button>
       </div>
 
       <%= if is_nil(@evidence) do %>
@@ -99,39 +109,22 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
         <%= case @reveal_state do %>
           <% :revealed -> %>
-            <div class="space-y-xs">
-              <div class="flex flex-wrap items-center justify-between gap-sm">
-                <p class="text-label font-bold text-secondary">
-                  Raw payload (read-only)
-                </p>
-                <button
-                  type="button"
-                  phx-click="re_redact_raw"
-                  data-testid="inbound-evidence-re-redact"
-                  class="mg-focus-ring btn btn-ghost min-h-11 px-sm"
-                >
-                  Hide raw source
-                </button>
-              </div>
-              <pre
-                data-testid="inbound-evidence-raw"
-                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
-              ><%= raw_payload_text(@evidence) %></pre>
-            </div>
+            <pre
+              id="inbound-evidence-raw"
+              data-testid="inbound-evidence-raw"
+              tabindex="0"
+              aria-label="Raw provider source, read-only"
+              class="mg-focus-ring mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
+            ><%= raw_payload_text(@evidence) %></pre>
           <% :denied -> %>
             <p
               data-testid="inbound-evidence-denied"
+              role="status"
               class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
             >
-              You do not have permission to reveal raw source.
+              You don't have permission to reveal raw source.
             </p>
           <% _redacted -> %>
-            <p
-              data-testid="inbound-evidence-redacted"
-              class="text-label text-secondary"
-            >
-              Raw source is hidden by default. Reveal it to inspect the provider payload.
-            </p>
         <% end %>
 
         <%!-- Reveal-state change is announced in TEXT, never the warning border

@@ -3,11 +3,12 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
   Component tests for the EvidenceCard reveal disclosure a11y hardening (D-11).
 
   Asserts the reveal control is a true ARIA disclosure (aria-expanded/aria-controls),
-  the :revealed branch carries a "Hide raw source" collapse button, an
-  aria-live="polite" role="status" region announces the state change in TEXT
-  (WCAG 1.4.1, never border color alone), the secondary "May contain personal information."
-  line is present, and the denied/redacted body copy is byte-frozen with the raw
-  payload absent in every non-revealed state (D-10 redacted-by-default).
+  that ONE persistent toggle reads "Reveal raw source" when collapsed and "Hide raw
+  source" when revealed (no second inner hide button), an aria-live="polite"
+  role="status" region announces the state change in TEXT (WCAG 1.4.1, never border
+  color alone), the "May contain personal information." caption is always present,
+  and the denied copy is frozen with the raw payload absent in every non-revealed
+  state (D-10 redacted-by-default).
   """
 
   use ExUnit.Case, async: true
@@ -45,21 +46,45 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       refute html =~ "secret-raw-payload-121-02"
     end
 
-    test "the :revealed state reflects aria-expanded=true and renders the re-redact collapse" do
+    test "the :revealed state reflects aria-expanded=true on the single toggle that collapses it" do
       html = render_state(:revealed)
+      doc = Floki.parse_document!(html)
 
-      # Disclosure is expanded.
-      assert html =~ ~s(aria-expanded="true") or
-               not (html =~ ~s(data-testid="inbound-evidence-reveal"))
+      # One persistent toggle: same id, label flipped, collapse event.
+      assert [toggle] = Floki.find(doc, "[data-testid='inbound-evidence-reveal']")
+      assert Floki.attribute(toggle, "id") == ["inbound-evidence-reveal-btn"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["true"]
+      assert Floki.attribute(toggle, "aria-controls") == ["inbound-evidence-raw"]
+      assert Floki.attribute(toggle, "aria-describedby") == ["inbound-evidence-caption"]
+      assert Floki.attribute(toggle, "phx-click") == ["re_redact_raw"]
+      assert Floki.text(toggle) =~ "Hide raw source"
 
-      # Re-redact collapse button — NEW, routes back to :redacted via re_redact_raw.
-      assert html =~ ~s(data-testid="inbound-evidence-re-redact")
-      assert html =~ ~s(phx-click="re_redact_raw")
-      assert html =~ "Hide raw source"
+      # No second inner hide control.
+      refute html =~ ~s(data-testid="inbound-evidence-re-redact")
+      assert length(Floki.find(doc, "button")) == 1
 
-      # Raw payload present only here.
-      assert html =~ ~s(data-testid="inbound-evidence-raw")
+      # Raw payload present only here, in a keyboard-scrollable read-only region.
+      assert [pre] = Floki.find(doc, "pre#inbound-evidence-raw")
+      assert Floki.attribute(pre, "tabindex") == ["0"]
+      assert Floki.attribute(pre, "aria-label") == ["Raw provider source, read-only"]
       assert html =~ "secret-raw-payload-121-02"
+    end
+
+    @tag :phase176
+    test "the :redacted toggle dispatches reveal_raw and the caption is always visible" do
+      for state <- [:redacted, :denied, :revealed] do
+        html = render_state(state)
+
+        assert html =~ ~s(data-testid="inbound-evidence-caption")
+        assert html =~ "May contain personal information."
+      end
+
+      html = render_state(:redacted)
+      doc = Floki.parse_document!(html)
+      assert [toggle] = Floki.find(doc, "[data-testid='inbound-evidence-reveal']")
+      assert Floki.attribute(toggle, "phx-click") == ["reveal_raw"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["false"]
+      refute html =~ "Raw source locked"
     end
   end
 
@@ -82,22 +107,29 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
   end
 
   describe "frozen denied/redacted copy + redacted-by-default (D-10)" do
-    test "the :denied body is byte-frozen and the raw payload is absent" do
+    test "the :denied body is byte-frozen, role=status, and the raw payload is absent" do
       html = render_state(:denied)
 
-      assert html =~
-               "You do not have permission to reveal raw source."
+      assert html =~ "You don&#39;t have permission to reveal raw source." or
+               html =~ "You don't have permission to reveal raw source."
+
+      assert [denied] =
+               html
+               |> Floki.parse_document!()
+               |> Floki.find("[data-testid='inbound-evidence-denied']")
+
+      assert Floki.attribute(denied, "role") == ["status"]
 
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"
     end
 
-    test "the :redacted body is byte-frozen and renders NO inbound-evidence-raw" do
+    test "the :redacted body has no hidden-by-default paragraph and renders NO inbound-evidence-raw" do
       html = render_state(:redacted)
 
-      assert html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
-
+      refute html =~ "Raw source is hidden by default"
+      refute html =~ ~s(data-testid="inbound-evidence-redacted")
+      assert html =~ ~s(data-testid="inbound-evidence-caption")
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"
     end
