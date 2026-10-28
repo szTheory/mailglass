@@ -48,7 +48,7 @@ key-decisions:
 patterns-established:
   - "Custom-mount tests assert decoded query pairs (sorted), not raw strings: put_tenant appends tenant_id after an existing query"
 
-requirements-completed: ["UXF-10", "UXF-09"]
+requirements-completed: ["UXF-10"]
 
 coverage:
   - id: D1
@@ -111,6 +111,10 @@ coverage:
 - The plan said "nil when that entry is missing". Implemented as `surface_href/3 || navigation_path/2`: a configured path that is non-local yields the same static value direct entry shows, instead of silently dropping a nav item; a missing entry is still nil.
 
 **Total deviations:** 1 own-test fix, 1 process note, 1 small robustness choice. **Impact:** none on scope.
+
+## Requirement status
+
+UXF-10 is marked complete (connected proof delivered). UXF-09 is advanced only by the Preview subtitle half (D-12); the compact Account control is a later plan, so UXF-09 stays pending.
 
 ## Known Stubs
 
