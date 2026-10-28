@@ -5,11 +5,11 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 176
 current_phase_name: Direct Filters and Useful Inbound Evidence
 status: planning
-stopped_at: Phase 176 context gathered (assumptions mode)
-last_updated: "2026-10-28T02:54:52.817Z"
+stopped_at: Phase 176 UI-SPEC approved
+last_updated: "2026-10-28T11:45:22.077Z"
 last_activity: 2026-10-27
 last_activity_desc: Phase 175 complete, transitioned to Phase 176
-state_head: 245405fa41454d455db835845a9d09eff4dc97f1
+state_head: 749af94c1f5b2d813d39dfbaf150da49a1224089
 progress:
   total_phases: 5
   completed_phases: 2
@@ -618,9 +618,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T02:54:52.679Z
-Stopped at: Phase 176 context gathered (assumptions mode)
-Resume file: .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-CONTEXT.md
+Last session: 2026-10-28T11:45:21.893Z
+Stopped at: Phase 176 UI-SPEC approved
+Resume file: .planning/phases/176-direct-filters-and-useful-inbound-evidence/176-UI-SPEC.md
 
 ## Operator Next Steps
 
