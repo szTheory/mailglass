@@ -63,8 +63,28 @@ findings:
     severity: info
     disposition: fixed
     title: "Operator renders a \"Custom period ( hours)\" option for a blank URL window"
-open: 5
-total: 15
+  - id: GR-WR-01
+    severity: warning
+    disposition: open
+    title: "Frozen Operator status region contradicts the list after a background refresh that changes the read state (176-13 WR-07 fix)"
+  - id: GR-IN-01
+    severity: info
+    disposition: open
+    title: "`filter_error_source` can no longer be `:url`, so the assignment is dead state"
+  - id: GR-IN-02
+    severity: info
+    disposition: open
+    title: "\"Payload size\" now reports the pretty-printed re-encoding, not the stored payload"
+  - id: GR-IN-03
+    severity: info
+    disposition: open
+    title: "`nothing_stored?/1` reports \"was not stored\" for a stored value of an unexpected shape"
+  - id: GR-IN-04
+    severity: info
+    disposition: open
+    title: "New browser specs add fixed sleeps and a race-prone connectivity check"
+open: 10
+total: 20
 recorded: 2026-10-28T16:36:37.161Z
 ---
 
@@ -91,6 +111,18 @@ recorded: 2026-10-28T16:36:37.161Z
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
 Re-running the gate keeps every row it can. A row the current review no longer reports is kept and its Source cell flagged, so a finding does not leave this record silently. ONE exception: when a finding id is REUSED by a different finding, the earlier decision cannot keep a row — the id is taken — and it is dropped. A RECORDED decision (anything but `open`) is named on the console when that happens; a row still at `open` is replaced silently, because `open` records no decision to lose.
+
+## Gap-round re-review (176-REVIEW.md, base d9418fca)
+
+The gap-round review reused finding IDs WR-01 and IN-01..04 for different findings. They are recorded here with a `GR-` prefix so the decisions above (several marked `fixed`) are not overwritten. The original findings are in git history at d9418fca.
+
+| Finding | Severity | Disposition | Source |
+|---------|----------|-------------|--------|
+| GR-WR-01 | warning | open | - |
+| GR-IN-01 | info | open | - |
+| GR-IN-02 | info | open | - |
+| GR-IN-03 | info | open | - |
+| GR-IN-04 | info | open | - |
 
 ## UI review warnings (176-UI-REVIEW.md)
 
