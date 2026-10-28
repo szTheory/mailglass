@@ -130,6 +130,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
       |> assign(:filter_errors, %{})
       |> assign(:filter_error_source, nil)
+      |> assign(:filter_url_invalid, %{})
       |> assign(:page_title, "mailglass — Operator")
 
     {:ok, socket}
@@ -189,6 +190,7 @@ defmodule MailglassAdmin.OperatorLive do
         |> assign(:filter_form, to_form(filter_draft_params(params, filter_params), as: :filters))
         |> assign(:filter_errors, filter_errors)
         |> assign(:filter_error_source, if(map_size(filter_errors) > 0, do: :url))
+        |> assign(:filter_url_invalid, filter_errors)
         |> assign(:support_state, support_state)
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_state, tenant_state)
@@ -992,7 +994,10 @@ defmodule MailglassAdmin.OperatorLive do
                   </div>
 
                   <%!-- Outside the collapsible panel so the label stays visible when the mobile
-                      panel is closed. Not live-announced: the invalid field already is (D-12/D-13). --%>
+                      panel is closed. Not live-announced: the invalid field already is (D-12/D-13).
+                      The URL note follows the committed URL (D-13): it stays while the URL carries an
+                      invalid value, whatever the draft does. The draft note shows whenever a change
+                      event leaves the draft invalid (D-12). Both may show together; each is true. --%>
                   <p
                     :if={@filter_error_source == :draft}
                     data-testid="filters-draft-pending-note"
@@ -1001,11 +1006,11 @@ defmodule MailglassAdmin.OperatorLive do
                     Showing results for your previous filters until the highlighted field is fixed.
                   </p>
                   <p
-                    :if={@filter_error_source == :url}
+                    :if={map_size(@filter_url_invalid) > 0}
                     data-testid="filters-url-invalid-note"
                     class="mt-sm text-label text-secondary"
                   >
-                    <span :for={note <- url_invalid_notes(@filter_errors)} class="block">{note}</span>
+                    <span :for={note <- url_invalid_notes(@filter_url_invalid)} class="block">{note}</span>
                   </p>
                 </section>
 
