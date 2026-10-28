@@ -163,29 +163,33 @@ Plans:
 4. Ordinary authorized Inbound contact displays show complete addresses, including long/Unicode, missing and multiple-address cases, without confusing envelope recipient and header To. Account authorization, sensitive routing/header/matcher diagnostics, raw access, telemetry and logs retain their separate protections. (INUX-05)
 5. Raw provider source groups its heading/reveal/privacy control and compact facts with consistent label/value roles. Permitted/denied reveal and unavailable evidence remain truthful on connected routes; retained production-component scenarios reproduce the repaired normal/adverse layouts. (INUX-06)
 
-**Plans:** 8 plans in 5 waves
+**Plans:** 10 plans in 6 waves
 **UI hint:** yes
 
 **Planning focus:** Reuse form → canonical URL → parameter/read ownership on both pinned clients. Validate focused-input Back behavior from the real DOM; do not assume deleting Apply changes reads. Preserve synchronous behavior unless measurement demonstrates an async need. Ordinary address usefulness does not justify blanket helper deletion or diagnostic unmasking. Custom dates remain deferred.
 
 Plans:
 **Wave 1**
-- [ ] 176-01-PLAN.md — Deliveries filter-commit tracer (FilterCommit, history policy, debounced search, FilterSearchSync spike on LV 1.2.13 and 1.1.33).
+- [ ] 176-01-PLAN.md — Deliveries filter-commit tracer (select auto-apply, FilterCommit history policy, recovery, mobile toggle).
 - [ ] 176-02-PLAN.md — Complete ordinary Inbound contacts (From/Reply-To/To/Cc/Delivered to) and context-aware recipient label.
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 176-03-PLAN.md — Coherent Raw provider source card with one disclosure and truthful facts.
+- [ ] 176-03-PLAN.md — Raw provider source card: one persistent Reveal/Hide disclosure and coupled specs.
 - [ ] 176-04-PLAN.md — Deliveries invalid-input and failed-read truthfulness with results status region.
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 176-05-PLAN.md — Inbound auto-apply, debounced search, history and draft retention.
-- [ ] 176-06-PLAN.md — Retained Inbound evidence stories and synthetic gallery fixtures.
+- [ ] 176-05-PLAN.md — Raw provider source facts: five truthful facts, nil-not-zero, can_reveal? removal.
+- [ ] 176-06-PLAN.md — Deliveries debounced search and FilterSearchSync spike on LV 1.2.13 and 1.1.33.
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 176-07-PLAN.md — Inbound invalid-input and failed-read truthfulness with stale retention.
+- [ ] 176-07-PLAN.md — Inbound auto-apply, debounced search, history and draft retention.
+- [ ] 176-08-PLAN.md — Retained Inbound evidence stories and synthetic gallery fixtures.
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 176-08-PLAN.md — Mutation-proven prohibition contract, connected proof on both clients, final gates.
+- [ ] 176-09-PLAN.md — Inbound invalid-input and failed-read truthfulness with stale retention.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 176-10-PLAN.md — Mutation-proven prohibition contract, connected proof on both clients, final gates.
 
 ### Phase 177: Readable Health and Coherent Account Navigation
 

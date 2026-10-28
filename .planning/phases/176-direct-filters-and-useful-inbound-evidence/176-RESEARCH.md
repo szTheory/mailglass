@@ -507,24 +507,31 @@ Address maps round-trip through JSONB with **string** keys but freshly built str
 | A6 | IME composition (CJK) is not disrupted by a debounced commit because focused input values are never patched. | Pitfall list | Low; cannot be automated easily |
 | A7 | Recommended server-formatted stale time as `HH:MM UTC` or `Components.timestamp`; no existing deliveries stale timestamp exists. | Open Question 3 | Low |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All five questions were resolved during planning (orchestrator decisions recorded in the named plans). Plan numbers below are the post-revision numbering (checker iteration 1).
 
 1. **Does D-08 "drop defaults" mean dropping `window_hours=168` from canonical URLs?**
    - What we know: current `build_path` drops only blanks and `page=1`; an existing test asserts the patched URL **includes** `"window_hours" => "168"` (`operator_live_test.exs:200-209`), and `same_location?` compares decoded queries, so a mismatch between "explicit default in the current URL" and "default dropped by the canonical builder" would cause a spurious replace on every commit.
    - What's unclear: whether D-08 intends a URL contract change.
    - Recommendation: keep today's shape (drop blanks and `page=1` only), treat "defaults" as the blank/`page=1` defaults, and add a canonical-path unit test. Revisit only with a deliberate URL-contract note.
+   - **RESOLVED:** `window_hours=168` is kept in canonical URLs; only blanks and `page=1` are dropped, keys sorted with `Enum.sort/1` (orchestrator decision 1). Implemented in 176-01 (`FilterCommit.encode_query/1`, task 176-01-01; canonical-query unit rows, task 176-01-02).
 
 2. **Should filter commits carry Operator `support_state`?**
    - What we know: Apply drops it today; select change did not patch so the panel survived; `phase168-plan03-acceptance.spec.js:171` expects the panel to survive a select change.
    - Recommendation: carry `support_state` (it is neither page nor selection), keeping that spec valid. If the plan chooses to drop it, update that spec explicitly.
+   - **RESOLVED:** `support_state` is carried through filter commits (orchestrator decision 2). Implemented and browser-proven in 176-01 (task 176-01-01 runs `phase168-plan03-acceptance.spec.js` unchanged).
 
 3. **Stale-result time: what is "HH:MM"?**
    - What we know: no deliveries-list timestamp exists; only `deliveries_loaded_for` is stored (operator_live.ex:1651-1654). `Components.timestamp` renders UTC server-side and localizes client-side.
    - Recommendation: store `deliveries_loaded_at` (UTC) on each `:ready` read and render it with `Components.timestamp` in the stale panel body; use `HH:MM UTC` in the sr-only status text. Brand voice allows either; tests assert the presence of the stored time, not a timezone.
+   - **RESOLVED:** `loaded_at` is stored (UTC, second precision) only on successful reads; the stale title carries a server-formatted `HH:MM UTC` via `ResultsStatus.stale_title/1` and the localized `Components.timestamp` renders as a sibling line (orchestrator decision 3). Deliveries in 176-04 (task 176-04-02); Inbound parity in 176-09.
 
 4. **D-25 states "No checksum (none stored)".** `InboundEvidence` stores `raw_mime_sha256` and `raw_mime_fingerprint` `[VERIFIED: inbound_evidence.ex schema]`. The decision to omit it stands (INUX-06 asks for five compact facts), but the rationale should read "not part of the five required facts", not "none stored". No behavior change.
+   - **RESOLVED:** the checksum is omitted as a scope choice (INUX-06's five compact facts), and any doc/comment states that rationale rather than "none stored" (orchestrator decision 4). Recorded in 176-05 (the facts plan split from the former 176-03).
 
 5. **Playwright lanes are advisory (D-29) but D-52 prefers merge-blocking.** The Operator Browser Gate is not in `ci_green.needs` `[VERIFIED: ci.yml needs list lines 1433-1452 omit the browser job at :955]`. Recommendation: follow the Phase 175 precedent (advisory for client-only behavior) and compensate with ExUnit DOM-contract pins (Pitfall 2) so a regression in any server-observable part is merge-blocking.
+   - **RESOLVED:** Playwright lanes stay advisory (not in `ci_green.needs`) per D-29 and the Phase 175 precedent; every server-observable part is pinned by merge-blocking ExUnit DOM contracts (176-01-01, 176-06-01, 176-07-02) and the mutation-proven prohibition contract, with lanes reported as advisory in 176-10. (The related Enter-after-in-flight-search rule — Enter returns `:replace` when the last commit kind is `:search` — is assumption A5 / orchestrator decision 5, encoded in the `history_kind/2` truth table in 176-01-02.)
 
 ## Environment Availability
 
