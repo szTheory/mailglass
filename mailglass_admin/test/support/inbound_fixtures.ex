@@ -21,6 +21,9 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
 
   @doc """
   Inserts a canonical inbound record. Returns the inserted `%InboundRecord{}`.
+
+  Contact lists are optional: `from:`, `to:`, `cc:` and `reply_to:` each take a list
+  of `%{address: ..., name: ...}` maps and default to `[]`.
   """
   def insert_record!(tenant_id, opts \\ []) do
     {:ok, record} =
@@ -30,6 +33,10 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         provider_message_id: Keyword.get(opts, :provider_message_id, unique("pmid")),
         envelope_recipient: Keyword.get(opts, :recipient, "support@example.com"),
         subject: Keyword.get(opts, :subject, "Inbound fixture"),
+        from: Keyword.get(opts, :from, []),
+        to: Keyword.get(opts, :to, []),
+        cc: Keyword.get(opts, :cc, []),
+        reply_to: Keyword.get(opts, :reply_to, []),
         headers: Keyword.get(opts, :headers, %{}),
         received_at: Keyword.get(opts, :received_at, DateTime.utc_now())
       })

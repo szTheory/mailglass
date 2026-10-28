@@ -298,7 +298,10 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
       assert html =~ "Failed"
-      assert html =~ "Unavailable"
+      # The mailbox cell is what degrades here (its label reads "Not recorded"); this
+      # assertion previously matched the From cell's "Unavailable" placeholder by accident.
+      assert html =~ "Not recorded"
+      assert html =~ "Processing failed, but no mailbox name was saved for this attempt."
       refute html =~ "No match"
       refute html =~ "private execution detail"
     end
@@ -324,7 +327,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       refute html =~ ~r/data-testid="inbound-replay-open"[^>]*disabled/
     end
 
-    test "the From cell shows the masked SENDER from `from`, not the recipient (WR-02)" do
+    test "the From cell shows the unmasked SENDER from `from`, not the recipient (WR-02, D-19)" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -343,9 +346,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      # Sender masked + present; raw sender never leaks.
-      assert html =~ "b**@s*****.test"
-      refute html =~ "bob@sender.test"
+      # Ordinary authorized detail shows the sender as received; the masked form is gone.
+      assert html =~ "bob@sender.test"
+      refute html =~ "b**@s*****.test"
       # The recipient is shown in the title, but the From cell is the sender.
       assert html =~ "alice@example.com"
     end
@@ -369,11 +372,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "c****@v*****.test"
-      refute html =~ "carol@vendor.test"
+      assert html =~ "Carol"
+      assert html =~ "carol@vendor.test"
+      refute html =~ "c****@v*****.test"
     end
 
-    test "the From cell degrades to 'Unavailable' on an empty `from`" do
+    test "the From cell degrades to 'No From header' on an empty `from`" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -392,10 +396,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "Unavailable"
+      cell = html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-contact-from']")
+      assert Floki.text(cell) =~ "No From header"
+      refute Floki.text(cell) =~ "Unavailable"
     end
 
-    test "the From cell degrades gracefully on a malformed `from` entry" do
+    test "the From cell degrades to 'Unparseable address' on a malformed `from` entry" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -414,7 +420,31 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "Unavailable"
+      cell = html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-contact-from']")
+      assert Floki.text(cell) =~ "Unparseable address"
+    end
+
+    @tag :phase176
+    test "Phase 176 a plain-map record with only id and tenant_id renders missing copy" do
+      detail = %{
+        record: %{id: "rec-min", tenant_id: "tenant-a"},
+        mailbox: nil,
+        outcome: nil,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      doc = Floki.parse_document!(html)
+
+      assert html =~ "No From header"
+      assert html =~ "No To header"
+
+      assert Floki.text(Floki.find(doc, "[data-testid='inbound-contact-delivered-to']")) =~
+               "Not recorded by provider"
+
+      assert html =~ "UNKNOWN"
+      refute html =~ "Provider message ID"
     end
   end
 

@@ -2289,6 +2289,46 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert detail_html =~ ~s(data-testid="inbound-routing-trace")
     end
 
+    @tag :phase176
+    test "Phase 176 Inbound detail shows From, To and Delivered to", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "support@example.com",
+          from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+          to: [%{address: "team@example.com"}]
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      doc = Floki.parse_document!(html)
+      text = fn testid -> doc |> Floki.find("[data-testid='#{testid}']") |> Floki.text() end
+
+      from = text.("inbound-contact-from")
+      assert from =~ "Ada Lovelace"
+      assert from =~ "ada@example.com"
+      refute html =~ "a**@e******.com"
+
+      to = text.("inbound-contact-to")
+      assert to =~ "team@example.com"
+      refute to =~ "support@example.com"
+
+      delivered = text.("inbound-contact-delivered-to")
+      assert delivered =~ "support@example.com"
+      assert delivered =~ "SMTP envelope recipient (RCPT TO), used for routing."
+      refute delivered =~ "team@example.com"
+
+      labels = doc |> Floki.find("dt") |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+
+      assert Enum.take(Enum.filter(labels, &(&1 in ["From", "To", "Delivered to"])), 3) ==
+               ["From", "To", "Delivered to"]
+    end
+
     test "raw evidence bytes are absent until :reveal_raw is granted (V5)", %{conn: conn} do
       secret = "RAW-SECRET-#{System.unique_integer([:positive])}"
 
