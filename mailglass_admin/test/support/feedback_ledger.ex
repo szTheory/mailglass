@@ -126,6 +126,254 @@ defmodule MailglassAdmin.TestSupport.FeedbackLedger do
     |> Enum.sort()
   end
 
+  @accounting_heading "## Retained stories (STORY-07)"
+  @linked_heading "### Linked scenarios without a story render (STORY-07)"
+  @linked_count_pattern ~r/^Linked scenarios without a story render: (\d+)$/m
+  @accounting_columns [
+    "Feedback",
+    "Requirement(s)",
+    "Story-backed scenarios",
+    "Linked without story render",
+    "Boundary"
+  ]
+  @linked_columns ["Scenario", "Feedback", "Rendered", "Story path", "Boundary"]
+
+  @doc """
+  Per-row story accounting, in row order.
+
+  A scenario is story-backed when it is rendered and has a story path. A row
+  links a scenario when the row lists it or the scenario lists the row. Each
+  entry is `%{id, stories, unrendered_linked, boundary}`: the count of
+  story-backed linked scenarios, the count of linked scenarios that are not
+  story-backed, and the row's own `proof_boundary` or else the sorted distinct
+  boundaries of its linked scenarios (`"none"` when it links nothing).
+  """
+  @spec story_accounting([map()], [map()]) :: [map()]
+  def story_accounting(rows, scenarios) do
+    Enum.map(rows, fn row ->
+      linked = linked_scenarios(row, scenarios)
+      {backed, unbacked} = Enum.split_with(linked, &story_backed?/1)
+
+      %{
+        id: row["id"],
+        stories: length(backed),
+        unrendered_linked: length(unbacked),
+        boundary: boundary_label(row, linked)
+      }
+    end)
+  end
+
+  @doc """
+  Rows with no story-backed scenario and no connected-only boundary, so a
+  missing, failed or zero-story case is counted and visible.
+  """
+  @spec story_accounting_violations([map()]) :: [violation()]
+  def story_accounting_violations(accounting) do
+    for %{id: id, stories: 0, boundary: boundary} <- accounting,
+        not String.contains?(boundary, @boundary),
+        do: {id, :no_story_and_no_boundary}
+  end
+
+  @doc """
+  Every scenario that a feedback row links and that is not story-rendered,
+  sorted by scenario id. A scenario is linked when some row lists it or its own
+  `feedback_ids` is non-empty; `feedback_ids` is the sorted union of both.
+  """
+  @spec unrendered_linked_scenarios([map()], [map()]) :: [map()]
+  def unrendered_linked_scenarios(rows, scenarios) do
+    listed = rows |> Enum.flat_map(&(&1["scenario_ids"] || [])) |> MapSet.new()
+
+    scenarios
+    |> Enum.filter(fn scenario ->
+      (MapSet.member?(listed, scenario["id"]) or (scenario["feedback_ids"] || []) != []) and
+        not story_backed?(scenario)
+    end)
+    |> Enum.map(fn scenario ->
+      listing_rows = for row <- rows, scenario["id"] in (row["scenario_ids"] || []), do: row["id"]
+
+      %{
+        scenario_id: scenario["id"],
+        feedback_ids: Enum.sort(Enum.uniq((scenario["feedback_ids"] || []) ++ listing_rows)),
+        rendered: scenario["rendered"],
+        story_path: scenario["story_path"],
+        proof_boundary: scenario["proof_boundary"]
+      }
+    end)
+    |> Enum.sort_by(& &1.scenario_id)
+  end
+
+  @doc "Entries whose `proof_boundary` is missing or empty, so none is silently unaccounted."
+  @spec boundary_violations([map()]) :: [violation()]
+  def boundary_violations(entries) do
+    for %{scenario_id: id, proof_boundary: boundary} <- entries,
+        boundary in [nil, ""],
+        do: {id, :empty_boundary}
+  end
+
+  @doc "The expected cells of the `## Retained stories (STORY-07)` table, one list per row."
+  @spec accounting_table_rows([map()], [map()]) :: [[String.t()]]
+  def accounting_table_rows(rows, scenarios) do
+    rows
+    |> Enum.zip(story_accounting(rows, scenarios))
+    |> Enum.map(fn {row, entry} ->
+      [
+        row["id"],
+        Enum.join(row["owner_requirements"] || [], ", "),
+        Integer.to_string(entry.stories),
+        Integer.to_string(entry.unrendered_linked),
+        entry.boundary
+      ]
+    end)
+  end
+
+  @doc "The expected cells of the `### Linked scenarios without a story render (STORY-07)` table."
+  @spec linked_table_rows([map()], [map()]) :: [[String.t()]]
+  def linked_table_rows(rows, scenarios) do
+    for entry <- unrendered_linked_scenarios(rows, scenarios) do
+      [
+        entry.scenario_id,
+        Enum.join(entry.feedback_ids, ", "),
+        cell(entry.rendered),
+        cell(entry.story_path),
+        entry.proof_boundary || ""
+      ]
+    end
+  end
+
+  @doc """
+  Compares both STORY-07 tables and the count line in the markdown record with
+  the computed accounting. Returns `[]` when the record is true.
+  """
+  @spec accounting_doc_violations(String.t(), [map()], [map()]) :: [term()]
+  def accounting_doc_violations(markdown, rows, scenarios) do
+    accounting_violations(markdown, rows, scenarios) ++
+      linked_violations(markdown, rows, scenarios)
+  end
+
+  @doc """
+  The first markdown table under `heading` (an exact heading line), as
+  `{:ok, header_cells, body_rows}`. A heading that is not found or has no table
+  before the next heading is an error.
+  """
+  @spec table_after(String.t(), String.t()) ::
+          {:ok, [String.t()], [[String.t()]]} | {:error, :heading_not_found | :table_not_found}
+  def table_after(markdown, heading) do
+    lines = String.split(markdown, "\n")
+
+    case Enum.drop_while(lines, &(String.trim_trailing(&1) != heading)) do
+      [] ->
+        {:error, :heading_not_found}
+
+      [_heading | rest] ->
+        table =
+          rest
+          |> Enum.take_while(&(not heading_line?(&1)))
+          |> Enum.drop_while(&(not table_line?(&1)))
+          |> Enum.take_while(&table_line?/1)
+          |> Enum.map(&split_cells/1)
+
+        case table do
+          [header, _separator | body] -> {:ok, header, body}
+          _ -> {:error, :table_not_found}
+        end
+    end
+  end
+
+  defp accounting_violations(markdown, rows, scenarios) do
+    case table_after(markdown, @accounting_heading) do
+      {:ok, header, body} ->
+        header_check(:accounting_header, header, @accounting_columns) ++
+          row_diff(:accounting, body, accounting_table_rows(rows, scenarios))
+
+      {:error, reason} ->
+        [{:accounting_table, reason}]
+    end
+  end
+
+  defp linked_violations(markdown, rows, scenarios) do
+    expected = linked_table_rows(rows, scenarios)
+
+    table =
+      case table_after(markdown, @linked_heading) do
+        {:ok, header, body} ->
+          header_check(:linked_header, header, @linked_columns) ++
+            row_diff(:linked, body, expected)
+
+        {:error, reason} ->
+          [{:linked_table, reason}]
+      end
+
+    table ++ count_check(markdown, length(expected))
+  end
+
+  defp count_check(markdown, expected) do
+    case Regex.run(@linked_count_pattern, markdown) do
+      [_line, count] ->
+        if String.to_integer(count) == expected,
+          do: [],
+          else: [{:linked_count, String.to_integer(count)}]
+
+      nil ->
+        [{:linked_count, :missing}]
+    end
+  end
+
+  defp header_check(_tag, header, header), do: []
+  defp header_check(tag, header, _expected), do: [{tag, header}]
+
+  defp row_diff(_tag, body, body), do: []
+
+  defp row_diff(tag, body, expected) do
+    missing = for row <- expected -- body, do: {:"#{tag}_missing_row", row}
+    extra = for row <- body -- expected, do: {:"#{tag}_extra_row", row}
+
+    case missing ++ extra do
+      [] -> [{:"#{tag}_row_order", body}]
+      found -> found
+    end
+  end
+
+  defp linked_scenarios(row, scenarios) do
+    listed = row["scenario_ids"] || []
+
+    Enum.filter(scenarios, fn scenario ->
+      scenario["id"] in listed or row["id"] in (scenario["feedback_ids"] || [])
+    end)
+  end
+
+  defp story_backed?(scenario),
+    do: scenario["rendered"] == true and scenario["story_path"] not in [nil, ""]
+
+  defp boundary_label(%{"proof_boundary" => boundary}, _linked) when is_binary(boundary),
+    do: boundary
+
+  defp boundary_label(_row, []), do: "none"
+
+  defp boundary_label(_row, linked) do
+    linked
+    |> Enum.map(&(&1["proof_boundary"] || "none"))
+    |> Enum.uniq()
+    |> Enum.sort()
+    |> Enum.join(", ")
+  end
+
+  defp cell(nil), do: "null"
+  defp cell(""), do: "null"
+  defp cell(value) when is_binary(value), do: value
+  defp cell(value), do: to_string(value)
+
+  defp heading_line?(line), do: String.starts_with?(line, "#")
+  defp table_line?(line), do: String.starts_with?(String.trim_leading(line), "|")
+
+  defp split_cells(line) do
+    line
+    |> String.trim()
+    |> String.trim_leading("|")
+    |> String.trim_trailing("|")
+    |> String.split("|")
+    |> Enum.map(&String.trim/1)
+  end
+
   # --- link helpers ---------------------------------------------------------
 
   defp link_problem(_row_id, nil, sid), do: {:unknown_scenario, sid}

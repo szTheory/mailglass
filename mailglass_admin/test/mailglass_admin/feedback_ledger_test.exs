@@ -436,6 +436,321 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
     end
   end
 
+  describe "STORY-07 accounting" do
+    test "Phase 178 accounting: a row whose only scenario is unrendered with no boundary reports zero stories and is flagged" do
+      rows = [
+        %{"id" => "r-none", "owner_requirements" => ["X-1"], "scenario_ids" => ["s-ghost"]},
+        %{"id" => "r-ok", "owner_requirements" => ["X-2"], "scenario_ids" => ["s-story"]},
+        %{
+          "id" => "r-conn",
+          "owner_requirements" => ["X-3"],
+          "scenario_ids" => [],
+          "proof_boundary" => "connected-real-route-only"
+        }
+      ]
+
+      scenarios = [
+        %{"id" => "s-ghost", "rendered" => false, "story_path" => nil},
+        %{"id" => "s-story", "rendered" => true, "story_path" => "/dev/storybook/x"}
+      ]
+
+      accounting = FeedbackLedger.story_accounting(rows, scenarios)
+
+      assert [
+               %{id: "r-none", stories: 0, unrendered_linked: 1},
+               %{id: "r-ok", stories: 1, unrendered_linked: 0},
+               %{id: "r-conn", stories: 0, unrendered_linked: 0}
+             ] = accounting
+
+      assert FeedbackLedger.story_accounting_violations(accounting) == [
+               {"r-none", :no_story_and_no_boundary}
+             ]
+    end
+
+    test "Phase 178 accounting: every real row has a story or the connected-only boundary, and only filters has none" do
+      accounting =
+        FeedbackLedger.story_accounting(
+          QuickViewScenarios.feedback(),
+          QuickViewScenarios.scenarios()
+        )
+
+      assert length(accounting) == 12
+      assert FeedbackLedger.story_accounting_violations(accounting) == []
+
+      assert for(%{stories: 0, id: id} <- accounting, do: id) == ["fb-auto-apply-filters"]
+
+      assert Enum.all?(
+               accounting,
+               &(&1.stories >= 1 or &1.boundary =~ "connected-real-route-only")
+             )
+    end
+
+    test "Phase 178 accounting: the Preview rows count their three authoring stories each" do
+      by_id =
+        Map.new(
+          FeedbackLedger.story_accounting(
+            QuickViewScenarios.feedback(),
+            QuickViewScenarios.scenarios()
+          ),
+          &{&1.id, &1}
+        )
+
+      assert %{stories: 3, unrendered_linked: 0, boundary: "story-render-only"} =
+               by_id["fb-preview-reset"]
+
+      assert %{stories: 3, unrendered_linked: 0, boundary: "story-render-only"} =
+               by_id["fb-preview-identity"]
+    end
+
+    test "Phase 178 accounting: unrendered_linked_scenarios keeps linked non-stories and omits the rest" do
+      rows = [
+        %{"id" => "r-a", "scenario_ids" => ["s-unrendered", "s-nopath", "s-story"]},
+        %{"id" => "r-b", "scenario_ids" => ["s-unrendered"]}
+      ]
+
+      scenarios = [
+        %{
+          "id" => "s-unrendered",
+          "rendered" => false,
+          "story_path" => nil,
+          "proof_boundary" => "connected-real-route-only",
+          "feedback_ids" => ["r-a", "r-b"]
+        },
+        %{
+          "id" => "s-nopath",
+          "rendered" => true,
+          "story_path" => nil,
+          "proof_boundary" => "story-render-only",
+          "feedback_ids" => ["r-a"]
+        },
+        %{
+          "id" => "s-story",
+          "rendered" => true,
+          "story_path" => "/dev/storybook/x",
+          "proof_boundary" => "story-render-only",
+          "feedback_ids" => ["r-a"]
+        },
+        %{
+          "id" => "s-unlinked",
+          "rendered" => false,
+          "story_path" => nil,
+          "proof_boundary" => "connected-real-route-only",
+          "feedback_ids" => []
+        },
+        %{
+          "id" => "s-self-linked",
+          "rendered" => false,
+          "story_path" => "",
+          "proof_boundary" => "connected-real-route-only",
+          "feedback_ids" => ["r-other"]
+        }
+      ]
+
+      assert FeedbackLedger.unrendered_linked_scenarios(rows, scenarios) == [
+               %{
+                 scenario_id: "s-nopath",
+                 feedback_ids: ["r-a"],
+                 rendered: true,
+                 story_path: nil,
+                 proof_boundary: "story-render-only"
+               },
+               %{
+                 scenario_id: "s-self-linked",
+                 feedback_ids: ["r-other"],
+                 rendered: false,
+                 story_path: "",
+                 proof_boundary: "connected-real-route-only"
+               },
+               %{
+                 scenario_id: "s-unrendered",
+                 feedback_ids: ["r-a", "r-b"],
+                 rendered: false,
+                 story_path: nil,
+                 proof_boundary: "connected-real-route-only"
+               }
+             ]
+
+      assert [%{id: "r-a", stories: 1, unrendered_linked: 2}, %{id: "r-b", unrendered_linked: 1}] =
+               FeedbackLedger.story_accounting(rows, scenarios)
+    end
+
+    test "Phase 178 accounting: a linked non-story with an empty boundary is flagged" do
+      entries = [
+        %{scenario_id: "ok", proof_boundary: "connected-real-route-only"},
+        %{scenario_id: "blank", proof_boundary: ""},
+        %{scenario_id: "missing", proof_boundary: nil}
+      ]
+
+      assert FeedbackLedger.boundary_violations(entries) == [
+               {"blank", :empty_boundary},
+               {"missing", :empty_boundary}
+             ]
+    end
+
+    test "Phase 178 accounting: on the real manifest every linked non-story carries a boundary" do
+      entries =
+        FeedbackLedger.unrendered_linked_scenarios(
+          QuickViewScenarios.feedback(),
+          QuickViewScenarios.scenarios()
+        )
+
+      assert FeedbackLedger.boundary_violations(entries) == []
+      assert Enum.all?(entries, &(&1.proof_boundary == "connected-real-route-only"))
+      assert Enum.all?(entries, &(&1.rendered != true or &1.story_path in [nil, ""]))
+    end
+
+    test "Phase 178 accounting: the Retained stories table equals the computed accounting row for row" do
+      assert FeedbackLedger.accounting_doc_violations(
+               automation_doc(),
+               QuickViewScenarios.feedback(),
+               QuickViewScenarios.scenarios()
+             ) == []
+    end
+
+    test "Phase 178 accounting: the doc names the Phase 175 Delivery path and its agreement tests" do
+      doc = automation_doc()
+
+      assert doc =~ "Phase 175 Northstar and Fjordline facts match scoped Delivery projections"
+      assert doc =~ "Fjordline Delivery pure facts match the tenant-scoped production projection"
+      assert doc =~ "delivery-investigation-"
+      assert doc =~ "pure-only (story-render-only)"
+      assert doc =~ "mailglass_admin/e2e/phase176-filters.spec.js"
+
+      projection_test = File.read!(Path.expand("quick_view_projection_test.exs", __DIR__))
+
+      assert projection_test =~
+               "Phase 175 Northstar and Fjordline facts match scoped Delivery projections"
+
+      assert projection_test =~
+               "Fjordline Delivery pure facts match the tenant-scoped production projection"
+    end
+
+    test "Phase 178 accounting: editing a count, dropping or adding a row in a fixture copy of the doc fails" do
+      rows = QuickViewScenarios.feedback()
+      scenarios = QuickViewScenarios.scenarios()
+      doc = automation_doc()
+
+      [first_row | _] = FeedbackLedger.accounting_table_rows(rows, scenarios)
+      [id, reqs, stories | rest] = first_row
+      original = "| " <> Enum.join(first_row, " | ") <> " |"
+      assert doc =~ original
+
+      edited_count = "| " <> Enum.join([id, reqs, "99" | rest], " | ") <> " |"
+      refute stories == "99"
+
+      assert [{:accounting_missing_row, ^first_row} | _] =
+               FeedbackLedger.accounting_doc_violations(
+                 String.replace(doc, original, edited_count),
+                 rows,
+                 scenarios
+               )
+
+      assert FeedbackLedger.accounting_doc_violations(
+               String.replace(doc, original <> "\n", ""),
+               rows,
+               scenarios
+             ) != []
+
+      extra = "| fb-invented | X-1 | 1 | 0 | story-render-only |\n"
+
+      assert Enum.any?(
+               FeedbackLedger.accounting_doc_violations(
+                 String.replace(doc, original <> "\n", original <> "\n" <> extra),
+                 rows,
+                 scenarios
+               ),
+               &match?({:accounting_extra_row, ["fb-invented" | _]}, &1)
+             )
+
+      assert FeedbackLedger.accounting_doc_violations("# nothing here\n", rows, scenarios) != []
+    end
+
+    test "Phase 178 accounting: swapping two table rows in a fixture copy of the doc fails" do
+      rows = QuickViewScenarios.feedback()
+      scenarios = QuickViewScenarios.scenarios()
+      doc = automation_doc()
+
+      [first, second | _] =
+        for cells <- FeedbackLedger.accounting_table_rows(rows, scenarios),
+            do: "| " <> Enum.join(cells, " | ") <> " |"
+
+      swapped = String.replace(doc, first <> "\n" <> second, second <> "\n" <> first)
+      refute swapped == doc
+
+      assert [{:accounting_row_order, _body}] =
+               FeedbackLedger.accounting_doc_violations(swapped, rows, scenarios)
+    end
+
+    test "Phase 178 accounting: the Linked scenarios table equals the manifest and fails when it drifts" do
+      rows = QuickViewScenarios.feedback()
+      scenarios = QuickViewScenarios.scenarios()
+      doc = automation_doc()
+
+      [first | _] = FeedbackLedger.linked_table_rows(rows, scenarios)
+      line = "| " <> Enum.join(first, " | ") <> " |"
+      assert doc =~ line
+
+      assert [{:linked_missing_row, ^first} | _] =
+               FeedbackLedger.accounting_doc_violations(
+                 String.replace(doc, line <> "\n", ""),
+                 rows,
+                 scenarios
+               )
+
+      extra = "| qv-invented | fb-x | false | null | connected-real-route-only |\n"
+
+      assert Enum.any?(
+               FeedbackLedger.accounting_doc_violations(
+                 String.replace(doc, line <> "\n", line <> "\n" <> extra),
+                 rows,
+                 scenarios
+               ),
+               &match?({:linked_extra_row, ["qv-invented" | _]}, &1)
+             )
+
+      stale_count =
+        String.replace(
+          doc,
+          ~r/^Linked scenarios without a story render: \d+$/m,
+          "Linked scenarios without a story render: 99"
+        )
+
+      assert {:linked_count, 99} in FeedbackLedger.accounting_doc_violations(
+               stale_count,
+               rows,
+               scenarios
+             )
+    end
+
+    test "Phase 178 accounting: the table parser reads the first table under a heading only" do
+      markdown = """
+      ## Section
+
+      intro
+
+      | A | B |
+      | --- | --- |
+      | 1 | two words |
+      | 3 | 4 |
+
+      ### Sub
+
+      | C |
+      | - |
+      | z |
+      """
+
+      assert FeedbackLedger.table_after(markdown, "## Section") ==
+               {:ok, ["A", "B"], [["1", "two words"], ["3", "4"]]}
+
+      assert FeedbackLedger.table_after(markdown, "### Sub") == {:ok, ["C"], [["z"]]}
+      assert FeedbackLedger.table_after(markdown, "## Absent") == {:error, :heading_not_found}
+
+      assert FeedbackLedger.table_after("## Section\n\ntext only\n", "## Section") ==
+               {:error, :table_not_found}
+    end
+  end
+
   describe "no phase coupling" do
     test "Phase 178 ledger: the rule functions do not reference owner_phase" do
       source = File.read!(@ledger_source)
@@ -449,6 +764,15 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
       assert references_owner_phase?(~s|row.owner_phase|)
       refute references_owner_phase?(~s|row["status"] == "pending"|)
     end
+  end
+
+  # The automation record may sit in the live phase directory or, once the
+  # milestone is archived, in exactly one archive; resolve it the same way the
+  # ledger resolves evidence pointers.
+  defp automation_doc do
+    pointer = ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md"
+    assert {:ok, file} = FeedbackLedger.resolve_pointer(pointer, FeedbackLedger.repo_root())
+    File.read!(file)
   end
 
   defp references_owner_phase?(source), do: String.contains?(source, "owner_phase")

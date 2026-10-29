@@ -13,6 +13,9 @@ cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs test/m
 # Retained Preview authoring stories and the feedback ledger (merge-blocking)
 cd mailglass_admin && mix test test/mailglass_admin/quick_view_projection_test.exs test/mailglass_admin/feedback_ledger_test.exs --seed 0
 
+# STORY-07 accounting and doc-truth tests: every "accounting" case (merge-blocking)
+cd mailglass_admin && mix test test/mailglass_admin/feedback_ledger_test.exs --seed 0 --trace | grep -i accounting
+
 # The whole admin lane, which includes every file above
 cd mailglass_admin && mix verify.support_contract.admin --seed 0
 
@@ -62,3 +65,39 @@ Advisory evidence (Chromium, same lane): `mailglass_admin/e2e/structural.spec.js
 Retained scenario ids: `preview-authoring-typed-values`, `preview-authoring-long-unicode`, `preview-authoring-duplicate-label`.
 
 Limits: stories prove rendering only; the open menu, keyboard selection and navigation run on the real route. Browser evidence is Chromium-only. The colliding long Unicode names are a synthetic fixture (the sixth `HappyMailer` scenario), not a real adopter Mailable.
+
+## Retained stories (STORY-07)
+
+The table below is the story accounting for all 12 owner-feedback rows in `reference/persona_spec/quick_view_scenarios.json`. A scenario is story-backed when it is `rendered` with a `story_path`; a row links a scenario when the row lists it or the scenario lists the row. The table is computed by `MailglassAdmin.TestSupport.FeedbackLedger.story_accounting/2` and held equal to this text by the doc-truth case in `mailglass_admin/test/mailglass_admin/feedback_ledger_test.exs` (the "accounting" tests), so a missing, failed or zero-story case is counted and visible: a row with no story and no connected-only boundary fails the lane.
+
+| Feedback | Requirement(s) | Story-backed scenarios | Linked without story render | Boundary |
+| --- | --- | --- | --- | --- |
+| fb-health-crowding | OUTUX-06 | 5 | 0 | story-render-only |
+| fb-preview-reset | PRVUX-05, PRVUX-06 | 3 | 0 | story-render-only |
+| fb-preview-identity | PRVUX-07 | 3 | 0 | story-render-only |
+| fb-account-context | UXF-09, UXF-10 | 6 | 0 | story-render-only |
+| fb-auto-apply-filters | FILTER-01, FILTER-02, FILTER-03, FILTER-04 | 0 | 0 | connected-real-route-only |
+| fb-quiet-quick-view-arrows | UXF-11 | 9 | 2 | connected-real-route-only, story-render-and-connected-route, story-render-and-persisted-projection, story-render-connected-route-and-persisted-projection, story-render-only |
+| fb-raw-source-hierarchy | INUX-06 | 4 | 0 | story-render-only |
+| fb-suppression-refresh | OUTUX-07, OUTUX-08 | 4 | 0 | story-render-and-connected-route, story-render-only |
+| fb-inbound-addresses | INUX-05 | 7 | 0 | story-render-only |
+| fb-storybook-fidelity | STORY-03, STORY-04, STORY-05, STORY-06, STORY-07 | 22 | 2 | connected-real-route-only, story-render-and-connected-route, story-render-and-persisted-projection, story-render-connected-route-and-persisted-projection, story-render-only |
+| fb-replay-review | REPLAY-04, REPLAY-05, REPLAY-06, REPLAY-07, REPLAY-08 | 5 | 0 | story-render-and-connected-route, story-render-only |
+| fb-technical-details | UXF-12 | 2 | 0 | story-render-and-connected-route, story-render-and-persisted-projection |
+
+Preview is pure-only (story-render-only) by decision D-09. Its five retained scenarios (`preview-authoring-*`) carry `proof_boundary: story-render-only`, and no persisted projection-agreement check is written for Preview. The one live check is the typed-values field-set equality test, "Phase 178 Preview authoring typed values story render shows the live route's field set", which compares the story render with `/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values` and persists nothing.
+
+Filters (FILTER-01 to FILTER-04) are connected-only by decision: the row has no story-backed scenario and carries the `connected-real-route-only` boundary, and its proof is the real-route browser file `mailglass_admin/e2e/phase176-filters.spec.js`. It is the only row with zero stories.
+
+The composed Delivery job is the Phase 175 Delivery investigation path: 9 `delivery-investigation-*` scenarios (stories at `/dev/storybook/delivery_investigation`), at least one of which, `delivery-investigation-fjordline-long-unicode` (`proof_boundary: story-render-and-persisted-projection`), agrees with the persisted projection. The merge-blocking projection-agreement tests already exist in `mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs` and are not duplicated here: "Phase 175 Northstar and Fjordline facts match scoped Delivery projections" and "Fjordline Delivery pure facts match the tenant-scoped production projection".
+
+### Linked scenarios without a story render (STORY-07)
+
+These scenarios are linked by a feedback row but have no story render, so they are counted boundaries rather than stories. Each carries a non-empty `proof_boundary`, asserted by the same accounting tests, and the table is generated from `FeedbackLedger.unrendered_linked_scenarios/2`, never typed by hand.
+
+| Scenario | Feedback | Rendered | Story path | Boundary |
+| --- | --- | --- | --- | --- |
+| qv-delivery-empty | fb-quiet-quick-view-arrows, fb-storybook-fidelity | false | null | connected-real-route-only |
+| qv-inbound-empty | fb-quiet-quick-view-arrows, fb-storybook-fidelity | false | null | connected-real-route-only |
+
+Linked scenarios without a story render: 2
