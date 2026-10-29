@@ -395,6 +395,22 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
       assert hd(Floki.attribute(span, "class")) =~ "sr-only"
     end
 
+    test "Phase 177 Account group has no description reference when no scoped path is configured" do
+      doc =
+        render_shell(%{overview_path: "", deliveries_path: "", inbound_path: ""})
+
+      for layout <- ["sidebar", "mobile"] do
+        [group] = doc |> nav(layout) |> Floki.find("[data-account-scope]")
+        assert Floki.attribute(group, "aria-describedby") == []
+
+        assert group
+               |> Floki.find(~s([data-testid="surface-nav-scope-description"]))
+               |> Enum.empty?()
+
+        assert Floki.find(group, ~s([data-testid="surface-nav-scope-items"] a)) == []
+      end
+    end
+
     test "Phase 177 Account control is neutral and never disabled" do
       for overrides <- [
             %{},

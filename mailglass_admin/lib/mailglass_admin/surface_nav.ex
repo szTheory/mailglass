@@ -74,7 +74,7 @@ defmodule MailglassAdmin.SurfaceNav do
         data-testid="surface-nav-scope-group"
         data-layout={@layout}
         aria-labelledby={if @scope == :account, do: @label_id, else: @header_id}
-        aria-describedby={@scope == :account && @desc_id}
+        aria-describedby={@scope == :account && @description != "" && @desc_id}
         class="w-full rounded-box border border-base-300 bg-base-100"
       >
         <div id={@header_id} class="relative border-b border-base-300 p-sm md:static">
@@ -106,7 +106,7 @@ defmodule MailglassAdmin.SurfaceNav do
           <% end %>
         </div>
         <span
-          :if={@scope == :account}
+          :if={@scope == :account and @description != ""}
           id={@desc_id}
           data-testid="surface-nav-scope-description"
           class="sr-only"
