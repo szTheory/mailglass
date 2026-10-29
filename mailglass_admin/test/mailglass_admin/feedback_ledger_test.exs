@@ -48,6 +48,352 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
     test "Phase 178 ledger: the manifest keeps exactly the 12 rows in their current order (D-07)" do
       assert Enum.map(QuickViewScenarios.feedback(), & &1["id"]) == @expected_row_ids
     end
+
+    test "Phase 178 ledger: every row links only to scenarios that link back" do
+      assert FeedbackLedger.link_violations(
+               QuickViewScenarios.feedback(),
+               QuickViewScenarios.scenarios()
+             ) == []
+    end
+
+    test "Phase 178 ledger: row ids are unique" do
+      assert FeedbackLedger.duplicate_ids(QuickViewScenarios.feedback()) == []
+    end
+
+    test "Phase 178 ledger: open rows are exactly the three named ones, so none can hide" do
+      assert FeedbackLedger.open_rows(QuickViewScenarios.feedback()) == %{
+               pending: ["fb-preview-reset", "fb-preview-identity"],
+               partial: ["fb-storybook-fidelity"]
+             }
+    end
+
+    test "Phase 178 ledger: every non-pending evidence pointer is path or path#anchor" do
+      for row <- QuickViewScenarios.feedback(), row["status"] != "pending" do
+        pointer = row["evidence_pointer"]
+
+        refute String.match?(pointer, ~r/\s/), "#{row["id"]} pointer is prose: #{pointer}"
+        assert length(String.split(pointer, "#")) in [1, 2], "#{row["id"]} has two anchors"
+      end
+    end
+
+    test "Phase 178 ledger: the filters row is closed on its connected-only boundary" do
+      row = row!("fb-auto-apply-filters")
+
+      assert row["status"] == "automated"
+      assert row["proof_boundary"] == "connected-real-route-only"
+      assert row["scenario_ids"] == []
+      assert row["disposition"] =~ "mailglass_admin/e2e/phase176-filters.spec.js"
+
+      assert File.regular?(
+               Path.join(
+                 FeedbackLedger.repo_root(),
+                 "mailglass_admin/e2e/phase176-filters.spec.js"
+               )
+             )
+
+      other_boundary_rows =
+        for r <- QuickViewScenarios.feedback(),
+            r["id"] != row["id"],
+            r["proof_boundary"],
+            do: r["id"]
+
+      assert other_boundary_rows == [], "only the filters row carries a feedback proof_boundary"
+    end
+
+    test "Phase 178 ledger: Inbound contact scenarios back-link fb-inbound-addresses" do
+      contacts =
+        ~w(normal-contacts long-local-part unicode spoofed-display-name many-recipients missing-headers unparseable)
+        |> Enum.map(&"inbound-evidence-#{&1}")
+
+      row = row!("fb-inbound-addresses")
+      assert row["status"] == "automated"
+      assert row["scenario_ids"] == contacts
+
+      for id <- contacts do
+        assert "fb-inbound-addresses" in scenario!(id)["feedback_ids"]
+      end
+    end
+
+    test "Phase 178 ledger: raw-source scenarios back-link fb-raw-source-hierarchy" do
+      evidence =
+        ~w(unknown empty-revealed large-revealed denied)
+        |> Enum.map(&"inbound-evidence-evidence-#{&1}")
+
+      row = row!("fb-raw-source-hierarchy")
+      assert row["status"] == "automated"
+      assert row["scenario_ids"] == evidence
+
+      for id <- evidence do
+        assert "fb-raw-source-hierarchy" in scenario!(id)["feedback_ids"]
+      end
+    end
+
+    test "Phase 178 ledger: the four fidelity scenarios keep both back-links" do
+      for id <- ~w(qv-delivery-first qv-delivery-last qv-delivery-empty qv-inbound-empty) do
+        assert scenario!(id)["feedback_ids"] == [
+                 "fb-quiet-quick-view-arrows",
+                 "fb-storybook-fidelity"
+               ]
+      end
+    end
+  end
+
+  describe "detectors have teeth (fail-first proof)" do
+    @scenarios [
+      %{"id" => "s-one", "feedback_ids" => ["r-ok"]},
+      %{"id" => "s-two", "feedback_ids" => []}
+    ]
+
+    test "Phase 178 ledger: a non-pending row with no scenarios and no boundary is flagged" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        row = ledger_row("r-bare", "automated", [], "docs/a.md")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                 [{"r-bare", :no_scenarios_and_no_boundary}]
+      end)
+    end
+
+    test "Phase 178 ledger: empty scenario_ids are legal with the connected-only boundary" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        row =
+          "r-bound"
+          |> ledger_row("automated", [], "docs/a.md")
+          |> Map.put("proof_boundary", "connected-real-route-only")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) == []
+      end)
+    end
+
+    test "Phase 178 ledger: another proof_boundary value does not excuse empty scenario_ids" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        row =
+          "r-other"
+          |> ledger_row("resolved", [], "docs/a.md")
+          |> Map.put("proof_boundary", "story-render-only")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                 [{"r-other", :no_scenarios_and_no_boundary}]
+      end)
+    end
+
+    test "Phase 178 ledger: an unresolvable path is flagged" do
+      with_root(%{}, fn root ->
+        row = ledger_row("r-gone", "automated", ["s-one"], "docs/missing.md")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                 [{"r-gone", {:pointer, :missing}}]
+      end)
+    end
+
+    test "Phase 178 ledger: a bad anchor on an existing file is flagged" do
+      with_root(%{"docs/a.md" => "# A\n\n## Real heading\n"}, fn root ->
+        bad = ledger_row("r-anchor", "automated", ["s-one"], "docs/a.md#no-such-heading")
+        good = ledger_row("r-fine", "automated", ["s-one"], "docs/a.md#real-heading")
+
+        assert FeedbackLedger.rule_violations([bad, good], @scenarios, root) ==
+                 [{"r-anchor", {:pointer, {:anchor_not_found, "no-such-heading"}}}]
+      end)
+    end
+
+    test "Phase 178 ledger: a prose pointer is flagged" do
+      with_root(%{}, fn root ->
+        row = ledger_row("r-prose", "resolved", ["s-one"], "Pending Phase 178 evidence.")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                 [{"r-prose", {:pointer, :prose_pointer}}]
+      end)
+    end
+
+    test "Phase 178 ledger: a scenario id that does not exist is flagged" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        row = ledger_row("r-ghost", "automated", ["s-one", "s-ghost"], "docs/a.md")
+
+        assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                 [{"r-ghost", {:unknown_scenario, "s-ghost"}}]
+      end)
+    end
+
+    test "Phase 178 ledger: a pending row is ignored by the rule but listed as open" do
+      with_root(%{}, fn root ->
+        pending = ledger_row("r-open", "pending", [], "Pending Phase 178 evidence.")
+        partial = ledger_row("r-half", "partial", ["s-one"], "docs/missing.md")
+
+        assert FeedbackLedger.rule_violations([pending], @scenarios, root) == []
+        assert FeedbackLedger.rule_violations([partial], @scenarios, root) != []
+
+        assert FeedbackLedger.open_rows([
+                 pending,
+                 partial,
+                 ledger_row("r-done", "automated", [], "x")
+               ]) ==
+                 %{pending: ["r-open"], partial: ["r-half"]}
+      end)
+    end
+
+    test "Phase 178 ledger: the rule does not look at owner_phase" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        for phase <- ["174", "178", "999", nil] do
+          row =
+            "r-phase"
+            |> ledger_row("automated", [], "docs/a.md")
+            |> Map.put("owner_phase", phase)
+
+          assert FeedbackLedger.rule_violations([row], @scenarios, root) ==
+                   [{"r-phase", :no_scenarios_and_no_boundary}]
+        end
+      end)
+    end
+
+    test "Phase 178 ledger: a phases pointer resolves from a milestone archive alone" do
+      files = %{
+        ".planning/milestones/v9.9-phases/777-demo/777-VERIFICATION.md" =>
+          "# V\n\n## Truths (A)\n"
+      }
+
+      with_root(files, fn root ->
+        assert {:ok, path} =
+                 FeedbackLedger.resolve_pointer(
+                   ".planning/phases/777-demo/777-VERIFICATION.md#truths-a",
+                   root
+                 )
+
+        assert path ==
+                 Path.join(root, ".planning/milestones/v9.9-phases/777-demo/777-VERIFICATION.md")
+      end)
+    end
+
+    test "Phase 178 ledger: a phases pointer present in the live tree and an archive is ambiguous" do
+      files = %{
+        ".planning/phases/777-demo/777-VERIFICATION.md" => "# V\n",
+        ".planning/milestones/v9.9-phases/777-demo/777-VERIFICATION.md" => "# V\n"
+      }
+
+      with_root(files, fn root ->
+        assert FeedbackLedger.resolve_pointer(
+                 ".planning/phases/777-demo/777-VERIFICATION.md",
+                 root
+               ) ==
+                 {:error, :ambiguous}
+      end)
+    end
+
+    test "Phase 178 ledger: a phases pointer present in two archives is ambiguous, in none is missing" do
+      files = %{
+        ".planning/milestones/v8.0-phases/777-demo/777-VERIFICATION.md" => "# V\n",
+        ".planning/milestones/v9.9-phases/777-demo/777-VERIFICATION.md" => "# V\n"
+      }
+
+      with_root(files, fn root ->
+        assert FeedbackLedger.resolve_pointer(
+                 ".planning/phases/777-demo/777-VERIFICATION.md",
+                 root
+               ) ==
+                 {:error, :ambiguous}
+
+        assert FeedbackLedger.resolve_pointer(
+                 ".planning/phases/888-none/888-VERIFICATION.md",
+                 root
+               ) ==
+                 {:error, :missing}
+      end)
+    end
+
+    test "Phase 178 ledger: a live phases pointer resolves when no archive holds it" do
+      with_root(%{".planning/phases/777-demo/777-VERIFICATION.md" => "# V\n"}, fn root ->
+        assert {:ok, path} =
+                 FeedbackLedger.resolve_pointer(
+                   ".planning/phases/777-demo/777-VERIFICATION.md",
+                   root
+                 )
+
+        assert path == Path.join(root, ".planning/phases/777-demo/777-VERIFICATION.md")
+      end)
+    end
+
+    test "Phase 178 ledger: absolute, traversing and glob-shaped pointers are rejected" do
+      with_root(%{"docs/a.md" => "# A\n"}, fn root ->
+        for pointer <- ["../../etc/hosts", "docs/../../etc/hosts", "/etc/hosts"] do
+          assert FeedbackLedger.resolve_pointer(pointer, root) == {:error, :outside_repo},
+                 "#{pointer} was not rejected as outside the repo"
+        end
+
+        assert FeedbackLedger.resolve_pointer("docs/*.md", root) == {:error, :invalid_path}
+
+        assert FeedbackLedger.resolve_pointer(".planning/phases/*/x.md", root) ==
+                 {:error, :invalid_path}
+      end)
+    end
+
+    test "Phase 178 ledger: empty and non-string pointers are rejected" do
+      with_root(%{}, fn root ->
+        for pointer <- [nil, "", 42] do
+          assert FeedbackLedger.resolve_pointer(pointer, root) == {:error, :empty_pointer}
+        end
+
+        assert FeedbackLedger.resolve_pointer("#only-an-anchor", root) == {:error, :empty_path}
+      end)
+    end
+
+    test "Phase 178 ledger: anchors follow GitHub slugs, repeats and fences" do
+      body = """
+      # Title
+
+      ## Health composition (OUTUX-06)
+
+      ## Account scope and Preview return (UXF-09, UXF-10)
+
+      ## Repeat
+
+      ## Repeat
+
+      ```
+      ## Hidden in a fence
+      ```
+      """
+
+      with_root(%{"docs/a.md" => body}, fn root ->
+        for anchor <-
+              ~w(title health-composition-outux-06 account-scope-and-preview-return-uxf-09-uxf-10 repeat repeat-1) do
+          assert {:ok, _} = FeedbackLedger.resolve_pointer("docs/a.md##{anchor}", root),
+                 "#{anchor} should resolve"
+        end
+
+        for anchor <- ["hidden-in-a-fence", "repeat-2", "Title"] do
+          assert {:error, {:anchor_not_found, ^anchor}} =
+                   FeedbackLedger.resolve_pointer("docs/a.md##{anchor}", root)
+        end
+
+        assert FeedbackLedger.resolve_pointer("docs/a.md#", root) == {:error, :empty_anchor}
+      end)
+    end
+
+    test "Phase 178 ledger: slug/1 keeps Unicode letters and drops punctuation" do
+      assert FeedbackLedger.slug("Health composition (OUTUX-06)") == "health-composition-outux-06"
+      assert FeedbackLedger.slug("  Zażółć gęślą_jaźń! ") == "zażółć-gęślą_jaźń"
+      assert FeedbackLedger.slug("A `code` & B") == "a-code--b"
+    end
+
+    test "Phase 178 ledger: a row listing a scenario that does not back-link it is flagged" do
+      rows = [
+        ledger_row("r-ok", "automated", ["s-one"], "x"),
+        ledger_row("r-nolink", "automated", ["s-two"], "x"),
+        ledger_row("r-ghost", "automated", ["s-ghost"], "x"),
+        ledger_row("r-none", "pending", [], "x")
+      ]
+
+      assert FeedbackLedger.link_violations(rows, @scenarios) == [
+               {"r-nolink", {:missing_backlink, "s-two"}},
+               {"r-ghost", {:unknown_scenario, "s-ghost"}}
+             ]
+    end
+
+    test "Phase 178 ledger: duplicate row ids are flagged once each" do
+      rows =
+        for id <- ~w(a b a c a b), do: ledger_row(id, "automated", [], "x")
+
+      assert FeedbackLedger.duplicate_ids(rows) == ["a", "b"]
+      assert FeedbackLedger.duplicate_ids(Enum.take(rows, 3) |> Enum.take(-2)) == []
+    end
   end
 
   describe "no phase coupling" do
@@ -66,4 +412,39 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
   end
 
   defp references_owner_phase?(source), do: String.contains?(source, "owner_phase")
+
+  defp row!(id),
+    do: Enum.find(QuickViewScenarios.feedback(), &(&1["id"] == id)) || flunk("no row #{id}")
+
+  defp scenario!(id),
+    do: Enum.find(QuickViewScenarios.scenarios(), &(&1["id"] == id)) || flunk("no scenario #{id}")
+
+  defp ledger_row(id, status, scenario_ids, pointer) do
+    %{
+      "id" => id,
+      "status" => status,
+      "scenario_ids" => scenario_ids,
+      "evidence_pointer" => pointer,
+      "owner_phase" => "178"
+    }
+  end
+
+  # Builds a throwaway repository root under the system temp dir, runs `fun`
+  # with it, and removes the directory this test created.
+  defp with_root(files, fun) do
+    root = Path.join(System.tmp_dir!(), "feedback-ledger-#{System.unique_integer([:positive])}")
+
+    try do
+      for {relative, content} <- files do
+        path = Path.join(root, relative)
+        File.mkdir_p!(Path.dirname(path))
+        File.write!(path, content)
+      end
+
+      File.mkdir_p!(root)
+      fun.(root)
+    after
+      File.rm_rf!(root)
+    end
+  end
 end

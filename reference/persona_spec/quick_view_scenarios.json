@@ -42,7 +42,7 @@
       "reason": "Retains a reachable first-record boundary with position and accessible unavailable navigation.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
       "proof_boundary": "story-render-and-connected-route",
-      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": true,
       "projection": {
         "delivery": {
@@ -72,7 +72,7 @@
       "reason": "Retains the final-record boundary without suggesting another result exists.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
       "proof_boundary": "story-render-and-connected-route",
-      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": true,
       "projection": {
         "delivery": {
@@ -142,7 +142,7 @@
       "reason": "Helios is realized by absence; a story cannot select a Delivery that does not exist.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
       "proof_boundary": "connected-real-route-only",
-      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": false
     },
     {
@@ -556,7 +556,7 @@
       "reason": "Helios Inbound absence is checked on the connected collection route; no selected message exists for a Storybook variation.",
       "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
       "proof_boundary": "connected-real-route-only",
-      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
       "rendered": false
     },
     {
@@ -575,7 +575,7 @@
       "reason": "Retains an ordinary message: display-named sender, two To, one Cc, a distinct Delivered to recipient and redacted raw source.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -642,7 +642,7 @@
       "reason": "Keeps one unbreakable dotted local part visible untruncated beside its copy control at narrow widths.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -702,7 +702,7 @@
       "reason": "Keeps Unicode local parts, domains and display names exact in the sender and To lists.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -760,7 +760,7 @@
       "reason": "Shows the spoof cue when the display name embeds a different address than the real sender.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -821,7 +821,7 @@
       "reason": "Collapses seven To addresses to five and offers Show 2 more.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -906,7 +906,7 @@
       "reason": "Says plainly that the From header, To header and envelope recipient were not recorded.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -957,7 +957,7 @@
       "reason": "Labels a sender value that is not an address as unparseable while keeping the original text copyable.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
       "rendered": true,
       "projection": {
         "record": {
@@ -1015,7 +1015,7 @@
       "reason": "Renders Unavailable, never 0 bytes, when stored evidence cannot say its payload size or header count.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
       "rendered": true,
       "projection": {
         "record": {
@@ -1069,7 +1069,7 @@
       "reason": "Reveals a provider payload that was genuinely empty and says so.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
       "rendered": true,
       "projection": {
         "record": {
@@ -1123,7 +1123,7 @@
       "reason": "Reveals a multi-kilobyte raw source in a scrollable, focusable region with a thousands-separated size.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
       "rendered": true,
       "projection": {
         "record": {
@@ -1182,7 +1182,7 @@
       "reason": "Shows the denied reveal copy and keeps every raw byte absent.",
       "owning_requirements": ["INUX-05", "INUX-06"],
       "proof_boundary": "story-render-only",
-      "feedback_ids": ["fb-storybook-fidelity"],
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
       "rendered": true,
       "projection": {
         "record": {
@@ -1913,10 +1913,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "MailglassAdmin.Inbound.RoutingTrace"}],
       "owner_requirements": ["INUX-06"],
       "owner_phase": "176",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Raw source controls/privacy copy remain disconnected from the sparse facts grid. This repair must retain the existing reveal authorization and safe allowlist.",
-      "evidence_pointer": "Pending Phase 176 authorized and denied connected reveal states plus retained component layout."
+      "scenario_ids": ["inbound-evidence-evidence-unknown", "inbound-evidence-evidence-empty-revealed", "inbound-evidence-evidence-large-revealed", "inbound-evidence-evidence-denied"],
+      "status": "automated",
+      "disposition": "The production EvidenceCard groups the raw source heading, reveal control and privacy copy with compact facts, and one source selector drives both byte size and the revealed text. Reveal stays authorization-gated and shows only the safe source allowlist; unknown, empty-revealed, large-revealed and denied evidence are each rendered truthfully, and denial is announced rather than shown as zero. Stories prove rendering only; reveal and denial are proven on the real route.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage"
     },
     {
       "id": "fb-suppression-refresh",
@@ -1937,10 +1937,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "sender_display/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "recipient_display/1"}],
       "owner_requirements": ["INUX-05"],
       "owner_phase": "176",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Ordinary sender display still masks the From contact. Keep raw source, routing/header/matcher diagnostics, telemetry, and logs separately protected.",
-      "evidence_pointer": "Pending Phase 176 authorized long/Unicode, missing, and multiple-address connected evidence."
+      "scenario_ids": ["inbound-evidence-normal-contacts", "inbound-evidence-long-local-part", "inbound-evidence-unicode", "inbound-evidence-spoofed-display-name", "inbound-evidence-many-recipients", "inbound-evidence-missing-headers", "inbound-evidence-unparseable"],
+      "status": "automated",
+      "disposition": "Ordinary authorized contacts show complete addresses: long local parts, Unicode, spoofed display names, many recipients, missing headers and unparseable headers all render through the production DetailHeader, with the envelope recipient kept distinct from header contacts. The visible address is also in the accessible name. Raw source, routing/header/matcher diagnostics, telemetry and logs stay separately protected.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage"
     },
     {
       "id": "fb-storybook-fidelity",
