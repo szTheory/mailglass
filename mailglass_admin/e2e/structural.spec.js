@@ -1551,11 +1551,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(menuTrigger).toHaveAccessibleName(
         /Email preview.*HappyMailer/
       );
-      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .toContainText("HappyMailer");
-      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .not.toContainText("MailglassAdmin.Fixtures");
-      await expect(menuTrigger).toContainText("welcome_default");
+      // Phase 178 D-04: humanized primary, namespace-free Mailable secondary,
+      // and the exact technical identity as visible text.
+      const triggerScenario = menuTrigger.getByTestId("preview-email-menu-active-scenario");
+      const triggerMailable = menuTrigger.getByTestId("preview-email-menu-active-mailable");
+      const triggerTechnical = menuTrigger.getByTestId("preview-email-menu-active-technical");
+      await expect(triggerScenario).toHaveText("Welcome default");
+      await expect(triggerMailable).toHaveText("HappyMailer");
+      await expect(triggerScenario).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(triggerMailable).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(triggerTechnical).toHaveText("MailglassAdmin.Fixtures.HappyMailer.welcome_default");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
       await expect(menuTrigger.locator(".hero-chevron-down")).toHaveCount(0);
@@ -1622,9 +1627,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       expect(bounds?.width).toBeGreaterThan(700);
       expect(bounds?.width).toBeLessThanOrEqual(896);
-      await expect(identity).toContainText("HappyMailer");
-      await expect(identity).toContainText("welcome_default");
-      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable")).toHaveText("HappyMailer");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario")).toHaveText("Welcome default");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-technical"))
+        .toContainText("welcome_default");
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
@@ -1731,9 +1741,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("preview-email-menu-trigger").click();
       await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
       const identity = page.getByTestId("preview-email-menu-active-identity");
-      await expect(identity).toContainText("HappyMailer");
-      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
-      await expect(identity).toContainText(longScenario);
+      await expect(identity.getByTestId("preview-email-menu-active-mailable")).toHaveText("HappyMailer");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-technical")).toContainText(longScenario);
 
       const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
       const widthButton = widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true });

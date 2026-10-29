@@ -199,10 +199,17 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert trigger != nil
       trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "HappyMailer"
-      assert trigger_text =~ "welcome_default"
-      refute trigger_text =~ "MailglassAdmin.Fixtures"
       refute trigger_text =~ "3 emails"
+
+      # Phase 178 D-04: humanized primary, Mailable secondary (both namespace-free),
+      # and the exact technical identity as visible text.
+      assert_trigger_identity(
+        trigger,
+        "Welcome default",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_default"
+      )
+
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
       assert Floki.find(affordance, "span") != []
@@ -478,10 +485,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Floki.parse_document!()
         |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
 
-      trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "HappyMailer"
-      refute trigger_text =~ "MailglassAdmin.Fixtures"
-      assert trigger_text =~ "welcome_enterprise"
+      assert_trigger_identity(
+        trigger,
+        "Welcome enterprise",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_enterprise"
+      )
     end
 
     test "compact picker exposes long non-ASCII scenario identity without truncation" do
@@ -508,10 +517,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
       [identity_id] = Floki.attribute(identity, "id")
       assert Floki.attribute(trigger, "aria-labelledby") == ["#{label_id} #{identity_id}"]
 
-      text = Floki.text(trigger)
-      assert text =~ "HappyMailer"
-      refute text =~ "MailglassAdmin.Fixtures"
-      assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
+      assert_trigger_identity(
+        trigger,
+        "Welcome überraschung 東京 with a deliberately long name",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_überraschung_東京__with_a_deliberately_long_name"
+      )
 
       [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
@@ -1303,6 +1314,23 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   # Every token in every aria-describedby / aria-labelledby must name an id in the
   # same fragment (PRVUX-06): a dangling token makes a screen reader announce nothing.
+  # Phase 178 D-04: the trigger reads primary scenario, secondary Mailable, then
+  # the exact technical identity as visible text. The primary and secondary
+  # lines carry no fixture namespace; only the technical line does.
+  defp assert_trigger_identity(trigger, primary, mailable, technical) do
+    text_of = fn testid ->
+      [node] = Floki.find(trigger, ~s([data-testid="#{testid}"]))
+      node |> Floki.text() |> String.split() |> Enum.join(" ")
+    end
+
+    assert text_of.("preview-email-menu-active-scenario") == primary
+    assert text_of.("preview-email-menu-active-mailable") == mailable
+    assert text_of.("preview-email-menu-active-technical") == technical
+    refute text_of.("preview-email-menu-active-scenario") =~ "MailglassAdmin.Fixtures"
+    refute text_of.("preview-email-menu-active-mailable") =~ "MailglassAdmin.Fixtures"
+    refute Floki.raw_html(trigger) =~ " · "
+  end
+
   defp assert_ids_closed!(html) do
     document = Floki.parse_fragment!(html)
 

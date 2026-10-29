@@ -24,6 +24,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Preview.ReturnContext
+  alias MailglassAdmin.Preview.ScenarioLabel
 
   attr(:mailables, :list, required: true)
   attr(:current_mailable, :atom, default: nil)
@@ -96,10 +97,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
   than a second navigation column.
   """
   def menu(assigns) do
+    labels = ScenarioLabel.build(assigns.mailables)
+
     assigns =
       assigns
-      |> assign(:current_mailable_label, current_mailable_label(assigns.current_mailable))
-      |> assign(:current_scenario_label, current_scenario_label(assigns.current_scenario))
+      |> assign(:labels, labels)
+      |> assign(:identity, identity(labels, assigns.current_mailable, assigns.current_scenario))
 
     ~H"""
     <div class="grid w-full min-w-0 max-w-4xl gap-xs">
@@ -126,9 +129,33 @@ defmodule MailglassAdmin.Preview.Sidebar do
               data-testid="preview-email-menu-active-identity"
               class="block min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere] text-body"
             >
-              <span class="font-bold text-base-content">{@current_mailable_label}</span>
-              <span :if={@current_scenario_label} class="font-normal text-secondary">
-                {" · "}{@current_scenario_label}
+              <span :if={@identity.placeholder} class="font-bold text-base-content">
+                {@identity.placeholder}
+              </span>
+              <span
+                :if={@identity.scenario}
+                data-testid="preview-email-menu-active-scenario"
+                class="block font-bold text-base-content"
+              >
+                {@identity.scenario}
+              </span>
+              <span
+                :if={@identity.mailable}
+                data-testid="preview-email-menu-active-mailable"
+                class={
+                  if @identity.scenario,
+                    do: "block text-secondary",
+                    else: "block font-bold text-base-content"
+                }
+              >
+                {@identity.mailable}
+              </span>
+              <span
+                :if={@identity.technical}
+                data-testid="preview-email-menu-active-technical"
+                class="block font-mono text-label text-secondary whitespace-normal [overflow-wrap:anywhere]"
+              >
+                {@identity.technical}
               </span>
             </span>
           </span>
@@ -373,16 +400,30 @@ defmodule MailglassAdmin.Preview.Sidebar do
     end
   end
 
-  defp current_mailable_label(nil), do: "Choose an email"
-
-  defp current_mailable_label(mod) do
-    {_namespace, leaf} = module_parts(mod)
-    leaf
+  # Trigger content for the selected scenario: humanized primary, Mailable as
+  # secondary context, and the exact technical identity (D-04). With nothing
+  # selected only the placeholder renders, with no technical line.
+  defp identity(_labels, nil, _scenario) do
+    %{placeholder: "Choose an email", scenario: nil, mailable: nil, technical: nil}
   end
 
-  defp current_scenario_label(nil), do: nil
-  defp current_scenario_label(:__error__), do: "render error"
-  defp current_scenario_label(scenario), do: Atom.to_string(scenario)
+  defp identity(labels, mod, nil) do
+    %{
+      placeholder: nil,
+      scenario: nil,
+      mailable: ScenarioLabel.module_label(labels, mod),
+      technical: ScenarioLabel.technical(mod, nil)
+    }
+  end
+
+  defp identity(labels, mod, scenario) do
+    %{
+      placeholder: nil,
+      scenario: ScenarioLabel.scenario_label(labels, mod, scenario),
+      mailable: ScenarioLabel.module_label(labels, mod),
+      technical: ScenarioLabel.technical(mod, scenario)
+    }
+  end
 
   defp email_count_label(mailables) do
     count =
