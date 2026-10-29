@@ -293,7 +293,6 @@ defmodule MailglassDemo.QuickViewScenarios do
     "free" => :free,
     "invite_admin" => :invite_admin,
     "magic_link" => :magic_link,
-    "typed_values" => :typed_values,
     "invoice_paid" => :invoice_paid,
     "welcome_überraschung_東京__with_a_deliberately_long_name" =>
       :welcome_überraschung_東京__with_a_deliberately_long_name,

@@ -775,6 +775,119 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
     assert html =~ "MailglassDemoWeb.Mailers.AccountMailer.invite_admin"
   end
 
+  @tag :phase178
+  test "Phase 178 Preview authoring manifest carries exactly the five retained variations in story order" do
+    ids = ~w(
+      preview-authoring-typed-values preview-authoring-no-editable
+      preview-authoring-field-error preview-authoring-long-unicode
+      preview-authoring-duplicate-label
+    )
+
+    assert Enum.map(authoring_scenarios(), & &1["id"]) == ids
+
+    assert Enum.map(authoring_scenarios(), & &1["variation_id"]) ==
+             ~w(typed_values no_editable field_error long_unicode duplicate_label)
+
+    story = File.read!(story_path("preview_authoring.story.exs"))
+    assert story =~ "[:typed_values, :no_editable, :field_error, :long_unicode, :duplicate_label]"
+
+    for scenario <- authoring_scenarios() do
+      assert scenario["feedback_ids"] -- ["fb-preview-reset", "fb-preview-identity"] == []
+      assert scenario["feedback_ids"] != []
+    end
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring no_editable renders the no-editable message and no note" do
+    html = preview_authoring_form(:no_editable)
+    assert html =~ ~s(data-testid="preview-no-editable-assigns")
+    assert html =~ "There are no editable values here."
+    refute html =~ "preview-assigns-readonly-note"
+    assert html =~ "Restore defaults"
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring field_error renders the specific error with an error-only describedby" do
+    html = preview_authoring_form(:field_error)
+    assert html =~ "Enter a whole number."
+
+    [input] = html |> Floki.parse_fragment!() |> Floki.find("input#assigns-quantity")
+    assert Floki.attribute(input, "aria-invalid") == ["true"]
+    assert Floki.attribute(input, "aria-describedby") == ["assigns-quantity-error"]
+    assert Floki.attribute(input, "value") == ["3.5"]
+
+    [error] = html |> Floki.parse_fragment!() |> Floki.find("#assigns-quantity-error")
+    assert Floki.text(error) =~ "Enter a whole number."
+
+    # A field without a parse error carries neither attribute.
+    [label] = html |> Floki.parse_fragment!() |> Floki.find("input#assigns-label")
+    assert Floki.attribute(label, "aria-invalid") == []
+    assert Floki.attribute(label, "aria-describedby") == []
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring long_unicode shows the raw atom in the technical line" do
+    scenario = QuickViewScenarios.preview_authoring(:long_unicode)
+    html = preview_authoring_menu(:long_unicode)
+    doc = Floki.parse_fragment!(html)
+
+    raw = Atom.to_string(scenario.menu.current_scenario)
+    assert raw == "welcome_überraschung_東京__with_a_deliberately_long_name"
+
+    technical =
+      doc |> Floki.find(~s([data-testid="preview-email-menu-active-technical"])) |> Floki.text()
+
+    assert technical =~ raw
+    assert technical =~ "MailglassDemoWeb.Mailers.AccountMailer."
+
+    primary =
+      doc
+      |> Floki.find(~s([data-testid="preview-email-menu-active-scenario"]))
+      |> Floki.text()
+      |> String.trim()
+
+    assert primary == "Welcome überraschung 東京 with a deliberately long name"
+    refute primary =~ "  "
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring duplicate_label opens the menu with distinct primaries and Mailable labels" do
+    html = preview_authoring_menu(:duplicate_label)
+    doc = Floki.parse_fragment!(html)
+
+    [details] = Floki.find(doc, ~s(details[data-picker-variant="menu"]))
+    assert Floki.attribute(details, "open") != []
+
+    options =
+      Floki.find(
+        doc,
+        ~s([data-testid="preview-email-menu-option"], [data-testid="preview-email-menu-active-option"])
+      )
+
+    unicode_primaries =
+      for option <- options,
+          label =
+            option
+            |> Floki.find(~s([data-testid="preview-email-menu-option-label"]))
+            |> Floki.text()
+            |> String.trim(),
+          label =~ "überraschung",
+          do: label
+
+    assert length(unicode_primaries) == 2
+    assert unicode_primaries == Enum.uniq(unicode_primaries)
+
+    groups =
+      doc
+      |> Floki.find(~s([data-testid="preview-email-menu-group-label"]))
+      |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+
+    assert length(groups) == 2
+    assert groups == Enum.uniq(groups)
+    assert Enum.any?(groups, &String.ends_with?(&1, "Northstar.Billing.ReceiptMailer"))
+    assert Enum.any?(groups, &String.ends_with?(&1, "Fjordline.Billing.ReceiptMailer"))
+  end
+
   defp manifest_path,
     do: Path.expand("../../../reference/persona_spec/quick_view_scenarios.json", __DIR__)
 

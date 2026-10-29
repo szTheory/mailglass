@@ -60,11 +60,51 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
       assert FeedbackLedger.duplicate_ids(QuickViewScenarios.feedback()) == []
     end
 
-    test "Phase 178 ledger: open rows are exactly the three named ones, so none can hide" do
+    test "Phase 178 ledger: the one open row is the partial fidelity row, so none can hide" do
       assert FeedbackLedger.open_rows(QuickViewScenarios.feedback()) == %{
-               pending: ["fb-preview-reset", "fb-preview-identity"],
+               pending: [],
                partial: ["fb-storybook-fidelity"]
              }
+    end
+
+    test "Phase 178 ledger: the Preview rows are automated and link the preview-authoring scenarios both ways" do
+      reset = row!("fb-preview-reset")
+      identity = row!("fb-preview-identity")
+
+      assert reset["status"] == "automated"
+      assert identity["status"] == "automated"
+
+      assert reset["scenario_ids"] == ~w(
+               preview-authoring-typed-values preview-authoring-no-editable
+               preview-authoring-field-error
+             )
+
+      assert identity["scenario_ids"] == ~w(
+               preview-authoring-typed-values preview-authoring-long-unicode
+               preview-authoring-duplicate-label
+             )
+
+      assert reset["evidence_pointer"] ==
+               ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#preview-authoring-prvux-05-prvux-06"
+
+      assert identity["evidence_pointer"] ==
+               ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#readable-scenario-selector-prvux-07"
+
+      for {row, ids} <- [{reset, reset["scenario_ids"]}, {identity, identity["scenario_ids"]}],
+          id <- ids do
+        assert row["id"] in scenario!(id)["feedback_ids"]
+      end
+
+      assert FeedbackLedger.rule_violations(
+               [reset, identity],
+               QuickViewScenarios.scenarios(),
+               FeedbackLedger.repo_root()
+             ) == []
+
+      assert FeedbackLedger.link_violations(
+               [reset, identity],
+               QuickViewScenarios.scenarios()
+             ) == []
     end
 
     test "Phase 178 ledger: every non-pending evidence pointer is path or path#anchor" do

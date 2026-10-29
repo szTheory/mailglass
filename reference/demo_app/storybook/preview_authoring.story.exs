@@ -26,7 +26,7 @@ defmodule Storybook.PreviewAuthoring do
   end
 
   def variations do
-    for id <- [:typed_values] do
+    for id <- [:typed_values, :no_editable, :field_error, :long_unicode, :duplicate_label] do
       %Variation{id: id, attributes: QuickViewScenarios.preview_authoring(id)}
     end
   end

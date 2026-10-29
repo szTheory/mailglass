@@ -1842,6 +1842,195 @@
           "open": false
         }
       }
+    },
+    {
+      "id": "preview-authoring-no-editable",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "no_editable",
+      "role_job": "A template author opens a scenario whose values are all read-only and is told plainly that there is nothing to edit here.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "no-editable",
+      "reason": "Retains the no-editable message with no read-only note, so a scenario with only atoms, maps and DateTimes does not explain a list that is not there.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "mode": {"type": "atom", "value": "preview"},
+            "metadata": {"type": "map", "value": {"source": {"type": "string", "value": "fixture"}}},
+            "scheduled_at": {"type": "datetime", "value": "2026-10-09T12:00:00Z"}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-field-error",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "field_error",
+      "role_job": "A template author types 3.5 into a whole-number field and sees one specific error tied to that field.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "field-error",
+      "reason": "Retains the parse error on a number field: the specific message, aria-invalid, and an aria-describedby that names only the error.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "label": {"type": "string", "value": "Original"},
+            "quantity": {"type": "integer", "value": 3},
+            "enabled?": {"type": "boolean", "value": true}
+          },
+          "draft_assigns": {
+            "quantity": {"type": "string", "value": "3.5"}
+          },
+          "field_errors": {
+            "quantity": "Enter a whole number."
+          }
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-long-unicode",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "long_unicode",
+      "role_job": "A template author selects a scenario with a long non-ASCII name and reads a humanized label above the exact technical identity, wrapped on one narrow screen.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "long-unicode",
+      "reason": "Retains the readable selector trigger for a long Unicode scenario: humanized primary, Mailable, and the raw Module.scenario atom as visible wrapping monospace text.",
+      "owning_requirements": [
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "user_name": {"type": "string", "value": "Ada"},
+            "plan": {"type": "atom", "value": "free"},
+            "admin?": {"type": "boolean", "value": false}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "welcome_\u00fcberraschung_\u6771\u4eac__with_a_deliberately_long_name"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "welcome_überraschung_東京__with_a_deliberately_long_name",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-duplicate-label",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "duplicate_label",
+      "role_job": "A template author opens the menu and can tell two scenarios that humanize to the same label apart, and two Mailables that share a leaf name.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "duplicate-label",
+      "reason": "Retains the open menu with a same-label collision falling back to raw atoms and two ReceiptMailer leaves told apart by namespace.",
+      "owning_requirements": [
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "user_name": {"type": "string", "value": "Ada"},
+            "plan": {"type": "atom", "value": "free"},
+            "admin?": {"type": "boolean", "value": false}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "Northstar.Billing.ReceiptMailer", "scenarios": ["welcome_überraschung_東京__with_a_deliberately_long_name", "welcome_überraschung_東京_with_a_deliberately_long_name"]},
+            {"module": "Fjordline.Billing.ReceiptMailer", "scenarios": ["invoice_paid"]}
+          ],
+          "current_mailable": "Northstar.Billing.ReceiptMailer",
+          "current_scenario": "welcome_überraschung_東京_with_a_deliberately_long_name",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": true
+        }
+      }
     }
   ],
   "axe_selection": [
@@ -1892,10 +2081,14 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex", "symbol": "MailglassAdmin.Preview.AssignsForm"}],
       "owner_requirements": ["PRVUX-05", "PRVUX-06"],
       "owner_phase": "178",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Restore defaults remains a ghost action inside the padded form card, with repeated generic Text value help. Preserve parsing and validation when adjusting the authoring layout.",
-      "evidence_pointer": "Pending Phase 178 Preview authoring scenario and reset behavior evidence."
+      "scenario_ids": [
+        "preview-authoring-typed-values",
+        "preview-authoring-no-editable",
+        "preview-authoring-field-error"
+      ],
+      "status": "automated",
+      "disposition": "Restore defaults is now a bordered, aligned action with the unchanged reset handler. The repeated generic value helpers are gone: read-only values share one note, and an all-read-only scenario shows the no-editable message with no note. A field error names the specific problem and is the only description of its control. Parsing and validation are unchanged.",
+      "evidence_pointer": ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#preview-authoring-prvux-05-prvux-06"
     },
     {
       "id": "fb-preview-identity",
@@ -1904,10 +2097,14 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar.menu/1"}],
       "owner_requirements": ["PRVUX-07"],
       "owner_phase": "178",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "The selector still combines a raw module/scenario identity with a middle dot; human identity and author access to exact technical identity remain unresolved.",
-      "evidence_pointer": "Pending Phase 178 long/Unicode and narrow Preview identity evidence."
+      "scenario_ids": [
+        "preview-authoring-typed-values",
+        "preview-authoring-long-unicode",
+        "preview-authoring-duplicate-label"
+      ],
+      "status": "automated",
+      "disposition": "The selector shows a humanized scenario label first, the Mailable second, and the exact Module.scenario identity as visible wrapping monospace text, with no middle-dot join. Scenarios that humanize to the same label fall back to their raw atoms, and Mailables that share a leaf are told apart by namespace. URLs are unchanged.",
+      "evidence_pointer": ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#readable-scenario-selector-prvux-07"
     },
     {
       "id": "fb-account-context",
