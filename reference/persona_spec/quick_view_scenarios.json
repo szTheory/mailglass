@@ -1224,6 +1224,59 @@
         },
         "reveal_state": "denied"
       }
+    },
+    {
+      "id": "health-overview-northstar-normal",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator confirms that an Account with recent mail and no recorded problems reads as healthy.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "normal-no-issues",
+      "reason": "Mirrors exactly what the real route derives for tenant northstar after the persona cohort seed: one outbound delivery, no inbound messages and no issue rows.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 1
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
     }
   ],
   "axe_selection": [

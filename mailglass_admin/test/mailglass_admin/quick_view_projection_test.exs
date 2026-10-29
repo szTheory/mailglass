@@ -11,6 +11,7 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   alias MailglassAdmin.Inbound.QuickView, as: InboundQuickView
   alias MailglassAdmin.OptionalDeps.MailglassInbound
   alias MailglassAdmin.Operator.DetailHeader
+  alias MailglassAdmin.Operator.HealthOverview
   alias MailglassAdmin.Operator.QuickView, as: DeliveryQuickView
   alias MailglassAdmin.TestSupport.{InboundFixtures, OperatorFixtures}
   alias MailglassDemo.QuickViewScenarios
@@ -399,6 +400,113 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
       QuickViewScenarios.inbound_evidence(:no_such_scenario)
     end
   end
+
+  @health_overview_keys ~w(issues activity states deliveries_path inbound_path window_copy
+                           window_description observed_at)a
+
+  @health_issue_testids ~w(
+    operator-health-deliveries-failed
+    operator-health-deliveries-bounced
+    operator-health-deliveries-rejected
+    operator-health-deliveries-deferred
+    operator-health-inbound-failed
+    operator-health-inbound-no_match
+    operator-overview-health-failures
+    operator-overview-health-orphans
+  )
+
+  @tag :phase177
+  test "Phase 177 northstar_normal Health scenario renders through the production component" do
+    scenario = QuickViewScenarios.health_overview(:northstar_normal)
+
+    assert scenario.scenario_id == "health-overview-northstar-normal"
+    assert scenario.variation_id == "northstar_normal"
+    assert scenario.state == "normal-no-issues"
+    assert scenario.proof_boundary == "story-render-only"
+    assert is_binary(scenario.role_job)
+
+    assigns = Map.take(scenario, @health_overview_keys)
+    assert Enum.sort(Map.keys(assigns)) == Enum.sort(@health_overview_keys)
+
+    html = render_component(&HealthOverview.overview/1, assigns)
+    assert html =~ ~s(data-testid="operator-health-layout")
+    assert html =~ "No issues found"
+
+    for issue <- scenario.issues do
+      assert html =~ ~s(data-testid="#{issue.testid}"), "#{issue.testid} row"
+    end
+
+    assert_raise ArgumentError, ~r/unknown retained Health scenario/, fn ->
+      QuickViewScenarios.health_overview(:no_such_scenario)
+    end
+  end
+
+  @tag :phase177
+  test "Phase 177 northstar_normal Health scenario matches the population the real route derives" do
+    OperatorFixtures.seed_persona_cohort!()
+    scenario = QuickViewScenarios.health_overview(:northstar_normal)
+
+    now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+
+    conn =
+      Phoenix.ConnTest.build_conn()
+      |> Plug.Test.init_test_session(%{
+        "current_user_id" => "operator-1",
+        "tenant_id" => "northstar",
+        "auth_method" => "password",
+        "recent_auth_at" => now
+      })
+
+    {:ok, _view, live_html} = live(conn, "/ops/mail?tenant_id=northstar")
+
+    region =
+      live_html
+      |> Floki.parse_document!()
+      |> Floki.find("[data-testid='operator-overview-health']")
+
+    live_issues =
+      for node <- Floki.find(region, "[data-testid]"),
+          testid = node |> Floki.attribute("data-testid") |> List.first(),
+          testid in @health_issue_testids do
+        count =
+          region
+          |> Floki.find("[data-testid='#{testid}-count']")
+          |> Floki.text()
+          |> String.trim()
+          |> String.to_integer()
+
+        {testid, count}
+      end
+
+    manifest_issues = Enum.map(scenario.issues, &{&1.testid, &1.count})
+    assert live_issues == manifest_issues
+
+    # Activity totals come from the same derivation; an empty issue list alone
+    # would make the comparison vacuous.
+    live_activity =
+      for id <- ~w(operator-health-outbound-activity operator-health-inbound-activity) do
+        region
+        |> Floki.find("[data-testid='#{id}'] .tabular-nums")
+        |> Floki.text()
+        |> String.trim()
+        |> String.to_integer()
+      end
+
+    assert live_activity == [scenario.activity.deliveries.total, scenario.activity.inbound.total]
+    assert live_activity == [1, 0]
+  end
+
+  @tag :phase177
+  test "Phase 177 Health story file composes the production component from the manifest builder" do
+    source = File.read!(story_path("health_overview.story.exs"))
+    assert {:defmodule, _, _} = Code.string_to_quoted!(source)
+    assert source =~ "Storybook.HealthOverview"
+    assert source =~ "QuickViewScenarios.health_overview"
+    assert source =~ "HealthOverview.overview"
+  end
+
+  defp story_path(name),
+    do: Path.expand("../../../reference/demo_app/storybook/#{name}", __DIR__)
 
   defp render_scenario(id) do
     scenario = QuickViewScenarios.inbound_evidence(id)

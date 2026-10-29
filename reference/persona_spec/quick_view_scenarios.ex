@@ -168,6 +168,85 @@ defmodule MailglassDemo.QuickViewScenarios do
     }
   end
 
+  @doc """
+  Builds the retained Health story assigns for a scenario id.
+
+  Returns exactly the assigns `MailglassAdmin.Operator.HealthOverview.overview/1`
+  accepts, plus the scenario metadata. Panel keys, statuses and surfaces are
+  converted through closed maps; manifest strings are never turned into atoms
+  by `String.to_atom/1`.
+  """
+  def health_overview(scenario_id) when is_atom(scenario_id) do
+    variation_id = Atom.to_string(scenario_id)
+
+    scenario =
+      Enum.find(@manifest["scenarios"], fn entry ->
+        entry["rendered"] == true and entry["variation_id"] == variation_id and
+          String.starts_with?(entry["id"], "health-overview-")
+      end)
+
+    if is_nil(scenario),
+      do: raise(ArgumentError, "unknown retained Health scenario #{variation_id}")
+
+    projection = scenario["projection"]
+
+    %{
+      scenario_id: scenario["id"],
+      variation_id: variation_id,
+      role_job: scenario["role_job"],
+      state: scenario["state"],
+      proof_boundary: scenario["proof_boundary"],
+      issues: Enum.map(projection["issues"], &health_issue/1),
+      activity: health_activity(projection["activity"]),
+      states: health_states(projection["states"]),
+      deliveries_path: projection["deliveries_path"],
+      inbound_path: projection["inbound_path"],
+      window_copy: projection["window_copy"],
+      window_description: projection["window_description"],
+      observed_at: datetime(projection["observed_at"])
+    }
+  end
+
+  defp health_issue(issue) do
+    %{
+      testid: issue["testid"],
+      count: issue["count"],
+      label: issue["label"],
+      help: issue["help"],
+      surface: health_surface(issue["surface"]),
+      path: issue["path"],
+      stale?: issue["stale"] == true
+    }
+  end
+
+  defp health_surface("deliveries"), do: :deliveries
+  defp health_surface("inbound"), do: :inbound
+
+  defp health_activity(activity) do
+    %{
+      deliveries: health_total(activity["deliveries"]),
+      inbound: health_total(activity["inbound"])
+    }
+  end
+
+  defp health_total(nil), do: nil
+  defp health_total(%{"total" => total}), do: %{total: total}
+
+  defp health_states(states) do
+    Map.new(states, fn {panel, state} -> {health_panel(panel), health_state(state)} end)
+  end
+
+  defp health_panel("failed_ingest"), do: :failed_ingest
+  defp health_panel("orphan_backlog"), do: :orphan_backlog
+  defp health_panel("delivery_activity"), do: :delivery_activity
+  defp health_panel("inbound_activity"), do: :inbound_activity
+
+  defp health_state(%{"status" => "ready"}), do: %{status: :ready}
+  defp health_state(%{"status" => "unavailable"}), do: %{status: :unavailable}
+
+  defp health_state(%{"status" => "stale", "checked_at" => checked_at}),
+    do: %{status: :stale, checked_at: datetime(checked_at)}
+
   defp evidence_record(record) do
     %{
       id: record["id"],
