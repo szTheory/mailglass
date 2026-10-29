@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-03-PLAN.md
-last_updated: "2026-10-29T13:02:19.649Z"
+stopped_at: Completed 178-12-PLAN.md
+last_updated: "2026-10-29T13:14:09.799Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: 9beb5779c9c765c83967802ce6ad194a2f63730f
+state_head: 3597a79e57cb7a1a5059c10006415e6624466fd8
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 41
+  completed_plans: 42
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 4 of 12
+Plan: 5 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -331,6 +331,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P01 | 7 min | 2 tasks | 5 files |
 | Phase 178 P02 | 6 min | 2 tasks | 5 files |
 | Phase 178 P03 | 9 min | 3 tasks | 5 files |
+| Phase 178 P12 | 12 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -637,6 +638,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-02: feedback ledger rule is phase-independent (never reads owner_phase), archive roots globbed, pointers must be path or path#anchor
 - [Phase 178]: 178-03: D-14 honored via slim sibling scripts/check_phase178_candidate.sh (173 script cannot run for non-173 candidates); launcher/teardown act only on mailglass-phase178-review-* projects and /tmp/mailglass-phase178.* parents
 - [Phase 178]: 178-03: cost disposition refuses runs whose head_sha is not the candidate SHA and never zero-fills a missing job; runner platform comes from a published label table or a saved job log, recorded in provenance
+- [Phase 178]: D-16: STATE.md permanent facts re-homed to the v2.8 DOCS-01 record; prohibitions stay on STATE.md
 
 ## Quick Tasks Completed
 
@@ -688,8 +690,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T13:02:19.079Z
-Stopped at: Completed 178-03-PLAN.md
+Last session: 2026-10-29T13:14:09.275Z
+Stopped at: Completed 178-12-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
