@@ -396,3 +396,19 @@ One row per requirement and machine-observable acceptance item. Every row is clo
 | UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-09 task 3, task 4 and task 5 automated verifies; 178-10 task 1 and task 2 automated verifies | `ci_green` aggregate (required) | source: automated |
 
 The UIQ-08 ship/no-ship review (plan 178-10, the owner decision) is the only owner hand-off allowed by D-52. It is a judgment on shipping, not an acceptance row, and nothing in the table above waits on it.
+
+## Hosted candidate evidence (UIQ-07, UIQ-08)
+
+pre_approval_main_sha: 8328093e4a07d28251ec7f02dd0f37cda2fd6a7b
+pre_approval_branch_sha: 25dc21cff0948eb75c0b00ec39cc06f4bb410e06
+
+### Pre-approval state (plan 178-09 task 1, read-only, 2026-10-29)
+
+- Candidate: `2bdf18161182beeb286435b556f26e205976e658` (`docs(178-08): phase diff review and dispositions`). `git diff --quiet <sha> HEAD -- . ':(exclude).planning'` exits 0.
+- Remote refs (`git ls-remote origin`): `refs/heads/main` is `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`; `refs/heads/gsd/v2.10-ui-repairs-storybook` is `25dc21cff0948eb75c0b00ec39cc06f4bb410e06`. Both equal the 178-08 values; no remote write has happened.
+- `gh pr list --head gsd/v2.10-ui-repairs-storybook --state all` returned `[]`. `gh run list --branch gsd/v2.10-ui-repairs-storybook` returned `[]`.
+- Live scope after `git fetch origin main gsd/v2.10-ui-repairs-storybook`:
+  - against `origin/main`: 351 commits ahead (`git rev-list --count origin/main..<sha>`); 656 files changed, 213365 insertions, 2163 deletions (`git diff --shortstat origin/main...<sha>`);
+  - against `origin/gsd/v2.10-ui-repairs-storybook`: 52 commits ahead; 68 files changed, 13048 insertions, 233 deletions (`git diff --shortstat origin/gsd/v2.10-ui-repairs-storybook..<sha>`).
+- Pipeline dry run on the baseline (run 40414024714, jobs saved as one 26-job page): the `disposition` subcommand with the baseline standing in for the PR and dispatch runs and the retained Phase 174 `phase174/cost.json` reports every job delta 0 and 0 runner-minute delta in both runs. It finds `Demo Browser Evidence (Docker Compose / Chromium)`, `Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)` and `Support Contract Admin (Elixir 1.18 / OTP 27)` by exact name, and `pilot_conditions` has cold and warm. Expected counts written: operator 311, demo 111 (the 178-08 `--list` totals).
+- Approval text drafted from these numbers; the PR body is `reference/demo_app/tmp/phase178_candidate/pr-body.md` (git-ignored). The next step is the owner checkpoint 178-09-02.
