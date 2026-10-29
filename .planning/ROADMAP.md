@@ -262,7 +262,7 @@ Plans:
 4. Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)
 5. The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)
 
-**Plans:** 7/12 plans executed in 8 waves
+**Plans:** 8/12 plans executed in 8 waves
 **UI hint:** yes
 
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
@@ -282,7 +282,7 @@ Plans:
 - [x] 178-06-PLAN.md — Real browser zoom gaps and honest zoom labels (UIQ-06).
 
 **Wave 4** *(blocked on Wave 3)*
-- [ ] 178-07-PLAN.md — StatCard font-role receipt, phase-close ledger invariant, ledger record and D-11 replay command (UIQ-06, UIQ-04, STORY-07).
+- [x] 178-07-PLAN.md — StatCard font-role receipt, phase-close ledger invariant, ledger record and D-11 replay command (UIQ-06, UIQ-04, STORY-07).
 
 **Wave 5** *(blocked on Wave 4)*
 - [ ] 178-11-PLAN.md — D-15 prohibition contract with recorded mutations (UIQ-04, STORY-07).
@@ -334,6 +334,6 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
 | 177. Readable Health and Coherent Account Navigation | 11/11 | Complete    | 2026-10-28 |
-| 178. Preview Authoring and Milestone Review | 7/12 | In Progress | — |
+| 178. Preview Authoring and Milestone Review | 8/12 | In Progress | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
