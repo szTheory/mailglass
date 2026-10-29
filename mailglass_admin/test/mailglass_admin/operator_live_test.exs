@@ -5706,6 +5706,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   describe "Health copy stays limited to persisted observations" do
     @tag :g_168_10
+    @tag :phase177
     test "stale Health values are scoped to the selected observation window", %{conn: conn} do
       conn = operator_conn(conn)
       provider_event_id = "g-168-10-outside-short-window"
@@ -5728,7 +5729,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "[data-testid='operator-overview-health-failures']"
         )
 
-      assert Floki.text(hd(Floki.find(initial_card, "p.mono"))) |> String.trim() == "1"
+      assert Floki.text(
+               hd(
+                 Floki.find(
+                   initial_card,
+                   "[data-testid='operator-overview-health-failures-count']"
+                 )
+               )
+             )
+             |> String.trim() == "1"
 
       # The last value remains valid as stale when a read for the same interval fails.
       OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
@@ -5751,7 +5760,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "[data-testid='operator-overview-health-failures']"
         )
 
-      assert Floki.text(hd(Floki.find(same_window_card, "p.mono"))) |> String.trim() == "1"
+      assert Floki.text(
+               hd(
+                 Floki.find(
+                   same_window_card,
+                   "[data-testid='operator-overview-health-failures-count']"
+                 )
+               )
+             )
+             |> String.trim() == "1"
+
       assert Floki.text(same_window_card) =~ "Last retrieved"
 
       # The same observation is outside 24 hours. A transient read in this new
@@ -5789,6 +5807,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
     end
 
+    @tag :phase177
     test "keeps a failed observation isolated while retaining its last known value", %{conn: conn} do
       conn = operator_conn(conn)
       insert_support_summary_fixture!()
@@ -5797,7 +5816,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       initial_orphans =
         initial
-        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> Floki.find("[data-testid='operator-overview-health-orphans-count']")
         |> List.first()
         |> Floki.text()
 
@@ -5814,7 +5833,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       current_orphans =
         document
-        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> Floki.find("[data-testid='operator-overview-health-orphans-count']")
         |> List.first()
         |> Floki.text()
 

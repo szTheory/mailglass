@@ -267,7 +267,13 @@ defmodule MailglassAdmin.HealthPopulationTest do
     |> Floki.find("[data-testid='operator-overview-health']")
   end
 
-  defp row_count(row), do: row |> Floki.find("p.mono") |> hd() |> Floki.text() |> String.trim()
+  defp row_count(row) do
+    row
+    |> Floki.find("[data-testid='#{testid(row)}-count']")
+    |> hd()
+    |> Floki.text()
+    |> String.trim()
+  end
 
   defp stale_tag?(row), do: Floki.text(row) =~ "Last retrieved"
 
