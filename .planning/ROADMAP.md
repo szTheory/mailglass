@@ -296,7 +296,7 @@ Plans:
 **Wave 8** *(blocked on Wave 7; owner ship/no-ship)*
 - [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08). NOT RUN (2026-10-29): precondition unmet, 178-09 `hosted_status: stopped` (Demo Browser Evidence missing `@playwright/test`); UIQ-07/UIQ-08 unmet. Superseded for the re-frozen candidate by gap plans 178-18/178-19.
 
-**Gap closure** (from 178-VERIFICATION.md, `gaps_found`; gap-plan waves 1-6)
+**Gap closure** (from 178-VERIFICATION.md, `gaps_found`; gap-plan waves 1-7)
 - [ ] 178-13-PLAN.md — Gap wave 1: lazy `@playwright/test` require in the Storybook axe supplement plus a merge-blocking ci.yml `node --test` require-resolution guard; hosted Operator summary counted once (UIQ-06, UIQ-07, UIQ-08).
 - [ ] 178-14-PLAN.md — Gap wave 2 (after 178-13): diagnose the PR-run-only Operator Browser Gate failure at `flows.spec.js:2453`, then fix it or classify it with evidence (UIQ-07, UIQ-08).
 - [ ] 178-15-PLAN.md — Gap wave 3: re-gate the affected lanes (including the cold/warm Demo pilot), point the acceptance closure at the gap plans, re-freeze the candidate (UIQ-06, UIQ-07, UIQ-08).
