@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-08-PLAN.md
-last_updated: "2026-10-29T15:34:27.825Z"
+stopped_at: "Completed 178-09-PLAN.md (stopped: new advisory failure, Demo Browser Evidence)"
+last_updated: "2026-10-29T16:04:31.257Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: d1347d2f7c5b13dd61a5763c5faaedfb706dde82
+state_head: 84804cea2f6bc4d31cc5ea8e90ab66a006e79842
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 48
+  completed_plans: 49
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 11 of 12
+Plan: 12 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -338,6 +338,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P07 | 10 min | 2 tasks | 5 files |
 | Phase 178 P11 | 25 min | 2 tasks | 2 files |
 | Phase 178 P08 | 70 min | 3 tasks | 8 files |
+| Phase 178 P09 | ~25min | 5 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -654,6 +655,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-08: operator timeout projection uses the count method (889 x 311 / 230 = 1203 s, within the 1440 s margin); the 20 minute sandbox-owner lifetime is a second bound with about 300 s of margin
 - [Phase 178]: 178-08: the three axe 'scan deliveries' timeouts were fixed (replayable row), not recorded as pre-existing, so plan 178-09 has no recorded advisory reds
 - [Phase 178]: 178-08: candidate_sha 2bdf18161182beeb286435b556f26e205976e658 frozen after a full local gate; demo_app lock refreshed for floki 0.38.5 and mailglass_admin publish allowlist refreshed
+- [Phase 178]: 178-09: hosted run stopped on new advisory failure (Demo Browser Evidence missing @playwright/test for storybook-axe.test.cjs); draft PR #317 open, CI Green + Guard Release Trigger success; no cost disposition; 178-10 precondition fails
 
 ## Quick Tasks Completed
 
@@ -705,8 +707,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T15:34:27.249Z
-Stopped at: Completed 178-08-PLAN.md
+Last session: 2026-10-29T16:04:30.665Z
+Stopped at: Completed 178-09-PLAN.md (stopped: new advisory failure, Demo Browser Evidence)
 Resume file: None
 
 ## Operator Next Steps
