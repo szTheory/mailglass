@@ -262,7 +262,7 @@ Plans:
 4. Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)
 5. The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)
 
-**Plans:** 11/12 plans executed in 8 waves
+**Plans:** 19 plans (11/12 original executed in 8 waves; 7 gap-closure plans 178-13 to 178-19 in 6 gap waves)
 **UI hint:** yes
 
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
@@ -294,7 +294,16 @@ Plans:
 - [x] 178-09-PLAN.md — Approved push, draft PR and the single dispatch; hosted cost/coverage disposition (UIQ-07, UIQ-08).
 
 **Wave 8** *(blocked on Wave 7; owner ship/no-ship)*
-- [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08). NOT RUN (2026-10-29): precondition unmet, 178-09 `hosted_status: stopped` (Demo Browser Evidence missing `@playwright/test`); UIQ-07/UIQ-08 unmet.
+- [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08). NOT RUN (2026-10-29): precondition unmet, 178-09 `hosted_status: stopped` (Demo Browser Evidence missing `@playwright/test`); UIQ-07/UIQ-08 unmet. Superseded for the re-frozen candidate by gap plans 178-18/178-19.
+
+**Gap closure** (from 178-VERIFICATION.md, `gaps_found`; gap-plan waves 1-6)
+- [ ] 178-13-PLAN.md — Gap wave 1: lazy `@playwright/test` require in the Storybook axe supplement plus a merge-blocking ci.yml `node --test` require-resolution guard (UIQ-06, UIQ-07, UIQ-08).
+- [ ] 178-14-PLAN.md — Gap wave 1: diagnose the PR-run-only Operator Browser Gate failure at `flows.spec.js:2453`, then fix it or classify it with evidence (UIQ-07, UIQ-08).
+- [ ] 178-15-PLAN.md — Gap wave 2: re-gate the affected lanes (including the cold/warm Demo pilot), point the acceptance closure at the gap plans, re-freeze the candidate (UIQ-06, UIQ-07, UIQ-08).
+- [ ] 178-16-PLAN.md — Gap wave 3 (new owner approval checkpoint): push the re-frozen candidate, update draft PR #317, single dispatch, wait for runs (UIQ-07, UIQ-08).
+- [ ] 178-17-PLAN.md — Gap wave 4: capture and classify hosted evidence, hosted UIQ-06 receipts, `178-COST-DISPOSITION.json` (UIQ-06, UIQ-07).
+- [ ] 178-18-PLAN.md — Gap wave 5: launch the exact-SHA candidate preview and verify the full-URL `178-DELIVERY.md` runbook (UIQ-08).
+- [ ] 178-19-PLAN.md — Gap wave 6 (owner ship/no-ship): record the decision and the service/artifact dispositions (UIQ-08).
 
 ## Continuing delivery obligations
 
