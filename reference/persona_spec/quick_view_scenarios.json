@@ -1789,6 +1789,59 @@
         "return_href": null,
         "return_label": null
       }
+    },
+    {
+      "id": "preview-authoring-typed-values",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "typed_values",
+      "role_job": "A template author edits a scenario's typed values and sees every editable field, the read-only values and one note that explains them.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "typed-values",
+      "reason": "Retains the mixed editable and read-only authoring form with a bordered Restore defaults action and a single read-only note, beside the readable selector.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset",
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "label": {"type": "string", "value": "Original"},
+            "quantity": {"type": "integer", "value": 3},
+            "ratio": {"type": "float", "value": 1.5},
+            "enabled?": {"type": "boolean", "value": true},
+            "due_on": {"type": "date", "value": "2026-10-09"},
+            "metadata": {"type": "map", "value": {"source": {"type": "string", "value": "fixture"}}},
+            "mode": {"type": "atom", "value": "preview"},
+            "scheduled_at": {"type": "datetime", "value": "2026-10-09T12:00:00Z"}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
     }
   ],
   "axe_selection": [

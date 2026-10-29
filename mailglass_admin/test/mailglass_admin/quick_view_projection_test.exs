@@ -11,6 +11,7 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.QuickView, as: InboundQuickView
   alias MailglassAdmin.OptionalDeps.MailglassInbound
+  alias MailglassAdmin.Preview.{AssignsForm, Sidebar}
   alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.HealthOverview
   alias MailglassAdmin.Operator.Shell
@@ -670,6 +671,162 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
     assert source =~ "Storybook.HealthOverview"
     assert source =~ "QuickViewScenarios.health_overview"
     assert source =~ "HealthOverview.overview"
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring story file composes the production components from the manifest builder" do
+    source = File.read!(story_path("preview_authoring.story.exs"))
+    assert {:defmodule, _, _} = Code.string_to_quoted!(source)
+    assert source =~ "Storybook.PreviewAuthoring"
+    assert source =~ "QuickViewScenarios.preview_authoring"
+    assert source =~ "AssignsForm.assigns_form"
+    assert source =~ "Sidebar.menu"
+    assert source =~ "preview-authoring-review-theme"
+    assert source =~ ~s(data-theme-owner="preview-authoring-story")
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring typed values decode to the HappyMailer scenario defaults" do
+    scenario = QuickViewScenarios.preview_authoring(:typed_values)
+
+    assert scenario.form.scenario_assigns ==
+             MailglassAdmin.Fixtures.HappyMailer.preview_props()[:typed_values]
+
+    assert scenario.form.draft_assigns == %{}
+    assert scenario.form.field_errors == %{}
+    assert scenario.scenario_id == "preview-authoring-typed-values"
+    assert scenario.proof_boundary == "story-render-only"
+    assert scenario.menu.open == false
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring typed values story render shows the live route's field set",
+       %{conn: conn} do
+    story_form = preview_authoring_form(:typed_values)
+    story_fields = field_summary(Floki.parse_fragment!(story_form))
+
+    assert length(story_fields) == 8
+    assert {"Label", "text"} in story_fields
+    assert {"Quantity", "number"} in story_fields
+    assert {"Enabled?", "checkbox"} in story_fields
+    assert {"Due on", "date"} in story_fields
+    assert {"Mode (atom)", "readonly"} in story_fields
+    assert {"Metadata (map)", "readonly"} in story_fields
+    assert {"Scheduled at (DateTime)", "readonly"} in story_fields
+
+    assert story_form =~ ~s(data-testid="preview-assigns-readonly-note")
+
+    {:ok, _view, live_html} =
+      live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+    live_form =
+      live_html
+      |> Floki.parse_document!()
+      |> Floki.find("[data-testid='preview-assigns-form']")
+
+    assert live_form != []
+    assert field_summary(live_form) == story_fields
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring rows carry the full object shape and stay out of the axe selection" do
+    retained = authoring_scenarios()
+    assert retained != []
+
+    required =
+      ~w(id story_path theme_owner theme_picker_testid variation_id role_job source cohort
+         state reason owning_requirements proof_boundary feedback_ids rendered projection)
+
+    for scenario <- retained do
+      for key <- required,
+          do: assert(Map.has_key?(scenario, key), "#{scenario["id"]} lacks #{key}")
+
+      assert scenario["story_path"] == "/dev/storybook/preview_authoring"
+      assert scenario["theme_owner"] == "preview-authoring-story"
+      assert scenario["theme_picker_testid"] == "preview-authoring-review-theme"
+      assert scenario["proof_boundary"] == "story-render-only"
+      assert scenario["rendered"] == true
+      assert scenario["cohort"] == "none"
+      assert "STORY-07" in scenario["owning_requirements"]
+    end
+
+    ids = Enum.map(retained, & &1["id"])
+    assert ids == Enum.uniq(ids)
+    variation_ids = Enum.map(retained, & &1["variation_id"])
+    assert variation_ids == Enum.uniq(variation_ids)
+
+    axe = Jason.decode!(File.read!(manifest_path()))["axe_selection"]
+    assert length(axe) == 20
+    refute Enum.any?(axe, &String.starts_with?(&1["scenario_id"], "preview-authoring-"))
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring builder raises for an unknown scenario" do
+    assert_raise ArgumentError, ~r/unknown retained Preview authoring scenario/, fn ->
+      QuickViewScenarios.preview_authoring(:no_such_scenario)
+    end
+  end
+
+  @tag :phase178
+  test "Phase 178 Preview authoring typed values menu renders the readable trigger" do
+    html = preview_authoring_menu(:typed_values)
+    assert html =~ ~s(data-testid="preview-email-menu-trigger")
+    assert html =~ "Invite admin"
+    assert html =~ "MailglassDemoWeb.Mailers.AccountMailer.invite_admin"
+  end
+
+  defp manifest_path,
+    do: Path.expand("../../../reference/persona_spec/quick_view_scenarios.json", __DIR__)
+
+  defp authoring_scenarios,
+    do:
+      Enum.filter(
+        QuickViewScenarios.scenarios(),
+        &String.starts_with?(&1["id"], "preview-authoring-")
+      )
+
+  defp preview_authoring_form(id) do
+    scenario = QuickViewScenarios.preview_authoring(id)
+
+    render_component(&AssignsForm.assigns_form/1,
+      scenario_assigns: scenario.form.scenario_assigns,
+      draft_assigns: scenario.form.draft_assigns,
+      field_errors: scenario.form.field_errors
+    )
+  end
+
+  defp preview_authoring_menu(id) do
+    scenario = QuickViewScenarios.preview_authoring(id)
+
+    render_component(&Sidebar.menu/1,
+      mailables: scenario.menu.mailables,
+      current_mailable: scenario.menu.current_mailable,
+      current_scenario: scenario.menu.current_scenario,
+      device_width: scenario.menu.device_width,
+      mount_path: scenario.menu.mount_path,
+      open: scenario.menu.open
+    )
+  end
+
+  # One {visible label with type badge, control kind} per field, so the same
+  # fact is compared whether it came from a story render or the live route.
+  defp field_summary(nodes) do
+    nodes
+    |> Floki.find("div.form-control")
+    |> Enum.map(fn control ->
+      label =
+        control |> Floki.find(".label-text") |> Floki.text() |> String.split() |> Enum.join(" ")
+
+      kind =
+        if Floki.find(control, "[data-readonly-display]") != [] do
+          "readonly"
+        else
+          control |> Floki.find("input[id^='assigns-']") |> Floki.attribute("type") |> hd()
+        end
+
+      {label, kind}
+    end)
+    |> Enum.sort()
   end
 
   defp account_scope_html(s) do

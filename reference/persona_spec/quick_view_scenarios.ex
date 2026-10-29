@@ -273,6 +273,108 @@ defmodule MailglassDemo.QuickViewScenarios do
     })
   end
 
+  # Closed identifier table for the Preview authoring facts. The manifest names
+  # assign keys, scenario names and Mailable modules as strings; this map is the
+  # only way they become atoms, so a manifest edit can never create one.
+  @authoring_atoms %{
+    "label" => :label,
+    "quantity" => :quantity,
+    "ratio" => :ratio,
+    "enabled?" => :enabled?,
+    "due_on" => :due_on,
+    "metadata" => :metadata,
+    "mode" => :mode,
+    "scheduled_at" => :scheduled_at,
+    "source" => :source,
+    "preview" => :preview,
+    "user_name" => :user_name,
+    "plan" => :plan,
+    "admin?" => :admin?,
+    "free" => :free,
+    "invite_admin" => :invite_admin,
+    "magic_link" => :magic_link,
+    "typed_values" => :typed_values,
+    "invoice_paid" => :invoice_paid,
+    "welcome_überraschung_東京__with_a_deliberately_long_name" =>
+      :welcome_überraschung_東京__with_a_deliberately_long_name,
+    "welcome_überraschung_東京_with_a_deliberately_long_name" =>
+      :welcome_überraschung_東京_with_a_deliberately_long_name,
+    "MailglassDemoWeb.Mailers.AccountMailer" => MailglassDemoWeb.Mailers.AccountMailer,
+    "Northstar.Billing.ReceiptMailer" => Northstar.Billing.ReceiptMailer,
+    "Fjordline.Billing.ReceiptMailer" => Fjordline.Billing.ReceiptMailer
+  }
+
+  @doc """
+  Builds the retained Preview authoring story assigns for a scenario id.
+
+  Returns the assigns the production `MailglassAdmin.Preview.AssignsForm.assigns_form/1`
+  (`form`) and `MailglassAdmin.Preview.Sidebar.menu/1` (`menu`) accept, plus the
+  scenario metadata. Typed values use explicit `{"type": ..., "value": ...}` tags;
+  identifiers go through a closed table, so no atom is ever created from manifest text.
+  """
+  def preview_authoring(scenario_id) when is_atom(scenario_id) do
+    variation_id = Atom.to_string(scenario_id)
+
+    scenario =
+      Enum.find(@manifest["scenarios"], fn entry ->
+        entry["rendered"] == true and entry["variation_id"] == variation_id and
+          String.starts_with?(entry["id"], "preview-authoring-")
+      end)
+
+    if is_nil(scenario),
+      do: raise(ArgumentError, "unknown retained Preview authoring scenario #{variation_id}")
+
+    %{"form" => form, "menu" => menu} = scenario["projection"]
+
+    scenario
+    |> story_meta()
+    |> Map.merge(%{
+      form: %{
+        scenario_assigns: authoring_assigns(form["scenario_assigns"]),
+        draft_assigns: authoring_assigns(form["draft_assigns"] || %{}),
+        field_errors: authoring_errors(form["field_errors"] || %{})
+      },
+      menu: %{
+        mailables: Enum.map(menu["mailables"], &authoring_mailable/1),
+        current_mailable: authoring_atom!(menu["current_mailable"]),
+        current_scenario: authoring_atom!(menu["current_scenario"]),
+        device_width: menu["device_width"],
+        mount_path: menu["mount_path"],
+        open: menu["open"] == true
+      }
+    })
+  end
+
+  defp authoring_atom!(nil), do: nil
+
+  defp authoring_atom!(name) when is_binary(name) do
+    case @authoring_atoms do
+      %{^name => atom} -> atom
+      _ -> raise ArgumentError, "unknown Preview authoring identifier #{inspect(name)}"
+    end
+  end
+
+  defp authoring_mailable(%{"module" => module, "scenarios" => scenarios}) do
+    {authoring_atom!(module), Enum.map(scenarios, &{authoring_atom!(&1), %{}})}
+  end
+
+  defp authoring_assigns(assigns),
+    do: Map.new(assigns, fn {key, tagged} -> {authoring_atom!(key), authoring_value(tagged)} end)
+
+  defp authoring_errors(errors),
+    do: Map.new(errors, fn {key, text} when is_binary(text) -> {authoring_atom!(key), text} end)
+
+  defp authoring_value(%{"type" => "string", "value" => value}) when is_binary(value), do: value
+  defp authoring_value(%{"type" => "integer", "value" => value}) when is_integer(value), do: value
+  defp authoring_value(%{"type" => "float", "value" => value}) when is_float(value), do: value
+  defp authoring_value(%{"type" => "boolean", "value" => value}) when is_boolean(value), do: value
+  defp authoring_value(%{"type" => "date", "value" => value}), do: Date.from_iso8601!(value)
+  defp authoring_value(%{"type" => "datetime", "value" => value}), do: datetime(value)
+  defp authoring_value(%{"type" => "atom", "value" => value}), do: authoring_atom!(value)
+
+  defp authoring_value(%{"type" => "map", "value" => value}) when is_map(value),
+    do: authoring_assigns(value)
+
   defp story_meta(scenario) do
     %{
       scenario_id: scenario["id"],
