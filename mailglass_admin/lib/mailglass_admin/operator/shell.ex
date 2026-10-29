@@ -283,7 +283,6 @@ defmodule MailglassAdmin.Operator.Shell do
     <div
       data-testid="operator-account-context"
       data-layout={@layout}
-      aria-label="Account context"
       class="flex w-full min-w-0 flex-wrap items-center gap-sm"
     >
       <details
