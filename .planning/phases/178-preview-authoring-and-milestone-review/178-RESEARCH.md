@@ -409,16 +409,27 @@ Because `Support Contract Admin` (240 s) sits ~650 s below the critical path, ad
 | A5 | The "owner approval" for the checkpoint is satisfied by the user's own message in the session, not by any agent message. [ASSUMED process reading of D-13] | Open Questions | Mis-reading could authorize a remote action without consent; the checkpoint must be `autonomous: false` and wait for a user-originated message. |
 | A6 | Existing `mailglass-storybook-review-demo` Compose project (127.0.0.1:4015 / 5415, "2 days ago", healthy) is the owner's earlier feedback preview and should be left running. [ASSUMED from the 173-DELIVERY precedent "must remain available"] | Environment Availability | If the owner wants it stopped, runbook disposition changes; do not touch it without asking. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Hosted-evidence event type and the single checkpoint wording**
+All five questions are resolved by the Phase 178 plans (revision 1, 2026-10-29). The original analysis stays under each resolution.
+
+1. **Hosted-evidence event type and the single checkpoint wording** (RESOLVED)
+   - **Resolution:** The `workflow_dispatch` sits inside the single D-13 checkpoint (plan 178-09, task 178-09-02) and is named there explicitly beside the fast-forward push and the draft PR, as the one approved dispatch. No rerun is pre-authorized: any rerun of a failed job needs a separate owner decision. The checkpoint also states the live-computed scope of the candidate against `origin/main` and against the remote candidate branch.
    - Known: PR run cannot satisfy `--require-ci` (Finding 2); Phase 174 used `workflow_dispatch`.
-   - Unclear: whether the owner considers `gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook` inside D-13's "push and PR" approval.
+   - Unclear (at research time): whether the owner considers `gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook` inside D-13's "push and PR" approval.
    - Recommendation: one checkpoint that explicitly lists the three actions (fast-forward push of the exact SHA, draft PR titled with a non-bumping type such as `chore(ui): …` and the body "review only, do not merge", one `workflow_dispatch`). `Guard Release Trigger` passes for non-bump types without inspecting files [VERIFIED: `guard_decision` returns 0 when type is not feat/fix/bang].
-2. **Where the full technical identity lives (trigger vs outside `<summary>`)**: see Pin Inventory; decide in UI-SPEC. Default recommendation: inside the trigger's identity block with the six trigger pins rewritten.
-3. **`Sidebar.picker/1` (directory variant)**: it also lists raw atoms (`sidebar.ex:314`) but is only reached via `Sidebar.sidebar/1` from `GalleryLive` specimens (`gallery_live.ex:431`) and ExUnit; `PreviewLive` uses only `menu/1`. Recommendation: leave `picker/1` untouched (Gallery matrix/axe pin its output) and say so in the ledger disposition; humanizing it is optional follow-up.
-4. **What is "Phase 176-178 growth" in the pilot?** The pilot (`--phase174 --phase175`) runs the whole demo suite (109 tests) but only `Phase 175` Admin cases; Admin Phase 176/177/178 cases only exist in the Operator Browser Gate. Recommendation: report three job deltas (Demo pilot, Operator gate, Support Contract Admin) plus the workflow wall to `CI Green`, each with expected (`--list`) vs executed (hosted JSON/log) counts.
-5. **Disposition if the 5-minute wall budget is exceeded again** (prior +14 s over): CONTEXT forbids weakening; candidate dispositions are "advisory lane, off the required critical path (Demo 535 s vs critical path 894 s at baseline)" and "optimize shared setup (two `npm ci`, two Chromium installs)". Decide after measuring; do not pre-commit.
+2. **Where the full technical identity lives (trigger vs outside `<summary>`)** (RESOLVED)
+   - **Resolution:** The trigger holds the identity. The exact technical identity is visible secondary monospace text inside the trigger's identity block (plan 178-04), and the trigger pins are rewritten in the same change.
+   - See Pin Inventory. Default recommendation at research time: inside the trigger's identity block with the six trigger pins rewritten.
+3. **`Sidebar.picker/1` (directory variant)** (RESOLVED)
+   - **Resolution:** The picker is untouched. Gallery matrix and axe outputs pin it, and `PreviewLive` uses only `menu/1`. The ledger disposition says so.
+   - It also lists raw atoms (`sidebar.ex:314`) but is only reached via `Sidebar.sidebar/1` from `GalleryLive` specimens (`gallery_live.ex:431`) and ExUnit. Humanizing it is optional follow-up.
+4. **What is "Phase 176-178 growth" in the pilot?** (RESOLVED)
+   - **Resolution:** There are three job deltas (Demo Browser Evidence pilot, Operator Browser Gate, Support Contract Admin) plus the run wall to `CI Green` for the dispatch run and the PR run. Each has expected (`--list`) and executed counts derived from saved hosted files. The pilot's cold and warm setup-inclusive wall time and runner cost are also compared to the budgets (plans 178-03 and 178-09).
+   - The pilot (`--phase174 --phase175`) runs the whole demo suite (109 tests) but only `Phase 175` Admin cases; Admin Phase 176/177/178 cases only exist in the Operator Browser Gate.
+5. **Disposition if the 5-minute wall budget is exceeded again** (prior +14 s over) (RESOLVED)
+   - **Resolution:** Use the stated overage rule. Measure first. If the measurement is over budget, the disposition is one of two things, recorded honestly in `178-COST-DISPOSITION.json` and `178-AUTOMATION.md`: duplication is removed (for example shared setup), or the advisory or required placement is justified. A gate is never weakened, and an omission is never hidden. An overage alone never escalates to the owner. It is part of the ship/no-ship review evidence (plan 178-10).
+   - CONTEXT forbids weakening. Candidate dispositions at research time were "advisory lane, off the required critical path (Demo 535 s vs critical path 894 s at baseline)" and "optimize shared setup (two `npm ci`, two Chromium installs)".
 
 ## Environment Availability
 

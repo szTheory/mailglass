@@ -262,10 +262,39 @@ Plans:
 4. Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)
 5. The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)
 
-**Plans:** TBD
+**Plans:** 12 plans in 8 waves
 **UI hint:** yes
 
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
+
+Plans:
+**Wave 1**
+- [ ] 178-01-PLAN.md — Restore defaults action and sample-value guidance (PRVUX-05, PRVUX-06).
+- [ ] 178-02-PLAN.md — Phase-independent merge-blocking feedback-ledger rule; stale demo assertion and Phase 176 rows closed (UIQ-04).
+- [ ] 178-03-PLAN.md — Exact-SHA candidate launcher and deterministic hosted cost derivation (UIQ-07, UIQ-08 tooling).
+- [ ] 178-12-PLAN.md — Re-home the STATE.md permanent-fact contract to the v2.8 DOCS-01 record so the core suite is green on the candidate (UIQ-08).
+
+**Wave 2** *(blocked on 178-01)*
+- [ ] 178-04-PLAN.md — Readable scenario selector with pure disambiguation (PRVUX-07).
+
+**Wave 3** *(blocked on Waves 1-2)*
+- [ ] 178-05-PLAN.md — Preview authoring stories, closed Preview ledger rows and STORY-07 accounting (STORY-07, UIQ-04).
+- [ ] 178-06-PLAN.md — Real browser zoom gaps and honest zoom labels (UIQ-06).
+
+**Wave 4** *(blocked on Wave 3)*
+- [ ] 178-07-PLAN.md — StatCard font-role receipt, phase-close ledger invariant, ledger record and D-11 replay command (UIQ-06, UIQ-04, STORY-07).
+
+**Wave 5** *(blocked on Wave 4)*
+- [ ] 178-11-PLAN.md — D-15 prohibition contract with recorded mutations (UIQ-04, STORY-07).
+
+**Wave 6** *(blocked on Waves 1-5)*
+- [ ] 178-08-PLAN.md — Full local gate including every CI Green lane, code review and candidate freeze (UIQ-07, UIQ-08).
+
+**Wave 7** *(blocked on Wave 6; owner approval checkpoint)*
+- [ ] 178-09-PLAN.md — Approved push, draft PR and the single dispatch; hosted cost/coverage disposition (UIQ-07, UIQ-08).
+
+**Wave 8** *(blocked on Wave 7; owner ship/no-ship)*
+- [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08).
 
 ## Continuing delivery obligations
 
