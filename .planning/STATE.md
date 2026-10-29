@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-11-PLAN.md
-last_updated: "2026-10-29T14:21:11.183Z"
+stopped_at: Completed 178-08-PLAN.md
+last_updated: "2026-10-29T15:34:27.825Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: acc521ff32bc30d9d5c029f62610f5042d0adf57
+state_head: d1347d2f7c5b13dd61a5763c5faaedfb706dde82
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 47
+  completed_plans: 48
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 10 of 12
+Plan: 11 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -337,6 +337,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P06 | 10 min | 3 tasks | 5 files |
 | Phase 178 P07 | 10 min | 2 tasks | 5 files |
 | Phase 178 P11 | 25 min | 2 tasks | 2 files |
+| Phase 178 P08 | 70 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -650,6 +651,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-06: Phase 176 CSS-zoom cases relabelled, not migrated; the real-zoom filter proof lives once in phase178-real-zoom.spec.js (one persistent context, per-route real-zoom receipts)
 - [Phase 178]: 178-07: StatCard font-role receipt compares the story with the production Admin gallery (same CSS bytes); no serif reproduces so no story or setup change; ledger invariant asserts no pending or partial row
 - [Phase 178]: 178-11: P1 -help id family scoped to assigns-*-help (preview-backdrop-help is a different control); P4 collisions derived from ScenarioLabel.humanize/1 alone
+- [Phase 178]: 178-08: operator timeout projection uses the count method (889 x 311 / 230 = 1203 s, within the 1440 s margin); the 20 minute sandbox-owner lifetime is a second bound with about 300 s of margin
+- [Phase 178]: 178-08: the three axe 'scan deliveries' timeouts were fixed (replayable row), not recorded as pre-existing, so plan 178-09 has no recorded advisory reds
+- [Phase 178]: 178-08: candidate_sha 2bdf18161182beeb286435b556f26e205976e658 frozen after a full local gate; demo_app lock refreshed for floki 0.38.5 and mailglass_admin publish allowlist refreshed
 
 ## Quick Tasks Completed
 
@@ -701,8 +705,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T14:21:10.216Z
-Stopped at: Completed 178-11-PLAN.md
+Last session: 2026-10-29T15:34:27.249Z
+Stopped at: Completed 178-08-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
