@@ -4649,13 +4649,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 
+    @tag :phase177
     test "quiet Health has one empty state and no zero-count or audit cards", %{conn: conn} do
       {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
 
       assert has_element?(
                view,
                "[data-testid='operator-health-status']",
-               "No recent mail activity"
+               "No mail activity in this period"
              )
 
       assert has_element?(view, "[data-testid='operator-health-outbound-activity']", "0")
@@ -4768,6 +4769,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute href =~ "event=failed"
     end
 
+    @tag :phase177
     test "a stale zero result cannot produce an all-clear", %{conn: conn} do
       insert_delivery!(last_event_type: :delivered)
       {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
@@ -4776,7 +4778,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Health check incomplete"
       assert html =~ ~s(data-testid="operator-health-stale-failed_ingest")
       refute html =~ "No issues found"
-      refute html =~ "No recent mail activity"
+      refute html =~ "No mail activity in this period"
     end
 
     test "Health shows received message activity and only inbound processing or routing problems",
@@ -5770,7 +5772,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
              )
              |> String.trim() == "1"
 
-      assert Floki.text(same_window_card) =~ "Last retrieved"
+      assert Floki.text(same_window_card) =~ "Not refreshed"
 
       # The same observation is outside 24 hours. A transient read in this new
       # interval must not relabel the 168-hour value as current or stale.
@@ -5789,7 +5791,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(view, "[data-testid='operator-health-window']", "Last 1 day")
 
       assert changed_window_html =~ ~s(data-testid="operator-health-unavailable-failed_ingest")
-      assert changed_window_html =~ "could not be loaded"
+
+      assert changed_window_html |> Floki.parse_document!() |> Floki.text() =~
+               "couldn't be loaded"
+
       assert changed_window_html =~ "Health check incomplete"
       refute changed_window_html =~ ~s(data-testid="operator-overview-health-failures")
       refute changed_window_html =~ provider_event_id
@@ -5825,7 +5830,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       document = Floki.parse_document!(html)
 
       assert_push_event(view, "mailglass:toast", %{
-        message: "Some health data could not be refreshed.",
+        message: "Some health checks couldn't be refreshed. Showing the last results retrieved.",
         error: true
       })
 

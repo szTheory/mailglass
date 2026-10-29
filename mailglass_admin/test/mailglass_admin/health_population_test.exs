@@ -275,7 +275,7 @@ defmodule MailglassAdmin.HealthPopulationTest do
     |> String.trim()
   end
 
-  defp stale_tag?(row), do: Floki.text(row) =~ "Last retrieved"
+  defp stale_tag?(row), do: Floki.text(row) =~ "Not refreshed"
 
   defp first_integer(text) do
     case Regex.run(~r/\d+/, text) do

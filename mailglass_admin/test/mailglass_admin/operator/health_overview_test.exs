@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.Operator.HealthOverviewTest do
   @moduledoc """
   Phase 177 / OUTUX-06: structure, class-equality and help-tier proofs for the
-  recomposed Health column. Copy-state tests arrive with plan 177-05.
+  recomposed Health column, plus the copy-state proofs added by plan 177-05.
   """
 
   use ExUnit.Case, async: true
@@ -318,21 +318,144 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     assert "flex-wrap" in classes(label_cluster)
   end
 
-  test "Phase 177 Health keeps every pre-refactor visible string until copy changes" do
-    states = Map.put(ready_states(), :orphan_backlog, %{status: :stale, checked_at: @checked_at})
+  defp text_of(html), do: html |> parse() |> Floki.text() |> String.replace(~r/\s+/, " ")
 
-    text =
-      render_overview(states: states, issues: [issue("health-a", 1, stale?: true)])
-      |> parse()
-      |> Floki.text()
+  # Visible sentence text: the timestamp tooltip is aria-hidden chrome, not copy,
+  # and the <time> element's trailing source whitespace is not a rendered space.
+  defp visible_text(node) do
+    node
+    |> Floki.filter_out("[role=tooltip]")
+    |> Floki.text()
+    |> String.replace(~r/\s+/, " ")
+    |> String.replace(" .", ".")
+    |> String.trim()
+  end
+
+  defp with_state(panel, status) do
+    Map.put(ready_states(), panel, %{status: status, checked_at: @checked_at})
+  end
+
+  @stale_notices %{
+    failed_ingest:
+      "Webhook processing wasn't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+    orphan_backlog:
+      "Unmatched events weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+    delivery_activity:
+      "Outbound activity and delivery results weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+    inbound_activity:
+      "Inbound activity and processing results weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC."
+  }
+
+  @unavailable_notices %{
+    failed_ingest: "Webhook processing couldn't be loaded.",
+    orphan_backlog: "Unmatched events couldn't be loaded.",
+    delivery_activity: "Outbound activity and delivery results couldn't be loaded.",
+    inbound_activity: "Inbound activity and processing results couldn't be loaded."
+  }
+
+  test "Phase 177 Health copy: issues with an incomplete check say what to do" do
+    text = render_overview(states: with_state(:orphan_backlog, :unavailable)) |> text_of()
 
     assert text =~ "Needs attention"
-    assert text =~ "Last retrieved"
-    assert text =~ "Unmatched events:"
-    assert text =~ "last retrieved"
-    assert text =~ "Recent activity"
-    assert text =~ "deliveries updated"
-    assert text =~ "messages received"
+    assert text =~ "Some checks couldn't be updated. Refresh to try again."
+    refute text =~ "could not be updated"
+  end
+
+  test "Phase 177 Health copy: an incomplete check with no issues is not an all-clear" do
+    text =
+      render_overview(issues: [], states: with_state(:failed_ingest, :unavailable)) |> text_of()
+
+    assert text =~ "Health check incomplete"
+    assert text =~ "Refresh to try again."
+    refute text =~ "No issues found"
+  end
+
+  test "Phase 177 Health copy: a complete check with activity and no issues names the period" do
+    text = render_overview(issues: []) |> text_of()
+
+    assert text =~ "No issues found"
+    assert text =~ "No recorded problems in this period."
+  end
+
+  test "Phase 177 Health copy: no activity is a single neutral line with the links kept" do
+    tree =
+      render_overview(
+        issues: [],
+        activity: %{deliveries: %{total: 0}, inbound: %{total: 0}}
+      )
+      |> parse()
+
+    [status] = find(tree, testid("operator-health-status"))
+    status_text = status |> Floki.text() |> String.replace(~r/\s+/, " ") |> String.trim()
+
+    assert status_text == "No mail activity in this period"
+    assert find(status, "p") == []
+    refute Floki.text(tree) =~ "No recent mail activity"
+
+    assert [_] = find(tree, testid("operator-health-outbound-activity"))
+
+    linked = tree |> Floki.text() |> String.replace(~r/\s+/, " ")
+    assert linked =~ "0 deliveries updated"
+    assert linked =~ "0 messages received"
+  end
+
+  test "Phase 177 Health copy: a stale row is tagged Not refreshed" do
+    text =
+      render_overview(
+        states: with_state(:orphan_backlog, :stale),
+        issues: [issue("health-a", 1, stale?: true)]
+      )
+      |> text_of()
+
+    assert text =~ "Not refreshed"
+    refute text =~ "Last retrieved"
+  end
+
+  test "Phase 177 Health copy: each panel has its own stale notice with the timestamp" do
+    for {panel, sentence} <- @stale_notices do
+      html = render_overview(states: with_state(panel, :stale))
+      [notice] = html |> parse() |> find(testid("operator-health-stale-#{panel}"))
+      notice_text = visible_text(notice)
+
+      assert notice_text == sentence
+      refute notice_text =~ "last retrieved"
+    end
+  end
+
+  test "Phase 177 Health copy: each panel has its own unavailable notice" do
+    for {panel, sentence} <- @unavailable_notices do
+      html = render_overview(states: with_state(panel, :unavailable))
+      [notice] = html |> parse() |> find(testid("operator-health-unavailable-#{panel}"))
+      notice_text = visible_text(notice)
+
+      assert notice_text == sentence
+    end
+  end
+
+  test "Phase 177 Health copy: stale or unavailable panels never read No issues found" do
+    for panel <- Map.keys(@stale_notices), status <- [:stale, :unavailable] do
+      text = render_overview(issues: [], states: with_state(panel, status)) |> text_of()
+
+      refute text =~ "No issues found", "#{panel} #{status} rendered an all-clear"
+      assert text =~ "Health check incomplete"
+    end
+  end
+
+  test "Phase 177 Health copy: unavailable activity reads Outbound or Inbound activity unavailable" do
+    text =
+      render_overview(activity: %{deliveries: nil, inbound: nil}, issues: []) |> text_of()
+
+    assert text =~ "Outbound activity unavailable"
+    assert text =~ "Inbound activity unavailable"
+    refute text =~ " Activity unavailable"
+  end
+
+  test "Phase 177 Health copy: notice text is a closed clause set, not interpolated panel names" do
+    source = File.read!(@source)
+
+    assert source =~ "defp notice_copy("
+    refute source =~ ~S|panel_name(panel)}:|
+    refute source =~ "Last retrieved"
   end
 
   test "Phase 177 Health markup has no order, row-reverse or viewport layout classes" do

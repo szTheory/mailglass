@@ -21,14 +21,14 @@ defmodule MailglassAdmin.Operator.HealthOverview do
       cond do
         assigns.issues != [] ->
           {"Needs attention", "hero-exclamation-triangle", "text-warning",
-           if(complete?, do: nil, else: "Some checks could not be updated.")}
+           if(complete?, do: nil, else: "Some checks couldn't be updated. Refresh to try again.")}
 
         not complete? ->
           {"Health check incomplete", "hero-exclamation-triangle", "text-warning",
            "Refresh to try again."}
 
         not active? ->
-          {"No recent mail activity", "hero-minus-circle", "text-secondary", nil}
+          {"No mail activity in this period", "hero-minus-circle", "text-secondary", nil}
 
         true ->
           {"No issues found", "hero-check-circle", "text-success",
@@ -112,7 +112,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
             label={issue.label}
             text={issue.help}
           />
-          <span :if={issue.stale?} class="text-label text-secondary">Last retrieved</span>
+          <span :if={issue.stale?} class="text-label text-secondary">Not refreshed</span>
         </div>
       </li>
     </ul>
@@ -129,11 +129,10 @@ defmodule MailglassAdmin.Operator.HealthOverview do
       data-testid={"operator-health-#{state.status}-#{panel}"}
       class="mt-sm text-body text-secondary"
     >
-      {panel_name(panel)}:
       <%= if state.status == :stale do %>
-        last retrieved <Components.timestamp at={state.checked_at} />.
+        {notice_copy(:stale, panel)} <Components.timestamp at={state.checked_at} />.
       <% else %>
-        could not be loaded.
+        {notice_copy(:unavailable, panel)}
       <% end %>
     </p>
     """
@@ -179,7 +178,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
                     do: "delivery updated",
                     else: "deliveries updated"
                   ),
-                else: "Activity unavailable"}
+                else: "Outbound activity unavailable"}
             </span>
           </.link>
         </div>
@@ -207,7 +206,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
                     do: "message received",
                     else: "messages received"
                   ),
-                else: "Activity unavailable"}
+                else: "Inbound activity unavailable"}
             </span>
           </.link>
         </div>
@@ -259,8 +258,28 @@ defmodule MailglassAdmin.Operator.HealthOverview do
     """
   end
 
-  defp panel_name(:failed_ingest), do: "Webhook processing"
-  defp panel_name(:orphan_backlog), do: "Unmatched events"
-  defp panel_name(:delivery_activity), do: "Outbound activity and delivery results"
-  defp panel_name(:inbound_activity), do: "Inbound activity and processing results"
+  # Closed clause set (status x panel). No notice is built by interpolating a
+  # panel name into free text, so every sentence is reviewed as a whole.
+  # A stale notice returns the lead-in only; the timestamp and the closing
+  # period follow it in the template.
+  defp notice_copy(:stale, :failed_ingest),
+    do: "Webhook processing wasn't refreshed. Showing results from"
+
+  defp notice_copy(:stale, :orphan_backlog),
+    do: "Unmatched events weren't refreshed. Showing results from"
+
+  defp notice_copy(:stale, :delivery_activity),
+    do: "Outbound activity and delivery results weren't refreshed. Showing results from"
+
+  defp notice_copy(:stale, :inbound_activity),
+    do: "Inbound activity and processing results weren't refreshed. Showing results from"
+
+  defp notice_copy(:unavailable, :failed_ingest), do: "Webhook processing couldn't be loaded."
+  defp notice_copy(:unavailable, :orphan_backlog), do: "Unmatched events couldn't be loaded."
+
+  defp notice_copy(:unavailable, :delivery_activity),
+    do: "Outbound activity and delivery results couldn't be loaded."
+
+  defp notice_copy(:unavailable, :inbound_activity),
+    do: "Inbound activity and processing results couldn't be loaded."
 end

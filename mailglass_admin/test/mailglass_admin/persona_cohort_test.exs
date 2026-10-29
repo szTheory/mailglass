@@ -101,6 +101,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
   end
 
   describe "helios-void direct-URL surface (T-116-03)" do
+    @tag :phase177
     test "bare URL renders the no-data overview without crashing", %{conn: conn} do
       OperatorFixtures.seed_persona_cohort!()
 
@@ -113,7 +114,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
         live(conn, @base_path <> "?" <> URI.encode_query(%{"tenant_id" => "helios-void"}))
 
       assert html =~ "helios-void"
-      assert html =~ "No recent mail activity"
+      assert html =~ "No mail activity in this period"
       assert html =~ "deliveries updated"
       assert html =~ "messages received"
       refute html =~ "All clear"

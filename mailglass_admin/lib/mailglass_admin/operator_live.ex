@@ -533,7 +533,7 @@ defmodule MailglassAdmin.OperatorLive do
     message =
       if refreshed?,
         do: "Email health refreshed.",
-        else: "Some health data could not be refreshed."
+        else: "Some health checks couldn't be refreshed. Showing the last results retrieved."
 
     {:noreply, push_event(socket, "mailglass:toast", %{message: message, error: !refreshed?})}
   end
