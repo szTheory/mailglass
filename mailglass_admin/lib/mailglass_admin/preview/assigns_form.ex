@@ -21,7 +21,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   LiveView re-calls the mailable function with updated assigns and pipes
   through `Mailglass.Renderer.render/1`.
 
-  Supported scalar changes render live. Reset restores the scenario defaults.
+  Supported scalar changes render live. Restore defaults returns every field to the
+  scenario defaults.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -60,8 +61,12 @@ defmodule MailglassAdmin.Preview.AssignsForm do
       <% end %>
 
       <div class="flex flex-wrap gap-2">
-        <button type="button" class="btn btn-ghost min-h-11 px-5" phx-click="reset_assigns">
-          Reset assigns
+        <button
+          type="button"
+          class="mg-focus-ring btn btn-ghost min-h-11 px-md border border-base-300 w-full sm:ml-auto sm:w-auto"
+          phx-click="reset_assigns"
+        >
+          Restore defaults
         </button>
       </div>
     </form>

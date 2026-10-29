@@ -731,7 +731,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // Supported scalar edits render automatically. Reset is the explicit
     // action; a separate Render button would be redundant and imply stale state.
     const assignsForm = page.getByTestId("preview-assigns-form");
-    await expect(assignsForm.getByRole("button", { name: "Reset assigns", exact: true })).toBeVisible();
+    await expect(assignsForm.getByRole("button", { name: "Restore defaults", exact: true })).toBeVisible();
     await expect(assignsForm.getByRole("button", { name: /render preview/i })).toHaveCount(0);
   });
 

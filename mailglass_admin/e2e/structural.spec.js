@@ -1,4 +1,5 @@
 const { test, expect, chromium } = require("@playwright/test");
+const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
 const { accountSwitcher, accountOption } = require("./support/account.cjs");
@@ -122,6 +123,42 @@ async function openPreviewScenario(page, query = "theme=light") {
   await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
   await expect(page.getByTestId("preview-tab-strip")).toBeVisible();
   await expect(page.getByTestId("preview-pane")).toBeVisible();
+}
+
+// Phase 178 (PRVUX-05): geometry of the Preview "Restore defaults" action against
+// the assigns form content box (form box minus its own padding and border).
+async function measureRestoreDefaults(page) {
+  return page.evaluate(() => {
+    const form = document.getElementById("preview-assigns-form");
+    const button = form.querySelector('button[phx-click="reset_assigns"]');
+    const formRect = form.getBoundingClientRect();
+    const formStyle = getComputedStyle(form);
+    const buttonRect = button.getBoundingClientRect();
+    const buttonStyle = getComputedStyle(button);
+    const px = value => parseFloat(value) || 0;
+    const contentLeft = formRect.left + px(formStyle.borderLeftWidth) + px(formStyle.paddingLeft);
+    const contentRight = formRect.right - px(formStyle.borderRightWidth) - px(formStyle.paddingRight);
+    return {
+      contentWidth: contentRight - contentLeft,
+      contentLeft,
+      contentRight,
+      buttonLeft: buttonRect.left,
+      buttonRight: buttonRect.right,
+      buttonWidth: buttonRect.width,
+      buttonHeight: buttonRect.height,
+      borderTopWidth: px(buttonStyle.borderTopWidth),
+      borderTopColor: buttonStyle.borderTopColor,
+      formBackground: formStyle.backgroundColor,
+      text: button.textContent.trim()
+    };
+  });
+}
+
+// Tab from the last editable field so :focus-visible matches (keyboard modality).
+async function tabToRestoreDefaults(page) {
+  await page.locator("#assigns-user_name").focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Restore defaults", exact: true })).toBeFocused();
 }
 
 async function openPreviewError(page, query = "theme=light") {
@@ -2371,6 +2408,138 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(inboundSearch).toBeFocused();
       const inboundAfter = await page.evaluate(() => document.activeElement && document.activeElement.id);
       expect(inboundAfter).toBe(inboundBefore);
+    });
+
+    test("Preview: Phase 178 axe cell matches the committed baseline", async ({ page }) => {
+      test.slow();
+      const baseline = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "..", "docs", "axe-baseline.json"), "utf8")
+      );
+      const WCAG_22_AA_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
+      for (const theme of ["light", "dark", "system"]) {
+        // Same theme drive as e2e/axe-baseline.spec.js: system has no ?theme= and
+        // emulates a dark OS preference so the media-query branch is exercised.
+        await page.emulateMedia({ colorScheme: theme === "light" ? "light" : "dark" });
+        await page.context().clearCookies();
+        const themed = theme === "system" ? "" : `?theme=${theme}`;
+        await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default${themed}`);
+        await expect(page.getByTestId("preview-shell")).toBeVisible();
+
+        const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
+        const measured = {};
+        for (const violation of results.violations) {
+          measured[violation.id] = (measured[violation.id] || 0) + violation.nodes.length;
+          for (const node of violation.nodes) {
+            const description = `${theme} ${violation.id} ${JSON.stringify(node.target)}`;
+            test.info().annotations.push({ type: "axe-target", description });
+            console.log(`axe-target ${description}`);
+          }
+        }
+
+        expect(measured, `Preview axe cell (${theme}) must equal the committed baseline`).toEqual(
+          baseline.current.violations.preview[theme].rules
+        );
+      }
+    });
+
+    test("Preview: Phase 178 restore defaults geometry, border and focus", async ({ page }) => {
+      test.slow();
+      const viewports = [
+        { width: 390, height: 844, stacked: true },
+        { width: 639, height: 844, stacked: true },
+        { width: 640, height: 900, stacked: false },
+        { width: 1280, height: 900, stacked: false }
+      ];
+
+      for (const theme of ["light", "dark"]) {
+        for (const viewport of viewports) {
+          const label = `${theme} ${viewport.width}px`;
+          await page.setViewportSize({ width: viewport.width, height: viewport.height });
+          await openPreviewScenario(page, theme === "dark" ? "theme=dark" : "");
+
+          const restore = page.getByTestId("preview-assigns-form").getByRole("button", {
+            name: "Restore defaults",
+            exact: true
+          });
+          await expect(restore).toBeVisible();
+          const box = await measureRestoreDefaults(page);
+
+          expect(box.text, label).toBe("Restore defaults");
+          if (viewport.stacked) {
+            expect(Math.abs(box.buttonWidth - box.contentWidth), `${label} full-width`).toBeLessThanOrEqual(1);
+            expect(box.buttonHeight, `${label} touch target`).toBeGreaterThanOrEqual(44);
+          } else {
+            expect(Math.abs(box.buttonRight - box.contentRight), `${label} end-aligned`).toBeLessThanOrEqual(1);
+            expect(box.buttonWidth, `${label} auto width`).toBeLessThan(box.contentWidth / 2);
+          }
+
+          expect(box.borderTopWidth, `${label} border width`).toBeGreaterThanOrEqual(1);
+          expect(box.borderTopColor, `${label} border color differs from the form background`).not.toBe(
+            box.formBackground
+          );
+
+          await tabToRestoreDefaults(page);
+          await expect
+            .poll(
+              async () =>
+                restore.evaluate(el => {
+                  const style = getComputedStyle(el);
+                  const outline = style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
+                  return {
+                    ring: outline || style.boxShadow !== "none",
+                    color: outline ? style.outlineColor : style.boxShadow
+                  };
+                }),
+              { message: `${label} keyboard focus ring` }
+            )
+            .toMatchObject({ ring: true });
+          const ringColor = await restore.evaluate(el => getComputedStyle(el).outlineColor);
+          expect(ringColor, `${label} focus ring color differs from the form background`).not.toBe(
+            box.formBackground
+          );
+        }
+      }
+
+      // Behavior: an invalid draft is cleared and the scenario default returns.
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.context().clearCookies();
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values");
+      await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+      const quantity = page.locator("#assigns-quantity");
+      await expect(quantity).toHaveValue("3");
+      await quantity.fill("2.5");
+      await expect(page.locator("#assigns-quantity-error")).toHaveText("Enter a whole number.");
+      await page.getByRole("button", { name: "Restore defaults", exact: true }).click();
+      await expect(quantity).toHaveValue("3");
+      await expect(page.locator("#assigns-quantity-error")).toHaveCount(0);
+    });
+
+    test("Preview: Phase 178 restore defaults under reduced motion", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.context().clearCookies();
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values");
+      await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+
+      const restore = page.getByRole("button", { name: "Restore defaults", exact: true });
+      const durations = await restore.evaluate(el => getComputedStyle(el).transitionDuration);
+      const toMs = value => (value.trim().endsWith("ms") ? parseFloat(value) : parseFloat(value) * 1000);
+      for (const duration of durations.split(",")) {
+        expect(toMs(duration), `transition-duration ${durations}`).toBeLessThanOrEqual(0.01);
+      }
+
+      const quantity = page.locator("#assigns-quantity");
+      await quantity.fill("2.5");
+      await expect(page.locator("#assigns-quantity-error")).toHaveText("Enter a whole number.");
+
+      // Keyboard path: Tab from the last editable field to the action, then Enter.
+      await page.locator("#assigns-ratio").focus();
+      await page.keyboard.press("Tab");
+      await expect(restore).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect(quantity).toHaveValue("3");
+      await expect(page.locator("#assigns-quantity-error")).toHaveCount(0);
     });
 
     test("Preview assigns and operator replay radios keep explicit labels and descriptions", async ({

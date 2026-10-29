@@ -105,14 +105,14 @@ defmodule MailglassAdmin.VoiceTest do
       refute Floki.text(generator_command) =~ "`"
     end
 
-    test "assigns form names its reset action without a duplicate render action", %{conn: conn} do
+    test "assigns form names its restore action without a duplicate render action", %{conn: conn} do
       conn = Plug.Test.init_test_session(conn, %{"mailables" => [HappyMailer]})
 
       {:ok, _view, html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
-      assert html =~ "Reset assigns",
-             "secondary action must be the verb+noun 'Reset assigns' (not bare 'Reset')"
+      assert html =~ "Restore defaults",
+             "secondary action must be the verb+noun 'Restore defaults' (not a bare 'Reset')"
 
       assert html =~ ~s(id="preview-assigns-form")
       refute html =~ "Render preview"

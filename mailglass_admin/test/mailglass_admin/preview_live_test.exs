@@ -1059,7 +1059,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(id="preview-assigns-form")
       assert html =~ ~s(phx-debounce="150")
       refute html =~ "Render preview"
-      assert html =~ "Reset assigns"
+      assert html =~ "Restore defaults"
+      refute html =~ "Reset assigns"
     end
 
     test "string assigns render stable labels, IDs, names, and help associations" do
