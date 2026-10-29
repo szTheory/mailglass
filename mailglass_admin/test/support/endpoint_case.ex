@@ -204,6 +204,9 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         "phase169-support-empty" ->
           {:ok, OperatorFixtures.seed_phase169_support_empty!()}
 
+        "phase177-health-all" ->
+          {:ok, OperatorFixtures.seed_phase177_health_all!()}
+
         _ ->
           :unknown
       end
