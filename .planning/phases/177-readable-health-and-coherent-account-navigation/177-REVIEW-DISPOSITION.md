@@ -1,17 +1,43 @@
 ---
 phase: 177
 review: 177-REVIEW.md
-generated: 2026-10-28
+titles: json
+findings:
+  - id: WR-01
+    severity: warning
+    disposition: fixed
+    title: "Single-option Account control renders a fake \"selected\" identity and removes the only way to switch"
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "Invalid HTML content model in the observation group"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "Scope group accessible name absorbs the sr-only Account id"
+  - id: IN-03
+    severity: info
+    disposition: open
+    title: "Header `aria-describedby` can reference an empty description"
+  - id: IN-04
+    severity: info
+    disposition: open
+    title: "Operator Account control does not trim whitespace-only Account ids"
+open: 4
+total: 5
+recorded: 2026-10-29T02:13:36.819Z
 ---
 
-# Phase 177 Review Disposition
+# Phase 177: Code Review Disposition
 
-Advisory review; no finding blocks phase completion. Every row defaults to `open` until triaged.
+| Finding | Severity | Disposition | Source |
+|---------|----------|-------------|--------|
+| WR-01 | warning | fixed | 177-REVIEW-FIX.md |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| IN-03 | info | open | - |
+| IN-04 | info | open | - |
 
-| ID | Severity | File | Summary | Disposition |
-|----|----------|------|---------|-------------|
-| WR-01 | warning | mailglass_admin/lib/mailglass_admin/operator/shell.ex:381 | Single-option `account_variant` renders a named scoped Account regardless of `tenant_state` (blank `?tenant_id=` / deep link outside the sole option) | open |
-| IN-01 | info | mailglass_admin/lib/mailglass_admin/operator/health_overview.ex | `<p>` nested inside `<span>` (invalid HTML) | open |
-| IN-02 | info | mailglass_admin/lib/mailglass_admin/surface_nav.ex | scope group `aria-labelledby` header includes sr-only `tenant_id` in accessible name | open |
-| IN-03 | info | mailglass_admin/lib/mailglass_admin/surface_nav.ex | `aria-describedby` may reference an empty description with no scoped paths | open |
-| IN-04 | info | mailglass_admin/lib/mailglass_admin/operator_live.ex | `blank_to_nil/1` does not trim whitespace-only ids (reachability unconfirmed) | open |
+Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
+Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
+Re-running the gate keeps every row it can. A row the current review no longer reports is kept and its Source cell flagged, so a finding does not leave this record silently. ONE exception: when a finding id is REUSED by a different finding, the earlier decision cannot keep a row — the id is taken — and it is dropped. A RECORDED decision (anything but `open`) is named on the console when that happens; a row still at `open` is replaced silently, because `open` records no decision to lose.
