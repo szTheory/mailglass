@@ -72,7 +72,7 @@ test("Phase 178 retained Preview authoring stories render through production com
 });
 
 // UIQ-06 / D-07: the owner reported that the Storybook StatCard rendered in a serif face. The
-// receipt compares computed font roles in the story iframe with the same component rendered
+// receipt compares computed font roles in the inline story block with the same component rendered
 // by the production Admin gallery. Both pages are served by this demo from the same admin CSS
 // bytes, so the comparison fails on any divergence, not only on a serif fallback.
 const STATCARD = {
@@ -140,16 +140,25 @@ test("Phase 178 StatCard story uses the production font roles", async ({ page })
   const response = await page.goto(STATCARD.path);
   expect(response?.status(), `${STATCARD.path} loads`).toBe(200);
 
+  // The StatCard is a `:component` story without `container: :iframe`, so PhoenixStorybook renders
+  // each variation inline in the explorer page, inside `.psb-sandbox` (the element the owner's
+  // todo blames for the serif face). Resolve the variation block by its Storybook-generated id.
   const receipt = [];
   for (const { variation, theme } of STATCARD.cases) {
-    const iframe = page.locator(`iframe[id*="variation-${variation}"]`);
-    await expect(iframe, `${variation} has exactly one story iframe`).toHaveCount(1);
-    const frame = page.frameLocator(`iframe[id*="variation-${variation}"]`);
-    const wrapper = frame.locator(`[data-theme="mailglass-${theme}"]`).first();
+    const block = page.locator(`[id="${variation.replace(/_/g, "-")}-component"]`);
+    await expect(block, `${variation} has exactly one inline story block`).toHaveCount(1);
+    const wrapper = block.locator(`[data-theme="mailglass-${theme}"]`).first();
     await expect(wrapper.locator("article"), `${variation} renders the production StatCard`).toBeVisible();
 
     const story = await readStatCardRoles(await wrapper.elementHandle());
     const reference = production[theme];
+
+    const sandboxFamily = await block.locator(".psb-sandbox").first().evaluate(node =>
+      getComputedStyle(node).fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, "")
+    );
+    expect(sandboxFamily, `${variation} .psb-sandbox first family is the production UI face`).toBe(
+      reference.faces.find(face => face.role === "ui").family
+    );
 
     for (const role of ["ui", "label", "value"]) {
       const storyFamily = story.roles[role].family.split(",")[0].trim().replace(/^["']|["']$/g, "");
