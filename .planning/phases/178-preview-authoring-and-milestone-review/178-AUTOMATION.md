@@ -230,3 +230,45 @@ The advisory demo case in `reference/demo_app/assets/e2e/quick-views.spec.js` on
 The Phase 174 review guide (`mailglass_admin/docs/phase174-review.md`) restates each row's status and pointer in its Feedback disposition table, and its replay command now uses the installed Erlang pin `ASDF_ERLANG_VERSION=27.3.4.15` with Elixir `1.18.4-otp-27`, matching the toolchain note under "Reproduce and check" above (D-11; `.tool-versions` is unchanged).
 
 Limits: the ledger proves that each pointer resolves to a real file and heading and that scenarios link both ways; it does not judge whether the target section's evidence is sufficient. Sufficiency is each owning phase's automated record.
+
+## Prohibition contract (D-15)
+
+Every Phase 178 must-NOT is a mutation-proven, merge-blocking test, so none routes to owner review (D-52, METHODOLOGY 2026-10-27 clause). The contract is `mailglass_admin/test/mailglass_admin/phase178_prohibition_contract_test.exs` (`MailglassAdmin.Phase178ProhibitionContractTest`, `use MailglassAdmin.LiveViewCase, async: false` because P5 needs a live view, `@moduletag :phase178`). It has 21 tests: 8 detector-teeth cases that feed each detector a known violation and a known clean fixture, and 13 clean-state cases on real renders (component renders, the live typed_values page, the open and closed selector menu), the real feedback manifest, and the real e2e spec sources.
+
+### Rules
+
+| Rule | Prohibition | Detector | Clean-state tests |
+| --- | --- | --- | --- |
+| P1 | No generic per-field type helper string ("Text value.", "Whole number.", "Decimal number.", "Toggle on or off.", "Date.") and no editable `assigns-*-help` id or reference | `generic_helper_violations/1` | `P1: ... assigns_form/1 renders none for typed, editable-only, read-only, mixed and error states`; `... the typed_values page renders none on mount, after an invalid edit and after Restore defaults`; `... the selector menu renders no generic helper or -help id` |
+| P2 | No dangling `aria-describedby` or `aria-labelledby` id | `dangling_id_violations/1` | `P2: ... assigns_form/1 resolves every reference in every state`; `... the selector menu resolves every reference, closed and open`; `... every typed_values page state resolves its references` |
+| P3 | The selected scenario's exact technical identity is visible text in the trigger, never only a `title` | `title_only_identity_violations/2` | `P3: ... every fixture scenario shows ScenarioLabel.technical/2 in the trigger text` (all HappyMailer scenarios plus the render-error entry); `... the live scenario page shows the identity in the trigger` |
+| P4 | No raw scenario atom is the only primary label of a non-colliding scenario | `raw_primary_violations/2` | `P4: ... the open menu never shows a raw atom as the primary of a non-colliding option`; `... non-colliding primaries equal ScenarioLabel.humanize/1 and colliding ones keep the atom` |
+| P5 | The `reset_assigns` event name and its restore/clear behavior are unchanged | `reset_violations/3` | `P5: reset_assigns is unchanged Restore defaults fires reset_assigns, restores the default and clears every field error` |
+| P6 | No feedback row is pending or partial at phase close | `FeedbackLedger.open_rows/1` on `QuickViewScenarios.feedback/0` | `P6: ... the real manifest has no open row` |
+| P7 | No test that uses `style.zoom` says real zoom, actual 200% or 200% zoom | `css_zoom_label_violations/1` (spec files to `[{file, title}]`) | `P7: ... no spec in the Admin or demo e2e trees labels CSS zoom as real zoom` |
+
+Scope notes. P1 limits the `-help` id family to the assigns form (`assigns-*-help`); `preview-backdrop-help` is a different control and is legitimate. P4 derives collisions from `ScenarioLabel.humanize/1` alone, never from the label table under test, and the clean-state test asserts the fixture really contains a colliding pair. P7 splits each spec at `test(` and `test.describe(` boundaries, flags a block that contains `style.zoom` together with one of the phrases in its title or string literals, and asserts that it read more than 15 spec files and at least one `style.zoom` use (T-178-19, no vacuous scan). P5's clean-state test first asserts that the invalid edit produced a draft and a field error, so the restore it checks is not vacuous.
+
+### Mutation proofs
+
+Each mutation was applied to committed source (HEAD `a6596155`), the contract was run with `--seed 0`, and the file was reverted with `git checkout HEAD -- <that file>` only (no `git checkout .`, no `git stash`). After each revert `git diff --quiet HEAD -- <file>` exited 0.
+
+| Rule | File mutated | Mutation | Failing test(s) | Revert command |
+| --- | --- | --- | --- | --- |
+| P1 | `mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex` | Re-added `<p id={@control_id <> "-help"}>Whole number.</p>` to the integer field | `P1: ... assigns_form/1 renders none for typed, editable-only, read-only, mixed and error states`; `P1: ... the typed_values page renders none on mount, after an invalid edit and after Restore defaults` (21 tests, 2 failures) | `git checkout HEAD -- mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex` |
+| P2 | `mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex` | Read-only field `aria-describedby` points at the non-rendered `preview-assigns-missing` | `P2: ... assigns_form/1 resolves every reference in every state`; `P2: ... every typed_values page state resolves its references` (21 tests, 2 failures) | `git checkout HEAD -- mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex` |
+| P3 | `mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` | Technical identity span emptied and the identity moved to `title={@identity.technical}` | `P3: ... every fixture scenario shows ScenarioLabel.technical/2 in the trigger text`; `P3: ... the live scenario page shows the identity in the trigger` (21 tests, 2 failures) | `git checkout HEAD -- mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` |
+| P4 | `mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` | Option primary renders `Atom.to_string(scenario_name)` instead of `ScenarioLabel.scenario_label/3` | `P4: ... the open menu never shows a raw atom as the primary of a non-colliding option`; `P4: ... non-colliding primaries equal ScenarioLabel.humanize/1 and colliding ones keep the atom` (21 tests, 2 failures) | `git checkout HEAD -- mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` |
+| P5 | `mailglass_admin/lib/mailglass_admin/preview_live.ex` | Dropped `assign(:field_errors, %{})` from the `reset_assigns` handler | `P5: reset_assigns is unchanged Restore defaults fires reset_assigns, restores the default and clears every field error` (21 tests, 1 failure) | `git checkout HEAD -- mailglass_admin/lib/mailglass_admin/preview_live.ex` |
+| P6 | `reference/persona_spec/quick_view_scenarios.json` | `fb-health-crowding` status set from `automated` to `partial` | `P6: ... the real manifest has no open row` (21 tests, 1 failure) | `git checkout HEAD -- reference/persona_spec/quick_view_scenarios.json` |
+| P7 | `mailglass_admin/e2e/phase176-filters.spec.js` | Renamed "under CSS zoom 2x" to "under 200% zoom" in the 500-character query test title | `P7: ... no spec in the Admin or demo e2e trees labels CSS zoom as real zoom` (21 tests, 1 failure) | `git checkout HEAD -- mailglass_admin/e2e/phase176-filters.spec.js` |
+
+With every mutation reverted, `git diff --quiet HEAD -- mailglass_admin/lib reference/persona_spec mailglass_admin/e2e reference/demo_app/assets/e2e mailglass_admin/test/mailglass_admin/phase178_prohibition_contract_test.exs` exits 0 and the contract reports 21 tests, 0 failures.
+
+### Lane
+
+Support Contract Admin (required) runs the whole admin suite through `mix verify.support_contract.admin`, which includes this file. To reproduce the contract alone:
+
+```sh
+cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/phase178_prohibition_contract_test.exs --seed 0 --warnings-as-errors
+```
