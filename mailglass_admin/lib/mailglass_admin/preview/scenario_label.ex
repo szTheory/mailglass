@@ -48,14 +48,25 @@ defmodule MailglassAdmin.Preview.ScenarioLabel do
 
   @doc """
   Builds the label table for a `Discovery.discover/1` result.
+
+  Within one Mailable, scenarios whose humanized labels collide (compared
+  NFC-normalized and downcased) use their raw atom string as the primary label.
+  Mailables that share a leaf across namespaces get the shortest trailing
+  namespace suffix that tells them apart. A repeated module entry keeps its
+  first occurrence. Over any input the `{module_label, primary_label}` pairs
+  are unique.
   """
   @spec build([{module(), reflection()}]) :: labels()
   def build(mailables) when is_list(mailables) do
-    Enum.reduce(mailables, %{modules: %{}, scenarios: %{}}, fn {mod, reflection}, acc ->
-      acc
-      |> put_in([:modules, mod], leaf(mod))
-      |> put_scenarios(mod, reflection)
-    end)
+    entries = Enum.uniq_by(mailables, fn {mod, _reflection} -> mod end)
+
+    %{
+      modules: entries |> Enum.map(&elem(&1, 0)) |> module_labels(),
+      scenarios:
+        Enum.reduce(entries, %{}, fn {mod, reflection}, acc ->
+          put_scenarios(acc, mod, reflection)
+        end)
+    }
   end
 
   @doc """
@@ -76,12 +87,63 @@ defmodule MailglassAdmin.Preview.ScenarioLabel do
     do: Map.get(scenarios, {mod, scenario}) || Atom.to_string(scenario)
 
   defp put_scenarios(acc, mod, reflection) when is_list(reflection) do
-    Enum.reduce(reflection, acc, fn {scenario, _defaults}, inner ->
-      put_in(inner, [:scenarios, {mod, scenario}], humanize(scenario))
+    humanized =
+      for {scenario, _defaults} <- reflection, is_atom(scenario), into: %{} do
+        {scenario, humanize(scenario)}
+      end
+
+    collisions = humanized |> Map.values() |> Enum.frequencies_by(&collision_key/1)
+
+    Enum.reduce(humanized, acc, fn {scenario, label}, inner ->
+      primary =
+        if Map.fetch!(collisions, collision_key(label)) > 1,
+          do: Atom.to_string(scenario),
+          else: label
+
+      Map.put(inner, {mod, scenario}, primary)
     end)
   end
 
   defp put_scenarios(acc, _mod, _reflection), do: acc
+
+  # Two labels that differ only by case or Unicode normalization form look the
+  # same to a reader, so they count as one label.
+  defp collision_key(label) do
+    case :unicode.characters_to_nfc_binary(label) do
+      normalized when is_binary(normalized) -> String.downcase(normalized)
+      _invalid -> String.downcase(label)
+    end
+  end
+
+  defp module_labels(mods) do
+    mods
+    |> Enum.group_by(&leaf/1)
+    |> Enum.flat_map(fn
+      {leaf, [mod]} -> [{mod, leaf}]
+      {_leaf, group} -> disambiguate(group)
+    end)
+    |> Map.new()
+  end
+
+  # Smallest trailing-segment count that makes every label in a leaf-sharing
+  # group unique, applied to every member. Falls back to the full name.
+  defp disambiguate(group) do
+    segments = Map.new(group, fn mod -> {mod, mod |> inspect() |> String.split(".")} end)
+    longest = segments |> Map.values() |> Enum.map(&length/1) |> Enum.max()
+
+    unique_depth =
+      Enum.find(1..longest, fn depth ->
+        labels = Enum.map(group, &suffix(Map.fetch!(segments, &1), depth))
+        labels == Enum.uniq(labels)
+      end)
+
+    case unique_depth do
+      nil -> Enum.map(group, &{&1, inspect(&1)})
+      depth -> Enum.map(group, &{&1, suffix(Map.fetch!(segments, &1), depth)})
+    end
+  end
+
+  defp suffix(segments, depth), do: segments |> Enum.take(-depth) |> Enum.join(".")
 
   defp leaf(mod), do: mod |> inspect() |> String.split(".") |> List.last()
 end

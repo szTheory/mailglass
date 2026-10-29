@@ -30,6 +30,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Preview.ScenarioLabel
+
   # One form-level note replaces the per-field helpers: read-only values share a
   # single explanation instead of repeating it under every display.
   @readonly_note "Read-only values come from this scenario's defaults. Edit them in its Mailable."
@@ -329,9 +331,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   defp described_by(key, _error), do: error_id(key)
   defp label_id(key), do: control_id(key) <> "-label"
 
-  # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97)
-  defp humanize(atom) when is_atom(atom) do
-    [first | rest] = atom |> Atom.to_string() |> String.split("_")
-    Enum.join([String.capitalize(first) | rest], " ")
-  end
+  # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97).
+  # One rule for the whole Preview surface lives in ScenarioLabel (Phase 178 D-04).
+  defp humanize(atom) when is_atom(atom), do: ScenarioLabel.humanize(atom)
 end
