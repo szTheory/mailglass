@@ -1911,6 +1911,168 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       }
     });
 
+    // Phase 178 (PRVUX-07 / UIQ-06): the two long Unicode scenarios humanize to
+    // the same label, so the selector shows their raw atoms and the exact
+    // technical identity instead of hiding the difference.
+    const PHASE_178_DOUBLE = "welcome_überraschung_東京__with_a_deliberately_long_name";
+    const PHASE_178_SINGLE = "welcome_überraschung_東京_with_a_deliberately_long_name";
+
+    function phase178Option(menuPanel, scenario) {
+      return menuPanel.locator(`a[href*="/${scenario}?"]`);
+    }
+
+    async function phase178FocusOption(page, scenario) {
+      for (let attempt = 0; attempt < 24; attempt += 1) {
+        const href = await page.evaluate(() => document.activeElement?.getAttribute("href") || "");
+        if (href.includes(`/${scenario}?`)) return;
+        await page.keyboard.press("Tab");
+      }
+      throw new Error(`keyboard focus never reached the ${scenario} option`);
+    }
+
+    test("Preview: Phase 178 selector distinguishes duplicate long Unicode scenarios at 320px and 390px", async ({ page }) => {
+      for (const [width, openKey] of [[320, "Enter"], [390, "Space"]]) {
+        await page.setViewportSize({ width, height: 900 });
+        await openPreviewScenario(page, "theme=light");
+
+        const trigger = page.getByTestId("preview-email-menu-trigger");
+        await trigger.focus();
+        await page.keyboard.press(openKey);
+        const menuPanel = page.getByTestId("preview-email-menu-panel");
+        await expect(menuPanel, `${width}px menu opens with ${openKey}`).toBeVisible();
+
+        const doubleOption = phase178Option(menuPanel, PHASE_178_DOUBLE);
+        const singleOption = phase178Option(menuPanel, PHASE_178_SINGLE);
+        await expect(doubleOption).toHaveCount(1);
+        await expect(singleOption).toHaveCount(1);
+        await expect(doubleOption.getByTestId("preview-email-menu-option-label")).toHaveText(PHASE_178_DOUBLE);
+        await expect(singleOption.getByTestId("preview-email-menu-option-label")).toHaveText(PHASE_178_SINGLE);
+        await expect(doubleOption.getByTestId("preview-email-menu-option-technical")).toHaveText(PHASE_178_DOUBLE);
+        await expect(singleOption.getByTestId("preview-email-menu-option-technical")).toHaveText(PHASE_178_SINGLE);
+        await assertTouchTarget(doubleOption, `${width}px double-underscore option`);
+        await assertTouchTarget(singleOption, `${width}px single-underscore option`);
+
+        const overflow = await page.evaluate(() => ({
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          technical: [...document.querySelectorAll(
+            '[data-testid="preview-email-menu-option-technical"], [data-testid="preview-email-menu-active-technical"]'
+          )].map(el => ({ client: el.clientWidth, scroll: el.scrollWidth }))
+        }));
+        expect(overflow.scrollWidth, `${width}px selector has no page-level horizontal overflow`)
+          .toBeLessThanOrEqual(overflow.clientWidth);
+        for (const line of overflow.technical) {
+          expect(line.scroll, `${width}px technical line stays inside its box`).toBeLessThanOrEqual(line.client + 1);
+        }
+
+        await phase178FocusOption(page, PHASE_178_SINGLE);
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(url => decodeURIComponent(url.pathname).endsWith(`/${PHASE_178_SINGLE}`));
+        await expect(page.getByTestId("preview-email-menu-active-technical"))
+          .toHaveText(`MailglassAdmin.Fixtures.HappyMailer.${PHASE_178_SINGLE}`);
+        await expect(page.getByTestId("preview-email-menu-active-scenario")).toHaveText(PHASE_178_SINGLE);
+      }
+    });
+
+    test("Preview: Phase 178 selector identity reads in light and dark", async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 900 });
+      for (const theme of ["light", "dark"]) {
+        await openPreviewScenario(page, `theme=${theme}`);
+        const contrast = await page.evaluate(() => {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          const rgba = css => {
+            ctx.clearRect(0, 0, 1, 1);
+            ctx.fillStyle = "#000";
+            ctx.fillStyle = css;
+            ctx.fillRect(0, 0, 1, 1);
+            const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+            return { r, g, b, a: a / 255 };
+          };
+          const luminance = ({ r, g, b }) => {
+            const lin = v => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+          };
+          const effectiveBackground = el => {
+            for (let node = el; node; node = node.parentElement) {
+              const bg = rgba(getComputedStyle(node).backgroundColor);
+              if (bg.a > 0.99) return bg;
+            }
+            return rgba("#fff");
+          };
+          const measure = testid => {
+            const el = document.querySelector(`[data-testid="${testid}"]`);
+            const fg = rgba(getComputedStyle(el).color);
+            const bg = effectiveBackground(el);
+            const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+            return { color: getComputedStyle(el).color, ratio: (hi + 0.05) / (lo + 0.05) };
+          };
+          return {
+            technical: measure("preview-email-menu-active-technical"),
+            mailable: measure("preview-email-menu-active-mailable"),
+            scenario: measure("preview-email-menu-active-scenario")
+          };
+        });
+        for (const [name, result] of Object.entries(contrast)) {
+          expect(result.ratio, `${theme} ${name} line contrast (${result.color})`).toBeGreaterThanOrEqual(4.5);
+        }
+        await expect(page.getByTestId("preview-email-menu-active-technical"))
+          .toHaveText("MailglassAdmin.Fixtures.HappyMailer.welcome_default");
+      }
+    });
+
+    test("Preview: Phase 178 selector under reduced motion", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 390, height: 900 });
+      await openPreviewScenario(page, "theme=light");
+
+      const trigger = page.getByTestId("preview-email-menu-trigger");
+      const affordance = page.getByTestId("preview-email-menu-affordance");
+      const details = page.locator('details[data-picker-variant="menu"]');
+
+      const motion = await page.evaluate(() => {
+        const read = testid => getComputedStyle(document.querySelector(`[data-testid="${testid}"]`)).animationName;
+        const toMs = value => {
+          const n = parseFloat(value);
+          return value.trim().endsWith("ms") ? n : n * 1000;
+        };
+        const affordanceEl = document.querySelector('[data-testid="preview-email-menu-affordance"]');
+        const durations = getComputedStyle(affordanceEl).transitionDuration.split(",").map(toMs);
+        return {
+          scenario: read("preview-email-menu-active-scenario"),
+          mailable: read("preview-email-menu-active-mailable"),
+          technical: read("preview-email-menu-active-technical"),
+          maxDurationMs: Math.max(...durations)
+        };
+      });
+      expect(motion.scenario).toBe("none");
+      expect(motion.mailable).toBe("none");
+      expect(motion.technical).toBe("none");
+      expect(motion.maxDurationMs, "affordance transition-duration under reduce (global block)")
+        .toBeLessThanOrEqual(0.01);
+
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+      // The details element carries `open`, so `group-open:rotate-180` applies.
+      // Poll for the final rotated state rather than sampling a single frame.
+      await expect(details).toHaveAttribute("open", "");
+      await expect.poll(
+        () => affordance.evaluate(el => {
+          const style = getComputedStyle(el);
+          return `${style.rotate}|${style.transform}`;
+        }),
+        { message: "affordance reaches its rotated final state" }
+      ).toMatch(/^180deg\||matrix\(-1,/);
+
+      const menuPanel = page.getByTestId("preview-email-menu-panel");
+      await expect(menuPanel).toBeVisible();
+      await phase178FocusOption(page, PHASE_178_SINGLE);
+      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("preview-email-menu-active-technical"))
+        .toHaveText(`MailglassAdmin.Fixtures.HappyMailer.${PHASE_178_SINGLE}`);
+    });
+
     test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
       await openPreviewScenario(page, "theme=light");
 

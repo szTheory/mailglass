@@ -117,7 +117,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "<h2"
       assert html =~ "Email previews"
       assert html =~ "Choose an email"
-      assert html =~ "5 emails"
+      assert html =~ "6 emails"
       refute html =~ "3 mailers"
 
       # HappyMailer module + scenarios rendered
@@ -519,7 +519,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert_trigger_identity(
         trigger,
-        "Welcome überraschung 東京 with a deliberately long name",
+        "welcome_überraschung_東京__with_a_deliberately_long_name",
         "HappyMailer",
         "MailglassAdmin.Fixtures.HappyMailer.welcome_überraschung_東京__with_a_deliberately_long_name"
       )
@@ -532,6 +532,204 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert identity_class =~ "whitespace-normal"
       assert identity_class =~ "[overflow-wrap:anywhere]"
       refute Floki.attribute(identity, "title") != []
+    end
+  end
+
+  describe "Phase 178 selector options" do
+    @long_double :welcome_überraschung_東京__with_a_deliberately_long_name
+    @long_single :welcome_überraschung_東京_with_a_deliberately_long_name
+
+    defp render_menu(overrides \\ []) do
+      attrs =
+        Keyword.merge(
+          [
+            mailables: discovered_fixture_mailables(),
+            current_mailable: HappyMailer,
+            current_scenario: :welcome_default,
+            device_width: 375,
+            admin_chrome_theme: nil,
+            mount_path: "/dev/mail"
+          ],
+          overrides
+        )
+
+      render_component(&Sidebar.menu/1, attrs)
+    end
+
+    defp collapsed_text(node), do: node |> Floki.text() |> String.split() |> Enum.join(" ")
+
+    defp happy_options(html) do
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(
+        ~s(a[data-testid="preview-email-menu-option"], a[data-testid="preview-email-menu-active-option"])
+      )
+      |> Enum.filter(fn link ->
+        link |> Floki.attribute("href") |> hd() |> String.contains?("HappyMailer/")
+      end)
+    end
+
+    test "each HappyMailer option reads humanized first with the raw atom as monospace text" do
+      options = html_options = happy_options(render_menu())
+      assert length(html_options) == 6
+
+      rows =
+        for option <- options do
+          [label] = Floki.find(option, ~s([data-testid="preview-email-menu-option-label"]))
+
+          [technical] =
+            Floki.find(option, ~s([data-testid="preview-email-menu-option-technical"]))
+
+          [technical_class] = Floki.attribute(technical, "class")
+          assert technical_class =~ "font-mono"
+          {collapsed_text(label), collapsed_text(technical)}
+        end
+
+      assert {"Welcome default", "welcome_default"} in rows
+      assert {"Welcome enterprise", "welcome_enterprise"} in rows
+      assert {"Typed values", "typed_values"} in rows
+      assert {"Recoverable", "recoverable"} in rows
+    end
+
+    test "the two long Unicode scenarios are distinguishable by visible primary text" do
+      options = happy_options(render_menu())
+
+      primaries =
+        for option <- options,
+            [label] = Floki.find(option, ~s([data-testid="preview-email-menu-option-label"])),
+            collapsed_text(label) =~ "überraschung",
+            do: collapsed_text(label)
+
+      assert Enum.sort(primaries) == [Atom.to_string(@long_double), Atom.to_string(@long_single)]
+      assert length(Enum.uniq(primaries)) == 2
+    end
+
+    test "no option span truncates and each wraps" do
+      for option <- happy_options(render_menu()) do
+        classes =
+          option
+          |> Floki.find("[class]")
+          |> Enum.flat_map(&Floki.attribute(&1, "class"))
+          |> Enum.join(" ")
+
+        refute classes =~ "truncate"
+        assert classes =~ "whitespace-normal"
+        assert classes =~ "[overflow-wrap:anywhere]"
+      end
+    end
+
+    test "option hrefs are the unchanged scenario_path/6 output, with and without return context" do
+      scenarios = Keyword.keys(HappyMailer.preview_props())
+
+      plain =
+        for option <- happy_options(render_menu()), into: %{} do
+          {option |> Floki.attribute("href") |> hd(), true}
+        end
+
+      assert plain ==
+               Map.new(scenarios, fn scenario ->
+                 {Sidebar.scenario_base_path("/dev/mail", HappyMailer, scenario) <> "?width=375",
+                  true}
+               end)
+
+      return_query = [{"return_surface", "deliveries"}, {"return_tenant_id", "tenant-1"}]
+
+      threaded =
+        for option <- happy_options(render_menu(return_query: return_query)) do
+          [href] = Floki.attribute(option, "href")
+          uri = URI.parse(href)
+          {uri.path, URI.decode_query(uri.query)}
+        end
+
+      for scenario <- scenarios do
+        path = Sidebar.scenario_base_path("/dev/mail", HappyMailer, scenario)
+
+        assert {path,
+                %{
+                  "width" => "375",
+                  "return_surface" => "deliveries",
+                  "return_tenant_id" => "tenant-1"
+                }} in threaded
+      end
+    end
+
+    test "open renders the details element open and the default does not" do
+      default_details =
+        render_menu() |> Floki.parse_document!() |> Floki.find("details") |> List.first()
+
+      open_details =
+        render_menu(open: true)
+        |> Floki.parse_document!()
+        |> Floki.find("details")
+        |> List.first()
+
+      assert Floki.attribute(default_details, "open") == []
+      assert Floki.attribute(open_details, "open") == ["open"]
+    end
+
+    test "Mailables sharing a leaf show a distinguishing group label; the title keeps the module" do
+      html =
+        render_menu(
+          mailables: [{Foo.Account.Mailer, [w: %{}]}, {Bar.Account.Mailer, [w: %{}]}],
+          current_mailable: Foo.Account.Mailer,
+          current_scenario: :w
+        )
+
+      document = Floki.parse_document!(html)
+
+      labels =
+        document
+        |> Floki.find(~s([data-testid="preview-email-menu-group-label"]))
+        |> Enum.map(&collapsed_text/1)
+
+      assert labels == ["Foo.Account.Mailer", "Bar.Account.Mailer"]
+
+      [mailable] = Floki.find(document, ~s([data-testid="preview-email-menu-active-mailable"]))
+      assert collapsed_text(mailable) == "Foo.Account.Mailer"
+    end
+
+    test "empty, single, and unselected states keep their existing rows" do
+      stub =
+        render_menu(
+          mailables: [{StubMailer, :no_previews}],
+          current_mailable: nil,
+          current_scenario: nil
+        )
+
+      assert stub =~ "No previews defined"
+      assert stub =~ "Choose an email"
+      refute stub =~ "preview-email-menu-active-technical"
+      refute stub =~ "preview-email-menu-active-scenario"
+
+      single =
+        render_menu(
+          mailables: [{HappyMailer, [only_one: %{}]}],
+          current_scenario: :only_one
+        )
+
+      assert length(happy_options(single)) == 1
+      assert single =~ "Only one"
+    end
+
+    test "render error shows the module-only technical identity" do
+      html =
+        render_menu(
+          mailables: Discovery.discover([BrokenMailer]),
+          current_mailable: BrokenMailer,
+          current_scenario: :__error__
+        )
+
+      trigger =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+
+      assert_trigger_identity(
+        trigger,
+        "render error",
+        "BrokenMailer",
+        "MailglassAdmin.Fixtures.BrokenMailer"
+      )
     end
   end
 

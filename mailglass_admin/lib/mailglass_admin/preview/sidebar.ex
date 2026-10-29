@@ -88,6 +88,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:mount_path, :string, default: nil)
   attr(:return_query, :list, default: [])
   attr(:testid, :string, default: "preview-mailables-picker")
+  attr(:open, :boolean, default: false)
 
   @doc """
   Renders a compact grouped menu for switching the current email preview.
@@ -116,6 +117,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
       <details
         data-testid={@testid}
         data-picker-variant="menu"
+        open={@open}
         class="group relative mg-layer-dropdown min-w-0 w-full"
       >
         <summary
@@ -186,6 +188,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
                   admin_chrome_theme={@admin_chrome_theme}
                   mount_path={@mount_path}
                   return_query={@return_query}
+                  labels={@labels}
                 />
               </li>
             <% end %>
@@ -207,11 +210,16 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
   attr(:return_query, :list, default: [])
+  # Label table from `ScenarioLabel.build/1` over the whole menu. Left nil, the
+  # entry builds one for itself (no cross-Mailable disambiguation).
+  attr(:labels, :map, default: nil)
 
   def mailable_menu_entry(%{reflection: list} = assigns) when is_list(list) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <ul data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
@@ -240,7 +248,17 @@ defmodule MailglassAdmin.Preview.Sidebar do
                 menu_scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
               ]}
             >
-              <span class="min-w-0 flex-1 truncate">{Atom.to_string(scenario_name)}</span>
+              <span class="min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]">
+                <span data-testid="preview-email-menu-option-label" class="block">
+                  {ScenarioLabel.scenario_label(@labels, @mod, scenario_name)}
+                </span>
+                <span
+                  data-testid="preview-email-menu-option-technical"
+                  class="block font-mono text-label text-secondary"
+                >
+                  {Atom.to_string(scenario_name)}
+                </span>
+              </span>
               <Components.icon
                 :if={scenario_selected?(@current_mailable, @current_scenario, @mod, scenario_name)}
                 name="hero-check"
@@ -255,9 +273,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
   end
 
   def mailable_menu_entry(%{reflection: :no_previews} = assigns) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <div class="flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary">
           <span class="min-w-0 flex-1 truncate">No previews defined</span>
@@ -269,9 +289,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
   end
 
   def mailable_menu_entry(%{reflection: {:error, _msg}} = assigns) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <.link
           patch={broken_path(@mount_path, @mod, @return_query)}
@@ -287,17 +309,25 @@ defmodule MailglassAdmin.Preview.Sidebar do
     """
   end
 
-  defp mailable_menu_label(assigns) do
-    {_namespace, leaf} = module_parts(assigns.mod)
-    assigns = assign(assigns, leaf: leaf)
+  defp with_labels(%{labels: nil} = assigns) do
+    assign(assigns, :labels, ScenarioLabel.build([{assigns.mod, assigns.reflection}]))
+  end
 
+  defp with_labels(assigns), do: assigns
+
+  # The visible text is the Mailable leaf unless another Mailable shares that
+  # leaf; the full module stays in the title.
+  attr(:mod, :atom, required: true)
+  attr(:label, :string, required: true)
+
+  defp mailable_menu_label(assigns) do
     ~H"""
     <div
       data-testid="preview-email-menu-group-label"
       class="min-w-0 px-sm pt-xs pb-0 text-label font-bold uppercase text-secondary"
       title={inspect(@mod)}
     >
-      <span class="block truncate">{@leaf}</span>
+      <span class="block truncate">{@label}</span>
     </div>
     """
   end
