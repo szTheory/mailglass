@@ -207,9 +207,10 @@ defmodule MailglassAdmin.Operator.Shell do
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
         >
-          <:scope_header>
+          <:scope_header :let={label_id}>
             <.account_context
               layout={:sidebar}
+              label_id={label_id}
               selected_tenant_id={@selected_tenant_id}
               tenant_options={@tenant_options}
               tenant_state={@tenant_state}
@@ -230,9 +231,10 @@ defmodule MailglassAdmin.Operator.Shell do
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
         >
-          <:scope_header>
+          <:scope_header :let={label_id}>
             <.account_context
               layout={:mobile}
+              label_id={label_id}
               selected_tenant_id={@selected_tenant_id}
               tenant_options={@tenant_options}
               tenant_state={@tenant_state}
@@ -260,6 +262,7 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:page_uri, :string, required: true)
   attr(:layout, :atom, values: [:sidebar, :mobile], default: :sidebar)
   attr(:tenant_state, :atom, default: nil)
+  attr(:label_id, :string, default: nil)
 
   # The Account control is the header of the scope group (D-09). It renders a
   # picker only when there is a real choice: two or more options (D-10). Below
@@ -305,7 +308,7 @@ defmodule MailglassAdmin.Operator.Shell do
           data-layout={@layout}
         >
           <span class="min-w-0 flex-1">
-            <span class="block text-label text-secondary">Account</span>
+            <span id={@label_id} class="block text-label text-secondary">Account</span>
             <span
               data-testid="operator-account-label"
               data-layout={@layout}
@@ -352,7 +355,7 @@ defmodule MailglassAdmin.Operator.Shell do
         :if={@variant != :picker}
         class="flex min-h-11 w-full min-w-0 flex-col justify-center"
       >
-        <span class="block text-label text-secondary">Account</span>
+        <span id={@label_id} class="block text-label text-secondary">Account</span>
         <span
           data-testid="operator-account-label"
           data-layout={@layout}

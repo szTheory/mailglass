@@ -47,9 +47,16 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
         assert Floki.attribute(group, "data-testid") == ["surface-nav-scope-group"]
         assert Floki.attribute(group, "data-layout") == [layout]
 
-        header_id = hd(Floki.attribute(group, "aria-labelledby"))
-        [header] = Floki.find(group, ~s([id="#{header_id}"]))
+        # D-13: the group is named by the "Account" label alone. The header also
+        # holds the sr-only tenant_id, which must not enter the accessible name.
+        [label_id] = Floki.attribute(group, "aria-labelledby")
+        [label] = Floki.find(group, ~s([id="#{label_id}"]))
+        assert Floki.text(label) |> String.trim() == "Account"
+        assert Floki.find(label, ~s([data-testid="operator-account-id"])) == []
+
+        [header] = Floki.find(group, ~s([id="surface-nav-scope-header-#{layout}"]))
         assert Floki.find(header, ~s([data-testid="operator-account-switcher"])) != []
+        assert [_] = Floki.find(header, ~s([data-testid="operator-account-id"]))
 
         assert group
                |> Floki.find(~s([data-testid="surface-nav-scope-items"] a))

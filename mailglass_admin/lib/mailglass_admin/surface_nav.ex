@@ -32,6 +32,10 @@ defmodule MailglassAdmin.SurfaceNav do
   # header shows no Account identity rather than a fake one (D-11).
   attr(:scope, :atom, values: [:account, :preview], default: :preview)
 
+  # The group is named by one label element, not by the whole header: the
+  # `:account` header also holds the sr-only `tenant_id`, which must not become
+  # part of the group's accessible name (D-13). The slot receives the id its
+  # label element must carry (`:let={label_id}`).
   slot(:scope_header)
 
   def nav(assigns) do
@@ -44,6 +48,7 @@ defmodule MailglassAdmin.SurfaceNav do
       |> assign(:preview_items, preview)
       |> assign(:description, description(scoped))
       |> assign(:header_id, "surface-nav-scope-header-#{assigns.layout}")
+      |> assign(:label_id, "surface-nav-scope-label-#{assigns.layout}")
       |> assign(:desc_id, "surface-nav-scope-desc-#{assigns.layout}")
       |> assign(:caption_id, "surface-nav-preview-caption-#{assigns.layout}")
 
@@ -68,13 +73,13 @@ defmodule MailglassAdmin.SurfaceNav do
         role="group"
         data-testid="surface-nav-scope-group"
         data-layout={@layout}
-        aria-labelledby={@header_id}
+        aria-labelledby={if @scope == :account, do: @label_id, else: @header_id}
         aria-describedby={@scope == :account && @desc_id}
         class="w-full rounded-box border border-base-300 bg-base-100"
       >
         <div id={@header_id} class="relative border-b border-base-300 p-sm md:static">
           <%= if @scope == :account do %>
-            {render_slot(@scope_header)}
+            {render_slot(@scope_header, @label_id)}
           <% else %>
             <p data-testid="preview-scope-label" class="text-label font-bold text-secondary">
               Scoped to an Account
