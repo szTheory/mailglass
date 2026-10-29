@@ -271,7 +271,13 @@ defmodule MailglassAdmin.Operator.Shell do
     selected_label =
       blank_to_nil(Accounts.label(assigns.selected_tenant_id, assigns.account_labels))
 
-    variant = account_variant(assigns.tenant_options, assigns.tenant_state, selected_label)
+    variant =
+      account_variant(
+        assigns.tenant_options,
+        assigns.tenant_state,
+        assigns.selected_tenant_id,
+        selected_label
+      )
 
     assigns =
       assigns
@@ -381,16 +387,26 @@ defmodule MailglassAdmin.Operator.Shell do
   # D-10: a control that offers no choice is a fake picker, so only two or
   # more options render the menu. Inbound's :unavailable state has no option
   # list by design, which is not the same as "no Accounts yet" (Pitfall 3).
-  defp account_variant(options, _state, _selected) when length(options) >= 2, do: :picker
+  #
+  # One option is "no choice" only when that option is the active scope (or an
+  # auto-select is pending). If the operator must still choose, or the selected
+  # Account is not the sole listed one (the list is activity-derived), a real
+  # choice remains, so the picker stays. A `:select_required` picker reads
+  # "Choose an Account" because no Account is selected.
+  defp account_variant(options, _state, _selected_id, _label) when length(options) >= 2,
+    do: :picker
 
-  defp account_variant([only], _state, selected),
-    do: {:static, selected || only.label, :named}
+  defp account_variant([only], state, selected_id, selected_label)
+       when state != :select_required and (is_nil(selected_id) or selected_id == only.id),
+       do: {:static, selected_label || only.label, :named}
 
-  defp account_variant([], :unavailable, selected),
+  defp account_variant([_only], _state, _selected_id, _label), do: :picker
+
+  defp account_variant([], :unavailable, _selected_id, selected),
     do: {:static, selected || "Choose an Account", if(selected, do: :named, else: :prompt)}
 
-  defp account_variant([], _state, nil), do: {:static, "No Accounts yet", :prompt}
-  defp account_variant([], _state, selected), do: {:static, selected, :named}
+  defp account_variant([], _state, _selected_id, nil), do: {:static, "No Accounts yet", :prompt}
+  defp account_variant([], _state, _selected_id, selected), do: {:static, selected, :named}
 
   defp static_text({:static, text, _tone}), do: text
   defp static_text(_variant), do: nil

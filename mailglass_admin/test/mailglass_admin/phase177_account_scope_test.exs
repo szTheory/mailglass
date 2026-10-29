@@ -196,6 +196,63 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
       assert_no_picker(header)
     end
 
+    test "Phase 177 Account one option with select_required prompts instead of naming it" do
+      one = [%{id: "acme", label: "Acme"}]
+
+      doc =
+        render_shell(%{
+          tenant_options: one,
+          selected_tenant_id: nil,
+          tenant_state: :select_required
+        })
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        [summary] = Floki.find(header, ~s([data-testid="operator-account-switcher"]))
+        assert Floki.attribute(summary, "aria-label") == ["Choose an Account"]
+
+        [label] = Floki.find(header, ~s([data-testid="operator-account-label"]))
+        assert text(label) == "Choose an Account"
+        refute hd(Floki.attribute(label, "class")) =~ "font-bold"
+
+        # The sole Account stays reachable as a menu item, never as the scope.
+        assert [option] = Floki.find(header, ~s([data-testid="operator-account-option"]))
+        assert Floki.attribute(option, "data-account-id") == ["acme"]
+        assert Floki.find(header, ~s([data-testid="operator-account-id"])) == []
+      end
+    end
+
+    test "Phase 177 Account selected Account missing from the sole option keeps the picker" do
+      listed = [%{id: "busy-account", label: "Busy Account"}]
+
+      doc =
+        render_shell(%{
+          tenant_options: listed,
+          selected_tenant_id: "quiet-account",
+          account_labels: %{},
+          tenant_state: :selected
+        })
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        [summary] = Floki.find(header, ~s([data-testid="operator-account-switcher"]))
+        assert Floki.attribute(summary, "aria-label") == ["Change Account: quiet-account"]
+
+        assert [option] = Floki.find(header, ~s([data-testid="operator-account-option"]))
+        assert Floki.attribute(option, "data-account-id") == ["busy-account"]
+        assert Floki.attribute(option, "aria-current") == []
+      end
+    end
+
+    test "Phase 177 Account one option that is the selected Account stays static" do
+      one = [%{id: "acme", label: "Acme"}]
+      doc = render_shell(%{tenant_options: one, tenant_state: :selected})
+
+      header = header(doc, "sidebar")
+      assert text(header) =~ "Acme"
+      assert_no_picker(header)
+    end
+
     test "Phase 177 Account two options with one selected renders the switcher" do
       doc = render_shell(%{})
 
