@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-04-PLAN.md
-last_updated: "2026-10-29T13:29:02.286Z"
+stopped_at: Completed 178-05-PLAN.md
+last_updated: "2026-10-29T13:47:26.141Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: 037e2a5cdbf9d2021a3dd2e493512b54efcfb277
+state_head: 7502643f4dc26c537c0814e07c3c4a88d17ba60d
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 43
+  completed_plans: 44
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 6 of 12
+Plan: 7 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -333,6 +333,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P03 | 9 min | 3 tasks | 5 files |
 | Phase 178 P12 | 12 min | 2 tasks | 1 files |
 | Phase 178 P04 | 12 min | 3 tasks | 9 files |
+| Phase 178 P05 | 15 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -641,6 +642,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-03: cost disposition refuses runs whose head_sha is not the candidate SHA and never zero-fills a missing job; runner platform comes from a published label table or a saved job log, recorded in provenance
 - [Phase 178]: D-16: STATE.md permanent facts re-homed to the v2.8 DOCS-01 record; prohibitions stay on STATE.md
 - [Phase 178]: 178-04: Preview technical identity is inspect(mod).scenario shown as visible monospace text; same-Mailable collisions fall back to raw atoms, leaf collisions take the shortest unique namespace suffix
+- [Phase 178]: 178-05: Preview authoring facts resolve identifiers through a closed compile-time map; STORY-07 accounting is computed from the manifest and held equal to 178-AUTOMATION.md by doc-truth tests
+- [Phase 178]: 178-05: Preview stays pure-only (story-render-only); typed_values is checked against the live /dev/mail route by field-set equality, with no persisted projection check
 
 ## Quick Tasks Completed
 
@@ -692,8 +695,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T13:29:01.581Z
-Stopped at: Completed 178-04-PLAN.md
+Last session: 2026-10-29T13:47:24.405Z
+Stopped at: Completed 178-05-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
