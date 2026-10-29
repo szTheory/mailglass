@@ -304,6 +304,39 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
       end
     end
 
+    test "Phase 177 Account whitespace-only selected id is treated as no selection" do
+      for blank <- ["   ", "\t", " \n "] do
+        doc = render_shell(%{selected_tenant_id: blank, tenant_state: :select_required})
+
+        for layout <- ["sidebar", "mobile"] do
+          header = header(doc, layout)
+          [summary] = Floki.find(header, ~s([data-testid="operator-account-switcher"]))
+          assert Floki.attribute(summary, "aria-label") == ["Choose an Account"]
+
+          [label] = Floki.find(header, ~s([data-testid="operator-account-label"]))
+          assert text(label) == "Choose an Account"
+          refute "font-bold" in String.split(hd(Floki.attribute(label, "class")))
+          assert Floki.find(header, ~s([data-testid="operator-account-id"])) == []
+        end
+      end
+
+      # A single option with a blank selection is "auto-select pending", not a
+      # named Account with empty text.
+      doc =
+        render_shell(%{
+          selected_tenant_id: "  ",
+          tenant_options: [%{id: "acme", label: "Acme"}],
+          tenant_state: :auto_select
+        })
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        [label] = Floki.find(header, ~s([data-testid="operator-account-label"]))
+        assert text(label) == "Acme"
+        assert Floki.find(header, ~s([data-testid="operator-account-id"])) == []
+      end
+    end
+
     test "Phase 177 Account Inbound unavailable never reads No Accounts yet" do
       unavailable = %{tenant_options: [], tenant_state: :unavailable}
 

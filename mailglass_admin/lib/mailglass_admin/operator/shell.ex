@@ -141,7 +141,12 @@ defmodule MailglassAdmin.Operator.Shell do
     end
   end
 
-  defp blank_to_nil(value) when value in [nil, ""], do: nil
+  # Whitespace-only text is blank: it must not render as a named Account or a
+  # query value. Non-blank values pass through unchanged (not trimmed).
+  defp blank_to_nil(value) when is_binary(value) do
+    if String.trim(value) == "", do: nil, else: value
+  end
+
   defp blank_to_nil(value), do: value
 
   @switch_query_keys ~w(provider status event outcome window_hours search view)
@@ -271,6 +276,8 @@ defmodule MailglassAdmin.Operator.Shell do
   # static and the details is the anchor, so the capped menu lines up with the
   # summary and overlays main.
   def account_context(assigns) do
+    assigns = assign(assigns, :selected_tenant_id, blank_to_nil(assigns.selected_tenant_id))
+
     selected_label =
       blank_to_nil(Accounts.label(assigns.selected_tenant_id, assigns.account_labels))
 
