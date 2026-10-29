@@ -106,7 +106,7 @@ completed: 2026-10-29
 
 ## Verification evidence
 
-- Task 1 verify: `health_overview + health_population + persona_cohort` 35 tests, 0 failures (`--seed 0`); `operator_live_test --only phase177` 174 tests ran... 0 failures (169 excluded); `--only phase177 --trace` on health_overview shows 12 "Phase 177 Health copy" lines (10 copy tests, counted with their describe/tag echo).
+- Task 1 verify: `health_overview + health_population + persona_cohort` 35 tests, 0 failures (`--seed 0`); `operator_live_test --only phase177` 174 tests, 0 failures (169 excluded, 5 ran); `--only phase177 --trace` on health_overview shows 12 "Phase 177 Health copy" lines (10 copy tests, counted with their describe/tag echo).
 - Golden comparison: extraction (`awk '/^  @[a-z_]+_golden \[/,/^  \]$/'`) at `golden_commit` 1676b15a54625f25222c414918b04008e979f2ab vs working tree: empty diff (GOLDEN-IDENTICAL). `git diff 1676b15a..HEAD -- health_population_test.exs` touches only `row_count/1` (plan 177-04) and `stale_tag?/1` (this plan).
 - Acceptance greps: `Last retrieved` 0, `No recent mail activity` 0, `Activity unavailable` 0 in `health_overview.ex`; `defp notice_copy` 8; old toast string 0 in `operator_live.ex`; `stays separate` 0, `No recent mail activity` 0 in the guide; `Last retrieved` 0 in `phase169-journey.spec.js`; `Refresh health` lines in the e2e diff 0.
 - Browser (grepped `phase169-journey`, `health-tooltips`, `operator`): 11 passed, 0 skipped, 0 flaky. `priv/static/app.css` and `assets/` byte-identical before and after (`git diff --quiet`); no archived screenshot was rewritten by this narrower run.
