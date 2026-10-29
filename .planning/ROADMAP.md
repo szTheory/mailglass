@@ -294,7 +294,7 @@ Plans:
 - [x] 178-09-PLAN.md — Approved push, draft PR and the single dispatch; hosted cost/coverage disposition (UIQ-07, UIQ-08).
 
 **Wave 8** *(blocked on Wave 7; owner ship/no-ship)*
-- [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08).
+- [ ] 178-10-PLAN.md — Verified working preview runbook and service/artifact dispositions (UIQ-08). NOT RUN (2026-10-29): precondition unmet, 178-09 `hosted_status: stopped` (Demo Browser Evidence missing `@playwright/test`); UIQ-07/UIQ-08 unmet.
 
 ## Continuing delivery obligations
 
