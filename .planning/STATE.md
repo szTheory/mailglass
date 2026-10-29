@@ -5,17 +5,17 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Phase 178 context gathered (assumptions mode)
-last_updated: "2026-10-29T12:21:08.917Z"
-last_activity: 2026-10-28
-last_activity_desc: Phase 177 complete, transitioned to Phase 178
-state_head: 63c01ffdc6ab2631d33a03452ce68a010266eadb
+stopped_at: Completed 178-01-PLAN.md
+last_updated: "2026-10-29T12:39:59.808Z"
+last_activity: 2026-10-29
+last_activity_desc: Phase 178 execution started
+state_head: bb977183f3443a65e0290df5b34d0ed3a65711e3
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 38
-  percent: 76
+  completed_plans: 39
+  percent: 78
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 177 — Readable Health and Coherent Account Navigation
+**Current focus:** Phase 178 — Preview Authoring and Milestone Review
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps
@@ -35,12 +35,12 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — READY TO EXECUTE
-Plan: Not started
+Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
+Plan: 2 of 12
 Status: Ready to execute
-Last activity: 2026-10-28 — Phase 177 complete, transitioned to Phase 178
+Last activity: 2026-10-29 — Phase 178 execution started
 
-Progress: [████████░░] 76%
+Progress: [████████░░] 78%
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -328,6 +328,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 177 P08 | 18 min | 3 tasks | 3 files |
 | Phase 177 P09 | 40min | 3 tasks | 8 files |
 | Phase 177 P11 | 45 min | 3 tasks | 6 files |
+| Phase 178 P01 | 7 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -630,6 +631,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 177]: 177-09: northstar_normal Health story mirrors the real route's no-issue derivation; parity test also compares activity totals; story iframes resolved by stable id prefix
 - [Phase 177]: 177-11: Phase 177 prohibitions are 16 violation-list detectors in phase177_prohibition_contract_test.exs, each mutation-proven; the docs rule guards against ever claiming the push_patch Account switch re-runs host authorization (gap captured as an open todo)
 - [Phase 177]: 177-11: Pre-existing core (3), format (10 files), credo (6) and axe-baseline (3) failures recorded with pre-phase evidence in 177-AUTOMATION.md and deferred-items.md, not fixed
+- [Phase 178]: 178-01: Preview read-only note wording kept verbatim after ux-writing review; editable fields describe only their own parse error (described_by/2), read-only displays reference preview-assigns-readonly-note
 
 ## Quick Tasks Completed
 
@@ -681,9 +683,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T09:47:04.514Z
-Stopped at: Phase 178 context gathered (assumptions mode)
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CONTEXT.md
+Last session: 2026-10-29T12:39:59.064Z
+Stopped at: Completed 178-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

@@ -48,8 +48,8 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Preview authoring controls
 
-- [ ] **PRVUX-05**: An author can restore scenario defaults through an intentionally aligned secondary action with clear wording and the existing reset behavior.
-- [ ] **PRVUX-06**: An author editing sample values gets useful parsing, validation and read-only guidance without repetitive generic type helpers.
+- [x] **PRVUX-05**: An author can restore scenario defaults through an intentionally aligned secondary action with clear wording and the existing reset behavior.
+- [x] **PRVUX-06**: An author editing sample values gets useful parsing, validation and read-only guidance without repetitive generic type helpers.
 - [ ] **PRVUX-07**: An author can identify and choose a readable scenario with secondary module context, accessible exact technical identity and disambiguation of duplicate humanized names.
 
 ### Faithful retained Storybook scenarios
@@ -150,8 +150,8 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | REPLAY-06 | Phase 175 | Complete |
 | REPLAY-07 | Phase 175 | Complete |
 | REPLAY-08 | Phase 175 | Complete |
-| PRVUX-05 | Phase 178 | Pending |
-| PRVUX-06 | Phase 178 | Pending |
+| PRVUX-05 | Phase 178 | Complete |
+| PRVUX-06 | Phase 178 | Complete |
 | PRVUX-07 | Phase 178 | Pending |
 | STORY-03 | Phase 174 | Complete |
 | STORY-04 | Phase 174 | Complete |
