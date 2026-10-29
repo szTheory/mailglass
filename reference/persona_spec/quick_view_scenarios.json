@@ -1821,10 +1821,16 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex", "symbol": "MailglassAdmin.Operator.HealthOverview"}],
       "owner_requirements": ["OUTUX-06"],
       "owner_phase": "177",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "The desktop 2:1 grid still gives issue dividers excess width and lets activity compete with freshness. The next health repair owns the composition and deep-link comparison.",
-      "evidence_pointer": "Pending Phase 177 retained Health scenario and connected filtered-link evidence."
+      "scenario_ids": [
+        "health-overview-northstar-normal",
+        "health-overview-helios-empty",
+        "health-overview-stale",
+        "health-overview-unavailable",
+        "health-overview-fjordline-long-unicode"
+      ],
+      "status": "automated",
+      "disposition": "Health is one left-aligned 42rem reading column: a grouped observation block, fixed-order 44px issue rows with subordinate per-issue help, adjacent stale and unavailable notices, and a subordinate Recent activity section. The composition was chosen by a bounded 252-measurement comparison (Winner A) and is held by population, geometry, axe, link-landing and focus gates. Stories prove rendering only; every issue link is proven on the real route.",
+      "evidence_pointer": ".planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#health-composition-outux-06"
     },
     {
       "id": "fb-preview-reset",
@@ -1857,10 +1863,17 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/shell.ex", "symbol": "MailglassAdmin.Operator.Shell"}, {"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar"}],
       "owner_requirements": ["UXF-09", "UXF-10"],
       "owner_phase": "177",
-      "scenario_ids": [],
-      "status": "pending",
-      "disposition": "The Account control remains visually heavy and Preview is account-independent; the host-safe return seam has not been added or validated.",
-      "evidence_pointer": "Pending Phase 177 Account-scoped Health/collection and Preview return-route evidence."
+      "scenario_ids": [
+        "account-scope-none",
+        "account-scope-one",
+        "account-scope-many",
+        "account-scope-long-label",
+        "preview-chrome-valid-return",
+        "preview-chrome-direct-entry"
+      ],
+      "status": "automated",
+      "disposition": "The Account control heads the Health, Deliveries and Inbound group it scopes and offers a picker only when there is a real choice; Preview sits outside the group, shows no Account identity, and returns to the originating Account through a validated closed-set return context. Stories prove rendering only; scope and return are proven on the real routes and in the reference demo.",
+      "evidence_pointer": ".planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#account-scope-and-preview-return-uxf-09-uxf-10"
     },
     {
       "id": "fb-auto-apply-filters",
