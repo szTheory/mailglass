@@ -99,6 +99,15 @@ This project uses GSD (Get Shit Done) for planning + execution. Common entry poi
 
 Other phases (1, 3, 6, 7) plan directly from synthesis — patterns are 4-of-4 convergent across prior libs.
 
+## Verification Policy — Shift Left, Zero Human UAT (D-52)
+
+**Target zero owner verification/UAT.** This is a locked owner decision (D-52, reaffirmed 2026-10-27). The canonical rules live in `.planning/METHODOLOGY.md` § "Shift-Left Verification by Default". Read it before any plan, execute, or verify-work step, and don't re-ask the owner about it.
+
+- Claude runs the evidence and closes UAT rows as `source: automated` with the covering test. Never present a "reply yes if this matches" checkpoint for anything a machine can observe.
+- Must-NOT copy/control prohibitions are authored `verification: test`. Leftover judgment-tier `human_needed` rows become a mutation-proven contract test (template: `mailglass_admin/test/mailglass_admin/phase175_prohibition_contract_test.exs`). They are not handed to the owner.
+- Recurring checks go into an existing merge-blocking lane. Admin tests are gated automatically by the full `mix verify.support_contract.admin`.
+- Owner hand-off is limited to ship/no-ship, brand/visual identity, secrets/credentials/interactive login, the `hex-publish` approval, and physical devices, each with a full-URL runbook.
+
 ## Decision Policy — Research-First, Decide, Escalate Rarely
 
 This applies in **every** context — discuss/plan/spec phases **and** mid-execution, debugging, and release ceremonies. It is not limited to scoping workflows.

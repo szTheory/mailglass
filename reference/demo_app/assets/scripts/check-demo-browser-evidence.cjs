@@ -3,8 +3,9 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveEvidenceOutputPath } = require("./evidence-output-path.cjs");
 
-const evidenceDir = path.resolve(__dirname, "../../tmp/demo_browser_evidence");
+const evidenceDir = resolveEvidenceOutputPath(process.env.DEMO_BROWSER_EVIDENCE_DIR);
 const reportPath = path.join(evidenceDir, "playwright-report.json");
 const manifestPath = path.join(evidenceDir, "phase173-captures.json");
 const checkpointPath = path.join(evidenceDir, "checkpoint.json");
@@ -76,6 +77,9 @@ function collectTests(suites, acc = []) {
       for (const test of spec.tests || []) {
         acc.push({
           title: spec.title,
+          case_id: Number.isSafeInteger(spec.line) && typeof spec.file === "string"
+            ? `${spec.file}:${spec.line}:${spec.title}`
+            : null,
           outcomes: (test.results || []).map((result) => result.status),
           outcome: test.outcome || test.status
         });
@@ -352,10 +356,10 @@ function validatePinnedBaselines(root) {
 }
 
 function stageRetainedEvidence(root, checkpoint) {
-  const target = path.join(path.resolve(root), "retained");
-  const staging = path.join(path.resolve(root), `.retained-${process.pid}-${Date.now()}`);
-  fs.rmSync(staging, { recursive: true, force: true });
-  fs.mkdirSync(staging, { recursive: true });
+  root = resolveEvidenceOutputPath(root);
+  const target = resolveEvidenceOutputPath(path.join(root, "retained"));
+  fs.mkdirSync(root, { recursive: true });
+  const staging = fs.mkdtempSync(path.join(root, ".retained-staging-"));
   try {
     fs.writeFileSync(path.join(staging, "checkpoint.json"), `${JSON.stringify(checkpoint, null, 2)}\n`, { flag: "wx" });
     for (const capture of checkpoint.captures) {
@@ -364,10 +368,15 @@ function stageRetainedEvidence(root, checkpoint) {
       fs.copyFileSync(currentPath, path.join(staging, `${capture.id}-current.png`), fs.constants.COPYFILE_EXCL);
       fs.copyFileSync(path.join(root, baseline.path), path.join(staging, `${capture.id}-baseline.png`), fs.constants.COPYFILE_EXCL);
     }
-    fs.rmSync(target, { recursive: true, force: true });
+    resolveEvidenceOutputPath(target);
+    if (fs.existsSync(target)) {
+      // Retain prior evidence instead of recursively deleting a caller path.
+      const prior = fs.mkdtempSync(path.join(root, ".retained-prior-"));
+      fs.renameSync(target, prior);
+    }
     fs.renameSync(staging, target);
   } catch (error) {
-    fs.rmSync(staging, { recursive: true, force: true });
+    fs.rmSync(resolveEvidenceOutputPath(staging), { recursive: true, force: true });
     throw error;
   }
 }
@@ -383,7 +392,10 @@ function main() {
       candidateRevision: process.env.DEMO_CANDIDATE_REVISION
     });
     fs.mkdirSync(evidenceDir, { recursive: true });
-    fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`);
+    fs.writeFileSync(resolveEvidenceOutputPath(checkpointPath), `${JSON.stringify(checkpoint, null, 2)}\n`, {
+      flag: fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW,
+      mode: 0o600
+    });
     stageRetainedEvidence(evidenceDir, checkpoint);
     console.log(`Demo browser evidence passed. Checkpoint: ${checkpointPath}`);
   } catch (error) {
@@ -395,7 +407,10 @@ function main() {
       failure: error.message
     };
     fs.mkdirSync(evidenceDir, { recursive: true });
-    fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`);
+    fs.writeFileSync(resolveEvidenceOutputPath(checkpointPath), `${JSON.stringify(checkpoint, null, 2)}\n`, {
+      flag: fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW,
+      mode: 0o600
+    });
     console.error(`Demo browser evidence failed: ${error.message}. Checkpoint: ${checkpointPath}`);
     process.exitCode = 1;
   }
@@ -403,4 +418,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { createCheckpoint, collectTests, safeCapturePath, validatePinnedBaselines, EXPECTED_BASELINES };
+module.exports = { createCheckpoint, collectTests, safeCapturePath, validatePinnedBaselines, stageRetainedEvidence, EXPECTED_BASELINES };

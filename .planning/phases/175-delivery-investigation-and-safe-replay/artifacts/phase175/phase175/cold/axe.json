@@ -1,0 +1,4270 @@
+{
+  "schema_version": 1,
+  "run_id": "mailglass-evidence-20261027221513-96275-31939-cold",
+  "producer_execution_token": "mailglass-evidence-20261027221513-96275-31939-cold",
+  "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+  "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c",
+  "started_at": "2026-10-27T22:19:01.843Z",
+  "completed_at": "2026-10-27T22:19:38.652Z",
+  "expected": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::light",
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light"
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::dark",
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark"
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::light",
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::dark",
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::light",
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "light"
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::dark",
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "dark"
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::light",
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light"
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::dark",
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark"
+    }
+  ],
+  "excluded": [
+    {
+      "scenario_id": "qv-delivery-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Delivery record or story variation exists for this real absence state."
+    },
+    {
+      "scenario_id": "qv-inbound-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Inbound record or story variation exists for this real absence state."
+    }
+  ],
+  "executed": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:03.024Z"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:04.040Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:05.120Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:06.169Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:07.237Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:08.288Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:09.395Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:10.457Z"
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::light",
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:12.891Z"
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::dark",
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:15.323Z"
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::light",
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:17.845Z"
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::dark",
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:20.322Z"
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::light",
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:21.967Z"
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::dark",
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:23.550Z"
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::light",
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:25.502Z"
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::dark",
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:27.507Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:28.594Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:29.694Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:30.777Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:31.913Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:32.993Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:34.101Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:35.207Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:36.363Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:37.490Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T22:19:38.642Z"
+    }
+  ],
+  "violations": [],
+  "incomplete": [
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-title"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-description"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".space-y-4 > p"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".min-w-0:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-confirm"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-title"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-description"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".space-y-4 > p"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".min-w-0:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-confirm"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-northstar-normal",
+      "state": "normal-permitted-review",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-description"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".space-y-4 > p"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p[data-testid=\"operator-replay-target-id\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(1) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-4 > div:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".min-w-0:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-confirm"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-modal-description"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".space-y-4 > p"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p[data-testid=\"operator-replay-target-id\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(1) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-4 > div:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".min-w-0:nth-child(2) > .mono.mt-1.break-all"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-confirm"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-fjordline-long-unicode",
+      "state": "long-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-suppression-stale",
+      "state": "stale-retained-match",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".whitespace-nowrap"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-suppression-refresh-action"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#replay-open-btn"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-replay-cancel"
+        ]
+      ],
+      "scenario_id": "delivery-investigation-replay-ambiguous",
+      "state": "replay-ambiguous",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "mailglass-evidence-20261027221513-96275-31939-cold"
+    }
+  ],
+  "supplemental": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 6.57428861557707,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.110197905164332,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 528.125,
+          "bottom": 1638.875,
+          "width": 318,
+          "height": 1110.75
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-title",
+          "ratio": 16.738344363743387,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-description",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".space-y-4 > p",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".min-w-0:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-confirm",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "delivery-investigation-northstar-normal::normal-permitted-review::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 528.125,
+          "bottom": 1638.875,
+          "width": 318,
+          "height": 1110.75
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-title",
+          "ratio": 15.798465125073323,
+          "minimum": 3,
+          "font_size": 20,
+          "font_weight": 700,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-description",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".space-y-4 > p",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".min-w-0:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-confirm",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 448.828125,
+          "bottom": 1651.171875,
+          "width": 318,
+          "height": 1202.34375
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-description",
+          "ratio": 5.26377889458762,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".space-y-4 > p",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "p[data-testid=\"operator-replay-target-id\"]",
+          "ratio": 4.849630255913208,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "div:nth-child(1) > .mono.mt-1.break-all",
+          "ratio": 15.42138887022224,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".mt-4 > div:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 15.42138887022224,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".min-w-0:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-confirm",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "delivery-investigation-fjordline-long-unicode::long-unicode::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 448.828125,
+          "bottom": 1651.171875,
+          "width": 318,
+          "height": 1202.34375
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-modal-description",
+          "ratio": 10.30130968671092,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".space-y-4 > p",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "p[data-testid=\"operator-replay-target-id\"]",
+          "ratio": 9.614014709412345,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "div:nth-child(1) > .mono.mt-1.break-all",
+          "ratio": 14.74440442214182,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".mt-4 > div:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 14.74440442214182,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": ".min-w-0:nth-child(2) > .mono.mt-1.break-all",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-confirm",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 5
+      }
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 37,
+          "right": 313,
+          "top": 125,
+          "bottom": 325.375,
+          "width": 276,
+          "height": 200.375
+        },
+        "dialog_present": false,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "not-applicable",
+        "controls": 9
+      }
+    },
+    {
+      "case_id": "delivery-investigation-suppression-stale::stale-retained-match::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 37,
+          "right": 313,
+          "top": 125,
+          "bottom": 325.375,
+          "width": 276,
+          "height": 200.375
+        },
+        "dialog_present": false,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "not-applicable",
+        "controls": 9
+      }
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 168,
+          "bottom": 1526,
+          "width": 318,
+          "height": 1358
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 17.393900941155273,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 4.6351418996190015,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 4
+      }
+    },
+    {
+      "case_id": "delivery-investigation-replay-ambiguous::replay-ambiguous::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 16,
+          "right": 334,
+          "top": 168,
+          "bottom": 1526,
+          "width": 318,
+          "height": 1358
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".whitespace-nowrap",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        },
+        {
+          "target": "#operator-suppression-refresh-action",
+          "ratio": 14.09097818327338,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#replay-open-btn",
+          "ratio": 12.98138849717932,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        },
+        {
+          "target": "#operator-replay-cancel",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 600,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 4
+      }
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 8
+      }
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 8
+      }
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 7
+      }
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.130310076434003,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": ".badge",
+          "ratio": 7.601672452205473,
+          "minimum": 4.5,
+          "font_size": 14,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 6
+      }
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "p",
+          "ratio": 16.738344363743387,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 1
+      }
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "chrome": {
+        "picker": {
+          "left": 8,
+          "right": 255,
+          "top": 8,
+          "bottom": 85,
+          "width": 247,
+          "height": 77
+        },
+        "dialog": {
+          "left": 0,
+          "right": 350,
+          "top": 96,
+          "bottom": 610,
+          "width": 350,
+          "height": 514
+        },
+        "dialog_present": true,
+        "viewport": 350,
+        "targets": [
+          {
+            "left": 13,
+            "right": 83,
+            "top": 36,
+            "bottom": 80,
+            "width": 70,
+            "height": 44
+          },
+          {
+            "left": 87,
+            "right": 156,
+            "top": 36,
+            "bottom": 80,
+            "width": 69,
+            "height": 44
+          },
+          {
+            "left": 160,
+            "right": 250,
+            "top": 36,
+            "bottom": 80,
+            "width": 90,
+            "height": 44
+          }
+        ]
+      },
+      "contrasts": [
+        {
+          "target": "p",
+          "ratio": 15.798465125073323,
+          "minimum": 4.5,
+          "font_size": 16,
+          "font_weight": 400,
+          "matches": 1
+        }
+      ],
+      "focus_wrap": {
+        "mode": "trapped",
+        "forward": true,
+        "backward": true,
+        "controls": 1
+      }
+    }
+  ]
+}

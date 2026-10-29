@@ -1,6 +1,8 @@
 const { test, expect, chromium } = require("@playwright/test");
+const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
+const { accountSwitcher, accountOption } = require("./support/account.cjs");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
@@ -121,6 +123,42 @@ async function openPreviewScenario(page, query = "theme=light") {
   await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
   await expect(page.getByTestId("preview-tab-strip")).toBeVisible();
   await expect(page.getByTestId("preview-pane")).toBeVisible();
+}
+
+// Phase 178 (PRVUX-05): geometry of the Preview "Restore defaults" action against
+// the assigns form content box (form box minus its own padding and border).
+async function measureRestoreDefaults(page) {
+  return page.evaluate(() => {
+    const form = document.getElementById("preview-assigns-form");
+    const button = form.querySelector('button[phx-click="reset_assigns"]');
+    const formRect = form.getBoundingClientRect();
+    const formStyle = getComputedStyle(form);
+    const buttonRect = button.getBoundingClientRect();
+    const buttonStyle = getComputedStyle(button);
+    const px = value => parseFloat(value) || 0;
+    const contentLeft = formRect.left + px(formStyle.borderLeftWidth) + px(formStyle.paddingLeft);
+    const contentRight = formRect.right - px(formStyle.borderRightWidth) - px(formStyle.paddingRight);
+    return {
+      contentWidth: contentRight - contentLeft,
+      contentLeft,
+      contentRight,
+      buttonLeft: buttonRect.left,
+      buttonRight: buttonRect.right,
+      buttonWidth: buttonRect.width,
+      buttonHeight: buttonRect.height,
+      borderTopWidth: px(buttonStyle.borderTopWidth),
+      borderTopColor: buttonStyle.borderTopColor,
+      formBackground: formStyle.backgroundColor,
+      text: button.textContent.trim()
+    };
+  });
+}
+
+// Tab from the last editable field so :focus-visible matches (keyboard modality).
+async function tabToRestoreDefaults(page) {
+  await page.locator("#assigns-user_name").focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Restore defaults", exact: true })).toBeFocused();
 }
 
 async function openPreviewError(page, query = "theme=light") {
@@ -655,8 +693,9 @@ function noMatchRow(page) {
   return tableRow.or(cardRow).filter({ visible: true }).first();
 }
 
-// Two-tier inspection: a row click opens the condensed Quick view (peek); the full
-// record (detail-column, replay, timeline) lives behind "Open full detail" (&full=1).
+// Two-tier inspection: a row click opens the condensed Quick view (peek); full
+// technical evidence (detail-column and timeline) lives behind "Open full detail"
+// (&full=1). Inbound replay review can start from either selected-record surface.
 async function selectDeliveryFull(page, row) {
   await row.click();
   await expect(page.getByTestId("operator-quick-view")).toBeVisible();
@@ -709,13 +748,16 @@ async function firstReplayableInboundRecordId(page) {
 
 async function openOperatorReplayModal(page) {
   await openOperator(page);
-  // operator-delivery-row exists in both the desktop <table> and mobile card <ul>
-  // (Phase 113 DATA-01). Filter to the visible presentation so the click targets
-  // the rendered row at the current viewport instead of the hidden one.
+  // Select the seeded exact-linkage delivery. The leading browser-selected row
+  // intentionally has unavailable replay and must not be treated as actionable.
   await selectDeliveryFull(
     page,
-    page.getByTestId("operator-delivery-row").filter({ visible: true }).first()
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-exact@example.com", visible: true })
+      .first()
   );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -724,32 +766,22 @@ async function openOperatorReplayModal(page) {
 
 async function openAmbiguousOperatorReplayModal(page) {
   await openOperator(page);
+  // This fixture has two distinct exact webhook candidates; unavailable rows
+  // deliberately render explanatory copy without a dead-end review control.
+  await selectDeliveryFull(
+    page,
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-ambiguous@example.com", visible: true })
+      .first()
+  );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+  await page.getByTestId("operator-replay-open").click();
 
-  const count = await page
-    .getByTestId("operator-delivery-row")
-    .filter({ visible: true })
-    .count();
-
-  for (let index = 0; index < count; index += 1) {
-    // Return to the list each iteration (Full detail replaces it), then drill row N.
-    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await selectDeliveryFull(
-      page,
-      page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(index)
-    );
-    await page.getByTestId("operator-replay-open").click();
-
-    const modal = page.getByTestId("operator-replay-modal");
-    await expect(modal).toBeVisible();
-
-    if (await modal.locator("#operator-replay-targets").count()) {
-      return modal;
-    }
-
-    await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
-  }
-
-  throw new Error("Ambiguous operator replay modal was not found");
+  const modal = page.getByTestId("operator-replay-modal");
+  await expect(modal).toBeVisible();
+  await expect(modal.locator("#operator-replay-targets")).toBeVisible();
+  return modal;
 }
 
 async function openInboundReplayModal(page) {
@@ -816,7 +848,14 @@ async function openOperatorReplayModalThemed(page, theme) {
   ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
-  await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").first());
+  await selectDeliveryFull(
+    page,
+    page
+      .getByTestId("operator-delivery-row")
+      .filter({ hasText: "browser-exact@example.com", visible: true })
+      .first()
+  );
+  await expect(page.getByTestId("operator-replay-open")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -953,8 +992,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // candidates (those are tracked as GAP rows in RATCHET-GAP-REGISTER.md, not as test
       // failures here — per the plan's gate-now vs record-as-GAP split).
       //
-      // The primary filter CTA is inside the mobile disclosure; open it before measuring.
-      await page.getByTestId("operator-filters-toggle").click();
+      // Phase 176 removed the filter Apply button (selects and Enter commit directly),
+      // so the primary CTA is now the replay review action on the exact-replay
+      // Delivery's Quick view (Phase 175).
+      await page
+        .getByTestId("operator-delivery-row")
+        .filter({ hasText: "browser-exact@example.com", visible: true })
+        .first()
+        .click();
+      await expect(page.getByTestId("operator-quick-view")).toBeVisible();
       const primaryBtn = page.locator(".btn-primary:visible").first();
       await expect(primaryBtn).toBeVisible();
       const box = await primaryBtn.boundingBox();
@@ -1015,7 +1061,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await assertTouchTarget(page.getByTestId("preview-email-menu-trigger"), "preview email menu trigger");
       await page.getByTestId("preview-email-menu-trigger").click();
       await assertTouchTarget(
-        page.getByTestId("preview-mailables-picker").getByRole("link", { name: "welcome_default", exact: true }),
+        // Phase 178: each option reads the humanized label first and the raw atom beneath it.
+        page.getByTestId("preview-mailables-picker").getByRole("link", { name: /^Welcome default\s+welcome_default$/ }),
         "preview picker scenario link"
       );
     });
@@ -1292,7 +1339,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
       await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
       await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
-      await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+      await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
       await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
 
       const source = await page.request.get("/ops/mail/inbound?tenant_id=browser-tenant");
@@ -1360,7 +1407,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertNonTextContrastAA(selectedBoundary, `${theme.name} ${viewport.width} selected/detail flow`);
 
           await assertTextContrastAA(page.getByTestId("inbound-evidence-card"), `${theme.name} ${viewport.width} inbound-evidence-card`);
-          await assertTextContrastAA(page.getByTestId("inbound-evidence-redacted"), `${theme.name} ${viewport.width} inbound-evidence-redacted`);
+          await assertTextContrastAA(page.getByTestId("inbound-evidence-caption"), `${theme.name} ${viewport.width} inbound-evidence-caption`);
           await page.getByTestId("inbound-evidence-reveal").click();
           await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-raw`);
 
@@ -1413,7 +1460,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("inbound-record-row")
         .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
-      // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
+      // This case exercises the Full detail trigger; quick-view entry and focus return
+      // are covered by the Phase 175 connected Inbound replay cases.
       await selectInboundFull(page, replayableRow);
 
       // Open the replay modal via the trigger button
@@ -1504,11 +1552,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(menuTrigger).toHaveAccessibleName(
         /Email preview.*HappyMailer/
       );
-      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .toContainText("HappyMailer");
-      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .not.toContainText("MailglassAdmin.Fixtures");
-      await expect(menuTrigger).toContainText("welcome_default");
+      // Phase 178 D-04: humanized primary, namespace-free Mailable secondary,
+      // and the exact technical identity as visible text.
+      const triggerScenario = menuTrigger.getByTestId("preview-email-menu-active-scenario");
+      const triggerMailable = menuTrigger.getByTestId("preview-email-menu-active-mailable");
+      const triggerTechnical = menuTrigger.getByTestId("preview-email-menu-active-technical");
+      await expect(triggerScenario).toHaveText("Welcome default");
+      await expect(triggerMailable).toHaveText("HappyMailer");
+      await expect(triggerScenario).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(triggerMailable).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(triggerTechnical).toHaveText("MailglassAdmin.Fixtures.HappyMailer.welcome_default");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
       await expect(menuTrigger.locator(".hero-chevron-down")).toHaveCount(0);
@@ -1575,9 +1628,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       expect(bounds?.width).toBeGreaterThan(700);
       expect(bounds?.width).toBeLessThanOrEqual(896);
-      await expect(identity).toContainText("HappyMailer");
-      await expect(identity).toContainText("welcome_default");
-      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable")).toHaveText("HappyMailer");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario")).toHaveText("Welcome default");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-technical"))
+        .toContainText("welcome_default");
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
@@ -1684,9 +1742,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("preview-email-menu-trigger").click();
       await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
       const identity = page.getByTestId("preview-email-menu-active-identity");
-      await expect(identity).toContainText("HappyMailer");
-      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
-      await expect(identity).toContainText(longScenario);
+      await expect(identity.getByTestId("preview-email-menu-active-mailable")).toHaveText("HappyMailer");
+      await expect(identity.getByTestId("preview-email-menu-active-scenario"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-mailable"))
+        .not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity.getByTestId("preview-email-menu-active-technical")).toContainText(longScenario);
 
       const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
       const widthButton = widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true });
@@ -1841,6 +1902,27 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         expect(layout.identityScrollWidth, "long selected identity remains within its container")
           .toBeLessThanOrEqual(layout.identityWidth + 1);
 
+        // Phase 178 (UIQ-06): the Restore defaults action stays usable and the
+        // exact technical identity line wraps, both under actual 200% zoom.
+        const restoreDefaults = zoomPage.getByRole("button", { name: "Restore defaults", exact: true });
+        await expect(restoreDefaults, "Restore defaults at actual 200% zoom").toBeVisible();
+        const restoreBox = await restoreDefaults.boundingBox();
+        expect(restoreBox, "Restore defaults has a rendered box").not.toBeNull();
+        expect(restoreBox.width, "Restore defaults width").toBeGreaterThanOrEqual(44);
+        expect(restoreBox.height, "Restore defaults height").toBeGreaterThanOrEqual(44);
+        expect(restoreBox.x, "Restore defaults starts inside the viewport").toBeGreaterThanOrEqual(0);
+        expect(restoreBox.x + restoreBox.width, "Restore defaults ends inside 320 CSS px")
+          .toBeLessThanOrEqual(320);
+        const technicalLines = await zoomPage.getByTestId("preview-email-menu-active-technical").evaluateAll(
+          elements => elements
+            .filter(el => el.getBoundingClientRect().width > 0)
+            .map(el => ({ client: el.clientWidth, scroll: el.scrollWidth }))
+        );
+        expect(technicalLines.length, "the technical identity line is rendered").toBeGreaterThan(0);
+        for (const line of technicalLines) {
+          expect(line.scroll, "technical identity line wraps inside its box").toBeLessThanOrEqual(line.client + 1);
+        }
+
         const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
         fs.mkdirSync(captureDir, { recursive: true });
         const screenshot = path.join(captureDir, "phase171-320-actual-200-percent.png");
@@ -1849,6 +1931,168 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       } finally {
         await zoomContext.close();
       }
+    });
+
+    // Phase 178 (PRVUX-07 / UIQ-06): the two long Unicode scenarios humanize to
+    // the same label, so the selector shows their raw atoms and the exact
+    // technical identity instead of hiding the difference.
+    const PHASE_178_DOUBLE = "welcome_überraschung_東京__with_a_deliberately_long_name";
+    const PHASE_178_SINGLE = "welcome_überraschung_東京_with_a_deliberately_long_name";
+
+    function phase178Option(menuPanel, scenario) {
+      return menuPanel.locator(`a[href*="/${scenario}?"]`);
+    }
+
+    async function phase178FocusOption(page, scenario) {
+      for (let attempt = 0; attempt < 24; attempt += 1) {
+        const href = await page.evaluate(() => document.activeElement?.getAttribute("href") || "");
+        if (href.includes(`/${scenario}?`)) return;
+        await page.keyboard.press("Tab");
+      }
+      throw new Error(`keyboard focus never reached the ${scenario} option`);
+    }
+
+    test("Preview: Phase 178 selector distinguishes duplicate long Unicode scenarios at 320px and 390px", async ({ page }) => {
+      for (const [width, openKey] of [[320, "Enter"], [390, "Space"]]) {
+        await page.setViewportSize({ width, height: 900 });
+        await openPreviewScenario(page, "theme=light");
+
+        const trigger = page.getByTestId("preview-email-menu-trigger");
+        await trigger.focus();
+        await page.keyboard.press(openKey);
+        const menuPanel = page.getByTestId("preview-email-menu-panel");
+        await expect(menuPanel, `${width}px menu opens with ${openKey}`).toBeVisible();
+
+        const doubleOption = phase178Option(menuPanel, PHASE_178_DOUBLE);
+        const singleOption = phase178Option(menuPanel, PHASE_178_SINGLE);
+        await expect(doubleOption).toHaveCount(1);
+        await expect(singleOption).toHaveCount(1);
+        await expect(doubleOption.getByTestId("preview-email-menu-option-label")).toHaveText(PHASE_178_DOUBLE);
+        await expect(singleOption.getByTestId("preview-email-menu-option-label")).toHaveText(PHASE_178_SINGLE);
+        await expect(doubleOption.getByTestId("preview-email-menu-option-technical")).toHaveText(PHASE_178_DOUBLE);
+        await expect(singleOption.getByTestId("preview-email-menu-option-technical")).toHaveText(PHASE_178_SINGLE);
+        await assertTouchTarget(doubleOption, `${width}px double-underscore option`);
+        await assertTouchTarget(singleOption, `${width}px single-underscore option`);
+
+        const overflow = await page.evaluate(() => ({
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          technical: [...document.querySelectorAll(
+            '[data-testid="preview-email-menu-option-technical"], [data-testid="preview-email-menu-active-technical"]'
+          )].map(el => ({ client: el.clientWidth, scroll: el.scrollWidth }))
+        }));
+        expect(overflow.scrollWidth, `${width}px selector has no page-level horizontal overflow`)
+          .toBeLessThanOrEqual(overflow.clientWidth);
+        for (const line of overflow.technical) {
+          expect(line.scroll, `${width}px technical line stays inside its box`).toBeLessThanOrEqual(line.client + 1);
+        }
+
+        await phase178FocusOption(page, PHASE_178_SINGLE);
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(url => decodeURIComponent(url.pathname).endsWith(`/${PHASE_178_SINGLE}`));
+        await expect(page.getByTestId("preview-email-menu-active-technical"))
+          .toHaveText(`MailglassAdmin.Fixtures.HappyMailer.${PHASE_178_SINGLE}`);
+        await expect(page.getByTestId("preview-email-menu-active-scenario")).toHaveText(PHASE_178_SINGLE);
+      }
+    });
+
+    test("Preview: Phase 178 selector identity reads in light and dark", async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 900 });
+      for (const theme of ["light", "dark"]) {
+        await openPreviewScenario(page, `theme=${theme}`);
+        const contrast = await page.evaluate(() => {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          const rgba = css => {
+            ctx.clearRect(0, 0, 1, 1);
+            ctx.fillStyle = "#000";
+            ctx.fillStyle = css;
+            ctx.fillRect(0, 0, 1, 1);
+            const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+            return { r, g, b, a: a / 255 };
+          };
+          const luminance = ({ r, g, b }) => {
+            const lin = v => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+          };
+          const effectiveBackground = el => {
+            for (let node = el; node; node = node.parentElement) {
+              const bg = rgba(getComputedStyle(node).backgroundColor);
+              if (bg.a > 0.99) return bg;
+            }
+            return rgba("#fff");
+          };
+          const measure = testid => {
+            const el = document.querySelector(`[data-testid="${testid}"]`);
+            const fg = rgba(getComputedStyle(el).color);
+            const bg = effectiveBackground(el);
+            const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+            return { color: getComputedStyle(el).color, ratio: (hi + 0.05) / (lo + 0.05) };
+          };
+          return {
+            technical: measure("preview-email-menu-active-technical"),
+            mailable: measure("preview-email-menu-active-mailable"),
+            scenario: measure("preview-email-menu-active-scenario")
+          };
+        });
+        for (const [name, result] of Object.entries(contrast)) {
+          expect(result.ratio, `${theme} ${name} line contrast (${result.color})`).toBeGreaterThanOrEqual(4.5);
+        }
+        await expect(page.getByTestId("preview-email-menu-active-technical"))
+          .toHaveText("MailglassAdmin.Fixtures.HappyMailer.welcome_default");
+      }
+    });
+
+    test("Preview: Phase 178 selector under reduced motion", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 390, height: 900 });
+      await openPreviewScenario(page, "theme=light");
+
+      const trigger = page.getByTestId("preview-email-menu-trigger");
+      const affordance = page.getByTestId("preview-email-menu-affordance");
+      const details = page.locator('details[data-picker-variant="menu"]');
+
+      const motion = await page.evaluate(() => {
+        const read = testid => getComputedStyle(document.querySelector(`[data-testid="${testid}"]`)).animationName;
+        const toMs = value => {
+          const n = parseFloat(value);
+          return value.trim().endsWith("ms") ? n : n * 1000;
+        };
+        const affordanceEl = document.querySelector('[data-testid="preview-email-menu-affordance"]');
+        const durations = getComputedStyle(affordanceEl).transitionDuration.split(",").map(toMs);
+        return {
+          scenario: read("preview-email-menu-active-scenario"),
+          mailable: read("preview-email-menu-active-mailable"),
+          technical: read("preview-email-menu-active-technical"),
+          maxDurationMs: Math.max(...durations)
+        };
+      });
+      expect(motion.scenario).toBe("none");
+      expect(motion.mailable).toBe("none");
+      expect(motion.technical).toBe("none");
+      expect(motion.maxDurationMs, "affordance transition-duration under reduce (global block)")
+        .toBeLessThanOrEqual(0.01);
+
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+      // The details element carries `open`, so `group-open:rotate-180` applies.
+      // Poll for the final rotated state rather than sampling a single frame.
+      await expect(details).toHaveAttribute("open", "");
+      await expect.poll(
+        () => affordance.evaluate(el => {
+          const style = getComputedStyle(el);
+          return `${style.rotate}|${style.transform}`;
+        }),
+        { message: "affordance reaches its rotated final state" }
+      ).toMatch(/^180deg\||matrix\(-1,/);
+
+      const menuPanel = page.getByTestId("preview-email-menu-panel");
+      await expect(menuPanel).toBeVisible();
+      await phase178FocusOption(page, PHASE_178_SINGLE);
+      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("preview-email-menu-active-technical"))
+        .toHaveText(`MailglassAdmin.Fixtures.HappyMailer.${PHASE_178_SINGLE}`);
     });
 
     test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
@@ -2278,7 +2522,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             label: "Status",
             controlSelector: "select",
             helpText: "Filter by delivery status.",
-            errorText: "Status was not applied. Choose a listed status."
+            errorText: "Latest recorded event was not applied. Choose a listed event."
           });
 
           await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "disabled", theme), {
@@ -2325,7 +2569,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
           const invalidWrapper = primitiveWrapper(page, "filters_form", "invalid", theme);
           await expect(invalidWrapper, `gallery filters_form invalid ${theme}`).toBeVisible();
-          await expect(invalidWrapper).toContainText("Status was not applied. Choose a listed status.");
+          await expect(invalidWrapper).toContainText("Latest recorded event was not applied. Choose a listed event.");
           await expect(invalidWrapper).toContainText("Action needed");
         }
       }
@@ -2340,6 +2584,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Provider is now a <select> populated from Deliveries.list_providers/2 — pick the
       // first real option (index 1, past the "All providers" placeholder) instead of fill().
       await operatorProvider.selectOption({ index: 1 });
+      // The select auto-applies; measure focus across a settled patch.
+      await page.waitForURL(url => new URL(url).searchParams.get("provider"));
       await operatorProvider.focus();
       const operatorBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
       await page.evaluate(() => document.getElementById("operator-filters").requestSubmit());
@@ -2351,12 +2597,146 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const inboundFilters = page.getByTestId("inbound-filters");
       const inboundSearch = inboundFilters.getByLabel("Search", { exact: true }).first();
       await inboundSearch.fill("browser");
+      // The debounced Search commit lands before the focus assertion.
+      await page.waitForURL(url => new URL(url).searchParams.get("search") === "browser");
       await inboundSearch.focus();
       const inboundBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
       await page.evaluate(() => document.getElementById("inbound-filters").requestSubmit());
       await expect(inboundSearch).toBeFocused();
       const inboundAfter = await page.evaluate(() => document.activeElement && document.activeElement.id);
       expect(inboundAfter).toBe(inboundBefore);
+    });
+
+    test("Preview: Phase 178 axe cell matches the committed baseline", async ({ page }) => {
+      test.slow();
+      const baseline = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "..", "docs", "axe-baseline.json"), "utf8")
+      );
+      const WCAG_22_AA_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
+      for (const theme of ["light", "dark", "system"]) {
+        // Same theme drive as e2e/axe-baseline.spec.js: system has no ?theme= and
+        // emulates a dark OS preference so the media-query branch is exercised.
+        await page.emulateMedia({ colorScheme: theme === "light" ? "light" : "dark" });
+        await page.context().clearCookies();
+        const themed = theme === "system" ? "" : `?theme=${theme}`;
+        await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default${themed}`);
+        await expect(page.getByTestId("preview-shell")).toBeVisible();
+
+        const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
+        const measured = {};
+        for (const violation of results.violations) {
+          measured[violation.id] = (measured[violation.id] || 0) + violation.nodes.length;
+          for (const node of violation.nodes) {
+            const description = `${theme} ${violation.id} ${JSON.stringify(node.target)}`;
+            test.info().annotations.push({ type: "axe-target", description });
+            console.log(`axe-target ${description}`);
+          }
+        }
+
+        expect(measured, `Preview axe cell (${theme}) must equal the committed baseline`).toEqual(
+          baseline.current.violations.preview[theme].rules
+        );
+      }
+    });
+
+    test("Preview: Phase 178 restore defaults geometry, border and focus", async ({ page }) => {
+      test.slow();
+      const viewports = [
+        { width: 390, height: 844, stacked: true },
+        { width: 639, height: 844, stacked: true },
+        { width: 640, height: 900, stacked: false },
+        { width: 1280, height: 900, stacked: false }
+      ];
+
+      for (const theme of ["light", "dark"]) {
+        for (const viewport of viewports) {
+          const label = `${theme} ${viewport.width}px`;
+          await page.setViewportSize({ width: viewport.width, height: viewport.height });
+          await openPreviewScenario(page, theme === "dark" ? "theme=dark" : "");
+
+          const restore = page.getByTestId("preview-assigns-form").getByRole("button", {
+            name: "Restore defaults",
+            exact: true
+          });
+          await expect(restore).toBeVisible();
+          const box = await measureRestoreDefaults(page);
+
+          expect(box.text, label).toBe("Restore defaults");
+          if (viewport.stacked) {
+            expect(Math.abs(box.buttonWidth - box.contentWidth), `${label} full-width`).toBeLessThanOrEqual(1);
+            expect(box.buttonHeight, `${label} touch target`).toBeGreaterThanOrEqual(44);
+          } else {
+            expect(Math.abs(box.buttonRight - box.contentRight), `${label} end-aligned`).toBeLessThanOrEqual(1);
+            expect(box.buttonWidth, `${label} auto width`).toBeLessThan(box.contentWidth / 2);
+          }
+
+          expect(box.borderTopWidth, `${label} border width`).toBeGreaterThanOrEqual(1);
+          expect(box.borderTopColor, `${label} border color differs from the form background`).not.toBe(
+            box.formBackground
+          );
+
+          await tabToRestoreDefaults(page);
+          await expect
+            .poll(
+              async () =>
+                restore.evaluate(el => {
+                  const style = getComputedStyle(el);
+                  const outline = style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
+                  return {
+                    ring: outline || style.boxShadow !== "none",
+                    color: outline ? style.outlineColor : style.boxShadow
+                  };
+                }),
+              { message: `${label} keyboard focus ring` }
+            )
+            .toMatchObject({ ring: true });
+          const ringColor = await restore.evaluate(el => getComputedStyle(el).outlineColor);
+          expect(ringColor, `${label} focus ring color differs from the form background`).not.toBe(
+            box.formBackground
+          );
+        }
+      }
+
+      // Behavior: an invalid draft is cleared and the scenario default returns.
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.context().clearCookies();
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values");
+      await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+      const quantity = page.locator("#assigns-quantity");
+      await expect(quantity).toHaveValue("3");
+      await quantity.fill("2.5");
+      await expect(page.locator("#assigns-quantity-error")).toHaveText("Enter a whole number.");
+      await page.getByRole("button", { name: "Restore defaults", exact: true }).click();
+      await expect(quantity).toHaveValue("3");
+      await expect(page.locator("#assigns-quantity-error")).toHaveCount(0);
+    });
+
+    test("Preview: Phase 178 restore defaults under reduced motion", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.context().clearCookies();
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values");
+      await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+
+      const restore = page.getByRole("button", { name: "Restore defaults", exact: true });
+      const durations = await restore.evaluate(el => getComputedStyle(el).transitionDuration);
+      const toMs = value => (value.trim().endsWith("ms") ? parseFloat(value) : parseFloat(value) * 1000);
+      for (const duration of durations.split(",")) {
+        expect(toMs(duration), `transition-duration ${durations}`).toBeLessThanOrEqual(0.01);
+      }
+
+      const quantity = page.locator("#assigns-quantity");
+      await quantity.fill("2.5");
+      await expect(page.locator("#assigns-quantity-error")).toHaveText("Enter a whole number.");
+
+      // Keyboard path: Tab from the last editable field to the action, then Enter.
+      await page.locator("#assigns-ratio").focus();
+      await page.keyboard.press("Tab");
+      await expect(restore).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect(quantity).toHaveValue("3");
+      await expect(page.locator("#assigns-quantity-error")).toHaveCount(0);
     });
 
     test("Preview assigns and operator replay radios keep explicit labels and descriptions", async ({
@@ -2370,17 +2750,29 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const userNameId = await userName.getAttribute("id");
       expect(userNameId).toBe("assigns-user_name");
       expect(await previewForm.locator("label[for='assigns-user_name']").count()).toBe(1);
-      await expect(previewForm.locator("#assigns-user_name-help")).toBeVisible();
+      expect(await userName.getAttribute("aria-describedby")).toBeNull();
 
       const admin = previewForm.getByLabel("Admin?", { exact: true }).first();
       await expect(admin).toBeVisible();
       expect(await admin.getAttribute("id")).toBe("assigns-admin?");
-      await expect(previewForm.locator('[id="assigns-admin?-help"]')).toBeVisible();
+      expect(await admin.getAttribute("aria-describedby")).toBeNull();
 
       const planDisplay = previewForm.locator("[data-readonly-display='true'][id='assigns-plan']").first();
       await expect(planDisplay).toBeVisible();
       expect(await planDisplay.getAttribute("aria-readonly")).toBe("true");
-      await expect(previewForm.locator("#assigns-plan-help")).toBeVisible();
+
+      // PRVUX-06: no per-field helpers; one form-level note describes read-only values.
+      expect(await previewForm.locator('[id$="-help"]').count()).toBe(0);
+      const readonlyNote = previewForm.locator("#preview-assigns-readonly-note");
+      await expect(readonlyNote).toHaveCount(1);
+      await expect(readonlyNote).toBeVisible();
+      await expect(readonlyNote).toHaveText(
+        "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+      );
+      expect(await planDisplay.getAttribute("aria-describedby")).toBe("preview-assigns-readonly-note");
+      await expect(planDisplay).toHaveAccessibleDescription(
+        "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+      );
 
       const modal = await openAmbiguousOperatorReplayModal(page);
       await expect(modal).toBeVisible();
@@ -2530,16 +2922,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
       await expect(firstChoice).toContainText("browser-tenant");
       await expect(firstChoice).toBeVisible();
-      await page.getByTestId("operator-account-switcher").click();
+      await accountSwitcher(page).click();
       const accountList = page.getByRole("list", { name: "Available Accounts" });
       await expect(accountList.getByRole("listitem")).toHaveCount(2);
       await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
       await expect(
-        page.locator('[data-testid="operator-account-option"][data-account-id="browser-tenant"]')
+        accountOption(page, "browser-tenant")
       ).toBeVisible();
       await expect(
-        page.locator('[data-testid="operator-account-option"][data-account-id="deny-reveal"]')
+        accountOption(page, "deny-reveal")
       ).toBeVisible();
 
       await firstChoice.click();
@@ -2557,7 +2949,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(activeMobile.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
       await page.setViewportSize({ width: 1440, height: 900 });
-      await page.getByTestId("operator-account-switcher").click();
+      await accountSwitcher(page).click();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
@@ -3441,7 +3833,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
         // Close via the modal's Close button (routes to close_replay; the
         // :if span's phx-remove fires JS.focus(to:"#replay-open-btn")).
-        await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
+        await modal.getByRole("button", { name: "Close", exact: true }).click();
         await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
 
         const activeId = await page.evaluate(

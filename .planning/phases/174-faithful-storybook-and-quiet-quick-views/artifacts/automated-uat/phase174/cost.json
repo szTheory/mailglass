@@ -1,0 +1,158 @@
+{
+  "schema_version": "phase174-cost.v1",
+  "run_id": "mailglass-evidence-20261027131817-50319-18180",
+  "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+  "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef",
+  "pilot": true,
+  "conditions": [
+    {
+      "condition": "cold",
+      "run_id": "mailglass-evidence-20261027131817-50319-18180-cold",
+      "job_id": "local",
+      "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+      "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef",
+      "timings_ms": {
+        "service_start": 57409,
+        "demo_lock_audit": 110,
+        "demo_npm_ci": 1024,
+        "demo_browser_install": 46211,
+        "demo_scan": 87764,
+        "admin_npm_ci": 1043,
+        "admin_browser_install": 44484,
+        "admin_axe_scan": 35903,
+        "comparison": 77
+      },
+      "setup_ms": 150281,
+      "execution_ms": 123744,
+      "teardown_ms": 0,
+      "wall_ms": 276262,
+      "runner_count": 1,
+      "runner_minutes": null,
+      "runner_minutes_status": "awaiting-hosted-job",
+      "expected_counts": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "executed_counts": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "admin_browser": {
+        "schema_version": "phase174-admin-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027131817-50319-18180-cold",
+          "condition": "cold",
+          "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+          "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef"
+        },
+        "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
+        "version": "1.59.1",
+        "chromium_revision": "1217",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "miss",
+        "installer_ms": 44484,
+        "install_exit_code": 0
+      },
+      "demo_browser": {
+        "schema_version": "phase174-demo-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027131817-50319-18180-cold",
+          "condition": "cold",
+          "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+          "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef"
+        },
+        "version": "1.60.0",
+        "chromium_revision": "1223",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "miss",
+        "installer_ms": 46211
+      }
+    },
+    {
+      "condition": "warm",
+      "run_id": "mailglass-evidence-20261027131817-50319-18180-warm",
+      "job_id": "local",
+      "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+      "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef",
+      "timings_ms": {
+        "service_start": 0,
+        "demo_lock_audit": 99,
+        "demo_npm_ci": 452,
+        "demo_browser_install": 567,
+        "demo_scan": 87451,
+        "admin_npm_ci": 577,
+        "admin_browser_install": 273,
+        "admin_axe_scan": 36503,
+        "comparison": 73
+      },
+      "setup_ms": 1968,
+      "execution_ms": 124027,
+      "teardown_ms": 2236,
+      "wall_ms": 127562,
+      "runner_count": 1,
+      "runner_minutes": null,
+      "runner_minutes_status": "awaiting-hosted-job",
+      "expected_counts": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "executed_counts": {
+        "demo": 98,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 18,
+        "total": 148
+      },
+      "admin_browser": {
+        "schema_version": "phase174-admin-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027131817-50319-18180-warm",
+          "condition": "warm",
+          "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+          "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef"
+        },
+        "cli": "/workspace/mailglass_admin/node_modules/.bin/playwright",
+        "version": "1.59.1",
+        "chromium_revision": "1217",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "hit",
+        "installer_ms": 273,
+        "install_exit_code": 0
+      },
+      "demo_browser": {
+        "schema_version": "phase174-demo-browser.v1",
+        "run_identity": {
+          "run_id": "mailglass-evidence-20261027131817-50319-18180-warm",
+          "condition": "warm",
+          "source_revision": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+          "source_digest": "71f4452a8221b45bc6aa7dbf27744fe93e5df966ed378b831677c3a3fab703ef"
+        },
+        "version": "1.60.0",
+        "chromium_revision": "1223",
+        "cache_directory": "/cache/playwright",
+        "cache_state": "hit",
+        "installer_ms": 567
+      }
+    }
+  ],
+  "pilot_wall_ms": 406849,
+  "added_cost": {
+    "status": "unmeasured",
+    "reason": "A same-profile existing-lane baseline has not yet been compared; Task 2 must record the actual hosted job and cost disposition."
+  },
+  "budget": {
+    "added_wall_minutes": 5,
+    "added_runner_minutes": 10,
+    "disposition": "awaiting-hosted-job"
+  },
+  "teardown_completed_at": "2026-10-27T13:25:04.678Z"
+}

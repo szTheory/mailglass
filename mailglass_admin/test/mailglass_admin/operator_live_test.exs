@@ -181,15 +181,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Postmark"
       assert html =~ ~s(<option value="sendgrid")
       assert html =~ "SendGrid"
-      assert html =~ "Apply filters"
-      assert html =~ ~s(phx-disable-with="Applying filters…")
-      assert html =~ "w-40"
+      refute html =~ "Apply filters"
+      refute html =~ "phx-disable-with"
       assert html =~ "Open delivery"
 
       view
       |> form("#operator-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "postmark",
           "event" => "delivered",
           "window_hours" => "168"
@@ -294,7 +292,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           })
         )
 
-      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ "match@example.com"
       assert selected_filter_value(html, "#filters_window_hours") == "0"
@@ -303,7 +301,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # Inspect the filter's option selection directly: the full LiveView document
       # includes the Phoenix client bundle, which contains this test value as code.
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_event option[value='not-real']") == []
+      # The rejected value stays selected as a "Not applied" option (D-12): the select
+      # never shows its prompt beside the "was not applied" error.
+      assert selected_filter_value(html, "#filters_event") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_event option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -324,7 +329,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         })
 
-      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert selected_filter_value(html, "#filters_window_hours") == "-5"
 
@@ -333,9 +338,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       end
     end
 
-    test "retains custom positive window links and rejects unsafe or empty window drafts", %{
-      conn: conn
-    } do
+    test "retains custom positive window links, rejects unsafe window drafts and normalizes a blank window quietly",
+         %{conn: conn} do
       conn = operator_conn(conn)
 
       insert_delivery!(
@@ -361,6 +365,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       unsafe_html =
         render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "window_hours"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -378,6 +383,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       empty_html =
         render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "window_hours"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -386,8 +392,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         })
 
-      assert empty_html =~ "Time window was not applied. Choose a positive listed time window."
-      assert selected_filter_value(empty_html, "#filters_window_hours") == ""
+      # A blank window means "no window chosen" (absent), not an invalid value (bounded D-13).
+      refute empty_html =~ "Time window was not applied"
+      refute empty_html =~ "Custom period"
+      assert selected_filter_value(empty_html, "#filters_window_hours") == "168"
       assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
@@ -476,19 +484,24 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "pm_123"
       assert html =~ "Current suppression"
       assert html =~ "Address · Account-local"
-      assert html =~ "The public Mailglass removal command permits Manual records."
+      assert html =~ "Mailglass allows removal of Manual suppressions."
       assert html =~ "Other configured stores and provider restrictions are not checked."
 
       assert html =~ "Sent"
       assert html =~ "Delivered"
       assert html =~ "Webhook replay"
-      assert html =~ ~s(data-testid="operator-replay-open")
+
+      assert html =~
+               "Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely."
+
+      refute html =~ ~s(data-testid="operator-replay-open")
       refute html =~ "Remove suppression"
       refute html =~ "recent-auth"
       refute html =~ "recent auth"
     end
 
-    test "suppression read failure retains its last match and historical timeline with retry", %{
+    @tag :phase175
+    test "Phase 175 suppression refresh marks retained evidence stale and recovers on retry", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -528,12 +541,279 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> render_click()
 
       html = render(view)
-      assert html =~ "The current Mailglass suppression read is unavailable."
+      assert html =~ "Couldn’t refresh suppression evidence. Try again."
+      assert html =~ "Stale"
       assert html =~ "last retrieved record and may be out of date"
-      assert html =~ "The public Mailglass removal command permits Policy records."
+      assert html =~ "Mailglass allows removal of Policy suppressions."
       assert html =~ "Suppressed"
       assert html =~ ~s(data-testid="operator-timeline")
       refute html =~ "No current matching suppression recorded in Mailglass was found"
+
+      view
+      |> element(~s([data-testid="operator-suppression-refresh"]))
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "Current Mailglass match"
+      assert html =~ "ops:review"
+      refute html =~ "Couldn’t refresh suppression evidence. Try again."
+    end
+
+    @tag :phase175
+    test "Phase 175 suppression refresh keeps initial failure unavailable and successful empty distinct without writes",
+         %{conn: conn} do
+      delivery = insert_delivery!(recipient: "empty-refresh@example.com")
+      conn = operator_conn(conn)
+      OperatorFixtures.arm_reader_fault!("operator-1", "delivery_suppression", :known)
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      assert html =~ "Unavailable"
+      assert html =~ "Couldn’t refresh suppression evidence. Try again."
+      refute html =~ "No current Mailglass suppression matches this delivery."
+
+      view
+      |> element(~s([data-testid="operator-suppression-refresh"]))
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "No current Mailglass match"
+      assert html =~ "No current Mailglass suppression matches this delivery."
+      refute html =~ "Couldn’t refresh suppression evidence. Try again."
+
+      before_refresh_counts = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      for _ <- 1..2 do
+        view
+        |> element(~s([data-testid="operator-suppression-refresh"]))
+        |> render_click()
+      end
+
+      after_refresh_counts = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      assert after_refresh_counts == before_refresh_counts
+    end
+
+    @tag :phase175
+    test "Phase 175 suppression policy states removal support, unknown expiry, and safe missing values" do
+      future_expiry =
+        DateTime.utc_now()
+        |> DateTime.truncate(:second)
+        |> DateTime.add(3_600, :second)
+
+      supported_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "policy@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "operator review",
+            expires_at: future_expiry,
+            removal_policy: :supported
+          }
+        )
+
+      assert supported_html =~ "Removal policy"
+      assert supported_html =~ "Mailglass allows removal of Manual suppressions."
+
+      assert supported_html =~
+               "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")} UTC\""
+
+      blocked_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "complaint@example.com",
+            scope: :address,
+            reason: :complaint,
+            source: "provider complaint",
+            expires_at: nil,
+            removal_policy: :blocked
+          }
+        )
+
+      assert blocked_html =~ "Expiry date not recorded"
+      assert blocked_html =~ "Mailglass does not allow removal of Complaint suppressions."
+      refute blocked_html =~ "permanent"
+
+      unknown_policy_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: nil,
+            scope: :unknown,
+            reason: nil,
+            source: "",
+            expires_at: nil,
+            removal_policy: nil
+          }
+        )
+
+      assert unknown_policy_html =~ "Removal policy not recorded."
+      assert unknown_policy_html =~ "Expiry date not recorded"
+      assert unknown_policy_html =~ "Unavailable"
+
+      assert length(
+               Floki.find(
+                 Floki.parse_fragment!(unknown_policy_html),
+                 "[data-testid='operator-suppression-refresh']"
+               )
+             ) == 1
+
+      refute unknown_policy_html =~ "Remove suppression"
+
+      long_source = "東京·Ångström-" <> String.duplicate("配信·é·", 40) <> "<script>alert(1)</script>"
+
+      long_unicode_html =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: %{
+            address: "māil+東京@example.com",
+            scope: :address,
+            reason: :manual,
+            source: long_source,
+            expires_at: future_expiry,
+            removal_policy: :supported
+          }
+        )
+
+      assert long_unicode_html =~ "māil+東京@example.com"
+      assert long_unicode_html =~ "東京·Ångström-"
+      assert long_unicode_html =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+      refute long_unicode_html =~ "<script>alert(1)</script>"
+    end
+
+    @tag :phase175
+    test "Phase 175 suppression policy refresh observes external changes, expiry, and Account/stream scope",
+         %{conn: conn} do
+      recipient = "scoped-refresh@example.com"
+      future_expiry = DateTime.add(DateTime.utc_now(), 3_600, :second)
+      expired_at = DateTime.add(DateTime.utc_now(), -3_600, :second)
+
+      delivery =
+        insert_delivery!(
+          recipient: recipient,
+          stream: :transactional,
+          status: :suppressed,
+          last_event_type: :suppressed
+        )
+
+      insert_event!(delivery, %{type: :suppressed, metadata: %{source: "historical event"}})
+
+      insert_suppression!(%{
+        tenant_id: @tenant_id,
+        address: recipient,
+        scope: :address_stream,
+        stream: :transactional,
+        reason: :manual,
+        source: "initial-account-match",
+        expires_at: future_expiry
+      })
+
+      insert_suppression!(%{
+        tenant_id: "foreign-tenant",
+        address: recipient,
+        scope: :address_stream,
+        stream: :transactional,
+        reason: :manual,
+        source: "foreign-account-match",
+        expires_at: future_expiry
+      })
+
+      insert_suppression!(%{
+        tenant_id: @tenant_id,
+        address: recipient,
+        scope: :address_stream,
+        stream: :bulk,
+        reason: :unsubscribe,
+        source: "other-stream-match",
+        expires_at: future_expiry
+      })
+
+      conn = operator_conn(conn)
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      assert html =~ "initial-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+
+      assert html =~
+               "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")}"
+
+      [external_update] =
+        TestRepo.query!(
+          "UPDATE mailglass_suppressions SET source = $1 WHERE tenant_id = $2 AND address = $3 AND scope = 'address_stream' AND stream = 'transactional' RETURNING id",
+          ["external-account-match", @tenant_id, recipient]
+        ).rows
+
+      assert length(external_update) == 1
+
+      view
+      |> element("[data-testid='operator-suppression-refresh']")
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "external-account-match"
+      refute html =~ "initial-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+
+      [expired_update] =
+        TestRepo.query!(
+          "UPDATE mailglass_suppressions SET expires_at = $1 WHERE tenant_id = $2 AND address = $3 AND scope = 'address_stream' AND stream = 'transactional' RETURNING id",
+          [expired_at, @tenant_id, recipient]
+        ).rows
+
+      assert length(expired_update) == 1
+
+      view
+      |> element("[data-testid='operator-suppression-refresh']")
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "No current Mailglass match"
+      assert html =~ "No current Mailglass suppression matches this delivery."
+      refute html =~ "external-account-match"
+      refute html =~ "foreign-account-match"
+      refute html =~ "other-stream-match"
+
+      before_repeated_reads = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      for _ <- 1..2 do
+        view
+        |> element("[data-testid='operator-suppression-refresh']")
+        |> render_click()
+      end
+
+      after_repeated_reads = %{
+        events: TestRepo.query!("SELECT COUNT(*) FROM mailglass_events").rows,
+        suppressions: TestRepo.query!("SELECT COUNT(*) FROM mailglass_suppressions").rows,
+        deliveries: TestRepo.query!("SELECT COUNT(*) FROM mailglass_deliveries").rows
+      }
+
+      assert after_repeated_reads == before_repeated_reads
     end
 
     test "full detail keeps exact Unicode labels, provider IDs, and timestamps readable", %{
@@ -796,7 +1076,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ "No events are recorded for this Delivery."
-      assert html =~ "The public Mailglass removal command blocks Complaint records."
+      assert html =~ "Mailglass does not allow removal of Complaint suppressions."
       refute html =~ "This Suppression is permanent."
     end
 
@@ -812,28 +1092,252 @@ defmodule MailglassAdmin.OperatorLiveTest do
                live(conn, operator_path(%{"tenant_id" => @tenant_id}))
     end
 
-    test "shows the replay CTA only after a delivery is selected", %{conn: conn} do
+    @tag :phase175
+    test "Phase 175 Delivery entry exposes replay from the selected quick and full detail", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
       conn = operator_conn(conn)
-      delivery = insert_delivery!(recipient: "cta@example.com", provider_message_id: "pm-cta")
+      {delivery, webhook_event} = insert_exact_replay_fixture!("pm-phase175-entry", 17501)
+
+      filters = %{
+        "tenant_id" => @tenant_id,
+        "view" => "deliveries",
+        "provider" => "postmark",
+        "window_hours" => "168",
+        "delivery_id" => delivery.id
+      }
 
       {:ok, view, html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+        live(conn, operator_path(Map.delete(filters, "delivery_id")))
 
       refute html =~ "Review webhook replay"
 
-      # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
       |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
-      refute render(view) =~ "Review webhook replay"
+      quick_html = render(view)
+      assert quick_html =~ ~s(id="operator-quick-view-replay-open-btn")
+      assert quick_html =~ ~s(phx-value-origin="quick_view")
+      assert quick_html =~ "Replay is ready."
 
-      # Open full detail → the Replay CTA appears.
+      view
+      |> element("#operator-quick-view-replay-open-btn")
+      |> render_click()
+
+      assert render(view) =~ webhook_event.id
+      review_id = replay_review_id(view)
+
+      render_hook(view, "confirm_replay", %{
+        "review" => review_id,
+        "delivery_id" => "forged-delivery-id",
+        "webhook_event_id" => "forged-webhook-id"
+      })
+
+      assert [%{webhook_event_id: replayed_id}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert replayed_id == webhook_event.id
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
+      assert render(view) =~ "Replay command added 1 newly normalized Event."
+      assert render(view) =~ ~s(data-testid="operator-quick-view")
+
       view
       |> element(~s([data-testid="operator-quick-view-full"]))
       |> render_click()
 
-      assert render(view) =~ "Review webhook replay"
+      assert has_element?(
+               view,
+               "[data-testid='operator-replay-open'][phx-value-origin='full_detail']"
+             )
+
+      assert_patch(view, operator_path(filters |> Map.delete("view") |> Map.put("full", "1")))
+
+      view
+      |> element("[data-testid='operator-replay-open'][phx-value-origin='full_detail']")
+      |> render_click()
+
+      assert render(view) =~ webhook_event.id
+      view |> element("#operator-replay-close") |> render_click()
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry keeps same-looking ambiguous requests separate", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      delivery =
+        insert_delivery!(
+          recipient: "same-looking@example.com",
+          provider_message_id: "pm-same-looking"
+        )
+
+      first =
+        insert_webhook_event!(
+          provider_event_id: "same-visible-request-label-1",
+          raw_payload: raw_postmark_payload("pm-same-looking", 17502)
+        )
+
+      second =
+        insert_webhook_event!(
+          provider_event_id: "same-visible-request-label-2",
+          raw_payload: raw_postmark_payload("pm-same-looking", 17503)
+        )
+
+      insert_linked_event!(delivery, first, "child-same-looking-1")
+      insert_linked_event!(delivery, second, "child-same-looking-2")
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id})
+        )
+
+      assert has_element?(view, "#operator-quick-view-replay-open-btn")
+
+      view |> element("#operator-quick-view-replay-open-btn") |> render_click()
+
+      html = render(view)
+      assert html =~ "Replay is choice required."
+
+      labels =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("#operator-replay-targets label")
+        |> Enum.map(&(Floki.text(&1) |> String.trim()))
+
+      assert labels == ["POSTMARK webhook target", "POSTMARK webhook target"]
+
+      [first_id, second_id] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-replay-target-id']")
+        |> Enum.map(&(Floki.text(&1) |> String.trim()))
+
+      assert MapSet.new([first_id, second_id]) == MapSet.new([first.id, second.id])
+      refute has_element?(view, "#operator-replay-confirm")
+      refute has_element?(view, "#operator-replay-targets input[checked]")
+
+      view
+      |> form("#operator-replay-targets", %{"webhook_event_id" => second.id})
+      |> render_change()
+
+      assert has_element?(view, "#operator-replay-targets input[value='#{second.id}'][checked]")
+      refute has_element?(view, "#operator-replay-targets input[value='#{first.id}'][checked]")
+      assert replay_review_id(view)
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry explains unavailable replay and rejects forged identities", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      historical =
+        insert_delivery!(
+          recipient: "historical-phase175@example.com",
+          provider_message_id: "pm-historical-phase175"
+        )
+
+      insert_event!(historical, %{
+        type: :delivered,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "unlinked-historical-child",
+          "message_id" => historical.provider_message_id
+        }
+      })
+
+      other =
+        insert_delivery!(
+          tenant_id: "foreign-tenant",
+          recipient: "foreign-phase175@example.com",
+          provider_message_id: "pm-other-phase175"
+        )
+
+      other_webhook =
+        insert_webhook_event!(
+          tenant_id: "foreign-tenant",
+          provider_event_id: "postmark-webhook-phase175-foreign",
+          raw_payload: raw_postmark_payload(other.provider_message_id, 17504)
+        )
+
+      insert_linked_event!(other, other_webhook, "seed-link-phase175-foreign")
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => historical.id})
+        )
+
+      assert html =~ "Historical rows without exact webhook linkage"
+      refute has_element?(view, "#operator-quick-view-replay-open-btn")
+      refute has_element?(view, "#operator-replay-confirm")
+
+      render_hook(view, "open_replay", %{
+        "origin" => "full_detail",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      refute has_element?(view, "[data-testid='operator-replay-modal']")
+
+      render_hook(view, "open_replay", %{
+        "origin" => "quick_view",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      render_hook(view, "confirm_replay", %{
+        "review" => "forged-review-id",
+        "delivery_id" => other.id,
+        "webhook_event_id" => other_webhook.id
+      })
+
+      assert render(view) =~ "Historical rows without exact webhook linkage"
+      refute render(view) =~ other_webhook.id
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+      assert replay_audit_rows_for(other_webhook.id) == []
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery entry discards a review after the selected delivery changes", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {first, first_webhook} = insert_exact_replay_fixture!("pm-selected-first", 17505)
+      {second, second_webhook} = insert_exact_replay_fixture!("pm-selected-second", 17506)
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => first.id})
+        )
+
+      render_hook(view, "open_replay", %{"origin" => "quick_view"})
+      old_review_id = replay_review_id(view)
+      assert render(view) =~ first_webhook.id
+
+      render_patch(view, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => second.id}))
+
+      assert render(view) =~ second.recipient
+      refute render(view) =~ first_webhook.id
+
+      render_hook(view, "confirm_replay", %{
+        "review" => old_review_id,
+        "webhook_event_id" => second_webhook.id
+      })
+
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+      assert replay_audit_rows_for(first_webhook.id) == []
+      assert replay_audit_rows_for(second_webhook.id) == []
     end
 
     test "auto-populates the replay modal when exactly one target is available", %{conn: conn} do
@@ -930,18 +1434,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      view
-      |> element("[data-testid='operator-replay-open']")
-      |> render_click()
-
       html = render(view)
 
-      assert html =~ "Replay unavailable"
       assert html =~ "Replay is unavailable."
       assert html =~ "Historical rows without exact webhook linkage"
+      refute has_element?(view, "[data-testid='operator-replay-open']")
+      refute has_element?(view, "[data-testid='operator-replay-modal']")
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
 
+    @tag :phase175
     test "returns a stale-auth error without performing replay", %{conn: conn} do
       stale =
         DateTime.utc_now()
@@ -962,14 +1464,53 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> element("[data-testid='operator-replay-open']")
       |> render_click()
 
-      view
-      |> element("[data-testid='operator-replay-confirm']")
-      |> render_click()
-
-      html = render(view)
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
       assert html =~ "Recent authentication is required."
+      refute html =~ "Ask an Account administrator to review access."
+
+      assert html =~ ~s(data-testid="operator-replay-feedback")
+      assert html =~ ~s(data-testid="operator-replay-review-again")
+      assert html =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       assert replay_audit_rows_for(webhook_event.id) == []
+    end
+
+    @tag :phase175
+    test "first exact target review after an unavailable read still requires deliberate selection",
+         %{
+           conn: conn
+         } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      on_exit(&OperatorFixtures.clear_reader_faults!/0)
+      on_exit(&MailglassAdmin.TestOperatorAuth.reset_destructive_calls!/0)
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("phase175-first-rereview", 17543)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
+      open_html = view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      assert open_html =~ ~s(data-testid="operator-replay-review-again")
+      refute has_element?(view, "#operator-replay-confirm")
+
+      review_html =
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+
+      assert review_html =~ "Review the exact stored request before confirming."
+      refute review_html =~ "This exact request changed."
+      assert has_element?(view, "#operator-replay-targets input[type='radio']")
+      refute has_element?(view, "#operator-replay-confirm")
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      render_hook(view, "choose_replay_target", %{"webhook_event_id" => webhook_event.id})
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
     end
 
     test "rejects the same webhook ID when reviewed receipt facts change", %{conn: conn} do
@@ -994,8 +1535,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      assert html =~ "This webhook request changed or is no longer eligible."
-      assert html =~ "Review the current request before replaying."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ ~s(data-testid="operator-replay-feedback")
+      assert html =~ ~s(data-testid="operator-replay-review-again")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
     end
@@ -1028,16 +1571,20 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      assert html =~ "This webhook request changed or is no longer eligible."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ reviewed.id
+      assert html =~ ~s(data-testid="operator-replay-review-again")
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
-      view |> element("#operator-replay-close") |> render_click()
-      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      changed_review_html =
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
 
-      fresh_review_id = replay_review_id(view)
-      refute fresh_review_id == old_review_id
-      assert render(view) =~ "replacement-652"
+      assert changed_review_html =~
+               "This exact request changed. Review the current request before confirming."
+
+      assert changed_review_html =~ replacement.id
+      refute has_element?(view, "#operator-replay-confirm")
 
       # A queued Confirm from the rejected review cannot consume the new review.
       render_hook(view, "confirm_replay", %{"review" => old_review_id})
@@ -1045,6 +1592,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert replay_audit_rows_for(replacement.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
+      render_hook(view, "choose_replay_target", %{"webhook_event_id" => replacement.id})
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == old_review_id
       render_hook(view, "confirm_replay", %{"review" => fresh_review_id})
 
       assert Enum.count(
@@ -1078,7 +1629,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       TestRepo.delete!(reviewed)
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
-      assert html =~ "This webhook request changed or is no longer eligible."
+      assert html =~ "Eligibility changed. Review the current request again."
+      assert html =~ reviewed.id
+      assert html =~ ~s(data-testid="operator-replay-review-again")
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
@@ -1095,9 +1648,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
     end
 
-    test "explicit replay review can refresh after an unavailable target read", %{conn: conn} do
+    test "an unavailable replay-target read exposes a scoped retry without confirmation", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-review-read-retry", 655)
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
 
       {:ok, view, _html} =
         live(
@@ -1105,14 +1661,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
-      view |> element("[data-testid='operator-replay-open']") |> render_click()
-
-      assert render(view) =~ "Current replay targets could not be refreshed."
+      unavailable_html = render(view)
+      assert unavailable_html =~ "Current replay targets could not be refreshed."
+      assert has_element?(view, "[data-testid='operator-replay-open']")
       refute render(view) =~ ~s(data-testid="operator-replay-confirm")
 
-      view |> element("#operator-replay-close") |> render_click()
       view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      if has_element?(view, "[data-testid='operator-replay-review-again']") do
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      end
 
       assert render(view) =~ webhook_event.provider_event_id
       assert render(view) =~ ~s(data-testid="operator-replay-confirm")
@@ -1143,15 +1701,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
 
-      assert html =~
-               "Current records could not be refreshed. The exact reviewed request is retained."
+      assert html =~ "Couldn’t refresh current Delivery eligibility. Review again before trying."
+      assert html =~ ~s(data-testid="operator-replay-review-again")
 
       assert replay_review_id(view) == review_id
-      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       refute html =~ "Replaying the reviewed request…"
       refute html =~ "Webhook replay requested"
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == review_id
+      assert render(view) =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
@@ -1192,15 +1756,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
 
-      assert html =~
-               "Current records could not be refreshed. The exact reviewed request is retained."
+      assert html =~ "Couldn’t refresh current Delivery eligibility. Review again before trying."
+      assert html =~ ~s(data-testid="operator-replay-review-again")
 
       assert replay_review_id(view) == review_id
-      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      assert has_element?(view, "#operator-replay-confirm[disabled]")
       refute html =~ "Replaying the reviewed request…"
       refute html =~ "Webhook replay requested"
       assert replay_audit_rows_for(webhook_event.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == review_id
+      assert render(view) =~ webhook_event.id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
@@ -1305,6 +1875,185 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Last replay: completed · 0 newly normalized Events"
     end
 
+    @tag :phase175
+    test "Phase 175 Delivery recovery re-reviews the exact request after command failure", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("phase175-recovery-command", 17541)
+      trigger_name = "reject_replay_recovery_#{System.unique_integer([:positive])}"
+      schema = Mailglass.Config.schema()
+
+      try do
+        TestRepo.query!("""
+        CREATE FUNCTION #{schema}.#{trigger_name}_fn() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.type = 'webhook_replay_succeeded'
+             AND NEW.metadata->>'webhook_event_id' = '#{webhook_event.id}' THEN
+            RAISE EXCEPTION 'private simulated replay recovery failure';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        """)
+
+        TestRepo.query!("""
+        CREATE TRIGGER #{trigger_name}
+        BEFORE INSERT ON #{schema}.mailglass_events
+        FOR EACH ROW EXECUTE FUNCTION #{schema}.#{trigger_name}_fn();
+        """)
+
+        {:ok, view, _html} =
+          live(
+            conn,
+            operator_path(%{
+              "tenant_id" => @tenant_id,
+              "delivery_id" => delivery.id,
+              "full" => "1"
+            })
+          )
+
+        view |> element("[data-testid='operator-replay-open']") |> render_click()
+        reviewed_id = replay_review_id(view)
+        html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+        assert html =~ ~s(data-testid="operator-replay-modal")
+        assert html =~ ~s(data-testid="operator-replay-feedback")
+
+        assert html =~
+                 "Replay couldn’t be completed. Review current eligibility before trying again."
+
+        assert html =~ webhook_event.id
+        refute html =~ "private simulated replay recovery failure"
+        assert replay_review_id(view) == reviewed_id
+        assert has_element?(view, "#operator-replay-confirm[disabled]")
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_requested)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_failed)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_succeeded)
+               ) == 0
+
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+        fresh_review_id = replay_review_id(view)
+        refute fresh_review_id == reviewed_id
+        assert render(view) =~ webhook_event.id
+        assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+
+        success_html =
+          view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+        assert success_html =~ "Replay command added 1 newly normalized Event."
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_requested)
+               ) == 2
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_failed)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_succeeded)
+               ) == 1
+
+        assert Enum.map(
+                 MailglassAdmin.TestOperatorAuth.destructive_calls(),
+                 & &1.webhook_event_id
+               ) ==
+                 [webhook_event.id, webhook_event.id]
+      after
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+      end
+    end
+
+    @tag :phase175
+    test "Phase 175 Delivery safety rechecks authorization revoked after review opens", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      revoked_key = {MailglassAdmin.TestOperatorAuth, :delivery_replay_revoked}
+      :persistent_term.erase(revoked_key)
+
+      on_exit(fn ->
+        :persistent_term.erase(revoked_key)
+        MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      end)
+
+      conn = operator_conn(conn)
+
+      {delivery, webhook_event} =
+        insert_exact_replay_fixture!("phase175-revoked-after-open", 17542)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      reviewed_id = replay_review_id(view)
+      assert render(view) =~ webhook_event.id
+
+      :persistent_term.put(revoked_key, true)
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert html =~
+               "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+
+      assert html =~ ~s(data-testid="operator-replay-modal")
+      assert html =~ webhook_event.id
+      assert replay_review_id(view) == reviewed_id
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      :persistent_term.put(revoked_key, false)
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == reviewed_id
+      assert render(view) =~ webhook_event.id
+
+      success_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+      assert success_html =~ "Replay command added 1 newly normalized Event."
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_requested)
+             ) == 1
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
+      assert [%{delivery_id: authorized_delivery, webhook_event_id: authorized_target}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert authorized_delivery == delivery.id
+      assert authorized_target == webhook_event.id
+    end
+
     test "reports terminal audit write failure safely and retains requested and failed evidence",
          %{
            conn: conn
@@ -1347,11 +2096,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
         html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
         assert html =~
-                 "Replay processing could not be recorded because persistence failed. Normalized Events and projection changes were rolled back."
+                 "Replay couldn’t be completed. Review current eligibility before trying again."
 
+        assert html =~ ~s(data-testid="operator-replay-modal")
+        assert html =~ ~s(data-testid="operator-replay-review-again")
         refute html =~ "private simulated terminal audit failure detail"
-        assert html =~ "Webhook replay requested"
-        assert html =~ "Webhook replay failed"
 
         assert Enum.count(
                  replay_audit_rows_for(webhook_event.id),
@@ -1362,6 +2111,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
                  replay_audit_rows_for(webhook_event.id),
                  &(&1.type == :webhook_replay_failed)
                ) == 1
+
+        assert has_element?(view, "#operator-replay-confirm[disabled]")
 
         assert replay_audit_rows_for(webhook_event.id)
                |> Enum.any?(&(&1.type == :webhook_replay_succeeded)) == false
@@ -1460,7 +2211,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render_hook(view, "confirm_replay", %{})
 
-      assert html =~ "Select a delivery before replaying a webhook."
+      assert html =~ ~s(data-testid="operator-shell")
+      refute html =~ ~s(data-testid="operator-replay-modal")
+      refute html =~ "Select a delivery before replaying a webhook."
     end
   end
 
@@ -1637,8 +2390,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "This view could not be updated."
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
       assert html =~ "Retry deliveries"
+      refute html =~ ~s(data-testid="operator-result-count")
       refute html =~ "No deliveries in this time window"
       refute html =~ "synthetic transient operator read failure"
     end
@@ -1662,7 +2416,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Delivery details are temporarily unavailable."
       assert html =~ "Retry details"
       assert html =~ "Back to deliveries"
-      refute html =~ "No deliveries in this time window"
+      # The sr-only status region may state the settled list read; no visible empty pane renders.
+      refute html =~ ~s(data-testid="operator-empty-truly")
+      refute html =~ ~s(data-testid="data-state-empty")
     end
   end
 
@@ -1963,13 +2719,31 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
     end
 
+    @tag :phase177
     test "rendered Inbound nav target preserves the current tenant", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ "/ops/mail/inbound?tenant_id=#{@tenant_id}"
       assert html =~ "/ops/mail?tenant_id=#{@tenant_id}&amp;view=deliveries"
-      assert html =~ ~s(href="/dev/mail")
+
+      # Phase 177: with an Account selected the Preview link carries the
+      # closed-set return context (and no top-level tenant_id).
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      [preview_href | _] =
+        doc
+        |> Floki.find(~s([data-testid="surface-nav-sidebar"] a))
+        |> Enum.filter(fn link -> link |> Floki.text() |> String.trim() == "Preview" end)
+        |> Enum.flat_map(&Floki.attribute(&1, "href"))
+
+      uri = URI.parse(preview_href)
+      assert uri.path == "/dev/mail"
+
+      assert uri.query |> URI.query_decoder() |> Enum.sort() == [
+               {"return_surface", "overview"},
+               {"return_tenant_id", @tenant_id}
+             ]
     end
   end
 
@@ -2002,6 +2776,1478 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       refute html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
     end
+  end
+
+  describe "Phase 176 Deliveries direct filters" do
+    @describetag :phase176
+
+    test "Phase 176 select change commits one sorted canonical push patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+
+      path = assert_patch_kind(view, :push)
+
+      assert path ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "event" => "failed",
+                 "window_hours" => "168"
+               })
+
+      assert selected_filter_value(render(view), "#filters_event") == "failed"
+    end
+
+    test "Phase 176 the same payload twice yields exactly one patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      payload = filter_change("event", %{"event" => "failed"})
+
+      render_hook(view, "validate_filters", payload)
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", payload)
+      refute_patch(view)
+    end
+
+    test "Phase 176 a select equal to the committed value is a no-op", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 an unchanged commit from a bare entry URL is a no-op, a changing one pushes",
+         %{conn: conn} do
+      # Bare entry URL: no window_hours key (the shape other tests deep-link with).
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => ""}))
+      refute_patch(view)
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      path = assert_patch_kind(view, :push)
+
+      assert %{"event" => "failed", "window_hours" => "168", "tenant_id" => @tenant_id} =
+               path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+    end
+
+    test "Phase 176 a foreign tenant_id never changes the Account on change or submit", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"event" => "failed", "tenant_id" => "foreign-tenant"})
+      )
+
+      change_path = assert_patch_kind(view, :push)
+      change_query = change_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert change_query["tenant_id"] == @tenant_id
+      refute change_path =~ "foreign-tenant"
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "event" => "failed",
+          "search" => "foo ",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      submit_path = assert_patch_kind(view, :push)
+      submit_query = submit_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert submit_query["tenant_id"] == @tenant_id
+      assert submit_query["search"] == "foo"
+      refute submit_path =~ "foreign-tenant"
+    end
+
+    test "Phase 176 commits drop page and selection keys but carry support state", %{conn: conn} do
+      delivery = insert_delivery!(last_event_type: :sent)
+      support_event_id = Ecto.UUID.generate()
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "delivery_id" => delivery.id,
+            "full" => "1",
+            "page" => "2",
+            "support_focus" => "failed_ingest",
+            "support_event_id" => support_event_id
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("provider", %{
+          "provider" => "postmark",
+          "page" => "2",
+          "delivery_id" => delivery.id,
+          "inbound_id" => "inb-1",
+          "full" => "1"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+
+      for dropped <- ["page", "delivery_id", "inbound_id", "full"] do
+        refute Map.has_key?(query, dropped), "#{dropped} must not survive a filter commit"
+      end
+
+      assert query["support_focus"] == "failed_ingest"
+      assert query["support_event_id"] == support_event_id
+      assert query["window_hours"] == "168"
+      assert query["provider"] == "postmark"
+    end
+
+    test "Phase 176 choosing the blank All option drops that key from the URL", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => ""}))
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "event")
+      assert query["window_hours"] == "168"
+    end
+
+    test "Phase 176 payload key order never changes the canonical URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", %{
+        "filters" => %{
+          "window_hours" => "720",
+          "provider" => "postmark",
+          "event" => "failed",
+          "search" => ""
+        },
+        "_target" => ["filters", "provider"]
+      })
+
+      first = assert_patch_kind(view, :push)
+      assert first == URI.parse(first).path <> "?" <> sorted_query(first)
+    end
+
+    test "Phase 176 Enter trims search and commits it to the URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo ",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :push)
+
+      assert path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "foo"
+    end
+
+    test "Phase 176 a 500-character search round-trips through the canonical URL", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      long = String.duplicate("a", 500)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => long,
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["search"] == long
+      assert render(view) =~ long
+    end
+
+    test "Phase 176 a commit starting on page 2 patches to page 1 and renders page 1", %{
+      conn: conn
+    } do
+      for index <- 1..21 do
+        insert_delivery!(
+          recipient: "reset-#{index}@example.com",
+          provider_message_id: "pm-reset-#{index}",
+          last_event_type: :sent,
+          last_event_at: hours_ago(index)
+        )
+      end
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "sent",
+            "page" => "2"
+          })
+        )
+
+      assert html =~ "Page 2 of 2"
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"event" => "sent", "provider" => "postmark"})
+      )
+
+      path = assert_patch_kind(view, :push)
+
+      refute path
+             |> URI.parse()
+             |> Map.fetch!(:query)
+             |> URI.decode_query()
+             |> Map.has_key?("page")
+
+      assert render(view) =~ "Page 1 of 2"
+    end
+
+    test "Phase 176 pagination links keep the committed filters and only change page", %{
+      conn: conn
+    } do
+      for index <- 1..21 do
+        insert_delivery!(
+          recipient: "links-#{index}@example.com",
+          provider_message_id: "pm-links-#{index}",
+          last_event_type: :sent,
+          last_event_at: hours_ago(index)
+        )
+      end
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("provider", %{"event" => "sent", "provider" => "postmark"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      [href] =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-pagination-next']")
+        |> Floki.attribute("href")
+
+      query = href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["event"] == "sent"
+      assert query["provider"] == "postmark"
+      assert query["tenant_id"] == @tenant_id
+      assert query["page"] == "2"
+    end
+
+    test "Phase 176 search pushes the first commit of an edit, replaces later ones, a select ends it",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "a"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "ab"}))
+      assert_patch_kind(view, :replace)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "ab", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "abc", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 successive search commits end at the latest value with kinds push then replace",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "ab"}))
+      first = assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      final = assert_patch_kind(view, :replace)
+
+      assert first |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "ab"
+
+      assert final |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("search") ==
+               "abc"
+    end
+
+    test "Phase 176 clearing Search or whitespace-only Search drops the search key", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "abc",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "   "}))
+      path = assert_patch_kind(view, :push)
+
+      refute path
+             |> URI.parse()
+             |> Map.fetch!(:query)
+             |> URI.decode_query()
+             |> Map.has_key?("search")
+
+      assert path ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "window_hours" => "168"
+               })
+    end
+
+    test "Phase 176 trailing whitespace canonicalizes to the same search URL", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "foo",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "foo "}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 rapid select, search and Enter end at the last URL with push, push, replace",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"event" => "failed", "search" => "abc"})
+      )
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "abcd",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert_patch_kind(view, :push)
+      final = assert_patch_kind(view, :replace)
+      refute_patch(view)
+
+      assert final ==
+               operator_path(%{
+                 "tenant_id" => @tenant_id,
+                 "view" => "deliveries",
+                 "event" => "failed",
+                 "search" => "abcd",
+                 "window_hours" => "168"
+               })
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_event") == "failed"
+      assert html =~ ~s(value="abcd")
+    end
+
+    test "Phase 176 a no-op commit does not leak a pending kind into the next non-commit patch",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      # Same value again: a no-op, no patch, nothing pending.
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      refute_patch(view)
+
+      # Back to the earlier location is a non-commit patch and ends the search edit.
+      render_patch(view, deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "xyz"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Back ends the search edit and restores the earlier filter state", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+
+      render_patch(view, deliveries_path())
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_event") in [nil, ""]
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "q"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Enter after an unchanged search commit is a no-op", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Enter with a changed value finalizes a search edit with replace", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abcd",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :replace)
+    end
+
+    test "Phase 176 Enter without an in-flight search edit pushes", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "abc", "event" => "failed"})
+      )
+
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abcd",
+          "event" => "failed",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Account canonicalization replaces history", %{conn: conn} do
+      insert_delivery!(tenant_id: "solo-tenant", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), @base_path)
+      render(view)
+
+      path = assert_patch_kind(view, :replace)
+      assert path == operator_path(%{"tenant_id" => "solo-tenant"})
+    end
+
+    test "Phase 176 recover restores a valid differing draft with replace", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+
+      assert path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.get("event") ==
+               "failed"
+    end
+
+    test "Phase 176 recover keeps an invalid draft as a draft and never patches", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "recover_filters", %{
+          "filters" => %{
+            "event" => "not-real",
+            "search" => "",
+            "provider" => "",
+            "window_hours" => "168"
+          }
+        })
+
+      refute_patch(view)
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
+    end
+
+    test "Phase 176 recover ignores a foreign tenant_id and an identical draft", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+      refute path =~ "foreign-tenant"
+      assert path =~ "tenant_id=#{@tenant_id}"
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "event" => "failed",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Clear with nothing applied produces no patch and stays enabled", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      assert has_element?(view, "#operator-filters button[phx-click='clear_filters']")
+      refute has_element?(view, "#operator-filters button[phx-click='clear_filters'][disabled]")
+
+      view |> element("#operator-filters button[phx-click='clear_filters']") |> render_click()
+      refute_patch(view)
+    end
+
+    test "Phase 176 Clear with filters applied pushes", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "failed",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "clear_filters", %{})
+      path = assert_patch_kind(view, :push)
+      refute path =~ "event="
+    end
+
+    test "Phase 176 mobile Filters toggle is labelled, controls the panel and starts collapsed",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      toggle =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='operator-filters-toggle']")
+
+      assert Floki.attribute(toggle, "aria-controls") == ["operator-filter-panel"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["false"]
+      assert toggle_label(view) == "Filters"
+      assert has_element?(view, "#operator-filter-panel")
+    end
+
+    test "Phase 176 mobile Filters toggle counts committed filters only", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "sent",
+            "provider" => "postmark"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (2 applied)"
+    end
+
+    test "Phase 176 mobile Filters toggle counts search and a non-default window, not the default window",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "search" => "match",
+            "window_hours" => "720"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (2 applied)"
+
+      {:ok, default_view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "168"
+          })
+        )
+
+      assert toggle_label(default_view) == "Filters"
+    end
+
+    test "Phase 176 mobile Filters toggle ignores an invalid draft and follows the committed URL",
+         %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+      refute_patch(view)
+      assert toggle_label(view) == "Filters"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+      assert toggle_label(view) == "Filters (1 applied)"
+    end
+
+    test "Phase 176 the filter form has no Apply, submit, loading or tenant control", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+      assert form != []
+      assert Floki.find(form, "[type='submit']") == []
+      assert Floki.find(form, "[phx-disable-with]") == []
+      assert Floki.find(form, "#filters_tenant_id") == []
+      refute Floki.text(form) =~ "Apply"
+
+      assert has_element?(
+               view,
+               "#operator-filters button[phx-click='clear_filters']",
+               "Clear filters"
+             )
+
+      refute has_element?(view, "#operator-filters [disabled]")
+    end
+
+    test "Phase 176 Search is debounced and carries the search-field attributes only on Search",
+         %{
+           conn: conn
+         } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+      [search] = Floki.find(form, "#filters_search")
+
+      assert Floki.attribute(search, "phx-debounce") == ["300"]
+      assert Floki.attribute(search, "phx-hook") == ["FilterSearchSync"]
+      assert Floki.attribute(search, "autocomplete") == ["off"]
+      assert Floki.attribute(search, "enterkeyhint") == ["search"]
+      assert Floki.attribute(search, "data-committed") == [""]
+      assert Floki.attribute(search, "disabled") == []
+      assert Floki.attribute(search, "readonly") == []
+
+      for select <- Floki.find(form, "select") do
+        assert Floki.attribute(select, "phx-debounce") == []
+      end
+    end
+
+    test "Phase 176 the filter form has exactly one implicit-submission text field", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#operator-filters")
+
+      text_like =
+        ~w(text search email url tel password number date datetime-local month time week)
+
+      text_inputs =
+        form
+        |> Floki.find("input")
+        |> Enum.filter(fn input ->
+          case Floki.attribute(input, "type") do
+            [] -> true
+            [type] -> type in text_like
+          end
+        end)
+
+      assert length(text_inputs) == 1
+      assert Floki.find(form, "button[type='submit'], input[type='submit']") == []
+    end
+
+    test "Phase 176 data-committed follows the committed search while a draft differs", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo",
+          "event" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert search_attr(view, "data-committed") == ["foo"]
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"search" => "foobar draft", "event" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert search_attr(view, "data-committed") == ["foo"]
+    end
+
+    test "Phase 176 an invalid draft stays a draft with a pending note outside the filter panel",
+         %{conn: conn} do
+      insert_delivery!(recipient: "previous@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+
+      refute_patch(view)
+      document = Floki.parse_document!(html)
+
+      [select] = Floki.find(document, "#filters_event")
+      assert Floki.attribute(select, "aria-invalid") == ["true"]
+      [described_by] = Floki.attribute(select, "aria-describedby")
+      assert "filters_event-error" in String.split(described_by)
+
+      assert Floki.find(document, "#filters_event-error") |> Floki.text() =~
+               "Latest recorded event was not applied. Choose a listed event."
+
+      note = Floki.find(document, "[data-testid='filters-draft-pending-note']")
+
+      assert Floki.text(note) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert Floki.find(
+               document,
+               "#operator-filter-panel [data-testid='filters-draft-pending-note']"
+             ) ==
+               []
+
+      assert Floki.find(document, "[data-testid='filters-url-invalid-note']") == []
+      assert html =~ "previous@example.com"
+      assert toggle_label(view) == "Filters"
+
+      # A later valid commit clears the note.
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+      refute has_element?(view, "#filters_event-error")
+    end
+
+    test "Phase 176 an invalid URL value is labelled as excluded, never an unlabelled fallback",
+         %{conn: conn} do
+      insert_delivery!(recipient: "fallback@example.com", last_event_type: :sent)
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
+      assert html =~ "fallback@example.com"
+
+      note =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='filters-url-invalid-note']")
+
+      assert Floki.text(note) =~ "Showing results without the Latest recorded event filter."
+      refute Floki.text(note) =~ "default time window"
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "bogus"
+          })
+        )
+
+      note =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='filters-url-invalid-note']")
+
+      assert Floki.text(note) =~ "Showing results for the default time window instead."
+      refute Floki.text(note) =~ "Latest recorded event"
+
+      # A later valid commit removes the URL note.
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-url-invalid-note']")
+    end
+
+    test "Phase 176 Deliveries new-query read failure shows a truthful error, no count and no empty copy",
+         %{conn: conn} do
+      insert_delivery!(recipient: "readable@example.com", last_event_type: :sent)
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert html =~ "readable@example.com"
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      path = assert_patch_kind(view, :push)
+      assert path =~ "event=sent"
+
+      html = render(view)
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+      refute has_element?(view, "[data-testid='operator-result-count']")
+      refute has_element?(view, "[data-testid='operator-delivery-row']")
+      refute has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      refute html =~ "No deliveries match the current filters."
+      refute html =~ "readable@example.com"
+      refute html =~ "synthetic"
+      assert selected_filter_value(html, "#filters_event") == "sent"
+    end
+
+    test "Phase 176 results status region exists at first render and announces the settled count",
+         %{conn: conn} do
+      insert_delivery!(
+        recipient: "one@example.com",
+        last_event_type: :sent,
+        provider_message_id: "pm_status_one"
+      )
+
+      insert_delivery!(
+        recipient: "two@example.com",
+        last_event_type: :sent,
+        provider_message_id: "pm_status_two"
+      )
+
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+
+      region =
+        html |> Floki.parse_document!() |> Floki.find("#operator-results-status")
+
+      assert [_] = region
+      assert Floki.attribute(region, "role") == ["status"]
+      assert Floki.attribute(region, "aria-live") == ["polite"]
+      assert Floki.attribute(region, "aria-atomic") == ["true"]
+      assert Floki.attribute(region, "class") |> List.first() =~ "sr-only"
+      assert status_text(view) == "2 deliveries match"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
+      assert_patch_kind(view, :push)
+      assert status_text(view) == "No deliveries match the current filters"
+    end
+
+    test "Phase 176 results status text ignores invalid drafts and identical re-reads", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "steady@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      settled = status_text(view)
+      assert settled == "1 delivery matches"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
+      refute_patch(view)
+      assert status_text(view) == settled
+
+      render_hook(view, "retry_deliveries", %{})
+      assert status_text(view) == settled
+    end
+
+    test "Phase 176 a same-query failed read keeps rows under the stale panel with the load time",
+         %{conn: conn} do
+      insert_delivery!(recipient: "kept@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      assert has_element?(view, "[data-testid='operator-result-count']")
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+      render_hook(view, "retry_deliveries", %{})
+
+      html = render(view)
+      assert html =~ "kept@example.com"
+      assert has_element?(view, "[data-testid='operator-delivery-row']")
+      assert has_element?(view, "[data-testid='data-state-stale']")
+      assert html =~ ~r/Showing results from \d{2}:\d{2} UTC; refresh failed/
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert has_element?(view, "[data-testid='operator-stale-loaded-at']", "Results loaded")
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+      refute has_element?(view, "[data-testid='operator-result-count']")
+      refute html =~ "synthetic"
+      assert status_text(view) =~ ~r/^Showing results from \d{2}:\d{2} UTC; refresh failed$/
+
+      # The next successful read settles back to the count and drops the stale panel.
+      view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
+      refute has_element?(view, "[data-testid='data-state-stale']")
+      assert has_element?(view, "[data-testid='operator-result-count']")
+      assert status_text(view) == "1 delivery matches"
+    end
+
+    test "Phase 176 Deliveries Retry adds no history and re-reads the committed filters", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "retried@example.com", last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "deliveries", :known)
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      assert has_element?(view, "[data-testid='operator-retry-deliveries']")
+
+      view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
+
+      refute_patch(view)
+      html = render(view)
+      assert html =~ "retried@example.com"
+      assert has_element?(view, "[data-testid='operator-result-count']")
+      refute html =~ "Couldn&#39;t load deliveries for these filters"
+    end
+
+    test "Phase 176 gap: an empty narrower window keeps the toolbar and a way back", %{conn: conn} do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert html =~ "older@example.com"
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      to = assert_patch_kind(view, :push)
+      assert to =~ "window_hours=24"
+
+      html = render(view)
+      assert has_element?(view, "[data-testid='operator-filters']")
+      assert has_element?(view, "#operator-filters")
+      assert selected_filter_value(html, "#filters_window_hours") == "24"
+      assert has_element?(view, "[data-testid='operator-empty-filtered']")
+      assert html =~ "No deliveries match the current filters."
+      assert has_element?(view, "[data-testid='operator-empty-reset']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      refute html =~ "No deliveries in this time window"
+      assert status_text(view) =~ "No deliveries match the current filters"
+    end
+
+    test "Phase 176 gap: a direct URL with an empty narrower window keeps the toolbar", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "24"
+          })
+        )
+
+      assert has_element?(view, "#operator-filters")
+      assert has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-empty-truly']")
+      assert selected_filter_value(html, "#filters_window_hours") == "24"
+    end
+
+    test "Phase 176 gap: the default window written out explicitly is not a filter", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "168"
+          })
+        )
+
+      assert has_element?(view, "[data-testid='operator-empty-truly']")
+      refute has_element?(view, "[data-testid='operator-empty-filtered']")
+      refute has_element?(view, "[data-testid='operator-filters']")
+    end
+
+    test "Phase 176 gap: the toggle count and the empty-state branch agree on the window", %{
+      conn: conn
+    } do
+      insert_delivery!(recipient: "older@example.com", last_event_at: hours_ago(48))
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "720"
+          })
+        )
+
+      assert toggle_label(view) == "Filters (1 applied)"
+    end
+
+    test "Phase 176 gap: the mobile Filters toggle switches a class, never an inline display", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      doc = view |> render() |> Floki.parse_document!()
+
+      [command] =
+        doc
+        |> Floki.find("[data-testid='operator-filters-toggle']")
+        |> Floki.attribute("phx-click")
+
+      ops = command |> Jason.decode!() |> Enum.map(fn [op, args] -> {op, args} end)
+      op_names = Enum.map(ops, &elem(&1, 0))
+
+      refute "toggle" in op_names
+      assert {"toggle_class", class_args} = Enum.find(ops, &(elem(&1, 0) == "toggle_class"))
+      assert class_args["names"] == ["mg-inbound-filters-open"]
+      assert class_args["to"] == "#operator-filter-panel"
+
+      assert Enum.find_index(op_names, &(&1 == "toggle_class")) <
+               Enum.find_index(op_names, &(&1 == "toggle_attr"))
+
+      assert doc |> Floki.find("#operator-filter-panel") |> Floki.attribute("class") ==
+               ["hidden md:block"]
+    end
+
+    test "Phase 176 gap: a PubSub refresh does not rewrite the status region", %{conn: conn} do
+      insert_delivery!(recipient: "first@example.com", provider_message_id: "pm_first")
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      assert status_text(view) == "1 delivery matches"
+
+      second =
+        insert_delivery!(recipient: "second@example.com", provider_message_id: "pm_second")
+
+      broadcast = fn ->
+        Phoenix.PubSub.broadcast(
+          Mailglass.PubSub,
+          Mailglass.PubSub.Topics.events(@tenant_id),
+          {:delivery_updated, second.id, :sent, %{tenant_id: @tenant_id}}
+        )
+
+        render(view)
+      end
+
+      html = broadcast.()
+      assert html =~ "first@example.com"
+      assert html =~ "second@example.com"
+      assert status_text(view) == "1 delivery matches"
+
+      third =
+        insert_delivery!(recipient: "third@example.com", provider_message_id: "pm_third")
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(@tenant_id),
+        {:delivery_updated, third.id, :sent, %{tenant_id: @tenant_id}}
+      )
+
+      assert render(view) =~ "third@example.com"
+      assert status_text(view) == "1 delivery matches"
+
+      render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
+      assert_patch_kind(view, :push)
+      assert status_text(view) == "3 deliveries match"
+    end
+
+    test "Phase 176 gap: a blank window normalizes quietly without a Custom period option", %{
+      conn: conn
+    } do
+      insert_delivery!(last_event_type: :sent)
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => ""
+          })
+        )
+
+      refute html =~ "Custom period"
+      refute html =~ "Time window was not applied"
+      assert selected_filter_value(html, "#filters_window_hours") == "168"
+      assert has_element?(view, "#operator-filters")
+
+      # D-13 stays for non-blank invalid values: blank is absent, not invalid.
+      {:ok, _view, invalid_html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "abc"
+          })
+        )
+
+      assert invalid_html =~ "Time window was not applied"
+    end
+
+    test "Phase 176 gap: a URL-invalid filter stays labelled as excluded after a later edit or a reconnect",
+         %{conn: conn} do
+      insert_delivery!(recipient: "kept@example.com", last_event_type: :sent)
+
+      url_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-url-invalid-note']")
+      end
+
+      draft_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-draft-pending-note']")
+      end
+
+      window_path =
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "window_hours" => "abc"
+        })
+
+      # First render (unchanged): the URL note shows, the draft note does not.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+      assert draft_note.(view) == []
+
+      # Search edit that re-posts the URL's own invalid value (D-12 + D-13 together).
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "ada", "window_hours" => "abc"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert render(view) =~ "Time window was not applied. Choose a positive listed time window."
+
+      # Reconnect: phx-auto-recover re-posts the same invalid value.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "abc",
+          "event" => "",
+          "provider" => ""
+        }
+      })
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      # Enum: URL event=bogus, then a Search change that posts event=bogus.
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("search", %{"search" => "ada", "event" => "bogus"})
+      )
+
+      refute_patch(view)
+
+      assert Floki.text(url_note.(view)) =~
+               "Showing results without the Latest recorded event filter."
+
+      assert draft_note.(view) != []
+
+      # A second field that is invalid only in the draft is not named by the URL note.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("event", %{"window_hours" => "abc", "event" => "bogus"})
+      )
+
+      refute_patch(view)
+      note_text = Floki.text(url_note.(view))
+      assert note_text =~ "default time window"
+      refute note_text =~ "Latest recorded event"
+      assert draft_note.(view) != []
+
+      # Recovery: a valid commit clears both notes.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        filter_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      assert_patch_kind(view, :push)
+      assert url_note.(view) == []
+      assert draft_note.(view) == []
+    end
+
+    test "Phase 176 gap: a rejected event stays selected as a Not applied option", %{conn: conn} do
+      insert_delivery!(last_event_type: :sent)
+
+      options = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#filters_event option")
+      end
+
+      not_applied = fn html ->
+        html
+        |> options.()
+        |> Enum.filter(
+          &(&1
+            |> Floki.text()
+            |> String.trim()
+            |> String.starts_with?("Not applied"))
+        )
+      end
+
+      {:ok, _view, baseline} = live(operator_conn(conn), deliveries_path())
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(baseline, "#filters_event") in [nil, ""]
+      assert not_applied.(baseline) == []
+
+      # URL-backed rejected value.
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "bogus"
+          })
+        )
+
+      assert html =~ "Latest recorded event was not applied. Choose a listed event."
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == ["bogus"]
+      assert option |> Floki.text() |> String.trim() == "Not applied: bogus"
+      # Enabled: a disabled option is left out of submission and would clear the filter.
+      assert Floki.attribute(option, "disabled") == []
+      # Directly after the prompt.
+      assert [_prompt, ^option | _] = options.(html)
+
+      # A change event that posts the rejected value keeps it selected and never patches.
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          filter_change("search", %{"search" => "x", "event" => "bogus"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+      assert [_] = not_applied.(html)
+
+      # Draft-only rejected value.
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      html =
+        render_hook(view, "validate_filters", filter_change("event", %{"event" => "bogus"}))
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_event") == "bogus"
+      assert [option] = not_applied.(html)
+      assert option |> Floki.text() |> String.trim() == "Not applied: bogus"
+
+      # Encoding: quotes and angle brackets are escaped, one extra option, nothing injected.
+      raw = ~s(a"b<c>)
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "event" => raw})
+        )
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == [raw]
+      assert option |> Floki.text() |> String.trim() == "Not applied: " <> raw
+      assert length(options.(html)) == length(options.(baseline)) + 1
+      assert Floki.find(Floki.parse_document!(html), "#filters_event option *") == []
+
+      # Blank: the prompt is selected and no Not applied option appears.
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "event" => ""})
+        )
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(html, "#filters_event") in [nil, ""]
+      assert not_applied.(html) == []
+    end
+  end
+
+  defp status_text(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#operator-results-status")
+    |> Floki.text()
+    |> String.trim()
+  end
+
+  defp toggle_label(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='operator-filters-toggle']")
+    |> Floki.text()
+    |> String.split()
+    |> Enum.join(" ")
+  end
+
+  defp deliveries_path do
+    operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"})
+  end
+
+  # A phx-change payload as the browser sends it: the changed field in `_target`.
+  defp filter_change(field, overrides) do
+    %{
+      "_target" => ["filters", field],
+      "filters" =>
+        Map.merge(
+          %{"search" => "", "window_hours" => "168", "event" => "", "provider" => ""},
+          overrides
+        )
+    }
+  end
+
+  defp assert_patch_kind(view, kind) do
+    %{proxy: {ref, topic, _pid}} = view
+    assert_receive {^ref, {:patch, ^topic, %{kind: ^kind, to: to}}}
+    to
+  end
+
+  defp search_attr(view, name) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#operator-filters #filters_search")
+    |> Floki.attribute(name)
+  end
+
+  defp refute_patch(view) do
+    %{proxy: {ref, topic, _pid}} = view
+    refute_receive {^ref, {:patch, ^topic, _opts}}, 50
+  end
+
+  defp sorted_query(path) do
+    path
+    |> URI.parse()
+    |> Map.fetch!(:query)
+    |> URI.decode_query()
+    |> Enum.sort()
+    |> URI.encode_query()
   end
 
   defp operator_path(params) do
@@ -2403,13 +4649,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 
+    @tag :phase177
     test "quiet Health has one empty state and no zero-count or audit cards", %{conn: conn} do
       {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
 
       assert has_element?(
                view,
                "[data-testid='operator-health-status']",
-               "No recent mail activity"
+               "No mail activity in this period"
              )
 
       assert has_element?(view, "[data-testid='operator-health-outbound-activity']", "0")
@@ -2522,6 +4769,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute href =~ "event=failed"
     end
 
+    @tag :phase177
     test "a stale zero result cannot produce an all-clear", %{conn: conn} do
       insert_delivery!(last_event_type: :delivered)
       {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
@@ -2530,7 +4778,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Health check incomplete"
       assert html =~ ~s(data-testid="operator-health-stale-failed_ingest")
       refute html =~ "No issues found"
-      refute html =~ "No recent mail activity"
+      refute html =~ "No mail activity in this period"
     end
 
     test "Health shows received message activity and only inbound processing or routing problems",
@@ -3307,10 +5555,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-error")
-      assert html =~ "This view could not be updated."
-
-      assert html =~
-               "Refresh to try again. If it continues, contact your Mailglass host administrator."
+      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
+      refute html =~ ~s(data-testid="operator-result-count")
 
       refute html =~ ~s(data-testid="data-state-empty")
     end
@@ -3353,12 +5600,35 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
-      assert html =~ "This view may be out of date."
-
-      assert html =~
-               "The latest read was unavailable. Showing the last results loaded for this Account."
-
+      assert html =~ "Showing earlier results; refresh failed"
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "Retry deliveries"
+      refute html =~ ~s(data-testid="operator-stale-loaded-at")
       refute html =~ "14:32"
+      refute html =~ ~s(data-testid="operator-result-count")
+    end
+
+    @tag :phase176
+    test "Phase 176 stale signal with a load time names it in the title and a timestamp line" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :stale,
+          loaded_at: ~U[2026-10-28 14:05:09Z],
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ "Showing results from 14:05 UTC; refresh failed"
+      assert html =~ ~s(data-testid="operator-stale-loaded-at")
+      assert html =~ ~s(datetime="2026-10-28T14:05:09Z")
     end
 
     test "no two states share a testid — the legacy filtered/truly-empty distinction is preserved within :empty" do
@@ -3438,6 +5708,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   describe "Health copy stays limited to persisted observations" do
     @tag :g_168_10
+    @tag :phase177
     test "stale Health values are scoped to the selected observation window", %{conn: conn} do
       conn = operator_conn(conn)
       provider_event_id = "g-168-10-outside-short-window"
@@ -3460,7 +5731,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "[data-testid='operator-overview-health-failures']"
         )
 
-      assert Floki.text(hd(Floki.find(initial_card, "p.mono"))) |> String.trim() == "1"
+      assert Floki.text(
+               hd(
+                 Floki.find(
+                   initial_card,
+                   "[data-testid='operator-overview-health-failures-count']"
+                 )
+               )
+             )
+             |> String.trim() == "1"
 
       # The last value remains valid as stale when a read for the same interval fails.
       OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
@@ -3483,8 +5762,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "[data-testid='operator-overview-health-failures']"
         )
 
-      assert Floki.text(hd(Floki.find(same_window_card, "p.mono"))) |> String.trim() == "1"
-      assert Floki.text(same_window_card) =~ "Last retrieved"
+      assert Floki.text(
+               hd(
+                 Floki.find(
+                   same_window_card,
+                   "[data-testid='operator-overview-health-failures-count']"
+                 )
+               )
+             )
+             |> String.trim() == "1"
+
+      assert Floki.text(same_window_card) =~ "Not refreshed"
 
       # The same observation is outside 24 hours. A transient read in this new
       # interval must not relabel the 168-hour value as current or stale.
@@ -3503,7 +5791,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(view, "[data-testid='operator-health-window']", "Last 1 day")
 
       assert changed_window_html =~ ~s(data-testid="operator-health-unavailable-failed_ingest")
-      assert changed_window_html =~ "could not be loaded"
+
+      assert changed_window_html |> Floki.parse_document!() |> Floki.text() =~
+               "couldn't be loaded"
+
       assert changed_window_html =~ "Health check incomplete"
       refute changed_window_html =~ ~s(data-testid="operator-overview-health-failures")
       refute changed_window_html =~ provider_event_id
@@ -3521,6 +5812,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
     end
 
+    @tag :phase177
     test "keeps a failed observation isolated while retaining its last known value", %{conn: conn} do
       conn = operator_conn(conn)
       insert_support_summary_fixture!()
@@ -3529,7 +5821,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       initial_orphans =
         initial
-        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> Floki.find("[data-testid='operator-overview-health-orphans-count']")
         |> List.first()
         |> Floki.text()
 
@@ -3538,7 +5830,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       document = Floki.parse_document!(html)
 
       assert_push_event(view, "mailglass:toast", %{
-        message: "Some health data could not be refreshed.",
+        message: "Some health checks couldn't be refreshed. Showing the last results retrieved.",
         error: true
       })
 
@@ -3546,7 +5838,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       current_orphans =
         document
-        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> Floki.find("[data-testid='operator-overview-health-orphans-count']")
         |> List.first()
         |> Floki.text()
 

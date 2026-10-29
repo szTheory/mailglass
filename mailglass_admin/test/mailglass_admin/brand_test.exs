@@ -89,6 +89,7 @@ defmodule MailglassAdmin.BrandTest do
       # `backdrop-filter: ` followed by a value such as `blur(...)`.
       refute css =~ ~r/backdrop-filter\s*:/,
              "compiled CSS must NOT use `backdrop-filter:` as a property (no glassmorphism)"
+
       refute css =~ "box-shadow: inset",
              "compiled CSS must NOT contain `box-shadow: inset` (no bevels)"
     end
@@ -96,6 +97,7 @@ defmodule MailglassAdmin.BrandTest do
     test "depth and noise are disabled in both themes", %{css: css} do
       assert css =~ "--depth: 0" or css =~ "--depth:0",
              "both themes must set --depth: 0"
+
       assert css =~ "--noise: 0" or css =~ "--noise:0",
              "both themes must set --noise: 0"
     end

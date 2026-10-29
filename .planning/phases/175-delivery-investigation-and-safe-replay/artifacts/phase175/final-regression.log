@@ -1,0 +1,63 @@
+== Storybook evidence and review contracts ==
+✔ Phase 175 selected Axe inventory executes 13 rendered variants in 26 theme cases (0.752708ms)
+✔ supplemental contrast aggregates every selector match conservatively (0.459459ms)
+✔ supplemental proof rejects missing coverage, overlap, clipped controls and broken focus (2.869375ms)
+✔ supplemental contrast cannot omit a retained target or relax its threshold (0.561416ms)
+✔ supplemental contrast covers new Axe incompletes before triage (0.1745ms)
+✔ validateReport rejects a missing report before comparison (0.05925ms)
+✔ validateReport rejects unsupported report schema (0.115666ms)
+✔ validateReport rejects empty expected and executed sets (0.190375ms)
+✔ validateReport requires the exact nonempty manifest case set (0.273833ms)
+✔ validateReport requires one successful execution for every expected case (0.379417ms)
+✔ validateReport rejects failed, skipped and unfinished executions (0.378333ms)
+✔ validateReport rejects stale caller run, revision and digest identities (0.29825ms)
+✔ validateReport requires a completed report timestamp (0.18975ms)
+✔ validateReport rejects the same evidence run on both sides of a comparison (0.148792ms)
+✔ normalizeTarget removes only a volatile Storybook host iframe selector (0.116041ms)
+✔ compareFindings rejects changed rules at a flat finding count (0.281625ms)
+✔ compareFindings rejects changed targets at a flat finding count (0.079458ms)
+✔ compareFindings rejects changed states at a flat finding count (0.065834ms)
+✔ compareFindings requires exact triage for every incomplete fingerprint (0.106375ms)
+✔ compareFindings retains independently identified historical and current triage runs (0.127125ms)
+✔ compareFindings rejects a report used as its own approval evidence (0.043583ms)
+✔ compareFindings passes an unchanged exact independently approved fingerprint (0.052666ms)
+✔ compareFindings passes an improved report with no findings (0.04ms)
+✔ CLI prints execution counts and rejects a missing report file (49.69375ms)
+✔ checker accepts complete independent local cold/warm evidence (39.643875ms)
+✔ same test title from different source locations remains separately countable (37.036584ms)
+✔ Admin bootstrap is isolated from Storybook documents and present on production routes (36.804ms)
+✔ checker rejects missing, empty, partial, and stale reports (129.243084ms)
+✔ checker rejects absent cost fields and forged local CI labels (103.458917ms)
+✔ require-ci rejects mismatched job identity and missing completed-job metadata (67.111625ms)
+✔ require-ci accepts matching completed job and derives full runner duration (38.399625ms)
+✔ CI producer validates condition timings before completed job metadata exists (98.416583ms)
+✔ source identity includes dirty route and .story.exs bytes at the same revision (139.679ms)
+✔ Phase 175 case receipts reject empty, missing, duplicate, unexpected, failed, and skipped execution (1.205167ms)
+✔ Phase 175 report selection requires named Demo and connected Admin cases to pass exactly once (0.411333ms)
+✔ Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes (46.7385ms)
+✔ Phase 175 fidelity requires decoded responsive and zoom PNGs inside the current run directory (147.35725ms)
+✔ Phase 175 Axe receipt accounts for expected, executed, violation, and separately triaged incomplete rows (6.461708ms)
+✔ Phase 175 clean current-source evidence passes while missing and malformed reports fail (78.478083ms)
+✔ Phase 175 selected source identity binds the Demo Mix dependency manifest (13.701583ms)
+✔ executed advisory evidence never claims required CI or owner approval (1.357708ms)
+✔ unexecuted, failed, zero-case and partial evidence cannot produce a passing review (0.209125ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 736.848042
+== Core contracts and renderer ==
+Finished in 0.3 seconds (0.2s async, 0.1s sync)
+81 tests, 0 failures
+== Admin LiveView and component suite ==
+Finished in 5.6 seconds (1.8s async, 3.8s sync)
+661 tests, 0 failures, 1 excluded
+== Inbound deterministic CI suite ==
+Finished in 4.1 seconds (0.5s async, 3.6s sync)
+3 properties, 480 tests, 0 failures, 3 excluded
+== Connected operator and preview browser suite ==
+::notice title=🎭 Playwright Run Summary::  31 passed (20.2s)
+  31 passed (20.2s)

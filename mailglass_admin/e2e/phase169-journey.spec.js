@@ -49,7 +49,7 @@ test.describe("Phase 169 connected journey", () => {
     await page.getByRole("button", { name: "Refresh health" }).click();
     await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
     await expect(unmatched).toContainText("1");
-    await expect(unmatched).toContainText("Last retrieved");
+    await expect(unmatched).toContainText("Not refreshed");
     await expect(failures).toContainText("1");
     await expect(page.getByTestId("operator-health-status")).toContainText("Needs attention");
     await expect(page.getByTestId("operator-health-outbound-activity")).toBeVisible();
@@ -140,7 +140,7 @@ test.describe("Phase 169 connected journey", () => {
     // The visible Event ID is itself the copy control; feedback uses the shared
     // copy toast (role=status, aria-live=polite) instead of an adjacent status node.
     const selected = page.getByTestId("operator-timeline-selected-event");
-    const eventId = selected.getByRole("button", { name: "Copy Event ID", exact: true });
+    const eventId = selected.getByRole("button", { name: /^Copy Event ID: / });
     const copyToast = page.getByTestId("copy-toast");
     await expect(copyToast).toHaveAttribute("role", "status");
     await expect(copyToast).toHaveAttribute("aria-live", "polite");
@@ -218,7 +218,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(current).toContainText("Address · Account-local");
     await expect(current).toContainText("Policy");
     await expect(current).toContainText("operator review · Ångström");
-    await expect(current).toContainText("Expires at");
+    await expect(current).toContainText("Expiry date");
     await expect(page.getByTestId("operator-timeline")).toContainText("Suppressed");
     await expect(page.getByTestId("operator-support-cards")).toContainText("Active suppressions: 1");
     // Health no longer carries a suppression metric: intentional suppression policy
@@ -250,8 +250,9 @@ test.describe("Phase 169 connected journey", () => {
 
     await page.getByTestId("operator-suppression-refresh").click();
     await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
+    await expect(current).toContainText("Couldn’t refresh suppression evidence. Try again.");
     await expect(current).toContainText("last retrieved record and may be out of date");
-    await expect(current).toContainText("The public Mailglass removal command permits Policy records.");
+    await expect(current).toContainText("Mailglass allows removal of Policy suppressions.");
     await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);
     await expect(page.locator("body")).not.toContainText("never render");
 
@@ -272,7 +273,7 @@ test.describe("Phase 169 connected journey", () => {
       } else {
         await expect(card).toContainText("Address + stream · Account-local");
         await expect(card).toContainText("Complaint");
-        await expect(card).toContainText("The public Mailglass removal command blocks Complaint records.");
+        await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
         await expect(card).toContainText(nextFixture.recipient);
       }
     }
@@ -353,7 +354,7 @@ test.describe("Phase 169 connected journey", () => {
         bodyFont: Number.parseFloat(getComputedStyle(document.querySelector(".text-body")).fontSize),
         labels: [...document.querySelectorAll(".text-label")].map(el => Number.parseFloat(getComputedStyle(el).fontSize)),
         decorativeIcons: document.querySelectorAll('span[aria-hidden="true"][class*="hero-"]').length,
-        metricColumns: getComputedStyle(document.querySelector('[data-testid="operator-overview-health"] > div:nth-child(2)')).gridTemplateColumns.split(" ").length
+        columnWidth: document.querySelector('[data-testid="operator-health-column"]').getBoundingClientRect().width
       }));
       expect(healthGeometry.viewport).toBe(width);
       expect(healthGeometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
@@ -361,9 +362,8 @@ test.describe("Phase 169 connected journey", () => {
       expect(healthGeometry.labels.length).toBeGreaterThan(0);
       expect(Math.min(...healthGeometry.labels)).toBe(14);
       expect(healthGeometry.decorativeIcons).toBeGreaterThan(0);
-      // Health is a status column (verdict + issue rows) beside a Recent activity
-      // column from the lg breakpoint; below it the two stack in one column.
-      expect(healthGeometry.metricColumns).toBe(width < 1024 ? 1 : 2);
+      // Health is one left-aligned reading column capped at 42rem at every width.
+      expect(healthGeometry.columnWidth, `Health column width at ${width}px`).toBeLessThanOrEqual(42 * 16 + 1);
       geometryByWidth.push({ width, ...healthGeometry });
       await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
       await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
@@ -416,7 +416,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(quickView).toContainText("Updated");
       await expect(quickView.locator("time[data-local-time]").first()).toBeVisible();
       await expect(quickView).toContainText("Delivery ID");
-      await expect(quickView.getByRole("button", { name: "Copy Delivery ID", exact: true })).toBeVisible();
+      await expect(quickView.getByRole("button", { name: /^Copy Delivery ID: / })).toBeVisible();
       // Recipients are readable (not masked) in inspection views: the Quick view
       // identity names the same exact recipient the Full detail header shows.
       await expect(quickView).toContainText("browser-exact@example.com");
@@ -455,7 +455,7 @@ test.describe("Phase 169 connected journey", () => {
       const review = page.getByTestId("operator-replay-modal");
       await expect(review).toBeVisible();
       await expect(review).toHaveAttribute("aria-modal", "true");
-      await expect(review).toContainText("does not resend outbound mail or prove provider receipt");
+      await expect(review).toContainText("does not resend mail or prove provider receipt");
       expect(await review.evaluate(el => el.contains(document.activeElement)), `Replay focus remains inside at ${width}px`).toBeTruthy();
       await page.screenshot({ path: path.join(afterDir, `replay-review-${width}.png`), animations: "disabled" });
       routes.push({ width, state: "Replay review", url: new URL(page.url()).pathname + new URL(page.url()).search });
@@ -482,6 +482,20 @@ test.describe("Phase 169 connected journey", () => {
       screenshots: widths.flatMap(width => ["health", "deliveries", "quick-view", "detail", "replay-review"].map(state => `artifacts/after/${state}-${width}.png`)),
       geometryByWidth
     })}`);
+  });
+
+  test("Phase 177 Health column stays capped at landmark widths", async ({ page }) => {
+    for (const width of [320, 375, 390, 768, 1024, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await openBrowserTenant(page);
+      await expect(page.getByTestId("operator-health-column")).toBeVisible();
+      const geometry = await page.evaluate(() => ({
+        columnWidth: document.querySelector('[data-testid="operator-health-column"]').getBoundingClientRect().width,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }));
+      expect(geometry.columnWidth, `Health column width at ${width}px`).toBeLessThanOrEqual(42 * 16 + 1);
+      expect(geometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
+    }
   });
 
   test("Phase 169 connected Health, exact support, aged-out Delivery, replay, and return", async ({ page }) => {
@@ -566,8 +580,6 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
     await page.locator("#filters_event").selectOption("failed");
-    await expect(page).not.toHaveURL(/event=failed/);
-    await page.getByRole("button", { name: "Apply filters" }).click();
     await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");
 
     await page.goBack();

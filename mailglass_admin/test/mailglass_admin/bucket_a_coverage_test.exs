@@ -44,7 +44,9 @@ defmodule MailglassAdmin.BucketACoverageTest do
   @axe_baseline_json Path.join([@admin_root, "docs", "axe-baseline.json"])
   # The persona spec is the shared canonical cohort dir (compiled into the admin
   # :test build via mix.exs elixirc_paths — plan 116-01).
-  @persona_spec Path.expand(Path.join([@admin_root, "..", "reference", "persona_spec", "personas.ex"]))
+  @persona_spec Path.expand(
+                  Path.join([@admin_root, "..", "reference", "persona_spec", "personas.ex"])
+                )
 
   # ===========================================================================
   # THE MANIFEST — all 24 Bucket-A defects, each with {guard_kind, locator, status}.
@@ -54,103 +56,245 @@ defmodule MailglassAdmin.BucketACoverageTest do
   # ===========================================================================
   @manifest [
     # --- A1: modal/drawer behind the scrim ----------------------------------
-    %{id: "A1", desc: "Modal/drawer behind the scrim", guard_kind: :grep_gate,
-      locator: "Z-INDEX-GATE", status: :live},
-    %{id: "A1b", desc: "A1 runtime: panel is top hit-test target above scrim", guard_kind: :playwright_title,
-      locator: "panel above scrim — deliveries replay dialog", status: :live},
+    %{
+      id: "A1",
+      desc: "Modal/drawer behind the scrim",
+      guard_kind: :grep_gate,
+      locator: "Z-INDEX-GATE",
+      status: :live
+    },
+    %{
+      id: "A1b",
+      desc: "A1 runtime: panel is top hit-test target above scrim",
+      guard_kind: :playwright_title,
+      locator: "panel above scrim — deliveries replay dialog",
+      status: :live
+    },
 
     # --- A2: scroll bugs / nested-scroll traps ------------------------------
-    %{id: "A2", desc: "Scroll-chaining contained (overscroll-behavior)", guard_kind: :playwright_title,
-      locator: "scroll-chaining contained — deliveries replay dialog", status: :live},
+    %{
+      id: "A2",
+      desc: "Scroll-chaining contained (overscroll-behavior)",
+      guard_kind: :playwright_title,
+      locator: "scroll-chaining contained — deliveries replay dialog",
+      status: :live
+    },
 
     # --- A3: hover on non-interactive empty state (NET-NEW 116-05) -----------
-    %{id: "A3", desc: "Hover affordance only on interactive empty-state elements", guard_kind: :playwright_title,
-      locator: "Bucket-A A3: hover affordance only on interactive elements (no-data empty state)", status: :live},
+    %{
+      id: "A3",
+      desc: "Hover affordance only on interactive empty-state elements",
+      guard_kind: :playwright_title,
+      locator: "Bucket-A A3: hover affordance only on interactive elements (no-data empty state)",
+      status: :live
+    },
 
     # --- A4 / A23: floating element overlap of primary CTA (NET-NEW 116-05) --
-    %{id: "A4", desc: "Floating elements do not overlap a btn-primary outside the overlay", guard_kind: :playwright_title,
-      locator: "Bucket-A A4/A23: floating elements do not overlap a primary CTA outside the overlay", status: :live},
-    %{id: "A23", desc: "Toasts/floats obscuring controls (shares the A4 guard)", guard_kind: :playwright_title,
-      locator: "Bucket-A A4/A23: floating elements do not overlap a primary CTA outside the overlay", status: :live},
+    %{
+      id: "A4",
+      desc: "Floating elements do not overlap a btn-primary outside the overlay",
+      guard_kind: :playwright_title,
+      locator:
+        "Bucket-A A4/A23: floating elements do not overlap a primary CTA outside the overlay",
+      status: :live
+    },
+    %{
+      id: "A23",
+      desc: "Toasts/floats obscuring controls (shares the A4 guard)",
+      guard_kind: :playwright_title,
+      locator:
+        "Bucket-A A4/A23: floating elements do not overlap a primary CTA outside the overlay",
+      status: :live
+    },
 
     # --- A5: misaligned elements --------------------------------------------
-    %{id: "A5", desc: "Direct-sibling left-edge alignment in composed groups", guard_kind: :playwright_title,
-      locator: "direct-sibling left-edge alignment, padding-floor, and no overflow at 320/1280", status: :live},
+    %{
+      id: "A5",
+      desc: "Direct-sibling left-edge alignment in composed groups",
+      guard_kind: :playwright_title,
+      locator: "direct-sibling left-edge alignment, padding-floor, and no overflow at 320/1280",
+      status: :live
+    },
 
     # --- A6: awkward padding / content chopped off --------------------------
-    %{id: "A6", desc: "Long-value overflow handling (no clip without truncate)", guard_kind: :playwright_title,
-      locator: "overflow: list containers do not exceed their parent aside width at 320px and 768px (DATA-05)", status: :live},
+    %{
+      id: "A6",
+      desc: "Long-value overflow handling (no clip without truncate)",
+      guard_kind: :playwright_title,
+      locator:
+        "overflow: list containers do not exceed their parent aside width at 320px and 768px (DATA-05)",
+      status: :live
+    },
 
     # --- A7: inconsistent / off-grid spacing --------------------------------
-    %{id: "A7", desc: "Off-grid spacing tokens banned in group surfaces", guard_kind: :grep_gate,
-      locator: "SPACE-GATE", status: :live},
+    %{
+      id: "A7",
+      desc: "Off-grid spacing tokens banned in group surfaces",
+      guard_kind: :grep_gate,
+      locator: "SPACE-GATE",
+      status: :live
+    },
 
     # --- A8: elements flush inside containers (no breathing room) -----------
-    %{id: "A8", desc: "Computed padding-floor (no flush content) in group surfaces", guard_kind: :playwright_title,
-      locator: "direct-sibling left-edge alignment, padding-floor, and no overflow at 320/1280", status: :live},
+    %{
+      id: "A8",
+      desc: "Computed padding-floor (no flush content) in group surfaces",
+      guard_kind: :playwright_title,
+      locator: "direct-sibling left-edge alignment, padding-floor, and no overflow at 320/1280",
+      status: :live
+    },
 
     # --- A9: cards nested in cards (box prison) ------------------------------
-    %{id: "A9", desc: "Same-tone card-in-card signature banned in group surfaces", guard_kind: :grep_gate,
-      locator: "GROUP-GATE", status: :live},
+    %{
+      id: "A9",
+      desc: "Same-tone card-in-card signature banned in group surfaces",
+      guard_kind: :grep_gate,
+      locator: "GROUP-GATE",
+      status: :live
+    },
 
     # --- A10: squished / unreadable table columns ---------------------------
-    %{id: "A10", desc: "Responsive table->cards below breakpoint (DATA-01)", guard_kind: :playwright_title,
-      locator: "responsive: operator collection follows available content width for table/cards (DATA-01)", status: :live},
+    %{
+      id: "A10",
+      desc: "Responsive table->cards below breakpoint (DATA-01)",
+      guard_kind: :playwright_title,
+      locator:
+        "responsive: operator collection follows available content width for table/cards (DATA-01)",
+      status: :live
+    },
 
     # --- A11: table overuse (NET-NEW 116-05) --------------------------------
-    %{id: "A11", desc: "Table-overuse count-must-not-increase floor", guard_kind: :grep_gate,
-      locator: "TABLE-OVERUSE-GATE", status: :live},
+    %{
+      id: "A11",
+      desc: "Table-overuse count-must-not-increase floor",
+      guard_kind: :grep_gate,
+      locator: "TABLE-OVERUSE-GATE",
+      status: :live
+    },
 
     # --- A12: inconsistent stat-card design ---------------------------------
-    %{id: "A12", desc: "All stat cards route through Components.stat_card/1", guard_kind: :grep_gate,
-      locator: "STATCARD-GATE", status: :live},
+    %{
+      id: "A12",
+      desc: "All stat cards route through Components.stat_card/1",
+      guard_kind: :grep_gate,
+      locator: "STATCARD-GATE",
+      status: :live
+    },
 
     # --- A13: disabled looks enabled / enabled looks disabled ---------------
-    %{id: "A13", desc: "Programmatic disabled is visually distinct (primitive contracts)", guard_kind: :playwright_title,
-      locator: "interactive primitive hover, focus, disabled, and target-size contracts hold", status: :live},
+    %{
+      id: "A13",
+      desc: "Programmatic disabled is visually distinct (primitive contracts)",
+      guard_kind: :playwright_title,
+      locator: "interactive primitive hover, focus, disabled, and target-size contracts hold",
+      status: :live
+    },
 
     # --- A14: weird focus / hover states ------------------------------------
-    %{id: "A14", desc: "Visible focus rings (>=2px, not obscured, AA non-text contrast)", guard_kind: :playwright_title,
-      locator: "visible focus rings", status: :live},
+    %{
+      id: "A14",
+      desc: "Visible focus rings (>=2px, not obscured, AA non-text contrast)",
+      guard_kind: :playwright_title,
+      locator: "visible focus rings",
+      status: :live
+    },
 
     # --- A15: unreadable button text (same color font + background) ---------
-    %{id: "A15", desc: "WCAG AA contrast matrix (text vs background, light/dark)", guard_kind: :playwright_title,
-      locator: "Inbound: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", status: :live},
+    %{
+      id: "A15",
+      desc: "WCAG AA contrast matrix (text vs background, light/dark)",
+      guard_kind: :playwright_title,
+      locator: "Inbound: WCAG AA contrast matrix covers light/dark themes at 390/768/1440",
+      status: :live
+    },
 
     # --- A16: poor dark-mode contrast ---------------------------------------
-    %{id: "A16", desc: "Dark-mode contrast matrix (light/dark at 390/768/1440)", guard_kind: :playwright_title,
-      locator: "Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", status: :live},
+    %{
+      id: "A16",
+      desc: "Dark-mode contrast matrix (light/dark at 390/768/1440)",
+      guard_kind: :playwright_title,
+      locator: "Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440",
+      status: :live
+    },
     # --- A16-system: system theme dark parity (NET-NEW 116-05) --------------
-    %{id: "A16-system", desc: "System theme contrast parity with explicit dark", guard_kind: :playwright_title,
-      locator: "Bucket-A A16-system: system theme contrast parity with explicit dark", status: :live},
-    %{id: "A16-axe", desc: "Axe WCAG 2.2 AA baseline (system cell <= dark cell)", guard_kind: :axe,
-      locator: "axe-baseline.json", status: :live},
+    %{
+      id: "A16-system",
+      desc: "System theme contrast parity with explicit dark",
+      guard_kind: :playwright_title,
+      locator: "Bucket-A A16-system: system theme contrast parity with explicit dark",
+      status: :live
+    },
+    %{
+      id: "A16-axe",
+      desc: "Axe WCAG 2.2 AA baseline (system cell <= dark cell)",
+      guard_kind: :axe,
+      locator: "axe-baseline.json",
+      status: :live
+    },
 
     # --- A17: no system/light/dark picker -----------------------------------
-    %{id: "A17", desc: "Native three-radio theme picker (System/Light/Dark)", guard_kind: :playwright_title,
-      locator: "theme_picker keeps native three-radio semantics without pressed-button state", status: :live},
+    %{
+      id: "A17",
+      desc: "Native three-radio theme picker (System/Light/Dark)",
+      guard_kind: :playwright_title,
+      locator: "theme_picker keeps native three-radio semantics without pressed-button state",
+      status: :live
+    },
 
     # --- A18: tabs not showing selected / active state ----------------------
-    %{id: "A18", desc: "Selected state (data-selected + aria-current) on clicked delivery in table + card presentation", guard_kind: :playwright_title,
-      locator: "selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)", status: :live},
+    %{
+      id: "A18",
+      desc:
+        "Selected state (data-selected + aria-current) on clicked delivery in table + card presentation",
+      guard_kind: :playwright_title,
+      locator:
+        "selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)",
+      status: :live
+    },
 
     # --- A19: weird pagination when nothing to paginate ---------------------
-    %{id: "A19", desc: "Honest pagination boundaries (only when total_pages > 1)", guard_kind: :playwright_title,
-      locator: "sole tenant canonicalizes, theme preference paints root, active nav has structural cues, and pagination boundaries are honest", status: :live},
+    %{
+      id: "A19",
+      desc: "Honest pagination boundaries (only when total_pages > 1)",
+      guard_kind: :playwright_title,
+      locator:
+        "sole tenant canonicalizes, theme preference paints root, active nav has structural cues, and pagination boundaries are honest",
+      status: :live
+    },
 
     # --- A20: icons that don't semantically read ----------------------------
-    %{id: "A20", desc: "Every hero-* used in lib/ has a vendored SVG", guard_kind: :grep_gate,
-      locator: "ICON-EXISTS-GATE", status: :live},
+    %{
+      id: "A20",
+      desc: "Every hero-* used in lib/ has a vendored SVG",
+      guard_kind: :grep_gate,
+      locator: "ICON-EXISTS-GATE",
+      status: :live
+    },
 
     # --- A21: loading states that jump layout (CLS) (NET-NEW 116-05 + 116-03)-
-    %{id: "A21", desc: "Loading-state CLS height delta within threshold", guard_kind: :playwright_title,
-      locator: "Bucket-A A21: loading-state CLS height delta within threshold", status: :live},
-    %{id: "A21b", desc: "A21 pillar: layout-jump/CLS within threshold (116-03)", guard_kind: :playwright_title,
-      locator: "layout-jump/CLS within threshold — deliveries list region", status: :live},
+    %{
+      id: "A21",
+      desc: "Loading-state CLS height delta within threshold",
+      guard_kind: :playwright_title,
+      locator: "Bucket-A A21: loading-state CLS height delta within threshold",
+      status: :live
+    },
+    %{
+      id: "A21b",
+      desc: "A21 pillar: layout-jump/CLS within threshold (116-03)",
+      guard_kind: :playwright_title,
+      locator: "layout-jump/CLS within threshold — deliveries list region",
+      status: :live
+    },
 
     # --- A22: skeleton overuse on synchronous surfaces (NET-NEW 116-05) -----
-    %{id: "A22", desc: "Synchronous inbound mount renders no skeleton", guard_kind: :playwright_title,
-      locator: "Bucket-A A22: synchronous inbound mount renders no skeleton", status: :live},
+    %{
+      id: "A22",
+      desc: "Synchronous inbound mount renders no skeleton",
+      guard_kind: :playwright_title,
+      locator: "Bucket-A A22: synchronous inbound mount renders no skeleton",
+      status: :live
+    },
 
     # --- A24: bare "—" / "___" placeholder cards ----------------------------
     # Cite the gate by its stable NAME (IN-01) rather than the verbatim `do: "—"`
@@ -158,12 +302,22 @@ defmodule MailglassAdmin.BucketACoverageTest do
     # (check-conformance.sh), and a whitespace-only reformat of that pattern would
     # break a verbatim-token citation as a confusing "STALE CITATION (A24)"
     # unrelated to any real regression. The gate name is the durable handle.
-    %{id: "A24", desc: "STATCARD-GATE bans the bare em-dash placeholder fallback", guard_kind: :grep_gate,
-      locator: "STATCARD-GATE", status: :live},
+    %{
+      id: "A24",
+      desc: "STATCARD-GATE bans the bare em-dash placeholder fallback",
+      guard_kind: :grep_gate,
+      locator: "STATCARD-GATE",
+      status: :live
+    },
 
     # --- B-A1: focus not restored to trigger on overlay close ---------------
-    %{id: "B-A1", desc: "Focus restored to the opening trigger after overlay close", guard_kind: :playwright_title,
-      locator: "focus restore to trigger — deliveries replay modal", status: :live}
+    %{
+      id: "B-A1",
+      desc: "Focus restored to the opening trigger after overlay close",
+      guard_kind: :playwright_title,
+      locator: "focus restore to trigger — deliveries replay modal",
+      status: :live
+    }
   ]
 
   # The 24 canonical Bucket-A defect IDs (A1..A24). The manifest carries extra
@@ -184,7 +338,9 @@ defmodule MailglassAdmin.BucketACoverageTest do
       |> Enum.map(fn id ->
         cond do
           # Exact canonical ID (A1..A24) — keep as-is.
-          String.match?(id, ~r/^A\d+$/) -> id
+          String.match?(id, ~r/^A\d+$/) ->
+            id
+
           # Cross-cite suffix on a canonical ID (A1b, A16-system, A16-axe, A21b)
           # normalizes back to its canonical AN. B-A1 (a bonus row, not a canonical
           # A1..A24 defect) yields nil and is dropped.
@@ -291,6 +447,7 @@ defmodule MailglassAdmin.BucketACoverageTest do
     ]
 
     script = read!(@conformance_script)
+
     assert String.contains?(script, "TABLE_FLOOR=3"),
            "A11 floor drifted: TABLE_FLOOR=3 not found in check-conformance.sh. " <>
              "If the floor changes, update the per-table justification rows in this manifest to match."

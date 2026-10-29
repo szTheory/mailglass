@@ -44,6 +44,11 @@ defmodule MailglassDemo.MixProject do
       {:bandit, "~> 1.6"},
       {:phoenix_live_view, "~> 1.1"},
       {:phoenix_html, "~> 4.1"},
+      # Keep the development composition on the package graph recorded by this
+      # app's committed mix.lock. Broad transitive ranges otherwise resolve to
+      # newer minor versions when Mix starts in a fresh isolated container.
+      {:boundary, "== 0.11.0", override: true},
+      {:websock_adapter, "== 0.6.0", override: true},
       # Dev-only interactive component review surface (PROJECT D-06). Never
       # ships to adopters: the dep is absent from mailglass_admin's :files glob
       # and is mounted strictly inside the demo router's dev-only /dev scope.

@@ -1,43 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.9 — Operator, Preview & Email UI Refinement",
+  "milestone": "v2.10 — UI Repairs & Faithful Storybook",
   "phases": [
     {
-      "number": "168",
-      "name": "Shared Workspace and Usable Baseline",
+      "number": "174",
+      "name": "Faithful Storybook and Quiet Quick Views",
       "status": "complete"
     },
     {
-      "number": "169",
-      "name": "Outbound Investigation and Recovery",
+      "number": "175",
+      "name": "Delivery Investigation and Safe Replay",
       "status": "complete"
     },
     {
-      "number": "170",
-      "name": "Inbound Investigation and Recovery",
+      "number": "176",
+      "name": "Direct Filters and Useful Inbound Evidence",
       "status": "complete"
     },
     {
-      "number": "171",
-      "name": "Developer Preview",
+      "number": "177",
+      "name": "Readable Health and Coherent Account Navigation",
       "status": "complete"
     },
     {
-      "number": "172",
-      "name": "Recipient Output and Built-in Pages",
-      "status": "complete"
-    },
-    {
-      "number": "173",
-      "name": "Consistency and Delivery Evidence",
-      "status": "complete"
+      "number": "178",
+      "name": "Preview Authoring and Milestone Review",
+      "status": "in_progress"
     }
   ],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 5 of 5 · 80% · executing"
   },
-  "updated_at": "2026-10-26T13:34:41.641Z"
+  "updated_at": "2026-10-29T14:21:06.326Z"
 }

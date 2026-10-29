@@ -15,4 +15,4 @@ RUN node /tmp/mailglass-demo-assets/scripts/check-demo-browser-deps.cjs --lock-o
 
 WORKDIR /workspace/reference/demo_app
 
-CMD ["sh", "-lc", "mix deps.get && mix ecto.setup && mix phx.server"]
+CMD ["sh", "-lc", "mix deps.get --check-locked && mix ecto.setup && mix phx.server"]

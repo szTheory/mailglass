@@ -190,9 +190,10 @@ invoke the global full-detail shortcut.
 
 ## Investigation controls and health signals
 
-Keep a refresh control adjacent to its observation timestamp; treat them as one
-wrapping group rather than distributing them across a toolbar. Other context,
-such as the observation period or section title, stays separate.
+The observation period and the last-checked timestamp are both observation basis:
+group them left-aligned as one wrapping group, with Refresh adjacent to the
+timestamp rather than distributed across a toolbar. Other context, such as a
+section title, stays outside the group.
 
 Delivery and inbound filters follow task order in the DOM and visually: Search,
 Time window, latest event or mailbox outcome, then Provider. Keep the distinct
@@ -207,7 +208,7 @@ investigation and are neither fetched nor displayed on this overview.
 
 When all checks are current, active mail with no recorded problems shows “No issues
 found”, explicitly limited to the observation period. No activity shows a neutral
-“No recent mail activity”. Stale or unavailable reads must never produce an
+“No mail activity in this period”. Stale or unavailable reads must never produce an
 all-clear; retain known problems and identify the data that could not be refreshed.
 Small outbound/inbound activity counts provide context without implying successful
 delivery. Health ignores provider, status, search, and paging parameters inherited

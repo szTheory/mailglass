@@ -62,6 +62,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias MailglassAdmin.InboundLive
   alias MailglassAdmin.PubSub.Topics
   alias MailglassAdmin.Inbound.ReadResult
   alias MailglassAdmin.Inbound.RecordsList
@@ -380,7 +381,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-read-unavailable")
-      assert html =~ "Inbound records unavailable"
+      assert html =~ "Couldn&#39;t load inbound messages for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
       assert html =~ "Inbound summary unavailable"
       refute html =~ "No messages have been received yet."
       refute html =~ "synthetic inbound connection failure"
@@ -479,11 +481,11 @@ defmodule MailglassAdmin.InboundLiveTest do
       # these IA hooks are withheld in genuine no-data (Phase 121 D-02/D-03).
       InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
 
-      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      {:ok, view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-filters")
       assert html =~ ~s(data-testid="inbound-filters-toggle")
-      assert html =~ ~s(phx-disable-with="Applying filters…")
+      refute view |> element("#inbound-filters") |> render() =~ "phx-disable-with"
       assert html =~ ~s(aria-controls="inbound-filter-panel")
       assert html =~ ~s(aria-expanded="false")
       assert html =~ "toggle"
@@ -633,7 +635,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "mailgun",
           "outcome" => "accept",
           "window_hours" => "168",
@@ -767,11 +768,23 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ matching.id
       refute html =~ foreign.id
-      assert html =~ ~s(value="168" selected)
 
+      # The rejected window stays in the draft: the select shows "Custom period (bogus
+      # hours)" selected next to its error instead of silently selecting 168 (D-12).
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
-      assert Floki.find(document, "#filters_window_hours option[value='bogus']") == []
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
+
+      assert selected_filter_value(html, "#filters_window_hours") == "bogus"
+
+      assert document
+             |> Floki.find("#filters_window_hours option[value='bogus']")
+             |> Floki.text()
+             |> String.trim() == "Custom period (bogus hours)"
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -782,7 +795,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       html =
-        render_hook(view, "apply_filters", %{
+        render_hook(view, "validate_filters", %{
+          "_target" => ["filters", "outcome"],
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
@@ -796,7 +810,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Time window was not applied. Choose a positive listed time window."
 
       document = Floki.parse_document!(html)
-      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert document
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
@@ -1011,7 +1030,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "no_change",
           "window_hours" => "168",
@@ -1062,7 +1080,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -1088,7 +1105,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -1118,7 +1134,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       view
       |> form("#inbound-filters",
         filters: %{
-          "tenant_id" => @tenant_id,
           "provider" => "",
           "outcome" => "",
           "window_hours" => "168",
@@ -1277,9 +1292,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-evidence-card")
       assert html =~ "Raw provider source"
-      # Redacted-by-default copy (verbatim).
-      assert html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      # Collapsed: one persistent disclosure plus the always-visible caption.
+      assert html =~ ~s(data-testid="inbound-evidence-caption")
+      assert html =~ "May contain personal information."
+      assert html =~ "Reveal raw source"
+      refute html =~ "Raw source is hidden by default"
 
       # The raw payload bytes MUST be absent from the HTML by default.
       refute html =~ secret
@@ -1297,7 +1314,37 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "evidence card without stored evidence (INUX-06)" do
+    @tag :phase176
+    test "Phase 176 Inbound detail without stored evidence says so and offers no reveal", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      record = InboundFixtures.insert_record!(@tenant_id, recipient: "no-evidence@example.com")
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      assert [card] =
+               html
+               |> Floki.parse_document!()
+               |> Floki.find("[data-testid='inbound-evidence-card']")
+
+      card_text = Floki.text(card)
+      assert card_text =~ "Raw provider source"
+      assert card_text =~ "No raw provider source was stored for this message."
+      assert Floki.find(card, "[data-testid='inbound-evidence-reveal']") == []
+      assert Floki.find(card, "[data-testid='inbound-evidence-facts']") == []
+      # Unknown is never shown as zero.
+      refute card_text =~ "0 bytes"
+    end
+  end
+
   describe "replay confirm flow (IADM-03)" do
+    @describetag :phase175
     test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{
       conn: conn
     } do
@@ -1357,30 +1404,32 @@ defmodule MailglassAdmin.InboundLiveTest do
         |> element("#inbound-replay-confirm")
         |> render_click()
 
-      assert unescape(html) =~
-               "Replay run recorded. Mailbox outcome: Accepted."
+      refute html =~ "Replay run recorded. Mailbox outcome"
 
-      assert html =~ ~s(data-testid="inbound-replay-feedback")
-      assert html =~ ~s(role="status")
-      assert html =~ ~s(aria-live="polite")
-      refute html =~ "Replay requested"
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
-      # The successful command is reported independently from the selected
-      # history snapshot. It does not trigger a read or invent a timeline event.
+      refute html =~ ~s(data-testid="inbound-replay-modal")
+
       assert length(
                Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")
              ) ==
-               initial_timeline_count
-
-      assert Floki.find(
-               Floki.parse_document!(html),
-               "[data-testid='inbound-timeline-snapshot'] time"
-             )
-             |> Floki.attribute("datetime")
-             |> List.first() == initial_snapshot_at
+               initial_timeline_count + 1
 
       replay_run = latest_run(record.id)
-      refute html =~ replay_run.id
+      assert html =~ replay_run.id
+
+      refreshed_snapshot_at =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-timeline-snapshot'] time")
+        |> Floki.attribute("datetime")
+        |> List.first()
+
+      assert is_binary(refreshed_snapshot_at)
+      refute refreshed_snapshot_at == initial_snapshot_at
 
       refreshed_html = render_click(view, "refresh_inbound_timeline", %{})
       assert refreshed_html =~ replay_run.id
@@ -1393,7 +1442,7 @@ defmodule MailglassAdmin.InboundLiveTest do
              ) ==
                initial_timeline_count + 1
 
-      assert refreshed_html =~ "Replay run recorded. Mailbox outcome: Accepted."
+      assert refreshed_html =~ replay_run.id
 
       after_count = run_count(record.id)
       assert after_count == before_count + 1
@@ -1526,7 +1575,38 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay review is stale. Reopen it to check the recorded Mailbox again."
+      assert html =~
+               "Replay review is stale. Review again to check the selected record and recorded Mailbox."
+
+      assert html =~ ~s(data-testid="inbound-replay-modal")
+      assert html =~ ~s(data-testid="inbound-replay-feedback")
+
+      old_review_id =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("#inbound-replay-identity")
+        |> Floki.attribute("data-review-id")
+        |> hd()
+
+      assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
+      assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
+      assert run_count(record.id) == before_count
+
+      refreshed_review = render_click(view, "review_replay_again", %{})
+
+      new_review_id =
+        refreshed_review
+        |> Floki.parse_document!()
+        |> Floki.find("#inbound-replay-identity")
+        |> Floki.attribute("data-review-id")
+        |> hd()
+
+      refute new_review_id == old_review_id
+      assert refreshed_review =~ "No mailbox matched this message when it was received"
+
+      assert Floki.find(Floki.parse_document!(refreshed_review), "#inbound-replay-confirm")
+             |> Floki.attribute("disabled") != []
+
       assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
       assert run_count(record.id) == before_count
     end
@@ -1596,7 +1676,35 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ "Replay blocked: this action is not authorized for the current operator."
       assert html =~ ~s(data-testid="inbound-replay-feedback")
+      assert html =~ ~s(data-testid="inbound-replay-modal")
+      assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
       assert run_count(record.id) == before_count
+    end
+
+    test "reported Mailbox outcomes stay distinct from a queued replay request" do
+      assert InboundLive.replay_result_copy(%{status: :queued}) ==
+               "Replay requested. The runtime reported that this replay is queued."
+
+      assert InboundLive.replay_result_copy(%{status: :requested}) ==
+               "Replay requested. The runtime reported that this replay is queued."
+
+      for {outcome, label} <- [
+            {:accept, "Accepted"},
+            {:ignore, "Ignored"},
+            {:reject, "Rejected"},
+            {:bounce, "Bounced"},
+            {:no_match, "No mailbox matched"},
+            {:no_change, "No change"}
+          ] do
+        assert InboundLive.replay_result_copy(%{outcome: outcome}) ==
+                 "Replay run recorded. Mailbox outcome: #{label}."
+      end
+
+      assert InboundLive.replay_result_copy(%{outcome: :failed}) ==
+               "Replay run recorded. Mailbox execution failed."
+
+      assert InboundLive.replay_result_copy(%{outcome: :future_outcome}) ==
+               "Replay run recorded. Mailbox outcome is unavailable."
     end
   end
 
@@ -1628,7 +1736,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Refresh history"
     end
 
-    test "a failed manual refresh keeps command feedback and identifies history as unavailable",
+    test "a failed manual refresh keeps the replay toast and identifies history as unavailable",
          %{conn: conn} do
       conn = operator_conn(conn)
       %{record: record} = InboundFixtures.seed_matched!(@tenant_id)
@@ -1640,8 +1748,12 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       render_click(view, "open_replay", %{})
-      command_html = render_click(view, "confirm_replay", %{})
-      assert command_html =~ "Replay run recorded. Mailbox outcome: Accepted."
+      render_click(view, "confirm_replay", %{})
+
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
       previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
       Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundTimelineFailingRepo)
@@ -1651,8 +1763,6 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render_click(view, "refresh_inbound_timeline", %{})
 
       assert html =~ ~s(data-testid="inbound-timeline-unavailable")
-      assert html =~ ~s(data-testid="inbound-replay-feedback")
-      assert html =~ "Replay run recorded. Mailbox outcome: Accepted."
       assert html =~ "Last updated"
       refute html =~ "No execution runs have been recorded for this InboundMessage yet."
       assert html =~ record.id
@@ -1941,8 +2051,9 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
-      assert html =~ "This view may be out of date."
-      assert html =~ "Refresh the view to check for updates."
+      assert html =~ "Showing earlier results; refresh failed"
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      refute html =~ ~s(data-testid="inbound-stale-loaded-at")
       refute html =~ "14:32"
     end
 
@@ -2099,7 +2210,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       render_click(view1, "open_replay", %{})
       success_html = render_click(view1, "confirm_replay", %{})
 
-      assert unescape(success_html) =~ "Replay run recorded. Mailbox outcome: Accepted."
+      assert_push_event(view1, "mailglass:toast", %{
+        message: "Replay run recorded. Mailbox outcome: Accepted.",
+        error: false
+      })
 
       refute_banned(success_html)
 
@@ -2155,13 +2269,20 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
-      assert html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      assert html =~ "May contain personal information."
+      refute html =~ "Raw source is hidden by default"
 
       denied_html = render_click(view, "reveal_raw", %{})
 
-      assert denied_html =~
-               "You do not have permission to reveal raw source."
+      assert denied_html =~ "t have permission to reveal raw source."
+
+      assert denied_html
+             |> Floki.parse_document!()
+             |> Floki.find("[data-testid='inbound-evidence-status'][role='status']")
+             |> Floki.text()
+             |> String.trim() == "You don't have permission to reveal raw source."
+
+      refute denied_html =~ ~s(id="inbound-evidence-raw")
 
       refute denied_html =~ "SECRET-BYTES"
       refute_banned(denied_html)
@@ -2219,6 +2340,72 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert Floki.text(trace) =~ masked
       refute Floki.text(trace) =~ raw
       assert detail_html =~ ~s(data-testid="inbound-routing-trace")
+    end
+
+    @tag :phase176
+    test "Phase 176 Inbound detail shows From, To and Delivered to", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "support@example.com",
+          from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+          to: [%{address: "team@example.com"}]
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      doc = Floki.parse_document!(html)
+      text = fn testid -> doc |> Floki.find("[data-testid='#{testid}']") |> Floki.text() end
+
+      from = text.("inbound-contact-from")
+      assert from =~ "Ada Lovelace"
+      assert from =~ "ada@example.com"
+      refute html =~ "a**@e******.com"
+
+      to = text.("inbound-contact-to")
+      assert to =~ "team@example.com"
+      refute to =~ "support@example.com"
+
+      delivered = text.("inbound-contact-delivered-to")
+      assert delivered =~ "support@example.com"
+      assert delivered =~ "SMTP envelope recipient (RCPT TO), used for routing."
+      refute delivered =~ "team@example.com"
+
+      labels = doc |> Floki.find("dt") |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+
+      assert Enum.take(Enum.filter(labels, &(&1 in ["From", "To", "Delivered to"])), 3) ==
+               ["From", "To", "Delivered to"]
+    end
+
+    @tag :phase176
+    test "Phase 176 Inbound Quick view labels the envelope recipient 'Delivered to'", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "support@example.com",
+          to: [%{address: "team@example.com"}],
+          cc: [%{address: "cc@example.com"}]
+        )
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      [quick] =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-quick-view']")
+
+      text = quick |> Floki.text() |> String.replace(~r/\s+/, " ")
+      assert text =~ "Delivered to support@example.com"
+      refute text =~ "team@example.com"
+      refute text =~ "cc@example.com"
+      refute text =~ "Recipient not recorded"
     end
 
     test "raw evidence bytes are absent until :reveal_raw is granted (V5)", %{conn: conn} do
@@ -2282,13 +2469,105 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert revealed_html =~ ~s(data-testid="inbound-evidence-raw")
       assert revealed_html =~ secret
 
-      # Re-redact collapses back: raw bytes absent, redacted body present.
+      # Re-redact collapses back: raw bytes absent, caption + toggle present.
       redacted_html = render_click(view, "re_redact_raw", %{})
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ secret
 
-      assert redacted_html =~
-               "Raw source is hidden by default. Reveal it to inspect the provider payload."
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-caption")
+      refute redacted_html =~ "Raw source is hidden by default"
+    end
+
+    @tag :phase176
+    test "one persistent toggle keeps its id across collapse -> reveal -> collapse", %{
+      conn: conn
+    } do
+      secret = "PT-SECRET-#{System.unique_integer([:positive])}"
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "pt@example.com",
+          evidence: [raw_payload: %{"body" => secret}]
+        )
+
+      {:ok, view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      toggle = fn html ->
+        assert [btn] =
+                 html
+                 |> Floki.parse_document!()
+                 |> Floki.find("#inbound-evidence-reveal-btn")
+
+        {Floki.text(btn) |> String.trim(), Floki.attribute(btn, "aria-expanded"),
+         Floki.attribute(btn, "phx-click")}
+      end
+
+      assert toggle.(html) == {"Reveal raw source", ["false"], ["reveal_raw"]}
+      refute html =~ secret
+
+      revealed_html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+      assert toggle.(revealed_html) == {"Hide raw source", ["true"], ["re_redact_raw"]}
+
+      assert [pre] =
+               revealed_html |> Floki.parse_document!() |> Floki.find("pre#inbound-evidence-raw")
+
+      assert Floki.attribute(pre, "tabindex") == ["0"]
+      assert revealed_html =~ secret
+
+      collapsed_html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+      assert toggle.(collapsed_html) == {"Reveal raw source", ["false"], ["reveal_raw"]}
+      refute collapsed_html =~ secret
+      refute collapsed_html =~ ~s(id="inbound-evidence-raw")
+    end
+
+    @tag :phase176
+    test "denied reveal on the live route renders status copy and no raw sentinel bytes", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn, %{"current_user_id" => "deny-reveal"})
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "pd@example.com",
+          evidence: [raw_payload: %{"body" => "SENTINEL-176-03-RAW"}]
+        )
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      html = view |> element("#inbound-evidence-reveal-btn") |> render_click()
+
+      assert html =~ "have permission to reveal raw source."
+      refute html =~ "SENTINEL-176-03-RAW"
+      refute html =~ ~s(id="inbound-evidence-raw")
+    end
+
+    @tag :phase176
+    test "reveal telemetry metadata keys are exactly outcome, record_id, tenant_id", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "tk@example.com",
+          evidence: [raw_payload: %{"body" => "KEYS-BYTES"}]
+        )
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      meta = attach_and_reveal(view)
+
+      assert meta |> Map.keys() |> Enum.sort() == [:outcome, :record_id, :tenant_id]
     end
 
     test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{
@@ -2405,6 +2684,1163 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "Phase 176 Inbound direct filters" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound select change commits one sorted canonical push patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      path = assert_patch_kind(view, :push)
+
+      assert path ==
+               inbound_path(%{
+                 "tenant_id" => @tenant_id,
+                 "outcome" => "accept",
+                 "window_hours" => "168"
+               })
+
+      assert path == @base_path <> "?outcome=accept&tenant_id=#{@tenant_id}&window_hours=168"
+      assert selected_filter_value(render(view), "#filters_outcome") == "accept"
+    end
+
+    test "Phase 176 Inbound the same payload twice yields exactly one patch", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      payload = inbound_change("outcome", %{"outcome" => "accept"})
+
+      render_hook(view, "validate_filters", payload)
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", payload)
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound a select equal to the committed value is a no-op", %{conn: conn} do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "window_hours" => "168"
+          })
+        )
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound an unchanged commit from a bare entry URL is a no-op, a changing one pushes",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => ""}))
+      refute_patch(view)
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      path = assert_patch_kind(view, :push)
+
+      assert %{"outcome" => "accept", "window_hours" => "168", "tenant_id" => @tenant_id} =
+               path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+    end
+
+    test "Phase 176 Inbound a foreign tenant_id never changes the Account on change, submit or recover",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "accept", "tenant_id" => "foreign-tenant"})
+      )
+
+      change_path = assert_patch_kind(view, :push)
+      refute change_path =~ "foreign-tenant"
+      assert change_path =~ "tenant_id=#{@tenant_id}"
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "outcome" => "bounce",
+          "search" => "foo ",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      submit_path = assert_patch_kind(view, :push)
+      refute submit_path =~ "foreign-tenant"
+      submit_query = submit_path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert submit_query["tenant_id"] == @tenant_id
+      assert submit_query["search"] == "foo"
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "tenant_id" => "foreign-tenant",
+          "outcome" => "reject",
+          "search" => "",
+          "window_hours" => "168",
+          "provider" => ""
+        }
+      })
+
+      recover_path = assert_patch_kind(view, :replace)
+      refute recover_path =~ "foreign-tenant"
+      assert recover_path =~ "tenant_id=#{@tenant_id}"
+    end
+
+    test "Phase 176 Inbound a commit drops inbound_id, full and page", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{
+          "outcome" => "accept",
+          "inbound_id" => "abc",
+          "full" => "1",
+          "page" => "3"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "inbound_id")
+      refute Map.has_key?(query, "full")
+      refute Map.has_key?(query, "page")
+    end
+
+    test "Phase 176 Inbound Account canonicalization replaces history", %{conn: conn} do
+      InboundFixtures.seed_matched!("solo-inbound", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), @base_path)
+      render(view)
+
+      path = assert_patch_kind(view, :replace)
+      assert path == inbound_path(%{"tenant_id" => "solo-inbound"})
+    end
+
+    test "Phase 176 Inbound recover restores a valid differing draft with replace, keeps an invalid one",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "outcome" => "accept",
+          "search" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      path = assert_patch_kind(view, :replace)
+      assert path =~ "outcome=accept"
+
+      html =
+        render_hook(view, "recover_filters", %{
+          "filters" => %{
+            "outcome" => "not-real",
+            "search" => "",
+            "provider" => "",
+            "window_hours" => "168"
+          }
+        })
+
+      refute_patch(view)
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+    end
+
+    test "Phase 176 Inbound Clear with nothing applied produces no patch and stays enabled", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert has_element?(view, "#inbound-filters button[phx-click='clear_filters']")
+      refute has_element?(view, "#inbound-filters button[phx-click='clear_filters'][disabled]")
+
+      view |> element("#inbound-filters button[phx-click='clear_filters']") |> render_click()
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound the filter form has no Apply, submit, loading or tenant control", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form_html = view |> element("#inbound-filters") |> render()
+      document = Floki.parse_fragment!(form_html)
+
+      assert Floki.find(document, "[type='submit']") == []
+      assert Floki.find(document, "[phx-disable-with]") == []
+      assert Floki.find(document, "#filters_tenant_id") == []
+      refute form_html =~ "Apply filters"
+      assert Floki.attribute(document, "form", "phx-auto-recover") == ["recover_filters"]
+    end
+
+    test "Phase 176 Inbound Back via render_patch restores the earlier committed filters", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      assert_patch_kind(view, :push)
+
+      render_patch(view, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html = render(view)
+      assert selected_filter_value(html, "#filters_outcome") in [nil, ""]
+    end
+
+    test "Phase 176 Inbound trailing whitespace canonicalizes to the same search URL", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "search" => "foo", "window_hours" => "168"})
+        )
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "foo "}))
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound pagination links preserve the committed filters", %{conn: conn} do
+      for index <- 1..21 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "paged-#{index}@example.com",
+          provider_message_id: "p176-page-#{index}"
+        )
+      end
+
+      InboundFixtures.seed_no_match!(@tenant_id, recipient: "unrouted@example.com")
+
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      committed = assert_patch_kind(view, :push)
+      render_patch(view, committed)
+
+      next_href =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-pagination-next']")
+        |> Floki.attribute("href")
+        |> List.first()
+
+      assert next_href
+      query = next_href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["outcome"] == "accept"
+      assert query["tenant_id"] == @tenant_id
+      assert query["page"] == "2"
+      refute Map.has_key?(query, "inbound_id")
+      refute Map.has_key?(query, "full")
+
+      render_patch(view, next_href)
+      html = render(view)
+      assert selected_filter_value(html, "#filters_outcome") == "accept"
+      assert html =~ "21 messages"
+    end
+
+    test "Phase 176 Inbound a select commit from page 2 patches to a path without page and renders page 1",
+         %{conn: conn} do
+      for index <- 1..21 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "reset-#{index}@example.com",
+          provider_message_id: "p176-reset-#{index}"
+        )
+      end
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "window_hours" => "168",
+            "page" => "2"
+          })
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{
+          "outcome" => "accept",
+          "window_hours" => "720"
+        })
+      )
+
+      path = assert_patch_kind(view, :push)
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      refute Map.has_key?(query, "page")
+      assert query["window_hours"] == "720"
+
+      render_patch(view, path)
+      html = render(view)
+      refute html =~ ~s(data-testid="inbound-pagination-prev-link")
+      assert html =~ "21 messages"
+    end
+
+    test "Phase 176 Inbound a no-op does not leak a pending kind into the next non-commit patch",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      earlier = inbound_path(%{"tenant_id" => @tenant_id})
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      assert_patch_kind(view, :push)
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      refute_patch(view)
+
+      render_patch(view, earlier)
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "xyz"}))
+      assert_patch_kind(view, :push)
+    end
+
+    test "Phase 176 Inbound the change handler does not reload provider options", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # An invalid outcome is a draft only; it must neither patch nor disturb the provider
+      # select, which only handle_params may rebuild (D-04).
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("outcome", %{"outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert html =~ "Mailbox outcome was not applied."
+      assert html =~ ~s(id="filters_provider")
+    end
+  end
+
+  describe "Phase 176 Inbound draft retention" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound invalid URL values stay in the draft next to their errors", %{
+      conn: conn
+    } do
+      %{record: matching} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "match@example.com")
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant, recipient: "foreign@example.com")
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "not-real",
+            "window_hours" => "bogus"
+          })
+        )
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert html =~ matching.id
+      refute html =~ foreign.id
+
+      assert selected_filter_value(html, "#filters_window_hours") == "bogus"
+      assert html =~ "Custom period (bogus hours)"
+
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert html
+             |> Floki.parse_document!()
+             |> Floki.find("#filters_outcome option[value='not-real']")
+             |> Floki.text()
+             |> String.trim() == "Not applied: not-real"
+    end
+
+    test "Phase 176 Inbound an invalid form window stays in the draft without a patch", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("window_hours", %{"window_hours" => "-5", "outcome" => "accept"})
+        )
+
+      refute_patch(view)
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert selected_filter_value(html, "#filters_window_hours") == "-5"
+      assert html =~ "Custom period (-5 hours)"
+    end
+
+    test "Phase 176 Inbound a blank window normalizes quietly without a Custom period option", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => ""})
+        )
+
+      refute html =~ "Custom period"
+
+      assert selected_filter_value(html, "#filters_window_hours") == "168"
+    end
+
+    test "Phase 176 Inbound a listed window never adds a Custom period option", %{conn: conn} do
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "720"})
+        )
+
+      refute html =~ "Custom period"
+      assert selected_filter_value(html, "#filters_window_hours") == "720"
+    end
+
+    test "Phase 176 Inbound gap: a rejected outcome stays selected as a Not applied option", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      options = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#filters_outcome option")
+      end
+
+      not_applied = fn html ->
+        html
+        |> options.()
+        |> Enum.filter(
+          &(&1
+            |> Floki.text()
+            |> String.trim()
+            |> String.starts_with?("Not applied"))
+        )
+      end
+
+      {:ok, _view, baseline} =
+        live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(baseline, "#filters_outcome") in [nil, ""]
+      assert not_applied.(baseline) == []
+
+      # URL-backed rejected value.
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "not-real"})
+        )
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == ["not-real"]
+      assert option |> Floki.text() |> String.trim() == "Not applied: not-real"
+      # Enabled: a disabled option is left out of submission and would clear the filter.
+      assert Floki.attribute(option, "disabled") == []
+      # Directly after the prompt.
+      assert [_prompt, ^option | _] = options.(html)
+
+      # A change event that posts the rejected value keeps it selected and never patches.
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("search", %{"search" => "x", "outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+      assert [_] = not_applied.(html)
+
+      # Draft-only rejected value.
+      {:ok, view, _html} =
+        live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("outcome", %{"outcome" => "not-real"})
+        )
+
+      refute_patch(view)
+      assert selected_filter_value(html, "#filters_outcome") == "not-real"
+      assert [option] = not_applied.(html)
+      assert option |> Floki.text() |> String.trim() == "Not applied: not-real"
+
+      # Encoding: quotes and angle brackets are escaped, one extra option, nothing injected.
+      raw = ~s(a"b<c>)
+
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => raw})
+        )
+
+      assert [option] = not_applied.(html)
+      assert Floki.attribute(option, "value") == [raw]
+      assert option |> Floki.text() |> String.trim() == "Not applied: " <> raw
+      assert length(options.(html)) == length(options.(baseline)) + 1
+      assert Floki.find(Floki.parse_document!(html), "#filters_outcome option *") == []
+
+      # Blank: the prompt is selected and no Not applied option appears.
+      {:ok, _view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => ""})
+        )
+
+      # The prompt carries no selected attribute; the browser shows it first.
+      assert selected_filter_value(html, "#filters_outcome") in [nil, ""]
+      assert not_applied.(html) == []
+    end
+  end
+
+  describe "Phase 176 Inbound search and toggle" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound Search is debounced and carries the search-field attributes only on Search",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#inbound-filters")
+      [search] = Floki.find(form, "#filters_search")
+
+      assert Floki.attribute(search, "phx-debounce") == ["300"]
+      assert Floki.attribute(search, "phx-hook") == ["FilterSearchSync"]
+      assert Floki.attribute(search, "autocomplete") == ["off"]
+      assert Floki.attribute(search, "enterkeyhint") == ["search"]
+      assert Floki.attribute(search, "data-committed") == [""]
+      assert Floki.attribute(search, "disabled") == []
+      assert Floki.attribute(search, "readonly") == []
+
+      for select <- Floki.find(form, "select") do
+        assert Floki.attribute(select, "phx-debounce") == []
+      end
+    end
+
+    test "Phase 176 Inbound the filter form has exactly one implicit-submission text field", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      form = view |> render() |> Floki.parse_document!() |> Floki.find("#inbound-filters")
+
+      text_like =
+        ~w(text search email url tel password number date datetime-local month time week)
+
+      text_inputs =
+        form
+        |> Floki.find("input")
+        |> Enum.filter(fn input ->
+          case Floki.attribute(input, "type") do
+            [] -> true
+            [type] -> type in text_like
+          end
+        end)
+
+      assert length(text_inputs) == 1
+      assert Floki.find(form, "button[type='submit'], input[type='submit']") == []
+    end
+
+    test "Phase 176 Inbound data-committed follows the committed search while a draft differs", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "foo",
+          "outcome" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      assert_patch_kind(view, :push)
+      assert inbound_search_attr(view, "data-committed") == ["foo"]
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"search" => "foobar draft", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert inbound_search_attr(view, "data-committed") == ["foo"]
+    end
+
+    test "Phase 176 Inbound search history: first commit pushes, next replaces, settled Enter is a no-op",
+         %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "ab"}))
+      assert_patch_kind(view, :push)
+      render_hook(view, "validate_filters", inbound_change("search", %{"search" => "abc"}))
+      second = assert_patch_kind(view, :replace)
+      assert second =~ "search=abc"
+      # Enter after a settled commit with an unchanged value does nothing.
+      render_hook(view, "apply_filters", %{
+        "filters" => %{
+          "search" => "abc",
+          "outcome" => "",
+          "provider" => "",
+          "window_hours" => "168"
+        }
+      })
+
+      refute_patch(view)
+    end
+
+    test "Phase 176 Inbound mobile Filters toggle is labelled, controls the panel and starts collapsed",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      toggle =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-filters-toggle']")
+
+      assert Floki.attribute(toggle, "aria-controls") == ["inbound-filter-panel"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["false"]
+      assert inbound_toggle_label(view) == "Filters"
+      assert has_element?(view, "#inbound-filter-panel")
+    end
+
+    test "Phase 176 Inbound mobile Filters toggle counts committed filters only", %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "accept",
+            "search" => "match",
+            "window_hours" => "720"
+          })
+        )
+
+      assert inbound_toggle_label(view) == "Filters (3 applied)"
+
+      {:ok, default_view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"})
+        )
+
+      assert inbound_toggle_label(default_view) == "Filters"
+
+      # An invalid draft is not committed, so the label does not move.
+      render_hook(
+        default_view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "not-real"})
+      )
+
+      refute_patch(default_view)
+      assert inbound_toggle_label(default_view) == "Filters"
+
+      render_hook(
+        default_view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "accept"})
+      )
+
+      assert_patch_kind(default_view, :push)
+    end
+  end
+
+  describe "Phase 176 Inbound read states" do
+    @describetag :phase176
+
+    test "Phase 176 Inbound new-query read failure shows a truthful error, no count and no empty copy",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "readable-new@example.com")
+      {:ok, view, html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      assert html =~ "readable-new@example.com"
+
+      swap_inbound_repo(MailglassAdmin.InboundUnavailableRepo)
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "accept"}))
+      path = assert_patch_kind(view, :push)
+      assert path =~ "outcome=accept"
+
+      html = render(view)
+      assert has_element?(view, "[data-testid='inbound-read-unavailable']")
+      assert html =~ "Couldn&#39;t load inbound messages for these filters"
+      assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
+      assert has_element?(view, "[data-testid='inbound-retry-messages']", "Retry messages")
+      refute has_element?(view, "[data-testid='inbound-result-count']")
+      refute has_element?(view, "[data-testid='inbound-record-row']")
+      refute has_element?(view, "[data-testid='inbound-stale-results']")
+      refute html =~ "No messages have been received yet."
+      refute html =~ "No messages match the current filters."
+      refute html =~ "readable-new@example.com"
+      refute html =~ "synthetic inbound connection failure"
+      assert selected_filter_value(html, "#filters_outcome") == "accept"
+      assert status_text(view) == "Couldn't load inbound messages"
+    end
+
+    test "Phase 176 Inbound Retry adds no history and re-reads the committed filters", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "retry-me@example.com")
+      {:ok, view, _html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      previous_repo = swap_inbound_repo(MailglassAdmin.InboundUnavailableRepo)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{"window_hours" => "720"})
+      )
+
+      assert_patch_kind(view, :push)
+      assert has_element?(view, "[data-testid='inbound-read-unavailable']")
+
+      Application.put_env(:mailglass_inbound, :repo, previous_repo)
+      view |> element("[data-testid='inbound-retry-messages']") |> render_click()
+
+      refute_patch(view)
+      html = render(view)
+      refute has_element?(view, "[data-testid='inbound-read-unavailable']")
+      assert html =~ "retry-me@example.com"
+      assert has_element?(view, "[data-testid='inbound-result-count']")
+      assert selected_filter_value(html, "#filters_window_hours") == "720"
+    end
+
+    test "Phase 176 a same-query failed read keeps rows under the stale panel with the load time",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "stale-one@example.com")
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "stale-two@example.com")
+      {:ok, view, html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      assert html =~ "stale-one@example.com"
+      assert status_text(view) == "2 messages match"
+
+      swap_inbound_repo(MailglassAdmin.InboundUnavailableRepo)
+      view |> render_hook("retry_inbound", %{})
+      refute_patch(view)
+
+      html = render(view)
+      assert has_element?(view, "[data-testid='inbound-stale-results']")
+      assert html =~ "Showing results from "
+      assert html =~ " UTC; refresh failed"
+      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert has_element?(view, "[data-testid='inbound-stale-loaded-at']", "Results loaded")
+      assert has_element?(view, "[data-testid='inbound-retry-messages']", "Retry messages")
+      assert html =~ "stale-one@example.com"
+      assert html =~ "stale-two@example.com"
+
+      assert length(
+               Floki.find(
+                 Floki.parse_document!(html),
+                 "[data-testid='inbound-records-table'] [data-testid='inbound-record-row']"
+               )
+             ) ==
+               2
+
+      refute has_element?(view, "[data-testid='inbound-result-count']")
+      refute has_element?(view, "[data-testid='inbound-read-unavailable']")
+      assert status_text(view) =~ ~r/^Showing results from \d\d:\d\d UTC; refresh failed$/
+
+      # The stale panel sits above the retained rows, not instead of them.
+      assert_in_order(html, [
+        ~s(data-testid="inbound-stale-results"),
+        ~s(data-testid="inbound-records-table")
+      ])
+    end
+
+    test "Phase 176 RecordsList renders retained rows beneath the stale panel" do
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [
+            %{
+              id: "00000000-0000-0000-0000-000000000176",
+              tenant_id: @tenant_id,
+              provider: "mailgun",
+              envelope_recipient: "kept@example.com",
+              received_at: nil,
+              outcome: :accept,
+              mailbox: "MyApp.Mailboxes.SupportMailbox"
+            }
+          ],
+          selected_record: nil,
+          empty_state: :filtered,
+          data_state: :stale,
+          loaded_at: ~U[2026-10-28 14:32:00Z],
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            per_page: 10,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ ~s(data-testid="inbound-stale-results")
+      assert html =~ "Showing results from 14:32 UTC; refresh failed"
+      assert html =~ ~s(data-testid="inbound-stale-loaded-at")
+      assert html =~ ~s(phx-click="retry_inbound")
+      assert html =~ "kept@example.com"
+      assert html =~ ~s(data-testid="inbound-record-row")
+      refute html =~ ~s(data-testid="inbound-result-count")
+    end
+
+    test "Phase 176 Inbound status region exists at first render and ignores invalid drafts", %{
+      conn: conn
+    } do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "status-one@example.com")
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "status-two@example.com")
+      {:ok, view, html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+
+      region = html |> Floki.parse_document!() |> Floki.find("#inbound-results-status")
+      assert [_] = region
+      assert Floki.attribute(region, "role") == ["status"]
+      assert Floki.attribute(region, "aria-live") == ["polite"]
+      assert Floki.attribute(region, "aria-atomic") == ["true"]
+      assert Floki.attribute(region, "class") |> List.first() =~ "sr-only"
+      assert status_text(view) == "2 messages match"
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{"window_hours" => "-5"})
+      )
+
+      refute_patch(view)
+      assert status_text(view) == "2 messages match"
+
+      render_hook(view, "validate_filters", inbound_change("outcome", %{"outcome" => "bounce"}))
+      assert_patch_kind(view, :push)
+      assert status_text(view) == "No messages match the current filters"
+    end
+
+    test "Phase 176 Inbound an invalid draft stays a draft with a pending note outside the filter panel",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "draft-rows@example.com")
+      {:ok, view, html} = live(operator_conn(conn), inbound_path(%{"tenant_id" => @tenant_id}))
+      assert html =~ "draft-rows@example.com"
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+
+      html =
+        render_hook(
+          view,
+          "validate_filters",
+          inbound_change("window_hours", %{"window_hours" => "-5"})
+        )
+
+      refute_patch(view)
+
+      assert has_element?(
+               view,
+               "[data-testid='filters-draft-pending-note']",
+               "Showing results for your previous filters until the highlighted field is fixed."
+             )
+
+      refute has_element?(
+               view,
+               "#inbound-filter-panel [data-testid='filters-draft-pending-note']"
+             )
+
+      refute has_element?(view, "[data-testid='filters-url-invalid-note']")
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert html =~ "draft-rows@example.com"
+
+      document = Floki.parse_document!(html)
+      select = Floki.find(document, "#filters_window_hours")
+      assert Floki.attribute(select, "aria-invalid") == ["true"]
+      assert [describedby] = Floki.attribute(select, "aria-describedby")
+      assert "filters_window_hours-error" in String.split(describedby)
+
+      assert Floki.find(document, "#filters_window_hours-error") |> Floki.text() =~
+               "Time window was not applied."
+
+      # The note sits inside the filters section but after the collapsible panel.
+      assert_in_order(html, [
+        ~s(id="inbound-filter-panel"),
+        ~s(data-testid="filters-draft-pending-note")
+      ])
+
+      # A later valid commit clears it.
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{"window_hours" => "720"})
+      )
+
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+    end
+
+    test "Phase 176 Inbound an invalid URL value is labelled as excluded, never an unlabelled fallback",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "url-rows@example.com")
+
+      {:ok, view, html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "not-real",
+            "window_hours" => "bogus"
+          })
+        )
+
+      assert has_element?(
+               view,
+               "[data-testid='filters-url-invalid-note']",
+               "Showing results without the Mailbox outcome filter."
+             )
+
+      assert has_element?(
+               view,
+               "[data-testid='filters-url-invalid-note']",
+               "Showing results for the default time window instead."
+             )
+
+      refute has_element?(view, "[data-testid='filters-draft-pending-note']")
+      refute has_element?(view, "#inbound-filter-panel [data-testid='filters-url-invalid-note']")
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert html =~ "url-rows@example.com"
+
+      document = Floki.parse_document!(html)
+      outcome = Floki.find(document, "#filters_outcome")
+      assert Floki.attribute(outcome, "aria-invalid") == ["true"]
+      assert [described_by] = Floki.attribute(outcome, "aria-describedby")
+      assert "filters_outcome-error" in String.split(described_by)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"outcome" => "accept"})
+      )
+
+      assert_patch_kind(view, :push)
+      refute has_element?(view, "[data-testid='filters-url-invalid-note']")
+    end
+
+    test "Phase 176 Inbound reveal: with both fields stored, Payload size is the byte size of the revealed text",
+         %{conn: conn} do
+      payload = %{"marker" => "PAYLOAD-LIVE-176-11"}
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "both-stored@example.com",
+          evidence: [provider: "ses", raw_payload: payload, raw_mime: "MIME-LIVE-176-11"]
+        )
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      revealed_html = render_click(view, "reveal_raw", %{})
+      doc = Floki.parse_document!(revealed_html)
+
+      assert [pre] = Floki.find(doc, "pre#inbound-evidence-raw")
+      text = Floki.text(pre)
+      assert text =~ "PAYLOAD-LIVE-176-11"
+      refute text =~ "MIME-LIVE-176-11"
+
+      size_dd =
+        doc
+        |> Floki.find("[data-testid='inbound-evidence-facts'] div")
+        |> Enum.find(&(&1 |> Floki.find("dt") |> Floki.text() |> String.trim() == "Payload size"))
+        |> Floki.find("dd")
+        |> Floki.text()
+        |> String.trim()
+
+      assert size_dd == "#{byte_size(text)} bytes"
+    end
+
+    test "Phase 176 Inbound gap: a URL-invalid filter stays labelled as excluded after a later edit or a reconnect",
+         %{conn: conn} do
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "kept-inbound@example.com")
+
+      url_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-url-invalid-note']")
+      end
+
+      draft_note = fn view ->
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='filters-draft-pending-note']")
+      end
+
+      window_path =
+        inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "bogus"})
+
+      # First render (unchanged): the URL note shows, the draft note does not.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+      assert draft_note.(view) == []
+
+      # Search edit that re-posts the URL's own invalid value (D-12 + D-13 together).
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("search", %{"search" => "ada", "window_hours" => "bogus"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      assert render(view) =~ "Time window was not applied. Choose a positive listed time window."
+
+      # Reconnect: phx-auto-recover re-posts the same invalid value.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(view, "recover_filters", %{
+        "filters" => %{
+          "search" => "",
+          "window_hours" => "bogus",
+          "outcome" => "",
+          "provider" => ""
+        }
+      })
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results for the default time window instead."
+
+      assert Floki.text(draft_note.(view)) =~
+               "Showing results for your previous filters until the highlighted field is fixed."
+
+      # Enum: URL outcome=not-real, then a Search change that posts outcome=not-real.
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "not-real"})
+        )
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("search", %{"search" => "ada", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      assert Floki.text(url_note.(view)) =~ "Showing results without the Mailbox outcome filter."
+      assert draft_note.(view) != []
+
+      # A second field that is invalid only in the draft is not named by the URL note.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("outcome", %{"window_hours" => "bogus", "outcome" => "not-real"})
+      )
+
+      refute_patch(view)
+      note_text = Floki.text(url_note.(view))
+      assert note_text =~ "default time window"
+      refute note_text =~ "Mailbox outcome"
+      assert draft_note.(view) != []
+
+      # Recovery: a valid commit clears both notes.
+      {:ok, view, _html} = live(operator_conn(conn), window_path)
+
+      render_hook(
+        view,
+        "validate_filters",
+        inbound_change("window_hours", %{"window_hours" => "24"})
+      )
+
+      assert_patch_kind(view, :push)
+      assert url_note.(view) == []
+      assert draft_note.(view) == []
+    end
+  end
+
+  defp swap_inbound_repo(repo) do
+    previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
+    Application.put_env(:mailglass_inbound, :repo, repo)
+    on_exit(fn -> Application.put_env(:mailglass_inbound, :repo, previous_repo) end)
+    previous_repo
+  end
+
+  defp status_text(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#inbound-results-status")
+    |> Floki.text()
+    |> String.trim()
+  end
+
+  defp inbound_search_attr(view, name) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("#inbound-filters #filters_search")
+    |> Floki.attribute(name)
+  end
+
+  defp inbound_toggle_label(view) do
+    view
+    |> render()
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='inbound-filters-toggle']")
+    |> Floki.text()
+    |> String.split()
+    |> Enum.join(" ")
+  end
+
+  defp inbound_change(field, overrides) do
+    %{
+      "_target" => ["filters", field],
+      "filters" =>
+        Map.merge(
+          %{"search" => "", "window_hours" => "168", "outcome" => "", "provider" => ""},
+          overrides
+        )
+    }
+  end
+
+  defp assert_patch_kind(view, kind) do
+    %{proxy: {ref, topic, _pid}} = view
+    assert_receive {^ref, {:patch, ^topic, %{kind: ^kind, to: to}}}
+    to
+  end
+
+  defp refute_patch(view) do
+    %{proxy: {ref, topic, _pid}} = view
+    refute_receive {^ref, {:patch, ^topic, _opts}}, 50
+  end
+
+  defp selected_filter_value(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("#{selector} option")
+    |> Enum.find_value(fn option ->
+      if option |> Floki.attribute("selected") |> Enum.any?() do
+        option |> Floki.attribute("value") |> List.first()
+      end
+    end)
+  end
+
   defp inbound_path(params) do
     case URI.encode_query(params) do
       "" -> @base_path
@@ -2438,19 +3874,6 @@ defmodule MailglassAdmin.InboundLiveTest do
 
     assert offsets == Enum.sort(offsets),
            "expected phrases to appear in order: #{inspect(phrases)}"
-  end
-
-  # HEEx HTML-escapes text nodes, so verbatim UI-SPEC copy with an apostrophe
-  # renders as `&#39;`. Decode the handful of entities Phoenix emits so copy
-  # assertions can use the exact UI-SPEC string.
-  defp unescape(html) do
-    html
-    |> String.replace("&#39;", "'")
-    |> String.replace("&#x27;", "'")
-    |> String.replace("&quot;", "\"")
-    |> String.replace("&lt;", "<")
-    |> String.replace("&gt;", ">")
-    |> String.replace("&amp;", "&")
   end
 
   defp run_count(record_id) do

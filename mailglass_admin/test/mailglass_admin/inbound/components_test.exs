@@ -21,6 +21,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
+  alias MailglassAdmin.Inbound.QuickView
   alias MailglassInbound.InboundRecords.ExecutionRun
 
   describe "RecordsList.records_list/1" do
@@ -184,6 +185,32 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   end
 
   describe "DetailHeader.detail_header/1" do
+    @tag :phase175
+    test "eligible full-detail replay uses the primary accent and approved label" do
+      detail = %{
+        record: %{
+          id: "rec-primary-replay",
+          tenant_id: "tenant-a",
+          provider: "postmark",
+          envelope_recipient: "alice@example.com",
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      button = Floki.find(Floki.parse_document!(html), "#inbound-replay-open-btn")
+      classes = button |> Floki.attribute("class") |> List.first() |> String.split()
+
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
+      assert button |> Floki.text() |> String.trim() == "Review inbound replay"
+    end
+
     test "renders without raising for a record that has NO :suppression_flagged field" do
       detail = %{
         record: %{
@@ -271,7 +298,10 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
       assert html =~ "Failed"
-      assert html =~ "Unavailable"
+      # The mailbox cell is what degrades here (its label reads "Not recorded"); this
+      # assertion previously matched the From cell's "Unavailable" placeholder by accident.
+      assert html =~ "Not recorded"
+      assert html =~ "Processing failed, but no mailbox name was saved for this attempt."
       refute html =~ "No match"
       refute html =~ "private execution detail"
     end
@@ -297,7 +327,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       refute html =~ ~r/data-testid="inbound-replay-open"[^>]*disabled/
     end
 
-    test "the From cell shows the masked SENDER from `from`, not the recipient (WR-02)" do
+    test "the From cell shows the unmasked SENDER from `from`, not the recipient (WR-02, D-19)" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -316,9 +346,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      # Sender masked + present; raw sender never leaks.
-      assert html =~ "b**@s*****.test"
-      refute html =~ "bob@sender.test"
+      # Ordinary authorized detail shows the sender as received; the masked form is gone.
+      assert html =~ "bob@sender.test"
+      refute html =~ "b**@s*****.test"
       # The recipient is shown in the title, but the From cell is the sender.
       assert html =~ "alice@example.com"
     end
@@ -342,11 +372,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "c****@v*****.test"
-      refute html =~ "carol@vendor.test"
+      assert html =~ "Carol"
+      assert html =~ "carol@vendor.test"
+      refute html =~ "c****@v*****.test"
     end
 
-    test "the From cell degrades to 'Unavailable' on an empty `from`" do
+    test "the From cell degrades to 'No From header' on an empty `from`" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -365,10 +396,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "Unavailable"
+      cell = html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-contact-from']")
+      assert Floki.text(cell) =~ "No From header"
+      refute Floki.text(cell) =~ "Unavailable"
     end
 
-    test "the From cell degrades gracefully on a malformed `from` entry" do
+    test "the From cell degrades to 'Unparseable address' on a malformed `from` entry" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -387,7 +420,260 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "Unavailable"
+      cell = html |> Floki.parse_document!() |> Floki.find("[data-testid='inbound-contact-from']")
+      assert Floki.text(cell) =~ "Unparseable address"
+    end
+
+    @tag :phase176
+    test "Phase 176 a plain-map record with only id and tenant_id renders missing copy" do
+      detail = %{
+        record: %{id: "rec-min", tenant_id: "tenant-a"},
+        mailbox: nil,
+        outcome: nil,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      doc = Floki.parse_document!(html)
+
+      assert html =~ "No From header"
+      assert html =~ "No To header"
+
+      assert Floki.text(Floki.find(doc, "[data-testid='inbound-contact-delivered-to']")) =~
+               "Not recorded by provider"
+
+      assert html =~ "UNKNOWN"
+      refute html =~ "Provider message ID"
+    end
+  end
+
+  describe "Phase 176 contact display" do
+    @describetag :phase176
+
+    defp contact_doc(overrides) do
+      record =
+        Map.merge(
+          %{
+            id: "rec-1",
+            tenant_id: "tenant-a",
+            provider: "mailgun",
+            envelope_recipient: "support@example.com",
+            from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+            to: [%{address: "team@example.com"}],
+            subject: "Hello",
+            received_at: ~U[2026-05-24 10:00:00Z]
+          },
+          Map.new(overrides)
+        )
+
+      detail = %{
+        record: record,
+        mailbox: nil,
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      {html, Floki.parse_document!(html)}
+    end
+
+    defp cell(doc, testid), do: Floki.find(doc, "[data-testid='#{testid}']")
+
+    test "From missing renders 'No From header', To missing 'No To header', envelope nil 'Not recorded by provider'" do
+      {_html, doc} = contact_doc(from: [], to: [], envelope_recipient: nil)
+
+      assert doc |> cell("inbound-contact-from") |> Floki.text() =~ "No From header"
+      assert doc |> cell("inbound-contact-to") |> Floki.text() =~ "No To header"
+
+      assert doc |> cell("inbound-contact-delivered-to") |> Floki.text() =~
+               "Not recorded by provider"
+    end
+
+    test "empty Cc and Reply-To rows are hidden; populated ones render in order" do
+      {_html, doc} = contact_doc(cc: [], reply_to: [])
+      assert cell(doc, "inbound-contact-cc") == []
+      assert cell(doc, "inbound-contact-reply-to") == []
+
+      {_html, doc} =
+        contact_doc(
+          cc: [%{address: "cc@example.com"}],
+          reply_to: [%{address: "reply@example.com"}]
+        )
+
+      labels =
+        doc
+        |> Floki.find("dt")
+        |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+        |> Enum.filter(&(&1 in ["From", "Reply-To", "To", "Cc", "Delivered to", "Provider"]))
+
+      assert labels == ["From", "Reply-To", "To", "Cc", "Delivered to", "Provider"]
+      assert doc |> cell("inbound-contact-cc") |> Floki.text() =~ "cc@example.com"
+      assert doc |> cell("inbound-contact-reply-to") |> Floki.text() =~ "reply@example.com"
+    end
+
+    test "Delivered to is bound to envelope_recipient and To to the header list, never swapped" do
+      {_html, doc} =
+        contact_doc(
+          envelope_recipient: "envelope@example.com",
+          to: [%{address: "header-to@example.com"}]
+        )
+
+      delivered = doc |> cell("inbound-contact-delivered-to") |> Floki.text()
+      to = doc |> cell("inbound-contact-to") |> Floki.text()
+
+      assert delivered =~ "envelope@example.com"
+      refute delivered =~ "header-to@example.com"
+      assert delivered =~ "SMTP envelope recipient (RCPT TO), used for routing."
+      assert to =~ "header-to@example.com"
+      refute to =~ "envelope@example.com"
+    end
+
+    test "5 addresses render without overflow; 6 render a 'Show 1 more' details; 7 'Show 2 more'" do
+      many = fn n -> for i <- 1..n, do: %{address: "to#{i}@example.com"} end
+
+      {_html, doc} = contact_doc(to: many.(5))
+      assert doc |> cell("inbound-contact-to") |> Floki.find("li") |> length() == 5
+      assert doc |> cell("inbound-contact-to") |> Floki.find("details") == []
+
+      {_html, doc} = contact_doc(to: many.(6))
+      to = cell(doc, "inbound-contact-to")
+      assert [details] = Floki.find(to, "details")
+      assert details |> Floki.find("summary") |> Floki.text() =~ "Show 1 more"
+
+      {_html, doc} = contact_doc(to: many.(7))
+      to = cell(doc, "inbound-contact-to")
+      assert [details] = Floki.find(to, "details")
+      assert details |> Floki.find("summary") |> Floki.text() =~ "Show 2 more"
+      assert Floki.find(to, "ul[role='list']") |> length() == 2
+      assert Floki.find(details, "li") |> length() == 2
+      assert Floki.text(to) =~ "to7@example.com"
+    end
+
+    test "a single address renders one <li> and no <details>" do
+      {_html, doc} = contact_doc([])
+      to = cell(doc, "inbound-contact-to")
+      assert length(Floki.find(to, "li")) == 1
+      assert Floki.find(to, "details") == []
+    end
+
+    test "exact duplicates collapse within one field" do
+      {_html, doc} =
+        contact_doc(
+          to: [
+            %{address: "dup@example.com"},
+            %{address: "dup@EXAMPLE.com"},
+            %{address: "other@example.com"}
+          ]
+        )
+
+      assert doc |> cell("inbound-contact-to") |> Floki.find("li") |> length() == 2
+    end
+
+    test "unparseable entries render 'Unparseable address' plus the escaped original" do
+      {html, doc} = contact_doc(to: ["not an address", "<b>bold</b>"])
+      to = cell(doc, "inbound-contact-to")
+
+      assert Floki.text(to) =~ "Unparseable address"
+      assert Floki.text(to) =~ "not an address"
+      assert Floki.text(to) =~ "<b>bold</b>"
+      refute html =~ "<b>bold</b>"
+    end
+
+    test "a spoofed display name shows the name, the real address and the cue" do
+      {_html, doc} =
+        contact_doc(from: [%{address: "sender@mailer.example", name: "billing@paypal.example"}])
+
+      from = cell(doc, "inbound-contact-from")
+      assert Floki.text(from) =~ "billing@paypal.example"
+      assert Floki.text(from) =~ "sender@mailer.example"
+
+      assert doc |> cell("inbound-address-spoof-cue") |> Floki.text() =~
+               "Display name contains a different address."
+    end
+
+    test "an ordinary display name shows no spoof cue" do
+      {_html, doc} = contact_doc([])
+      assert cell(doc, "inbound-address-spoof-cue") == []
+    end
+
+    test "Unicode addresses and names render verbatim, long values are never truncated" do
+      long_local = String.duplicate("l", 70)
+      long_domain = String.duplicate("d", 210) <> ".example"
+      long = "#{long_local}@#{long_domain}"
+
+      {html, doc} =
+        contact_doc(
+          from: [%{address: "zoe@example.com", name: "Zoë Ångström-Łukasiewicz"}],
+          to: [%{address: "用户@例子.广告"}, %{address: long}]
+        )
+
+      assert Floki.text(cell(doc, "inbound-contact-from")) =~ "Zoë Ångström-Łukasiewicz"
+      to = Floki.text(cell(doc, "inbound-contact-to"))
+      assert to =~ "用户@例子.广告"
+      assert to =~ long
+      assert html =~ "[overflow-wrap:anywhere]"
+      refute html =~ "line-clamp"
+      refute html =~ "truncate"
+    end
+
+    test "a script display name renders escaped and never as an element" do
+      {html, doc} =
+        contact_doc(from: [%{address: "x@example.com", name: "<script>alert(1)</script>"}])
+
+      assert Floki.find(doc, "script") == []
+      assert Floki.text(cell(doc, "inbound-contact-from")) =~ "<script>alert(1)</script>"
+      assert html =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+      refute html =~ "<script>alert(1)</script>"
+    end
+
+    test "Phase 176 every contact copy button's accessible name contains its address" do
+      {_html, doc} =
+        contact_doc(
+          from: [%{address: "ada@example.com", name: "Ada Lovelace"}],
+          reply_to: [%{address: "reply@example.com"}],
+          to: [
+            %{address: "to1@example.com"},
+            %{address: "用户@例子.广告", name: "用户"},
+            %{address: "to3@example.com"}
+          ],
+          cc: for(i <- 1..6, do: %{address: "cc#{i}@example.com"}),
+          envelope_recipient: "support@example.com"
+        )
+
+      cells =
+        ~w(from reply-to to cc delivered-to)
+        |> Enum.flat_map(&cell(doc, "inbound-contact-" <> &1))
+
+      buttons = Floki.find(cells, "button[data-copy-value]")
+
+      # Seeded parseable contacts: 1 From, 1 Reply-To, 3 To, 6 Cc (the sixth sits behind
+      # "Show 1 more"), 1 envelope. A vacuous loop over a truncated list must fail.
+      assert length(buttons) >= 12
+
+      for button <- buttons do
+        [value] = Floki.attribute(button, "data-copy-value")
+        [toast] = Floki.attribute(button, "data-copy-toast")
+        [name] = Floki.attribute(button, "aria-label")
+        label = String.replace_suffix(toast, " copied.", "")
+
+        assert name == "Copy " <> label <> ": " <> value
+        assert name =~ String.trim(Floki.text(button))
+      end
+
+      names = Enum.flat_map(buttons, &Floki.attribute(&1, "aria-label"))
+      assert "Copy To address: 用户@例子.广告" in names
+      assert "Copy Cc address: cc6@example.com" in names
+      assert "Copy Delivered to address: support@example.com" in names
+    end
+
+    test "Phase 176 missing contacts render no copy button" do
+      {_html, doc} = contact_doc(from: [], to: [], envelope_recipient: nil)
+
+      for testid <- ~w(from to delivered-to) do
+        assert doc |> cell("inbound-contact-" <> testid) |> Floki.find("button") == []
+      end
     end
   end
 
@@ -627,14 +913,16 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
           reveal_state: :redacted
         )
 
-      assert redacted_html =~ ~s(data-testid="inbound-evidence-redacted")
+      refute redacted_html =~ ~s(data-testid="inbound-evidence-redacted")
       assert redacted_html =~ ~s(data-testid="inbound-evidence-reveal")
-      assert redacted_html =~ "Raw source locked"
+      refute redacted_html =~ "Raw source locked"
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-caption")
       assert redacted_html =~ "Provider"
       assert redacted_html =~ "Payload size"
       assert redacted_html =~ "Header count"
-      assert redacted_html =~ "Verification facts"
-      assert redacted_html =~ "Raw source is hidden by default"
+      refute redacted_html =~ "Verification facts"
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-facts")
+      assert redacted_html =~ "May contain personal information."
       assert redacted_html =~ "min-h-11"
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ "secret-raw-payload-99-03"
@@ -743,6 +1031,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       }
 
       review = %{
+        review_id: "review-1",
         record_id: "rec-1",
         tenant_id: "tenant-a",
         eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.Support"}
@@ -769,6 +1058,91 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&ReplayModal.replay_modal/1, open?: false, record: record)
 
       refute html =~ ~s(data-testid="inbound-replay-modal")
+    end
+  end
+
+  describe "Phase 175 quick replay and technical evidence" do
+    @describetag :phase175
+
+    test "quick view offers an exact replay review only when recorded Mailbox eligibility is clear" do
+      record = %{
+        id: "rec-quick-175",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "reader@example.com",
+        subject: "Follow-up",
+        received_at: ~U[2026-10-24 10:00:00Z],
+        outcome: :accept,
+        mailbox: "Elixir.Mailboxes.Recorded"
+      }
+
+      attrs = %{
+        record: record,
+        replay_eligibility: %{status: :eligible, mailbox: "Elixir.Mailboxes.Recorded"},
+        detail_error: nil,
+        outside_results?: false,
+        account_labels: %{},
+        full_path: "/inbound?tenant_id=tenant-a&inbound_id=rec-quick-175&full=1",
+        close_path: "/inbound?tenant_id=tenant-a",
+        keyboard?: true
+      }
+
+      html = render_component(&QuickView.quick_view/1, attrs)
+      button = Floki.find(Floki.parse_document!(html), "#inbound-quick-replay-open-btn")
+
+      assert button != []
+      assert Floki.attribute(button, "phx-click") == ["open_replay"]
+      assert Floki.attribute(button, "phx-value-origin") == ["quick"]
+      assert Floki.attribute(button, "data-testid") == ["inbound-quick-replay-open"]
+      classes = button |> Floki.attribute("class") |> List.first() |> String.split()
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
+      assert html =~ "Review inbound replay"
+      assert html =~ "rec-quick-175"
+
+      unavailable_html =
+        render_component(
+          &QuickView.quick_view/1,
+          Map.put(attrs, :replay_eligibility, %{
+            status: :ineligible,
+            reason: :execution_history_missing
+          })
+        )
+
+      assert unavailable_html =~ "No execution history is recorded for this message."
+      refute unavailable_html =~ ~s(id="inbound-quick-replay-open-btn")
+    end
+
+    test "full Inbound technical facts stay open with long Unicode identifiers" do
+      provider_message_id = "thread-東京<&-" <> String.duplicate("🔐-長い-", 12)
+
+      detail = %{
+        record: %{
+          id: "record-東京<&-" <> String.duplicate("界", 24),
+          tenant_id: "tenant-a",
+          provider: "postmark",
+          provider_message_id: provider_message_id,
+          envelope_recipient: "reader@example.com",
+          subject: "Technical evidence",
+          received_at: ~U[2026-10-24 10:00:00Z]
+        },
+        mailbox: "Elixir.Mailboxes.Recorded",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      technical = Floki.find(Floki.parse_document!(html), "#inbound-detail-technical")
+
+      assert length(technical) == 1
+      assert Floki.attribute(technical, "tag") == []
+      assert Floki.raw_html(technical) =~ "thread-東京"
+      refute Floki.raw_html(technical) =~ "<details"
+      refute Floki.raw_html(technical) =~ "<summary"
+      assert Floki.text(technical) =~ provider_message_id
+      assert Floki.text(technical) =~ "record-東京<&-"
+      assert Floki.raw_html(technical) =~ "break-all"
     end
   end
 end

@@ -32,6 +32,7 @@ defmodule MailglassAdmin.MixConfigTest do
   describe "mailglass dep switch (CONTEXT D-02)" do
     setup do
       original = System.get_env("MIX_PUBLISH")
+
       on_exit(fn ->
         case original do
           nil -> System.delete_env("MIX_PUBLISH")

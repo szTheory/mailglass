@@ -402,7 +402,6 @@ defmodule MailglassAdmin.GalleryLive do
     <EvidenceCard.evidence_card
       evidence={@assigns_map[:evidence]}
       reveal_state={@assigns_map[:reveal_state]}
-      can_reveal?={Map.get(@assigns_map, :can_reveal?, true)}
     />
     """
   end
@@ -579,7 +578,7 @@ defmodule MailglassAdmin.GalleryLive do
     ~H"""
     <div data-region class="space-y-4">
       <RoutingTrace.routing_trace trace={[]} />
-      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} can_reveal?={true} />
+      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} />
     </div>
     """
   end
@@ -594,7 +593,14 @@ defmodule MailglassAdmin.GalleryLive do
           id: "rec-1",
           tenant_id: "tenant-a",
           provider: "mailgun",
-          envelope_recipient: "a****@e******.com",
+          envelope_recipient: "support@northstar.example",
+          from: [%{address: "alex.rivera@example.com", name: "Alex Rivera"}],
+          to: [
+            %{address: "support@northstar.example", name: "Northstar Support"},
+            %{address: "billing@northstar.example"},
+            %{address: "ops@northstar.example"}
+          ],
+          cc: [%{address: "team.lead@example.com", name: "Team Lead"}],
           subject: "Hello",
           received_at: ~U[2026-05-24 10:00:00Z]
         },
@@ -866,7 +872,7 @@ defmodule MailglassAdmin.GalleryLive do
        type: :select,
        label: "Status",
        help: "Filter by delivery status.",
-       error: "Status was not applied. Choose a listed status.",
+       error: "Latest recorded event was not applied. Choose a listed event.",
        prompt: "Any status",
        options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
      }},
@@ -975,7 +981,7 @@ defmodule MailglassAdmin.GalleryLive do
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
-       errors: %{"event" => "Status was not applied. Choose a listed status."}
+       errors: %{"event" => "Latest recorded event was not applied. Choose a listed event."}
      }},
 
     # STATE-LD-14: support_cards — tier1-shown and tier1-hidden
@@ -1117,40 +1123,37 @@ defmodule MailglassAdmin.GalleryLive do
      }},
 
     # STATE-LD-19: evidence_card — no-evidence, redacted, revealed, denied
-    {:evidence_card, "no-evidence", %{evidence: nil, reveal_state: :redacted, can_reveal?: true}},
+    {:evidence_card, "no-evidence", %{evidence: nil, reveal_state: :redacted}},
     {:evidence_card, "redacted",
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload: nil,
+         raw_payload: %{"body" => "Gallery specimen payload"},
          raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
-       reveal_state: :redacted,
-       can_reveal?: true
+       reveal_state: :redacted
      }},
     {:evidence_card, "revealed",
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload:
+         raw_payload: %{},
+         raw_mime:
            "Received: from mail.sendgrid.net\r\nFrom: sender@example.com\r\nTo: recipient@example.com\r\n\r\nBody here.",
-         raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
-       reveal_state: :revealed,
-       can_reveal?: true
+       reveal_state: :revealed
      }},
     {:evidence_card, "denied",
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload: nil,
+         raw_payload: %{"body" => "Gallery specimen payload"},
          raw_mime: nil,
          verification_facts: %{"dkim" => true}
        },
-       reveal_state: :denied,
-       can_reveal?: false
+       reveal_state: :denied
      }},
 
     # STATE-LD-20: device_frame — inactive-btn (static assigns, no phx-click)
@@ -1276,7 +1279,7 @@ defmodule MailglassAdmin.GalleryLive do
        records: [
          %{
            id: "inb_01JXABCDEF",
-           envelope_recipient: "s*@m***.io",
+           envelope_recipient: "support@northstar.example",
            outcome: :accepted,
            mailbox: "MyApp.SupportMailbox",
            tenant_id: "acme-corp",
@@ -1285,7 +1288,7 @@ defmodule MailglassAdmin.GalleryLive do
          },
          %{
            id: "inb_01JXGHIJKL",
-           envelope_recipient: "b*@e******.com",
+           envelope_recipient: "billing@northstar.example",
            outcome: :no_match,
            mailbox: nil,
            tenant_id: "acme-corp",
@@ -1308,7 +1311,8 @@ defmodule MailglassAdmin.GalleryLive do
        records: [
          %{
            id: "inb_01JXWIDEVALUE000000000000000000000000000000000000",
-           envelope_recipient: "b*****@enterprise-example-company-name.co.uk",
+           envelope_recipient:
+             "very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com",
            outcome: :accepted,
            mailbox: "MyApp.VeryLongSupportMailbox.HandlesAllIncomingMessages",
            tenant_id: "tenant_01JXWIDEVALUE000000000000000000000000",

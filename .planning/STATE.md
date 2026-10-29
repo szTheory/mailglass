@@ -1,50 +1,50 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.9
-milestone_name: Operator, Preview & Email UI Refinement
-status: Awaiting next milestone
-stopped_at: Milestone v2.9 complete and archived
-last_updated: "2026-10-26T13:36:00.000Z"
-last_activity: 2026-10-26
-last_activity_desc: Milestone v2.9 completed and archived
-state_head: 4711c52450f786b595b7b19ef515aad7fd243ab2
+milestone: v2.10
+milestone_name: UI Repairs & Faithful Storybook
+current_phase: 178
+current_phase_name: Preview Authoring and Milestone Review
+status: executing
+stopped_at: Completed 178-11-PLAN.md
+last_updated: "2026-10-29T14:21:11.183Z"
+last_activity: 2026-10-29
+last_activity_desc: Phase 178 execution started
+state_head: acc521ff32bc30d9d5c029f62610f5042d0adf57
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 43
-  completed_plans: 43
-  percent: 100
-current_phase: null
-current_phase_name: Planning next milestone
+  total_phases: 5
+  completed_phases: 4
+  total_plans: 50
+  completed_plans: 47
+  percent: 80
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-26)
+See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Planning next milestone (v2.9 shipped 2026-10-26)
+**Current focus:** Phase 178 — Preview Authoring and Milestone Review
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
-> has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
-> as undiagnosed (fixed in `f733fc22`/`d65a1aa8`, both merged to `main`) and PR #222 as open (it is
-> closed). PR #129, the replay-copy redesign once suspected of causing those reds, is also closed.
-> Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an open-PR or
-> open-issue count or identity anywhere below — that is permanently non-permanent information. For
-> current open PRs and issues, run `gh pr list --state open` and `gh issue list --state open` against
-> `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh` machine-checks every `#NNN` reference in
-> this file against live GitHub state.
+> has since been corrected — `## Operator Next Steps
+
+- Phase 175 is complete: 8/8 UAT rows closed `source: automated` by `mailglass_admin/test/mailglass_admin/phase175_prohibition_contract_test.exs` (16 tests, one red mutation per prohibition). Full admin suite 677/0 under `--seed 0`; VERIFICATION `passed`; security has 0 open threats. No owner verification is outstanding.
+- Next: `/gsd-discuss-phase 176` (no CONTEXT.md yet). D-52 and `.planning/METHODOLOGY.md` apply, including the 2026-10-27 judgment-tier prohibition clause: author must-NOT items as `verification: test`.
 
 ## Current Position
 
-Phase: Milestone v2.9 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-26
+Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
+Plan: 10 of 12
+Status: Ready to execute
+Last activity: 2026-10-29 — Phase 178 execution started
 
-## v2.9 Roadmap Shape
+Progress: [████████░░] 80%
+
+## v2.9 Roadmap Shape (historical; shipped and archived)
+
+The progress statements below are retained execution history; v2.9 is complete.
 
 - Phases 168–173 own all 28 approved requirements. Phases 168–172 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04, and Phase 172 passed 9/9 must-haves across MAILUX-01–04. Phase 173 remains.
 - Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
@@ -152,7 +152,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 109
+- Total plans completed: 147
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -171,6 +171,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 171 | 4 | - | - |
 | 172 | 3 | - | - |
 | 173.1 | 5 | - | - |
+| 174 | 6 | - | - |
+| 175 | 6 | - | - |
+| 176 | 15 | - | - |
+| 177 | 11 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -286,6 +290,53 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 173 P06 | 7m | 1 tasks | 2 files |
 | Phase 173 P07 | 21min | 2 tasks | 16 files |
 | Phase 173 P08 | 32min | 2 tasks | 4 files |
+| Phase 174 P01 | 25min | 2 tasks | 6 files |
+| Phase 174 P02 | 26m | 2 tasks | 10 files |
+| Phase 174 P03 | 31min | 2 tasks | 7 files |
+| Phase 174 P04 | 33m43s | 2 tasks | 10 files |
+| Phase 174 P05 | 86m | 3 tasks | 17 files |
+| Phase 174 P06 | 4h29m | 2 tasks | 24 files |
+| Phase 175 P01 | 23m | 2 tasks | 11 files |
+| Phase 175 P02 | 21min | 2 tasks | 8 files |
+| Phase 175 P03 | ~29m (approximate) | 3 tasks | 13 files |
+| Phase 175 P04 | 30min | 2 tasks | 8 files |
+| Phase 175 P05 | 19min 22s | 2 tasks | 18 files |
+| Phase 175 P06 | 121m | 3 tasks | 180 files |
+| Phase 176 P01 | 12 min | 3 tasks | 6 files |
+| Phase 176 P02 | 10 min | 3 tasks | 8 files |
+| Phase 176 P03 | 14min | 2 tasks | 10 files |
+| Phase 176 P04 | 10 min | 3 tasks | 7 files |
+| Phase 176 P05 | 14 min | 2 tasks | 6 files |
+| Phase 176 P06 | 16 min | 2 tasks | 7 files |
+| Phase 176 P07 | 40 min | 3 tasks | 7 files |
+| Phase 176 P08 | 25 min | 3 tasks | 6 files |
+| Phase 176 P09 | 15 min | 3 tasks | 4 files |
+| Phase 176 P10 | 35 min | 4 tasks | 9 files |
+| Phase 176 P11 | 6 min | 2 tasks | 6 files |
+| Phase 176 P12 | 10 min | 2 tasks | 8 files |
+| Phase 176 P13 | 25min | 3 tasks | 3 files |
+| Phase 176 P15 | 9 min | 2 tasks | 8 files |
+| Phase 176 P14 | 25 min | 2 tasks | 3 files |
+| Phase 177 P01 | 6 min | 3 tasks | 11 files |
+| Phase 177 P02 | 25min | 2 tasks | 2 files |
+| Phase 177 P03 | 20min | 3 tasks | 6 files |
+| Phase 177 P04 | 45min | 2 tasks | 8 files |
+| Phase 177 P05 | 25 min | 2 tasks | 8 files |
+| Phase 177 P10 | 20 min | 2 tasks | 5 files |
+| Phase 177 P06 | 10 min | 3 tasks | 10 files |
+| Phase 177 P07 | 25 min | 3 tasks | 8 files |
+| Phase 177 P08 | 18 min | 3 tasks | 3 files |
+| Phase 177 P09 | 40min | 3 tasks | 8 files |
+| Phase 177 P11 | 45 min | 3 tasks | 6 files |
+| Phase 178 P01 | 7 min | 2 tasks | 5 files |
+| Phase 178 P02 | 6 min | 2 tasks | 5 files |
+| Phase 178 P03 | 9 min | 3 tasks | 5 files |
+| Phase 178 P12 | 12 min | 2 tasks | 1 files |
+| Phase 178 P04 | 12 min | 3 tasks | 9 files |
+| Phase 178 P05 | 15 min | 3 tasks | 8 files |
+| Phase 178 P06 | 10 min | 3 tasks | 5 files |
+| Phase 178 P07 | 10 min | 2 tasks | 5 files |
+| Phase 178 P11 | 25 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -512,6 +563,93 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 173]: Use sparse exclusions before candidate materialization and exclude both protected inputs from Docker contexts.
 - [Phase 173]: Install only lockfile-pinned Mix/npm dependencies in the detached candidate and restore only candidate-generated demo lock drift.
 - [Phase 173]: Keep delivery incomplete until required exact-SHA CI Green and protected owner acceptance are verified.
+- [Phase ?]: v2.10 reuses the supplied ui-quality-engine scope and focused research; no additional milestone ecosystem pass and no change to workflow.research. — Owner chose reuse; upstream stopping rule says implementation research belongs at actual phase uncertainties.
+- [Phase 174]: The retained Delivery Storybook variations use the compile-time JSON scenario manifest through a pure projection builder; empty Helios remains connected-route-only.
+- [Phase 174]: Fixed-overlay component stories keep a 600px iframe canvas so Storybook content-height sizing does not clip them.
+- [Phase 174]: Keep Inbound native disabled buttons and compare raw :accept at the production component boundary.
+- [Phase 174]: Normalize only generated selected IDs and documented timestamp precision or anchors; preserve meaningful projection values exactly.
+- [Phase 174]: Keep unavailable and empty cases within their real rendering and route proof boundaries.
+- [Phase 174]: Use one canonical production hooks.js asset and assign it to Storybook's hook registry without socket creation.
+- [Phase 174]: Count sockets by browsing document because the Storybook explorer and preview iframe each own a legitimate transport.
+- [Phase 174]: Keep the pinned Phoenix LiveView and PhoenixStorybook versions; verify both resolved clients instead of upgrading.
+- [Phase 174]: Keep Light/Dark/System preference and OS resolution on the retained story root; do not write the authenticated host preference or create another socket.
+- [Phase 174]: Serve production hooks plus the local theme adapter from a Demo-only versioned route. The pinned PhoenixStorybook macro evaluates use options before module attributes, so js_path uses the computed literal hash with a compile-time equality guard.
+- [Phase 174]: Scope Inter, Inter Tight, and IBM Plex Mono to the production .mg-admin-root, display, and code roles while retaining existing global defaults.
+- [Phase 174]: Keep source CSS, compiled bundle, and served response digests as separate receipt fields; assert byte equality only for built and served CSS.
+- [Phase 174]: Reuse Admin's locked @axe-core/playwright dependency in a dedicated Storybook scan config.
+- [Phase 174]: Require independent report identity and exact rule/target/scenario/state/theme fingerprint comparison.
+- [Phase 174]: Keep incomplete Axe results explicitly triaged against a reproduced pre-repair report; approve no violations.
+- [Phase 174]: Make each quick-view dialog focusable and use native disabled Delivery boundary buttons.
+- [Phase 174]: Keep the selected Phase 174 sweep in the existing advisory Demo Browser Evidence job; do not promote it to a protected required context.
+- [Phase 174]: Measure the full hosted job against a same-profile successful baseline; report the observed 15-second wall-budget overage without implying causality or critical-path latency.
+- [Phase 174]: Keep Axe violation approvals empty and retain incomplete findings as incomplete even when triage removes them from the untriaged count.
+- [Phase 174]: Keep Delivery's inert boundary and Inbound's native disabled-button boundary semantics distinct.
+- [Phase 174]: Leave non-Phase-174 feedback with its named Phase 175–178 owners; defer set-wide STORY-07 and zoom reconciliation to Phase 178.
+- [Phase 174]: D-52 reaffirmed: target zero owner UAT; automate observable criteria, repair routine defects, and close evidence-backed rows without confirmation. — Owner requested shift-left integration/e2e/smoke/seam proof, justified reuse of existing CI lanes, and durable records that prevent repeated UAT loops; see .planning/METHODOLOGY.md.
+- [Phase 175]: Replay target identity remains server-owned; browser events supply only the validated entry origin.
+- [Phase 175]: Quick view and Full detail share ReplayAction, with review entry shown only for exact or explicitly ambiguous target sets.
+- [Phase 175]: Keep suppression refresh on the existing tenant, recipient, and stream-scoped query; prove external changes through fresh reads without changing domain semantics.
+- [Phase 175]: Show only recorded expiry and known reason-based policy; label unknown expiry and policy as not recorded.
+- [Phase 175]: The shared replay shell owns accessible overlay presentation; domain wrappers keep identity, eligibility, commands and outcomes distinct.
+- [Phase 175]: Lower the Inbound quick-view layer while replay review is open so modal pointer actions remain reachable and selected context stays mounted.
+- [Phase 175]: Replay failures stay mounted and recovery uses a fresh exact-scope review.
+- [Phase 175]: Unavailable target evidence allows review again without enabling replay confirmation.
+- [Phase 175]: Keep authorization, audit, and idempotency at the existing command boundary; revocation control is test-only.
+- [Phase 175]: Keep empty Helios route-only and never fabricate a selected Delivery record.
+- [Phase 175]: Retain Axe incomplete findings separately from violations and add separately identified review runs.
+- [Phase 175]: Check every current Axe contrast selector match in the story root and keep the lowest ratio per selector.
+- [Phase 175]: Refresh persisted fidelity source identity and executed case inventory when the source changes.
+- [Phase 175]: Keep Phase 175 selection composable with the existing isolated Phase 174 runner and CI lane.
+- [Phase 175]: Require exact nonempty expected/executed case IDs and current source/asset identity; process exit alone is not evidence.
+- [Phase 175]: Retain Axe incomplete findings as incomplete and preserve failed historical evidence with rendered triage separate.
+- [Phase 175]: Use the isolated mailglass_demo_phase175_05 database because the default Demo database had a migration ledger but lacked the Demo schema; leave default untouched.
+- [Phase 175]: The eight judgment-tier prohibitions (UXF-12, OUTUX-07/08, REPLAY-04..08) are machine-checked by `phase175_prohibition_contract_test.exs` (mutation-proven) and closed as automated UAT. D-52 now covers prohibitions; see METHODOLOGY.md.
+- [Phase 176]: Phase 176-01: window_hours=168 stays in committed filter URLs; only blanks and page=1 are dropped, query keys sorted
+- [Phase 176]: Phase 176-01: filter commits read the Account only from socket.assigns.selected_tenant_id; hidden filters_tenant_id input deleted
+- [Phase 176]: Phase 176-01: search edit history = push first commit, replace later ones, tracked via pending/last commit kind settled in handle_params; canonicalize and recover replace
+- [Phase 176]: Inbound contacts: dedupe key is {local part exact, domain downcased}; unparseable = not exactly one @ with non-empty sides; spoof flagged when display name embeds a different address
+- [Phase 176]: message_identity derives its recipient label from context (:inbound -> Delivered to) with no new public attr; Inbound Quick view projection unwidened
+- [Phase 176]: Evidence card: one persistent disclosure toggle; caption and toggle render only when evidence is present; reveal handlers/telemetry unchanged
+- [Phase 176]: 176-04: stale count hidden (D-15); stale title carries HH:MM UTC load time with a Components.timestamp line
+- [Phase 176]: 176-04: persistent sr-only status region text is a pure function of settled read state (ResultsStatus.text/1); drafts never change it
+- [Phase 176]: 176-05: checksum stays out of the five evidence facts as a scope choice (InboundEvidence stores raw_mime_sha256/fingerprint); payload size/header count are nil when unknown and render Unavailable, never 0
+- [Phase 176]: 176-06: FilterSearchSync updated() hook path ships (demo LV 1.1.33 spike 2 passed, admin LV 1.2.13 3 passed); no push_event fallback
+- [Phase 176]: 176-06: any hooks.js body change must re-pin the demo Storybook review-JS md5 in reference/demo_app/dev/mailglass_demo_web/storybook.ex
+- [Phase 176]: Plan 07: Inbound filter_draft_params retains a rejected outcome/window only for a field in error, so a blank window never becomes a Custom period option
+- [Phase 176]: Plan 07: Inbound same_location? canonicalizes both queries; committed Inbound URLs keep window_hours=168
+- [Phase 176]: 176-08: inbound-evidence-* scenarios stay out of axe_selection (20); a11y for revealed/denied/invalid proven on connected routes in 176-10
+- [Phase 176]: Inbound retry_inbound derives the selected record id from the page URI so Retry after a failed detail read keeps the URL selection
+- [Phase 176]: Inbound stale retention keys on tenant/provider/outcome/search/window/page; only a same-key failed read is :stale, any other key is an error with no rows
+- [Phase 176]: 176-10: coupled browser reds were Phase 175 and plan 176-03 spec drift, fixed in specs only; axe 'no new violations' measured against a per-collection, per-theme neutral baseline because Deliveries row buttons carry a Phase 113 aria-selected-on-button defect
+- [Phase 176]: 176-11: Evidence card size and reveal share raw_source/1 (raw_payload first, then raw_mime); size is byte size of the revealed text; unencodable payload stays the source (Unavailable); nothing stored hides the reveal control; denial announced from the persistent status region (UI-SPEC rows superseded per D-26).
+- [Phase 176]: 176-12: copy_value accessible name is "Copy <label>: <value>" (WCAG 2.5.3), fixed in the shared component for all 13 call sites; browser locators use full exact name where value in scope, anchored regex elsewhere
+- [Phase 176]: 176-13: Deliveries treats a non-default window as a filter (non_default_window?/1); mobile toggle uses mg-inbound-filters-open class; PubSub refresh keeps status text (D-16); blank window_hours = absent (bounded D-13)
+- [Phase 176]: 176-15: Draft note unchanged (D-12 as written); it co-occurs with the URL note, which is keyed on filter_url_invalid (assigned only in handle_params)
+- [Phase 176]: 176-15: WR-05 fixed in product: rejected enum value stays selected as an enabled 'Not applied: <value>' option (enabled so re-post does not silently clear the filter)
+- [Phase 176]: 176-14: P9..P13 gap prohibitions are mutation-proven contract describes; P13 asserts the URL note present and never the draft note absent (D-12/D-13)
+- [Phase 177]: 177-01: Preview Back destination is rebuilt only from host navigation plus a closed-set surface and opaque id (ReturnContext); minting skipped for non-local preview_path (A3); theme sanitizer rejects dot segments (A2)
+- [Phase 177]: 177-02: Health goldens are issues/activity keyword blocks; seeded ids masked as {key} in hrefs; quiet seed used for the empty state
+- [Phase 177]: 177-04: Health column is a plain block (no grid gap) so status mt-md and activity mt-lg hairline spacing is not doubled; per-issue help stays the default tertiary field_help
+- [Phase 177]: 177-05: Health notice sentences come from a closed notice_copy(status, panel) clause set; stale clauses return the lead-in and the shared timestamp follows
+- [Phase 177]: 177-10: demo AdminAuth denies logged-out :operator_access with /demo/login?return_to=<arrival path+query> from get_connect_info(:uri); safe_return_to/1 stays the single validator
+- [Phase 177]: 177-06: SurfaceNav scope attr defaults to :preview so a forgotten call site shows no Account identity; Account menu anchors to the header below md (spans group) and the details at md+ (aligns with summary)
+- [Phase 177]: 177-07: Account-control e2e locators scope through the visible scope group (option/status/id) rather than visibility-filtering hidden-until-open elements; aria-label removed from role-less Account context div (axe aria-prohibited-attr)
+- [Phase 177]: 177-08: Health composition A (single 42rem column) wins the bounded A vs B comparison; both pass G1-G7, tie-breakers 1-3 tie, layout rules 3 vs 8 decides; production unchanged
+- [Phase 177]: 177-08: unavailable Health state is produced by arming a one-shot failed_ingest fault on Deliveries and reopening Health from the scope nav; empty uses the helios-void persona
+- [Phase 177]: 177-09: northstar_normal Health story mirrors the real route's no-issue derivation; parity test also compares activity totals; story iframes resolved by stable id prefix
+- [Phase 177]: 177-11: Phase 177 prohibitions are 16 violation-list detectors in phase177_prohibition_contract_test.exs, each mutation-proven; the docs rule guards against ever claiming the push_patch Account switch re-runs host authorization (gap captured as an open todo)
+- [Phase 177]: 177-11: Pre-existing core (3), format (10 files), credo (6) and axe-baseline (3) failures recorded with pre-phase evidence in 177-AUTOMATION.md and deferred-items.md, not fixed
+- [Phase 178]: 178-01: Preview read-only note wording kept verbatim after ux-writing review; editable fields describe only their own parse error (described_by/2), read-only displays reference preview-assigns-readonly-note
+- [Phase 178]: 178-02: feedback ledger rule is phase-independent (never reads owner_phase), archive roots globbed, pointers must be path or path#anchor
+- [Phase 178]: 178-03: D-14 honored via slim sibling scripts/check_phase178_candidate.sh (173 script cannot run for non-173 candidates); launcher/teardown act only on mailglass-phase178-review-* projects and /tmp/mailglass-phase178.* parents
+- [Phase 178]: 178-03: cost disposition refuses runs whose head_sha is not the candidate SHA and never zero-fills a missing job; runner platform comes from a published label table or a saved job log, recorded in provenance
+- [Phase 178]: D-16: STATE.md permanent facts re-homed to the v2.8 DOCS-01 record; prohibitions stay on STATE.md
+- [Phase 178]: 178-04: Preview technical identity is inspect(mod).scenario shown as visible monospace text; same-Mailable collisions fall back to raw atoms, leaf collisions take the shortest unique namespace suffix
+- [Phase 178]: 178-05: Preview authoring facts resolve identifiers through a closed compile-time map; STORY-07 accounting is computed from the manifest and held equal to 178-AUTOMATION.md by doc-truth tests
+- [Phase 178]: 178-05: Preview stays pure-only (story-render-only); typed_values is checked against the live /dev/mail route by field-set equality, with no persisted projection check
+- [Phase 178]: 178-06: Phase 176 CSS-zoom cases relabelled, not migrated; the real-zoom filter proof lives once in phase178-real-zoom.spec.js (one persistent context, per-route real-zoom receipts)
+- [Phase 178]: 178-07: StatCard font-role receipt compares the story with the production Admin gallery (same CSS bytes); no serif reproduces so no story or setup change; ledger invariant asserts no pending or partial row
+- [Phase 178]: 178-11: P1 -help id family scoped to assigns-*-help (preview-backdrop-help is a different control); P4 collisions derived from ScenarioLabel.humanize/1 alone
 
 ## Quick Tasks Completed
 
@@ -563,10 +701,15 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-10T15:44:07Z
-Stopped at: Milestone v2.9 complete and archived
+Last session: 2026-10-29T14:21:10.216Z
+Stopped at: Completed 178-11-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Phase 174 is complete: 3/3 automated UAT rows, 148/148 cold and warm acceptance cases, no owner verification outstanding. Durable proof and replay commands: `.planning/phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md`.
+- Next: `$gsd-plan-phase 175`. Apply D-52 and `.planning/METHODOLOGY.md`: target zero owner UAT, automate observable criteria, reuse justified CI coverage and do not reopen already-proved checks without relevant changes or new failures.
+
+### Blockers
+
+- 178-03: reference/demo_app/mix.lock is behind upstream (bandit 1.14.1, swoosh 1.29.3) so fresh isolated demo launches from main fail 'mix deps.get --check-locked'; blocks isolated-demo gates in 178-05/07/09/10 until a chore(deps) demo lock refresh (see deferred-items.md D-178-03-A)

@@ -74,7 +74,12 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
                ["fjordline-aps", "helios-void", "northstar"]
 
       assert MapSet.equal?(by_name["northstar"], MapSet.new([:many, :high_count, :error]))
-      assert MapSet.equal?(by_name["fjordline-aps"], MapSet.new([:one, :long_id, :non_ascii, :null]))
+
+      assert MapSet.equal?(
+               by_name["fjordline-aps"],
+               MapSet.new([:one, :long_id, :non_ascii, :null])
+             )
+
       assert MapSet.equal?(by_name["helios-void"], MapSet.new([:no_data]))
     end
 
@@ -161,9 +166,7 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
       literals = MailglassDemo.Personas.specimen_literals()
 
       delivery =
-        TestRepo.one!(
-          from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d)
-        )
+        TestRepo.one!(from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d))
 
       # Long delivery ID + long Mailable module name (truncation stress).
       assert delivery.provider_message_id == literals.long_delivery_id
@@ -176,9 +179,7 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
 
       # The null branch: a :delivered event with reject_reason: nil.
       event =
-        TestRepo.one!(
-          from(e in Event, where: e.delivery_id == ^delivery.id, select: e)
-        )
+        TestRepo.one!(from(e in Event, where: e.delivery_id == ^delivery.id, select: e))
 
       assert event.type == :delivered
       assert is_nil(event.reject_reason)

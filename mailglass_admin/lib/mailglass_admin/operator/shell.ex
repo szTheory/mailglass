@@ -30,6 +30,7 @@ defmodule MailglassAdmin.Operator.Shell do
   alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Preview.ReturnContext
   alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Theme
   alias Phoenix.LiveView.JS
@@ -140,7 +141,12 @@ defmodule MailglassAdmin.Operator.Shell do
     end
   end
 
-  defp blank_to_nil(value) when value in [nil, ""], do: nil
+  # Whitespace-only text is blank: it must not render as a named Account or a
+  # query value. Non-blank values pass through unchanged (not trimmed).
+  defp blank_to_nil(value) when is_binary(value) do
+    if String.trim(value) == "", do: nil, else: value
+  end
+
   defp blank_to_nil(value), do: value
 
   @switch_query_keys ~w(provider status event outcome window_hours search view)
@@ -164,6 +170,7 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:selected_tenant_id, :string, default: nil)
   attr(:tenant_options, :list, default: [])
   attr(:account_labels, :map, default: %{})
+  attr(:tenant_state, :atom, default: nil)
   attr(:page_uri, :string, default: "/ops/mail")
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
@@ -174,6 +181,17 @@ defmodule MailglassAdmin.Operator.Shell do
   Renders the operator shell around a surface's body (passed as the inner block).
   """
   def shell(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :preview_href,
+        ReturnContext.operator_preview_href(
+          assigns.preview_path,
+          assigns.active,
+          assigns.selected_tenant_id
+        )
+      )
+
     ~H"""
     <AdminShell.shell
       testid="operator-shell"
@@ -182,34 +200,54 @@ defmodule MailglassAdmin.Operator.Shell do
       main_max_width_class="max-w-7xl"
     >
       <:actions>
-        <.account_context
-          selected_tenant_id={@selected_tenant_id}
-          tenant_options={@tenant_options}
-          account_labels={@account_labels}
-          page_uri={@page_uri}
-        />
         <Components.theme_picker selected={@theme_choice} event="set_theme" />
       </:actions>
       <:sidebar>
         <SurfaceNav.nav
           active={@active}
-          preview_path={@preview_path}
+          scope={:account}
+          preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
-        />
+        >
+          <:scope_header :let={label_id}>
+            <.account_context
+              layout={:sidebar}
+              label_id={label_id}
+              selected_tenant_id={@selected_tenant_id}
+              tenant_options={@tenant_options}
+              tenant_state={@tenant_state}
+              account_labels={@account_labels}
+              page_uri={@page_uri}
+            />
+          </:scope_header>
+        </SurfaceNav.nav>
       </:sidebar>
       <:mobile_nav>
         <SurfaceNav.nav
           active={@active}
+          scope={:account}
           layout={:mobile}
-          preview_path={@preview_path}
+          preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
-        />
+        >
+          <:scope_header :let={label_id}>
+            <.account_context
+              layout={:mobile}
+              label_id={label_id}
+              selected_tenant_id={@selected_tenant_id}
+              tenant_options={@tenant_options}
+              tenant_state={@tenant_state}
+              account_labels={@account_labels}
+              page_uri={@page_uri}
+            />
+          </:scope_header>
+        </SurfaceNav.nav>
       </:mobile_nav>
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">{@title}</h1>
@@ -227,36 +265,66 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:tenant_options, :list, default: [])
   attr(:account_labels, :map, default: %{})
   attr(:page_uri, :string, required: true)
+  attr(:layout, :atom, values: [:sidebar, :mobile], default: :sidebar)
+  attr(:tenant_state, :atom, default: nil)
+  attr(:label_id, :string, default: nil)
 
+  # The Account control is the header of the scope group (D-09). It renders a
+  # picker only when there is a real choice: two or more options (D-10). Below
+  # md the menu is positioned against the header region SurfaceNav renders
+  # around it (`relative`), so it spans the whole group; at md+ the header is
+  # static and the details is the anchor, so the capped menu lines up with the
+  # summary and overlays main.
   def account_context(assigns) do
-    assigns =
-      assign(assigns,
-        selected_label: Accounts.label(assigns.selected_tenant_id, assigns.account_labels)
+    assigns = assign(assigns, :selected_tenant_id, blank_to_nil(assigns.selected_tenant_id))
+
+    selected_label =
+      blank_to_nil(Accounts.label(assigns.selected_tenant_id, assigns.account_labels))
+
+    variant =
+      account_variant(
+        assigns.tenant_options,
+        assigns.tenant_state,
+        assigns.selected_tenant_id,
+        selected_label
       )
+
+    assigns =
+      assigns
+      |> assign(:selected_label, selected_label)
+      |> assign(:variant, variant)
+      |> assign(:summary_label, selected_label || "Choose an Account")
 
     ~H"""
     <div
       data-testid="operator-account-context"
-      aria-label="Account context"
-      class="flex min-w-0 flex-wrap items-center gap-sm"
+      data-layout={@layout}
+      class="flex w-full min-w-0 flex-wrap items-center gap-sm"
     >
       <details
-        :if={@tenant_options != []}
-        class="group relative min-w-0 max-w-full"
+        :if={@variant == :picker}
+        class="group w-full min-w-0 max-w-full md:relative"
         data-dismiss-outside
       >
         <summary
           class="mg-focus-ring flex min-h-11 min-w-0 max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left text-base-content transition-colors hover:bg-base-200 [&::-webkit-details-marker]:hidden"
-          aria-label={"Change Account: #{@selected_label || "Choose Account"}"}
+          aria-label={
+            if @selected_label, do: "Change Account: #{@selected_label}", else: "Choose an Account"
+          }
           data-testid="operator-account-switcher"
+          data-layout={@layout}
         >
-          <span class="min-w-0">
-            <span class="block text-label text-secondary">Account</span>
+          <span class="min-w-0 flex-1">
+            <span id={@label_id} class="block text-label text-secondary">Account</span>
             <span
               data-testid="operator-account-label"
-              class="mg-scope-identity block break-words text-body font-bold"
+              data-layout={@layout}
+              class={[
+                "block break-words text-body [overflow-wrap:anywhere]",
+                if(@selected_label, do: "font-bold", else: "text-secondary")
+              ]}
             >
-              {@selected_label || "Choose Account"}
+              {@summary_label}
             </span>
           </span>
           <Components.icon
@@ -266,36 +334,44 @@ defmodule MailglassAdmin.Operator.Shell do
         </summary>
         <ul
           aria-label="Available Accounts"
-          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full sm:left-auto sm:right-0 mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
           <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
               patch={tenant_switch_path(@page_uri, tenant.id)}
               phx-click={
                 JS.show(
-                  to: "#operator-account-switch-status-#{index}",
+                  to: "#operator-account-switch-status-#{@layout}-#{index}",
                   display: "block"
                 )
               }
               aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
               data-testid="operator-account-option"
+              data-layout={@layout}
               data-account-id={tenant.id}
               data-dismiss-menu
               class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
             >
-              <span class="break-words">{tenant.label}</span>
+              <span class="break-words [overflow-wrap:anywhere]">{tenant.label}</span>
               <span class="mono break-all text-label text-secondary">{tenant.id}</span>
             </.link>
           </li>
         </ul>
       </details>
-      <div :if={@tenant_options == []} class="min-w-0">
-        <span class="block text-label text-secondary">Account</span>
+      <div
+        :if={@variant != :picker}
+        class="flex min-h-11 w-full min-w-0 flex-col justify-center"
+      >
+        <span id={@label_id} class="block text-label text-secondary">Account</span>
         <span
           data-testid="operator-account-label"
-          class="mg-scope-identity block break-words text-body font-bold text-base-content"
+          data-layout={@layout}
+          class={[
+            "block break-words text-body [overflow-wrap:anywhere]",
+            static_tone(@variant)
+          ]}
         >
-          {@selected_label || "Choose Account"}
+          {static_text(@variant)}
         </span>
       </div>
       <span :if={@selected_tenant_id} data-testid="operator-account-id" class="sr-only">
@@ -303,9 +379,10 @@ defmodule MailglassAdmin.Operator.Shell do
       </span>
       <span
         :for={{tenant, index} <- Enum.with_index(@tenant_options)}
-        :if={tenant.id != @selected_tenant_id}
-        id={"operator-account-switch-status-#{index}"}
+        :if={@variant == :picker and tenant.id != @selected_tenant_id}
+        id={"operator-account-switch-status-#{@layout}-#{index}"}
         data-testid="operator-account-switch-status"
+        data-layout={@layout}
         role="status"
         aria-live="polite"
         aria-atomic="true"
@@ -316,6 +393,37 @@ defmodule MailglassAdmin.Operator.Shell do
     </div>
     """
   end
+
+  # D-10: a control that offers no choice is a fake picker, so only two or
+  # more options render the menu. Inbound's :unavailable state has no option
+  # list by design, which is not the same as "no Accounts yet" (Pitfall 3).
+  #
+  # One option is "no choice" only when that option is the active scope (or an
+  # auto-select is pending). If the operator must still choose, or the selected
+  # Account is not the sole listed one (the list is activity-derived), a real
+  # choice remains, so the picker stays. A `:select_required` picker reads
+  # "Choose an Account" because no Account is selected.
+  defp account_variant(options, _state, _selected_id, _label) when length(options) >= 2,
+    do: :picker
+
+  defp account_variant([only], state, selected_id, selected_label)
+       when state != :select_required and (is_nil(selected_id) or selected_id == only.id),
+       do: {:static, selected_label || only.label, :named}
+
+  defp account_variant([_only], _state, _selected_id, _label), do: :picker
+
+  defp account_variant([], :unavailable, _selected_id, selected),
+    do: {:static, selected || "Choose an Account", if(selected, do: :named, else: :prompt)}
+
+  defp account_variant([], _state, _selected_id, nil), do: {:static, "No Accounts yet", :prompt}
+  defp account_variant([], _state, _selected_id, selected), do: {:static, selected, :named}
+
+  defp static_text({:static, text, _tone}), do: text
+  defp static_text(_variant), do: nil
+
+  defp static_tone({:static, _text, :named}), do: "font-bold text-base-content"
+  defp static_tone({:static, _text, :prompt}), do: "text-secondary"
+  defp static_tone(_variant), do: nil
 
   attr(:flash, :map, default: %{})
 

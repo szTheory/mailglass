@@ -1,0 +1,933 @@
+{
+  "source": {
+    "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
+    "revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+    "files": [
+      {
+        "path": "mailglass_admin/assets/css/app.css",
+        "bytes": 30098,
+        "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+      },
+      {
+        "path": "mailglass_admin/e2e/flows.spec.js",
+        "bytes": 131270,
+        "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
+      },
+      {
+        "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
+        "bytes": 17982,
+        "sha256": "2f56a780deb0a875d9b51b791a6e9f93c8fdae759940db883ffa890ee053d4c3"
+      },
+      {
+        "path": "mailglass_admin/e2e/storybook-axe.spec.js",
+        "bytes": 12645,
+        "sha256": "d6d388dddb5e77abb82e04824df25c50fba2a4f55f5d031850bac183655d541c"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+        "bytes": 8677,
+        "sha256": "9d2a43b0584c42fab0a2acdda414f7bc1fd783f444f039e4d69491f8c4fac648"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe.cjs",
+        "bytes": 23380,
+        "sha256": "5cea94555e3256eaee1a4ca7927ef0aab1e5720fdbc0efac0e4ffc3c8ec0d686"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+        "bytes": 6426,
+        "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+        "bytes": 10715,
+        "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+        "bytes": 6250,
+        "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
+        "bytes": 3530,
+        "sha256": "d8a4f092fb80426c9cff94b4e07e57d3a3d6ba16139d60239c6ac68f116e8277"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+        "bytes": 9324,
+        "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+        "bytes": 12931,
+        "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
+        "bytes": 6132,
+        "sha256": "cf4c08734c684b74575542a2d4bcbd8caabb91c20846057fb430f81dfddb9e7e"
+      },
+      {
+        "path": "mailglass_admin/priv/static/app.css",
+        "bytes": 137731,
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+        "bytes": 10180,
+        "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+        "bytes": 10152,
+        "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-400.woff2",
+        "bytes": 23396,
+        "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-700.woff2",
+        "bytes": 23932,
+        "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+        "bytes": 24908,
+        "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+        "bytes": 26084,
+        "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258"
+      },
+      {
+        "path": "mailglass_admin/priv/static/hooks.js",
+        "bytes": 4437,
+        "sha256": "87aa55436b1c87fe07102e7dd02a524fe496ed8c12234afa30e3f05b824dd761"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+        "bytes": 8220,
+        "sha256": "902009f32c8c1503d5ef912322dbc53be55b77a2ba3454b8300414085cf29719"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+        "bytes": 60074,
+        "sha256": "8c26ae4beb6afb7f6ce259b07062a85cd34312d5e3ff6a9a9fdf7aa42d500a96"
+      },
+      {
+        "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
+        "bytes": 4287,
+        "sha256": "5a8ff9c94020b82641d757aec722c9a78744fc684c2a4a2066569fb1ea528e07"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.ex",
+        "bytes": 10699,
+        "sha256": "a6a8ec5cc8c4f1b4d4d20aed1d7779edddc63ce704967a4e989ba280a9a13fce"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.json",
+        "bytes": 54206,
+        "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
+      }
+    ],
+    "digest": "47f1bded2c8c1785d5e18e148bab9ff39496f968d3edb640284cc5001ab1efce"
+  },
+  "selectedCaseIds": [
+    "story:delivery-investigation-fjordline-long-unicode",
+    "theme:delivery-investigation:system-light-dark-and-explicit-stability",
+    "fidelity:delivery-investigation:320:dark",
+    "fidelity:delivery-investigation:375:light",
+    "fidelity:delivery-investigation:768:dark",
+    "fidelity:delivery-investigation:1280:light",
+    "fidelity:delivery-investigation:1440:dark",
+    "assets:storybook-css-and-six-font-faces",
+    "fidelity:delivery-investigation:real-200-percent-zoom",
+    "hook:storybook-host-connected-and-production-quick-view-focus-return"
+  ],
+  "executedCaseIds": [
+    "story:delivery-investigation-fjordline-long-unicode",
+    "theme:delivery-investigation:system-light-dark-and-explicit-stability",
+    "fidelity:delivery-investigation:320:dark",
+    "fidelity:delivery-investigation:375:light",
+    "fidelity:delivery-investigation:768:dark",
+    "fidelity:delivery-investigation:1280:light",
+    "fidelity:delivery-investigation:1440:dark",
+    "assets:storybook-css-and-six-font-faces",
+    "fidelity:delivery-investigation:real-200-percent-zoom",
+    "hook:storybook-host-connected-and-production-quick-view-focus-return"
+  ],
+  "cases": [
+    {
+      "caseId": "fidelity:delivery-investigation:long-unicode",
+      "source": {
+        "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
+        "revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+        "files": [
+          {
+            "path": "mailglass_admin/assets/css/app.css",
+            "bytes": 30098,
+            "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+          },
+          {
+            "path": "mailglass_admin/e2e/flows.spec.js",
+            "bytes": 131270,
+            "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
+          },
+          {
+            "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
+            "bytes": 17982,
+            "sha256": "2f56a780deb0a875d9b51b791a6e9f93c8fdae759940db883ffa890ee053d4c3"
+          },
+          {
+            "path": "mailglass_admin/e2e/storybook-axe.spec.js",
+            "bytes": 12645,
+            "sha256": "d6d388dddb5e77abb82e04824df25c50fba2a4f55f5d031850bac183655d541c"
+          },
+          {
+            "path": "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+            "bytes": 8677,
+            "sha256": "9d2a43b0584c42fab0a2acdda414f7bc1fd783f444f039e4d69491f8c4fac648"
+          },
+          {
+            "path": "mailglass_admin/e2e/support/storybook-axe.cjs",
+            "bytes": 23380,
+            "sha256": "5cea94555e3256eaee1a4ca7927ef0aab1e5720fdbc0efac0e4ffc3c8ec0d686"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+            "bytes": 6426,
+            "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+            "bytes": 10715,
+            "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+            "bytes": 6250,
+            "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
+            "bytes": 3530,
+            "sha256": "d8a4f092fb80426c9cff94b4e07e57d3a3d6ba16139d60239c6ac68f116e8277"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+            "bytes": 9324,
+            "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+            "bytes": 12931,
+            "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
+          },
+          {
+            "path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
+            "bytes": 6132,
+            "sha256": "cf4c08734c684b74575542a2d4bcbd8caabb91c20846057fb430f81dfddb9e7e"
+          },
+          {
+            "path": "mailglass_admin/priv/static/app.css",
+            "bytes": 137731,
+            "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+            "bytes": 10180,
+            "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+            "bytes": 10152,
+            "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/inter-400.woff2",
+            "bytes": 23396,
+            "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/inter-700.woff2",
+            "bytes": 23932,
+            "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+            "bytes": 24908,
+            "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be"
+          },
+          {
+            "path": "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+            "bytes": 26084,
+            "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258"
+          },
+          {
+            "path": "mailglass_admin/priv/static/hooks.js",
+            "bytes": 4437,
+            "sha256": "87aa55436b1c87fe07102e7dd02a524fe496ed8c12234afa30e3f05b824dd761"
+          },
+          {
+            "path": "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+            "bytes": 8220,
+            "sha256": "902009f32c8c1503d5ef912322dbc53be55b77a2ba3454b8300414085cf29719"
+          },
+          {
+            "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+            "bytes": 60074,
+            "sha256": "8c26ae4beb6afb7f6ce259b07062a85cd34312d5e3ff6a9a9fdf7aa42d500a96"
+          },
+          {
+            "path": "reference/demo_app/storybook/delivery_investigation.story.exs",
+            "bytes": 4287,
+            "sha256": "5a8ff9c94020b82641d757aec722c9a78744fc684c2a4a2066569fb1ea528e07"
+          },
+          {
+            "path": "reference/persona_spec/quick_view_scenarios.ex",
+            "bytes": 10699,
+            "sha256": "a6a8ec5cc8c4f1b4d4d20aed1d7779edddc63ce704967a4e989ba280a9a13fce"
+          },
+          {
+            "path": "reference/persona_spec/quick_view_scenarios.json",
+            "bytes": 54206,
+            "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
+          }
+        ],
+        "digest": "47f1bded2c8c1785d5e18e148bab9ff39496f968d3edb640284cc5001ab1efce"
+      },
+      "selectedCaseCount": 10,
+      "expectedCaseCount": 10,
+      "executedCaseIds": [
+        "story:delivery-investigation-fjordline-long-unicode",
+        "theme:delivery-investigation:system-light-dark-and-explicit-stability",
+        "fidelity:delivery-investigation:320:dark",
+        "fidelity:delivery-investigation:375:light",
+        "fidelity:delivery-investigation:768:dark",
+        "fidelity:delivery-investigation:1280:light",
+        "fidelity:delivery-investigation:1440:dark",
+        "assets:storybook-css-and-six-font-faces",
+        "fidelity:delivery-investigation:real-200-percent-zoom",
+        "hook:storybook-host-connected-and-production-quick-view-focus-return"
+      ],
+      "themes": [
+        {
+          "caseId": "theme:delivery-investigation:system-light-dark-and-explicit-stability",
+          "owner": "delivery-investigation-story",
+          "systemLight": {
+            "preference": "system",
+            "resolved": "light",
+            "os": "light",
+            "dataTheme": "mailglass-light"
+          },
+          "systemDark": {
+            "preference": "system",
+            "resolved": "dark",
+            "os": "dark",
+            "dataTheme": "mailglass-dark"
+          },
+          "explicitDarkStableOnLightOS": true,
+          "restoredSystemDark": true
+        }
+      ],
+      "widths": [
+        {
+          "caseId": "fidelity:delivery-investigation:320:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+          "iframeUrl": "about:srcdoc",
+          "viewportWidth": 320,
+          "theme": "dark",
+          "themeOwner": "delivery-investigation-story",
+          "geometry": {
+            "viewportWidth": 320,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
+            "documentWidth": 320,
+            "picker": {
+              "left": 8,
+              "top": 8,
+              "right": 255,
+              "bottom": 85,
+              "width": 247,
+              "height": 77
+            },
+            "main": {
+              "left": 21,
+              "top": 21,
+              "right": 299,
+              "bottom": 2131.875,
+              "width": 278,
+              "height": 2110.875
+            },
+            "storyHeader": {
+              "left": 37,
+              "top": 125,
+              "right": 283,
+              "bottom": 378.5625,
+              "width": 246,
+              "height": 253.5625
+            },
+            "dialog": {
+              "left": 16,
+              "top": 360.828125,
+              "right": 304,
+              "bottom": 1659.171875,
+              "width": 288,
+              "height": 1298.34375
+            },
+            "technical": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "technicalWidth": 204,
+            "technicalScrollWidth": 204,
+            "targetId": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "targetIdWidth": 204,
+            "targetIdScrollWidth": 204,
+            "technicalWrap": "anywhere",
+            "technicalWordBreak": "break-all",
+            "targets": [
+              {
+                "left": 13,
+                "top": 36,
+                "right": 83,
+                "bottom": 80,
+                "width": 70,
+                "height": 44
+              },
+              {
+                "left": 87,
+                "top": 36,
+                "right": 156,
+                "bottom": 80,
+                "width": 69,
+                "height": 44
+              },
+              {
+                "left": 160,
+                "top": 36,
+                "right": 250,
+                "bottom": 80,
+                "width": 90,
+                "height": 44
+              }
+            ]
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-320-dark.png",
+          "captureGeometry": {
+            "viewportWidth": 320,
+            "viewportHeight": 1924,
+            "documentWidth": 320,
+            "contentHeight": 2153,
+            "devicePixelRatio": 1,
+            "screenshotScale": 1
+          }
+        },
+        {
+          "caseId": "fidelity:delivery-investigation:375:light",
+          "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+          "iframeUrl": "about:srcdoc",
+          "viewportWidth": 375,
+          "theme": "light",
+          "themeOwner": "delivery-investigation-story",
+          "geometry": {
+            "viewportWidth": 375,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
+            "documentWidth": 375,
+            "picker": {
+              "left": 8,
+              "top": 8,
+              "right": 255,
+              "bottom": 85,
+              "width": 247,
+              "height": 77
+            },
+            "main": {
+              "left": 21,
+              "top": 21,
+              "right": 354,
+              "bottom": 1958.6875,
+              "width": 333,
+              "height": 1937.6875
+            },
+            "storyHeader": {
+              "left": 37,
+              "top": 125,
+              "right": 338,
+              "bottom": 301.375,
+              "width": 301,
+              "height": 176.375
+            },
+            "dialog": {
+              "left": 16,
+              "top": 432.828125,
+              "right": 359,
+              "bottom": 1587.171875,
+              "width": 343,
+              "height": 1154.34375
+            },
+            "technical": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "technicalWidth": 259,
+            "technicalScrollWidth": 259,
+            "targetId": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "targetIdWidth": 259,
+            "targetIdScrollWidth": 259,
+            "technicalWrap": "anywhere",
+            "technicalWordBreak": "break-all",
+            "targets": [
+              {
+                "left": 13,
+                "top": 36,
+                "right": 83,
+                "bottom": 80,
+                "width": 70,
+                "height": 44
+              },
+              {
+                "left": 87,
+                "top": 36,
+                "right": 156,
+                "bottom": 80,
+                "width": 69,
+                "height": 44
+              },
+              {
+                "left": 160,
+                "top": 36,
+                "right": 250,
+                "bottom": 80,
+                "width": 90,
+                "height": 44
+              }
+            ]
+          }
+        },
+        {
+          "caseId": "fidelity:delivery-investigation:768:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+          "iframeUrl": "about:srcdoc",
+          "viewportWidth": 768,
+          "theme": "dark",
+          "themeOwner": "delivery-investigation-story",
+          "geometry": {
+            "viewportWidth": 768,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
+            "documentWidth": 768,
+            "picker": {
+              "left": 8,
+              "top": 8,
+              "right": 255,
+              "bottom": 85,
+              "width": 247,
+              "height": 77
+            },
+            "main": {
+              "left": 21,
+              "top": 21,
+              "right": 747,
+              "bottom": 1464.71875,
+              "width": 726,
+              "height": 1443.71875
+            },
+            "storyHeader": {
+              "left": 37,
+              "top": 125,
+              "right": 731,
+              "bottom": 257.78125,
+              "width": 694,
+              "height": 132.78125
+            },
+            "dialog": {
+              "left": 48,
+              "top": 636.015625,
+              "right": 720,
+              "bottom": 1383.984375,
+              "width": 672,
+              "height": 747.96875
+            },
+            "technical": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "technicalWidth": 290,
+            "technicalScrollWidth": 290,
+            "targetId": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "targetIdWidth": 336,
+            "targetIdScrollWidth": 336,
+            "technicalWrap": "anywhere",
+            "technicalWordBreak": "break-all",
+            "targets": [
+              {
+                "left": 13,
+                "top": 36,
+                "right": 83,
+                "bottom": 80,
+                "width": 70,
+                "height": 44
+              },
+              {
+                "left": 87,
+                "top": 36,
+                "right": 156,
+                "bottom": 80,
+                "width": 69,
+                "height": 44
+              },
+              {
+                "left": 160,
+                "top": 36,
+                "right": 250,
+                "bottom": 80,
+                "width": 90,
+                "height": 44
+              }
+            ]
+          }
+        },
+        {
+          "caseId": "fidelity:delivery-investigation:1280:light",
+          "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+          "iframeUrl": "about:srcdoc",
+          "viewportWidth": 1280,
+          "theme": "light",
+          "themeOwner": "delivery-investigation-story",
+          "geometry": {
+            "viewportWidth": 1280,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
+            "documentWidth": 1280,
+            "picker": {
+              "left": 8,
+              "top": 8,
+              "right": 255,
+              "bottom": 85,
+              "width": 247,
+              "height": 77
+            },
+            "main": {
+              "left": 183,
+              "top": 21,
+              "right": 1097,
+              "bottom": 1341.125,
+              "width": 914,
+              "height": 1320.125
+            },
+            "storyHeader": {
+              "left": 199,
+              "top": 125,
+              "right": 1081,
+              "bottom": 257.78125,
+              "width": 882,
+              "height": 132.78125
+            },
+            "dialog": {
+              "left": 304,
+              "top": 636.015625,
+              "right": 976,
+              "bottom": 1383.984375,
+              "width": 672,
+              "height": 747.96875
+            },
+            "technical": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "technicalWidth": 290,
+            "technicalScrollWidth": 290,
+            "targetId": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "targetIdWidth": 336,
+            "targetIdScrollWidth": 336,
+            "technicalWrap": "anywhere",
+            "technicalWordBreak": "break-all",
+            "targets": [
+              {
+                "left": 13,
+                "top": 36,
+                "right": 83,
+                "bottom": 80,
+                "width": 70,
+                "height": 44
+              },
+              {
+                "left": 87,
+                "top": 36,
+                "right": 156,
+                "bottom": 80,
+                "width": 69,
+                "height": 44
+              },
+              {
+                "left": 160,
+                "top": 36,
+                "right": 250,
+                "bottom": 80,
+                "width": 90,
+                "height": 44
+              }
+            ]
+          }
+        },
+        {
+          "caseId": "fidelity:delivery-investigation:1440:dark",
+          "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+          "iframeUrl": "about:srcdoc",
+          "viewportWidth": 1440,
+          "theme": "dark",
+          "themeOwner": "delivery-investigation-story",
+          "geometry": {
+            "viewportWidth": 1440,
+            "viewportHeight": 1924,
+            "devicePixelRatio": 1,
+            "documentWidth": 1440,
+            "picker": {
+              "left": 8,
+              "top": 8,
+              "right": 255,
+              "bottom": 85,
+              "width": 247,
+              "height": 77
+            },
+            "main": {
+              "left": 263,
+              "top": 21,
+              "right": 1177,
+              "bottom": 1341.125,
+              "width": 914,
+              "height": 1320.125
+            },
+            "storyHeader": {
+              "left": 279,
+              "top": 125,
+              "right": 1161,
+              "bottom": 257.78125,
+              "width": 882,
+              "height": 132.78125
+            },
+            "dialog": {
+              "left": 384,
+              "top": 636.015625,
+              "right": 1056,
+              "bottom": 1383.984375,
+              "width": 672,
+              "height": 747.96875
+            },
+            "technical": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "technicalWidth": 290,
+            "technicalScrollWidth": 290,
+            "targetId": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+            "targetIdWidth": 336,
+            "targetIdScrollWidth": 336,
+            "technicalWrap": "anywhere",
+            "technicalWordBreak": "break-all",
+            "targets": [
+              {
+                "left": 13,
+                "top": 36,
+                "right": 83,
+                "bottom": 80,
+                "width": 70,
+                "height": 44
+              },
+              {
+                "left": 87,
+                "top": 36,
+                "right": 156,
+                "bottom": 80,
+                "width": 69,
+                "height": 44
+              },
+              {
+                "left": 160,
+                "top": 36,
+                "right": 250,
+                "bottom": 80,
+                "width": 90,
+                "height": 44
+              }
+            ]
+          },
+          "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-1440-dark.png",
+          "captureGeometry": {
+            "viewportWidth": 1440,
+            "viewportHeight": 1924,
+            "documentWidth": 1440,
+            "contentHeight": 1363,
+            "devicePixelRatio": 1,
+            "screenshotScale": 1
+          }
+        }
+      ],
+      "screenshots": [
+        "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-320-dark.png",
+        "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-1440-dark.png",
+        "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-200-browser-zoom.png"
+      ],
+      "assets": {
+        "stylesheet": {
+          "url": "http://demo:4015/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+          "status": 200,
+          "bytes": 137731,
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00",
+          "md5": "21549168ce191c96f1ac179e72be0631",
+          "matchesBuilt": true
+        },
+        "fonts": [
+          {
+            "path": "inter-400.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/inter-400.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 23396,
+            "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626"
+          },
+          {
+            "path": "inter-700.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/inter-700.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 23932,
+            "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0"
+          },
+          {
+            "path": "inter-tight-400.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/inter-tight-400.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 24908,
+            "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be"
+          },
+          {
+            "path": "inter-tight-700.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/inter-tight-700.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 26084,
+            "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258"
+          },
+          {
+            "path": "ibm-plex-mono-400.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-400.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 10180,
+            "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340"
+          },
+          {
+            "path": "ibm-plex-mono-700.woff2",
+            "url": "http://demo:4015/dev/mail/fonts/ibm-plex-mono-700.woff2",
+            "status": 200,
+            "contentType": "font/woff2",
+            "bytes": 10152,
+            "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a"
+          }
+        ],
+        "loadedFaces": [
+          {
+            "family": "Inter",
+            "weight": 400,
+            "status": "loaded"
+          },
+          {
+            "family": "Inter",
+            "weight": 700,
+            "status": "loaded"
+          },
+          {
+            "family": "Inter Tight",
+            "weight": 400,
+            "status": "loaded"
+          },
+          {
+            "family": "Inter Tight",
+            "weight": 700,
+            "status": "loaded"
+          },
+          {
+            "family": "IBM Plex Mono",
+            "weight": 400,
+            "status": "loaded"
+          },
+          {
+            "family": "IBM Plex Mono",
+            "weight": 700,
+            "status": "loaded"
+          }
+        ],
+        "computedRoles": {
+          "ui": {
+            "family": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+            "weight": "400"
+          },
+          "display": {
+            "family": "\"Inter Tight\", Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+            "weight": "700"
+          },
+          "code": {
+            "family": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            "weight": "400"
+          }
+        },
+        "theme": {
+          "owner": "delivery-investigation-story",
+          "preference": "system",
+          "resolved": "dark",
+          "os": "dark",
+          "dataTheme": "mailglass-dark"
+        }
+      },
+      "hooks": {
+        "caseId": "hook:storybook-host-connected-and-production-quick-view-focus-return",
+        "storyHostConnected": true,
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f5b-caa4-7754-b389-726a251f6205&tenant_id=northstar&window_hours=168",
+        "connectedThemeOwner": null,
+        "quickViewClosed": true,
+        "exactFocusReturnId": "operator-delivery-desktop-01a17f5b-caa4-7754-b389-726a251f6205"
+      },
+      "urls": {
+        "storyUrl": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+        "storyIframeUrl": "about:srcdoc",
+        "storyIframeDocumentOrigin": "null",
+        "storyIframeOwnerOrigin": "http://demo:4015",
+        "storyIframeParentOrigin": "http://demo:4015",
+        "storyIframeMode": "srcdoc",
+        "storyIframeHasSrcAttribute": false,
+        "storyIframeSrcdocBytes": 22213,
+        "storyIframeSrcdocSha256": "74198067f9e458aef83ad6898bcbce7644224e948a217169c6cea96c82bb3375",
+        "connectedUrl": "http://demo:4015/ops/mail?delivery_id=01a17f5b-caa4-7754-b389-726a251f6205&tenant_id=northstar&window_hours=168"
+      },
+      "zoom": {
+        "caseId": "fidelity:delivery-investigation:real-200-percent-zoom",
+        "url": "http://demo:4015/dev/storybook/delivery_investigation?variation_id=fjordline_long_unicode",
+        "iframeUrl": "about:srcdoc",
+        "tabZoom": {
+          "tabId": 1468065671,
+          "factor": 2
+        },
+        "initial": {
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "devicePixelRatio": 2
+        },
+        "effective": {
+          "viewportWidth": 320,
+          "viewportHeight": 2324,
+          "documentWidth": 320,
+          "devicePixelRatio": 4,
+          "owner": "delivery-investigation-story",
+          "theme": "mailglass-dark"
+        },
+        "captureGeometry": {
+          "viewportWidth": 320,
+          "viewportHeight": 2324,
+          "documentWidth": 320,
+          "contentHeight": 2157,
+          "devicePixelRatio": 4,
+          "screenshotScale": 2
+        },
+        "screenshot": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027215211-71763-23440/phase175/cold/delivery-investigation-200-browser-zoom.png"
+      },
+      "completedCaseCount": 10
+    }
+  ],
+  "evidenceLimits": [
+    "Story composition proves rendering only; command authorization, persistence and replay results are checked on connected routes.",
+    "Actual zoom is Chromium tab zoom reported by chrome.tabs.getZoom with observed effective CSS viewport and DPR; the device scale factor only keeps screenshot output readable."
+  ]
+}

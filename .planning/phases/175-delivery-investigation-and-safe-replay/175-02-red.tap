@@ -1,0 +1,10 @@
+TAP version 13
+ok 1 - test operator surface Phase 175 Delivery entry keeps same-looking ambiguous requests separate
+ok 2 - test operator surface Phase 175 Delivery entry explains unavailable replay and rejects forged identities
+ok 3 - test operator surface Phase 175 suppression refresh marks retained evidence stale and recovers on retry
+ok 4 - test operator surface Phase 175 Delivery entry discards a review after the selected delivery changes
+ok 5 - test operator surface Phase 175 Delivery entry exposes replay from the selected quick and full detail
+ok 6 - test operator surface Phase 175 suppression refresh keeps initial failure unavailable and successful empty distinct without writes
+ok 7 - test operator surface Phase 175 suppression policy refresh observes external changes, expiry, and Account/stream scope
+not ok 8 - test operator surface Phase 175 suppression policy states removal support, unknown expiry, and safe missing values
+1..8

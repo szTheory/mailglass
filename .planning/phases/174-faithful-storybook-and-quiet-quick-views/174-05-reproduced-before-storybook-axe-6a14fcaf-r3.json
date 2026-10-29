@@ -1,0 +1,3894 @@
+{
+  "schema_version": 1,
+  "run_id": "phase174-05-pre-repair-6a14fcaf-repro-r3",
+  "producer_execution_token": "ea9865f0-1f3c-4b86-afca-46b5e2efbb19",
+  "source_revision": "6a14fcaf153589eedd19d6cddf4e26d56472b216+producer-11ffeae9c6c03d242dd951e17434e3bd1c620494",
+  "source_digest": "41abaf96e5402a93d12c4a48334e85332e338a513ab28a8fe234566a1b93df89",
+  "started_at": "2026-10-27T05:12:15.288Z",
+  "completed_at": "2026-10-27T05:12:26.473Z",
+  "expected": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark"
+    }
+  ],
+  "excluded": [
+    {
+      "scenario_id": "qv-delivery-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Delivery record or story variation exists for this real absence state."
+    },
+    {
+      "scenario_id": "qv-inbound-empty",
+      "state": "empty",
+      "proof_boundary": "connected-real-route-only",
+      "reason": "No selected Inbound record or story variation exists for this real absence state."
+    }
+  ],
+  "executed": [
+    {
+      "case_id": "qv-delivery-normal::normal::light",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:16.307Z"
+    },
+    {
+      "case_id": "qv-delivery-normal::normal::dark",
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:16.897Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::light",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:17.479Z"
+    },
+    {
+      "case_id": "qv-delivery-first::first::dark",
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:17.964Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::light",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:18.540Z"
+    },
+    {
+      "case_id": "qv-delivery-last::last::dark",
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:19.108Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::light",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:19.675Z"
+    },
+    {
+      "case_id": "qv-delivery-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:20.235Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::light",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:20.870Z"
+    },
+    {
+      "case_id": "qv-inbound-normal::normal::dark",
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:21.508Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::light",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:22.127Z"
+    },
+    {
+      "case_id": "qv-inbound-first::first::dark",
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:22.744Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::light",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:23.380Z"
+    },
+    {
+      "case_id": "qv-inbound-last::last::dark",
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:23.999Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::light",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:24.626Z"
+    },
+    {
+      "case_id": "qv-inbound-single-unicode::single-unicode::dark",
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:25.255Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::light",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:25.861Z"
+    },
+    {
+      "case_id": "qv-inbound-unavailable::unavailable::dark",
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "status": "passed",
+      "completed_at": "2026-10-27T05:12:26.467Z"
+    }
+  ],
+  "violations": [
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          ".opacity-40"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          ".opacity-40"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          ".opacity-40"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          "span[aria-label=\"Previous delivery\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          "span[aria-label=\"Next delivery\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          "span[aria-label=\"Previous delivery\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1
+    },
+    {
+      "rule_id": "aria-prohibited-attr",
+      "target": [
+        [
+          "span[aria-label=\"Next delivery\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1
+    }
+  ],
+  "incomplete": [
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dd"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#operator-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mono"
+        ]
+      ],
+      "scenario_id": "qv-delivery-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-normal",
+      "state": "normal",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-technical > dl > div > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-first",
+      "state": "first",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "#inbound-quick-view-title"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".px-xs"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(1)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "h3"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3)"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p:nth-child(3) > .text-base-content"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".mt-md > p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "time"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".sm\\:grid-cols-2 > div:nth-child(1) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(2) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".break-words"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dt"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "div:nth-child(3) > dd"
+        ]
+      ],
+      "scenario_id": "qv-inbound-last",
+      "state": "last",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          ".badge"
+        ]
+      ],
+      "scenario_id": "qv-inbound-single-unicode",
+      "state": "single-unicode",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "light",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"start\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "aria-hidden-focus",
+      "target": [
+        [
+          "span[data-focus-trap=\"end\"]"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    },
+    {
+      "rule_id": "color-contrast",
+      "target": [
+        [
+          "p"
+        ]
+      ],
+      "scenario_id": "qv-inbound-unavailable",
+      "state": "unavailable",
+      "theme": "dark",
+      "impact": "serious",
+      "count": 1,
+      "reason": "Axe returned an incomplete result requiring triage.",
+      "disposition": "untriaged",
+      "evidence": "phase174-05-pre-repair-6a14fcaf-repro-r3"
+    }
+  ]
+}

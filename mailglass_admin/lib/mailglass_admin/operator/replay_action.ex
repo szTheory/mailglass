@@ -10,6 +10,8 @@ defmodule MailglassAdmin.Operator.ReplayAction do
   attr(:latest_replay, :map, default: nil)
   attr(:replay_history_read_state, :atom, default: :ready)
   attr(:replay_command_feedback, :string, default: nil)
+  attr(:origin, :string, default: "full_detail")
+  attr(:button_id, :string, default: "replay-open-btn")
 
   def replay_action(assigns) do
     ~H"""
@@ -54,13 +56,29 @@ defmodule MailglassAdmin.Operator.ReplayAction do
         </div>
 
         <button
-          id="replay-open-btn"
+          :if={@replay_targets && @replay_targets.status in [:exact, :ambiguous]}
+          id={@button_id}
           type="button"
           phx-click="open_replay"
+          phx-value-origin={@origin}
           data-testid="operator-replay-open"
           class="btn btn-primary ml-auto min-h-11 px-md"
         >
           Review webhook replay
+        </button>
+        <button
+          :if={
+            @replay_targets && @replay_targets.status == :unavailable &&
+              @replay_targets.reason == :read_unavailable
+          }
+          id={@button_id}
+          type="button"
+          phx-click="open_replay"
+          phx-value-origin={@origin}
+          data-testid="operator-replay-open"
+          class="btn btn-ghost ml-auto min-h-11 px-md"
+        >
+          Retry replay review
         </button>
       </div>
     </Components.card>

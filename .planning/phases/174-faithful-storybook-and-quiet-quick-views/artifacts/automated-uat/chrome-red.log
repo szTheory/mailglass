@@ -1,0 +1,15 @@
+A [Error]: expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 61
+Received:    85
+    at Proxy.<anonymous> (/Users/jon/projects/mailglass/mailglass_admin/node_modules/playwright/lib/matchers/expect.js:213:24)
+    at verifyStoryAccessibility (/Users/jon/projects/mailglass/mailglass_admin/e2e/support/storybook-axe-supplement.cjs:67:85)
+    at async [stdin]:3:303 {
+  matcherResult: {
+    message: 'expect(received).toBeLessThanOrEqual(expected)\n' +
+      '\n' +
+      'Expected: <= 61\n' +
+      'Received:    85',
+    pass: false
+  }
+}

@@ -2,7 +2,8 @@
   "name": "mailglass-admin-browser-tests",
   "private": true,
   "scripts": {
-    "test:operator-browser": "mix mailglass_admin.assets.build && playwright test --config=playwright.config.cjs --workers=1"
+    "test:operator-browser": "mix mailglass_admin.assets.build && playwright test --config=playwright.config.cjs --workers=1",
+    "test:storybook-axe": "playwright test --config=playwright.storybook.config.cjs --workers=1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",

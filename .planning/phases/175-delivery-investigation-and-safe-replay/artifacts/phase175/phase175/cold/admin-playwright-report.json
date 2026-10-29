@@ -1,0 +1,539 @@
+{
+  "config": {
+    "configFile": "/workspace/mailglass_admin/playwright.config.cjs",
+    "rootDir": "/workspace/mailglass_admin/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "undefined//commit/",
+        "commitHash": "",
+        "buildHref": "undefined//actions/runs/"
+      },
+      "gitCommit": {
+        "shortHash": "0deab1a1",
+        "hash": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+        "subject": "fix(175): preserve locked demo dependency resolution for current-source evidence",
+        "body": "fix(175): preserve locked demo dependency resolution for current-source evidence\n",
+        "author": {
+          "name": "szTheory",
+          "email": "szTheory@users.noreply.github.com",
+          "time": 1793139304000
+        },
+        "committer": {
+          "name": "szTheory",
+          "email": "szTheory@users.noreply.github.com",
+          "time": 1793139304000
+        },
+        "branch": "main"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/mailglass_admin/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "ci": {
+            "commitHref": "undefined//commit/",
+            "commitHash": "",
+            "buildHref": "undefined//actions/runs/"
+          },
+          "gitCommit": {
+            "shortHash": "0deab1a1",
+            "hash": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+            "subject": "fix(175): preserve locked demo dependency resolution for current-source evidence",
+            "body": "fix(175): preserve locked demo dependency resolution for current-source evidence\n",
+            "author": {
+              "name": "szTheory",
+              "email": "szTheory@users.noreply.github.com",
+              "time": 1793139304000
+            },
+            "committer": {
+              "name": "szTheory",
+              "email": "szTheory@users.noreply.github.com",
+              "time": 1793139304000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/mailglass_admin/e2e",
+        "testIgnore": [
+          "**/storybook-axe.spec.js"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "command": "MIX_ENV=test mix run --no-halt -e \"MailglassAdmin.TestSupport.OperatorBrowserServer.run!()\"",
+      "cwd": "/workspace/mailglass_admin",
+      "env": {
+        "DEMO_PAGE_CONTROLLER_BEAM_SHA256": "6b4ef6f5ede3936c67234b3a55e7c04ded16ced493ee810fc276fbd367d0e927",
+        "STORYBOOK_AXE_EXECUTION_TOKEN": "mailglass-evidence-20261027221513-96275-31939-cold",
+        "PHASE174_RUN_ID": "mailglass-evidence-20261027221513-96275-31939-cold",
+        "PHASE174_SOURCE_REVISION": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+        "CI": "true",
+        "HOSTNAME": "d679948ba94d",
+        "PHASE174_HOST_UID": "501",
+        "PHASE174_CONDITION": "cold",
+        "HOME": "/root",
+        "GIT_CONFIG_COUNT": "1",
+        "OLDPWD": "/workspace",
+        "STORYBOOK_AXE_REPORT": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027221513-96275-31939/phase174/cold/axe.json",
+        "STORYBOOK_SOURCE_REVISION": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+        "DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256": "8d54ed8c4442c6fffaa0363451e48c4879345400eb004c3f32c109450a5a45d4",
+        "STORYBOOK_AXE_RUN_ID": "mailglass-evidence-20261027221513-96275-31939-cold",
+        "DEMO_BROWSER_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027221513-96275-31939/phase174/cold",
+        "PHASE175_ENABLED": "true",
+        "DEMO_EVIDENCE_RESET_TOKEN": "--PICnXK2gWTVmZU7qnKgr8FEKErQc6LgUA97-AkC7s",
+        "RUNNER_OS": "",
+        "PHASE174_JOB_ID": "local",
+        "BROWSER_SERVER_PORT": "4101",
+        "GITHUB_RUN_ID": "",
+        "npm_config_cache": "/cache/npm",
+        "DEMO_EVIDENCE_RUN_ID": "mailglass-evidence-20261027221513-96275-31939",
+        "GIT_CONFIG_VALUE_0": "/workspace",
+        "POSTGRES_PASSWORD": "postgres",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "RUNNER_ARCH": "",
+        "PLAYWRIGHT_BROWSERS_PATH": "/cache/playwright",
+        "PHASE174_SOURCE_DIGEST": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c",
+        "PHASE175_SOURCE_DIGEST": "d01817a07796768cbf874ba35715aa3945a3f59971104b362e82417244901fa7",
+        "DEMO_CANDIDATE_REVISION": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+        "POSTGRES_HOST": "demo_db",
+        "LANG": "C.UTF-8",
+        "POSTGRES_USER": "postgres",
+        "GITHUB_REPOSITORY": "",
+        "RUNNER_NAME": "",
+        "STORYBOOK_SOURCE_DIGEST": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c",
+        "GITHUB_ACTIONS": "false",
+        "PHASE174_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027221513-96275-31939/phase174/cold",
+        "GIT_CONFIG_KEY_0": "safe.directory",
+        "PHASE174_HOST_GID": "20",
+        "PHASE175_EVIDENCE_DIR": "/workspace/reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027221513-96275-31939/phase175/cold",
+        "GITHUB_JOB": "",
+        "STORYBOOK_BASE_URL": "http://demo:4015",
+        "DEMO_CANDIDATE_DIRTY": "true",
+        "GITHUB_SHA": "",
+        "DEMO_BASE_URL": "http://demo:4015",
+        "GITHUB_RUN_ATTEMPT": "",
+        "PWD": "/workspace/mailglass_admin",
+        "DEMO_EVIDENCE_PROJECT_ID": "mailglass-evidence-20261027221513-96275-31939",
+        "BROWSERSLIST_IGNORE_OLD_DATA": "true",
+        "MIX_ENV": "test",
+        "MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH": "test-results/operator-browser-server.ndjson"
+      },
+      "url": "http://127.0.0.1:4101/ops/browser-ready",
+      "timeout": 300000,
+      "reuseExistingServer": false,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "flows.spec.js",
+      "file": "flows.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "flows: a11y deltas — reveal disclosure + replay focus-trap + double-submit (D-11/D-14)",
+          "file": "flows.spec.js",
+          "line": 1346,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Phase 175 Delivery tracer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1519,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:44.999Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-a1eb273de15d17471744",
+              "file": "flows.spec.js",
+              "line": 1586,
+              "column": 3
+            },
+            {
+              "title": "Phase 175 Delivery recovery",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1336,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:46.570Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-a5ecc92cd06cf8f2d052",
+              "file": "flows.spec.js",
+              "line": 1689,
+              "column": 3
+            },
+            {
+              "title": "Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3021,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:47.913Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-5b35a431440b37369a6c",
+              "file": "flows.spec.js",
+              "line": 1773,
+              "column": 3
+            },
+            {
+              "title": "Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4225,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:50.940Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-a750f39280b3fcc333cc",
+              "file": "flows.spec.js",
+              "line": 1916,
+              "column": 3
+            },
+            {
+              "title": "Phase 175 suppression refresh",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 693,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:55.169Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-e658f492a72f9905378a",
+              "file": "flows.spec.js",
+              "line": 2112,
+              "column": 3
+            },
+            {
+              "title": "Phase 175 suppression policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 420,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:19:55.867Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50593df043d465c1094d-f1d2124b88decd18bab3",
+              "file": "flows.spec.js",
+              "line": 2186,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "phase175-inbound.spec.js",
+      "file": "phase175-inbound.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Phase 175 Inbound full: confirm reports recorded Mailbox outcome and refreshes evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1434,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T22:19:56.301Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "108dce8513759d9e97d6-e4513959c764b402cdd3",
+          "file": "phase175-inbound.spec.js",
+          "line": 60,
+          "column": 1
+        },
+        {
+          "title": "Phase 175 Inbound full: Escape closes review and returns focus to its detail trigger",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 934,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T22:19:57.741Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "108dce8513759d9e97d6-91be1a590d86c8826745",
+          "file": "phase175-inbound.spec.js",
+          "line": 121,
+          "column": 1
+        },
+        {
+          "title": "Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1802,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T22:19:58.680Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "108dce8513759d9e97d6-aa35af2122947e25c123",
+          "file": "phase175-inbound.spec.js",
+          "line": 132,
+          "column": 1
+        },
+        {
+          "title": "Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2110,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T22:20:00.488Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "108dce8513759d9e97d6-92be3bc88b13d016661f",
+          "file": "phase175-inbound.spec.js",
+          "line": 176,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T22:19:43.489Z",
+    "duration": 19312.053,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

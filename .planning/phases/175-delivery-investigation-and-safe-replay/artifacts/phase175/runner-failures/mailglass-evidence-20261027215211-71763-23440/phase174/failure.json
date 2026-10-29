@@ -1,0 +1,9 @@
+{
+  "schema_version": "phase174-failure.v1",
+  "run_id": "mailglass-evidence-20261027215211-71763-23440",
+  "condition": "failed",
+  "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+  "source_digest": "76f14c1b37d7d57ec51f0cfbe5fcf66655ac48b83feaeeb31c81220892286d93",
+  "exit_code": 1,
+  "recorded_at": "2026-10-27T21:59:48.057Z"
+}

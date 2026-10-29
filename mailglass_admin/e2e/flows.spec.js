@@ -1,6 +1,15 @@
 const { test, expect, chromium } = require("@playwright/test");
+const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
+const {
+  accountSwitcher,
+  accountOption,
+  accountContext,
+  accountId,
+  accountSwitchStatus,
+  switchStatusIdPattern
+} = require("./support/account.cjs");
 
 // =============================================================================
 // flows.spec.js — Phase 115 Plan 04 (FLOW-01 / FLOW-02 / FLOW-03)
@@ -71,6 +80,129 @@ async function openInbound(page, query = `tenant_id=${tenantId}`, subjectId = "o
   await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 }
 
+async function installPhase174HookProbe(page) {
+  await page.addInitScript(() => {
+    const probe = { sockets: [], focusinAdded: [], focusinRemoved: [] };
+    window.__phase174Probe = probe;
+    const NativeWebSocket = window.WebSocket;
+    window.WebSocket = new Proxy(NativeWebSocket, {
+      construct(target, args) {
+        const socket = Reflect.construct(target, args);
+        const record = {
+          url: String(args[0]),
+          opened: false,
+          closed: false,
+          sentFrames: 0,
+          receivedFrames: 0,
+          channelJoins: 0
+        };
+        probe.sockets.push(record);
+        const nativeSend = socket.send.bind(socket);
+        socket.send = data => {
+          record.sentFrames += 1;
+          if (String(data).includes("phx_join")) record.channelJoins += 1;
+          return nativeSend(data);
+        };
+        socket.addEventListener("open", () => { record.opened = true; });
+        socket.addEventListener("message", () => { record.receivedFrames += 1; });
+        socket.addEventListener("close", () => { record.closed = true; });
+        return socket;
+      }
+    });
+    const nativeAdd = EventTarget.prototype.addEventListener;
+    const nativeRemove = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+      if (
+        type === "focusin" &&
+        typeof this.matches === "function" &&
+        this.matches('[phx-hook="ModalFocusTrap"]')
+      ) probe.focusinAdded.push(this.id);
+      return nativeAdd.call(this, type, listener, options);
+    };
+    EventTarget.prototype.removeEventListener = function(type, listener, options) {
+      if (
+        type === "focusin" &&
+        typeof this.matches === "function" &&
+        this.matches('[phx-hook="ModalFocusTrap"]')
+      ) probe.focusinRemoved.push(this.id);
+      return nativeRemove.call(this, type, listener, options);
+    };
+  });
+}
+
+async function phase174DocumentProbe(page) {
+  return page.evaluate(() => {
+    const probe = window.__phase174Probe || {};
+    return {
+      sockets: (probe.sockets || []).map(socket => ({
+        path: new URL(socket.url, location.href).pathname,
+        opened: socket.opened,
+        closed: socket.closed,
+        sentFrames: socket.sentFrames,
+        receivedFrames: socket.receivedFrames,
+        channelJoins: socket.channelJoins
+      })),
+      focusinAdded: probe.focusinAdded || [],
+      focusinRemoved: probe.focusinRemoved || []
+    };
+  });
+}
+
+async function phase174FocusTrapWraps(page, dialogId) {
+  const dialog = page.locator("#" + dialogId);
+  const lastControl = await dialog.evaluate(element => {
+    const controls = [...element.querySelectorAll(
+      "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+    )].filter(control =>
+      !control.hasAttribute("data-focus-trap") &&
+      control.getClientRects().length > 0 &&
+      getComputedStyle(control).visibility !== "hidden"
+    );
+    const last = controls[controls.length - 1];
+    return last?.id || last?.getAttribute("data-testid") || last?.getAttribute("aria-label");
+  });
+  expect(lastControl, "the production quick view has a final tabbable control").toBeTruthy();
+  await dialog.locator('[data-focus-trap="start"]').focus();
+  await expect.poll(() => page.evaluate(() => {
+    const element = document.activeElement;
+    return element?.id || element?.getAttribute("data-testid") || element?.getAttribute("aria-label");
+  })).toBe(lastControl);
+}
+
+async function assertPhase174QuickViewScrollAccess(page, dialog, dialogId) {
+  await dialog.evaluate(element => {
+    const content = element.ownerDocument.createElement("div");
+    content.dataset.testid = "phase174-overflow-content";
+    content.style.blockSize = "1400px";
+    content.style.marginBlock = "1rem";
+    content.textContent = Array.from({ length: 80 }, (_, index) => `Overflow test line ${index + 1}`).join(" ");
+    element.insertBefore(content, element.querySelector('[data-focus-trap="end"]'));
+  });
+
+  const dimensions = await dialog.evaluate(element => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight
+  }));
+  expect(dimensions.scrollHeight, `${dialogId} contains clipped long content`).toBeGreaterThan(dimensions.clientHeight);
+
+  const axe = await new AxeBuilder({ page })
+    .include(`#${dialogId}`)
+    .withRules(["scrollable-region-focusable"])
+    .analyze();
+  expect(
+    axe.violations.map(violation => violation.id),
+    `${dialogId} has no scrollable-region-focusable violation after a long-content reproduction`
+  ).not.toContain("scrollable-region-focusable");
+
+  await expect(dialog).toHaveAttribute("tabindex", "0");
+  await dialog.focus();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(dialogId);
+  await page.keyboard.press("PageDown");
+  await expect.poll(() => dialog.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await page.keyboard.press("End");
+  await expect.poll(() => dialog.evaluate(element => element.scrollTop + element.clientHeight >= element.scrollHeight - 1)).toBe(true);
+}
+
 async function openPreviewEmpty(page) {
   await page.goto("/ops/browser-preview-empty");
   await expect(page.getByTestId("preview-shell")).toBeVisible();
@@ -138,6 +270,16 @@ async function assertZoomReadableValue(locator, label, expectedText, viewportWid
   await expect(locator, `${label} is rendered and visible`).toBeVisible();
   await expect(locator, `${label} matches its complete fixture value`).toHaveText(expectedText);
   await locator.scrollIntoViewIfNeeded();
+  // scrollIntoViewIfNeeded leaves an element that is already partly in view
+  // where it is, which can be a fraction of a pixel above the viewport after a
+  // resize carries the scroll offset over. Center it so the edge checks below
+  // measure the layout rather than the leftover scroll position.
+  await locator.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > document.documentElement.clientHeight) {
+      element.scrollIntoView({ block: "center", inline: "nearest" });
+    }
+  });
   const geometry = await locator.evaluate(element => {
     const rect = element.getBoundingClientRect();
     const range = document.createRange();
@@ -417,16 +559,21 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoRootOverflow(page, "operator happy");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator happy master-detail");
 
-    // At 320 the table is hidden — select from the card presentation.
+    // At 320 the table is hidden — select from the card presentation. Phase 175
+    // (REPLAY-05) renders the replay CTA only for a replayable target, so open the
+    // seeded exact-replay delivery rather than whichever row is first.
     await selectDeliveryFull(
       page,
-      page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+      page
+        .getByTestId("operator-deliveries-cards")
+        .getByTestId("operator-delivery-row")
+        .filter({ hasText: "browser-exact@example.com" })
+        .first()
     );
 
     // The single obvious top action for Operator: the replay CTA (the one
-    // destructive/dominant action in the detail header). It must be visible and
-    // be the dominant action button at 320px. Live copy is "Review webhook replay"
-    // (btn-error); the planner's prose label "Replay delivery" approximates it.
+    // dominant action in the detail). It must be visible and be the dominant
+    // action button at 320px. Live copy is "Review webhook replay" (btn-primary).
     const replayCta = page.getByTestId("operator-replay-open");
     await expect(replayCta).toBeVisible();
     const box = await replayCta.boundingBox();
@@ -584,7 +731,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // Supported scalar edits render automatically. Reset is the explicit
     // action; a separate Render button would be redundant and imply stale state.
     const assignsForm = page.getByTestId("preview-assigns-form");
-    await expect(assignsForm.getByRole("button", { name: "Reset assigns", exact: true })).toBeVisible();
+    await expect(assignsForm.getByRole("button", { name: "Restore defaults", exact: true })).toBeVisible();
     await expect(assignsForm.getByRole("button", { name: /render preview/i })).toHaveCount(0);
   });
 
@@ -617,7 +764,8 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(mailablesPicker).toBeVisible();
     await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
     await page.getByTestId("preview-email-menu-trigger").click();
-    await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
+    // Phase 178: each option reads the humanized label first and the raw atom beneath it.
+    await expect(mailablesPicker.getByRole("link", { name: /^Welcome default\s+welcome_default$/ })).toBeVisible();
   });
 
   test("Phase 168 shared spacing: operator, Inbound reveal, and Preview gaps use 4px", async ({ page }) => {
@@ -634,9 +782,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await selectInboundFull(page, noMatchRow(page));
     const evidenceCard = page.getByTestId("inbound-evidence-card");
     await expect(evidenceCard).toBeVisible();
-    const revealStack = evidenceCard.locator(".flex.flex-col.items-end");
-    const revealStackRowGap = await revealStack.evaluate(element => getComputedStyle(element).rowGap);
-    expect(revealStackRowGap, "Inbound evidence reveal row gap").toBe("4px");
+    // Phase 176 replaced the right-aligned reveal stack with one header group: the
+    // heading sits above its caption in a 4px (space-y-xs) text stack.
+    const headingStack = evidenceCard.getByRole("heading", { name: "Raw provider source" });
+    const headingGap = await headingStack.evaluate(element => getComputedStyle(element).marginBottom);
+    expect(headingGap, "Inbound evidence heading-to-caption gap").toBe("4px");
 
     await openPreviewIndex(page);
     await page.getByTestId("preview-email-menu-trigger").click();
@@ -711,16 +861,15 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-  await page.getByTestId("operator-account-switcher").click();
-  const fjordline = page.locator(
-    '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
-  );
+  await accountSwitcher(page).click();
+  const fjordline = accountOption(page, "fjordline-aps");
   await fjordline.click();
   await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
 
   const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
   await selectDeliveryFull(page, row);
-  await page.locator("#delivery-detail-technical > summary").click();
+  // Technical details are always expanded since Phase 175 (no disclosure summary).
+  await expect(page.locator("#delivery-detail-technical")).toBeVisible();
   const mailableElement = page.locator("#delivery-detail-mailable-trigger");
   await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
   await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
@@ -791,10 +940,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     );
     await zoomPage.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     await expect(zoomPage.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await zoomPage.getByTestId("operator-account-switcher").click();
-    await zoomPage
-      .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
-      .click();
+    await accountSwitcher(zoomPage).click();
+    await accountOption(zoomPage, "fjordline-aps").click();
     await expect(zoomPage).toHaveURL(/tenant_id=fjordline-aps/);
 
     const zoomRow = zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
@@ -802,7 +949,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
     const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-    await zoomPage.locator("#delivery-detail-technical > summary").click();
+    // Technical details are always expanded since Phase 175 (no disclosure summary).
+    await expect(zoomPage.locator("#delivery-detail-technical")).toBeVisible();
     const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
     await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
@@ -821,12 +969,12 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       .poll(() => zoomPage.evaluate(() => window.devicePixelRatio))
       .toBe(initialDevicePixelRatio * 2);
 
-    const accountContext = zoomPage.getByTestId("operator-account-context");
-    await expect(accountContext).toBeVisible();
-    await expect(accountContext).toContainText("fjordline-aps");
+    const committedAccountContext = accountContext(zoomPage);
+    await expect(committedAccountContext).toBeVisible();
+    await expect(committedAccountContext).toContainText("fjordline-aps");
     const topbarControls = [
-      ["committed Account context", accountContext],
-      ["Account switcher", zoomPage.getByTestId("operator-account-switcher")],
+      ["committed Account context", committedAccountContext],
+      ["Account switcher", accountSwitcher(zoomPage)],
       ["Appearance group", zoomPage.getByRole("group", { name: "Appearance", exact: true })],
       ["System radio", zoomPage.getByRole("radio", { name: "System", exact: true })],
       ["System radio label", zoomPage.getByRole("radio", { name: "System", exact: true }).locator("xpath=..")],
@@ -840,7 +988,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     }
 
     const detail = zoomPage.getByTestId("operator-detail-header");
-    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID", expectedDeliveryId, 720);
+    await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID", expectedDeliveryId, 720);
     await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
@@ -859,7 +1007,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     const expectedRecordedTimestamp = (await recordedTimestamp.textContent()).trim();
     expect(expectedRecordedTimestamp, "the fixture timestamp exposes its canonical UTC value").toBeTruthy();
     await assertZoomReadableValue(
-      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      timelineEvent.getByRole("button", { name: /^Copy Event ID: / }),
       "Timeline Event ID",
       expectedEventId,
       720
@@ -919,7 +1067,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     for (const [label, control] of topbarControls) {
       await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
     }
-    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
+    await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
     await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
     await assertZoomReadableValue(
@@ -929,7 +1077,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       320
     );
     await assertZoomReadableValue(
-      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      timelineEvent.getByRole("button", { name: /^Copy Event ID: / }),
       "Timeline Event ID at 320 CSS px",
       expectedEventId,
       320
@@ -1098,9 +1246,14 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
         expect(await page.locator("html").getAttribute("data-theme"), "system root has no data-theme").toBeNull();
       }
 
+      // Phase 175 (REPLAY-05): only a replayable target renders the replay CTA.
       await selectDeliveryFull(
         page,
-        page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+        page
+          .getByTestId("operator-deliveries-cards")
+          .getByTestId("operator-delivery-row")
+          .filter({ hasText: "browser-exact@example.com" })
+          .first()
       );
       await page.getByTestId("operator-replay-open").click();
       const modal = page.getByTestId("operator-replay-modal");
@@ -1209,8 +1362,8 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
 //
 // Only-forward evidence for the three new a11y behaviors built in Plans 02 & 03:
 //   - Reveal disclosure (Plan 02): aria-expanded false->true, aria-controls=
-//     "inbound-evidence-raw", a "Re-redact raw source" collapse returning the raw
-//     bytes to count 0, and a role="status" aria-live="polite" region.
+//     "inbound-evidence-raw", the same toggle relabelled "Hide raw source" collapsing
+//     back and returning the raw bytes to count 0, and a role="status" aria-live="polite" region.
 //   - Replay-modal Tab focus-trap (Plan 03): Tab off the last control wraps focus
 //     back inside the dialog, on BOTH the inbound and operator replay modals.
 //   - Replay-modal double-submit lock (Plan 03): Confirm carries phx-disable-with
@@ -1236,12 +1389,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
     await expect(reveal).toHaveAttribute("aria-controls", "inbound-evidence-raw");
     // Redacted-by-default PII boundary (D-10): raw bytes absent before reveal.
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
 
     // Grant the reveal — aria-expanded flips true and the raw payload renders.
     await reveal.click();
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
+    await expect(reveal).toHaveText("Hide raw source");
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(1);
 
     // aria-live status region announces the grant in TEXT (WCAG 1.4.1, never color alone).
@@ -1251,10 +1405,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(status).toContainText("Raw source revealed.");
 
     // Re-redact collapses back to redacted: raw bytes return to count 0, aria-expanded false.
-    await page.getByTestId("inbound-evidence-re-redact").click();
+    // The SAME persistent toggle collapses it; focus stays on that one element.
+    await reveal.click();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
+    await expect(reveal).toHaveText("Reveal raw source");
+    await expect(reveal).toBeFocused();
   });
 
   test("Inbound replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
@@ -1332,14 +1489,12 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     );
     await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(accountId(page)).toHaveText("northstar");
 
     // Give the prior Account a selected record; switching must drop this ID.
     await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
     await expect(page).toHaveURL(/delivery_id=/);
-    const targetAccount = page.locator(
-      '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
-    );
+    const targetAccount = accountOption(page, "fjordline-aps");
     await expect(targetAccount).toHaveAttribute("href", /tenant_id=fjordline-aps/);
     await expect(targetAccount).not.toHaveAttribute("href", /delivery_id=/);
     // Quick view is modal, so finish its focused task before opening the selector.
@@ -1347,15 +1502,15 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page).not.toHaveURL(/delivery_id=/);
     const committedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
     const committedRowText = await committedRow.innerText();
-    const pendingSwitch = page
-      .getByTestId("operator-account-switch-status")
-      .filter({ hasText: "Switching to fjordline-aps…" });
+    const pendingSwitch = accountSwitchStatus(page).filter({
+      hasText: "Switching to fjordline-aps…"
+    });
     await expect(pendingSwitch, "the target Account's pending status is available to the switch control")
       .toHaveCount(1);
     await expect(pendingSwitch, "status target uses a safe numeric token independent of the Account ID")
-      .toHaveAttribute("id", /^operator-account-switch-status-\d+$/);
+      .toHaveAttribute("id", switchStatusIdPattern);
     await expect(pendingSwitch).toBeHidden();
-    await page.getByTestId("operator-account-switcher").click();
+    await accountSwitcher(page).click();
     holdAccountReply = true;
     const pendingAccountReply = new Promise(resolve => { resolveAccountReply = resolve; });
     await targetAccount.click();
@@ -1366,7 +1521,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(pendingSwitch).toHaveAttribute("aria-live", "polite");
     await expect(pendingSwitch).toHaveAttribute("aria-atomic", "true");
     await expect(pendingSwitch).toHaveText("Switching to fjordline-aps…");
-    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(accountId(page)).toHaveText("northstar");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText, { useInnerText: true });
     liveSocket.send(heldAccountReply);
@@ -1374,7 +1529,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
     await expect(page).not.toHaveURL(/delivery_id=/);
-    await expect(page.getByTestId("operator-account-id")).toHaveText("fjordline-aps");
+    await expect(accountId(page)).toHaveText("fjordline-aps");
     await expect(pendingSwitch).toHaveCount(0);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
@@ -1429,7 +1584,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.keyboard.press("Shift+Tab");
     await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBe("operator-quick-view-full");
 
-    const idField = quickView.getByRole("button", { name: "Copy Delivery ID", exact: true });
+    const idField = quickView.getByRole("button", { name: /^Copy Delivery ID: / });
     const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
     expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
 
@@ -1457,6 +1612,652 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.getByTestId("operator-detail-back").click();
     await expect(quickView).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(desktopId);
+  });
+
+  test("Phase 175 Delivery tracer", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    fs.mkdirSync(gapClosureArtifacts, { recursive: true });
+
+    let holdNextReply = false;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const selectedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3);
+    await selectDeliveryFull(page, selectedRow);
+
+    const selectedUrl = new URL(page.url());
+    const selectedDeliveryId = selectedUrl.searchParams.get("delivery_id");
+    expect(selectedDeliveryId).toBeTruthy();
+    await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+
+    const technical = page.locator("#delivery-detail-technical");
+    await expect(technical).toBeVisible();
+    expect(await technical.evaluate(element => element.tagName)).toBe("DIV");
+    await expect(technical).toContainText(selectedDeliveryId);
+
+    const suppression = page.getByTestId("operator-suppression-card");
+    await expect(suppression).toBeVisible();
+    await suppression.getByTestId("operator-suppression-refresh").click();
+    await expect(suppression).toContainText(
+      /No current Mailglass suppression matches this delivery|Current Mailglass match|unavailable/i
+    );
+
+    await page.getByTestId("operator-replay-open").click();
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Close", exact: true })).toBeVisible();
+    const requestId = await modal.getByTestId("operator-replay-target-id").innerText();
+    expect(requestId).toMatch(/^[0-9a-f-]{36}$/i);
+    await expect(modal).toContainText("browser-exact-delivery");
+    await expect(modal).toContainText("does not resend mail");
+    await expect(modal).toContainText("across this Account");
+
+    const reviewScreenshot = path.join(gapClosureArtifacts, "delivery-175-replay-review.png");
+    await page.screenshot({ path: reviewScreenshot, fullPage: true });
+    expect(fs.statSync(reviewScreenshot).size, "Delivery replay review screenshot is non-empty")
+      .toBeGreaterThan(0);
+
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    const confirm = modal.getByTestId("operator-replay-confirm");
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(requestId);
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+
+    await expect(modal).toHaveCount(0);
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText(/Replay command added .* Event|Replay added no new Events/);
+
+    const detail = page.getByTestId("operator-detail-column");
+    await expect(detail).toContainText("Webhook replay requested");
+    await expect(detail).toContainText("Webhook replay completed");
+    await expect(detail).toContainText(/Replay command added .* Event|Replay added no new Events/);
+
+    const resultScreenshot = path.join(gapClosureArtifacts, "delivery-175-replay-result.png");
+    await page.screenshot({ path: resultScreenshot, fullPage: true });
+    expect(fs.statSync(resultScreenshot).size, "Delivery replay result screenshot is non-empty")
+      .toBeGreaterThan(0);
+
+    const returnedUrl = new URL(page.url());
+    expect(returnedUrl.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(returnedUrl.searchParams.get("window_hours")).toBe("168");
+    expect(returnedUrl.searchParams.get("delivery_id")).toBe(selectedDeliveryId);
+    expect(returnedUrl.searchParams.get("full")).toBe("1");
+    const backToListUrl = new URL(await page.getByTestId("operator-detail-back").getAttribute("href"), baseURL);
+    expect(backToListUrl.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(backToListUrl.searchParams.get("view")).toBe("deliveries");
+    expect(backToListUrl.searchParams.get("window_hours")).toBe("168");
+    await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+  });
+
+  test("Phase 175 Delivery recovery", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdNextReply = false;
+    let holdReplayResponse = true;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    await selectDeliveryFull(
+      page,
+      page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3)
+    );
+    await page.getByTestId("operator-replay-open").click();
+
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    const modalNode = await modal.elementHandle();
+    const targetId = await modal.getByTestId("operator-replay-target-id").innerText();
+    const confirm = modal.getByTestId("operator-replay-confirm");
+    const initialReviewId = await confirm.getAttribute("phx-value-review");
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=selected_delivery",
+        {
+          method: "POST",
+          headers: { "x-csrf-token": csrfToken },
+          redirect: "manual"
+        }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+    holdReplayResponse = false;
+
+    const feedback = modal.getByTestId("operator-replay-feedback");
+    await expect(feedback).toContainText("Couldn’t refresh current Delivery eligibility.");
+    await expect(feedback.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    expect(await modal.evaluate((element, original) => element === original, modalNode)).toBeTruthy();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+
+    await feedback.getByRole("button", { name: "Review again", exact: true }).click();
+    await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(targetId);
+    expect(await modal.evaluate((element, original) => element === original, modalNode)).toBeTruthy();
+    await expect(confirm).toBeEnabled();
+    expect(await confirm.getAttribute("phx-value-review")).not.toBe(initialReviewId);
+
+    await confirm.click();
+    await expect(modal).toHaveCount(0);
+    await expect(page.getByTestId("copy-toast")).toContainText(/Replay command added .* Event/);
+  });
+
+  test("Phase 175 Delivery safety keeps exact target, denial and no-change outcomes visible", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdReplayResponse = false;
+    let holdNextReply = false;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    const ambiguousReset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-many");
+    expect(ambiguousReset.ok()).toBeTruthy();
+    const ambiguous = await ambiguousReset.json();
+    const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${ambiguous.tenant_id}`);
+    await page.goto(`/ops/browser-login?tenant_id=${ambiguous.tenant_id}&return_to=${returnTo}`);
+    await page.goto(
+      `/ops/mail?tenant_id=${ambiguous.tenant_id}&delivery_id=${ambiguous.delivery_id}&full=1`
+    );
+    await page.getByTestId("operator-replay-open").click();
+
+    const ambiguousModal = page.getByTestId("operator-replay-modal");
+    await expect(ambiguousModal).toBeVisible();
+    const radios = ambiguousModal.getByRole("radio", { name: "POSTMARK webhook target", exact: true });
+    await expect(radios).toHaveCount(2);
+    await expect(radios.nth(0)).not.toBeChecked();
+    await expect(radios.nth(1)).not.toBeChecked();
+    await expect(ambiguousModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+
+    const selectedRadio = ambiguousModal.locator(
+      `#operator-replay-targets input[type='radio'][value='${ambiguous.candidate_ids[1]}']`
+    );
+    await selectedRadio.check();
+    await expect(selectedRadio).toBeChecked();
+    const exactTargetId = await ambiguousModal
+      .locator("#operator-replay-targets input[type='radio']:checked")
+      .getAttribute("value");
+    expect(exactTargetId).toBe(ambiguous.candidate_ids[1]);
+    const confirm = ambiguousModal.getByTestId("operator-replay-confirm");
+    holdReplayResponse = true;
+    const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+    await confirm.click();
+    await pendingReply;
+    await expect(confirm).toBeDisabled();
+    await expect(confirm).toHaveText("Replaying…");
+    await expect(selectedRadio).toBeChecked();
+
+    liveSocket.send(heldReply);
+    heldReply = null;
+    holdReplayResponse = false;
+    await expect(ambiguousModal).toHaveCount(0);
+    await expect(page.getByTestId("copy-toast")).toContainText("Replay command added 1 newly normalized Event.");
+
+    const authorized = await page.request.get("/ops/browser-auth-log");
+    expect(authorized.ok()).toBeTruthy();
+    const authorizationLog = await authorized.json();
+    expect(authorizationLog.destructive_actions).toHaveLength(1);
+    expect(authorizationLog.destructive_actions[0].delivery_id).toBe(ambiguous.delivery_id);
+    expect(authorizationLog.destructive_actions[0].webhook_event_id).toBe(exactTargetId);
+
+    const staleAuthAt = "2000-01-01T00:00:00.000Z";
+    await loginOperator(
+      page,
+      `/ops/mail?tenant_id=${tenantId}`,
+      "operator-1",
+      tenantId,
+      null,
+      staleAuthAt
+    );
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const exactRow = page.getByTestId("operator-delivery-row").filter({
+      visible: true,
+      hasText: "browser-exact@example.com"
+    }).first();
+    await selectDeliveryFull(page, exactRow);
+    await page.getByTestId("operator-replay-open").click();
+
+    const deniedModal = page.getByTestId("operator-replay-modal");
+    const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").first().innerText();
+    const deniedConfirm = deniedModal.getByTestId("operator-replay-confirm");
+    const firstReviewId = await deniedConfirm.getAttribute("phx-value-review");
+    await deniedConfirm.click();
+    const denial = deniedModal.getByTestId("operator-replay-feedback");
+    await expect(denial).toContainText("Recent authentication is required.");
+    await expect(denial).not.toContainText("Ask an Account administrator to review access.");
+    await expect(deniedModal).toBeVisible();
+    await expect(deniedModal.getByTestId("operator-replay-target-id").first()).toHaveText(deniedTarget);
+    await expect(deniedConfirm).toBeDisabled();
+    await expect(denial.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+
+    await denial.getByRole("button", { name: "Review again", exact: true }).click();
+    await expect(deniedModal.getByTestId("operator-replay-target-id").first()).toHaveText(deniedTarget);
+    await expect(deniedConfirm).toBeEnabled();
+    expect(await deniedConfirm.getAttribute("phx-value-review")).not.toBe(firstReviewId);
+    await expect(page.getByTestId("operator-replay-command-feedback")).toHaveCount(0);
+
+    await deniedModal.locator("#operator-replay-close").click();
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    const unavailableRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    await selectDeliveryFull(page, unavailableRow);
+    await expect(page.getByTestId("operator-detail-column")).toContainText("Replay is unavailable.");
+    await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+
+    await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&window_hours=168`);
+    const noChangeRow = page.getByTestId("operator-delivery-row").filter({
+      visible: true,
+      hasText: "browser-noop@example.com"
+    }).first();
+    await selectDeliveryFull(page, noChangeRow);
+    await page.getByTestId("operator-replay-open").click();
+    await page.getByTestId("operator-replay-confirm").click();
+    await expect(page.getByTestId("copy-toast")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
+      "Last replay: completed · 0 newly normalized Events"
+    );
+    await expect(page.getByTestId("operator-timeline")).toContainText("no change");
+  });
+
+  test("Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom", async ({ page }) => {
+    const expectedWidths = [320, 375, 768, 1280, 1440];
+    const expectedMailable = "Mailables.TransactionalEmailWithVeryLongModuleName";
+    const artifactDir = path.resolve(__dirname, "../test-results/phase175-layout");
+    fs.mkdirSync(artifactDir, { recursive: true });
+
+    const openFjordlineDetail = async targetPage => {
+      await loginOperator(
+        targetPage,
+        "/ops/mail?tenant_id=northstar",
+        "operator-1",
+        "northstar",
+        "accounts"
+      );
+      await targetPage.goto("/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168");
+      await accountSwitcher(targetPage).click();
+      await accountOption(targetPage, "fjordline-aps").click();
+      await expect(targetPage).toHaveURL(/tenant_id=fjordline-aps/);
+      const row = targetPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+      const deliveryId = await row.getAttribute("phx-value-id");
+      expect(deliveryId, "selected Delivery exposes its complete exact ID").toBeTruthy();
+      await selectDeliveryFull(targetPage, row);
+      return { deliveryId, detail: targetPage.getByTestId("operator-detail-header") };
+    };
+
+    const { deliveryId, detail } = await openFjordlineDetail(page);
+    const mailable = page.locator("#delivery-detail-mailable-trigger");
+    const copyId = detail.getByRole("button", { name: `Copy Delivery ID: ${deliveryId}`, exact: true });
+    const widthReceipts = [];
+    for (const width of expectedWidths) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText("fjordline-aps");
+      await assertZoomReadableValue(copyId, `Delivery ID at ${width}px`, deliveryId, width);
+      await assertZoomReadableValue(mailable, `Mailable at ${width}px`, expectedMailable, width);
+      const geometry = await page.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        horizontalOverflow: [...document.querySelectorAll("body *")]
+          .filter(element => {
+            const rect = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            return rect.width > 0 && style.display !== "none" && style.visibility !== "hidden" &&
+              Number(style.opacity) > 0 && (rect.left < -1 || rect.right > window.innerWidth + 1);
+          })
+          .slice(0, 8)
+          .map(element => `${element.tagName.toLowerCase()}#${element.id}.${String(element.className).slice(0, 48)}`)
+      }));
+      expect(geometry.documentWidth, `Delivery page has no horizontal overflow at ${width}px`)
+        .toBeLessThanOrEqual(width);
+      expect(geometry.horizontalOverflow, `visible Delivery geometry fits at ${width}px`)
+        .toEqual([]);
+      widthReceipts.push({ width, deliveryId, account: "fjordline-aps", mailable: expectedMailable, ...geometry });
+      if ([320, 1440].includes(width)) {
+        const screenshot = path.join(artifactDir, `delivery-${width}.png`);
+        await page.screenshot({ path: screenshot, fullPage: true });
+        expect(fs.statSync(screenshot).size, `Delivery ${width}px screenshot is retained`).toBeGreaterThan(0);
+        widthReceipts.at(-1).screenshot = path.relative(path.resolve(__dirname, "../.."), screenshot);
+      }
+    }
+    expect(widthReceipts).toHaveLength(5);
+
+    await openOperator(page);
+    await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+    const trigger = page.getByTestId("operator-replay-open");
+    await expect(trigger).toBeVisible();
+    const triggerId = await trigger.getAttribute("id");
+    const selectedUrl = page.url();
+    await trigger.click();
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("heading", { name: "Review webhook replay", exact: true })).toBeVisible();
+    const modalTargetId = await modal.getByTestId("operator-replay-target-id").innerText();
+    expect(modalTargetId, "the review names its exact stored request").toBeTruthy();
+    await expect(accountContext(page)).toContainText("browser-tenant");
+    expect(page.url()).toBe(selectedUrl);
+
+    const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+    const zoomContext = await chromium.launchPersistentContext("", {
+      channel: "chromium",
+      headless: true,
+      viewport: { width: 1440, height: 900 },
+      deviceScaleFactor: 2,
+      args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+    });
+    let zoomReceipt;
+    try {
+      const zoomPage = zoomContext.pages()[0] || await zoomContext.newPage();
+      const selected = await openFjordlineDetail(zoomPage);
+      const initial = await zoomPage.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio
+      }));
+      const serviceWorker = zoomContext.serviceWorkers()[0] || await zoomContext.waitForEvent("serviceworker");
+      const zoom = await serviceWorker.evaluate(async () => {
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (!tab?.id) throw new Error("Active Chromium tab is unavailable");
+        await chrome.tabs.setZoom(tab.id, 2);
+        return { tabId: tab.id, factor: await chrome.tabs.getZoom(tab.id) };
+      });
+      expect(zoom.factor, "actual browser tabs.setZoom applies a real 200% zoom").toBe(2);
+      await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(720);
+      await zoomPage.setViewportSize({ width: 640, height: 900 });
+      await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+      const effective = await zoomPage.evaluate(() => ({
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        documentWidth: document.documentElement.scrollWidth,
+        devicePixelRatio: window.devicePixelRatio
+      }));
+      expect(effective.devicePixelRatio / initial.devicePixelRatio, "real tab zoom doubles effective DPR").toBe(2);
+      expect(effective.documentWidth, "Delivery page has no overflow under real 200% zoom").toBeLessThanOrEqual(320);
+      const zoomId = zoomPage.getByTestId("operator-detail-header").getByRole("button", {
+        name: `Copy Delivery ID: ${selected.deliveryId}`, exact: true
+      });
+      await assertZoomReadableValue(zoomId, "Delivery ID at real 200% zoom", selected.deliveryId, 320);
+      await assertZoomReadableValue(
+        zoomPage.locator("#delivery-detail-mailable-trigger"),
+        "Mailable at real 200% zoom",
+        expectedMailable,
+        320
+      );
+      const zoomTextEvidence = { url: zoomPage.url(), deliveryId: selected.deliveryId, mailable: expectedMailable };
+      const longTextScreenshot = path.join(artifactDir, "delivery-200-browser-zoom-long-text.png");
+      await zoomPage.screenshot({ path: longTextScreenshot, fullPage: true, scale: "device" });
+      expect(fs.statSync(longTextScreenshot).size).toBeGreaterThan(0);
+      await openOperator(zoomPage);
+      await selectDeliveryFull(
+        zoomPage,
+        zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3)
+      );
+      const replayTrigger = zoomPage.getByTestId("operator-replay-open");
+      const originId = await replayTrigger.getAttribute("id");
+      await replayTrigger.click();
+      const zoomModal = zoomPage.getByTestId("operator-replay-modal");
+      await expect(zoomModal).toBeVisible();
+      const zoomTargetId = await zoomModal.getByTestId("operator-replay-target-id").innerText();
+      expect(zoomTargetId).toBeTruthy();
+      const scroll = await zoomModal.evaluate(element => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+        overflowY: getComputedStyle(element).overflowY,
+        scrollTop: element.scrollTop
+      }));
+      expect(scroll.overflowY).toBe("auto");
+      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+      expect((await accountContext(zoomPage).textContent()).trim()).toContain("browser-tenant");
+      const close = zoomModal.getByRole("button", { name: "Close", exact: true });
+      const confirm = zoomModal.getByTestId("operator-replay-confirm");
+      await expect(close).toBeVisible();
+      await expect(confirm).toBeVisible();
+      const targets = await Promise.all([close, confirm].map(control => control.boundingBox()));
+      for (const target of targets) {
+        expect(target.width).toBeGreaterThanOrEqual(44);
+        expect(target.height).toBeGreaterThanOrEqual(44);
+      }
+      await zoomModal.evaluate(element => { element.scrollTop = element.scrollHeight; });
+      await expect(confirm).toBeInViewport();
+      await zoomModal.evaluate(element => { element.scrollTop = 0; });
+      await expect(close).toBeInViewport();
+      await confirm.focus();
+      await zoomPage.keyboard.press("Tab");
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
+      await zoomPage.keyboard.press("Shift+Tab");
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe("operator-replay-confirm");
+      await zoomPage.keyboard.press("Escape");
+      await expect(zoomModal).toHaveCount(0);
+      await expect.poll(() => zoomPage.evaluate(() => document.activeElement?.id)).toBe(originId);
+      zoomReceipt = {
+        caseId: "layout:delivery:real-200-percent-zoom",
+        longTextEvidence: zoomTextEvidence,
+        url: zoomPage.url(),
+        source: { initial, effective, tabZoom: zoom },
+        dialog: { ...scroll, exactTargetId: zoomTargetId, closeTarget: targets[0], primaryTarget: targets[1], focusWrap: true, originId }
+      };
+      const screenshot = path.join(artifactDir, "delivery-200-browser-zoom.png");
+      await zoomPage.screenshot({ path: screenshot, fullPage: true, scale: "device" });
+      expect(fs.statSync(screenshot).size, "real 200% zoom screenshot is retained").toBeGreaterThan(0);
+      zoomReceipt.screenshot = path.relative(path.resolve(__dirname, "../.."), screenshot);
+    } finally {
+      await zoomContext.close();
+    }
+    const evidence = {
+      expectedCaseCount: expectedWidths.length + 1,
+      executedCaseCount: widthReceipts.length + Number(Boolean(zoomReceipt)),
+      cases: widthReceipts,
+      realZoom: zoomReceipt
+    };
+    expect(evidence.executedCaseCount).toBe(evidence.expectedCaseCount);
+    fs.writeFileSync(path.join(artifactDir, "delivery-layout.json"), `${JSON.stringify(evidence, null, 2)}\n`);
+  });
+
+  test("Phase 175 suppression refresh", async ({ page }) => {
+    const resetResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=one"
+    );
+    expect(resetResponse.ok()).toBeTruthy();
+    const fixture = await resetResponse.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&full=1`;
+
+    await page.context().clearCookies();
+    const loginPath = `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`;
+    await page.goto(loginPath);
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+    await page.goto(detailPath);
+
+    const originalUrl = page.url();
+    const card = page.getByTestId("operator-suppression-card");
+    const refresh = card.getByTestId("operator-suppression-refresh");
+    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("operator review · Ångström");
+    await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
+    await expect(refresh).toHaveClass(/btn-ghost/);
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await refresh.focus();
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=delivery_suppression",
+        {
+          method: "POST",
+          headers: { "x-csrf-token": csrfToken },
+          redirect: "manual"
+        }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    await refresh.click();
+    await expect(card).toContainText("Stale");
+    await expect(card).toContainText("Couldn’t refresh suppression evidence. Try again.");
+    await expect(card).toContainText("last retrieved record and may be out of date");
+    await expect(card).toContainText("operator review · Ångström");
+    await expect(refresh).toBeVisible();
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+    expect(page.url()).toBe(originalUrl);
+
+    const changedResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=many"
+    );
+    expect(changedResponse.ok()).toBeTruthy();
+
+    await refresh.click();
+    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("phase169-address-stream");
+    await expect(card).toContainText("Complaint");
+    await expect(card).not.toContainText("operator review · Ångström");
+    await expect(refresh).toBeVisible();
+    await expect(card.getByTestId("operator-suppression-refresh")).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.dataset.testid)).toBe(
+      "operator-suppression-refresh"
+    );
+    expect(page.url()).toBe(originalUrl);
+    const selected = new URL(page.url());
+    expect(selected.searchParams.get("tenant_id")).toBe(tenantId);
+    expect(selected.searchParams.get("delivery_id")).toBe(fixture.delivery_id);
+  });
+
+  test("Phase 175 suppression policy", async ({ page }) => {
+    const resetResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=one"
+    );
+    expect(resetResponse.ok()).toBeTruthy();
+    const fixture = await resetResponse.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&full=1`;
+
+    await page.context().clearCookies();
+    const loginPath = `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`;
+    await page.goto(loginPath);
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+    await page.goto(detailPath);
+
+    const card = page.getByTestId("operator-suppression-card");
+    const refresh = card.getByTestId("operator-suppression-refresh");
+    const actionIsLast = () =>
+      refresh.evaluate(button => button.parentElement?.lastElementChild === button);
+
+    await expect(card).toContainText("Removal policy");
+    await expect(card).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(card.getByText("Expiry date not recorded", { exact: true })).toHaveCount(0);
+    await expect(card.locator("time[data-local-time='true']")).toHaveCount(1);
+    await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
+    await expect(refresh).toHaveClass(/btn-ghost/);
+    await expect(refresh).toHaveCount(1);
+    await expect(card.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
+    expect(await actionIsLast()).toBe(true);
+
+    const changedResponse = await page.request.get(
+      "/ops/browser-reset?scenario=phase169-suppression&variant=many"
+    );
+    expect(changedResponse.ok()).toBeTruthy();
+
+    const originalUrl = page.url();
+    await refresh.click();
+    await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+    await expect(card).toContainText("Expiry date not recorded");
+    await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
+    await expect(card).toContainText("Address + stream · Account-local");
+    await expect(card).toContainText("phase169-address-stream");
+    await expect(card.locator("time[data-local-time='true']")).toHaveCount(0);
+    await expect(refresh).toBeVisible();
+    await expect(refresh).toHaveCount(1);
+    expect(await actionIsLast()).toBe(true);
+    await expect(card.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
+    expect(page.url()).toBe(originalUrl);
   });
 
   test("Phase 168 confirmation focus", async ({ browser }) => {
@@ -1580,9 +2381,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await deniedConfirm.focus();
       await expect(deniedConfirm).toBeFocused();
       await page.keyboard.press("Enter");
-      await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
+      const staleAuthFeedback = deniedModal.getByTestId("operator-replay-feedback");
+      await expect(staleAuthFeedback).toContainText("Recent authentication is required.");
+      await expect(staleAuthFeedback).not.toContainText("Ask an Account administrator to review access.");
+      await expect(deniedModal.getByTestId("operator-replay-review-again")).toBeVisible();
       await expect(deniedModal).toBeVisible();
       await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
+      await expect(deniedConfirm).toBeDisabled();
       await deniedModal.locator("#operator-replay-close").focus();
       await page.keyboard.press("Shift+Tab");
       await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
@@ -1593,18 +2398,216 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
       await openOperator(page);
       await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).first());
-      await page.getByTestId("operator-replay-open").tap();
-      const unavailableModal = page.getByTestId("operator-replay-modal");
-      await expect(unavailableModal).toContainText("Replay unavailable");
-      await expect(unavailableModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
-      await expect(unavailableModal.getByTestId("operator-replay-target-id")).toHaveCount(0);
-      await unavailableModal.locator("#operator-replay-close").focus();
-      await page.keyboard.press("Shift+Tab");
-      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
-      await expect.poll(() => unavailableModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+      const unavailableDetail = page.getByTestId("operator-detail-column");
+      await expect(unavailableDetail).toContainText("Replay is unavailable.");
+      await expect(unavailableDetail).toContainText("Historical rows without exact webhook linkage");
+      await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+      await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
     } finally {
       await context.close();
     }
+  });
+
+  test("Phase174 scroll access: delivery overflow is keyboard reachable and both navigation boundaries are inert", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openOperator(page);
+
+    const firstRow = page.locator('[data-testid="operator-delivery-row"]:visible').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await assertPhase174QuickViewScrollAccess(page, quickView, "operator-quick-view");
+
+    const position = quickView.locator('[aria-live="polite"]');
+    await expect(position).toHaveText(/^\s*1 of \d+\s*$/);
+    const [current, total] = (await position.textContent()).trim().split(" of ").map(Number);
+    expect(current).toBe(1);
+
+    const previous = quickView.getByTestId("operator-quick-view-prev");
+    await expect(previous).toHaveJSProperty("tagName", "SPAN");
+    await expect(previous).toHaveAttribute("tabindex", "-1");
+    await expect(previous).not.toHaveAttribute("role");
+    await expect(previous).not.toHaveAttribute("href");
+    await expect(previous).toHaveText("Previous delivery unavailable");
+    const previousBox = await previous.boundingBox();
+    for (let index = 1; index < total; index += 1) {
+      await quickView.getByRole("link", { name: "Next delivery", exact: true }).click();
+      await expect(position).toHaveText(`${index + 1} of ${total}`);
+    }
+    const next = quickView.getByTestId("operator-quick-view-next");
+    await expect(next).toHaveJSProperty("tagName", "SPAN");
+    await expect(next).toHaveAttribute("tabindex", "-1");
+    await expect(next).not.toHaveAttribute("role");
+    await expect(next).not.toHaveAttribute("href");
+    await expect(next).toHaveText("Next delivery unavailable");
+    const nextBox = await next.boundingBox();
+    const closeBox = await quickView.getByRole("link", { name: "Close quick view", exact: true }).boundingBox();
+
+    for (const [label, box] of [["Previous", previousBox], ["Next", nextBox], ["Close", closeBox]]) {
+      expect(box?.width, `${label} delivery control keeps a 44px width`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `${label} delivery control keeps a 44px height`).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test("Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openInbound(page);
+
+    const firstRow = page.locator('[data-testid="inbound-record-open"]:visible').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+    const quickView = page.getByTestId("inbound-quick-view");
+    await expect(quickView).toBeVisible();
+    await assertPhase174QuickViewScrollAccess(page, quickView, "inbound-quick-view");
+
+    const position = quickView.locator('[aria-live="polite"]');
+    await expect(position).toHaveText(/^\s*1 of \d+\s*$/);
+    const [current, total] = (await position.textContent()).trim().split(" of ").map(Number);
+    expect(current).toBe(1);
+
+    const previous = quickView.getByRole("button", { name: "Previous inbound record", exact: true });
+    await expect(previous).toBeDisabled();
+    const previousBox = await previous.boundingBox();
+    for (let index = 1; index < total; index += 1) {
+      await quickView.getByRole("link", { name: "Next inbound record", exact: true }).click();
+      await expect(position).toHaveText(`${index + 1} of ${total}`);
+    }
+    const next = quickView.getByRole("button", { name: "Next inbound record", exact: true });
+    await expect(next).toBeDisabled();
+    const nextBox = await next.boundingBox();
+    const closeBox = await quickView.getByRole("link", { name: "Close quick view", exact: true }).boundingBox();
+
+    for (const [label, box] of [["Previous", previousBox], ["Next", nextBox], ["Close", closeBox]]) {
+      expect(box?.width, `Inbound ${label} control keeps a 44px width`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `Inbound ${label} control keeps a 44px height`).toBeGreaterThanOrEqual(44);
+    }
+
+    await quickView.getByRole("link", { name: "Open full detail", exact: true }).click();
+    const back = page.getByTestId("inbound-detail-back");
+    await expect(back).toBeVisible();
+    await expect(back).toBeFocused();
+    await back.click();
+    await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+    await expect(page.locator("#inbound-quick-view-close")).toBeFocused();
+  });
+
+  test("Phase174 client hooks: Admin focus traps survive patches, reconnects, and removal", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await installPhase174HookProbe(page);
+
+    const actualWebSockets = [];
+    page.on("websocket", socket => actualWebSockets.push(socket.url()));
+    const lock = fs.readFileSync(path.resolve(__dirname, "../mix.lock"), "utf8");
+    const liveViewVersion = lock.match(/^\s+"phoenix_live_view": \{:hex, :phoenix_live_view, "([^"]+)"/m)?.[1];
+    expect(liveViewVersion).toBe("1.2.13");
+
+    const cases = [];
+    await openOperator(page);
+    await expect(page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).resolves.toBe(true);
+    const deliveryRows = page.getByTestId("operator-delivery-row").filter({ visible: true });
+    await expect(deliveryRows.count()).resolves.toBeGreaterThan(1);
+
+    async function runDeliveryCycle(index, closeWithEscape) {
+      const opener = deliveryRows.nth(index).getByRole("button", { name: /Open delivery/ });
+      const openerId = await opener.getAttribute("id");
+      const initialId = await opener.getAttribute("phx-value-id");
+      await opener.click();
+      const quickView = page.getByTestId("operator-quick-view");
+      await expect(quickView).toBeVisible();
+      const initialProbe = await phase174DocumentProbe(page);
+      expect(initialProbe.focusinAdded.filter(id => id === "operator-quick-view").length -
+        initialProbe.focusinRemoved.filter(id => id === "operator-quick-view").length).toBe(1);
+      await phase174FocusTrapWraps(page, "operator-quick-view");
+      const next = quickView.getByRole("link", { name: "Next delivery" });
+      await expect(next).toBeVisible();
+      const nextId = new URL(await next.getAttribute("href"), page.url()).searchParams.get("delivery_id");
+      expect(nextId).toBeTruthy();
+      await next.click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("delivery_id")).toBe(nextId);
+      expect(nextId).not.toBe(initialId);
+      if (closeWithEscape) await page.keyboard.press("Escape");
+      else await quickView.getByRole("link", { name: "Close quick view" }).click();
+      await expect(quickView).toHaveCount(0);
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(openerId);
+      const closedProbe = await phase174DocumentProbe(page);
+      const added = closedProbe.focusinAdded.filter(id => id === "operator-quick-view").length;
+      const removed = closedProbe.focusinRemoved.filter(id => id === "operator-quick-view").length;
+      expect(removed).toBe(added);
+      expect(closedProbe.sockets.some(socket => socket.channelJoins > 0)).toBe(true);
+      cases.push({ surface: "delivery", opened: initialId, navigatedTo: nextId, focusReturnedTo: openerId, focusinAdded: added, focusinRemoved: removed });
+    }
+
+    await runDeliveryCycle(1, true);
+    await runDeliveryCycle(1, false);
+
+    const beforeDrop = await phase174DocumentProbe(page);
+    const beforeDropCount = beforeDrop.sockets.filter(socket => socket.path.includes("/live/websocket")).length;
+    expect(beforeDropCount).toBe(1);
+    const createdBeforeDrop = await page.evaluate(() => window.__phase174Probe.sockets.length);
+    await page.evaluate(() => new Promise(resolve => window.liveSocket.disconnect(resolve)));
+    await page.evaluate(() => window.liveSocket.connect());
+    await expect.poll(async () => {
+      const afterDrop = await phase174DocumentProbe(page);
+      return afterDrop.sockets.length;
+    }).toBeGreaterThan(createdBeforeDrop);
+    await expect(page.locator("[data-phx-main].phx-connected")).toBeVisible();
+    const afterReconnect = await phase174DocumentProbe(page);
+    expect(afterReconnect.sockets.filter(socket => socket.path.includes("/live/websocket") && socket.opened && !socket.closed)).toHaveLength(1);
+    expect(actualWebSockets.length).toBeGreaterThan(0);
+    await runDeliveryCycle(0, true);
+
+    await openInbound(page);
+    await expect(page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).resolves.toBe(true);
+    const inboundRows = page.getByTestId("inbound-records-table")
+      .getByTestId("inbound-record-row").filter({ visible: true });
+    await expect(inboundRows.first()).toBeVisible();
+    expect(await inboundRows.count()).toBeGreaterThan(1);
+
+    async function runInboundCycle(index, closeWithEscape) {
+      const opener = inboundRows.nth(index).getByTestId("inbound-record-open");
+      const openerId = await opener.getAttribute("id");
+      const initialId = await opener.getAttribute("phx-value-id");
+      await opener.click();
+      const quickView = page.getByTestId("inbound-quick-view");
+      await expect(quickView).toBeVisible();
+      const initialProbe = await phase174DocumentProbe(page);
+      expect(initialProbe.focusinAdded.filter(id => id === "inbound-quick-view").length -
+        initialProbe.focusinRemoved.filter(id => id === "inbound-quick-view").length).toBe(1);
+      await phase174FocusTrapWraps(page, "inbound-quick-view");
+      const next = quickView.getByRole("link", { name: "Next inbound record" });
+      await expect(next).toBeVisible();
+      const nextId = new URL(await next.getAttribute("href"), page.url()).searchParams.get("inbound_id");
+      expect(nextId).toBeTruthy();
+      await next.click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id")).toBe(nextId);
+      expect(nextId).not.toBe(initialId);
+      if (closeWithEscape) await page.keyboard.press("Escape");
+      else await quickView.getByRole("link", { name: "Close quick view" }).click();
+      await expect(quickView).toHaveCount(0);
+      const matchingRowId = "inbound-record-open-desktop-" + nextId;
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(matchingRowId);
+      const closedProbe = await phase174DocumentProbe(page);
+      const added = closedProbe.focusinAdded.filter(id => id === "inbound-quick-view").length;
+      const removed = closedProbe.focusinRemoved.filter(id => id === "inbound-quick-view").length;
+      expect(removed).toBe(added);
+      expect(closedProbe.sockets.some(socket => socket.channelJoins > 0)).toBe(true);
+      cases.push({
+        surface: "inbound",
+        opened: initialId,
+        navigatedTo: nextId,
+        focusReturnedTo: matchingRowId,
+        openerBeforeNavigation: openerId,
+        focusinAdded: added,
+        focusinRemoved: removed
+      });
+    }
+
+    await runInboundCycle(1, false);
+    await runInboundCycle(1, true);
+    expect(cases.filter(item => item.surface === "delivery")).toHaveLength(3);
+    expect(cases.filter(item => item.surface === "inbound")).toHaveLength(2);
   });
 
 });

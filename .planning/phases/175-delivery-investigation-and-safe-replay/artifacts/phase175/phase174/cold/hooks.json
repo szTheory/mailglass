@@ -1,0 +1,243 @@
+{
+  "schema_version": "phase174-storybook-hooks.v1",
+  "proof_boundary": {
+    "static_story": "Storybook owns its preview iframe LiveView and proves shared hook registration, connected patch, trap wrap, and browsing-context removal.",
+    "real_routes": "Demo delivery and inbound routes own URL navigation, close, reduced-motion, and exact focus-return assertions.",
+    "admin_route_evidence": "The independently resolved Admin LiveView client is exercised by mailglass_admin/e2e/flows.spec.js.",
+    "reset": "authenticated reset endpoint used"
+  },
+  "source": {
+    "path": "mailglass_admin/priv/static/hooks.js",
+    "md5": "1b900e70a7ae41663bbac4060ab30bdb"
+  },
+  "locked_versions": {
+    "demo_live_view": "1.1.33",
+    "admin_live_view": "1.2.13",
+    "phoenix_storybook": "1.2.0",
+    "demo_playwright": "1.60.0",
+    "admin_playwright": "1.59.1"
+  },
+  "storybook": {
+    "hook_asset_responses": [
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      },
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      },
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      },
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      },
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      },
+      {
+        "url": "/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+        "status": 200,
+        "responseMd5": "571f26622aab3f8464962fb22bda3296",
+        "containsProductionHookSource": true,
+        "hasStorybookRegistration": true,
+        "hasSocketConstructor": false
+      }
+    ],
+    "preview": {
+      "mounted": true,
+      "patched_assign": "keyboard? toggled twice through the native Playground switch from its scenario default",
+      "focus_trap_after_patch": "start sentinel moved focus to the final tabbable control",
+      "removed": {
+        "iframe_detached": true,
+        "browsing_context_receipts": [
+          {
+            "url": "/dev/storybook/iframe/quick_views/delivery?color_mode=&playground=true&theme=&variation_id=northstar_normal",
+            "activeFocusinAtPagehide": 0
+          },
+          {
+            "url": "/dev/storybook/iframe/quick_views/delivery?color_mode=light&playground=true&theme=&variation_id=northstar_normal",
+            "activeFocusinAtPagehide": 1
+          }
+        ]
+      },
+      "remounted_listener_count": 1
+    },
+    "documents": [
+      {
+        "url": "/dev/storybook/quick_views/delivery?tab=playground&variation_id=northstar_normal",
+        "socket_count": 1,
+        "channel_join_count": 1,
+        "admin_bootstrap_present": false,
+        "script_urls": [
+          "http://demo:4015/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+          "http://demo:4015/dev/storybook/assets/js-20d1380275a6c41c72575b9dc6524395"
+        ]
+      },
+      {
+        "url": "/dev/storybook/iframe/quick_views/delivery?color_mode=light&playground=true&theme=&variation_id=northstar_normal",
+        "socket_count": 1,
+        "channel_join_count": 2,
+        "admin_bootstrap_present": false,
+        "script_urls": [
+          "http://demo:4015/dev/storybook-review-js-571f26622aab3f8464962fb22bda3296",
+          "http://demo:4015/dev/storybook/assets/iframejs-2d43509d5d56526c65c1d3c69c151b66"
+        ]
+      }
+    ]
+  },
+  "browser_websockets": [
+    {
+      "path": "/live/websocket",
+      "sentFrames": 7,
+      "receivedFrames": 8
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 0,
+      "receivedFrames": 0
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 2,
+      "receivedFrames": 4
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 1,
+      "receivedFrames": 2
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 0,
+      "receivedFrames": 0
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 2,
+      "receivedFrames": 2
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 7,
+      "receivedFrames": 10
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 5,
+      "receivedFrames": 7
+    },
+    {
+      "path": "/live/websocket",
+      "sentFrames": 7,
+      "receivedFrames": 10
+    }
+  ],
+  "demo_route_cases": [
+    {
+      "surface": "delivery",
+      "opened": "01a17f71-69b9-72a7-951d-1407a351fefa",
+      "navigatedTo": "01a17f71-69be-768c-9963-2bf4e62e641c",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f71-69b9-72a7-951d-1407a351fefa",
+      "focusinAdded": 1,
+      "focusinRemoved": 1,
+      "reducedMotion": true
+    },
+    {
+      "surface": "delivery",
+      "opened": "01a17f71-69b9-72a7-951d-1407a351fefa",
+      "navigatedTo": "01a17f71-69be-768c-9963-2bf4e62e641c",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f71-69b9-72a7-951d-1407a351fefa",
+      "focusinAdded": 2,
+      "focusinRemoved": 2,
+      "reducedMotion": true
+    },
+    {
+      "surface": "delivery",
+      "opened": "01a17f71-69bb-7f2a-837c-6970d6eabf15",
+      "navigatedTo": "01a17f71-69b9-72a7-951d-1407a351fefa",
+      "focusReturnedTo": "operator-delivery-desktop-01a17f71-69bb-7f2a-837c-6970d6eabf15",
+      "focusinAdded": 3,
+      "focusinRemoved": 3,
+      "reducedMotion": true
+    },
+    {
+      "surface": "inbound",
+      "opened": "01a17f71-69d6-71c7-9adb-52152f07e6d4",
+      "navigatedTo": "01a17f71-69d8-7fba-8fdd-81b3a9796fda",
+      "focusReturnedTo": "inbound-record-open-desktop-01a17f71-69d8-7fba-8fdd-81b3a9796fda",
+      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f71-69d6-71c7-9adb-52152f07e6d4",
+      "focusinAdded": 1,
+      "focusinRemoved": 1,
+      "reducedMotion": true
+    },
+    {
+      "surface": "inbound",
+      "opened": "01a17f71-69d6-71c7-9adb-52152f07e6d4",
+      "navigatedTo": "01a17f71-69d8-7fba-8fdd-81b3a9796fda",
+      "focusReturnedTo": "inbound-record-open-desktop-01a17f71-69d8-7fba-8fdd-81b3a9796fda",
+      "openerBeforeNavigation": "inbound-record-open-desktop-01a17f71-69d6-71c7-9adb-52152f07e6d4",
+      "focusinAdded": 2,
+      "focusinRemoved": 2,
+      "reducedMotion": true
+    }
+  ],
+  "final_documents": [
+    {
+      "url": "/ops/mail/inbound?provider=postmark&tenant_id=northstar&window_hours=168",
+      "sockets": [
+        {
+          "path": "/live/websocket",
+          "opened": true,
+          "closed": false,
+          "sentFrames": 7,
+          "receivedFrames": 10,
+          "channelJoins": 1,
+          "events": {}
+        }
+      ],
+      "focusin_added": [
+        "inbound-quick-view",
+        "inbound-quick-view"
+      ],
+      "focusin_removed": [
+        "inbound-quick-view",
+        "inbound-quick-view"
+      ],
+      "admin_bootstrap_present": true,
+      "script_urls": [
+        "inline"
+      ]
+    }
+  ],
+  "run_identity": {
+    "run_id": "mailglass-evidence-20261027221513-96275-31939-cold",
+    "condition": "cold",
+    "source_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+    "source_digest": "13694a3171535116a61d8ef3ed8c102cb5a664ef1d5c53fc9d401c58ba1d681c"
+  }
+}

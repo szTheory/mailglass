@@ -6,8 +6,24 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
+        pipeline :storybook_review_assets do
+          plug(:put_secure_browser_headers)
+        end
+
+        # Static Storybook assets share the full mount prefix so generated links
+        # and direct story destinations resolve from the deployed dev route.
         scope "/" do
-          storybook_assets()
+          storybook_assets("/dev/storybook/assets")
+        end
+
+        scope "/" do
+          pipe_through(:storybook_review_assets)
+
+          get(
+            "/dev/storybook-review-js-:md5",
+            MailglassDemoWeb.Storybook,
+            :js
+          )
         end
       end
     else
@@ -20,10 +36,16 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
-        scope "/dev" do
+        # PhoenixStorybook's 1.2 router macros need a root scope and a complete
+        # mount path. Keep the application browser protections around its own
+        # session/CSRF pipeline.
+        scope "/" do
           pipe_through(:browser)
 
-          live_storybook("/storybook", backend_module: MailglassDemoWeb.Storybook)
+          live_storybook("/dev/storybook",
+            backend_module: MailglassDemoWeb.Storybook,
+            assets_path: "/dev/storybook/assets"
+          )
         end
       end
     else
@@ -87,18 +109,18 @@ defmodule MailglassDemoWeb.Router do
         MailglassDemoWeb.Mailers.ComponentMailer
       ],
       navigation: [
-        overview_path: "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
-        deliveries_path:
-          "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar%26view%3Ddeliveries",
-        inbound_path: "/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar"
+        overview_path: "/ops/mail",
+        deliveries_path: "/ops/mail?view=deliveries",
+        inbound_path: "/ops/mail/inbound"
       ]
     )
   end
 
-  # Dev-only interactive component review surface (PROJECT D-06). Mounted strictly
-  # inside this dev-only /dev scope so it is never prod-reachable (V4 access-control
-  # mitigation T-118-01). Its sandbox CSS is the committed admin bundle served by
-  # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
+  # Dev-only interactive component review surface (PROJECT D-06). The macro keeps
+  # its dependency-availability guard and full /dev/storybook mount at root scope.
+  # Its sandbox CSS is the committed admin bundle served by
+  # mailglass_admin_routes/2 above at /dev/mail/css-<md5>; its JS endpoint combines
+  # shared production hooks with the local review-theme adapter.
   MailglassDemoWeb.StorybookRoutes.maybe_live_storybook()
 
   scope "/ops" do

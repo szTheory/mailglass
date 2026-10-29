@@ -8,9 +8,35 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
+## Current Milestone: v2.10 UI Repairs & Faithful Storybook
+
+**Goal:** Resolve recorded operator and author UI friction through integrated repairs, faithful retained production-component scenarios, and proof at the real affected boundary.
+
+**Scope confirmed:** 2026-10-26. Formalize only the next envelope from [UPSTREAM-SCOPE.md](research/ui-quality-engine/UPSTREAM-SCOPE.md), the current scope authority; the [rolling proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md) projects later envelopes without admitting them to this milestone. Continue phase numbering at 174.
+
+**Target features:**
+- Health hierarchy, compact Account context and coherent host-supported navigation, preserving actionable issues and truthful scope.
+- Auto-apply selects and debounced text on Deliveries and Inbound, preserving canonical URLs, useful Back, focus, pagination reset, validation and account isolation.
+- Restrained quick-view navigation and discoverable, truthful replay with shared dialog presentation, X-close, requested success toast and explicit in-dialog failure/retry outcomes.
+- Complete ordinary authorized Inbound contact values, useful technical details visible on full detail, and coherent raw-source/suppression presentation without widening sensitive evidence access.
+- Preview restore-defaults/action/helper treatment and readable scenario/module identity, preserving account-independent sample rendering.
+- Storybook mount/font/theme/hook fidelity established early; realistic retained scenarios and real-route checks accompany each repair. Complete one Delivery investigation path as an early integration proof.
+
+**Selected seeds:** SEED-009 (bounded to this envelope), SEED-261010-hjp, and only the live-filter portion of SEED-261010-gad. Custom date ranges remain deferred.
+
+**Boundaries:** Preserve the shipped brand, domain, authorization, Account, exact replay and rendering contracts. No exhaustive Gallery migration, fully storied app, six-profile quota, generic view/fixture framework, capability/provider growth, custom date ranges, account-aware Preview, interactive unsubscribe submission, Gallery-route removal, rebrand, CI-wide redesign or judge service. F7 token-route mounting remains a named following-envelope candidate. Preview return context needs a narrow validated host-supported seam if admitted; it must not expand auth/session contracts. Prefer existing dependencies and incremental presentation extraction.
+
+**Phase 174 completed 2026-10-27:** All six requirements and 20/20 truths passed; three former UAT checkpoints now have automated proof, with 148/148 acceptance cases in both cold and warm conditions. No owner verification remains. Source identity, replayable receipts and limits are recorded in [174-AUTOMATION.md](phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md). Next: plan Phase 175.
+
+**Phase 176 completed 2026-10-28:** FILTER-01–04, INUX-05 and INUX-06 passed 5/5 goal-backward must-haves after gap round 176-11..15. That round fixed four defects: the evidence card's size and reveal read different stored fields; copy controls hid the address from assistive technology; an empty narrower window removed the filter toolbar; and the mobile filter toggle hid desktop filters. Prohibitions P9–P13 are mutation-proven in `phase176_prohibition_contract_test.exs`. Local gate: core 81, Admin 878 (1 excluded), inbound 480 (3 properties), browser 31, 0 failures. Security 37/37 closed. No owner UAT. Advisory GR-WR-01 is open: the Deliveries status region keeps its committed text across PubSub refreshes, even when the read state changes. Next: plan Phase 177.
+
+**Verification:** D-52 applies. Use synthetic normal/empty/long-Unicode cohorts, relevant reachable boundary/failure/permission states, representative themes and viewport/container widths, keyboard/focus, and explicit System/reduced-motion/real-zoom ownership. Fresh axe comparisons and expected/executed counts precede ratchet claims. Measure added cold/warm CI cost against provisional ≤5 wall minutes / ≤10 runner-minutes; these are pilot budgets, not measured facts. Existing required gates retain their meaning.
+
+**Automation default (D-52 reaffirmed 2026-10-27):** Target zero owner UAT. Convert observable checks to integration/browser/smoke/seam assertions and finish routine repairs; add CI coverage only where it has recurring value. Record proof and close covered UAT rows without confirmation. Carry forward only an explicit irreducible human decision, with its reason. Missing test wiring and agent-reviewable layout are engineering work. Follow [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default), including its no-repeat-UAT rule.
+
 ## Completed Milestone: v2.9 Operator, Preview & Email UI Refinement
 
-**Shipped and archived 2026-10-26.** No milestone is active; the next one starts with `/gsd-new-milestone`.
+**Shipped and archived 2026-10-26.** Historical v2.9 scope follows; v2.10 is the current milestone above.
 
 **Goal:** Make Mailglass's existing operator, author, and recipient journeys coherent, readable, responsive, and reviewable with clear actions and truthful outcomes.
 
@@ -220,7 +246,13 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**No milestone is active.** Define the next milestone's requirements with `/gsd-new-milestone`. Candidate inputs: the owner-review follow-up (`todos/2026-10-25-owner-review-pr302-ui-feedback.md`, plus the v2.9 dead handlers, theme doc drift and F7), CI efficiency, and SEED-009 fractal storybook.
+**v2.10 UI Repairs & Faithful Storybook** — scope, all 31 [requirements](REQUIREMENTS.md), and the [roadmap](ROADMAP.md) approved 2026-10-26 from the current upstream brief and unresolved owner feedback. Phases 174–178 map every requirement exactly once. Ready to plan Phase 174; implementation has not started.
+
+- [ ] Resolve all admitted Health, Account/navigation, collection-filter, quick-view, evidence, suppression, replay and Preview feedback with a current-source disposition for every row.
+- [ ] Establish trustworthy Storybook navigation, assets, typography, themes and hooks, then retain realistic scenarios invoking production presentation alongside the repaired jobs/areas.
+- [ ] Prove interactions at their connected boundaries, preserve trust contracts, and record fresh coverage/accessibility/fidelity and measured cost evidence without speculative infrastructure.
+
+The following whole-job expansion and conditional consolidation envelopes remain future scope. [Current brief](research/ui-quality-engine/UPSTREAM-SCOPE.md), [proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md), and [thread](threads/ui-quality-engine.md) retain their rationale. Demo auth/browser fixes, dead-handler cleanup and theme-doc cleanup already completed after v2.9 stay completed. CI efficiency remains separate.
 
 ## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
@@ -1065,6 +1097,23 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
+### D-52 extension: judgment-tier prohibitions (2026-10-27, Phase 175)
+
+- D-52 (zero owner UAT) now explicitly covers must-NOT prohibitions. Author them `verification: test`. The GSD verifier's judgment-tier `human_needed` rows are disposed by a mutation-proven contract test, not an owner review. Precedent: `phase175_prohibition_contract_test.exs` (16 tests; a detector self-test plus one red mutation per prohibition). Rule text: [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default). `CLAUDE.md` mirrors it so every GSD agent loads it.
+
+### Phase 176 implementation decisions
+
+- The Inbound evidence card uses one raw-source selector: raw_payload first, then raw_mime. Payload size is the byte size of the exact revealed text, so a map payload measures as pretty JSON.
+- `copy_value/1` names every copy control "Copy <label>: <value>" (WCAG 2.5.3 Label in Name). The fix is in the shared component, not per call site.
+- A non-default time window counts as a filter on both collections. A blank URL window normalizes quietly to the default.
+- An invalid URL filter keeps its note through later edits and reconnects (`filter_url_invalid`). A rejected enum value stays selected as "Not applied: <value>" (D-12, D-13 as written).
+
+### Phase 175 implementation decisions
+
+- Keep outbound webhook replay and Inbound Mailbox replay as distinct commands with distinct consequence copy. Neither claims resend, provider receipt, or delivery.
+- Show suppression as one current Account-local Mailglass match. Name unchecked stores, keep stale facts visibly stale, never call missing expiry permanent, and keep the card read-only.
+- Never preselect an ambiguous replay target. Failures keep the dialog open with an explicit fresh "Review again" and no automatic retry.
+
 ### Phase 170 implementation decisions
 
 - Persist `:no_change` only when Mailbox explicitly returns it; keep it distinct from `:ignore`, no match, and failure.
@@ -1165,7 +1214,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-26 after v2.9 milestone archive. Audit tech_debt (28/28 requirements, 7/7 phases, 11/14 integration, 6/7 flows); no milestone active.*
+*Last updated: 2026-10-28 after Phase 176 gap closure and verification (5/5 passed); ready to plan Phase 177.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

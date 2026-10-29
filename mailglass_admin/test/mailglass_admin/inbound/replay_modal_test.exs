@@ -11,6 +11,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
         render_component(&ReplayModal.replay_modal/1,
           open?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}
@@ -34,6 +35,12 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       assert html =~ ~s(phx-click="close_replay")
       confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
       assert Floki.attribute(confirm_button, "phx-click") |> List.first() =~ "confirm_replay"
+
+      confirm_classes =
+        confirm_button |> Floki.attribute("class") |> List.first() |> String.split()
+
+      assert "btn-primary" in confirm_classes
+      refute "btn-error" in confirm_classes
       refute html =~ "Re-runs Mailbox routing"
       refute html =~ ~s(disabled="disabled")
       refute html =~ ~s(type="radio")
@@ -41,11 +48,36 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       refute html =~ "choose_replay_target"
     end
 
+    test "normal replay confirmation keeps semantic error feedback on actual failures" do
+      html =
+        render_component(&ReplayModal.replay_modal/1,
+          open?: true,
+          feedback: %{kind: :error, text: "Replay is not authorized."},
+          review: %{
+            review_id: "review-1",
+            tenant_id: "tenant-a",
+            record_id: "rec-1",
+            eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}
+          },
+          record: %{id: "rec-1", tenant_id: "tenant-a"}
+        )
+
+      confirm = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
+      confirm_classes = confirm |> Floki.attribute("class") |> List.first() |> String.split()
+      feedback = Floki.find(Floki.parse_document!(html), "#inbound-replay-feedback")
+      feedback_classes = feedback |> Floki.attribute("class") |> List.first() |> String.split()
+
+      assert "btn-primary" in confirm_classes
+      assert "border-error" in feedback_classes
+      assert "bg-error/10" in feedback_classes
+    end
+
     test "renders the cause and disables confirmation for an ineligible target" do
       html =
         render_component(&ReplayModal.replay_modal/1,
           open?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :ineligible, reason: :execution_history_missing}
@@ -69,6 +101,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
           open?: true,
           busy?: true,
           review: %{
+            review_id: "review-1",
             tenant_id: "tenant-a",
             record_id: "rec-1",
             eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}

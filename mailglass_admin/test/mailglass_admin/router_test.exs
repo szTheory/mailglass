@@ -149,6 +149,43 @@ defmodule MailglassAdmin.RouterTest do
 
       assert redirected_to(conn) == "/ops/mail"
     end
+
+    @tag :phase177
+    test "Phase 177 rejects sibling mounts, separators, dot segments and other mounts", %{
+      conn: conn
+    } do
+      for return_to <- [
+            "/ops/mailx",
+            "/ops/mail%2e%2e/x",
+            "/ops/mail\\x",
+            "/ops/mail//x",
+            "/ops/mail/./x",
+            "/ops/mail/../x",
+            "/ops/mail/%2e%2e/x",
+            "/ops/mail/%2E/x",
+            "/dev/mail/x"
+          ] do
+        conn =
+          get(conn, "/ops/mail/theme/dark?return_to=" <> URI.encode_www_form(return_to))
+
+        assert redirected_to(conn) == "/ops/mail", "return_to #{inspect(return_to)}"
+      end
+    end
+
+    @tag :phase177
+    test "Phase 177 keeps redirecting to every valid in-mount return", %{conn: conn} do
+      for return_to <- [
+            "/ops/mail",
+            "/ops/mail?tenant_id=t",
+            "/ops/mail/inbound?tenant_id=t",
+            "/ops/mail?return_surface=overview&return_tenant_id=t"
+          ] do
+        conn =
+          get(conn, "/ops/mail/theme/dark?return_to=" <> URI.encode_www_form(return_to))
+
+        assert redirected_to(conn) == return_to, "return_to #{inspect(return_to)}"
+      end
+    end
   end
 
   describe "root layout theme persistence" do
@@ -222,6 +259,56 @@ defmodule MailglassAdmin.RouterTest do
              "__preview_session__/2 must return exactly the whitelisted keys, got #{inspect(Map.keys(session))}"
 
       assert session["navigation"] == %{}
+    end
+
+    @tag :phase177
+    test "Phase 177 session maps never carry the return context", %{conn: conn} do
+      with_context =
+        Phoenix.ConnTest.build_conn(
+          :get,
+          "/dev/mail?return_surface=overview&return_tenant_id=tenant-b"
+        )
+        |> Plug.Test.init_test_session(%{})
+        |> Plug.Conn.fetch_query_params()
+
+      without_context = Plug.Test.init_test_session(conn, %{})
+
+      preview_opts = [mailables: :auto_scan, live_session_name: :test_session]
+
+      preview_session = MailglassAdmin.Router.__preview_session__(with_context, preview_opts)
+
+      assert preview_session ==
+               MailglassAdmin.Router.__preview_session__(without_context, preview_opts)
+
+      assert Enum.sort(Map.keys(preview_session)) == [
+               "admin_chrome_theme_cookie",
+               "live_session_name",
+               "mailables",
+               "navigation"
+             ]
+
+      operator_opts = [
+        auth: MailglassAdmin.TestOperatorAuth,
+        session: [
+          subject_id: "current_user_id",
+          tenant_id: "tenant_id",
+          auth_method: "auth_method",
+          recent_auth_at: "recent_auth_at"
+        ],
+        live_session_name: :mailglass_admin_operator,
+        unauthorized_path: "/login",
+        on_mount: []
+      ]
+
+      operator_session = MailglassAdmin.Router.__operator_session__(with_context, operator_opts)
+
+      assert operator_session ==
+               MailglassAdmin.Router.__operator_session__(without_context, operator_opts)
+
+      for session <- [preview_session, operator_session] do
+        refute Map.has_key?(session, "return_surface")
+        refute Map.has_key?(session, "return_tenant_id")
+      end
     end
 
     test "preview session exposes configured sibling nav paths", %{conn: conn} do
