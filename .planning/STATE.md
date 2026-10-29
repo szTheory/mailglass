@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-02-PLAN.md
-last_updated: "2026-10-29T12:47:36.429Z"
+stopped_at: Completed 178-03-PLAN.md
+last_updated: "2026-10-29T13:02:19.649Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: 614ebe10f93c99f2c1f6558251e1fb1ec2aabf07
+state_head: 9beb5779c9c765c83967802ce6ad194a2f63730f
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 40
+  completed_plans: 41
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 3 of 12
+Plan: 4 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -330,6 +330,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 177 P11 | 45 min | 3 tasks | 6 files |
 | Phase 178 P01 | 7 min | 2 tasks | 5 files |
 | Phase 178 P02 | 6 min | 2 tasks | 5 files |
+| Phase 178 P03 | 9 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -634,6 +635,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 177]: 177-11: Pre-existing core (3), format (10 files), credo (6) and axe-baseline (3) failures recorded with pre-phase evidence in 177-AUTOMATION.md and deferred-items.md, not fixed
 - [Phase 178]: 178-01: Preview read-only note wording kept verbatim after ux-writing review; editable fields describe only their own parse error (described_by/2), read-only displays reference preview-assigns-readonly-note
 - [Phase 178]: 178-02: feedback ledger rule is phase-independent (never reads owner_phase), archive roots globbed, pointers must be path or path#anchor
+- [Phase 178]: 178-03: D-14 honored via slim sibling scripts/check_phase178_candidate.sh (173 script cannot run for non-173 candidates); launcher/teardown act only on mailglass-phase178-review-* projects and /tmp/mailglass-phase178.* parents
+- [Phase 178]: 178-03: cost disposition refuses runs whose head_sha is not the candidate SHA and never zero-fills a missing job; runner platform comes from a published label table or a saved job log, recorded in provenance
 
 ## Quick Tasks Completed
 
@@ -685,11 +688,15 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T12:47:35.816Z
-Stopped at: Completed 178-02-PLAN.md
+Last session: 2026-10-29T13:02:19.079Z
+Stopped at: Completed 178-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
 - Phase 174 is complete: 3/3 automated UAT rows, 148/148 cold and warm acceptance cases, no owner verification outstanding. Durable proof and replay commands: `.planning/phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md`.
 - Next: `$gsd-plan-phase 175`. Apply D-52 and `.planning/METHODOLOGY.md`: target zero owner UAT, automate observable criteria, reuse justified CI coverage and do not reopen already-proved checks without relevant changes or new failures.
+
+### Blockers
+
+- 178-03: reference/demo_app/mix.lock is behind upstream (bandit 1.14.1, swoosh 1.29.3) so fresh isolated demo launches from main fail 'mix deps.get --check-locked'; blocks isolated-demo gates in 178-05/07/09/10 until a chore(deps) demo lock refresh (see deferred-items.md D-178-03-A)
