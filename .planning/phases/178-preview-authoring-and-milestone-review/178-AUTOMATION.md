@@ -436,3 +436,37 @@ dispatch_run_id: 40904249445
 Both approved runs reached `completed` at attempt 1 (no rerun). The PR run concluded `failure` and the dispatch run concluded `failure`; classification is task 4.
 
 remote_runs_status: completed
+
+### Hosted classification (plan 178-09 task 4)
+
+Both approved runs completed at attempt 1 and concluded `failure`. Logs were fetched read-only (`gh api --allow-escape-sequences .../jobs/<id>/logs`) and saved before classification. No rerun ran.
+
+| Run | Event | Job | Conclusion | Saved log | SHA-256 |
+|-----|-------|-----|------------|-----------|---------|
+| 40904235961 | pull_request | Demo Browser Evidence (Docker Compose / Chromium) | failure | `reference/demo_app/tmp/demo_browser_evidence/ci/40904235961-attempt-1/demo-job.log` | `66c1f1ac333847ef8056ac33591e5da586555ebf73ab833fba313c7ef0bfb54f` |
+| 40904235961 | pull_request | Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22) | failure (1 failed, 1 skipped, 309 passed) | `reference/demo_app/tmp/demo_browser_evidence/ci/40904235961-attempt-1/operator-gate.log` | `f174338e8222ea127bc9ae7d93e698bb14e77fe55679dcf5859df547f47e9516` |
+| 40904249445 | workflow_dispatch | Demo Browser Evidence (Docker Compose / Chromium) | failure | `reference/demo_app/tmp/demo_browser_evidence/ci/40904249445-attempt-1/demo-job.log` | `6703d781e8e3ee7c934d7c919a746e51bdeb2d1771207718be34762b6b45e646` |
+| 40904249445 | workflow_dispatch | Operator Browser Gate | success | not needed | n/a |
+
+Required contexts for the candidate SHA `2bdf18161182beeb286435b556f26e205976e658` (`gh api repos/szTheory/mailglass/commits/<sha>/check-runs`): `CI Green` = success, `Guard Release Trigger` = success. Preview Capture Advisory = success in the PR run.
+
+Failure detail:
+
+- Demo Browser Evidence (both runs, identical): the step `node --test scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs` exits 1 in about 1 s. `mailglass_admin/e2e/support/storybook-axe-supplement.cjs:1` requires `@playwright/test`, which is not installed in that job (`Error: Cannot find module '@playwright/test'`, `MODULE_NOT_FOUND`), so `not ok 1 - mailglass_admin/e2e/support/storybook-axe.test.cjs` (18 of 19 pass). No evidence was captured, and the artifact upload found no files. This is a source or workflow defect in the candidate (the test passes locally because `mailglass_admin/e2e` dependencies are installed there). Its title matches no recorded advisory title; the Demo matched set is empty by construction.
+- Operator Browser Gate, pull_request run only: `e2e/flows.spec.js:2453:3 > flows: a11y deltas - reveal disclosure + replay focus-trap + double-submit (D-11/D-14) > Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled` failed (`expect(received).toBe(expected)`). Not in the recorded set (the 177 "scan deliveries" timeouts, the 178-08 list, which is empty, and the Pitfall 4 cold-start window). The same job passed in the dispatch run on the same SHA.
+
+Per the plan's stop rule, a new advisory failure stops the plan and is never patched here; a source fix needs a new freeze and a new 178-09-02 approval.
+
+hosted_status: stopped: new advisory failure (Demo Browser Evidence (Docker Compose / Chromium))
+stop_job: Demo Browser Evidence (Docker Compose / Chromium)
+stop_log: reference/demo_app/tmp/demo_browser_evidence/ci/40904249445-attempt-1/demo-job.log
+
+UIQ-07's hosted measurement and UIQ-08's required CI are not met on this candidate; the plan stopped with the status above. (Note: the required check runs `CI Green` and `Guard Release Trigger` were success for the candidate SHA, but the Demo Browser Evidence pilot checkers did not run on hosted, so the identity-bound evidence and the hosted cost disposition do not exist. The status line above is authoritative.)
+
+Run, job and PR URLs:
+
+- PR: https://github.com/szTheory/mailglass/pull/317 (draft, open, not merged)
+- pull_request run: https://github.com/szTheory/mailglass/actions/runs/40904235961 (Demo job https://github.com/szTheory/mailglass/actions/runs/40904235961/job/123554577451; Operator Browser Gate job https://github.com/szTheory/mailglass/actions/runs/40904235961/job/123554577630)
+- workflow_dispatch run: https://github.com/szTheory/mailglass/actions/runs/40904249445 (Demo job https://github.com/szTheory/mailglass/actions/runs/40904249445/job/123554654315)
+
+Post-action audit (2026-10-29): PR 317 `isDraft true`, `OPEN`, `mergedAt null`; `git ls-remote origin refs/heads/main` = `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` (equals `pre_approval_main_sha`); `.planning/release-target.json` unchanged; both runs at attempt 1.
