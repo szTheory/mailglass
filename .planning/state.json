@@ -26,13 +26,13 @@
     {
       "number": "178",
       "name": "Preview Authoring and Milestone Review",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd-progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 5 of 5 · 78% · executing"
+    "reason": "Phase 5 of 5 · 80% · executing"
   },
-  "updated_at": "2026-10-29T12:39:56.411Z"
+  "updated_at": "2026-10-29T12:47:33.496Z"
 }
