@@ -476,6 +476,12 @@ if compose up --build --detach --wait --wait-timeout 600 demo; then
   fi
 else
   FAILURES+=("isolated review Compose project did not become healthy")
+  # Keep the demo container's own output next to the record: the cause is in
+  # its log, and --teardown removes the container afterwards.
+  COMPOSE_LOG="${RECORD_PATH%.json}.compose.log"
+  compose logs --no-color --tail 120 demo >"$COMPOSE_LOG" 2>&1 || true
+  FAILURES+=("demo container log saved to $COMPOSE_LOG")
+  tail -n 25 "$COMPOSE_LOG" >&2 || true
 fi
 
 if [[ "$launch_ok" == true ]]; then
