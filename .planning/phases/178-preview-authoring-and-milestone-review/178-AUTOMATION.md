@@ -108,13 +108,22 @@ The last open owner-feedback row, `fb-storybook-fidelity`, is closed (`automated
 
 ### StatCard font roles
 
-Advisory demo case `reference/demo_app/assets/e2e/phase178-stories.spec.js` "Phase 178 StatCard story uses the production font roles". For the `neutral_light` and `neutral_dark` variations of `/dev/storybook/primitives/stat_card` it reads the computed `font-family` and `font-weight` of three roles: the `data-theme` root (UI text), the label span and the `p.mono` value. It reads the same three roles from the production Admin gallery cell `gallery-stat_card-neutral` at `/dev/mail/gallery`, in the matching light and dark wrappers. Both pages are served by the same isolated demo from the same admin CSS bytes, so the comparison does not hard-code family names. It asserts, per role and theme:
+Advisory demo case `reference/demo_app/assets/e2e/phase178-stories.spec.js` "Phase 178 StatCard story uses the production font roles". The StatCard is a `:component` story with no iframe container, so PhoenixStorybook renders each variation inline inside `.psb-sandbox` in the explorer page (the element the todo blames for the serif face). For the `neutral_light` and `neutral_dark` variation blocks (`#neutral-light-component`, `#neutral-dark-component`) of `/dev/storybook/primitives/stat_card` the case reads the computed `font-family` and `font-weight` of three roles: the `data-theme` root (UI text), the label span and the `p.mono` value. It reads the same three roles from the production Admin gallery cell `gallery-stat_card-neutral` at `/dev/mail/gallery`, in the matching light and dark wrappers. Both pages are served by the same isolated demo from the same admin CSS bytes, so the comparison does not hard-code family names. It asserts, per role and theme:
 
 - the first family and the weight equal production's;
 - the first family is one of Inter, Inter Tight or IBM Plex Mono and is not a serif generic;
+- the `.psb-sandbox` ancestor itself resolves to the production UI face (a run with `.psb-sandbox { font-family: Georgia, serif }` injected fails this assertion: expected "Inter", received "Georgia");
 - `document.fonts.check` is true for the face in use and that face reports `loaded` (the case calls `document.fonts.load` first, because `check` alone is true when no face matches).
 
-RECEIPT_PLACEHOLDER
+**Receipt** (gate G178-07-DEMO, isolated demo built from committed `890a7e67`, record `reference/demo_app/tmp/phase178_candidate/statcard-1793282939.json`, 2 passed in the Playwright run, wall 112 s against the 900 s bound, teardown left no `mailglass-phase178-review-*` container and the owner's review demo containers unchanged at 2). Computed first family and weight, identical in the story and in production for both themes:
+
+| Role | Story first family | Production first family | Weight (story = production) |
+| --- | --- | --- | --- |
+| UI text (theme root) | Inter | Inter | 400 |
+| Label | Inter | Inter | 700 |
+| Value | IBM Plex Mono | IBM Plex Mono | 700 |
+
+All three faces report `document.fonts.check` true and a `loaded` face. The full stacks differ after the first family (the story reports `Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif`, the production gallery `Inter, system-ui, -apple-system, sans-serif`); the assertion is on the first family, which is what decides the rendered face once it is loaded. No serif appears in either. Before the receipt existed nothing asserted this; at this revision the serif the owner saw does not reproduce, so the story template and the demo Storybook setup needed no change and `mailglass_admin/priv/static/app.css` is untouched.
 
 ### Real zoom
 
@@ -174,4 +183,50 @@ $ echo $?
 
 Their existing receipts (Phase 174 `hooks.json` and the Admin `flows.spec.js` cases) are therefore unchanged and need no new real-route receipt.
 
-Limits: Chromium only, headless, synthetic data. The StatCard receipt covers the neutral variation in two themes, not every severity; the font roles are set by the shared `.mg-admin-root` bundle rules, so the remaining variations differ only in colour and content. Real zoom is Chromium tab zoom at 320 CSS px and says nothing about Safari or Firefox text scaling.
+Limits: Chromium only, headless, synthetic data. The StatCard receipt reads the neutral variation in light and dark, not all 13 variations. Real zoom is Chromium tab zoom at 320 CSS px and says nothing about Safari or Firefox text scaling.
+
+## Feedback ledger (UIQ-04)
+
+`reference/persona_spec/quick_view_scenarios.json` carries 12 owner-feedback rows. Phase 178 closes the ledger: every row is `automated` or `resolved`, none is `pending` or `partial`, and a merge-blocking test keeps it that way.
+
+### The rule (D-08)
+
+A row is judged by its own contents, never by the phase that owns it. `MailglassAdmin.TestSupport.FeedbackLedger.rule_violations/3` requires, for every row whose status is not `pending`:
+
+1. `scenario_ids` is non-empty and every id exists, or the row carries `proof_boundary: "connected-real-route-only"` (only `fb-auto-apply-filters` does);
+2. `evidence_pointer` is `path` or `path#anchor` with no whitespace, absolute path, `..` segment or glob character, resolves to exactly one regular file, and, with an anchor, matches a markdown heading slug in that file.
+
+`link_violations/2` also requires each listed scenario to exist and list the row id in its own `feedback_ids`. `owner_phase` is read nowhere, and a source-scan test pins that (with its own teeth).
+
+### Merge-blocking test and its teeth
+
+`mailglass_admin/test/mailglass_admin/feedback_ledger_test.exs` runs in the admin lane (`mix verify.support_contract.admin`). The real-manifest cases pin the 12 ids in order, the rule, the back-links, unique ids, the connected-only boundary, and the phase-close invariant **"Phase 178 ledger: no feedback row is pending or partial"**, which asserts `FeedbackLedger.open_rows/1` on the real manifest equals `%{pending: [], partial: []}`. The previous assertion named `fb-storybook-fidelity` as the one open row; it is replaced, so a row cannot reopen or hide without failing the lane. The `detectors have teeth` cases feed fixture rows and a throwaway repository root to each detector (bare row, other boundary value, missing path, bad anchor, prose pointer, unknown scenario, missing back-link, duplicate ids, `owner_phase` variation, absolute, traversing and glob pointers) and assert the exact violation, so each check can fail. Plan 178-02 proved the rule against 13 mutations.
+
+### Dual-location resolver
+
+A `.planning/phases/<dir>/...` pointer resolves in exactly one place: the live phase directory or one `.planning/milestones/v*-phases/<dir>/...` archive. Present in two places is `:ambiguous`, in none is `:missing`. The ledger therefore survives milestone archival without editing pointers, and the Phase 178 pointers below work both before and after this milestone is archived.
+
+### Replaced demo assertion
+
+The advisory demo case in `reference/demo_app/assets/e2e/quick-views.spec.js` once required the Phase 176 to 178 rows to be `pending`, which failed the moment they closed. It now holds phase-independent structural checks only (a known status, no whitespace in a non-pending pointer) and defers the full rule to the ExUnit file above (plan 178-02).
+
+### Final status
+
+| Feedback | Requirement(s) | Status | Evidence pointer |
+| --- | --- | --- | --- |
+| fb-health-crowding | OUTUX-06 | automated | `.planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#health-composition-outux-06` |
+| fb-preview-reset | PRVUX-05, PRVUX-06 | automated | `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#preview-authoring-prvux-05-prvux-06` |
+| fb-preview-identity | PRVUX-07 | automated | `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#readable-scenario-selector-prvux-07` |
+| fb-account-context | UXF-09, UXF-10 | automated | `.planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#account-scope-and-preview-return-uxf-09-uxf-10` |
+| fb-auto-apply-filters | FILTER-01 to FILTER-04 | automated | `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths-roadmap-success-criteria` |
+| fb-quiet-quick-view-arrows | UXF-11 | resolved | `mailglass_admin/docs/phase174-review.md#feedback-disposition` |
+| fb-raw-source-hierarchy | INUX-06 | automated | `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage` |
+| fb-suppression-refresh | OUTUX-07, OUTUX-08 | automated | `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08` |
+| fb-inbound-addresses | INUX-05 | automated | `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage` |
+| fb-storybook-fidelity | STORY-03 to STORY-07 | automated | `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#storybook-fidelity-and-real-zoom-uiq-06` |
+| fb-replay-review | REPLAY-04 to REPLAY-08 | automated | `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#replay-path-replay-04-through-replay-08` |
+| fb-technical-details | UXF-12 | automated | `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#technical-evidence-uxf-12` |
+
+The Phase 174 review guide (`mailglass_admin/docs/phase174-review.md`) restates each row's status and pointer in its Feedback disposition table, and its replay command now uses the installed Erlang pin `ASDF_ERLANG_VERSION=27.3.4.15` with Elixir `1.18.4-otp-27`, matching the toolchain note under "Reproduce and check" above (D-11; `.tool-versions` is unchanged).
+
+Limits: the ledger proves that each pointer resolves to a real file and heading and that scenarios link both ways; it does not judge whether the target section's evidence is sufficient. Sufficiency is each owning phase's automated record.

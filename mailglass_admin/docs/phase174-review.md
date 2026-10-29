@@ -17,7 +17,7 @@ The hosted candidate and cost figures below describe the earlier implementation 
 Run the isolated cold/warm pilot from the repository root with the pinned local toolchain:
 
 ```sh
-ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 \
+ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 \
   bash scripts/run_demo_browser_evidence.sh --phase174 --pilot
 ```
 
@@ -82,28 +82,28 @@ The scenario manifest distinguishes pure scenario facts from persisted projectio
 
 I reviewed the retained candidate captures `phase174/cold/delivery-light.png`, `phase174/cold/delivery-dark.png`, `phase174/warm/delivery-320-boundary-dark.png`, and `phase174/warm/inbound-1440-boundary-dark.png`. Light and dark keep the subject, outcome, recipient, time, Account/provider and technical identifier in a clear hierarchy. The selected navigation and close controls read as quiet controls with visible boundaries. At 320px, the subject and timestamp wrap and the panel continues vertically without visible horizontal spill. At the wide Inbound capture, the panel remains a contained reading column. The Storybook review-theme control crowds its own chrome at the top of the narrow capture; that is review chrome rather than quick-view content. This is a bounded, subjective review of selected Chromium captures, not an aesthetic score or a statement about all browsers/devices.
 
-The 50 Axe incomplete findings per condition are retained and matched against the independent triage record; they remain incomplete machine results, not passes. No violation fingerprint is approved. The descriptorless transparency prohibition remains flagged-unverified; this evidence does not infer an owner approval. The serif StatCard/catalogue feedback and real browser zoom/final milestone reconciliation remain Phase 178 work. Focus, reduced-motion, width, theme, hook and keyboard evidence for the current repair is not deferred.
+The 50 Axe incomplete findings per condition are retained and matched against the independent triage record; they remain incomplete machine results, not passes. No violation fingerprint is approved. The descriptorless transparency prohibition remains flagged-unverified; this evidence does not infer an owner approval. The serif StatCard feedback and real browser zoom were closed in Phase 178: the StatCard font-role receipt, the actual-200% zoom cases and the replay commands are recorded in `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#storybook-fidelity-and-real-zoom-uiq-06`. This review's own limits (Chromium only, selected captures, no owner aesthetic verdict) are unchanged. Focus, reduced-motion, width, theme, hook and keyboard evidence for the current repair is not deferred.
 
 ## Feedback disposition
 
-The manifest is `reference/persona_spec/quick_view_scenarios.json`; its `feedback` entries and scenario IDs remain the inventory. The two Phase 174 rows link to this guide and to the current retained evidence:
+The manifest is `reference/persona_spec/quick_view_scenarios.json`; its `feedback` entries and scenario IDs remain the inventory. Phase 174 owned the first two rows. Every row now carries the status and `evidence_pointer` the manifest records, and the merge-blocking test "Phase 178 ledger: no feedback row is pending or partial" in `mailglass_admin/test/mailglass_admin/feedback_ledger_test.exs` keeps the open set empty:
 
-| Feedback | Requirement(s) | Current disposition and evidence |
+| Feedback | Requirement(s) | Current status, evidence and scope |
 | --- | --- | --- |
-| `fb-quiet-quick-view-arrows` | UXF-11 | Resolved for Delivery and Inbound connected routes and the scenario IDs above. Delivery unavailable navigation is inert; Inbound unavailable navigation is natively disabled. |
-| `fb-storybook-fidelity` | STORY-03–07 | Partial. Current receipts cover routes/assets, production CSS/fonts, both themes, hooks, connected cases and strict Axe comparison. STORY-07 set-wide reconciliation, serif StatCard/catalogue work and real zoom remain with Phase 178. |
-| `fb-suppression-refresh` | OUTUX-07, OUTUX-08 | Pending Phase 175; retain ready/empty/stale/unavailable suppression evidence and truthful retry/expiry language. |
-| `fb-replay-review` | REPLAY-04–08 | Pending Phase 175; retain permitted, unavailable, denied, success and retry outcomes. |
-| `fb-technical-details` | UXF-12 | Pending Phase 175; retain production stories and connected full-detail evidence on both surfaces. |
-| `fb-auto-apply-filters` | FILTER-01–04 | Pending Phase 176; retain connected URL/history and Back/Forward cases for both lists. |
-| `fb-raw-source-hierarchy` | INUX-06 | Pending Phase 176; keep reveal authorization and the safe source allowlist in connected evidence. |
-| `fb-inbound-addresses` | INUX-05 | Pending Phase 176; retain authorized long/Unicode, missing and multiple-address cases. |
-| `fb-health-crowding` | OUTUX-06 | Pending Phase 177; retain Health hierarchy and filtered deep-link comparison. |
-| `fb-account-context` | UXF-09, UXF-10 | Pending Phase 177; retain scoped Health/collection and host-approved Preview return-route evidence. |
-| `fb-preview-reset` | PRVUX-05, PRVUX-06 | Pending Phase 178; retain authoring/reset behavior while preserving parsing and validation. |
-| `fb-preview-identity` | PRVUX-07 | Pending Phase 178; retain long/Unicode and narrow selector identity evidence. |
+| `fb-quiet-quick-view-arrows` | UXF-11 | Resolved. Evidence: `mailglass_admin/docs/phase174-review.md#feedback-disposition`. Delivery and Inbound connected routes and the scenario IDs above. Delivery unavailable navigation is inert; Inbound unavailable navigation is natively disabled. |
+| `fb-storybook-fidelity` | STORY-03–07 | Automated. Evidence: `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#storybook-fidelity-and-real-zoom-uiq-06`. Routes/assets, production CSS/fonts, both themes, hooks, connected cases and strict Axe comparison from Phase 174, plus the Phase 178 StatCard font-role receipt, STORY-07 set-wide accounting and actual-200% zoom at 320 CSS px. |
+| `fb-suppression-refresh` | OUTUX-07, OUTUX-08 | Automated. Evidence: `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08`. Ready, empty, stale and unavailable suppression evidence with truthful retry and expiry language. |
+| `fb-replay-review` | REPLAY-04–08 | Automated. Evidence: `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#replay-path-replay-04-through-replay-08`. Permitted, unavailable, denied, success and retry outcomes. |
+| `fb-technical-details` | UXF-12 | Automated. Evidence: `.planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#technical-evidence-uxf-12`. Production stories and connected full-detail evidence on both surfaces. |
+| `fb-auto-apply-filters` | FILTER-01–04 | Automated. Evidence: `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths-roadmap-success-criteria`. Connected URL/history and Back/Forward cases for both lists (`connected-real-route-only`). |
+| `fb-raw-source-hierarchy` | INUX-06 | Automated. Evidence: `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage`. Reveal authorization and the safe source allowlist in connected evidence. |
+| `fb-inbound-addresses` | INUX-05 | Automated. Evidence: `.planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage`. Authorized long/Unicode, missing and multiple-address cases. |
+| `fb-health-crowding` | OUTUX-06 | Automated. Evidence: `.planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#health-composition-outux-06`. Health hierarchy and filtered deep-link comparison. |
+| `fb-account-context` | UXF-09, UXF-10 | Automated. Evidence: `.planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#account-scope-and-preview-return-uxf-09-uxf-10`. Scoped Health/collection and host-approved Preview return-route evidence. |
+| `fb-preview-reset` | PRVUX-05, PRVUX-06 | Automated. Evidence: `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#preview-authoring-prvux-05-prvux-06`. Authoring and Restore defaults behavior with parsing and validation preserved. |
+| `fb-preview-identity` | PRVUX-07 | Automated. Evidence: `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#readable-scenario-selector-prvux-07`. Long/Unicode and narrow selector identity evidence. |
 
-Later rows remain pending with their assigned owners; this plan does not mark them resolved.
+All 12 rows are closed; the record of the rule, its teeth and the final status table is `.planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#feedback-ledger-uiq-04`.
 
 ## CI placement and cost disposition
 
