@@ -72,7 +72,7 @@ defmodule MailglassAdmin.SurfaceNav do
         aria-describedby={@scope == :account && @desc_id}
         class="w-full rounded-box border border-base-300 bg-base-100"
       >
-        <div id={@header_id} class="relative border-b border-base-300 p-sm">
+        <div id={@header_id} class="relative border-b border-base-300 p-sm md:static">
           <%= if @scope == :account do %>
             {render_slot(@scope_header)}
           <% else %>

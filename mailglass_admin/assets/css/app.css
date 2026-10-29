@@ -337,10 +337,6 @@
   max-width: 42rem;
 }
 
-.mg-scope-identity {
-  max-width: 18rem;
-}
-
 .mg-scope-menu {
   width: min(22rem, calc(100vw - 2rem));
 }
@@ -699,8 +695,11 @@ code, pre, .mono {
   display: block;
 }
 
-/* Narrow chrome has two deliberate rows: identity/theme, then account scope.
-   Keep native radio names and 44px targets while hiding their redundant text. */
+/* Narrow chrome is one topbar row: logo and the Appearance picker. The Account
+   control no longer lives here; it heads the scope group in the mobile band
+   (see SurfaceNav). Keep native radio names and 44px targets while hiding their
+   redundant text. Below md the Account menu spans the group instead of the md+
+   capped width. */
 @media (max-width: 767px) {
   .mg-admin-root [data-testid="admin-shell-topbar"] {
     display: grid;
@@ -728,30 +727,8 @@ code, pre, .mono {
     display: none;
   }
 
-  .mg-admin-root [data-testid="operator-account-context"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .mg-admin-root [data-testid="operator-account-context"] > details {
+  .mg-admin-root [data-account-scope] .mg-scope-menu {
     width: 100%;
-  }
-
-  .mg-admin-root [data-testid="operator-account-context"] .mg-scope-menu {
-    width: 100%;
-  }
-
-  .mg-admin-root [data-testid="operator-account-switcher"] {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .mg-admin-root [data-testid="operator-account-switcher"] > span > .text-secondary {
-    display: none;
-  }
-
-  .mg-admin-root [data-testid="operator-account-label"] {
-    max-width: none;
   }
 }
 

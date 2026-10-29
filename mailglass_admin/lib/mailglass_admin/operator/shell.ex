@@ -262,9 +262,11 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:tenant_state, :atom, default: nil)
 
   # The Account control is the header of the scope group (D-09). It renders a
-  # picker only when there is a real choice: two or more options (D-10). The
-  # menu is positioned against the header region SurfaceNav renders around it
-  # (`relative`), so below md it spans the group and at md+ it overlays main.
+  # picker only when there is a real choice: two or more options (D-10). Below
+  # md the menu is positioned against the header region SurfaceNav renders
+  # around it (`relative`), so it spans the whole group; at md+ the header is
+  # static and the details is the anchor, so the capped menu lines up with the
+  # summary and overlays main.
   def account_context(assigns) do
     selected_label =
       blank_to_nil(Accounts.label(assigns.selected_tenant_id, assigns.account_labels))
@@ -284,7 +286,11 @@ defmodule MailglassAdmin.Operator.Shell do
       aria-label="Account context"
       class="flex w-full min-w-0 flex-wrap items-center gap-sm"
     >
-      <details :if={@variant == :picker} class="group min-w-0 max-w-full" data-dismiss-outside>
+      <details
+        :if={@variant == :picker}
+        class="group w-full min-w-0 max-w-full md:relative"
+        data-dismiss-outside
+      >
         <summary
           class="mg-focus-ring flex min-h-11 min-w-0 max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left text-base-content transition-colors hover:bg-base-200 [&::-webkit-details-marker]:hidden"
           aria-label={
