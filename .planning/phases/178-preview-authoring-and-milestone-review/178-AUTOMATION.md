@@ -412,3 +412,9 @@ pre_approval_branch_sha: 25dc21cff0948eb75c0b00ec39cc06f4bb410e06
   - against `origin/gsd/v2.10-ui-repairs-storybook`: 52 commits ahead; 68 files changed, 13048 insertions, 233 deletions (`git diff --shortstat origin/gsd/v2.10-ui-repairs-storybook..<sha>`).
 - Pipeline dry run on the baseline (run 40414024714, jobs saved as one 26-job page): the `disposition` subcommand with the baseline standing in for the PR and dispatch runs and the retained Phase 174 `phase174/cost.json` reports every job delta 0 and 0 runner-minute delta in both runs. It finds `Demo Browser Evidence (Docker Compose / Chromium)`, `Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)` and `Support Contract Admin (Elixir 1.18 / OTP 27)` by exact name, and `pilot_conditions` has cold and warm. Expected counts written: operator 311, demo 111 (the 178-08 `--list` totals).
 - Approval text drafted from these numbers; the PR body is `reference/demo_app/tmp/phase178_candidate/pr-body.md` (git-ignored). The next step is the owner checkpoint 178-09-02.
+
+### Owner decision (checkpoint 178-09-02)
+
+owner_decision: approve-all
+
+The owner answered the checkpoint directly (AskUserQuestion in the orchestrator session) with `approve-all`, recorded verbatim. It authorizes exactly: the fast-forward push of the candidate SHA to `gsd/v2.10-ui-repairs-storybook`, one draft PR to main, and one `workflow_dispatch` of `ci.yml` on that branch. No rerun, merge, further push or PR edit is authorized. Before pushing, the remote was re-verified: `gsd/v2.10-ui-repairs-storybook` is still `25dc21cff0948eb75c0b00ec39cc06f4bb410e06` (an ancestor of the candidate), `main` is still `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`, and no PR exists for the branch.
