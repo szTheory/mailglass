@@ -15,7 +15,7 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Shared workspace and investigation controls
 
-- [ ] **UXF-09**: An operator can use a compact Account control that clearly scopes Health, Deliveries and Inbound without suggesting Account-scoped Preview data.
+- [x] **UXF-09**: An operator can use a compact Account control that clearly scopes Health, Deliveries and Inbound without suggesting Account-scoped Preview data.
 - [x] **UXF-10**: An operator entering Preview can return to the originating Account through a validated host-approved local destination, with a clear direct-entry fallback.
 - [x] **UXF-11**: An operator can use quieter previous/next controls on both quick views with readable position, coherent Close, 44px targets, accessible names, focus and disabled boundaries.
 - [x] **UXF-12**: An operator opening full Delivery or Inbound detail can read grouped technical evidence below primary facts without first expanding a disclosure.
@@ -29,7 +29,7 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Health and suppression evidence
 
-- [ ] **OUTUX-06**: An operator can scan Health's actionable issues in a readable composition with grouped period/freshness/Refresh and subordinate activity, retaining specific deep links and truthful populations.
+- [x] **OUTUX-06**: An operator can scan Health's actionable issues in a readable composition with grouped period/freshness/Refresh and subordinate activity, retaining specific deep links and truthful populations.
 - [x] **OUTUX-07**: An operator can refresh suppression evidence and retry a failed read through a consistently placed action with truthful ready, empty, stale and unavailable outcomes.
 - [x] **OUTUX-08**: An operator can understand suppression expiry and supported removal in plain language, without an invented removal button or treating unknown expiry as never expiring.
 
@@ -132,7 +132,7 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 
 | Requirement | Phase | Status |
 | --- | --- | --- |
-| UXF-09 | Phase 177 | Pending |
+| UXF-09 | Phase 177 | Complete |
 | UXF-10 | Phase 177 | Complete |
 | UXF-11 | Phase 174 | Complete |
 | UXF-12 | Phase 175 | Complete |
@@ -140,7 +140,7 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | FILTER-02 | Phase 176 | Complete |
 | FILTER-03 | Phase 176 | Complete |
 | FILTER-04 | Phase 176 | Complete |
-| OUTUX-06 | Phase 177 | Pending |
+| OUTUX-06 | Phase 177 | Complete |
 | OUTUX-07 | Phase 175 | Complete |
 | OUTUX-08 | Phase 175 | Complete |
 | INUX-05 | Phase 176 | Complete |

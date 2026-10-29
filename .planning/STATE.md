@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 177
 current_phase_name: Readable Health and Coherent Account Navigation
 status: executing
-stopped_at: Completed 177-08-PLAN.md
-last_updated: "2026-10-29T01:02:47.705Z"
+stopped_at: Completed 177-09-PLAN.md
+last_updated: "2026-10-29T01:10:51.887Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 177 execution started
-state_head: e66627686ffee2cbacc250b26d6cdd1750f25f35
+state_head: 48d68cd95ac73d4b5cd5e22540957108aed54215
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 38
-  completed_plans: 36
+  completed_plans: 37
   percent: 60
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 177 (Readable Health and Coherent Account Navigation) — EXECUTING
-Plan: 10 of 11
+Plan: 11 of 11
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 177 execution started
 
@@ -325,6 +325,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 177 P06 | 10 min | 3 tasks | 10 files |
 | Phase 177 P07 | 25 min | 3 tasks | 8 files |
 | Phase 177 P08 | 18 min | 3 tasks | 3 files |
+| Phase 177 P09 | 40min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -624,6 +625,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 177]: 177-07: Account-control e2e locators scope through the visible scope group (option/status/id) rather than visibility-filtering hidden-until-open elements; aria-label removed from role-less Account context div (axe aria-prohibited-attr)
 - [Phase 177]: 177-08: Health composition A (single 42rem column) wins the bounded A vs B comparison; both pass G1-G7, tie-breakers 1-3 tie, layout rules 3 vs 8 decides; production unchanged
 - [Phase 177]: 177-08: unavailable Health state is produced by arming a one-shot failed_ingest fault on Deliveries and reopening Health from the scope nav; empty uses the helios-void persona
+- [Phase 177]: 177-09: northstar_normal Health story mirrors the real route's no-issue derivation; parity test also compares activity totals; story iframes resolved by stable id prefix
 
 ## Quick Tasks Completed
 
@@ -675,8 +677,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T01:02:47.281Z
-Stopped at: Completed 177-08-PLAN.md
+Last session: 2026-10-29T01:10:51.398Z
+Stopped at: Completed 177-09-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
