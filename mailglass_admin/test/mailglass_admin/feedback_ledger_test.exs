@@ -60,10 +60,12 @@ defmodule MailglassAdmin.FeedbackLedgerTest do
       assert FeedbackLedger.duplicate_ids(QuickViewScenarios.feedback()) == []
     end
 
-    test "Phase 178 ledger: the one open row is the partial fidelity row, so none can hide" do
+    test "Phase 178 ledger: no feedback row is pending or partial" do
+      # D-15 phase-close invariant: every owner-feedback row is closed (automated or
+      # resolved), so none can hide as pending or partial.
       assert FeedbackLedger.open_rows(QuickViewScenarios.feedback()) == %{
                pending: [],
-               partial: ["fb-storybook-fidelity"]
+               partial: []
              }
     end
 

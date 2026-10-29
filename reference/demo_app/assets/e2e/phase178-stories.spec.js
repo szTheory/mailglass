@@ -70,3 +70,111 @@ test("Phase 178 retained Preview authoring stories render through production com
     }
   }
 });
+
+// UIQ-06 / D-07: the owner reported that the Storybook StatCard rendered in a serif face. The
+// receipt compares computed font roles in the story iframe with the same component rendered
+// by the production Admin gallery. Both pages are served by this demo from the same admin CSS
+// bytes, so the comparison fails on any divergence, not only on a serif fallback.
+const STATCARD = {
+  path: "/dev/storybook/primitives/stat_card",
+  gallery: "/dev/mail/gallery",
+  galleryCell: "gallery-stat_card-neutral",
+  cases: [
+    { variation: "neutral_light", theme: "light" },
+    { variation: "neutral_dark", theme: "dark" }
+  ],
+  productionFamilies: ["Inter", "Inter Tight", "IBM Plex Mono"],
+  serifGenerics: ["serif", "georgia", "times", "times new roman", "cambria", "palatino"]
+};
+
+// Reads {family, weight} per role from the StatCard under `scope`, plus the faces in use.
+async function readStatCardRoles(scope) {
+  return scope.evaluate(async scope => {
+    const view = scope.ownerDocument.defaultView;
+    const document = scope.ownerDocument;
+    const style = element => {
+      const computed = view.getComputedStyle(element);
+      return { family: computed.fontFamily, weight: computed.fontWeight };
+    };
+    const article = scope.querySelector("article");
+    const label = article.querySelector("p span");
+    const value = article.querySelector("p.mono");
+    const roles = { ui: style(scope), label: style(label), value: style(value) };
+    const firstFamily = family => family.split(",")[0].trim().replace(/^["']|["']$/g, "");
+    const faces = [];
+    for (const role of Object.keys(roles)) {
+      const family = firstFamily(roles[role].family);
+      const weight = roles[role].weight;
+      await document.fonts.load(`${weight} 16px "${family}"`, "Mailglass 012345");
+      const loaded = [...document.fonts].some(
+        face =>
+          face.family.replace(/["']/g, "") === family &&
+          face.weight === String(weight) &&
+          face.style === "normal" &&
+          face.status === "loaded"
+      );
+      faces.push({
+        role,
+        family,
+        weight,
+        check: document.fonts.check(`${weight} 16px "${family}"`, "Mailglass 012345"),
+        loaded
+      });
+    }
+    return { roles, faces };
+  });
+}
+
+test("Phase 178 StatCard story uses the production font roles", async ({ page }) => {
+  const production = {};
+  const galleryResponse = await page.goto(STATCARD.gallery);
+  expect(galleryResponse?.status(), `${STATCARD.gallery} loads`).toBe(200);
+  const cell = page.getByTestId(STATCARD.galleryCell);
+  await expect(cell, "production gallery renders the neutral StatCard cell").toBeVisible();
+  for (const { theme } of STATCARD.cases) {
+    const wrapper = cell.locator(`[data-theme="mailglass-${theme}"]`).first();
+    await expect(wrapper, `production ${theme} StatCard wrapper`).toBeVisible();
+    production[theme] = await readStatCardRoles(await wrapper.elementHandle());
+  }
+
+  const response = await page.goto(STATCARD.path);
+  expect(response?.status(), `${STATCARD.path} loads`).toBe(200);
+
+  const receipt = [];
+  for (const { variation, theme } of STATCARD.cases) {
+    const iframe = page.locator(`iframe[id*="variation-${variation}"]`);
+    await expect(iframe, `${variation} has exactly one story iframe`).toHaveCount(1);
+    const frame = page.frameLocator(`iframe[id*="variation-${variation}"]`);
+    const wrapper = frame.locator(`[data-theme="mailglass-${theme}"]`).first();
+    await expect(wrapper.locator("article"), `${variation} renders the production StatCard`).toBeVisible();
+
+    const story = await readStatCardRoles(await wrapper.elementHandle());
+    const reference = production[theme];
+
+    for (const role of ["ui", "label", "value"]) {
+      const storyFamily = story.roles[role].family.split(",")[0].trim().replace(/^["']|["']$/g, "");
+      const productionFamily = reference.roles[role].family.split(",")[0].trim().replace(/^["']|["']$/g, "");
+      expect(storyFamily, `${variation} ${role} first family matches production`).toBe(productionFamily);
+      expect(story.roles[role].weight, `${variation} ${role} weight matches production`).toBe(
+        reference.roles[role].weight
+      );
+      expect(
+        STATCARD.productionFamilies,
+        `${variation} ${role} resolves to a production face, not a fallback`
+      ).toContain(storyFamily);
+      expect(
+        STATCARD.serifGenerics,
+        `${variation} ${role} first family is not a serif`
+      ).not.toContain(storyFamily.toLowerCase());
+    }
+    for (const face of [...story.faces, ...reference.faces]) {
+      expect(face.check, `document.fonts.check ${face.role} ${face.weight} ${face.family}`).toBe(true);
+      expect(face.loaded, `${face.role} ${face.weight} ${face.family} face is loaded`).toBe(true);
+    }
+
+    receipt.push({ variation, theme, story: story.roles, production: reference.roles });
+  }
+
+  test.info().annotations.push({ type: "statcard-font-roles", description: JSON.stringify(receipt) });
+  console.log("PHASE178_STATCARD_RECEIPT " + JSON.stringify(receipt));
+});

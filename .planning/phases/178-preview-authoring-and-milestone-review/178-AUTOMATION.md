@@ -101,3 +101,77 @@ These scenarios are linked by a feedback row but have no story render, so they a
 | qv-inbound-empty | fb-quiet-quick-view-arrows, fb-storybook-fidelity | false | null | connected-real-route-only |
 
 Linked scenarios without a story render: 2
+
+## Storybook fidelity and real zoom (UIQ-06)
+
+The last open owner-feedback row, `fb-storybook-fidelity`, is closed (`automated`, `pending_phases` removed) on two receipts: a computed font-role comparison for the StatCard story (plan 178-07) and actual-200% browser zoom at 320 CSS px for every area the milestone deferred (plan 178-06). The owner's todo said Storybook's `.psb-sandbox` rendered the StatCard in a serif face; the question was never answered by an assertion until now.
+
+### StatCard font roles
+
+Advisory demo case `reference/demo_app/assets/e2e/phase178-stories.spec.js` "Phase 178 StatCard story uses the production font roles". For the `neutral_light` and `neutral_dark` variations of `/dev/storybook/primitives/stat_card` it reads the computed `font-family` and `font-weight` of three roles: the `data-theme` root (UI text), the label span and the `p.mono` value. It reads the same three roles from the production Admin gallery cell `gallery-stat_card-neutral` at `/dev/mail/gallery`, in the matching light and dark wrappers. Both pages are served by the same isolated demo from the same admin CSS bytes, so the comparison does not hard-code family names. It asserts, per role and theme:
+
+- the first family and the weight equal production's;
+- the first family is one of Inter, Inter Tight or IBM Plex Mono and is not a serif generic;
+- `document.fonts.check` is true for the face in use and that face reports `loaded` (the case calls `document.fonts.load` first, because `check` alone is true when no face matches).
+
+RECEIPT_PLACEHOLDER
+
+### Real zoom
+
+Chromium tab zoom is applied through the repository's zoom extension (`mailglass_admin/e2e/support/real-zoom.cjs`), not CSS `zoom` or a DPR override. Every case reports tab zoom 2, initial `{devicePixelRatio: 2, innerWidth: 1440}` and effective `{devicePixelRatio: 4, innerWidth: 320}`, with `documentWidth <= 320` asserted per route and pushed as a `real-zoom` test annotation. Results from 178-06 (`178-06-SUMMARY.md`):
+
+| Case | Where | Result |
+| --- | --- | --- |
+| Delivery quick view keeps position, arrows and Close usable | `mailglass_admin/e2e/phase178-real-zoom.spec.js` | pass (0.5-0.7 s) |
+| Inbound quick view keeps position, arrows and Close usable | `phase178-real-zoom.spec.js` | pass (0.7-0.8 s) |
+| Health overview keeps verdict, issue rows and Refresh readable | `phase178-real-zoom.spec.js` | pass (0.4-0.5 s) |
+| Account control opens and lists Accounts | `phase178-real-zoom.spec.js` | pass (0.2 s) |
+| Filters on Deliveries and Inbound apply without overflow | `phase178-real-zoom.spec.js` | pass (0.8-1.1 s) |
+| Phase 171 actual 200% zoom, now also Restore defaults and the technical identity line | `mailglass_admin/e2e/structural.spec.js` | pass (0.8 s) |
+
+The two Phase 176 `style.zoom` cases are labelled "CSS zoom 2x" and are not counted as real zoom. The Storybook fidelity receipt limit says it applies no browser zoom and points to `phase178-real-zoom.spec.js`. The target scan has teeth: raising the 44 px threshold in `undersizedTargets` made the Delivery case fail naming `operator-quick-view-next`, `operator-detail-back`, `operator-quick-view-full` and the copy buttons.
+
+### CI lanes
+
+Both lanes are advisory and neither is in the `CI Green` aggregate.
+
+- **Demo Browser Evidence** (Docker Compose, Chromium): runs the demo Playwright suite under `reference/demo_app/assets/e2e/`, which includes the StatCard case and the retained Preview authoring stories case.
+- **Operator Browser Gate** (`npm run test:operator-browser`, Chromium): runs `mailglass_admin/e2e/`, which includes `phase178-real-zoom.spec.js` and the extended Phase 171 case. It adds one Chromium launch for the persistent real-zoom context.
+
+### Width selection
+
+The phase's browser cases use 320, 390, 639, 640 and 1280 px rather than the 768 and 1440 px landmarks:
+
+- 320: the WCAG 1.4.10 reflow width, and the effective CSS width of real 2x zoom on a 640 px viewport (178-06).
+- 390: a current common phone width, for the narrow selector and the full-width Restore defaults button.
+- 639 and 640: the two sides of the committed bundle's only layout breakpoint on the repaired Preview surfaces, `@media (min-width: 40rem)` (sm), where Restore defaults changes from full width to end-aligned (178-01).
+- 1280: the desktop landmark for end alignment above the breakpoint, also on the padded side of the sidebar's `md:p-lg`.
+- 768 is not a separate width because the only md rule on the repaired surfaces is `md:p-lg` padding in `sidebar.ex` (`assigns_form.ex` has none), which the 639/640 and 1280 runs already cover on both sides. Re-checked at execution time with `grep -o 'md:[a-z0-9-]*\|lg:[a-z0-9-]*' mailglass_admin/lib/mailglass_admin/preview/sidebar.ex mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex`, which printed only `md:p-lg`.
+- 1440 is the launch viewport of the real-zoom recipe before it is resized to 640, and desktop alignment is already proven at 1280 under the same min-width rule.
+
+### Hook receipts
+
+Determination for ROADMAP success criterion 4: this phase adds or changes no hook.
+
+The repaired surfaces carry no `phx-hook`. `reset_assigns` is a server `phx-click` event, not a hook.
+
+```sh
+$ grep -n 'phx-hook' mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex mailglass_admin/lib/mailglass_admin/preview/sidebar.ex
+$ echo $?
+1
+```
+
+The grep prints nothing and exits 1. The Preview-area hooks `PreviewTabs` and `PreviewPanelScroll` (`mailglass_admin/lib/mailglass_admin/preview/tabs.ex:40` and `:71`, implemented in `mailglass_admin/priv/static/hooks.js`) are untouched since `phase_base_sha` `61e90275f01f9927d2f8ab3bbfd3ba7f9099dffc` (from `178-01-SUMMARY.md`):
+
+```sh
+$ grep -n 'phx-hook' mailglass_admin/lib/mailglass_admin/preview/tabs.ex
+40:        phx-hook="PreviewTabs"
+71:        phx-hook="PreviewPanelScroll"
+$ git diff --quiet 61e90275f01f9927d2f8ab3bbfd3ba7f9099dffc HEAD -- mailglass_admin/lib/mailglass_admin/preview/tabs.ex mailglass_admin/priv/static/hooks.js
+$ echo $?
+0
+```
+
+Their existing receipts (Phase 174 `hooks.json` and the Admin `flows.spec.js` cases) are therefore unchanged and need no new real-route receipt.
+
+Limits: Chromium only, headless, synthetic data. The StatCard receipt covers the neutral variation in two themes, not every severity; the font roles are set by the shared `.mg-admin-root` bundle rules, so the remaining variations differ only in colour and content. Real zoom is Chromium tab zoom at 320 CSS px and says nothing about Safari or Firefox text scaling.
