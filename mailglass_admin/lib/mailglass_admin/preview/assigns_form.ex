@@ -30,6 +30,10 @@ defmodule MailglassAdmin.Preview.AssignsForm do
 
   use Phoenix.Component
 
+  # One form-level note replaces the per-field helpers: read-only values share a
+  # single explanation instead of repeating it under every display.
+  @readonly_note "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+
   attr :scenario_assigns, :map, required: true
   attr :draft_assigns, :map, default: %{}
   attr :field_errors, :map, default: %{}
@@ -39,6 +43,12 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   """
   @doc since: "0.1.0"
   def assigns_form(assigns) do
+    assigns =
+      assigns
+      |> assign(:readonly_note, @readonly_note)
+      |> assign(:readonly_note_id, readonly_note_id())
+      |> assign(:readonly_values?, readonly_values?(assigns.scenario_assigns))
+
     ~H"""
     <form
       id="preview-assigns-form"
@@ -53,7 +63,16 @@ defmodule MailglassAdmin.Preview.AssignsForm do
           value={value}
           draft={Map.get(@draft_assigns, key)}
           error={Map.get(@field_errors, key)}
+          note_id={if @readonly_values?, do: @readonly_note_id}
         />
+        <p
+          :if={@readonly_values?}
+          id={@readonly_note_id}
+          data-testid="preview-assigns-readonly-note"
+          class="text-label text-secondary"
+        >
+          {@readonly_note}
+        </p>
       <% else %>
         <p data-testid="preview-no-editable-assigns" class="text-body text-secondary">
           There are no editable values here. Edit this scenario's defaults in its Mailable.
@@ -77,6 +96,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   attr :value, :any, required: true
   attr :draft, :any, default: nil
   attr :error, :string, default: nil
+  attr :note_id, :string, default: nil
 
   # binary -> text input
   def field(%{value: v} = assigns) when is_binary(v) do
@@ -95,7 +115,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
-      <.field_help id={@help_id} text={@help_text} />
       <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
@@ -118,7 +137,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
-      <.field_help id={@help_id} text={@help_text} />
       <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
@@ -141,7 +159,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
-      <.field_help id={@help_id} text={@help_text} />
       <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
@@ -169,7 +186,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         text={@label}
         class="label cursor-pointer justify-start gap-sm px-0"
       />
-      <.field_help id={@help_id} text={@help_text} />
       <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
@@ -196,7 +212,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
-      <.field_help id={@help_id} text={@help_text} />
       <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
@@ -250,15 +265,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   attr :id, :string, required: true
   attr :text, :string, required: true
 
-  defp field_help(assigns) do
-    ~H"""
-    <p id={@id} class="mt-1 text-label text-secondary">{@text}</p>
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :text, :string, required: true
-
   defp field_error(assigns) do
     ~H"""
     <p id={@id} class="mt-1 text-label text-error">{@text}</p>
@@ -277,13 +283,12 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         id={@control_id}
         data-readonly-display="true"
         aria-labelledby={@label_id}
-        aria-describedby={@help_id}
+        aria-describedby={Map.get(assigns, :note_id)}
         aria-readonly="true"
         class="rounded-box border border-base-300 bg-base-200 p-3 font-mono text-label text-base-content"
       >
         {inspect(@value)}
       </div>
-      <.field_help id={@help_id} text={@help_text} />
     </div>
     """
   end
@@ -294,30 +299,11 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     assigns
     |> assign(:control_id, control_id(key))
     |> assign(:control_name, control_name(key))
-    |> assign(:help_id, help_id(key))
     |> assign(:label_id, label_id(key))
     |> assign(:error_id, error_id(key))
     |> assign(:label, humanize(key))
     |> assign(:input_value, Map.get(assigns, :draft) || assigns.value)
     |> assign(:described_by, described_by(key, Map.get(assigns, :error)))
-    |> assign(:help_text, help_text_for(assigns.value))
-  end
-
-  # Per-field help describes the value type and how to edit it — not a
-  # restatement of the label (the old "Preview assign value for X." boilerplate
-  # repeated the field name under every control and added no information).
-  defp help_text_for(value) do
-    cond do
-      is_boolean(value) -> "Toggle on or off."
-      is_binary(value) -> "Text value."
-      is_integer(value) -> "Whole number."
-      is_float(value) -> "Decimal number."
-      is_struct(value, DateTime) -> "Read-only; edit it in the Mailable scenario."
-      is_struct(value, Date) -> "Date."
-      is_struct(value) or is_map(value) -> "Read-only; edit it in the Mailable scenario."
-      is_atom(value) -> "Read-only; edit it in the Mailable scenario."
-      true -> "Read-only; edit it in the Mailable scenario."
-    end
   end
 
   defp editable_values?(assigns),
@@ -328,12 +314,19 @@ defmodule MailglassAdmin.Preview.AssignsForm do
       is_binary(value) or is_integer(value) or is_float(value) or is_boolean(value) or
         is_struct(value, Date)
 
+  # True when at least one value renders as a read-only display beside editable ones.
+  defp readonly_values?(assigns),
+    do: Enum.any?(assigns, fn {_key, value} -> not editable_value?(value) end)
+
   defp control_id(key), do: "assigns-" <> Atom.to_string(key)
   defp control_name(key), do: "assigns[" <> Atom.to_string(key) <> "]"
-  defp help_id(key), do: control_id(key) <> "-help"
   defp error_id(key), do: control_id(key) <> "-error"
-  defp described_by(key, nil), do: help_id(key)
-  defp described_by(key, _error), do: help_id(key) <> " " <> error_id(key)
+  defp readonly_note_id, do: "preview-assigns-readonly-note"
+
+  # Editable fields are described only by their own parse error; the label already
+  # names the value, so no error means no aria-describedby.
+  defp described_by(_key, nil), do: nil
+  defp described_by(key, _error), do: error_id(key)
   defp label_id(key), do: control_id(key) <> "-label"
 
   # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97)

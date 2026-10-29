@@ -52,6 +52,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
+  @readonly_note "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
@@ -1009,18 +1011,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert mixed_draft =~ ~s(value="Long draft 東京")
       assert mixed_draft =~ ~s(value="8items")
 
-      for {key, invalid} <- [
-            {"quantity", "8items"},
-            {"ratio", "2.75tail"},
-            {"due_on", "2026-02-30"}
+      for {key, invalid, message} <- [
+            {"quantity", "8items", "Enter a whole number."},
+            {"ratio", "2.75tail", "Enter a decimal number."},
+            {"due_on", "2026-02-30", "Enter a valid calendar date."}
           ] do
         html =
           render_change(view, "assigns_changed", %{"assigns" => %{key => invalid}})
 
         assert html =~ "value=\"#{invalid}\""
         assert html =~ ~s(id="assigns-#{key}-error")
-        assert html =~ ~s(aria-describedby="assigns-#{key}-help assigns-#{key}-error")
+        assert html =~ ~s(aria-describedby="assigns-#{key}-error")
         assert html =~ ~s(aria-invalid="true")
+        assert html =~ message
+        assert_ids_closed!(html)
+        refute_generic_helpers!(html)
       end
     end
 
@@ -1031,7 +1036,10 @@ defmodule MailglassAdmin.PreviewLiveTest do
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
 
       assert html =~ ~s(data-readonly-display="true")
-      assert html =~ "edit it in the Mailable scenario"
+      [note] = html |> Floki.parse_document!() |> Floki.find("#preview-assigns-readonly-note")
+      assert String.trim(Floki.text(note)) == @readonly_note
+      assert_ids_closed!(html)
+      refute_generic_helpers!(html)
       refute html =~ ~s(name="assigns[metadata]")
       refute html =~ ~s(type="datetime-local")
 
@@ -1063,14 +1071,122 @@ defmodule MailglassAdmin.PreviewLiveTest do
       refute html =~ "Reset assigns"
     end
 
-    test "string assigns render stable labels, IDs, names, and help associations" do
+    test "restore defaults with no draft and no error re-renders the defaults (idempotent)", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      form = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#preview-assigns-form") |> Floki.raw_html()
+      end
+
+      first = view |> render_click("reset_assigns", %{}) |> form.()
+      second = view |> render_click("reset_assigns", %{}) |> form.()
+
+      assert first == second
+      assert first =~ ~s(value="Original")
+      refute first =~ "-error"
+    end
+
+    test "the assigns form ends with one Restore defaults action using the secondary classes" do
+      html =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{label: "Ada"})
+
+      [button] =
+        html |> Floki.parse_fragment!() |> Floki.find(~s(button[phx-click="reset_assigns"]))
+
+      assert String.trim(Floki.text(button)) == "Restore defaults"
+
+      assert Floki.attribute(button, "class") == [
+               "mg-focus-ring btn btn-ghost min-h-11 px-md border border-base-300 w-full sm:ml-auto sm:w-auto"
+             ]
+    end
+
+    test "editable fields carry no per-field helper and no -help ids" do
+      for {key, value} <- [
+            user_name: "Ada",
+            quantity: 3,
+            ratio: 1.5,
+            subscribed: true,
+            due_on: ~D[2026-10-09]
+          ] do
+        html = render_component(&AssignsForm.field/1, key: key, value: value)
+
+        refute html =~ "aria-describedby"
+        refute html =~ "-help"
+        refute_generic_helpers!(html)
+        assert_ids_closed!(html)
+      end
+    end
+
+    test "one form-level note describes read-only values and each display references it" do
+      html =
+        render_component(&AssignsForm.assigns_form/1,
+          scenario_assigns: %{user_name: "Ada", plan: :free}
+        )
+
+      document = Floki.parse_fragment!(html)
+
+      assert [note] = Floki.find(document, "#preview-assigns-readonly-note")
+      assert Floki.attribute(note, "data-testid") == ["preview-assigns-readonly-note"]
+      assert String.trim(Floki.text(note)) == @readonly_note
+
+      [plan] = Floki.find(document, "#assigns-plan")
+      assert Floki.attribute(plan, "aria-describedby") == ["preview-assigns-readonly-note"]
+      assert Floki.attribute(plan, "data-readonly-display") == ["true"]
+      assert Floki.attribute(plan, "aria-readonly") == ["true"]
+
+      [user_name] = Floki.find(document, "#assigns-user_name")
+      assert Floki.attribute(user_name, "aria-describedby") == []
+
+      assert_ids_closed!(html)
+      refute_generic_helpers!(html)
+    end
+
+    test "the read-only note is absent with only editable fields or no editable values" do
+      only_editable =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{user_name: "Ada"})
+
+      refute only_editable =~ "preview-assigns-readonly-note"
+      assert_ids_closed!(only_editable)
+
+      no_editable =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{plan: :free})
+
+      refute no_editable =~ "preview-assigns-readonly-note"
+      assert no_editable =~ "There are no editable values here."
+      assert_ids_closed!(no_editable)
+    end
+
+    test "every typed_values page state resolves its aria references", %{conn: conn} do
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      assert_ids_closed!(html)
+
+      invalid = render_change(view, "assigns_changed", %{"assigns" => %{"quantity" => "8items"}})
+      assert_ids_closed!(invalid)
+
+      assert_ids_closed!(render_click(view, "reset_assigns", %{}))
+    end
+
+    test "assert_ids_closed!/1 fails on a dangling aria-describedby" do
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_ids_closed!(~s(<div aria-describedby="missing"></div>))
+      end
+
+      assert_ids_closed!(~s(<p id="a"></p><div aria-describedby="a" aria-labelledby="a"></div>))
+    end
+
+    test "string assigns render stable labels, IDs and names without a helper" do
       html = render_component(&AssignsForm.field/1, key: :user_name, value: "Ada")
 
       assert html =~ ~s(<label for="assigns-user_name")
       assert html =~ ~s(id="assigns-user_name")
       assert html =~ ~s(name="assigns[user_name]")
-      assert html =~ ~s(aria-describedby="assigns-user_name-help")
-      assert html =~ ~s(id="assigns-user_name-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-user_name-help"
       assert html =~ "User name"
       refute html =~ "disabled"
     end
@@ -1082,8 +1198,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(id="assigns-subscribed")
       assert html =~ ~s(name="assigns[subscribed]")
       assert html =~ ~s(<label for="assigns-subscribed")
-      assert html =~ ~s(aria-describedby="assigns-subscribed-help")
-      assert html =~ ~s(id="assigns-subscribed-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-subscribed-help"
       assert html =~ "Subscribed"
     end
 
@@ -1093,7 +1209,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-readonly-display)
       assert html =~ ~s(id="assigns-mode")
       assert html =~ ~s(aria-readonly="true")
-      assert html =~ ~s(aria-describedby="assigns-mode-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-mode-help"
+      assert html =~ "(atom)"
       assert html =~ ":preview"
       refute html =~ ~s(type="text" disabled)
       refute html =~ ~s(disabled)
@@ -1118,7 +1236,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
         html = render_component(&AssignsForm.field/1, key: key, value: value)
 
         assert html =~ ~s(data-readonly-display="true")
-        assert html =~ "edit it in the Mailable scenario"
+        refute html =~ "edit it in the Mailable scenario"
+        refute html =~ "aria-describedby"
         refute html =~ "JSON"
         refute html =~ "<textarea"
       end
@@ -1180,6 +1299,44 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert render(view) =~ "Reloaded: user_mailer.ex",
              "LiveReload broadcast must surface a 'Reloaded: <file>' flash"
     end
+  end
+
+  # Every token in every aria-describedby / aria-labelledby must name an id in the
+  # same fragment (PRVUX-06): a dangling token makes a screen reader announce nothing.
+  defp assert_ids_closed!(html) do
+    document = Floki.parse_fragment!(html)
+
+    ids =
+      document
+      |> Floki.find("[id]")
+      |> Enum.flat_map(&Floki.attribute(&1, "id"))
+      |> MapSet.new()
+
+    for attribute <- ["aria-describedby", "aria-labelledby"],
+        element <- Floki.find(document, "[#{attribute}]"),
+        value <- Floki.attribute(element, attribute),
+        token <- String.split(value),
+        do:
+          assert(
+            MapSet.member?(ids, token),
+            "#{attribute} token #{inspect(token)} has no matching id"
+          )
+
+    :ok
+  end
+
+  defp refute_generic_helpers!(html) do
+    for generic <- [
+          "Text value.",
+          "Whole number.",
+          "Decimal number.",
+          "Toggle on or off.",
+          ">Date.<"
+        ] do
+      refute html =~ generic, "generic per-field helper #{inspect(generic)} must not render"
+    end
+
+    refute html =~ ~r/id="assigns-[^"]*-help"/
   end
 
   defp preview_subtitle(html) do

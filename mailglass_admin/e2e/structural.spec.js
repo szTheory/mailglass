@@ -2553,17 +2553,29 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const userNameId = await userName.getAttribute("id");
       expect(userNameId).toBe("assigns-user_name");
       expect(await previewForm.locator("label[for='assigns-user_name']").count()).toBe(1);
-      await expect(previewForm.locator("#assigns-user_name-help")).toBeVisible();
+      expect(await userName.getAttribute("aria-describedby")).toBeNull();
 
       const admin = previewForm.getByLabel("Admin?", { exact: true }).first();
       await expect(admin).toBeVisible();
       expect(await admin.getAttribute("id")).toBe("assigns-admin?");
-      await expect(previewForm.locator('[id="assigns-admin?-help"]')).toBeVisible();
+      expect(await admin.getAttribute("aria-describedby")).toBeNull();
 
       const planDisplay = previewForm.locator("[data-readonly-display='true'][id='assigns-plan']").first();
       await expect(planDisplay).toBeVisible();
       expect(await planDisplay.getAttribute("aria-readonly")).toBe("true");
-      await expect(previewForm.locator("#assigns-plan-help")).toBeVisible();
+
+      // PRVUX-06: no per-field helpers; one form-level note describes read-only values.
+      expect(await previewForm.locator('[id$="-help"]').count()).toBe(0);
+      const readonlyNote = previewForm.locator("#preview-assigns-readonly-note");
+      await expect(readonlyNote).toHaveCount(1);
+      await expect(readonlyNote).toBeVisible();
+      await expect(readonlyNote).toHaveText(
+        "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+      );
+      expect(await planDisplay.getAttribute("aria-describedby")).toBe("preview-assigns-readonly-note");
+      await expect(planDisplay).toHaveAccessibleDescription(
+        "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+      );
 
       const modal = await openAmbiguousOperatorReplayModal(page);
       await expect(modal).toBeVisible();
