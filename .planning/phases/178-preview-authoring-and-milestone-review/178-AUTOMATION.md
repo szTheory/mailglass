@@ -418,3 +418,21 @@ pre_approval_branch_sha: 25dc21cff0948eb75c0b00ec39cc06f4bb410e06
 owner_decision: approve-all
 
 The owner answered the checkpoint directly (AskUserQuestion in the orchestrator session) with `approve-all`, recorded verbatim. It authorizes exactly: the fast-forward push of the candidate SHA to `gsd/v2.10-ui-repairs-storybook`, one draft PR to main, and one `workflow_dispatch` of `ci.yml` on that branch. No rerun, merge, further push or PR edit is authorized. Before pushing, the remote was re-verified: `gsd/v2.10-ui-repairs-storybook` is still `25dc21cff0948eb75c0b00ec39cc06f4bb410e06` (an ancestor of the candidate), `main` is still `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`, and no PR exists for the branch.
+
+### Remote actions
+
+Run exactly as authorized, once each, from `/Users/jon/projects/mailglass` (times UTC, 2026-10-29):
+
+1. 15:41:51Z `git push origin 2bdf18161182beeb286435b556f26e205976e658:refs/heads/gsd/v2.10-ui-repairs-storybook` -> `25dc21cf..2bdf1816` (fast-forward, no force). `git ls-remote` afterwards: branch `2bdf18161182beeb286435b556f26e205976e658`, main `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` (unchanged).
+2. 15:42:06Z `gh pr create --draft --base main --head gsd/v2.10-ui-repairs-storybook --title "chore(ui): v2.10 UI repairs review candidate (do not merge)" --body-file reference/demo_app/tmp/phase178_candidate/pr-body.md` -> https://github.com/szTheory/mailglass/pull/317 (no earlier PR existed for the branch; draft, open).
+3. 15:42:15Z `gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook` -> https://github.com/szTheory/mailglass/actions/runs/40904249445 (workflow_dispatch, headSha = candidate, attempt 1).
+
+The PR creation started the `pull_request` CI run https://github.com/szTheory/mailglass/actions/runs/40904235961 (attempt 1; headSha = candidate).
+
+pr_number: 317
+pr_run_id: 40904235961
+dispatch_run_id: 40904249445
+
+Both approved runs reached `completed` at attempt 1 (no rerun). The PR run concluded `failure` and the dispatch run concluded `failure`; classification is task 4.
+
+remote_runs_status: completed
