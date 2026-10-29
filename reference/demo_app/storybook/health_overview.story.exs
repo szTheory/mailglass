@@ -26,7 +26,7 @@ defmodule Storybook.HealthOverview do
   end
 
   def variations do
-    for id <- [:northstar_normal] do
+    for id <- [:northstar_normal, :helios_empty, :stale, :unavailable, :fjordline_long_unicode] do
       %Variation{id: id, attributes: QuickViewScenarios.health_overview(id)}
     end
   end

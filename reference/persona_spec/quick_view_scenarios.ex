@@ -207,6 +207,103 @@ defmodule MailglassDemo.QuickViewScenarios do
     }
   end
 
+  @doc """
+  Builds the retained Account-scope story assigns for a scenario id.
+
+  Returns the assigns `MailglassAdmin.Operator.Shell.account_context/1` and
+  `MailglassAdmin.SurfaceNav.nav/1` (scope `:account`) accept, flat, plus the
+  scenario metadata.
+  """
+  def account_scope(scenario_id) when is_atom(scenario_id) do
+    variation_id = Atom.to_string(scenario_id)
+
+    scenario =
+      Enum.find(@manifest["scenarios"], fn entry ->
+        entry["rendered"] == true and entry["variation_id"] == variation_id and
+          String.starts_with?(entry["id"], "account-scope-")
+      end)
+
+    if is_nil(scenario),
+      do: raise(ArgumentError, "unknown retained Account scope scenario #{variation_id}")
+
+    projection = scenario["projection"]
+
+    scenario
+    |> story_meta()
+    |> Map.merge(surface_nav_assigns(projection))
+    |> Map.merge(%{
+      selected_tenant_id: projection["selected_tenant_id"],
+      tenant_options:
+        Enum.map(projection["tenant_options"], &%{id: &1["id"], label: &1["label"]}),
+      account_labels: projection["account_labels"],
+      tenant_state: tenant_state(projection["tenant_state"]),
+      page_uri: projection["page_uri"]
+    })
+  end
+
+  @doc """
+  Builds the retained Preview-chrome story assigns for a scenario id.
+
+  Returns the assigns `MailglassAdmin.SurfaceNav.nav/1` (scope `:preview`)
+  accepts, plus the scenario metadata. No Account identity is part of the facts.
+  """
+  def preview_chrome(scenario_id) when is_atom(scenario_id) do
+    variation_id = Atom.to_string(scenario_id)
+
+    scenario =
+      Enum.find(@manifest["scenarios"], fn entry ->
+        entry["rendered"] == true and entry["variation_id"] == variation_id and
+          String.starts_with?(entry["id"], "preview-chrome-")
+      end)
+
+    if is_nil(scenario),
+      do: raise(ArgumentError, "unknown retained Preview chrome scenario #{variation_id}")
+
+    projection = scenario["projection"]
+
+    scenario
+    |> story_meta()
+    |> Map.merge(surface_nav_assigns(projection))
+    |> Map.merge(%{
+      return_href: projection["return_href"],
+      return_label: projection["return_label"]
+    })
+  end
+
+  defp story_meta(scenario) do
+    %{
+      scenario_id: scenario["id"],
+      variation_id: scenario["variation_id"],
+      role_job: scenario["role_job"],
+      state: scenario["state"],
+      proof_boundary: scenario["proof_boundary"]
+    }
+  end
+
+  defp surface_nav_assigns(projection) do
+    %{
+      active: nav_key(projection["active"]),
+      layout: nav_layout(projection["layout"]),
+      preview_path: projection["preview_path"],
+      overview_path: projection["overview_path"],
+      deliveries_path: projection["deliveries_path"],
+      inbound_path: projection["inbound_path"],
+      inbound_available?: projection["inbound_available"] == true
+    }
+  end
+
+  defp nav_key("preview"), do: :preview
+  defp nav_key("overview"), do: :overview
+  defp nav_key("deliveries"), do: :deliveries
+  defp nav_key("inbound"), do: :inbound
+
+  defp nav_layout("sidebar"), do: :sidebar
+  defp nav_layout("mobile"), do: :mobile
+
+  defp tenant_state("none"), do: :none
+  defp tenant_state("selected"), do: :selected
+  defp tenant_state("unavailable"), do: :unavailable
+
   defp health_issue(issue) do
     %{
       testid: issue["testid"],

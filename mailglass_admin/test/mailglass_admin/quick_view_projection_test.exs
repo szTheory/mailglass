@@ -2,6 +2,7 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   use MailglassAdmin.LiveViewCase, async: false
 
   import Ecto.Query
+  import Phoenix.Component, only: [sigil_H: 2]
 
   alias Mailglass.Operator.Deliveries
   alias Mailglass.Events.Event
@@ -12,6 +13,8 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   alias MailglassAdmin.OptionalDeps.MailglassInbound
   alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.HealthOverview
+  alias MailglassAdmin.Operator.Shell
+  alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Operator.QuickView, as: DeliveryQuickView
   alias MailglassAdmin.TestSupport.{InboundFixtures, OperatorFixtures}
   alias MailglassDemo.QuickViewScenarios
@@ -497,12 +500,223 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   end
 
   @tag :phase177
+  test "Phase 177 retained Health scenarios render their defining states through production markup" do
+    # {scenario, markup that must appear, markup that must not appear}
+    table = [
+      {:helios_empty, ["No mail activity in this period"], ["<ul", "Needs attention"]},
+      {:stale,
+       [
+         "Not refreshed",
+         "Needs attention",
+         ~r/Webhook processing wasn(&#39;|')t refreshed/,
+         "Showing results from"
+       ], []},
+      {:unavailable,
+       [
+         "Health check incomplete",
+         ~r/couldn(&#39;|')t be loaded\./,
+         "Inbound activity unavailable"
+       ], ["No issues found"]},
+      {:fjordline_long_unicode, ["1234567890", "&lt;img src=x onerror=alert(1)&gt;", "山田太郎", "😀"],
+       ["<img src=x"]}
+    ]
+
+    for {id, needles, absent} <- table do
+      scenario = QuickViewScenarios.health_overview(id)
+      assert scenario.proof_boundary == "story-render-only"
+      assert scenario.scenario_id == "health-overview-" <> String.replace("#{id}", "_", "-")
+
+      html =
+        render_component(&HealthOverview.overview/1, Map.take(scenario, @health_overview_keys))
+
+      assert html =~ ~s(data-testid="operator-health-layout"), "#{id} layout"
+
+      for needle <- needles,
+          do: assert(html =~ needle, "#{id}: should contain #{inspect(needle)}")
+
+      for needle <- absent,
+          do: refute(html =~ needle, "#{id}: must not contain #{inspect(needle)}")
+
+      for issue <- scenario.issues do
+        assert html =~ ~s(data-testid="#{issue.testid}"), "#{id}: #{issue.testid} row"
+      end
+    end
+  end
+
+  @tag :phase177
+  test "Phase 177 retained Account scope scenarios render the control inside the scope group" do
+    # {scenario, markup that must appear, markup that must not appear}
+    table = [
+      {:none, ["No Accounts yet"], ["<details", "operator-account-option"]},
+      {:one, ["Northstar Logistics"], ["<details", "operator-account-option"]},
+      {:many, ["<details", "Available Accounts", "Helios Trial", "Fjordline A/S"],
+       ["No Accounts yet"]},
+      {:long_label, ["&lt;b&gt;bold&lt;/b&gt;", "山田太郎", "😀", "break-words"], ["<b>bold</b>"]}
+    ]
+
+    for {id, needles, absent} <- table do
+      scenario = QuickViewScenarios.account_scope(id)
+      assert scenario.proof_boundary == "story-render-only"
+      assert scenario.scenario_id == "account-scope-" <> String.replace("#{id}", "_", "-")
+
+      html = account_scope_html(scenario)
+      assert html =~ ~s(data-testid="operator-account-context"), "#{id} control"
+      assert html =~ ~s(data-testid="surface-nav-scope-group"), "#{id} scope group"
+      assert html =~ "Applies to Health, Deliveries and Inbound.", "#{id} scope description"
+
+      for needle <- needles,
+          do: assert(html =~ needle, "#{id}: should contain #{inspect(needle)}")
+
+      for needle <- absent,
+          do: refute(html =~ needle, "#{id}: must not contain #{inspect(needle)}")
+    end
+
+    many = account_scope_html(QuickViewScenarios.account_scope(:many))
+    assert length(String.split(many, ~s(data-testid="operator-account-option"))) - 1 == 3
+
+    assert_raise ArgumentError, ~r/unknown retained Account scope scenario/, fn ->
+      QuickViewScenarios.account_scope(:no_such_scenario)
+    end
+  end
+
+  @tag :phase177
+  test "Phase 177 retained Preview chrome scenarios show a plain return and never an Account" do
+    valid = preview_chrome_html(QuickViewScenarios.preview_chrome(:valid_return))
+    assert valid =~ ~s(data-testid="preview-return-link")
+    assert valid =~ "Back to Deliveries"
+    assert valid =~ ~s(data-testid="preview-scope-label")
+    assert valid =~ "Not tied to an Account"
+
+    direct = preview_chrome_html(QuickViewScenarios.preview_chrome(:direct_entry))
+    refute direct =~ ~s(data-testid="preview-return-link")
+    assert direct =~ ~s(data-testid="preview-scope-label")
+
+    for {id, html} <- [valid_return: valid, direct_entry: direct] do
+      scenario = QuickViewScenarios.preview_chrome(id)
+      assert scenario.proof_boundary == "story-render-only"
+      assert scenario.scenario_id == "preview-chrome-" <> String.replace("#{id}", "_", "-")
+      assert html =~ ~s(data-testid="surface-nav-sidebar")
+
+      visible = Regex.replace(~r/<[^>]*>/, html, "")
+
+      for forbidden <- ["Fjordline", "Northstar", "fjordline-aps", "northstar", "Helios"] do
+        refute visible =~ forbidden, "#{id}: visible text names #{forbidden}"
+      end
+    end
+
+    assert_raise ArgumentError, ~r/unknown retained Preview chrome scenario/, fn ->
+      QuickViewScenarios.preview_chrome(:no_such_scenario)
+    end
+  end
+
+  @tag :phase177
+  test "Phase 177 Account scope and Preview chrome story files compose their production components" do
+    account = File.read!(story_path("account_scope.story.exs"))
+    assert {:defmodule, _, _} = Code.string_to_quoted!(account)
+    assert account =~ "Storybook.AccountScope"
+    assert account =~ "QuickViewScenarios.account_scope"
+    assert account =~ "Shell.account_context"
+    assert account =~ "SurfaceNav.nav"
+
+    preview = File.read!(story_path("preview_chrome.story.exs"))
+    assert {:defmodule, _, _} = Code.string_to_quoted!(preview)
+    assert preview =~ "Storybook.PreviewChrome"
+    assert preview =~ "QuickViewScenarios.preview_chrome"
+    assert preview =~ "SurfaceNav.nav"
+
+    health = File.read!(story_path("health_overview.story.exs"))
+
+    for id <- ~w(northstar_normal helios_empty stale unavailable fjordline_long_unicode) do
+      assert health =~ id, "Health story must list #{id}"
+    end
+  end
+
+  @tag :phase177
+  test "Phase 177 manifest carries the eleven retained scenarios with the full object shape" do
+    ids = ~w(
+      health-overview-northstar-normal health-overview-helios-empty health-overview-stale
+      health-overview-unavailable health-overview-fjordline-long-unicode
+      account-scope-none account-scope-one account-scope-many account-scope-long-label
+      preview-chrome-valid-return preview-chrome-direct-entry
+    )
+
+    retained =
+      QuickViewScenarios.scenarios()
+      |> Enum.filter(
+        &String.starts_with?(&1["id"], ["health-overview-", "account-scope-", "preview-chrome-"])
+      )
+
+    assert Enum.sort(Enum.map(retained, & &1["id"])) == Enum.sort(ids)
+
+    required =
+      ~w(id story_path theme_owner theme_picker_testid variation_id role_job source cohort
+                  state reason owning_requirements proof_boundary feedback_ids rendered projection)
+
+    for scenario <- retained do
+      for key <- required,
+          do: assert(Map.has_key?(scenario, key), "#{scenario["id"]} lacks #{key}")
+
+      assert scenario["proof_boundary"] == "story-render-only"
+      assert scenario["rendered"] == true
+      owner = String.replace_suffix(scenario["theme_owner"], "-story", "")
+      assert scenario["theme_picker_testid"] == owner <> "-review-theme"
+    end
+  end
+
+  @tag :phase177
   test "Phase 177 Health story file composes the production component from the manifest builder" do
     source = File.read!(story_path("health_overview.story.exs"))
     assert {:defmodule, _, _} = Code.string_to_quoted!(source)
     assert source =~ "Storybook.HealthOverview"
     assert source =~ "QuickViewScenarios.health_overview"
     assert source =~ "HealthOverview.overview"
+  end
+
+  defp account_scope_html(s) do
+    assigns = %{s: s}
+
+    rendered_to_string(~H"""
+    <SurfaceNav.nav
+      active={@s.active}
+      scope={:account}
+      layout={@s.layout}
+      preview_path={@s.preview_path}
+      overview_path={@s.overview_path}
+      deliveries_path={@s.deliveries_path}
+      inbound_path={@s.inbound_path}
+      inbound_available?={@s.inbound_available?}
+    >
+      <:scope_header>
+        <Shell.account_context
+          layout={@s.layout}
+          selected_tenant_id={@s.selected_tenant_id}
+          tenant_options={@s.tenant_options}
+          tenant_state={@s.tenant_state}
+          account_labels={@s.account_labels}
+          page_uri={@s.page_uri}
+        />
+      </:scope_header>
+    </SurfaceNav.nav>
+    """)
+  end
+
+  defp preview_chrome_html(s) do
+    assigns = %{s: s}
+
+    rendered_to_string(~H"""
+    <SurfaceNav.nav
+      active={@s.active}
+      scope={:preview}
+      layout={@s.layout}
+      preview_path={@s.preview_path}
+      overview_path={@s.overview_path}
+      deliveries_path={@s.deliveries_path}
+      inbound_path={@s.inbound_path}
+      inbound_available?={@s.inbound_available?}
+      return_href={@s.return_href}
+      return_label={@s.return_label}
+    />
+    """)
   end
 
   defp story_path(name),

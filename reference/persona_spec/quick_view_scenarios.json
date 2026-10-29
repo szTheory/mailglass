@@ -1277,6 +1277,518 @@
         "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
         "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
       }
+    },
+    {
+      "id": "health-overview-helios-empty",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "helios_empty",
+      "role_job": "An operator sees that an Account with no mail in the period is quiet, not healthy.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "helios-void",
+      "state": "empty-no-activity",
+      "reason": "Retains the zero-activity verdict for an Account with no Deliveries and no Inbound messages.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 0
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=helios-void&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=helios-void&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-stale",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "stale",
+      "role_job": "An operator sees which results are older than the rest after a partial refresh failed.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "stale-partial-refresh",
+      "reason": "Retains the stale failed-webhook row with its Not refreshed marker and the dated stale notice alongside fresh rows.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [
+          {
+            "testid": "operator-health-deliveries-failed",
+            "count": 2,
+            "label": "Failed deliveries",
+            "help": "Sending failed before a successful handoff to the provider.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=failed&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": false
+          },
+          {
+            "testid": "operator-overview-health-failures",
+            "count": 3,
+            "label": "Failed webhook attempts",
+            "help": "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+            "surface": "deliveries",
+            "path": "/ops/mail?support_focus=failed_ingest&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": true
+          },
+          {
+            "testid": "operator-overview-health-orphans",
+            "count": 1,
+            "label": "Unmatched events",
+            "help": "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
+            "surface": "deliveries",
+            "path": "/ops/mail?support_focus=orphan_backlog&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": false
+          }
+        ],
+        "activity": {
+          "deliveries": {
+            "total": 14
+          },
+          "inbound": {
+            "total": 6
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "stale",
+            "checked_at": "2026-10-28T08:55:00Z"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-unavailable",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "unavailable",
+      "role_job": "An operator is told the check is incomplete when panels could not be read, instead of seeing a false all-clear.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "unavailable-incomplete",
+      "reason": "Retains the incomplete verdict, the unavailable notices and the unavailable Inbound activity link.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 3
+          },
+          "inbound": null
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "unavailable"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "unavailable"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-fjordline-long-unicode",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "fjordline_long_unicode",
+      "role_job": "An operator reads long, Unicode and HTML-looking issue text and very large counts without layout loss or injected markup.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "fjordline-aps",
+      "state": "long-unicode-large-counts",
+      "reason": "Carries a long Unicode/RTL/emoji/HTML-looking label and ten-digit counts to prove escaping and wrapping through the production component.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [
+          {
+            "testid": "operator-health-deliveries-failed",
+            "count": 1234567890,
+            "label": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 failed deliveries for the transactional welcome stream, with an extraordinarily long and unbroken label",
+            "help": "Sending failed before a successful handoff to the provider.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=failed&tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+            "stale": false
+          },
+          {
+            "testid": "operator-health-deliveries-bounced",
+            "count": 7,
+            "label": "Bounced deliveries",
+            "help": "The provider reported that these messages could not be delivered.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=bounced&tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+            "stale": false
+          }
+        ],
+        "activity": {
+          "deliveries": {
+            "total": 1234567890
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=fjordline-aps&window_hours=168"
+      }
+    },
+    {
+      "id": "account-scope-none",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "none",
+      "role_job": "An operator with no readable Account sees a plain statement instead of a picker.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "helios-void",
+      "state": "no-accounts",
+      "reason": "Retains the No Accounts yet static prompt: no choice, no details control.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": null,
+        "tenant_options": [],
+        "account_labels": {},
+        "tenant_state": "none",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-one",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "one",
+      "role_job": "An operator with exactly one Account sees its name, not a fake picker.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "northstar",
+      "state": "single-account",
+      "reason": "Retains the static named Account: one option means no choice.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "northstar",
+        "tenant_options": [
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "northstar": "Northstar Logistics"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-many",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "many",
+      "role_job": "An operator with several Accounts sees a compact picker whose menu lists every option.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "northstar",
+      "state": "many-accounts",
+      "reason": "Retains the picker with three options and the selected Account named in the control.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "northstar",
+        "tenant_options": [
+          {
+            "id": "fjordline-aps",
+            "label": "Fjordline A/S"
+          },
+          {
+            "id": "helios-void",
+            "label": "Helios Trial"
+          },
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "northstar": "Northstar Logistics",
+          "fjordline-aps": "Fjordline A/S",
+          "helios-void": "Helios Trial"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-long-label",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "long_label",
+      "role_job": "An operator reads a long Unicode, RTL, emoji and HTML-looking Account label without overflow or injected markup.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "fjordline-aps",
+      "state": "long-unicode-label",
+      "reason": "Retains the Fjordline long label in both the control and the menu, escaped and wrapped.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "fjordline-aps",
+        "tenant_options": [
+          {
+            "id": "fjordline-aps",
+            "label": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 Account <b>bold</b>"
+          },
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "fjordline-aps": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 Account <b>bold</b>",
+          "northstar": "Northstar Logistics"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "preview-chrome-valid-return",
+      "story_path": "/dev/storybook/preview_chrome",
+      "theme_owner": "preview-chrome-story",
+      "theme_picker_testid": "preview-chrome-review-theme",
+      "variation_id": "valid_return",
+      "role_job": "A maintainer opens Preview from Deliveries and sees a plain way back, with no Account identity shown.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1",
+        "mailglass_admin/lib/mailglass_admin/preview/return_context.ex#back_label/1"
+      ],
+      "cohort": "none",
+      "state": "valid-return",
+      "reason": "Retains the Back to Deliveries link with the scope label; the Account stays only inside link targets.",
+      "owning_requirements": [
+        "UXF-09",
+        "UXF-10"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "layout": "sidebar",
+        "active": "preview",
+        "preview_path": "/dev/mail",
+        "overview_path": "/ops/mail?tenant_id=northstar",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar",
+        "inbound_available": true,
+        "return_href": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "return_label": "Back to Deliveries"
+      }
+    },
+    {
+      "id": "preview-chrome-direct-entry",
+      "story_path": "/dev/storybook/preview_chrome",
+      "theme_owner": "preview-chrome-story",
+      "theme_picker_testid": "preview-chrome-review-theme",
+      "variation_id": "direct_entry",
+      "role_job": "A maintainer who opens Preview directly sees no Back link and no Account identity.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1",
+        "mailglass_admin/lib/mailglass_admin/preview/return_context.ex#back_label/1"
+      ],
+      "cohort": "none",
+      "state": "direct-entry",
+      "reason": "Retains the no-return-context chrome: scope label, section links and no Back link.",
+      "owning_requirements": [
+        "UXF-09",
+        "UXF-10"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "layout": "sidebar",
+        "active": "preview",
+        "preview_path": "/dev/mail",
+        "overview_path": "/ops/mail",
+        "deliveries_path": "/ops/mail",
+        "inbound_path": "/ops/mail/inbound",
+        "inbound_available": true,
+        "return_href": null,
+        "return_label": null
+      }
     }
   ],
   "axe_selection": [
