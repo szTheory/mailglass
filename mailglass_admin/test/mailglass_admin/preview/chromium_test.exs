@@ -23,7 +23,9 @@ defmodule MailglassAdmin.Preview.ChromiumTest do
 
   test "capture/4 enforces the timeout and kills a hung binary" do
     # A fake "chromium" that ignores its args and sleeps well past the timeout.
-    script = Path.join(System.tmp_dir!(), "fake_chromium_#{System.unique_integer([:positive])}.sh")
+    script =
+      Path.join(System.tmp_dir!(), "fake_chromium_#{System.unique_integer([:positive])}.sh")
+
     File.write!(script, "#!/usr/bin/env bash\nsleep 30\n")
     File.chmod!(script, 0o755)
     on_exit(fn -> File.rm(script) end)

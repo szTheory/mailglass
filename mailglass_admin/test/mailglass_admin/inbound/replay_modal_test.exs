@@ -35,7 +35,10 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       assert html =~ ~s(phx-click="close_replay")
       confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
       assert Floki.attribute(confirm_button, "phx-click") |> List.first() =~ "confirm_replay"
-      confirm_classes = confirm_button |> Floki.attribute("class") |> List.first() |> String.split()
+
+      confirm_classes =
+        confirm_button |> Floki.attribute("class") |> List.first() |> String.split()
+
       assert "btn-primary" in confirm_classes
       refute "btn-error" in confirm_classes
       refute html =~ "Re-runs Mailbox routing"

@@ -261,7 +261,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <p class="text-body font-bold text-base-content">
             {String.upcase(@candidate.provider || "unknown")}
           </p>
-          <p data-testid="operator-replay-target-id" class="mono min-w-0 break-all text-label text-secondary">
+          <p
+            data-testid="operator-replay-target-id"
+            class="mono min-w-0 break-all text-label text-secondary"
+          >
             {@candidate.webhook_event_id}
           </p>
         </div>
@@ -273,11 +276,15 @@ defmodule MailglassAdmin.Operator.ReplayModal do
       <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
         <div>
           <dt class="text-label uppercase font-bold">Provider event</dt>
-          <dd class="mono min-w-0 break-all mt-1 text-base-content">{present(@candidate.provider_event_id)}</dd>
+          <dd class="mono min-w-0 break-all mt-1 text-base-content">
+            {present(@candidate.provider_event_id)}
+          </dd>
         </div>
         <div>
           <dt class="text-label uppercase font-bold">Delivery linkage</dt>
-          <dd class="mono min-w-0 break-all mt-1 text-base-content">{present(@candidate.delivery_provider_message_id)}</dd>
+          <dd class="mono min-w-0 break-all mt-1 text-base-content">
+            {present(@candidate.delivery_provider_message_id)}
+          </dd>
         </div>
       </dl>
     </div>

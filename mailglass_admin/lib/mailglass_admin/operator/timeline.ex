@@ -68,8 +68,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                   <span
                     :if={index < length(@visible_events) - 1}
                     class="mt-sm h-full w-px bg-base-300"
-                  >
-                  </span>
+                  ></span>
                 </div>
                 <div class={[
                   "min-w-0 flex-1 rounded-box border bg-base-100 p-md",
