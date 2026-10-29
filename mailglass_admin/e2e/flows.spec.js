@@ -2,6 +2,14 @@ const { test, expect, chromium } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
+const {
+  accountSwitcher,
+  accountOption,
+  accountContext,
+  accountId,
+  accountSwitchStatus,
+  switchStatusIdPattern
+} = require("./support/account.cjs");
 
 // =============================================================================
 // flows.spec.js — Phase 115 Plan 04 (FLOW-01 / FLOW-02 / FLOW-03)
@@ -842,10 +850,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-  await page.getByTestId("operator-account-switcher").click();
-  const fjordline = page.locator(
-    '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
-  );
+  await accountSwitcher(page).click();
+  const fjordline = accountOption(page, "fjordline-aps");
   await fjordline.click();
   await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
 
@@ -923,10 +929,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     );
     await zoomPage.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     await expect(zoomPage.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await zoomPage.getByTestId("operator-account-switcher").click();
-    await zoomPage
-      .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
-      .click();
+    await accountSwitcher(zoomPage).click();
+    await accountOption(zoomPage, "fjordline-aps").click();
     await expect(zoomPage).toHaveURL(/tenant_id=fjordline-aps/);
 
     const zoomRow = zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
@@ -954,12 +958,12 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       .poll(() => zoomPage.evaluate(() => window.devicePixelRatio))
       .toBe(initialDevicePixelRatio * 2);
 
-    const accountContext = zoomPage.getByTestId("operator-account-context");
-    await expect(accountContext).toBeVisible();
-    await expect(accountContext).toContainText("fjordline-aps");
+    const committedAccountContext = accountContext(zoomPage);
+    await expect(committedAccountContext).toBeVisible();
+    await expect(committedAccountContext).toContainText("fjordline-aps");
     const topbarControls = [
-      ["committed Account context", accountContext],
-      ["Account switcher", zoomPage.getByTestId("operator-account-switcher")],
+      ["committed Account context", committedAccountContext],
+      ["Account switcher", accountSwitcher(zoomPage)],
       ["Appearance group", zoomPage.getByRole("group", { name: "Appearance", exact: true })],
       ["System radio", zoomPage.getByRole("radio", { name: "System", exact: true })],
       ["System radio label", zoomPage.getByRole("radio", { name: "System", exact: true }).locator("xpath=..")],
@@ -1474,14 +1478,12 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     );
     await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(accountId(page)).toHaveText("northstar");
 
     // Give the prior Account a selected record; switching must drop this ID.
     await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
     await expect(page).toHaveURL(/delivery_id=/);
-    const targetAccount = page.locator(
-      '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
-    );
+    const targetAccount = accountOption(page, "fjordline-aps");
     await expect(targetAccount).toHaveAttribute("href", /tenant_id=fjordline-aps/);
     await expect(targetAccount).not.toHaveAttribute("href", /delivery_id=/);
     // Quick view is modal, so finish its focused task before opening the selector.
@@ -1489,15 +1491,15 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page).not.toHaveURL(/delivery_id=/);
     const committedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
     const committedRowText = await committedRow.innerText();
-    const pendingSwitch = page
-      .getByTestId("operator-account-switch-status")
-      .filter({ hasText: "Switching to fjordline-aps…" });
+    const pendingSwitch = accountSwitchStatus(page).filter({
+      hasText: "Switching to fjordline-aps…"
+    });
     await expect(pendingSwitch, "the target Account's pending status is available to the switch control")
       .toHaveCount(1);
     await expect(pendingSwitch, "status target uses a safe numeric token independent of the Account ID")
-      .toHaveAttribute("id", /^operator-account-switch-status-\d+$/);
+      .toHaveAttribute("id", switchStatusIdPattern);
     await expect(pendingSwitch).toBeHidden();
-    await page.getByTestId("operator-account-switcher").click();
+    await accountSwitcher(page).click();
     holdAccountReply = true;
     const pendingAccountReply = new Promise(resolve => { resolveAccountReply = resolve; });
     await targetAccount.click();
@@ -1508,7 +1510,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(pendingSwitch).toHaveAttribute("aria-live", "polite");
     await expect(pendingSwitch).toHaveAttribute("aria-atomic", "true");
     await expect(pendingSwitch).toHaveText("Switching to fjordline-aps…");
-    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(accountId(page)).toHaveText("northstar");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText, { useInnerText: true });
     liveSocket.send(heldAccountReply);
@@ -1516,7 +1518,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
     await expect(page).not.toHaveURL(/delivery_id=/);
-    await expect(page.getByTestId("operator-account-id")).toHaveText("fjordline-aps");
+    await expect(accountId(page)).toHaveText("fjordline-aps");
     await expect(pendingSwitch).toHaveCount(0);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
@@ -1946,10 +1948,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
         "accounts"
       );
       await targetPage.goto("/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168");
-      await targetPage.getByTestId("operator-account-switcher").click();
-      await targetPage
-        .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
-        .click();
+      await accountSwitcher(targetPage).click();
+      await accountOption(targetPage, "fjordline-aps").click();
       await expect(targetPage).toHaveURL(/tenant_id=fjordline-aps/);
       const row = targetPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
       const deliveryId = await row.getAttribute("phx-value-id");
@@ -2007,7 +2007,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(modal.getByRole("heading", { name: "Review webhook replay", exact: true })).toBeVisible();
     const modalTargetId = await modal.getByTestId("operator-replay-target-id").innerText();
     expect(modalTargetId, "the review names its exact stored request").toBeTruthy();
-    await expect(page.getByTestId("operator-account-context")).toContainText("browser-tenant");
+    await expect(accountContext(page)).toContainText("browser-tenant");
     expect(page.url()).toBe(selectedUrl);
 
     const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
@@ -2076,12 +2076,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
         clientHeight: element.clientHeight,
         scrollHeight: element.scrollHeight,
         overflowY: getComputedStyle(element).overflowY,
-        scrollTop: element.scrollTop,
-        accountContext: document.querySelector('[data-testid="operator-account-context"]')?.textContent.trim()
+        scrollTop: element.scrollTop
       }));
       expect(scroll.overflowY).toBe("auto");
       expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
-      expect(scroll.accountContext).toContain("browser-tenant");
+      expect((await accountContext(zoomPage).textContent()).trim()).toContain("browser-tenant");
       const close = zoomModal.getByRole("button", { name: "Close", exact: true });
       const confirm = zoomModal.getByTestId("operator-replay-confirm");
       await expect(close).toBeVisible();
