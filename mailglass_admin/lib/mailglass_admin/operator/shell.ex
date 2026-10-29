@@ -165,6 +165,7 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:selected_tenant_id, :string, default: nil)
   attr(:tenant_options, :list, default: [])
   attr(:account_labels, :map, default: %{})
+  attr(:tenant_state, :atom, default: nil)
   attr(:page_uri, :string, default: "/ops/mail")
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
@@ -194,34 +195,52 @@ defmodule MailglassAdmin.Operator.Shell do
       main_max_width_class="max-w-7xl"
     >
       <:actions>
-        <.account_context
-          selected_tenant_id={@selected_tenant_id}
-          tenant_options={@tenant_options}
-          account_labels={@account_labels}
-          page_uri={@page_uri}
-        />
         <Components.theme_picker selected={@theme_choice} event="set_theme" />
       </:actions>
       <:sidebar>
         <SurfaceNav.nav
           active={@active}
+          scope={:account}
           preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
-        />
+        >
+          <:scope_header>
+            <.account_context
+              layout={:sidebar}
+              selected_tenant_id={@selected_tenant_id}
+              tenant_options={@tenant_options}
+              tenant_state={@tenant_state}
+              account_labels={@account_labels}
+              page_uri={@page_uri}
+            />
+          </:scope_header>
+        </SurfaceNav.nav>
       </:sidebar>
       <:mobile_nav>
         <SurfaceNav.nav
           active={@active}
+          scope={:account}
           layout={:mobile}
           preview_path={@preview_href}
           overview_path={@overview_path}
           deliveries_path={@deliveries_path}
           inbound_path={@inbound_path}
           inbound_available?={@inbound_available?}
-        />
+        >
+          <:scope_header>
+            <.account_context
+              layout={:mobile}
+              selected_tenant_id={@selected_tenant_id}
+              tenant_options={@tenant_options}
+              tenant_state={@tenant_state}
+              account_labels={@account_labels}
+              page_uri={@page_uri}
+            />
+          </:scope_header>
+        </SurfaceNav.nav>
       </:mobile_nav>
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">{@title}</h1>
@@ -239,6 +258,8 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:tenant_options, :list, default: [])
   attr(:account_labels, :map, default: %{})
   attr(:page_uri, :string, required: true)
+  attr(:layout, :atom, values: [:sidebar, :mobile], default: :sidebar)
+  attr(:tenant_state, :atom, default: nil)
 
   def account_context(assigns) do
     assigns =
