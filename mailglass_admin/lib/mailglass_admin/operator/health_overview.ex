@@ -235,7 +235,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
           text={@window_description}
         />
       </div>
-      <span class="inline-flex flex-wrap items-center gap-x-sm gap-y-xs">
+      <div class="inline-flex flex-wrap items-center gap-x-sm gap-y-xs">
         <p data-testid="operator-health-last-checked">
           Last checked <Components.timestamp at={@observed_at} />
         </p>
@@ -253,7 +253,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
             </span>
           </span>
         </button>
-      </span>
+      </div>
     </div>
     """
   end

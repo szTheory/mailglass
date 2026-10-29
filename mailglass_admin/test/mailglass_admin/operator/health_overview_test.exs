@@ -139,6 +139,13 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     refute "invisible" in classes(idle)
   end
 
+  test "Phase 177 Health freshness paragraph is not nested in a span (valid content model)" do
+    tree = render_overview() |> parse()
+
+    assert [_p] = find(tree, "div > p" <> testid("operator-health-last-checked"))
+    assert find(tree, "span > p" <> testid("operator-health-last-checked")) == []
+  end
+
   test "Phase 177 Health issue rows use one fixed count style with no mono and no heading size" do
     tree = render_overview() |> parse()
 
