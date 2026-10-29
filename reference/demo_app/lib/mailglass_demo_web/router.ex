@@ -109,10 +109,9 @@ defmodule MailglassDemoWeb.Router do
         MailglassDemoWeb.Mailers.ComponentMailer
       ],
       navigation: [
-        overview_path: "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
-        deliveries_path:
-          "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar%26view%3Ddeliveries",
-        inbound_path: "/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar"
+        overview_path: "/ops/mail",
+        deliveries_path: "/ops/mail?view=deliveries",
+        inbound_path: "/ops/mail/inbound"
       ]
     )
   end
