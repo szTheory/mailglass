@@ -18,6 +18,9 @@ defmodule MailglassDemo.QuickViewScenarios do
   @doc "Returns the declarative scenarios currently produced by Storybook or a connected route."
   def scenarios, do: @manifest["scenarios"]
 
+  @doc "Returns the owner-feedback ledger rows that scenarios and evidence pointers close."
+  def feedback, do: @manifest["feedback"]
+
   @doc "Builds production `MailglassAdmin.Operator.QuickView` assigns from a retained Delivery id."
   def delivery(scenario_id) when is_atom(scenario_id) do
     variation_id = Atom.to_string(scenario_id)

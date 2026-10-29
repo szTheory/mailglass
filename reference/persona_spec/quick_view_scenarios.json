@@ -1883,9 +1883,10 @@
       "owner_requirements": ["FILTER-01", "FILTER-02", "FILTER-03", "FILTER-04"],
       "owner_phase": "176",
       "scenario_ids": [],
-      "status": "pending",
-      "disposition": "Both live lists commit select changes and Enter straight to the canonical URL with no Apply control; debounced Search and the FILTER-04 read-state cases remain open.",
-      "evidence_pointer": "Pending Phase 176 connected filter, URL/history, and Back/Forward cases."
+      "proof_boundary": "connected-real-route-only",
+      "status": "automated",
+      "disposition": "Both live lists auto-apply: select changes and Enter commit straight to the canonical URL with no Apply control, and debounced Search edits add one history entry each. Back and Forward restore the filters with the search focused, a Clear during a pending debounce ends cleared, and a failed read shows an error with Retry rather than an empty population. FILTER-01 through FILTER-04 are connected-only, so there is no Storybook scenario; the cases run on the real routes in mailglass_admin/e2e/phase176-filters.spec.js.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths-roadmap-success-criteria"
     },
     {
       "id": "fb-quiet-quick-view-arrows",
@@ -1896,8 +1897,8 @@
       "owner_phase": "174",
       "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
       "status": "resolved",
-      "disposition": "Enabled navigation uses unoutlined 44px ghost-arrow links with accessible names, visible hover and focus states, and readable position. At Delivery boundaries the unavailable control is a generic inert span with screen-reader text and no link/button semantics; Inbound keeps its native disabled button. The two adapters retain their intended, different boundary semantics.",
-      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js and phase173-evidence.spec.js cover tracer, Delivery and Inbound cases; the 320/375/768/1280/1440 light/dark matrix and exact current Axe report are indexed in mailglass_admin/docs/phase174-review.md. Routes: /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound.",
+      "disposition": "Enabled navigation uses unoutlined 44px ghost-arrow links with accessible names, visible hover and focus states, and readable position. At Delivery boundaries the unavailable control is a generic inert span with screen-reader text and no link/button semantics; Inbound keeps its native disabled button. The two adapters retain their intended, different boundary semantics. Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js and phase173-evidence.spec.js cover tracer, Delivery and Inbound cases; the 320/375/768/1280/1440 light/dark matrix and exact current Axe report are indexed in mailglass_admin/docs/phase174-review.md. Routes: /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound.",
+      "evidence_pointer": "mailglass_admin/docs/phase174-review.md#feedback-disposition",
       "projection_evidence": {
         "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
         "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],
@@ -1951,8 +1952,8 @@
       "pending_phases": ["178"],
       "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
       "status": "partial",
-      "disposition": "The generated root, Theme Picker, sidebar, direct story, internal assets, and retained production Delivery/Inbound quick views work under /dev/storybook. Fresh cold/warm evidence covers exact production CSS and loaded font faces, story-owned Light/Dark/System behavior under live OS changes, real iframe hook registration/mount/remove/remount and route cycles, and the strict 18-case Admin Axe comparison. The scan has zero violations and zero untriaged findings; its 50 incomplete findings remain explicit and are not claimed as passes. The serif StatCard/catalogue work and real-zoom reconciliation remain open for their future owner.",
-      "evidence_pointer": "Current connected receipts, selected cases, reproduction command, source/run digest, bounded visual review and advisory-CI limitation are indexed in mailglass_admin/docs/phase174-review.md. Current stories: /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets. Pending Phase 178 scope is listed explicitly.",
+      "disposition": "The generated root, Theme Picker, sidebar, direct story, internal assets, and retained production Delivery/Inbound quick views work under /dev/storybook. Fresh cold/warm evidence covers exact production CSS and loaded font faces, story-owned Light/Dark/System behavior under live OS changes, real iframe hook registration/mount/remove/remount and route cycles, and the strict 18-case Admin Axe comparison. The scan has zero violations and zero untriaged findings; its 50 incomplete findings remain explicit and are not claimed as passes. The serif StatCard/catalogue work and real-zoom reconciliation remain open for their future owner. Current connected receipts, selected cases, reproduction command, source/run digest, bounded visual review and advisory-CI limitation are indexed in mailglass_admin/docs/phase174-review.md. Current stories: /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets. Pending Phase 178 scope is listed explicitly.",
+      "evidence_pointer": "mailglass_admin/docs/phase174-review.md#feedback-disposition",
       "projection_evidence": {
         "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
         "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],

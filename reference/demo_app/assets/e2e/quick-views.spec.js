@@ -296,11 +296,16 @@ test("Phase174 delivery scenario manifest accounts for rendered and real-route-o
     expect(feedback.disposition).toBeTruthy();
     expect(feedback.evidence_pointer).toBeTruthy();
   }
-  const automatedPhase175Feedback = new Set(["fb-technical-details", "fb-suppression-refresh", "fb-replay-review"]);
-  expect(manifest.feedback.filter(feedback => ["175", "176", "177", "178"].includes(feedback.owner_phase))
-    .every(feedback => automatedPhase175Feedback.has(feedback.id)
-      ? feedback.owner_phase === "175" && feedback.status === "automated"
-      : feedback.status === "pending")).toBe(true);
+  // Phase-independent structural checks only. The full ledger rule (scenario links, back-links,
+  // evidence pointers that resolve to a real file and heading) lives in
+  // mailglass_admin/test/mailglass_admin/feedback_ledger_test.exs.
+  const ledgerStatuses = new Set(["automated", "resolved", "pending", "partial"]);
+  for (const feedback of manifest.feedback) {
+    expect(ledgerStatuses.has(feedback.status), `${feedback.id} status ${feedback.status}`).toBe(true);
+    if (feedback.status !== "pending") {
+      expect(feedback.evidence_pointer, `${feedback.id} evidence_pointer`).not.toMatch(/\s/);
+    }
+  }
 });
 
 test("Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries", async ({ page }) => {
