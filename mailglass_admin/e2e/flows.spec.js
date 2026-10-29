@@ -270,6 +270,16 @@ async function assertZoomReadableValue(locator, label, expectedText, viewportWid
   await expect(locator, `${label} is rendered and visible`).toBeVisible();
   await expect(locator, `${label} matches its complete fixture value`).toHaveText(expectedText);
   await locator.scrollIntoViewIfNeeded();
+  // scrollIntoViewIfNeeded leaves an element that is already partly in view
+  // where it is, which can be a fraction of a pixel above the viewport after a
+  // resize carries the scroll offset over. Center it so the edge checks below
+  // measure the layout rather than the leftover scroll position.
+  await locator.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > document.documentElement.clientHeight) {
+      element.scrollIntoView({ block: "center", inline: "nearest" });
+    }
+  });
   const geometry = await locator.evaluate(element => {
     const rect = element.getBoundingClientRect();
     const range = document.createRange();

@@ -1,6 +1,7 @@
 const { test, expect, chromium } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
+const { accountSwitcher, accountOption } = require("./support/account.cjs");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
@@ -2543,16 +2544,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
       await expect(firstChoice).toContainText("browser-tenant");
       await expect(firstChoice).toBeVisible();
-      await page.getByTestId("operator-account-switcher").click();
+      await accountSwitcher(page).click();
       const accountList = page.getByRole("list", { name: "Available Accounts" });
       await expect(accountList.getByRole("listitem")).toHaveCount(2);
       await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
       await expect(
-        page.locator('[data-testid="operator-account-option"][data-account-id="browser-tenant"]')
+        accountOption(page, "browser-tenant")
       ).toBeVisible();
       await expect(
-        page.locator('[data-testid="operator-account-option"][data-account-id="deny-reveal"]')
+        accountOption(page, "deny-reveal")
       ).toBeVisible();
 
       await firstChoice.click();
@@ -2570,7 +2571,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(activeMobile.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
       await page.setViewportSize({ width: 1440, height: 900 });
-      await page.getByTestId("operator-account-switcher").click();
+      await accountSwitcher(page).click();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");

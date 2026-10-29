@@ -1,5 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
+const { accountSwitcher } = require("./support/account.cjs");
 
 async function openInbound(page) {
   const reset = await page.request.get("/ops/browser-reset");
@@ -192,7 +193,7 @@ test("outcome filters hide all-outcome stats and clearing restores them", async 
 test("account menu closes when the operator clicks outside it", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openInbound(page);
-  const switcher = page.getByTestId("operator-account-switcher");
+  const switcher = accountSwitcher(page);
   const accounts = page.getByRole("list", { name: "Available Accounts" });
   await switcher.click();
   await expect(accounts).toBeVisible();

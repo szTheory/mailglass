@@ -1,6 +1,7 @@
 const { test, expect, chromium } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
+const { accountContext } = require("./support/account.cjs");
 
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
@@ -293,9 +294,9 @@ test("Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and repl
     const scroll = await modal.evaluate(element => ({
       clientHeight: element.clientHeight,
       scrollHeight: element.scrollHeight,
-      overflowY: getComputedStyle(element).overflowY,
-      account: document.querySelector('[data-testid="operator-account-context"]')?.textContent.trim()
+      overflowY: getComputedStyle(element).overflowY
     }));
+    scroll.account = (await accountContext(zoomPage).textContent()).trim();
     expect(scroll.overflowY).toBe("auto");
     expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
     expect(scroll.account).toContain(tenantId);
