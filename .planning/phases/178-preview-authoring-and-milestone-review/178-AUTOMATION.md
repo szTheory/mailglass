@@ -470,3 +470,7 @@ Run, job and PR URLs:
 - workflow_dispatch run: https://github.com/szTheory/mailglass/actions/runs/40904249445 (Demo job https://github.com/szTheory/mailglass/actions/runs/40904249445/job/123554654315)
 
 Post-action audit (2026-10-29): PR 317 `isDraft true`, `OPEN`, `mergedAt null`; `git ls-remote origin refs/heads/main` = `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` (equals `pre_approval_main_sha`); `.planning/release-target.json` unchanged; both runs at attempt 1.
+
+## Placement, cost and limits (UIQ-07)
+
+not measured: hosted run stopped (stopped: new advisory failure (Demo Browser Evidence (Docker Compose / Chromium))); see stop_log `reference/demo_app/tmp/demo_browser_evidence/ci/40904249445-attempt-1/demo-job.log`. No `178-COST-DISPOSITION.json` was created and no hosted cost, count or placement figure is claimed. The Demo Browser Evidence job failed before capture in both the pull_request and workflow_dispatch runs (a missing `@playwright/test` module in the pre-capture `node --test` step), so no hosted pilot receipt exists. The job wall and runner-minute figures in the saved raw run/jobs JSON were not dispositioned against the budgets.
