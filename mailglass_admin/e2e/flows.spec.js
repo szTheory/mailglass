@@ -764,7 +764,8 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(mailablesPicker).toBeVisible();
     await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
     await page.getByTestId("preview-email-menu-trigger").click();
-    await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
+    // Phase 178: each option reads the humanized label first and the raw atom beneath it.
+    await expect(mailablesPicker.getByRole("link", { name: /^Welcome default\s+welcome_default$/ })).toBeVisible();
   });
 
   test("Phase 168 shared spacing: operator, Inbound reveal, and Preview gaps use 4px", async ({ page }) => {

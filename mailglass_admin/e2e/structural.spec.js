@@ -1061,7 +1061,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await assertTouchTarget(page.getByTestId("preview-email-menu-trigger"), "preview email menu trigger");
       await page.getByTestId("preview-email-menu-trigger").click();
       await assertTouchTarget(
-        page.getByTestId("preview-mailables-picker").getByRole("link", { name: "welcome_default", exact: true }),
+        // Phase 178: each option reads the humanized label first and the raw atom beneath it.
+        page.getByTestId("preview-mailables-picker").getByRole("link", { name: /^Welcome default\s+welcome_default$/ }),
         "preview picker scenario link"
       );
     });
