@@ -8,6 +8,7 @@ docs/compatibility-and-deprecations.md
 docs/design-system.md
 docs/operator-trust.md
 docs/phase174-review.md
+docs/phase175-review.md
 docs/storybook-axe-approved.json
 docs/ui-baseline-scores.json
 hex_metadata.config
@@ -18,6 +19,7 @@ lib/mailglass_admin/components.ex
 lib/mailglass_admin/controllers/assets.ex
 lib/mailglass_admin/controllers/theme_controller.ex
 lib/mailglass_admin/gallery_live.ex
+lib/mailglass_admin/inbound/address_list.ex
 lib/mailglass_admin/inbound/destructive_action.ex
 lib/mailglass_admin/inbound/detail_header.ex
 lib/mailglass_admin/inbound/evidence_card.ex
@@ -39,6 +41,7 @@ lib/mailglass_admin/operator/accounts.ex
 lib/mailglass_admin/operator/deliveries_list.ex
 lib/mailglass_admin/operator/destructive_action.ex
 lib/mailglass_admin/operator/detail_header.ex
+lib/mailglass_admin/operator/filter_commit.ex
 lib/mailglass_admin/operator/filters_form.ex
 lib/mailglass_admin/operator/health_overview.ex
 lib/mailglass_admin/operator/mount.ex
@@ -46,6 +49,7 @@ lib/mailglass_admin/operator/quick_view.ex
 lib/mailglass_admin/operator/repair_state.ex
 lib/mailglass_admin/operator/replay_action.ex
 lib/mailglass_admin/operator/replay_modal.ex
+lib/mailglass_admin/operator/results_status.ex
 lib/mailglass_admin/operator/shell.ex
 lib/mailglass_admin/operator/support_cards.ex
 lib/mailglass_admin/operator/suppression_card.ex
@@ -58,6 +62,8 @@ lib/mailglass_admin/preview/assigns_form.ex
 lib/mailglass_admin/preview/device_frame.ex
 lib/mailglass_admin/preview/discovery.ex
 lib/mailglass_admin/preview/mount.ex
+lib/mailglass_admin/preview/return_context.ex
+lib/mailglass_admin/preview/scenario_label.ex
 lib/mailglass_admin/preview/sidebar.ex
 lib/mailglass_admin/preview/tabs.ex
 lib/mailglass_admin/preview_live.ex
