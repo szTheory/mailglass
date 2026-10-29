@@ -136,7 +136,7 @@ function appendFidelityEvidence(section, receipt) {
         computedRoles: [],
         widths: [],
         evidenceLimits: [
-          "Browser zoom reconciliation is owned by Phase 178.",
+          "Real browser zoom for quick views is reconciled by Phase 178 on the connected routes in mailglass_admin/e2e/phase178-real-zoom.spec.js; this Storybook receipt applies no browser zoom.",
           "Captures use synthetic Northstar demo records only.",
           "The width matrix exercises System-resolved light and dark tokens at every viewport; the dedicated theme cases exercise Light/Dark/System radio selection and live preference changes."
         ]

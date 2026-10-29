@@ -596,7 +596,7 @@ test.describe("Phase 176 connected", () => {
     }
   });
 
-  test("Phase 176 connected: a 500-character query overflows nothing at 360px and 200% zoom", async ({ page }) => {
+  test("Phase 176 connected: a 500-character query overflows nothing at 360px and under CSS zoom 2x", async ({ page }) => {
     const longQuery = "a".repeat(250) + "東京-é-".repeat(40) + "z".repeat(20);
     for (const key of ["deliveries", "inbound"]) {
       for (const view of [
@@ -607,12 +607,12 @@ test.describe("Phase 176 connected", () => {
         await openCollection(page, key, { query: `&search=${encodeURIComponent(longQuery)}` });
         if (view.zoom) await page.evaluate(zoom => { document.documentElement.style.zoom = zoom; }, view.zoom);
         const { scrollWidth, clientWidth } = await noHorizontalOverflow(page);
-        expect(scrollWidth, `${key} at ${view.width}px zoom ${view.zoom || 1}`).toBeLessThanOrEqual(clientWidth);
+        expect(scrollWidth, `${key} at ${view.width}px CSS zoom ${view.zoom || 1}`).toBeLessThanOrEqual(clientWidth);
       }
     }
   });
 
-  test("Phase 176 connected: the mobile Filters toggle reaches 44px and does not clip at 200% zoom", async ({ page }) => {
+  test("Phase 176 connected: the mobile Filters toggle reaches 44px and does not clip under CSS zoom 2x", async ({ page }) => {
     for (const key of ["deliveries", "inbound"]) {
       const c = collections[key];
       for (const view of [
@@ -649,7 +649,7 @@ test.describe("Phase 176 connected", () => {
         await page.waitForURL(url => new URL(url).searchParams.get(c.selectParam) === c.selectValue);
         await expect(toggle).toContainText("(1 applied)");
         const clipped = await toggle.evaluate(node => node.scrollWidth > node.clientWidth + 1);
-        expect(clipped, `${key} toggle label clipped at ${view.width}px zoom ${view.zoom || 1}`).toBe(false);
+        expect(clipped, `${key} toggle label clipped at ${view.width}px CSS zoom ${view.zoom || 1}`).toBe(false);
         const { scrollWidth, clientWidth } = await noHorizontalOverflow(page);
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
       }
