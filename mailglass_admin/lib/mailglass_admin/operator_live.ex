@@ -723,6 +723,7 @@ defmodule MailglassAdmin.OperatorLive do
       theme_choice={@theme_choice}
       selected_tenant_id={@selected_tenant_id}
       tenant_options={@tenant_options}
+      tenant_state={@tenant_state}
       account_labels={@account_labels}
       page_uri={@page_uri}
       title={if @view == :overview, do: "Email health", else: "Deliveries"}

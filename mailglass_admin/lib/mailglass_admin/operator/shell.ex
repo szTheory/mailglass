@@ -261,35 +261,49 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:layout, :atom, values: [:sidebar, :mobile], default: :sidebar)
   attr(:tenant_state, :atom, default: nil)
 
+  # The Account control is the header of the scope group (D-09). It renders a
+  # picker only when there is a real choice: two or more options (D-10). The
+  # menu is positioned against the header region SurfaceNav renders around it
+  # (`relative`), so below md it spans the group and at md+ it overlays main.
   def account_context(assigns) do
+    selected_label =
+      blank_to_nil(Accounts.label(assigns.selected_tenant_id, assigns.account_labels))
+
+    variant = account_variant(assigns.tenant_options, assigns.tenant_state, selected_label)
+
     assigns =
-      assign(assigns,
-        selected_label: Accounts.label(assigns.selected_tenant_id, assigns.account_labels)
-      )
+      assigns
+      |> assign(:selected_label, selected_label)
+      |> assign(:variant, variant)
+      |> assign(:summary_label, selected_label || "Choose an Account")
 
     ~H"""
     <div
       data-testid="operator-account-context"
+      data-layout={@layout}
       aria-label="Account context"
-      class="flex min-w-0 flex-wrap items-center gap-sm"
+      class="flex w-full min-w-0 flex-wrap items-center gap-sm"
     >
-      <details
-        :if={@tenant_options != []}
-        class="group relative min-w-0 max-w-full"
-        data-dismiss-outside
-      >
+      <details :if={@variant == :picker} class="group min-w-0 max-w-full" data-dismiss-outside>
         <summary
           class="mg-focus-ring flex min-h-11 min-w-0 max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left text-base-content transition-colors hover:bg-base-200 [&::-webkit-details-marker]:hidden"
-          aria-label={"Change Account: #{@selected_label || "Choose Account"}"}
+          aria-label={
+            if @selected_label, do: "Change Account: #{@selected_label}", else: "Choose an Account"
+          }
           data-testid="operator-account-switcher"
+          data-layout={@layout}
         >
-          <span class="min-w-0">
+          <span class="min-w-0 flex-1">
             <span class="block text-label text-secondary">Account</span>
             <span
               data-testid="operator-account-label"
-              class="mg-scope-identity block break-words text-body font-bold"
+              data-layout={@layout}
+              class={[
+                "block break-words text-body [overflow-wrap:anywhere]",
+                if(@selected_label, do: "font-bold", else: "text-secondary")
+              ]}
             >
-              {@selected_label || "Choose Account"}
+              {@summary_label}
             </span>
           </span>
           <Components.icon
@@ -299,36 +313,44 @@ defmodule MailglassAdmin.Operator.Shell do
         </summary>
         <ul
           aria-label="Available Accounts"
-          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full sm:left-auto sm:right-0 mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
           <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
               patch={tenant_switch_path(@page_uri, tenant.id)}
               phx-click={
                 JS.show(
-                  to: "#operator-account-switch-status-#{index}",
+                  to: "#operator-account-switch-status-#{@layout}-#{index}",
                   display: "block"
                 )
               }
               aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
               data-testid="operator-account-option"
+              data-layout={@layout}
               data-account-id={tenant.id}
               data-dismiss-menu
               class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
             >
-              <span class="break-words">{tenant.label}</span>
+              <span class="break-words [overflow-wrap:anywhere]">{tenant.label}</span>
               <span class="mono break-all text-label text-secondary">{tenant.id}</span>
             </.link>
           </li>
         </ul>
       </details>
-      <div :if={@tenant_options == []} class="min-w-0">
+      <div
+        :if={@variant != :picker}
+        class="flex min-h-11 w-full min-w-0 flex-col justify-center"
+      >
         <span class="block text-label text-secondary">Account</span>
         <span
           data-testid="operator-account-label"
-          class="mg-scope-identity block break-words text-body font-bold text-base-content"
+          data-layout={@layout}
+          class={[
+            "block break-words text-body [overflow-wrap:anywhere]",
+            static_tone(@variant)
+          ]}
         >
-          {@selected_label || "Choose Account"}
+          {static_text(@variant)}
         </span>
       </div>
       <span :if={@selected_tenant_id} data-testid="operator-account-id" class="sr-only">
@@ -336,9 +358,10 @@ defmodule MailglassAdmin.Operator.Shell do
       </span>
       <span
         :for={{tenant, index} <- Enum.with_index(@tenant_options)}
-        :if={tenant.id != @selected_tenant_id}
-        id={"operator-account-switch-status-#{index}"}
+        :if={@variant == :picker and tenant.id != @selected_tenant_id}
+        id={"operator-account-switch-status-#{@layout}-#{index}"}
         data-testid="operator-account-switch-status"
+        data-layout={@layout}
         role="status"
         aria-live="polite"
         aria-atomic="true"
@@ -349,6 +372,27 @@ defmodule MailglassAdmin.Operator.Shell do
     </div>
     """
   end
+
+  # D-10: a control that offers no choice is a fake picker, so only two or
+  # more options render the menu. Inbound's :unavailable state has no option
+  # list by design, which is not the same as "no Accounts yet" (Pitfall 3).
+  defp account_variant(options, _state, _selected) when length(options) >= 2, do: :picker
+
+  defp account_variant([only], _state, selected),
+    do: {:static, selected || only.label, :named}
+
+  defp account_variant([], :unavailable, selected),
+    do: {:static, selected || "Choose an Account", if(selected, do: :named, else: :prompt)}
+
+  defp account_variant([], _state, nil), do: {:static, "No Accounts yet", :prompt}
+  defp account_variant([], _state, selected), do: {:static, selected, :named}
+
+  defp static_text({:static, text, _tone}), do: text
+  defp static_text(_variant), do: nil
+
+  defp static_tone({:static, _text, :named}), do: "font-bold text-base-content"
+  defp static_tone({:static, _text, :prompt}), do: "text-secondary"
+  defp static_tone(_variant), do: nil
 
   attr(:flash, :map, default: %{})
 

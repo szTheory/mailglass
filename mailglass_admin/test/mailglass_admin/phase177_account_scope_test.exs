@@ -163,6 +163,195 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
     end
   end
 
+  describe "Phase 177 Account header variants" do
+    test "Phase 177 Account zero options renders static No Accounts yet" do
+      doc = render_shell(%{tenant_options: [], selected_tenant_id: nil, tenant_state: :none})
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        assert text(header) =~ "Account"
+        assert text(header) =~ "No Accounts yet"
+        assert_no_picker(header)
+      end
+    end
+
+    test "Phase 177 Account one option renders static text with no picker" do
+      one = [%{id: "acme", label: "Acme"}]
+      doc = render_shell(%{tenant_options: one})
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        assert text(header) =~ "Acme"
+        refute text(header) =~ "No Accounts yet"
+        assert_no_picker(header)
+      end
+    end
+
+    test "Phase 177 Account one option and none selected shows that option as static text" do
+      one = [%{id: "acme", label: "Acme"}]
+      doc = render_shell(%{tenant_options: one, selected_tenant_id: nil})
+
+      header = header(doc, "sidebar")
+      assert text(header) =~ "Acme"
+      assert_no_picker(header)
+    end
+
+    test "Phase 177 Account two options with one selected renders the switcher" do
+      doc = render_shell(%{})
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+
+        [summary] = Floki.find(header, ~s([data-testid="operator-account-switcher"]))
+        assert Floki.attribute(summary, "aria-label") == ["Change Account: Acme"]
+
+        assert [_] = Floki.find(header, "details > summary")
+        assert [list] = Floki.find(header, ~s(ul[aria-label="Available Accounts"]))
+        assert Floki.attribute(list, "aria-label") == ["Available Accounts"]
+        assert Floki.find(header, ".hero-chevron-down") != []
+
+        options = Floki.find(header, ~s([data-testid="operator-account-option"]))
+
+        assert Enum.map(options, &(&1 |> Floki.attribute("data-account-id") |> hd())) ==
+                 ["acme", "fjordline-aps"]
+
+        for option <- options do
+          [id] = Floki.attribute(option, "data-account-id")
+
+          assert [Shell.tenant_switch_path("/ops/mail?tenant_id=acme", id)] ==
+                   Floki.attribute(option, "href")
+
+          assert hd(Floki.attribute(option, "class")) =~ "min-h-11"
+        end
+      end
+    end
+
+    test "Phase 177 Account two options with none selected prompts Choose an Account" do
+      doc =
+        render_shell(%{selected_tenant_id: nil, tenant_state: :select_required})
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        [summary] = Floki.find(header, ~s([data-testid="operator-account-switcher"]))
+        assert Floki.attribute(summary, "aria-label") == ["Choose an Account"]
+
+        assert text(Floki.find(header, ~s([data-testid="operator-account-label"]))) =~
+                 "Choose an Account"
+      end
+    end
+
+    test "Phase 177 Account Inbound unavailable never reads No Accounts yet" do
+      unavailable = %{tenant_options: [], tenant_state: :unavailable}
+
+      doc = render_shell(Map.merge(unavailable, %{selected_tenant_id: nil}))
+      header = header(doc, "sidebar")
+      refute text(header) =~ "No Accounts yet"
+      assert text(header) =~ "Choose an Account"
+      assert_no_picker(header)
+
+      doc = render_shell(unavailable)
+      header = header(doc, "sidebar")
+      refute text(header) =~ "No Accounts yet"
+      assert text(header) =~ "Acme"
+      assert_no_picker(header)
+    end
+
+    test "Phase 177 Account long Unicode HTML-looking label wraps and is escaped" do
+      label = "Fjordline A/S — ܐܒܓ 日本語 🚢 <b>x</b> Logistics International Holdings"
+      options = [%{id: "fjordline-aps", label: label}, %{id: "acme", label: "Acme"}]
+
+      doc =
+        render_shell(%{
+          tenant_options: options,
+          selected_tenant_id: "fjordline-aps",
+          account_labels: %{"fjordline-aps" => label}
+        })
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+        [name] = Floki.find(header, ~s([data-testid="operator-account-label"]))
+        assert text(name) == label
+        assert Floki.find(header, "b") == []
+
+        classes = hd(Floki.attribute(name, "class"))
+        assert classes =~ "break-words"
+        refute classes =~ "truncate"
+        refute classes =~ "mg-scope-identity"
+      end
+    end
+
+    test "Phase 177 Account every id in a full operator page is unique" do
+      doc = render_shell(%{})
+      ids = doc |> Floki.find("[id]") |> Enum.flat_map(&Floki.attribute(&1, "id"))
+
+      assert ids != []
+      assert ids == Enum.uniq(ids), "duplicate ids: #{inspect(ids -- Enum.uniq(ids))}"
+    end
+
+    test "Phase 177 Account switch status ids and JS targets carry the layout" do
+      doc = render_shell(%{})
+
+      for layout <- ["sidebar", "mobile"] do
+        header = header(doc, layout)
+
+        statuses = Floki.find(header, ~s([data-testid="operator-account-switch-status"]))
+        assert [status] = statuses
+        assert Floki.attribute(status, "id") == ["operator-account-switch-status-#{layout}-1"]
+        assert text(status) == "Switching to Fjordline…"
+        assert Floki.attribute(status, "aria-live") == ["polite"]
+
+        options = Floki.find(header, ~s([data-testid="operator-account-option"]))
+
+        for option <- options, id <- Floki.attribute(option, "phx-click") do
+          assert id =~ "operator-account-switch-status-#{layout}-"
+        end
+      end
+    end
+
+    test "Phase 177 Account scope description is derived from the rendered items" do
+      full = render_shell(%{})
+      assert description(full, "sidebar") == "Applies to Health, Deliveries and Inbound."
+      assert description(full, "mobile") == "Applies to Health, Deliveries and Inbound."
+
+      no_inbound = render_shell(%{inbound_available?: false})
+
+      for layout <- ["sidebar", "mobile"] do
+        assert description(no_inbound, layout) == "Applies to Health and Deliveries."
+        refute description(no_inbound, layout) =~ "Inbound"
+        refute nav(no_inbound, layout) |> text() =~ "Inbound"
+      end
+    end
+
+    test "Phase 177 Account group is described by the description span" do
+      doc = render_shell(%{})
+      [group] = doc |> nav("sidebar") |> Floki.find("[data-account-scope]")
+      [desc_id] = Floki.attribute(group, "aria-describedby")
+      assert desc_id == "surface-nav-scope-desc-sidebar"
+      assert [span] = Floki.find(group, ~s([id="#{desc_id}"]))
+      assert hd(Floki.attribute(span, "class")) =~ "sr-only"
+    end
+
+    test "Phase 177 Account control is neutral and never disabled" do
+      for overrides <- [
+            %{},
+            %{tenant_options: [], selected_tenant_id: nil, tenant_state: :none},
+            %{tenant_options: [%{id: "acme", label: "Acme"}]},
+            %{selected_tenant_id: nil}
+          ] do
+        doc = render_shell(overrides)
+
+        for layout <- ["sidebar", "mobile"] do
+          header = header(doc, layout)
+          html = Floki.raw_html(header)
+
+          refute html =~ "primary"
+          refute html =~ "disabled"
+          refute html =~ "aria-disabled"
+        end
+      end
+    end
+  end
+
   # -- helpers ---------------------------------------------------------------
 
   defp render_shell(overrides) do
@@ -177,6 +366,27 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
 
     {:ok, doc} = Floki.parse_fragment(html)
     doc
+  end
+
+  defp header(doc, layout) do
+    Floki.find(doc, ~s([id="surface-nav-scope-header-#{layout}"]))
+  end
+
+  defp text(nodes),
+    do: nodes |> Floki.text(sep: " ") |> String.replace(~r/\s+/, " ") |> String.trim()
+
+  defp description(doc, layout) do
+    doc
+    |> nav(layout)
+    |> Floki.find(~s([data-testid="surface-nav-scope-description"]))
+    |> text()
+  end
+
+  defp assert_no_picker(header) do
+    assert Floki.find(header, "details") == []
+    assert Floki.find(header, ".hero-chevron-down") == []
+    assert Floki.find(header, ~s([data-testid="operator-account-option"])) == []
+    assert Floki.find(header, ~s([data-testid="operator-account-switcher"])) == []
   end
 
   defp nav(doc, layout), do: Floki.find(doc, ~s([data-testid="surface-nav-#{layout}"]))
