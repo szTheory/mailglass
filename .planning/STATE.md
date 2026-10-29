@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 177
 current_phase_name: Readable Health and Coherent Account Navigation
 status: executing
-stopped_at: Completed 177-03-PLAN.md
-last_updated: "2026-10-28T23:44:50.376Z"
+stopped_at: Completed 177-04-PLAN.md
+last_updated: "2026-10-29T00:10:07.595Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 177 execution started
-state_head: 77627c510f2e691b525995318c3dc9c257d50567
+state_head: a2c3937a38400b78c30ef2513ea0205fdaef65cd
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 38
-  completed_plans: 30
+  completed_plans: 31
   percent: 60
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 177 (Readable Health and Coherent Account Navigation) — EXECUTING
-Plan: 4 of 11
+Plan: 5 of 11
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 177 execution started
 
@@ -319,6 +319,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 177 P01 | 6 min | 3 tasks | 11 files |
 | Phase 177 P02 | 25min | 2 tasks | 2 files |
 | Phase 177 P03 | 20min | 3 tasks | 6 files |
+| Phase 177 P04 | 45min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -611,6 +612,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 176]: 176-14: P9..P13 gap prohibitions are mutation-proven contract describes; P13 asserts the URL note present and never the draft note absent (D-12/D-13)
 - [Phase 177]: 177-01: Preview Back destination is rebuilt only from host navigation plus a closed-set surface and opaque id (ReturnContext); minting skipped for non-local preview_path (A3); theme sanitizer rejects dot segments (A2)
 - [Phase 177]: 177-02: Health goldens are issues/activity keyword blocks; seeded ids masked as {key} in hrefs; quiet seed used for the empty state
+- [Phase 177]: 177-04: Health column is a plain block (no grid gap) so status mt-md and activity mt-lg hairline spacing is not doubled; per-issue help stays the default tertiary field_help
 
 ## Quick Tasks Completed
 
@@ -662,8 +664,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-28T23:44:49.769Z
-Stopped at: Completed 177-03-PLAN.md
+Last session: 2026-10-29T00:10:07.224Z
+Stopped at: Completed 177-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

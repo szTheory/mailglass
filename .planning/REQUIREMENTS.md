@@ -29,7 +29,7 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 ### Health and suppression evidence
 
-- [ ] **OUTUX-06**: An operator can scan Health's actionable issues in a readable composition with grouped period/freshness/Refresh and subordinate activity, retaining specific deep links and truthful populations.
+- [x] **OUTUX-06**: An operator can scan Health's actionable issues in a readable composition with grouped period/freshness/Refresh and subordinate activity, retaining specific deep links and truthful populations.
 - [x] **OUTUX-07**: An operator can refresh suppression evidence and retry a failed read through a consistently placed action with truthful ready, empty, stale and unavailable outcomes.
 - [x] **OUTUX-08**: An operator can understand suppression expiry and supported removal in plain language, without an invented removal button or treating unknown expiry as never expiring.
 
@@ -140,7 +140,7 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | FILTER-02 | Phase 176 | Complete |
 | FILTER-03 | Phase 176 | Complete |
 | FILTER-04 | Phase 176 | Complete |
-| OUTUX-06 | Phase 177 | Pending |
+| OUTUX-06 | Phase 177 | Complete |
 | OUTUX-07 | Phase 175 | Complete |
 | OUTUX-08 | Phase 175 | Complete |
 | INUX-05 | Phase 176 | Complete |
