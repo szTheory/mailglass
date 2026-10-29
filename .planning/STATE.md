@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 177
 current_phase_name: Readable Health and Coherent Account Navigation
 status: executing
-stopped_at: Completed 177-05-PLAN.md
-last_updated: "2026-10-29T00:15:41.832Z"
+stopped_at: Completed 177-10-PLAN.md
+last_updated: "2026-10-29T00:19:17.192Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 177 execution started
-state_head: 60c66f4d978ab155a1a95dfaa895fe9ae3bae052
+state_head: e582b980f050774ee528f04efc7b49637c6be8f6
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 38
-  completed_plans: 32
+  completed_plans: 33
   percent: 60
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 177 (Readable Health and Coherent Account Navigation) — EXECUTING
-Plan: 6 of 11
+Plan: 7 of 11
 Status: Ready to execute
 Last activity: 2026-10-28 — Phase 177 execution started
 
@@ -321,6 +321,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 177 P03 | 20min | 3 tasks | 6 files |
 | Phase 177 P04 | 45min | 2 tasks | 8 files |
 | Phase 177 P05 | 25 min | 2 tasks | 8 files |
+| Phase 177 P10 | 20 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -615,6 +616,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 177]: 177-02: Health goldens are issues/activity keyword blocks; seeded ids masked as {key} in hrefs; quiet seed used for the empty state
 - [Phase 177]: 177-04: Health column is a plain block (no grid gap) so status mt-md and activity mt-lg hairline spacing is not doubled; per-issue help stays the default tertiary field_help
 - [Phase 177]: 177-05: Health notice sentences come from a closed notice_copy(status, panel) clause set; stale clauses return the lead-in and the shared timestamp follows
+- [Phase 177]: 177-10: demo AdminAuth denies logged-out :operator_access with /demo/login?return_to=<arrival path+query> from get_connect_info(:uri); safe_return_to/1 stays the single validator
 
 ## Quick Tasks Completed
 
@@ -666,8 +668,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T00:15:41.454Z
-Stopped at: Completed 177-05-PLAN.md
+Last session: 2026-10-29T00:19:16.790Z
+Stopped at: Completed 177-10-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

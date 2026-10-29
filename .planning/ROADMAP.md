@@ -217,7 +217,7 @@ Plans:
 3. An operator entering Preview can return to the originating Account through a host-approved local destination. Connected tests cover custom mounts, tampered/external destinations, unauthorized Account targets and direct entry fallback; destination context grants no authority and does not widen Preview auth/session whitelists. (UXF-10)
 4. Retained Health/Account/navigation area scenarios use the production presentation and realistic normal/empty/stale/unavailable/long-content cases where reachable; real routes prove the underlying scope and return behavior. (OUTUX-06, UXF-09, UXF-10)
 
-**Plans:** 5/11 plans executed
+**Plans:** 6/11 plans executed
 
 Plans:
 **Wave 1**
@@ -230,7 +230,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [x] 177-05-PLAN.md — Health copy, copy-coupled assertions and design-system amendment (OUTUX-06)
-- [ ] 177-10-PLAN.md — Demo dynamic return for a non-default Account (incl. logged-out D-07 return_to) and router docs note (UXF-10)
+- [x] 177-10-PLAN.md — Demo dynamic return for a non-default Account (incl. logged-out D-07 return_to) and router docs note (UXF-10)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 177-06-PLAN.md — Account control as scope-group header, picker only with a choice, Preview outside scope (UXF-09)
@@ -304,7 +304,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
-| 177. Readable Health and Coherent Account Navigation | 5/11 | In Progress | — |
+| 177. Readable Health and Coherent Account Navigation | 6/11 | In Progress | — |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
