@@ -88,15 +88,23 @@ async function applyRealZoom(context, page) {
 // Interactive targets inside rootSelector that render smaller than 44x44 CSS px.
 // Visible means a non-empty box that is not visibility:hidden; a natively
 // disabled button still counts because it is still a target a person sees.
-async function undersizedTargets(page, rootSelector) {
-  return page.evaluate(selector => {
+// `exempt` is an optional selector for targets with a smaller documented
+// minimum (the Health field-help trigger is held to 24x24 elsewhere).
+async function undersizedTargets(page, rootSelector, { exempt } = {}) {
+  return page.evaluate(({ selector, exempt }) => {
     const root = document.querySelector(selector);
     if (!root) return [{ testid: `missing root ${selector}`, width: 0, height: 0 }];
     return [...root.querySelectorAll("a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button]")]
       .filter(element => {
         const rect = element.getBoundingClientRect();
         const style = getComputedStyle(element);
-        return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && !element.closest("[hidden], .sr-only");
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.visibility !== "hidden" &&
+          !element.closest("[hidden], .sr-only") &&
+          !(exempt && element.closest(exempt))
+        );
       })
       .map(element => {
         const rect = element.getBoundingClientRect();
@@ -107,7 +115,7 @@ async function undersizedTargets(page, rootSelector) {
         };
       })
       .filter(({ width, height }) => width < 43.5 || height < 43.5);
-  }, rootSelector);
+  }, { selector: rootSelector, exempt });
 }
 
 // Asserts the receipt proves actual 200% zoom at 320 CSS px and records it as

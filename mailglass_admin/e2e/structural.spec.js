@@ -1901,6 +1901,27 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         expect(layout.identityScrollWidth, "long selected identity remains within its container")
           .toBeLessThanOrEqual(layout.identityWidth + 1);
 
+        // Phase 178 (UIQ-06): the Restore defaults action stays usable and the
+        // exact technical identity line wraps, both under actual 200% zoom.
+        const restoreDefaults = zoomPage.getByRole("button", { name: "Restore defaults", exact: true });
+        await expect(restoreDefaults, "Restore defaults at actual 200% zoom").toBeVisible();
+        const restoreBox = await restoreDefaults.boundingBox();
+        expect(restoreBox, "Restore defaults has a rendered box").not.toBeNull();
+        expect(restoreBox.width, "Restore defaults width").toBeGreaterThanOrEqual(44);
+        expect(restoreBox.height, "Restore defaults height").toBeGreaterThanOrEqual(44);
+        expect(restoreBox.x, "Restore defaults starts inside the viewport").toBeGreaterThanOrEqual(0);
+        expect(restoreBox.x + restoreBox.width, "Restore defaults ends inside 320 CSS px")
+          .toBeLessThanOrEqual(320);
+        const technicalLines = await zoomPage.getByTestId("preview-email-menu-active-technical").evaluateAll(
+          elements => elements
+            .filter(el => el.getBoundingClientRect().width > 0)
+            .map(el => ({ client: el.clientWidth, scroll: el.scrollWidth }))
+        );
+        expect(technicalLines.length, "the technical identity line is rendered").toBeGreaterThan(0);
+        for (const line of technicalLines) {
+          expect(line.scroll, "technical identity line wraps inside its box").toBeLessThanOrEqual(line.client + 1);
+        }
+
         const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
         fs.mkdirSync(captureDir, { recursive: true });
         const screenshot = path.join(captureDir, "phase171-320-actual-200-percent.png");
