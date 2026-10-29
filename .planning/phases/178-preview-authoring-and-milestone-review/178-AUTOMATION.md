@@ -474,3 +474,11 @@ Post-action audit (2026-10-29): PR 317 `isDraft true`, `OPEN`, `mergedAt null`; 
 ## Placement, cost and limits (UIQ-07)
 
 not measured: hosted run stopped (stopped: new advisory failure (Demo Browser Evidence (Docker Compose / Chromium))); see stop_log `reference/demo_app/tmp/demo_browser_evidence/ci/40904249445-attempt-1/demo-job.log`. No `178-COST-DISPOSITION.json` was created and no hosted cost, count or placement figure is claimed. The Demo Browser Evidence job failed before capture in both the pull_request and workflow_dispatch runs (a missing `@playwright/test` module in the pre-capture `node --test` step), so no hosted pilot receipt exists. The job wall and runner-minute figures in the saved raw run/jobs JSON were not dispositioned against the budgets.
+
+## Not run: plan 178-10 (UIQ-08)
+
+Plan 178-10 did not run (2026-10-29). Its precondition requires `owner_decision:` approve-all or approve-push-and-pr-only AND `hosted_status: completed`. This file records `owner_decision: approve-all` but `hosted_status: stopped: new advisory failure (Demo Browser Evidence (Docker Compose / Chromium))` (section "Hosted classification", plan 178-09 task 4). Not run: hosted candidate not approved or not completed.
+
+No candidate preview was launched, no runbook (`178-DELIVERY.md`) was written, the ship/no-ship checkpoint was not presented, and no remote action was taken. `review_demo_count_before` was not recorded because no Docker work ran. UIQ-07 and UIQ-08 remain unmet for this phase.
+
+Blocking defect: `.github/workflows/ci.yml` (root Demo Browser Evidence job) runs `node --test ... mailglass_admin/e2e/support/storybook-axe.test.cjs`, whose `storybook-axe-supplement.cjs:1` requires `@playwright/test`, which that job never installs (`MODULE_NOT_FOUND`). Introduced in Phase 175 and first hosted-run by 178-09. The PR-run Operator Browser Gate failure at `e2e/flows.spec.js:2453` is recorded, undiagnosed, and passed in the dispatch run on the same SHA. Moving on needs a fix to that job, a new candidate freeze and a new 178-09-02 approval.
