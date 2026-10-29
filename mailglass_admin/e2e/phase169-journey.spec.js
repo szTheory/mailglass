@@ -49,7 +49,7 @@ test.describe("Phase 169 connected journey", () => {
     await page.getByRole("button", { name: "Refresh health" }).click();
     await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
     await expect(unmatched).toContainText("1");
-    await expect(unmatched).toContainText("Last retrieved");
+    await expect(unmatched).toContainText("Not refreshed");
     await expect(failures).toContainText("1");
     await expect(page.getByTestId("operator-health-status")).toContainText("Needs attention");
     await expect(page.getByTestId("operator-health-outbound-activity")).toBeVisible();

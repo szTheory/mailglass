@@ -13,6 +13,7 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
   @moduletag :phase177
 
   @source Path.expand("../../../lib/mailglass_admin/operator/health_overview.ex", __DIR__)
+  @design_system Path.expand("../../../docs/design-system.md", __DIR__)
   @checked_at ~U[2026-10-28 12:00:00Z]
 
   defp issue(testid, count, opts \\ []) do
@@ -456,6 +457,17 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     assert source =~ "defp notice_copy("
     refute source =~ ~S|panel_name(panel)}:|
     refute source =~ "Last retrieved"
+  end
+
+  test "Phase 177 Health design-system guide documents the observation group and the empty verdict" do
+    guide = @design_system |> File.read!() |> String.replace(~r/\s+/, " ")
+
+    assert guide =~ "period and the last-checked timestamp are both observation basis"
+    assert guide =~ "with Refresh adjacent to the timestamp"
+    assert guide =~ "No activity shows a neutral “No mail activity in this period”."
+
+    refute guide =~ "stays separate"
+    refute guide =~ "No recent mail activity"
   end
 
   test "Phase 177 Health markup has no order, row-reverse or viewport layout classes" do
