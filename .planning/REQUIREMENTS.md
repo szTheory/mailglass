@@ -58,11 +58,11 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 - [x] **STORY-04**: A maintainer can review repaired areas using production CSS and actual loaded production font faces/weights with matching UI, display and code roles.
 - [x] **STORY-05**: A maintainer can review repaired areas in Light, Dark and System with explicit theme ownership and correct response to OS preference changes in System mode.
 - [x] **STORY-06**: A maintainer can exercise hook-dependent retained scenarios through shared production hook behavior while Storybook owns its own socket lifecycle.
-- [ ] **STORY-07**: A maintainer can find retained production-component pattern/area/job scenarios for each repair, including one complete Delivery investigation path and relevant reachable adverse states.
+- [x] **STORY-07**: A maintainer can find retained production-component pattern/area/job scenarios for each repair, including one complete Delivery investigation path and relevant reachable adverse states.
 
 ### Reproducible evidence and bounded upkeep
 
-- [ ] **UIQ-04**: A maintainer can trace every named feedback item to its current-source disposition, owning requirement, retained scenario and actual behavior evidence.
+- [x] **UIQ-04**: A maintainer can trace every named feedback item to its current-source disposition, owning requirement, retained scenario and actual behavior evidence.
 - [x] **UIQ-05**: A maintainer running the selected accessibility sweep gets fresh rule/target/state comparisons against approved findings and a failing result for missing, failed or incomplete expected execution.
 - [ ] **UIQ-06**: A maintainer can reproduce source-identified story/real-route fidelity receipts and connected interaction evidence across representative themes, widths, keyboard/focus, zoom and reduced-motion conditions.
 - [ ] **UIQ-07**: A maintainer can see measured added cold/warm PR wall time and runner cost, explicit coverage and justified check placement without weakened existing gates or hidden omissions.
@@ -157,8 +157,8 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | STORY-04 | Phase 174 | Complete |
 | STORY-05 | Phase 174 | Complete |
 | STORY-06 | Phase 174 | Complete |
-| STORY-07 | Phase 178 | Pending |
-| UIQ-04 | Phase 178 | Pending |
+| STORY-07 | Phase 178 | Complete |
+| UIQ-04 | Phase 178 | Complete |
 | UIQ-05 | Phase 174 | Complete |
 | UIQ-06 | Phase 178 | Pending |
 | UIQ-07 | Phase 178 | Pending |

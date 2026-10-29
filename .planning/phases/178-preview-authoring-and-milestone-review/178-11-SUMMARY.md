@@ -152,7 +152,7 @@ None. T-178-34: every mutation was reverted by path and verified against HEAD, a
 
 ## Next Phase Readiness
 
-- UIQ-04 and STORY-07 are also declared by sibling plans (178-08 to 178-10), so `REQUIREMENTS.md` stays unticked until the last declaring plan finishes.
+- UIQ-04 and STORY-07 are declared by 178-02, 178-05, 178-07 and this plan; all four now have summaries, so both requirements were marked complete here.
 - 178-08 and 178-09 can cite `178-AUTOMATION.md#prohibition-contract-d-15` as the machine-checked answer for every D-15 must-NOT; no prohibition routes to the owner.
 
 ## Self-Check: PASSED

@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-07-PLAN.md
-last_updated: "2026-10-29T14:13:01.784Z"
+stopped_at: Completed 178-11-PLAN.md
+last_updated: "2026-10-29T14:21:11.183Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 178 execution started
-state_head: 334919dbb8e0843e5c02c25cdd27a3ed1b42601d
+state_head: acc521ff32bc30d9d5c029f62610f5042d0adf57
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 50
-  completed_plans: 46
+  completed_plans: 47
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 9 of 12
+Plan: 10 of 12
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 178 execution started
 
@@ -336,6 +336,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P05 | 15 min | 3 tasks | 8 files |
 | Phase 178 P06 | 10 min | 3 tasks | 5 files |
 | Phase 178 P07 | 10 min | 2 tasks | 5 files |
+| Phase 178 P11 | 25 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -648,6 +649,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-05: Preview stays pure-only (story-render-only); typed_values is checked against the live /dev/mail route by field-set equality, with no persisted projection check
 - [Phase 178]: 178-06: Phase 176 CSS-zoom cases relabelled, not migrated; the real-zoom filter proof lives once in phase178-real-zoom.spec.js (one persistent context, per-route real-zoom receipts)
 - [Phase 178]: 178-07: StatCard font-role receipt compares the story with the production Admin gallery (same CSS bytes); no serif reproduces so no story or setup change; ledger invariant asserts no pending or partial row
+- [Phase 178]: 178-11: P1 -help id family scoped to assigns-*-help (preview-backdrop-help is a different control); P4 collisions derived from ScenarioLabel.humanize/1 alone
 
 ## Quick Tasks Completed
 
@@ -699,8 +701,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T14:13:01.116Z
-Stopped at: Completed 178-07-PLAN.md
+Last session: 2026-10-29T14:21:10.216Z
+Stopped at: Completed 178-11-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
