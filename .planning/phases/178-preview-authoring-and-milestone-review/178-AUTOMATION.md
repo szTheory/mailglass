@@ -354,6 +354,18 @@ Placement is the `ci.yml` job. `CI Green` needs are required; the operator and d
 
 Not run, with the reason: `generated_ecto_host_proof.sh` (core and inbound unchanged), and the admin-package credo and format findings (not CI Green inputs).
 
+### Candidate freeze
+
+candidate_sha: 2bdf18161182beeb286435b556f26e205976e658
+
+- **Commit subject:** `docs(178-08): phase diff review and dispositions`. The review (4 findings: 3 warnings fixed, 1 info rejected; see `178-REVIEW-DISPOSITION.md`) produced no source change after `gate_head_sha`, so no gate was re-run for it beyond the admin suite (1204 tests, 0 failures).
+- **No source change since the gate:** `git diff --quiet dd392b87a5c99895495f046241242b3eb35c5e64 2bdf18161182beeb286435b556f26e205976e658 -- . ':(exclude).planning'` exits 0, and `git status --porcelain -- mailglass_admin reference scripts test lib mailglass_inbound config` prints nothing.
+- **Remote refs (read-only `git fetch origin main gsd/v2.10-ui-repairs-storybook`):** `origin/main` is `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` and `origin/gsd/v2.10-ui-repairs-storybook` is `25dc21cff0948eb75c0b00ec39cc06f4bb410e06`, the same value as before the plan (`git ls-remote` agrees).
+- **Ancestor checks:** `git merge-base --is-ancestor origin/main <candidate_sha>` exits 0; `git merge-base --is-ancestor origin/gsd/v2.10-ui-repairs-storybook <candidate_sha>` exits 0. The push in plan 178-09 is therefore a plain fast-forward.
+- **Commits ahead:** 351 ahead of `origin/main`, 52 ahead of `origin/gsd/v2.10-ui-repairs-storybook`.
+- **Remote actions taken by this plan: none.** No push, pull request, workflow dispatch, rerun or merge. `gh run list --branch gsd/v2.10-ui-repairs-storybook` returned `[]` before and after.
+- The commit that records this freeze comes after the candidate and is never pushed.
+
 ## Acceptance closure (D-15)
 
 One row per requirement and machine-observable acceptance item. Every row is closed by a test or command, and the lane column names its required or advisory placement.
