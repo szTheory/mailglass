@@ -78,7 +78,7 @@ Resolve recorded operator/author friction through integrated repairs with realis
 - [x] **Phase 174: Faithful Storybook and Quiet Quick Views** — Repair both quick-view navigation controls and make their retained stories trustworthy. (completed 2026-10-27)
 - [x] **Phase 175: Delivery Investigation and Safe Replay** — Complete an early Delivery investigation/recovery path and repair replay review/outcomes on both operator surfaces. (completed 2026-10-27)
 - [x] **Phase 176: Direct Filters and Useful Inbound Evidence** — Auto-apply both collections and make ordinary Inbound evidence useful without widening private disclosure. (completed 2026-10-28)
-- [ ] **Phase 177: Readable Health and Coherent Account Navigation** — Recompose Health and preserve truthful Account context through the workspace and Preview return.
+- [x] **Phase 177: Readable Health and Coherent Account Navigation** — Recompose Health and preserve truthful Account context through the workspace and Preview return. (completed 2026-10-28)
 - [ ] **Phase 178: Preview Authoring and Milestone Review** — Repair author controls and deliver the complete bounded, reproducible review preview.
 
 ## Phase Details
@@ -217,7 +217,7 @@ Plans:
 3. An operator entering Preview can return to the originating Account through a host-approved local destination. Connected tests cover custom mounts, tampered/external destinations, unauthorized Account targets and direct entry fallback; destination context grants no authority and does not widen Preview auth/session whitelists. (UXF-10)
 4. Retained Health/Account/navigation area scenarios use the production presentation and realistic normal/empty/stale/unavailable/long-content cases where reachable; real routes prove the underlying scope and return behavior. (OUTUX-06, UXF-09, UXF-10)
 
-**Plans:** 11/11 plans executed
+**Plans:** 11/11 plans complete
 
 Plans:
 **Wave 1**
@@ -304,7 +304,7 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 174. Faithful Storybook and Quiet Quick Views | 6/6 | Complete    | 2026-10-27 |
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
-| 177. Readable Health and Coherent Account Navigation | 11/11 | In Progress | — |
+| 177. Readable Health and Coherent Account Navigation | 11/11 | Complete    | 2026-10-28 |
 | 178. Preview Authoring and Milestone Review | 0/TBD | Not started | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
