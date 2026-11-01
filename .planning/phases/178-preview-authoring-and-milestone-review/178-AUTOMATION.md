@@ -466,18 +466,18 @@ Every row without a status token is closed by the test or command it cites. A pe
 | STORY-07 | Each retained Preview authoring story has exactly one frame and renders its production roots in light, dark and system | `phase178-stories.spec.js` "Phase 178 retained Preview authoring stories render through production components" (`demo_browser_evidence`, 111 cold and 111 warm) | `demo_browser_evidence` (advisory) | source: automated |
 | UIQ-04 | No feedback row is `pending` or `partial`; every pointer resolves to a real file and heading; scenarios link both ways | `feedback_ledger_test.exs` "Phase 178 ledger: no feedback row is pending or partial" and the rule and link cases (13 mutations, plan 178-02); contract P6 | `support_contract_admin` (required) | source: automated |
 | UIQ-06 | The StatCard story uses the production font roles (computed family and weight equal the Admin gallery's; no serif) | `phase178-stories.spec.js` "Phase 178 StatCard story uses the production font roles" (`demo_browser_evidence`) | `demo_browser_evidence` (advisory) | source: automated |
-| UIQ-06 | The StatCard font-role and retained Preview stories receipts reproduce in the hosted Demo lane, cold and warm | 178-17 task 1 hosted receipt verify on `rerun_candidate_sha` | `demo_browser_evidence` (advisory) | source: automated; status: pending |
+| UIQ-06 | The StatCard font-role and retained Preview stories receipts reproduce in the hosted Demo lane, cold and warm | 178-17 task 1 hosted receipt verify on `rerun_candidate_sha` | `demo_browser_evidence` (advisory) | source: automated; status: open (hosted re-run stopped: required lane red (Hex Audit (Elixir 1.18 / OTP 27))) |
 | UIQ-06 | Actual 200% Chromium tab zoom at 320 CSS px for the Delivery and Inbound quick views, Health, the Account control, the Filters and Preview | `phase178-real-zoom.spec.js` (5 cases) and `structural.spec.js` Phase 171 actual 200% zoom case (`operator_browser_gate`) | `operator_browser_gate` (advisory) | source: automated |
 | UIQ-06 | No test labels CSS zoom as real zoom | `phase178_prohibition_contract_test.exs` P7, mutation-proven | `support_contract_admin` (required) | source: automated |
 | UIQ-06 | The repaired surfaces add or change no hook | the Hook receipts commands above: `grep -n 'phx-hook' mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` exits 1, and `git diff --quiet 61e90275 HEAD -- mailglass_admin/lib/mailglass_admin/preview/tabs.ex mailglass_admin/priv/static/hooks.js` exits 0 | planning record | source: automated |
 | UIQ-07 | Expected and executed test counts are recorded for both browser suites and every difference is explained by name | this file, `rerun_operator_list_count`, `rerun_operator_named_skips`, `rerun_demo_list_count`, `rerun_demo_receipt_expected_total`, and unit-declared `expected.json`, all measured at `rerun_gate_head_sha`; checked by the 178-15 task 1 counts verify | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated |
 | UIQ-07 | The projected hosted Operator Browser Gate time is within 0.8 x the job timeout, or carries a remedy | this file, `rerun_operator_projected_hosted_s` and `rerun_operator_timeout_disposition`; checked by the 178-15 task 1 projection verify | `operator_browser_gate` (advisory) | source: automated |
-| UIQ-07 | The hosted run executes the same counts, and the hosted cost is derived deterministically | 178-17 tasks 1 and 2 hosted evidence and cost-disposition verifies on `rerun_candidate_sha` | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated; status: pending |
+| UIQ-07 | The hosted run executes the same counts, and the hosted cost is derived deterministically | 178-17 tasks 1 and 2 hosted evidence and cost-disposition verifies on `rerun_candidate_sha` | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated; status: open (hosted re-run stopped: required lane red (Hex Audit (Elixir 1.18 / OTP 27))) |
 | UIQ-08 | Every CI Green need passes locally on the candidate, or is shown not affected | the re-gate table and not-affected lanes in this section; logs are headed by `rerun_gate_head_sha`; checked by the 178-15 task 1 verifies | `ci_green` aggregate (required) | source: automated |
 | UIQ-08 | A hosted-only missing-package red in any `ci.yml` `node --test` step is caught by a required lane | `test/scripts/ci_node_test_requires_contract_test.exs` | `mix_task_tests`, `core_deterministic_suite` (required) | source: automated |
 | UIQ-08 | The phase diff has a standard-depth review with every finding dispositioned, and no gate was weakened | `178-REVIEW.md` for `61e90275..dd392b87`; `178-REVIEW-DISPOSITION.md` `Gap-closure review` for `dd392b87..<rerun_gate_head_sha>`; `rerun-gate/gate-integrity.log`; checked by the 178-15 task 1 verifies | planning record | source: automated |
 | UIQ-08 | The frozen candidate has both remote refs as ancestors, so the push is a plain fast-forward, and no source changed after the freeze | 178-15 task 3 verify: `rerun_candidate_sha`, both `git merge-base --is-ancestor` checks, and no source diff after the gate head or candidate | planning record | source: automated |
-| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-17 task 1 required-CI/exact-SHA verify and 178-18 tasks 1 and 2 runbook URL verifies on `rerun_candidate_sha` | `ci_green` aggregate (required) | source: automated; status: pending |
+| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-17 task 1 required-CI/exact-SHA verify and 178-18 tasks 1 and 2 runbook URL verifies on `rerun_candidate_sha` | `ci_green` aggregate (required) | source: automated; status: open (hosted re-run stopped: required lane red (Hex Audit (Elixir 1.18 / OTP 27))) |
 
 The UIQ-08 ship/no-ship review (plan 178-10, the owner decision) is the only owner hand-off allowed by D-52. It is a judgment on shipping, not an acceptance row, and nothing in the table above waits on it.
 
@@ -687,3 +687,42 @@ Post-action audit: origin/gsd/v2.10-ui-repairs-storybook equals the candidate; o
 Demo Browser Evidence failed in both runs; Support Contract Admin passed in both. Run conclusions and the Demo failure evidence are recorded here, but are not classified by this plan. The three hosted acceptance rows remain pending. Plan 178-17 handles the hosted evidence and will stop on an unapproved Demo failure.
 
 No rerun, merge, release, publication or deployment occurred.
+
+### Re-run capture and classification
+
+**Stopped on a required-lane failure.** Both approved attempt-1 runs use candidate `255422cbe6e16c570ccb465246c2394fa3190866` and completed with failure:
+
+| Event | Run | Failed jobs | Run URL |
+|---|---:|---|---|
+| pull_request | 41358618944 | Hex Audit; Demo Browser Evidence; CI Green | https://github.com/szTheory/mailglass/actions/runs/41358618944 |
+| workflow_dispatch | 41358616440 | Hex Audit; Demo Browser Evidence; CI Green | https://github.com/szTheory/mailglass/actions/runs/41358616440 |
+
+Required-lane stop: `Hex Audit (Elixir 1.18 / OTP 27)` failed in both runs. Each saved log reports `phoenix_html 4.3.0 VULNERABLE!`, advisory `EEF-CVE-2026-117645` (medium), and `Delivery blocked` for the root, Admin and Inbound applications. The candidate's root `mix.lock` also records `phoenix_html` 4.3.0. The first run's log is the designated stop log; the other log is retained for the matching dispatch failure.
+
+- PR run job: https://github.com/szTheory/mailglass/actions/runs/41358618944/job/125004019195
+  - Log: `reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/hex-audit.log`
+  - SHA-256: `5d0fa908bfcad34fee14e083e10ad862ff09a25ecff33981c368fe0bcb5c1551`
+- Dispatch run job: https://github.com/szTheory/mailglass/actions/runs/41358616440/job/125004013390
+  - Log: `reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/hex-audit.log`
+  - SHA-256: `d2722d617631de6d13019f2c0504c474af2f16e0a902b2e1ad56097022c9eca0`
+
+The required aggregate `CI Green` failed because `hex_audit=failure` in both runs. Its logs and job links are saved at `reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/ci-green.log` (SHA-256 `0c648fc6351873832cd9d7a65edb62ce8689907fc6bc8101c49e613a64693cb9`; https://github.com/szTheory/mailglass/actions/runs/41358618944/job/125007934368) and `reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/ci-green.log` (SHA-256 `46ce868b9e77dfec4718be612b01bf1bd37556eed9085811401511400d3712e7`; https://github.com/szTheory/mailglass/actions/runs/41358616440/job/125006966779).
+
+Demo Browser Evidence independently failed in both runs, which is also a stop condition. Its log shows 26 Phase 175 Axe cases passing before the environment dependency check reported Hex packages unavailable and exited with a Mix dependency error. The artifact upload then failed with `EACCES` opening `phase175/cold/axe.json`. The run artifact listings contain no `demo-browser-evidence-<run>-1` artifact, so there are no downloadable Demo receipts to inspect. Saved job logs:
+
+- PR run job: https://github.com/szTheory/mailglass/actions/runs/41358618944/job/125004019203
+  - `reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/demo-browser-evidence.log`
+  - SHA-256: `8d6147b4fda6f080afe3e7b5ced7f0671796005bde3190775d1c0fe2d856f5c6`
+- Dispatch run job: https://github.com/szTheory/mailglass/actions/runs/41358616440/job/125004013534
+  - `reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/demo-browser-evidence.log`
+  - SHA-256: `18c179f8b072dadfa535f8f8837ead9851087c3adcf74368c84e16ae1d93946c`
+
+Other recorded lane results: Operator Browser Gate and Support Contract Admin passed in both runs; Preview Capture Advisory passed in both. Two Guard Release Trigger check runs passed at the candidate SHA (41358619051 and 41358619116); both were `pull_request` events. The run and job metadata plus artifact listings are saved in each attempt-1 evidence directory.
+
+Post-action audit: PR #317 remains open and draft at the candidate SHA; `origin/main` remains `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`; `.planning/release-target.json` is unchanged; both run attempts are 1. No rerun or further remote write occurred.
+
+rerun_hosted_status: stopped: required lane red (Hex Audit (Elixir 1.18 / OTP 27))
+rerun_stop_job: Hex Audit (Elixir 1.18 / OTP 27)
+rerun_stop_log: reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/hex-audit.log
+
+UIQ-06's hosted receipts, UIQ-07's hosted measurement and UIQ-08's required CI are not met on this candidate; the plan stopped with the status above. The three hosted-dependent acceptance rows are open. No advisory-red continuation, hosted receipt, count disposition or cost figure was produced.
