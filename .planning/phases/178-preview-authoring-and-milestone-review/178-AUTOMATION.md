@@ -594,3 +594,67 @@ The temporary focus-loss mutation (`dialog.blur()` immediately before the End-si
 One separate local harness startup race was observed during an invalid repeat attempt: `/ops/browser-ready` returns `200` before the startup fixture seed completes, allowing Playwright's first `/ops/browser-reset` to compete with that seed on the shared SQL Sandbox connection. The server then exited before the test ran, so those failures do not count toward the 50-repeat result. For the valid run, the server was started and allowed to log `fixtures_seeded` and `ready` before Playwright connected; a temporary local config enabled reuse of that already-ready server. The tracked Playwright config and retry policy were unchanged. This local startup issue does not appear in the saved hosted traces and does not explain the hosted End-key result.
 
 Outcome: `classified-nondeterministic`. The PR and dispatch runs used the same tree; both saved hosted traces show focus on `inbound-quick-view`, PageDown advancing `scrollTop`, and End advancing it further, with the dialog and frame remaining stable. The traces omit the dimensions and poll callback value needed to identify why the final bottom predicate was false. No product or test cause for the hosted result appears in the available trace evidence. The required `50/50` target repeats and full in-order suite pass establish the classification threshold; the advisory line above records the exact title for plan 178-17.
+
+## Hosted candidate re-run (UIQ-06, UIQ-07, UIQ-08)
+
+### Pre-approval state (read-only, 2026-11-01)
+
+rerun_pre_approval_main_sha: 8328093e4a07d28251ec7f02dd0f37cda2fd6a7b
+rerun_pre_approval_branch_sha: 2bdf18161182beeb286435b556f26e205976e658
+
+- Candidate under review: 255422cbe6e16c570ccb465246c2394fa3190866 (docs(178-15): point acceptance closure at gap plans). The candidate has both recorded remote refs as ancestors and no source diff after the re-gate.
+- Live scope from the fetched refs: against origin/main, 396 commits ahead, 675 files changed, 216803 insertions and 2166 deletions; against origin/gsd/v2.10-ui-repairs-storybook, 45 commits ahead, 32 files changed, 3480 insertions and 45 deletions.
+- Existing PR: #317, https://github.com/szTheory/mailglass/pull/317, state OPEN, draft, not merged.
+- Stopped dispatch run: 40904249445, completed with failure, https://github.com/szTheory/mailglass/actions/runs/40904249445.
+- Stopped pull_request run: 40904235961, completed with failure, https://github.com/szTheory/mailglass/actions/runs/40904235961.
+- Read-only branch run list returned runs 40904249445, 40904236058, 40904235995, 40904235953, 40904235938 and 40904235961; all have head SHA 2bdf18161182beeb286435b556f26e205976e658.
+- The compare URL https://github.com/szTheory/mailglass/compare/main...gsd/v2.10-ui-repairs-storybook resolves to status ahead.
+- A no-FETCH_HEAD fetch refreshed local refs; git ls-remote matched the recorded main and branch SHAs.
+
+Pre-approval measurement pipeline:
+- Copied baseline-run.raw.json and baseline-jobs.raw.json from disposition-inputs/; cmp confirms the copies match.
+- Self-comparison output: reference/demo_app/tmp/phase178_candidate/rerun-disposition-inputs/self-check.json. It finds Demo Browser Evidence, Operator Browser Gate and Support Contract Admin by exact name for both workflow_dispatch and pull_request, with all job, CI-green wall-time and runner-minute deltas equal to zero. Cold and warm pilot conditions are present. The advisory-red input SHA-256 is e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+- Draft PR body: reference/demo_app/tmp/phase178_candidate/rerun-pr-body.md. Its final attribution names OpenAI Codex, matching the configured runtime.
+
+Source-only commits the candidate would add to the branch:
+
+```text
+ea1e09b1 test(178-15): isolate workspace evidence sync markers
+5d625006 test(178-15): reduce CI contract parser nesting
+ad10d639 test(178-15): stabilize Demo theme screenshot captures
+1cc410df test(178-15): allow time for loader contract checks
+397c8391 test(178-15): wait for browser fixtures before readiness
+f90c37e6 chore(deps): refresh reference/demo_app lock (phoenix_html 4.3.0 => 4.4.0)
+5ee9a173 test(178-14): self-diagnosing scroll-access helper
+befeb47e test(178-13): measure a recorded advisory Operator red in the cost disposition
+33e485a5 test(178-13): reproduce disposition refusing a recorded advisory Operator red
+a6a136e0 test(178-13): count each hosted Operator summary line once
+b2102ced test(178-13): reproduce hosted Operator summary double count
+534a6898 test(178-13): prove the require guard's teeth with hermetic fixtures
+92704fc2 test(178-13): load Playwright lazily in the Storybook axe supplement
+71122b66 test(178-13): add ci.yml node --test require guard (red)
+```
+
+### Approval checkpoint draft
+
+Candidate: 255422cbe6e16c570ccb465246c2394fa3190866, docs(178-15): point acceptance closure at gap plans.
+
+The previous hosted candidate stopped because Demo Browser Evidence failed before capture: @playwright/test was missing from that job's node test. Plan 178-13 fixed lazy loading and added a required missing-package guard. Plan 178-14 classified the pull_request-only flows.spec.js:2453 failure as nondeterministic after 50/50 local repeats and added focus diagnostics. Plan 178-15 passed the affected local gates and a new cold/warm Demo pilot on the candidate's source tree.
+
+Live scope: against main SHA 8328093e4a07d28251ec7f02dd0f37cda2fd6a7b, 396 commits ahead with 675 files changed, 216803 insertions and 2166 deletions. Against branch SHA 2bdf18161182beeb286435b556f26e205976e658, 45 commits ahead with 32 files changed, 3480 insertions and 45 deletions. The source commits added by the push are listed above.
+
+Review runbook, resolved immediately before this draft:
+1. PR 317: https://github.com/szTheory/mailglass/pull/317 — open, draft and not merged.
+2. Dispatch run 40904249445: https://github.com/szTheory/mailglass/actions/runs/40904249445 — completed; Demo Browser Evidence failed before capture.
+3. Pull request run 40904235961: https://github.com/szTheory/mailglass/actions/runs/40904235961 — completed; Demo Browser Evidence failed before capture and Operator Browser Gate also failed on the recorded nondeterministic title.
+4. Branch compare: https://github.com/szTheory/mailglass/compare/main...gsd/v2.10-ui-repairs-storybook — ahead.
+
+Approve-all authorizes exactly these actions: fast-forward push candidate 255422cbe6e16c570ccb465246c2394fa3190866 to gsd/v2.10-ui-repairs-storybook; update the body of draft PR #317 from rerun-pr-body.md; and dispatch ci.yml once on that branch. The push starts the pull_request run automatically. Estimated hosted cost is about 100 runner-minutes per workflow run, for two runs. No rerun is included.
+
+Approve-push-and-pr-only authorizes the push and PR body update without a dispatch. It does not provide the D-12 identity binding because the PR run builds the merge commit. The hosted Demo receipts and UIQ-07 cost disposition cannot be bound to the candidate; the UIQ-06 hosted receipt and UIQ-07 rows will remain open as unmet.
+
+Decline performs no remote action. UIQ-06 hosted receipts, UIQ-07 hosted measurement and UIQ-08 required CI remain unmet, and plans 178-17 through 178-19 do not run.
+
+Only recorded Operator Browser Gate or Preview Capture Advisory reds may continue: every failing title must already be recorded, and its title, saved log and hash are recorded. A failed Operator Browser Gate is measured with its duration, failure conclusion and matched titles. Any Demo Browser Evidence red, required-context red, or other failure stops the plan. Nothing is merged, released, published or deployed.
+
+The new owner reply must be one of: approve-all, approve-push-and-pr-only, or decline. No remote write occurs before that user-originated choice.
