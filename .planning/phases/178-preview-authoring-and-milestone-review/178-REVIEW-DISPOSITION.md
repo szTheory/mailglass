@@ -38,3 +38,18 @@ Dispositions used here: `fixed` (a commit and a covering test are named) and `re
 ## Gate-integrity check (T-178-21)
 
 `git diff --stat 61e90275..HEAD -- mailglass_admin/docs/axe-baseline.json mailglass_admin/docs/storybook-axe-approved.json scripts/check_phase174_evidence.cjs .github/workflows config/quality config/test_exceptions.exs .tool-versions .planning/release-target.json` prints nothing, so no axe baseline, evidence-checker case set, workflow, CI policy, exception ledger, toolchain pin or release ledger changed in the phase diff. No gate was weakened, skipped or re-baselined to make the local run green.
+
+## Gap-closure review
+
+gap_review_range: dd392b87a5c99895495f046241242b3eb35c5e64..f90c37e6762049374e736722b75acb9cae0b6b0a
+gap_review_findings: 0
+gap_review_open: 0
+
+Standard-depth review of the gap-closure source diff against `CLAUDE.md`, decisions D-01..D-16 and the threat registers in 178-13 and 178-14. Reviewed files: `mailglass_admin/e2e/flows.spec.js`, `mailglass_admin/e2e/support/storybook-axe-supplement.cjs`, `scripts/phase178_cost_disposition.cjs`, `scripts/phase178_cost_disposition.test.cjs`, `test/scripts/ci_node_test_requires_contract_test.exs`, `test_js/support/ci-require-guard.cjs`, and `reference/demo_app/mix.lock`.
+
+The focus checks preserve both keyboard-scroll assertions and only add diagnostics. The lazy Playwright import is confined to the helper that uses it. The CI require-resolution contract checks all parsed `node --test` inputs and has non-vacuity checks plus outside-root, allowed-root and lazy-require cases. The disposition exception remains limited to a completed Operator Browser Gate failure with a recorded exact run/job match; Demo, Support and all other non-success outcomes retain the success requirement. The timestamped-summary parser change is covered by both timestamped and untimestamped cases. No reviewed change weakens a baseline, workflow, retry or product contract. The only lock change is the `phoenix_html` 4.3.0 → 4.4.0 entry named in the lock check's `Upgraded:` output.
+
+No review findings were identified.
+
+| Finding | Severity | Disposition | Commit and covering test, or reason |
+|---------|----------|-------------|-------------------------------------|
