@@ -2,6 +2,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -99,6 +100,24 @@ function pilotCost() {
 
 function tmpDir(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `phase178-cost-test-${label}-`));
+}
+
+function withConclusion(jobs, name, conclusion) {
+  return { ...jobs, jobs: jobs.jobs.map((candidate) => candidate.name === name
+    ? { ...candidate, conclusion }
+    : candidate) };
+}
+
+function advisoryRed(runId, jobName = OPERATOR, overrides = {}) {
+  return {
+    run: String(runId), job: jobName, title: "Flaky preview assertion", key: "preview assertion",
+    matched: ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md",
+    log_sha256: "c".repeat(64), ...overrides
+  };
+}
+
+function advisoryRedLine(entry) {
+  return `rerun_advisory_red: run=${entry.run} | job=${entry.job} | title=${entry.title} | key=${entry.key} | log=operator-gate.log | log_sha256=${entry.log_sha256} | matched=${entry.matched}`;
 }
 
 test("deriveCiJob derives the schema, duration and Linux/X64 from the ubuntu-latest label", () => {
@@ -205,6 +224,101 @@ test("deriveDisposition never omits a requested job and needs at least one run",
   assert.throws(() => tool.deriveDisposition({
     baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_B, counts: {}
   }), /head_sha|identity|candidate/i);
+});
+
+test("disposition measures an Operator advisory red only when a recorded advisory red matches it", () => {
+  const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
+  const entry = advisoryRed("300");
+  const out = tool.deriveDisposition({
+    baselineRun, baselineJobs, pr: failedPr, sha: SHA_A, counts: {}, advisoryReds: [entry]
+  });
+  const measured = out.runs.pull_request.jobs[OPERATOR];
+  assert.equal(measured.candidate_seconds, 610);
+  assert.equal(measured.delta_seconds, 10);
+  assert.equal(measured.conclusion, "failure");
+  assert.deepEqual(measured.advisory_reds, [{
+    title: entry.title, key: entry.key, matched: entry.matched, log_sha256: entry.log_sha256
+  }]);
+  const successful = tool.deriveDisposition({
+    baselineRun, baselineJobs, pr: { run: prRun, jobs: prJobs }, sha: SHA_A, counts: {}
+  });
+  assert.deepEqual(out.runs.pull_request.jobs[DEMO], successful.runs.pull_request.jobs[DEMO]);
+  assert.deepEqual(out.runs.pull_request.jobs[SUPPORT], successful.runs.pull_request.jobs[SUPPORT]);
+  assert.equal("conclusion" in out.runs.pull_request.jobs[DEMO], false);
+  assert.equal("conclusion" in out.runs.pull_request.jobs[SUPPORT], false);
+});
+
+test("an unmatched Operator advisory red still fails the disposition", () => {
+  const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
+  const derive = (options = {}) => tool.deriveDisposition({
+    baselineRun, baselineJobs, pr: failedPr, sha: SHA_A, counts: {}, ...options
+  });
+  assert.throws(() => derive(), /did not complete successfully.*failure/);
+  assert.throws(() => derive({ advisoryReds: [advisoryRed("200")] }), /job succeeded/);
+  assert.throws(() => derive({ advisoryReds: [advisoryRed("999")] }), /not a measured run/);
+  assert.throws(() => derive({ advisoryReds: [advisoryRed("300", "Preview Capture Advisory")] }), /did not complete successfully.*failure/);
+});
+
+test("Demo, Support, CI Green and non-failure Operator conclusions still require success", () => {
+  const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
+  const validRed = advisoryRed("300");
+  const derive = (candidate, advisoryReds = [validRed]) => tool.deriveDisposition({
+    baselineRun, baselineJobs, pr: { run: prRun, jobs: candidate }, sha: SHA_A, counts: {}, advisoryReds
+  });
+  assert.throws(() => derive(
+    withConclusion(prJobs, DEMO, "failure"), [advisoryRed("300", DEMO)]
+  ), /advisory red recorded for a job that must succeed/);
+  assert.throws(() => derive(withConclusion(prJobs, SUPPORT, "failure")), /did not complete successfully.*failure/);
+  assert.throws(() => derive(withConclusion(failedPr.jobs, "CI Green", "failure")), /CI Green job.*did not complete successfully/);
+  for (const conclusion of ["timed_out", "cancelled"]) {
+    assert.throws(() => derive(withConclusion(prJobs, OPERATOR, conclusion)), new RegExp(`completed/${conclusion}`));
+  }
+});
+
+test("advisory red input is validated, hashed and unmatched CLI reds exit non-zero", () => {
+  const dir = tmpDir("advisory-reds");
+  const write = (name, value) => {
+    const file = path.join(dir, name);
+    fs.writeFileSync(file, typeof value === "string" ? value : JSON.stringify(value));
+    return file;
+  };
+  const failedPrJobs = withConclusion(prJobs, OPERATOR, "failure");
+  const files = {
+    baselineRun: write("baseline-run.json", baselineRun),
+    baselineJobs: write("baseline-jobs.json", baselineJobs),
+    prRun: write("pr-run.json", prRun),
+    prJobs: write("pr-jobs.json", failedPrJobs),
+    successfulPrJobs: write("successful-pr-jobs.json", prJobs)
+  };
+  const validEntry = advisoryRed("300");
+  const validFile = write("advisory-reds.txt", `${advisoryRedLine(validEntry)}\n`);
+  const baseArgs = ["disposition", "--baseline-run", files.baselineRun, "--baseline-jobs", files.baselineJobs,
+    "--pr-run", files.prRun, "--pr-jobs", files.prJobs, "--sha", SHA_A, "--counts", "{}"]; 
+  const out1 = path.join(dir, "out1.json");
+  const out2 = path.join(dir, "out2.json");
+  tool.cli([...baseArgs, "--advisory-reds", validFile, "--out", out1]);
+  tool.cli([...baseArgs, "--advisory-reds", validFile, "--out", out2]);
+  assert.equal(fs.readFileSync(out1, "utf8"), fs.readFileSync(out2, "utf8"));
+  const result = JSON.parse(fs.readFileSync(out1, "utf8"));
+  assert.equal(result.input_hashes.advisory_reds, tool.sha256File(validFile));
+
+  const emptyFile = write("empty-advisory-reds.txt", "");
+  const emptyOut = path.join(dir, "empty-out.json");
+  tool.cli(["disposition", "--baseline-run", files.baselineRun, "--baseline-jobs", files.baselineJobs,
+    "--pr-run", files.prRun, "--pr-jobs", files.successfulPrJobs, "--sha", SHA_A, "--counts", "{}",
+    "--advisory-reds", emptyFile, "--out", emptyOut]);
+  assert.equal(JSON.parse(fs.readFileSync(emptyOut, "utf8")).input_hashes.advisory_reds, tool.sha256File(emptyFile));
+
+  const malformedFile = write("malformed-advisory-reds.txt", "not an advisory line\n");
+  assert.throws(() => tool.cli([...baseArgs, "--advisory-reds", malformedFile, "--out", path.join(dir, "bad.json")]), /line 1/);
+  const incompleteFile = write("incomplete-advisory-reds.txt", "rerun_advisory_red: run=300 | job=Operator\n");
+  assert.throws(() => tool.cli([...baseArgs, "--advisory-reds", incompleteFile, "--out", path.join(dir, "bad-fields.json")]), /line 1/);
+
+  const unmatchedFile = write("unmatched-advisory-reds.txt", `${advisoryRedLine(advisoryRed("300", "Preview Capture Advisory"))}\n`);
+  const child = spawnSync(process.execPath, [path.join(__dirname, "phase178_cost_disposition.cjs"), ...baseArgs.slice(1),
+    "--advisory-reds", unmatchedFile, "--out", path.join(dir, "unmatched.json")], { encoding: "utf8" });
+  assert.equal(child.status, 1);
+  assert.match(child.stderr, /^ERROR:/);
 });
 
 test("pilot_conditions copies cold and warm measurements and flags the budgets", () => {
