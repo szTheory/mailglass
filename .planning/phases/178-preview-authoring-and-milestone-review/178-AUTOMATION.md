@@ -601,6 +601,7 @@ Outcome: `classified-nondeterministic`. The PR and dispatch runs used the same t
 
 rerun_pre_approval_main_sha: 8328093e4a07d28251ec7f02dd0f37cda2fd6a7b
 rerun_pre_approval_branch_sha: 2bdf18161182beeb286435b556f26e205976e658
+rerun_owner_decision: approve-all
 
 - Candidate under review: 255422cbe6e16c570ccb465246c2394fa3190866 (docs(178-15): point acceptance closure at gap plans). The candidate has both recorded remote refs as ancestors and no source diff after the re-gate.
 - Live scope from the fetched refs: against origin/main, 396 commits ahead, 675 files changed, 216803 insertions and 2166 deletions; against origin/gsd/v2.10-ui-repairs-storybook, 45 commits ahead, 32 files changed, 3480 insertions and 45 deletions.
@@ -658,3 +659,31 @@ Decline performs no remote action. UIQ-06 hosted receipts, UIQ-07 hosted measure
 Only recorded Operator Browser Gate or Preview Capture Advisory reds may continue: every failing title must already be recorded, and its title, saved log and hash are recorded. A failed Operator Browser Gate is measured with its duration, failure conclusion and matched titles. Any Demo Browser Evidence red, required-context red, or other failure stops the plan. Nothing is merged, released, published or deployed.
 
 The new owner reply must be one of: approve-all, approve-push-and-pr-only, or decline. No remote write occurs before that user-originated choice.
+
+### Re-run remote actions
+
+rerun_pr_number: 317
+rerun_pr_run_id: 41358618944
+rerun_dispatch_run_id: 41358616440
+rerun_remote_runs_status: completed
+
+Owner reply recorded: I approve all your recommendations from above. This authorizes the approve-all option for the exact re-frozen candidate.
+
+Remote actions, in execution order (all times UTC):
+
+1. 2026-11-01T22:44:09Z — git push origin 255422cbe6e16c570ccb465246c2394fa3190866:refs/heads/gsd/v2.10-ui-repairs-storybook. Exit 0; fast-forwarded branch from 2bdf1816 to 255422c.
+2. 2026-11-01T22:44:11Z — gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/rerun-pr-body.md. Exit 0; returned https://github.com/szTheory/mailglass/pull/317.
+3. 2026-11-01T22:44:13Z — gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook. Exit 0; returned https://github.com/szTheory/mailglass/actions/runs/41358616440.
+
+Attempt-1 runs resolved by event and candidate SHA:
+
+| Event | Run | Created | Head SHA | Status | Conclusion | URL |
+|---|---:|---|---|---|---|---|
+| pull_request | 41358618944 | 2026-11-01T22:44:16Z | 255422cbe6e16c570ccb465246c2394fa3190866 | completed | failure | https://github.com/szTheory/mailglass/actions/runs/41358618944 |
+| workflow_dispatch | 41358616440 | 2026-11-01T22:44:14Z | 255422cbe6e16c570ccb465246c2394fa3190866 | completed | failure | https://github.com/szTheory/mailglass/actions/runs/41358616440 |
+
+Post-action audit: origin/gsd/v2.10-ui-repairs-storybook equals the candidate; origin/main remains 8328093e4a07d28251ec7f02dd0f37cda2fd6a7b, equal to rerun_pre_approval_main_sha. The PR remains an open draft and is not merged. .planning/release-target.json is unchanged. Both runs are attempt 1 on the exact candidate SHA.
+
+Demo Browser Evidence failed in both runs; Support Contract Admin passed in both. Run conclusions and the Demo failure evidence are recorded here, but are not classified by this plan. The three hosted acceptance rows remain pending. Plan 178-17 handles the hosted evidence and will stop on an unapproved Demo failure.
+
+No rerun, merge, release, publication or deployment occurred.
