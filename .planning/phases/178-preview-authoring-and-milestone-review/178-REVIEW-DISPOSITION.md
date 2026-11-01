@@ -41,15 +41,14 @@ Dispositions used here: `fixed` (a commit and a covering test are named) and `re
 
 ## Gap-closure review
 
-gap_review_range: dd392b87a5c99895495f046241242b3eb35c5e64..f90c37e6762049374e736722b75acb9cae0b6b0a
-gap_review_findings: 0
+gap_review_range: dd392b87a5c99895495f046241242b3eb35c5e64..397c8391a927ba8f28cb2ca9f079d5d3e0f6bdf6
+gap_review_findings: 1
 gap_review_open: 0
 
-Standard-depth review of the gap-closure source diff against `CLAUDE.md`, decisions D-01..D-16 and the threat registers in 178-13 and 178-14. Reviewed files: `mailglass_admin/e2e/flows.spec.js`, `mailglass_admin/e2e/support/storybook-axe-supplement.cjs`, `scripts/phase178_cost_disposition.cjs`, `scripts/phase178_cost_disposition.test.cjs`, `test/scripts/ci_node_test_requires_contract_test.exs`, `test_js/support/ci-require-guard.cjs`, and `reference/demo_app/mix.lock`.
+Standard-depth review of the gap-closure source diff against `CLAUDE.md`, decisions D-01..D-16 and the threat registers in 178-13 and 178-14. Reviewed files: `mailglass_admin/e2e/flows.spec.js`, `mailglass_admin/e2e/support/storybook-axe-supplement.cjs`, `mailglass_admin/test/support/endpoint_case.ex`, `mailglass_admin/test/support/operator_browser_server.ex`, `mailglass_admin/test/mailglass_admin/browser_server_readiness_test.exs`, `scripts/phase178_cost_disposition.cjs`, `scripts/phase178_cost_disposition.test.cjs`, `test/scripts/ci_node_test_requires_contract_test.exs`, `test_js/support/ci-require-guard.cjs`, and `reference/demo_app/mix.lock`.
 
-The focus checks preserve both keyboard-scroll assertions and only add diagnostics. The lazy Playwright import is confined to the helper that uses it. The CI require-resolution contract checks all parsed `node --test` inputs and has non-vacuity checks plus outside-root, allowed-root and lazy-require cases. The disposition exception remains limited to a completed Operator Browser Gate failure with a recorded exact run/job match; Demo, Support and all other non-success outcomes retain the success requirement. The timestamped-summary parser change is covered by both timestamped and untimestamped cases. No reviewed change weakens a baseline, workflow, retry or product contract. The only lock change is the `phoenix_html` 4.3.0 → 4.4.0 entry named in the lock check's `Upgraded:` output.
-
-No review findings were identified.
+The focus checks preserve both keyboard-scroll assertions and only add diagnostics. The lazy Playwright import is confined to the helper that uses it. The CI require-resolution contract checks all parsed `node --test` inputs and has non-vacuity checks plus outside-root, allowed-root and lazy-require cases. The disposition exception remains limited to a completed Operator Browser Gate failure with a recorded exact run/job match; Demo, Support and all other non-success outcomes retain the success requirement. The timestamped-summary parser change is covered by both timestamped and untimestamped cases. No reviewed change weakens a baseline, workflow, retry or product contract. The only lock change is the `phoenix_html` 4.3.0 → 4.4.0 entry named in the lock check's `Upgraded:` output. The readiness endpoint now reports 503 until the browser server finishes its initial fixture seed; the focused controller regression test covers both the starting and ready responses.
 
 | Finding | Severity | Disposition | Commit and covering test, or reason |
 |---------|----------|-------------|-------------------------------------|
+| GR-01 | warning | fixed | `397c8391` + `MailglassAdmin.BrowserServerReadinessTest` |
