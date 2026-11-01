@@ -482,3 +482,25 @@ Plan 178-10 did not run (2026-10-29). Its precondition requires `owner_decision:
 No candidate preview was launched, no runbook (`178-DELIVERY.md`) was written, the ship/no-ship checkpoint was not presented, and no remote action was taken. `review_demo_count_before` was not recorded because no Docker work ran. UIQ-07 and UIQ-08 remain unmet for this phase.
 
 Blocking defect: `.github/workflows/ci.yml` (root Demo Browser Evidence job) runs `node --test ... mailglass_admin/e2e/support/storybook-axe.test.cjs`, whose `storybook-axe-supplement.cjs:1` requires `@playwright/test`, which that job never installs (`MODULE_NOT_FOUND`). Introduced in Phase 175 and first hosted-run by 178-09. The PR-run Operator Browser Gate failure at `e2e/flows.spec.js:2453` is recorded, undiagnosed, and passed in the dispatch run on the same SHA. Moving on needs a fix to that job, a new candidate freeze and a new 178-09-02 approval.
+
+## PR-run Operator Browser Gate failure (flows.spec.js:2453)
+
+operator_pr_flake_evidence_dir: reference/demo_app/tmp/phase178_candidate/opgate-pr-40904235961
+operator_pr_flake_repeats: 50/50
+
+The failure is the exact test title `Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled` in pull request run 40904235961. The saved log is `reference/demo_app/tmp/demo_browser_evidence/ci/40904235961-attempt-1/operator-gate.log`, SHA-256 `f174338e8222ea127bc9ae7d93e698bb14e77fe55679dcf5859df547f47e9516`. It reports `expect(received).toBe(expected)`, Expected `true`, Received `false`, after the 5-second End poll. It failed on attempt 1 and retry 1.
+
+Trace artifacts from `operator-browser-timeout-evidence-40904235961-node-22` are saved under the evidence directory:
+
+| Attempt | Trace SHA-256 | Focus and scroll evidence |
+|---|---|---|
+| attempt 1 | `dde73155916d483700b69d38ba8b4409ea860de27c821684ea5e8a40d411b825` | focus call `call@5129`; active-element evaluation `call@5131` returned `inbound-quick-view`; PageDown `call@5133`; post-PageDown snapshot `call@5139` recorded scrollTop 625; End `call@5143`; post-End snapshot recorded scrollTop 630. |
+| retry 1 | `475fb82752343c0fe8b7f08dd8448e4b99ced22858e4b8a501247396e3a1c0f0` | focus call `call@62`; active-element evaluation `call@64` returned `inbound-quick-view`; PageDown `call@66`; post-PageDown snapshot `call@72` recorded scrollTop 625; End `call@76`; post-End snapshot recorded scrollTop 630. |
+
+The snapshots do not record `clientHeight` or `scrollHeight`, and the Playwright trace does not serialize the poll callback's numeric result. Both traces keep the same page, main frame, URL and `inbound-quick-view` element through the key presses and polls; no frame navigation or dialog replacement appears. The `0-trace.network` HAR contains resource snapshots and no WebSocket frame records, so it shows no LiveView patch during this interval. The End poll's false result is the recorded failure; the available trace cannot establish the expected bottom dimensions. The trace artifacts, both `error-context.md` files and server capture are retained in the evidence directory.
+
+The PR merge tree equals the candidate: `git rev-list --count 2bdf18161182beeb286435b556f26e205976e658..8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` returned `0`. On that same tree, the Dispatch run 40904249445 passed this target test.
+
+Under `CI=1` and the pinned Elixir/OTP toolchain, the target passed `50/50` repeats; reporter output is `reference/demo_app/tmp/phase178_candidate/opgate-pr-40904235961/local-target-repeat.log`. The whole `e2e/flows.spec.js` first reported 45 passed and 1 failed in `local-flows-full.log`; the unrelated Phase 168 Delivery Mailable wrapping case failed during account switching/quick-view setup. It passed in isolation (`local-mailable-isolated.log`, 1 passed), and a fresh full in-order run passed all 46 tests (`local-flows-full-rerun.log`, 0 failures). The target Inbound test passed in both full-file runs.
+
+The outcome is deferred to the follow-up record after the self-diagnosing focus preconditions and their local checks are complete.
