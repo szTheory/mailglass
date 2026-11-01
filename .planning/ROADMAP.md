@@ -298,7 +298,7 @@ Plans:
 
 **Gap closure** (from 178-VERIFICATION.md, `gaps_found`; gap-plan waves 1-7)
 - [x] 178-13-PLAN.md — Gap wave 1: lazy `@playwright/test` require in the Storybook axe supplement plus a merge-blocking ci.yml `node --test` require-resolution guard; hosted Operator summary counted once (UIQ-06, UIQ-07, UIQ-08).
-- [ ] 178-14-PLAN.md — Gap wave 2 (after 178-13): diagnose the PR-run-only Operator Browser Gate failure at `flows.spec.js:2453`, then fix it or classify it with evidence (UIQ-07, UIQ-08).
+- [x] 178-14-PLAN.md — Gap wave 2 (after 178-13): diagnose the PR-run-only Operator Browser Gate failure at `flows.spec.js:2453`, then fix it or classify it with evidence (UIQ-07, UIQ-08).
 - [ ] 178-15-PLAN.md — Gap wave 3: re-gate the affected lanes (including the cold/warm Demo pilot), point the acceptance closure at the gap plans, re-freeze the candidate (UIQ-06, UIQ-07, UIQ-08).
 - [ ] 178-16-PLAN.md — Gap wave 4 (new owner approval checkpoint): push the re-frozen candidate, update draft PR #317, single dispatch, wait for runs (UIQ-07, UIQ-08).
 - [ ] 178-17-PLAN.md — Gap wave 5: capture and classify hosted evidence, hosted UIQ-06 receipts, `178-COST-DISPOSITION.json` (UIQ-06, UIQ-07).
@@ -343,6 +343,6 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
 | 177. Readable Health and Coherent Account Navigation | 11/11 | Complete    | 2026-10-28 |
-| 178. Preview Authoring and Milestone Review | 13/19 | In Progress | — |
+| 178. Preview Authoring and Milestone Review | 14/19 | In Progress | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
