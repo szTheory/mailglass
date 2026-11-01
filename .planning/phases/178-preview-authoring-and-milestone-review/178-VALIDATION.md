@@ -91,3 +91,14 @@ All other phase behaviors have automated verification.
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
+
+## Gap closure verification (plans 178-13 to 178-19)
+
+| Requirement | Verification item | Automated command or evidence | Status |
+|-------------|-------------------|-------------------------------|--------|
+| UIQ-08 | Required CI lanes catch a missing package in any `ci.yml` `node --test` step | `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/scripts/ci_node_test_requires_contract_test.exs --seed 0` | ⬜ pending |
+| UIQ-08 | The Demo `node --test` inputs load under the CI require guard with no allowed package roots | `NODE_OPTIONS="--require $PWD/test_js/support/ci-require-guard.cjs" MAILGLASS_REQUIRE_GUARD_ALLOWED='' MAILGLASS_REQUIRE_GUARD_RECORD=<record> node --test --test-name-pattern='^__mailglass_ci_require_guard_no_match__$' test_js/phase173-baselines.test.cjs scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs` | ⬜ pending |
+| UIQ-08 | The recorded Operator scroll-access advisory is repeatable and self-diagnosing | `cd mailglass_admin && CI=1 npx playwright test --config=playwright.config.cjs e2e/flows.spec.js --grep "Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled" --repeat-each=50 --workers=1`; see 178-14 repeated run and full-file rerun records | ⬜ pending |
+| UIQ-06 | Re-gate Demo pilot receipts bind the candidate and pass in cold and warm | `node scripts/check_phase174_evidence.cjs --evidence-dir <rerun_local_pilot_evidence_dir> --pilot`; `node scripts/check_phase175_evidence.cjs --evidence-dir <rerun_local_pilot_evidence_dir> --pilot`; verify both Phase 178 story specs are `ok: true` in each report at `rerun_gate_head_sha` | ⬜ pending |
+| UIQ-06, UIQ-07 | Hosted receipt identity, counts and cost disposition reproduce from the approved run inputs | 178-17 tasks 1-2: hosted pilot checkers with `--require-ci`, expected/executed count comparison, and byte-identical `scripts/phase178_cost_disposition.cjs disposition` reproduction | ⬜ pending |
+| UIQ-08 | Re-frozen candidate preview and runbook URLs resolve to the claimed pages | 178-18 tasks 1-2: `bash scripts/check_phase178_candidate.sh --sha <rerun_candidate_sha> --require-ci --record <record>`; fetch each runbook URL and verify HTTP 200 plus its page marker, or resolve GitHub URLs with `gh` | ⬜ pending |

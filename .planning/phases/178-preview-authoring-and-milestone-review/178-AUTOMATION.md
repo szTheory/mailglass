@@ -366,9 +366,65 @@ candidate_sha: 2bdf18161182beeb286435b556f26e205976e658
 - **Remote actions taken by this plan: none.** No push, pull request, workflow dispatch, rerun or merge. `gh run list --branch gsd/v2.10-ui-repairs-storybook` returned `[]` before and after.
 - The commit that records this freeze comes after the candidate and is never pushed.
 
+## Gap closure: re-gate and re-freeze (UIQ-06, UIQ-07, UIQ-08)
+
+rerun_gate_head_sha: baf5685e1a9b943d41b884b007fdea5fa45fa498
+rerun_local_pilot_evidence_dir: reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101214833-39818-11964
+rerun_lock_refresh: phoenix_html 4.3.0 => 4.4.0
+rerun_operator_list_count: 311
+rerun_operator_named_skips: 1 | header-anchored overlay transform-origin is top-edge IF such an overlay exists (guarded, D-07)
+rerun_demo_list_count: 111
+rerun_demo_receipt_expected_total: 169
+rerun_operator_executed_count: 311
+rerun_operator_projected_hosted_s: 1203
+rerun_operator_timeout_disposition: within margin (1203 s of 1440 s)
+rerun_branch_sha_before: 2bdf18161182beeb286435b556f26e205976e658
+
+The re-gate runs at `rerun_gate_head_sha`; all saved gate logs are in `reference/demo_app/tmp/phase178_candidate/rerun-gate/` and begin with that SHA. `expected.json` is `reference/demo_app/tmp/phase178_candidate/rerun-disposition-inputs/expected.json`. Operator counts use the Playwright end-of-run summary lines: 311 executed as 310 passed plus the one named guarded skip, 0 failed and 0 flaky. Demo counts use the local pilot `phase174/cost.json` expected/executed receipt per condition: 111 Demo cases plus 6 hooks, 26 fidelity and 26 axe cases equals 169; this receipt total is a different unit from the Demo `--list` count of 111. Cold and warm each match `{demo: 111, hooks: 6, fidelity: 26, axe: 26, total: 169}`.
+
+| Gate | Command | Saved log | Result | Expected | Executed | Wall | CI lane and placement |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Gate integrity | `git diff --stat 61e90275..<rerun_gate_head_sha> -- <178-08-02 gate-integrity list>` | `rerun-gate/gate-integrity.log` | pass; no protected-path diff | n/a | n/a | 0 s | Candidate integrity, local |
+| Node lists | `node --test test_js/phase173-baselines.test.cjs scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs scripts/phase178_cost_disposition.test.cjs`; `node --test test_js/ci-monitor.test.cjs`; `bash scripts/test_check_phase178_candidate.sh` | `rerun-gate/node-lists.log` | pass | 63 + 5 + 11 checks | 63 + 5 + 11 pass | 3 s | Demo evidence / Operator setup, advisory |
+| Node CI monitor | `node --test test_js/ci-monitor.test.cjs` | `rerun-gate/node-ci-monitor.log` | pass | 5 | 5 pass | 0 s | Operator Browser Gate setup, advisory |
+| Candidate self-test | `bash scripts/test_check_phase178_candidate.sh` | `rerun-gate/candidate-selftest.log` | pass | 11 | 11 pass | 1 s | Candidate runner, local |
+| CI require guard | `mix test test/scripts/ci_node_test_requires_contract_test.exs` | `rerun-gate/require-guard-contract.log` | pass | 4 | 4 tests, 0 failures | 2 s | Mix Task Tests / Core Deterministic Suite, required |
+| CI lane contract | `mix verify.ci_lane_contract` | `rerun-gate/ci-lane-contract.log` | expected local-only red: `phase_164_repository_truth_test.exs:261` (`.gsd/.gitignore` is local-only) | 511 | 480 executed, 1 known failure, 31 excluded | 329 s | Mix Task Tests / Core Deterministic Suite, required; four proofs in `178-12-SUMMARY.md` |
+| Format | `mix format --check-formatted` | `rerun-gate/format.log` | pass | n/a | clean | 0 s | Format Check, required |
+| Credo | `bash scripts/check_credo_suppressions.sh && mix run scripts/check_static_analysis_exceptions.exs && mix credo --strict` | `rerun-gate/credo.log` | pass | 81 checks | 565 files, no issues | 4 s | Credo Strict, required |
+| Admin suite | `cd mailglass_admin && mix verify.support_contract.admin --seed 0` | `rerun-gate/admin-suite.log` | pass | n/a | 1205 tests, 0 failures, 1 excluded | 19 s | Support Contract Admin, required |
+| Operator suite | `cd mailglass_admin && CI=1 ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 npm run test:operator-browser` | `rerun-gate/operator-suite.log` | pass | 311 | 310 passed, 1 named guarded skip, 0 failed, 0 flaky | 397 s | Operator Browser Gate, advisory |
+| Operator list | `cd mailglass_admin && npx playwright test --config=playwright.config.cjs --list` | `rerun-gate/operator-list.log` | pass | 311 | 311 tests in 18 files | 1 s | Operator Browser Gate, advisory |
+| Demo list | `cd reference/demo_app/assets && npx playwright test --list` | `rerun-gate/demo-list.log` | pass | 111 | 111 tests in 14 files | 1 s | Demo Browser Evidence, advisory |
+| Demo lock | `cd reference/demo_app && mix deps.get --check-locked` | `rerun-gate/lock-check.log` | pass; known cowlib advisory only | n/a | lock matches | 2 s | Demo Browser Evidence, advisory |
+| Demo cold/warm pilot | `bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` | `rerun-gate/pilot.log` | pass | 169 per condition | 169 cold and 169 warm; 111 Demo, 6 hooks, 26 fidelity, 26 axe each | 612 s | Demo Browser Evidence, advisory |
+| Pilot receipts | Both Phase 174/175 pilot checkers, plus exact-revision and Phase 178 story report checks | `rerun-gate/pilot-checkers.log` | pass | both Phase 178 stories in each report | checkers pass; cold/warm story specs `ok: true`; `source_revision` matches G | 0 s | Demo Browser Evidence, advisory |
+
+### Not-affected CI lanes
+
+Each command below is `git diff --name-only dd392b87a5c99895495f046241242b3eb35c5e64..baf5685e1a9b943d41b884b007fdea5fa45fa498 -- <paths>` and produced no output (empty changed-path set):
+
+| Lane | Paths checked | Result |
+| --- | --- | --- |
+| Compile Warnings / Compile No Optional Deps | `lib mix.exs mix.lock config` | not affected |
+| Inbound Compile No Optional Deps | `lib mix.exs mix.lock config mailglass_inbound` | not affected |
+| Installer Host Smoke | `lib mix.exs mix.lock config mailglass_admin/lib mailglass_admin/mix.exs mailglass_admin/mix.lock` | not affected |
+| Installer Golden Gate | `lib mix.exs mix.lock config priv test/mailglass/install test/support` | not affected |
+| Inbound Test | `mailglass_inbound` | not affected |
+| Dialyzer | `lib mix.exs mix.lock config .dialyzer_ignore.exs scripts/check_dialyzer_ignore.sh` | not affected |
+| Inbound Dialyzer | `lib mix.exs mix.lock config .dialyzer_ignore.exs scripts/check_dialyzer_ignore.sh mailglass_inbound` | not affected |
+| Trust Lane Repo Head | `lib mix.exs mix.lock config mailglass_inbound reference/host_app scripts/check_trust_runner_checkpoint.sh` | not affected |
+| Design System Conformance | `mailglass_admin/assets/css mailglass_admin/priv/static mailglass_admin/scripts/check-conformance.sh mailglass_admin/scripts/check-conformance-advisory.sh` | not affected |
+
+The Operator build left `mailglass_admin/priv/static` clean. The Demo lock change is limited to the named `phoenix_html` refresh and is committed as `chore(deps):`.
+
+### Re-frozen candidate
+
+Pending task 178-15-03 read-only remote-ref checks.
+
 ## Acceptance closure (D-15)
 
-One row per requirement and machine-observable acceptance item. Every row is closed by a test or command, and the lane column names its required or advisory placement.
+Every row without a status token is closed by the test or command it cites. A pending row closes only when its hosted verify passes on the re-frozen candidate; 178-17 or 178-18 then records it as closed with the run or record. A decline or a stop records it as open with the reason, which means unmet. Every row is `source: automated`, and the lane column names its required or advisory placement.
 
 | Requirement | Acceptance item | Covering test or command | Lane | Source |
 | --- | --- | --- | --- | --- |
@@ -384,16 +440,18 @@ One row per requirement and machine-observable acceptance item. Every row is clo
 | STORY-07 | Each retained Preview authoring story has exactly one frame and renders its production roots in light, dark and system | `phase178-stories.spec.js` "Phase 178 retained Preview authoring stories render through production components" (`demo_browser_evidence`, 111 cold and 111 warm) | `demo_browser_evidence` (advisory) | source: automated |
 | UIQ-04 | No feedback row is `pending` or `partial`; every pointer resolves to a real file and heading; scenarios link both ways | `feedback_ledger_test.exs` "Phase 178 ledger: no feedback row is pending or partial" and the rule and link cases (13 mutations, plan 178-02); contract P6 | `support_contract_admin` (required) | source: automated |
 | UIQ-06 | The StatCard story uses the production font roles (computed family and weight equal the Admin gallery's; no serif) | `phase178-stories.spec.js` "Phase 178 StatCard story uses the production font roles" (`demo_browser_evidence`) | `demo_browser_evidence` (advisory) | source: automated |
+| UIQ-06 | The StatCard font-role and retained Preview stories receipts reproduce in the hosted Demo lane, cold and warm | 178-17 task 1 hosted receipt verify on `rerun_candidate_sha` | `demo_browser_evidence` (advisory) | source: automated; status: pending |
 | UIQ-06 | Actual 200% Chromium tab zoom at 320 CSS px for the Delivery and Inbound quick views, Health, the Account control, the Filters and Preview | `phase178-real-zoom.spec.js` (5 cases) and `structural.spec.js` Phase 171 actual 200% zoom case (`operator_browser_gate`) | `operator_browser_gate` (advisory) | source: automated |
 | UIQ-06 | No test labels CSS zoom as real zoom | `phase178_prohibition_contract_test.exs` P7, mutation-proven | `support_contract_admin` (required) | source: automated |
 | UIQ-06 | The repaired surfaces add or change no hook | the Hook receipts commands above: `grep -n 'phx-hook' mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` exits 1, and `git diff --quiet 61e90275 HEAD -- mailglass_admin/lib/mailglass_admin/preview/tabs.ex mailglass_admin/priv/static/hooks.js` exits 0 | planning record | source: automated |
-| UIQ-07 | Expected and executed test counts are recorded for both browser suites and every difference is explained by name | this file, "Expected and executed counts" (`npx playwright test --list`: 311 and 111) | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated |
-| UIQ-07 | The projected hosted Operator Browser Gate time is within 0.8 x the job timeout, or carries a remedy | this file, `operator_projected_hosted_s: 1203` and `operator_timeout_disposition`; checked by the 178-08 task 1 projection verify | `operator_browser_gate` (advisory) | source: automated |
-| UIQ-07 | The hosted run executes the same counts, and the hosted cost is derived deterministically | 178-09 task 3, task 4 and task 5 automated verifies (remote actions, hosted evidence and red classification, cost disposition); 178-10 task 1 and task 2 automated verifies (exact-SHA preview with required CI, runbook URLs) | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated |
-| UIQ-08 | Every CI Green need passes locally on the candidate, or is shown not affected | the Gate table above (all 19 job ids); `support_contract_admin`, `inbound_test`, `core_deterministic_suite` carry the summary lines | `ci_green` aggregate (required) | source: automated |
-| UIQ-08 | The phase diff has a standard-depth review with every finding dispositioned, and no gate was weakened | `178-REVIEW.md`, `178-REVIEW-DISPOSITION.md`; `git diff --stat 61e90275..HEAD -- <gate files>` prints nothing | planning record | source: automated |
-| UIQ-08 | The frozen candidate has both remote refs as ancestors, so the push is a plain fast-forward, and no source changed after the freeze | the 178-08 task 3 verify (`git merge-base --is-ancestor` twice; `git diff --quiet $candidate_sha HEAD -- . ':(exclude).planning'`) | planning record | source: automated |
-| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-09 task 3, task 4 and task 5 automated verifies; 178-10 task 1 and task 2 automated verifies | `ci_green` aggregate (required) | source: automated |
+| UIQ-07 | Expected and executed test counts are recorded for both browser suites and every difference is explained by name | this file, `rerun_operator_list_count`, `rerun_operator_named_skips`, `rerun_demo_list_count`, `rerun_demo_receipt_expected_total`, and unit-declared `expected.json`, all measured at `rerun_gate_head_sha`; checked by the 178-15 task 1 counts verify | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated |
+| UIQ-07 | The projected hosted Operator Browser Gate time is within 0.8 x the job timeout, or carries a remedy | this file, `rerun_operator_projected_hosted_s` and `rerun_operator_timeout_disposition`; checked by the 178-15 task 1 projection verify | `operator_browser_gate` (advisory) | source: automated |
+| UIQ-07 | The hosted run executes the same counts, and the hosted cost is derived deterministically | 178-17 tasks 1 and 2 hosted evidence and cost-disposition verifies on `rerun_candidate_sha` | `operator_browser_gate`, `demo_browser_evidence` (advisory) | source: automated; status: pending |
+| UIQ-08 | Every CI Green need passes locally on the candidate, or is shown not affected | the re-gate table and not-affected lanes in this section; logs are headed by `rerun_gate_head_sha`; checked by the 178-15 task 1 verifies | `ci_green` aggregate (required) | source: automated |
+| UIQ-08 | A hosted-only missing-package red in any `ci.yml` `node --test` step is caught by a required lane | `test/scripts/ci_node_test_requires_contract_test.exs` | `mix_task_tests`, `core_deterministic_suite` (required) | source: automated |
+| UIQ-08 | The phase diff has a standard-depth review with every finding dispositioned, and no gate was weakened | `178-REVIEW.md` for `61e90275..dd392b87`; `178-REVIEW-DISPOSITION.md` `Gap-closure review` for `dd392b87..<rerun_gate_head_sha>`; `rerun-gate/gate-integrity.log`; checked by the 178-15 task 1 verifies | planning record | source: automated |
+| UIQ-08 | The frozen candidate has both remote refs as ancestors, so the push is a plain fast-forward, and no source changed after the freeze | 178-15 task 3 verify: `rerun_candidate_sha`, both `git merge-base --is-ancestor` checks, and no source diff after the gate head or candidate | planning record | source: automated |
+| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-17 task 1 required-CI/exact-SHA verify and 178-18 tasks 1 and 2 runbook URL verifies on `rerun_candidate_sha` | `ci_green` aggregate (required) | source: automated; status: pending |
 
 The UIQ-08 ship/no-ship review (plan 178-10, the owner decision) is the only owner hand-off allowed by D-52. It is a judgment on shipping, not an acceptance row, and nothing in the table above waits on it.
 
