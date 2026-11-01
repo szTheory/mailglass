@@ -420,7 +420,33 @@ The Operator build left `mailglass_admin/priv/static` clean. The Demo lock chang
 
 ### Re-frozen candidate
 
-Pending task 178-15-03 read-only remote-ref checks.
+rerun_candidate_sha: 255422cbe6e16c570ccb465246c2394fa3190866
+
+- **Commit subject:** `docs(178-15): point acceptance closure at gap plans`.
+- **No source changed after the gate:** `git diff --quiet baf5685e1a9b943d41b884b007fdea5fa45fa498 255422cbe6e16c570ccb465246c2394fa3190866 -- . ':(exclude).planning'` exits 0, and `git status --porcelain -- mailglass_admin reference scripts test lib test_js` prints nothing. `mailglass_admin/priv/static` and `reference/demo_app/mix.lock` are clean.
+- **Remote refs, read-only:** after `git fetch origin main gsd/v2.10-ui-repairs-storybook`, `origin/main` is `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` and `origin/gsd/v2.10-ui-repairs-storybook` is `2bdf18161182beeb286435b556f26e205976e658`. `git ls-remote` agrees with both values, and the branch equals `rerun_branch_sha_before`.
+- **Ancestor checks:** `git merge-base --is-ancestor origin/main 255422cbe6e16c570ccb465246c2394fa3190866` and the same check for `origin/gsd/v2.10-ui-repairs-storybook` both exit 0. The candidate is a plain fast-forward from both refs.
+- **Commits ahead:** 396 ahead of `origin/main`, 45 ahead of `origin/gsd/v2.10-ui-repairs-storybook`.
+- **Source commits the push would add to the branch:**
+
+  ```text
+  ea1e09b1 test(178-15): isolate workspace evidence sync markers
+  5d625006 test(178-15): reduce CI contract parser nesting
+  ad10d639 test(178-15): stabilize Demo theme screenshot captures
+  1cc410df test(178-15): allow time for loader contract checks
+  397c8391 test(178-15): wait for browser fixtures before readiness
+  f90c37e6 chore(deps): refresh reference/demo_app lock (phoenix_html 4.3.0 => 4.4.0)
+  5ee9a173 test(178-14): self-diagnosing scroll-access helper
+  befeb47e test(178-13): measure a recorded advisory Operator red in the cost disposition
+  33e485a5 test(178-13): reproduce disposition refusing a recorded advisory Operator red
+  a6a136e0 test(178-13): count each hosted Operator summary line once
+  b2102ced test(178-13): reproduce hosted Operator summary double count
+  534a6898 test(178-13): prove the require guard's teeth with hermetic fixtures
+  92704fc2 test(178-13): load Playwright lazily in the Storybook axe supplement
+  71122b66 test(178-13): add ci.yml node --test require guard (red)
+  ```
+- **Run history:** read-only `gh run list --branch gsd/v2.10-ui-repairs-storybook --limit 20` found only runs through `40904249445`, all on the superseded SHA `2bdf18161182beeb286435b556f26e205976e658`; no newer run exists.
+- **Remote actions taken by plan 178-15: none.** No push, pull request, workflow dispatch, rerun or merge. The record commit below comes after the candidate and is never pushed.
 
 ## Acceptance closure (D-15)
 
