@@ -726,3 +726,7 @@ rerun_stop_job: Hex Audit (Elixir 1.18 / OTP 27)
 rerun_stop_log: reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/hex-audit.log
 
 UIQ-06's hosted receipts, UIQ-07's hosted measurement and UIQ-08's required CI are not met on this candidate; the plan stopped with the status above. The three hosted-dependent acceptance rows are open. No advisory-red continuation, hosted receipt, count disposition or cost figure was produced.
+
+## Placement, cost and limits, re-run (UIQ-07)
+
+not measured: hosted re-run stopped (required lane red (Hex Audit (Elixir 1.18 / OTP 27))); see rerun_stop_log.
