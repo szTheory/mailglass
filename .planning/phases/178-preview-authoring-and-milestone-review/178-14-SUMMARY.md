@@ -79,7 +79,7 @@ plan_head_after: 00143b5a9fe91ba7d1532affe1699ab6c851759b
 - Added one inline focus poll before each key press. Each reports `element?.id || element?.tagName`; the End poll identifies `BODY` when a temporary `dialog.blur()` mutation removes focus.
 - Recorded the exact advisory title and SHA-256 for the valid `50/50` CI repeat log. The full in-order `flows.spec.js` rerun passed all 46 tests; final Inbound and shared-helper Delivery checks passed `30/30` and `10/10`.
 
-## Verification
+## Local Results
 
 | Check | Result |
 |---|---|
@@ -105,6 +105,11 @@ The first full-file run had one unrelated Phase 168 Delivery Mailable wrapping s
 ## Next Plan
 
 Plan 178-15 is next in gap-only dependency order. Plan 178-16 retains its owner checkpoint before any remote action.
+
+## Self-Check: PASSED
+
+- The summary file exists and the recorded commits are present in Git history.
+- The classification log matches its recorded SHA-256, and the static acceptance checks passed.
 
 ---
 *Phase: 178-preview-authoring-and-milestone-review*
