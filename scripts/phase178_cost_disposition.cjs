@@ -15,6 +15,7 @@
 //   disposition  --baseline-run <raw> --baseline-jobs <raw>
 //                [--dispatch-run <raw> --dispatch-jobs <raw>] [--pr-run <raw> --pr-jobs <raw>]
 //                [--pilot-cost <cost.json> --pilot-source-event workflow_dispatch|pull_request --identity-bound true|false]
+//                [--advisory-reds <file>] # 178-17 rerun_advisory_red lines; sole exception for a failed Operator job
 //                --sha <candidate> --counts <file|'{}'> [--input <path>]... --out <path>
 
 const crypto = require("node:crypto");
@@ -101,6 +102,31 @@ function requireSuccessfulJob(job, label) {
   if (job.status !== "completed" || job.conclusion !== "success") {
     fail(`${label} job ${job.name} did not complete successfully (${job.status}/${job.conclusion})`);
   }
+}
+
+function parseAdvisoryReds(text) {
+  const entries = [];
+  for (const [index, line] of String(text).split(/\r?\n/).entries()) {
+    if (line.trim() === "") continue;
+    const prefix = "rerun_advisory_red: ";
+    if (!line.startsWith(prefix)) fail(`advisory reds line ${index + 1} must start with '${prefix.trimEnd()}'`);
+    const fields = {};
+    for (const part of line.slice(prefix.length).split("|")) {
+      const separator = part.indexOf("=");
+      if (separator < 0) continue;
+      const key = part.slice(0, separator).trim();
+      const value = part.slice(separator + 1).trim();
+      if (key) fields[key] = value;
+    }
+    for (const key of ["run", "job", "title", "key", "matched", "log_sha256"]) {
+      if (!fields[key]) fail(`advisory reds line ${index + 1} is missing ${key}`);
+    }
+    entries.push({
+      run: fields.run, job: fields.job, title: fields.title, key: fields.key,
+      matched: fields.matched, log_sha256: fields.log_sha256
+    });
+  }
+  return entries;
 }
 
 // ---------------------------------------------------------------------------
@@ -394,7 +420,7 @@ function totalRunnerMs(jobs) {
   ), 0);
 }
 
-function deriveRun(baseline, candidate, sha, label) {
+function deriveRun(baseline, candidate, sha, label, advisoryReds = []) {
   const { run, jobs } = candidate;
   if (!run || !jobs) fail(`${label} run and jobs inputs must both be provided`);
   if (run.head_sha !== sha) {
@@ -405,12 +431,15 @@ function deriveRun(baseline, candidate, sha, label) {
     const base = findJob(baseline.jobs, name);
     const cand = findJob(jobs, name);
     requireSuccessfulJob(base, "baseline");
-    requireSuccessfulJob(cand, label);
+    const matchingAdvisoryReds = advisoryReds.filter((entry) => entry.run === String(run.id) && entry.job === OPERATOR_JOB);
+    const measuredAdvisoryFailure = name === OPERATOR_JOB && cand.status === "completed"
+      && cand.conclusion === "failure" && matchingAdvisoryReds.length > 0;
+    if (!measuredAdvisoryFailure) requireSuccessfulJob(cand, label);
     const baseMs = jobDurationMs(base);
     const candMs = jobDurationMs(cand);
     const deltaMs = candMs - baseMs;
     const runnerDelta = deltaMs / 60000;
-    jobEntries[name] = {
+    const entry = {
       baseline_seconds: baseMs / 1000,
       candidate_seconds: candMs / 1000,
       delta_seconds: deltaMs / 1000,
@@ -419,6 +448,13 @@ function deriveRun(baseline, candidate, sha, label) {
       runner_within_budget: runnerDelta <= ADDED_RUNNER_MINUTES,
       wall_exceedance_ms: Math.max(0, deltaMs - WALL_BUDGET_MS)
     };
+    if (measuredAdvisoryFailure) {
+      entry.conclusion = "failure";
+      entry.advisory_reds = matchingAdvisoryReds.map(({ title, key, matched, log_sha256 }) => ({
+        title, key, matched, log_sha256
+      }));
+    }
+    jobEntries[name] = entry;
   }
   const baseWall = wallToCiGreen(baseline.run, baseline.jobs);
   const candWall = wallToCiGreen(run, jobs);
@@ -476,10 +512,23 @@ function deriveDisposition(options) {
   if (!baselineRun || !baselineJobs) fail("baseline run and jobs inputs are required");
   if (!dispatch && !pr) fail("disposition needs at least one measured run (dispatch or pull_request)");
   if (!/^[0-9a-f]{40}$/.test(String(sha))) fail("--sha must be a full 40-character lowercase hex candidate SHA");
+  const advisoryReds = options.advisoryReds === undefined ? [] : options.advisoryReds;
+  if (!Array.isArray(advisoryReds)) fail("advisory reds must be an array");
+  const measuredRuns = [dispatch, pr].filter(Boolean);
+  for (const advisoryRed of advisoryReds) {
+    if ([DEMO_JOB, SUPPORT_JOB].includes(advisoryRed.job)) {
+      fail("advisory red recorded for a job that must succeed");
+    }
+    const measured = measuredRuns.find(({ run }) => String(run.id) === advisoryRed.run);
+    if (!measured) fail(`advisory red references unmeasured run ${advisoryRed.run}`);
+    if (advisoryRed.job === OPERATOR_JOB && findJob(measured.jobs, OPERATOR_JOB).conclusion === "success") {
+      fail(`recorded advisory red for run ${advisoryRed.run}, but the Operator Browser Gate job succeeded`);
+    }
+  }
   const baseline = { run: baselineRun, jobs: baselineJobs };
   const runs = {};
-  if (dispatch) runs[RUN_KEYS.dispatch] = deriveRun(baseline, dispatch, sha, RUN_KEYS.dispatch);
-  if (pr) runs[RUN_KEYS.pr] = deriveRun(baseline, pr, sha, RUN_KEYS.pr);
+  if (dispatch) runs[RUN_KEYS.dispatch] = deriveRun(baseline, dispatch, sha, RUN_KEYS.dispatch, advisoryReds);
+  if (pr) runs[RUN_KEYS.pr] = deriveRun(baseline, pr, sha, RUN_KEYS.pr, advisoryReds);
   const pilot = options.pilotCost
     ? derivePilotConditions(options.pilotCost, options.pilotSourceEvent, options.identityBound)
     : null;
@@ -587,6 +636,11 @@ function cli(argv = process.argv.slice(2)) {
     const baselineJobs = readJson(hashed("baseline_jobs", need(flags, "--baseline-jobs")));
     const dispatch = pair("--dispatch-run", "--dispatch-jobs", "dispatch");
     const pr = pair("--pr-run", "--pr-jobs", "pr");
+    let advisoryReds = [];
+    if (flags["--advisory-reds"] !== undefined) {
+      const advisoryRedsFile = hashed("advisory_reds", flags["--advisory-reds"]);
+      advisoryReds = parseAdvisoryReds(fs.readFileSync(advisoryRedsFile, "utf8"));
+    }
     let pilotCost = null;
     if (flags["--pilot-cost"] !== undefined) pilotCost = readJson(hashed("pilot_cost", flags["--pilot-cost"]));
     let counts;
@@ -603,13 +657,14 @@ function cli(argv = process.argv.slice(2)) {
       sha: need(flags, "--sha"),
       counts,
       pilotCost,
+      advisoryReds,
       pilotSourceEvent: flags["--pilot-source-event"],
       identityBound: flags["--identity-bound"] === undefined ? undefined : parseBoolean(flags["--identity-bound"], "--identity-bound"),
       inputHashes: hashes
     });
     return writeOutput(flags, [
       "--baseline-run", "--baseline-jobs", "--dispatch-run", "--dispatch-jobs", "--pr-run", "--pr-jobs",
-      "--pilot-cost", "--counts", "--input"
+      "--pilot-cost", "--counts", "--advisory-reds", "--input"
     ], disposition);
   }
   return fail(`unknown subcommand '${command || ""}'; expected ci-job, enrich-cost, counts or disposition`);

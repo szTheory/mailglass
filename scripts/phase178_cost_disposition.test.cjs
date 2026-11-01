@@ -250,26 +250,26 @@ test("disposition measures an Operator advisory red only when a recorded advisor
 
 test("an unmatched Operator advisory red still fails the disposition", () => {
   const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
-  const derive = (options = {}) => tool.deriveDisposition({
-    baselineRun, baselineJobs, pr: failedPr, sha: SHA_A, counts: {}, ...options
+  const derive = ({ dispatch, ...options } = {}) => tool.deriveDisposition({
+    baselineRun, baselineJobs, dispatch, pr: failedPr, sha: SHA_A, counts: {}, ...options
   });
   assert.throws(() => derive(), /did not complete successfully.*failure/);
-  assert.throws(() => derive({ advisoryReds: [advisoryRed("200")] }), /job succeeded/);
-  assert.throws(() => derive({ advisoryReds: [advisoryRed("999")] }), /not a measured run/);
+  assert.throws(() => derive({ dispatch: { run: dispatchRun, jobs: dispatchJobs }, advisoryReds: [advisoryRed("200")] }), /job succeeded/);
+  assert.throws(() => derive({ advisoryReds: [advisoryRed("999")] }), /unmeasured run/);
   assert.throws(() => derive({ advisoryReds: [advisoryRed("300", "Preview Capture Advisory")] }), /did not complete successfully.*failure/);
 });
 
-test("Demo, Support, CI Green and non-failure Operator conclusions still require success", () => {
+test("Demo, Support, CI Green and non-failure Operator conclusions reject an advisory red exception", () => {
   const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
   const validRed = advisoryRed("300");
-  const derive = (candidate, advisoryReds = [validRed]) => tool.deriveDisposition({
+  const derive = (candidate = failedPr.jobs, advisoryReds = [validRed]) => tool.deriveDisposition({
     baselineRun, baselineJobs, pr: { run: prRun, jobs: candidate }, sha: SHA_A, counts: {}, advisoryReds
   });
   assert.throws(() => derive(
     withConclusion(prJobs, DEMO, "failure"), [advisoryRed("300", DEMO)]
   ), /advisory red recorded for a job that must succeed/);
-  assert.throws(() => derive(withConclusion(prJobs, SUPPORT, "failure")), /did not complete successfully.*failure/);
-  assert.throws(() => derive(withConclusion(failedPr.jobs, "CI Green", "failure")), /CI Green job.*did not complete successfully/);
+  assert.throws(() => derive(withConclusion(prJobs, SUPPORT, "failure"), []), /did not complete successfully.*failure/);
+  assert.throws(() => derive(withConclusion(failedPr.jobs, "CI Green", "failure")), /job CI Green.*did not complete successfully/);
   for (const conclusion of ["timed_out", "cancelled"]) {
     assert.throws(() => derive(withConclusion(prJobs, OPERATOR, conclusion)), new RegExp(`completed/${conclusion}`));
   }
