@@ -196,9 +196,22 @@ async function assertPhase174QuickViewScrollAccess(page, dialog, dialogId) {
 
   await expect(dialog).toHaveAttribute("tabindex", "0");
   await dialog.focus();
-  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(dialogId);
+  await expect.poll(
+    () => page.evaluate(() => {
+      const element = document.activeElement;
+      return element?.id || element?.tagName;
+    }),
+    { message: `${dialogId} holds focus before PageDown` }
+  ).toBe(dialogId);
   await page.keyboard.press("PageDown");
   await expect.poll(() => dialog.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await expect.poll(
+    () => page.evaluate(() => {
+      const element = document.activeElement;
+      return element?.id || element?.tagName;
+    }),
+    { message: `${dialogId} holds focus before End` }
+  ).toBe(dialogId);
   await page.keyboard.press("End");
   await expect.poll(() => dialog.evaluate(element => element.scrollTop + element.clientHeight >= element.scrollHeight - 1)).toBe(true);
 }
