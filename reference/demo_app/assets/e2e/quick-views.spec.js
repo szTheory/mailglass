@@ -10,6 +10,19 @@ async function loginTo(page, target) {
   await page.locator("[data-phx-main].phx-connected").waitFor();
 }
 
+async function waitForStoryPaint(frame) {
+  await frame.locator("#operator-quick-view").evaluate(element => new Promise(resolve => {
+    const view = element.ownerDocument.defaultView;
+    view.requestAnimationFrame(() => view.requestAnimationFrame(resolve));
+  }));
+}
+
+async function captureStoryRoot(frame, screenshotPath) {
+  const root = frame.locator("#psb-iframe-container > .mg-admin-root");
+  await expect(root).toBeVisible();
+  await root.screenshot({ path: screenshotPath });
+}
+
 test("Phase174 tracer opens a real Delivery and its retained production story", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(
@@ -248,14 +261,14 @@ test("Phase174 delivery retained variants preserve exact scenario facts and boun
   const darkPanelBackground = await normal.locator("#operator-quick-view")
     .evaluate(panel => getComputedStyle(panel).backgroundColor);
   expect(darkPanelBackground, "dark capture uses the dark production theme").not.toBe(lightPanelBackground);
-  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  await normalFrame.screenshot({ path: path.join(captureDir, "delivery-dark.png") });
+  await waitForStoryPaint(normal);
+  await captureStoryRoot(normal, path.join(captureDir, "delivery-dark.png"));
   await page.locator('iframe[id*="northstar_normal"]').evaluate(frame => {
     frame.contentDocument.documentElement.dataset.theme = "mailglass-light";
     frame.contentDocument.querySelector("#psb-iframe-container > .mg-admin-root").dataset.theme = "mailglass-light";
   });
-  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  await normalFrame.screenshot({ path: path.join(captureDir, "delivery-light.png") });
+  await waitForStoryPaint(normal);
+  await captureStoryRoot(normal, path.join(captureDir, "delivery-light.png"));
 });
 
 test("Phase174 delivery scenario manifest accounts for rendered and real-route-only cases", async () => {
