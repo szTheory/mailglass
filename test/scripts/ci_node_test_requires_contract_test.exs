@@ -134,76 +134,101 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
   end
 
   defp node_test_steps(ci) do
-    jobs_text =
-      case String.split(ci, "\njobs:\n", parts: 2) do
-        [_, jobs] -> jobs
-        _ -> flunk("could not find the jobs section in .github/workflows/ci.yml")
-      end
+    ci
+    |> jobs_text()
+    |> parse_jobs()
+    |> Enum.flat_map(&job_node_test_steps/1)
+    |> Enum.reverse()
+  end
 
+  defp jobs_text(ci) do
+    case String.split(ci, "\njobs:\n", parts: 2) do
+      [_, jobs] -> jobs
+      _ -> flunk("could not find the jobs section in .github/workflows/ci.yml")
+    end
+  end
+
+  defp parse_jobs(jobs_text) do
     jobs_text
     |> String.split("\n")
-    |> Enum.reduce({nil, [], []}, fn line, {job, lines, jobs} ->
-      case Regex.run(~r/^  ([a-zA-Z0-9_-]+):\s*$/, line) do
-        [_, job_id] ->
-          jobs = if job, do: [{job, Enum.reverse(lines)} | jobs], else: jobs
-          {job_id, [], jobs}
+    |> Enum.reduce({nil, [], []}, &parse_job_line/2)
+    |> finish_jobs()
+  end
 
-        _ ->
-          {job, [line | lines], jobs}
-      end
-    end)
-    |> then(fn {job, lines, jobs} ->
-      jobs = if job, do: [{job, Enum.reverse(lines)} | jobs], else: jobs
-      Enum.reverse(jobs)
-    end)
-    |> Enum.flat_map(fn {job_id, job_lines} ->
-      job_lines
-      |> step_chunks()
-      |> Enum.reduce({[], []}, fn step, {install_roots, node_steps} ->
-        roots_before_step = Enum.reverse(install_roots)
+  defp parse_job_line(line, {job, lines, jobs}) do
+    case Regex.run(~r/^  ([a-zA-Z0-9_-]+):\s*$/, line) do
+      [_, job_id] ->
+        jobs = if job, do: [{job, Enum.reverse(lines)} | jobs], else: jobs
+        {job_id, [], jobs}
 
-        node_steps =
-          case node_test_files(step.run) do
-            [] ->
-              node_steps
+      _ ->
+        {job, [line | lines], jobs}
+    end
+  end
 
-            files ->
-              [
-                %{job: job_id, name: step.name, files: files, allowed_roots: roots_before_step}
-                | node_steps
-              ]
-          end
+  defp finish_jobs({job, lines, jobs}) do
+    jobs = if job, do: [{job, Enum.reverse(lines)} | jobs], else: jobs
+    Enum.reverse(jobs)
+  end
 
-        new_roots = npm_install_roots(step.run, step.working_directory)
-        {Enum.reverse(new_roots) ++ install_roots, node_steps}
-      end)
-      |> elem(1)
-    end)
-    |> Enum.reverse()
+  defp job_node_test_steps({job_id, job_lines}) do
+    job_lines
+    |> step_chunks()
+    |> Enum.reduce({[], []}, &accumulate_step(job_id, &1, &2))
+    |> elem(1)
+  end
+
+  defp accumulate_step(job_id, step, {install_roots, node_steps}) do
+    roots_before_step = Enum.reverse(install_roots)
+    node_steps = add_node_test_step(node_steps, job_id, step, roots_before_step)
+    new_roots = npm_install_roots(step.run, step.working_directory)
+
+    {Enum.reverse(new_roots) ++ install_roots, node_steps}
+  end
+
+  defp add_node_test_step(node_steps, job_id, step, roots_before_step) do
+    case node_test_files(step.run) do
+      [] ->
+        node_steps
+
+      files ->
+        [
+          %{job: job_id, name: step.name, files: files, allowed_roots: roots_before_step}
+          | node_steps
+        ]
+    end
   end
 
   defp step_chunks(job_lines) do
     case Enum.find_index(job_lines, &(&1 == "    steps:")) do
-      nil ->
-        []
-
-      index ->
-        job_lines
-        |> Enum.drop(index + 1)
-        |> Enum.reduce({[], []}, fn line, {current, steps} ->
-          if String.starts_with?(line, "      - ") do
-            steps = if current == [], do: steps, else: [Enum.reverse(current) | steps]
-            {[line], steps}
-          else
-            if current == [], do: {current, steps}, else: {[line | current], steps}
-          end
-        end)
-        |> then(fn {current, steps} ->
-          steps = if current == [], do: steps, else: [Enum.reverse(current) | steps]
-          Enum.reverse(steps)
-        end)
-        |> Enum.map(&parse_step/1)
+      nil -> []
+      index -> job_lines |> Enum.drop(index + 1) |> chunk_steps() |> Enum.map(&parse_step/1)
     end
+  end
+
+  defp chunk_steps(lines) do
+    lines
+    |> Enum.reduce({[], []}, &accumulate_step_line/2)
+    |> finish_step_chunks()
+  end
+
+  defp accumulate_step_line(line, {current, steps}) do
+    cond do
+      String.starts_with?(line, "      - ") ->
+        steps = if current == [], do: steps, else: [Enum.reverse(current) | steps]
+        {[line], steps}
+
+      current == [] ->
+        {current, steps}
+
+      true ->
+        {[line | current], steps}
+    end
+  end
+
+  defp finish_step_chunks({current, steps}) do
+    steps = if current == [], do: steps, else: [Enum.reverse(current) | steps]
+    Enum.reverse(steps)
   end
 
   defp parse_step(lines) do
