@@ -120,7 +120,7 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     assert output =~ "archive/source"
 
     fixture = fixture!()
-    sync_dir = tmp_dir!("mailglass-workspace-evidence-sync")
+    sync_dir = Path.join(Path.dirname(fixture.repo), "assessment-sync")
 
     task =
       Task.async(fn ->
