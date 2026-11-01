@@ -315,8 +315,13 @@ const SUMMARY_KEYS = { passed: "passed", skipped: "skipped", failed: "failed", f
 function parsePlaywrightSummary(log) {
   const executed = { passed: 0, skipped: 0, failed: 0, flaky: 0 };
   let lines = 0;
-  for (const raw of String(log).split(/\r?\n/)) {
-    const line = raw.replace(/\u001b\[[0-9;]*m/g, "").replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?/, "");
+  const rawLines = String(log).split(/\r?\n/).map((raw) => raw.replace(/\u001b\[[0-9;]*m/g, ""));
+  const timestamped = rawLines.some((raw) => /^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?/.test(raw));
+  for (const raw of rawLines) {
+    const hasTimestamp = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?/.test(raw);
+    const line = raw.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?/, "");
+    // Run 40904235961's untimestamped notice continuation duplicates the timestamped summary.
+    if (timestamped && !hasTimestamp) continue;
     const match = line.match(/^\s*(\d+)\s+(passed|skipped|failed|flaky)(?:\s+\([^)]*\))?\s*$/);
     if (match) {
       executed[SUMMARY_KEYS[match[2]]] += Number(match[1]);
