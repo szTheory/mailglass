@@ -5,11 +5,11 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: "Plan 178-10 not run (precondition unmet: hosted_status stopped; UIQ-07/UIQ-08 unmet)"
-last_updated: "2026-10-29T17:47:16.580Z"
-last_activity: 2026-10-29
+stopped_at: Completed 178-13-PLAN.md
+last_updated: "2026-11-01T19:46:08.982Z"
+last_activity: 2026-11-01
 last_activity_desc: Phase 178 execution started
-state_head: c1b85f8dd9943a1fb2181bc98637244562d129de
+state_head: befeb47eaa786dd61b65946d75a9911a838e3d7e
 progress:
   total_phases: 5
   completed_phases: 4
@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — READY TO EXECUTE
-Plan: 12 of 12
+Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
+Plan: 14 of 19
 Status: Ready to execute
-Last activity: 2026-10-29 — Phase 178 execution started
+Last activity: 2026-11-01 — Phase 178 execution started
 
 Progress: [████████░░] 80%
 
@@ -339,6 +339,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P11 | 25 min | 2 tasks | 2 files |
 | Phase 178 P08 | 70 min | 3 tasks | 8 files |
 | Phase 178 P09 | ~25min | 5 tasks | 3 files |
+| Phase 178 P13 | 29min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -656,6 +657,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: 178-08: the three axe 'scan deliveries' timeouts were fixed (replayable row), not recorded as pre-existing, so plan 178-09 has no recorded advisory reds
 - [Phase 178]: 178-08: candidate_sha 2bdf18161182beeb286435b556f26e205976e658 frozen after a full local gate; demo_app lock refreshed for floki 0.38.5 and mailglass_admin publish allowlist refreshed
 - [Phase 178]: 178-09: hosted run stopped on new advisory failure (Demo Browser Evidence missing @playwright/test for storybook-axe.test.cjs); draft PR #317 open, CI Green + Guard Release Trigger success; no cost disposition; 178-10 precondition fails
+- [Phase 178]: Move the Playwright require into verifyStoryAccessibility and guard every CI node --test entry file. — The pure helpers can load in the Demo Browser Evidence job without installing mailglass_admin or moving the test out of its evidence lane; the new contract models each CI job's installed roots and fails on eager package loads.
+- [Phase 178]: Count only timestamped Playwright summaries in timestamped GitHub logs, while preserving untimestamped local summaries. — The untimestamped lines after GitHub's notice header repeat list-reporter counts, so excluding them fixes hosted double counting without changing local CI=1 log parsing.
+- [Phase 178]: Measure a failed Operator Browser Gate only from an exact run-and-job advisory-red record. — This enables honest cost measurement for a title that 178-17 classified as advisory while preserving success requirements for Demo, Support and CI Green and refusing unmatched, timed-out or cancelled results.
 
 ## Quick Tasks Completed
 
@@ -707,8 +711,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-29T16:06:53.226Z
-Stopped at: Plan 178-10 not run (precondition unmet: hosted_status stopped; UIQ-07/UIQ-08 unmet)
+Last session: 2026-11-01T19:46:08.118Z
+Stopped at: Completed 178-13-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
