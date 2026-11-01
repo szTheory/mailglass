@@ -5,25 +5,56 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
   @ci_path Path.join(@repo_root, ".github/workflows/ci.yml")
   @guard_path Path.join(@repo_root, "test_js/support/ci-require-guard.cjs")
 
-  test "every ci.yml node --test file loads with only the packages its job installed earlier" do
+  setup do
+    node =
+      System.find_executable("node") ||
+        flunk("node is required to run the ci.yml node --test resolvability contract")
+
+    dir =
+      Path.join(System.tmp_dir!(), "ci-node-require-guard-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(dir)
+    on_exit(fn -> File.rm_rf!(dir) end)
+
+    %{node: node, dir: dir}
+  end
+
+  test "every ci.yml node --test file loads with only the packages its job installed earlier",
+       ctx do
     ci = File.read!(@ci_path)
-    node = System.find_executable("node") || flunk("node is required to run the ci.yml node --test resolvability contract")
     steps = node_test_steps(ci)
 
-    assert length(steps) >= 3, "expected at least three ci.yml node --test steps, found #{length(steps)}"
+    assert length(steps) >= 3,
+           "expected at least three ci.yml node --test steps, found #{length(steps)}"
 
-    demo_step = Enum.find(steps, &(&1.job == "demo_browser_evidence" and String.contains?(&1.name, "Storybook evidence")))
+    demo_step =
+      Enum.find(
+        steps,
+        &(&1.job == "demo_browser_evidence" and String.contains?(&1.name, "Storybook evidence"))
+      )
+
     assert demo_step, "demo_browser_evidence Storybook node --test step was not parsed"
-    assert demo_step.allowed_roots == [], "Demo's audit step installs nothing and must not create an allowed root"
+
+    assert demo_step.allowed_roots == [],
+           "Demo's audit step installs nothing and must not create an allowed root"
+
     assert "mailglass_admin/e2e/support/storybook-axe.test.cjs" in demo_step.files
 
-    operator_step = Enum.find(steps, &(&1.job == "operator_browser_gate" and String.contains?(&1.name, "CI monitor")))
+    operator_step =
+      Enum.find(
+        steps,
+        &(&1.job == "operator_browser_gate" and String.contains?(&1.name, "CI monitor"))
+      )
+
     assert operator_step, "operator_browser_gate CI monitor node --test step was not parsed"
-    assert operator_step.allowed_roots == [], "the monitor test runs before npm ci and must have no allowed root"
+
+    assert operator_step.allowed_roots == [],
+           "the monitor test runs before npm ci and must have no allowed root"
 
     for step <- steps do
-      result = run_load_only(node, step.files, step.allowed_roots)
+      result = run_load_only(ctx.node, step.files, step.allowed_roots)
       violations = Enum.filter(result.records, &String.starts_with?(&1, "violation\t"))
+
       missing_loaded =
         Enum.reject(step.files, fn file ->
           absolute_file = Path.expand(file, @repo_root)
@@ -41,8 +72,65 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
 
       assert result.status == 0, detail
       assert violations == [], detail
-      assert missing_loaded == [], "#{detail}\nmissing loaded records for #{Enum.join(missing_loaded, ", ")}"
+
+      assert missing_loaded == [],
+             "#{detail}\nmissing loaded records for #{Enum.join(missing_loaded, ", ")}"
     end
+  end
+
+  test "guard rejects a top-level package require outside allowed roots", ctx do
+    {fixture, _package_root} = write_package_fixture(ctx.dir, "top-level")
+    result = run_load_only(ctx.node, [fixture], [])
+    violation = Enum.find(result.records, &String.starts_with?(&1, "violation\t"))
+
+    assert result.status != 0, result.output
+    assert violation =~ "\tmailglass-guard-fixture-pkg\t"
+    assert violation =~ fixture
+    assert "loaded\t#{fixture}" in result.records
+  end
+
+  test "guard permits a top-level package require inside an allowed root", ctx do
+    {fixture, package_root} = write_package_fixture(ctx.dir, "allowed-root")
+    result = run_load_only(ctx.node, [fixture], [package_root])
+
+    assert result.status == 0, result.output
+    assert Enum.reject(result.records, &String.starts_with?(&1, "violation\t")) == result.records
+    assert "loaded\t#{fixture}" in result.records
+  end
+
+  test "guard permits an unused lazy package require outside allowed roots", ctx do
+    {fixture, _package_root} = write_package_fixture(ctx.dir, "lazy-require")
+
+    File.write!(
+      fixture,
+      "const test = require(\"node:test\");\n" <>
+        "function loadFixture() { return require(\"mailglass-guard-fixture-pkg\"); }\n" <>
+        "test(\"guard no-match fixture\", () => {});\n"
+    )
+
+    result = run_load_only(ctx.node, [fixture], [])
+
+    assert result.status == 0, result.output
+    assert Enum.reject(result.records, &String.starts_with?(&1, "violation\t")) == result.records
+    assert "loaded\t#{fixture}" in result.records
+  end
+
+  defp write_package_fixture(dir, name) do
+    package_root = Path.join(dir, name)
+    package_dir = Path.join([package_root, "node_modules", "mailglass-guard-fixture-pkg"])
+    File.mkdir_p!(package_dir)
+    File.write!(Path.join(package_dir, "index.js"), "module.exports = \"fixture\";\n")
+
+    fixture = Path.join(package_root, "#{name}.test.cjs")
+
+    File.write!(
+      fixture,
+      "const test = require(\"node:test\");\n" <>
+        "require(\"mailglass-guard-fixture-pkg\");\n" <>
+        "test(\"guard no-match fixture\", () => {});\n"
+    )
+
+    {fixture, package_root}
   end
 
   defp node_test_steps(ci) do
@@ -80,7 +168,10 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
               node_steps
 
             files ->
-              [%{job: job_id, name: step.name, files: files, allowed_roots: roots_before_step} | node_steps]
+              [
+                %{job: job_id, name: step.name, files: files, allowed_roots: roots_before_step}
+                | node_steps
+              ]
           end
 
         new_roots = npm_install_roots(step.run, step.working_directory)
@@ -157,7 +248,8 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
     |> Enum.find_value([], fn command ->
       tokens = String.split(command, ~r/\s+/, trim: true)
 
-      if Enum.member?(tokens, "--test") and Enum.any?(tokens, &(&1 == "node" or String.ends_with?(&1, "/node"))) do
+      if Enum.member?(tokens, "--test") and
+           Enum.any?(tokens, &(&1 == "node" or String.ends_with?(&1, "/node"))) do
         tokens
         |> Enum.drop_while(&(&1 != "--test"))
         |> Enum.drop(1)
@@ -172,40 +264,48 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
   defp npm_install_roots(run, working_directory) do
     run
     |> command_segments()
-    |> Enum.flat_map(fn command ->
-      tokens = String.split(command, ~r/\s+/, trim: true)
-      npm_index = Enum.find_index(tokens, &(&1 == "npm" or String.ends_with?(&1, "/npm")))
+    |> Enum.flat_map(&npm_install_roots_for_command(&1, working_directory))
+  end
 
-      if npm_index do
-        npm_args = Enum.drop(tokens, npm_index + 1)
-        install? = Enum.any?(npm_args, &(&1 in ["ci", "install"]))
+  defp npm_install_roots_for_command(command, working_directory) do
+    tokens = String.split(command, ~r/\s+/, trim: true)
 
-        if install? do
-          prefix =
-            case Enum.find_index(npm_args, &(&1 == "--prefix")) do
-              nil ->
-                Enum.find_value(npm_args, fn token ->
-                  if String.starts_with?(token, "--prefix="), do: String.replace_prefix(token, "--prefix=", "")
-                end)
-
-              index ->
-                Enum.at(npm_args, index + 1)
-            end
-
-          [Path.expand(prefix || working_directory, @repo_root)]
-        else
-          []
-        end
-      else
+    case Enum.find_index(tokens, &(&1 == "npm" or String.ends_with?(&1, "/npm"))) do
+      nil ->
         []
-      end
-    end)
+
+      npm_index ->
+        npm_install_root(Enum.drop(tokens, npm_index + 1), working_directory)
+    end
+  end
+
+  defp npm_install_root(args, working_directory) do
+    if Enum.any?(args, &(&1 in ["ci", "install"])) do
+      prefix = npm_prefix(args)
+      [Path.expand(prefix || working_directory, @repo_root)]
+    else
+      []
+    end
+  end
+
+  defp npm_prefix(args) do
+    case Enum.find_index(args, &(&1 == "--prefix")) do
+      nil ->
+        Enum.find_value(args, fn
+          <<"--prefix=", prefix::binary>> -> prefix
+          _ -> nil
+        end)
+
+      index ->
+        Enum.at(args, index + 1)
+    end
   end
 
   defp command_segments(run), do: String.split(run, ~r/[;&|]/, trim: true)
 
   defp run_load_only(node, files, allowed_roots) do
-    record_path = Path.join(System.tmp_dir!(), "ci-require-guard-#{System.unique_integer([:positive])}.log")
+    record_path =
+      Path.join(System.tmp_dir!(), "ci-require-guard-#{System.unique_integer([:positive])}.log")
 
     {output, status} =
       System.cmd(
@@ -220,7 +320,11 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
         ]
       )
 
-    records = if File.exists?(record_path), do: File.read!(record_path) |> String.split("\n", trim: true), else: []
+    records =
+      if File.exists?(record_path),
+        do: File.read!(record_path) |> String.split("\n", trim: true),
+        else: []
+
     File.rm(record_path)
 
     %{output: output, status: status, records: records}
