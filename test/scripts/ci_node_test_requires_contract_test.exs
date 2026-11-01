@@ -21,15 +21,18 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
     assert operator_step, "operator_browser_gate CI monitor node --test step was not parsed"
     assert operator_step.allowed_roots == [], "the monitor test runs before npm ci and must have no allowed root"
 
-    for step <- steps, file <- step.files do
-      result = run_load_only(node, [file], step.allowed_roots)
+    for step <- steps do
+      result = run_load_only(node, step.files, step.allowed_roots)
       violations = Enum.filter(result.records, &String.starts_with?(&1, "violation\t"))
-      absolute_file = Path.expand(file, @repo_root)
-      loaded = Enum.any?(result.records, &(&1 == "loaded\t#{absolute_file}"))
+      missing_loaded =
+        Enum.reject(step.files, fn file ->
+          absolute_file = Path.expand(file, @repo_root)
+          Enum.any?(result.records, &(&1 == "loaded\t#{absolute_file}"))
+        end)
 
       detail =
         [
-          "job #{step.job}, step #{step.name}, file #{file}",
+          "job #{step.job}, step #{step.name}, files #{Enum.join(step.files, ", ")}",
           "exit: #{result.status}",
           "violations: #{Enum.join(violations, "; ")}",
           "output: #{result.output}"
@@ -38,7 +41,7 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
 
       assert result.status == 0, detail
       assert violations == [], detail
-      assert loaded, "#{detail}\nmissing loaded record for #{absolute_file}"
+      assert missing_loaded == [], "#{detail}\nmissing loaded records for #{Enum.join(missing_loaded, ", ")}"
     end
   end
 
@@ -180,8 +183,13 @@ defmodule Mailglass.Scripts.CiNodeTestRequiresContractTest do
         if install? do
           prefix =
             case Enum.find_index(npm_args, &(&1 == "--prefix")) do
-              nil -> Enum.find_value(npm_args, &String.replace_prefix(&1, "--prefix=", ""))
-              index -> Enum.at(npm_args, index + 1)
+              nil ->
+                Enum.find_value(npm_args, fn token ->
+                  if String.starts_with?(token, "--prefix="), do: String.replace_prefix(token, "--prefix=", "")
+                end)
+
+              index ->
+                Enum.at(npm_args, index + 1)
             end
 
           [Path.expand(prefix || working_directory, @repo_root)]

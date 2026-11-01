@@ -1,5 +1,3 @@
-const { expect } = require("@playwright/test");
-
 // Runs in the rendered story document. Unsupported paint must fail closed;
 // this is a bounded solid-color check, not a replacement for the axe scan.
 function renderedContrast(element) {
@@ -63,6 +61,8 @@ function aggregateContrast(results) {
 }
 
 async function verifyStoryAccessibility(page, frameSelector, findings, options = {}) {
+  // Load Playwright lazily so pure contrast helpers work in node:test lanes without it installed.
+  const { expect } = require("@playwright/test");
   const frame = page.frameLocator(frameSelector);
   const owner = options.owner || "quick-view-story";
   const pickerTestId = options.pickerTestId || "quick-view-review-theme";
