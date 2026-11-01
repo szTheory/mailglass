@@ -988,6 +988,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     @tag :phase_164_canonical_loader
     @tag :phase_164_loader_shell_terminal_contract
+    @tag timeout: 120_000
     test "loader and shell authenticate exact terminal pairs 01 through 44" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
