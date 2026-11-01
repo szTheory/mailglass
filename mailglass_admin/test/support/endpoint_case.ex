@@ -141,7 +141,13 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   alias MailglassAdmin.TestSupport.OperatorFixtures
 
   def ready(conn, _params) do
-    text(conn, "ok")
+    if Application.get_env(:mailglass_admin, :operator_browser_server_ready?, false) do
+      text(conn, "ok")
+    else
+      conn
+      |> put_status(:service_unavailable)
+      |> text("starting")
+    end
   end
 
   def reset(conn, _params) do
