@@ -131,7 +131,7 @@ Saved reporter output for each gate is under reference/demo_app/tmp/phase178_can
 
 - **Gate head:** baf5685e1a9b943d41b884b007fdea5fa45fa498
 - **Frozen candidate:** 255422cbe6e16c570ccb465246c2394fa3190866, subject: docs(178-15): point acceptance closure at gap plans.
-- Both origin/main (8328093e4a07d28251ec7f02dd0f37cda2fd6a7b) and origin/gsd/v2.10-ui-repairs-storybook (2bdf18161182beeb286435b007fdea5fa45fa498) are ancestors of the candidate. The candidate is 396 commits ahead of main and 45 ahead of the branch.
+- Both origin/main (8328093e4a07d28251ec7f02dd0f37cda2fd6a7b) and origin/gsd/v2.10-ui-repairs-storybook (2bdf18161182beeb286435b556f26e205976e658) are ancestors of the candidate. The candidate is 396 commits ahead of main and 45 ahead of the branch.
 - The remote branch still equals its pre-freeze SHA; the read-only workflow check found no run newer than 40904249445. No remote write was made.
 - The post-candidate freeze record is ab0808fa8f5851e6fdbd9f0d8c5c190bcd7d459a and contains planning records only.
 
