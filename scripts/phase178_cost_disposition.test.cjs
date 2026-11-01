@@ -256,6 +256,29 @@ test("deriveCounts parses Playwright summary lines behind GitHub timestamps and 
   assert.throws(() => tool.deriveCounts({ operatorLog: `${ts}nothing useful`, demoCost: pilotCost(), expected: {} }), /summary/i);
 });
 
+test("deriveCounts ignores GitHub notice continuation lines in timestamped logs", () => {
+  const ts = "2026-10-29T12:00:00.0000000Z ";
+  const log = [
+    `${ts}##[notice]  1 failed`,
+    "    [chromium] › a.spec.js:1:1 › broken ───",
+    "  1 skipped",
+    "  309 passed (15.0m)",
+    `${ts}  1 failed`,
+    `${ts}  1 skipped`,
+    `${ts}  309 passed (15.0m)`
+  ].join("\n");
+  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: {} });
+  assert.deepEqual(counts.operator.executed, { passed: 309, skipped: 1, failed: 1, flaky: 0 });
+  assert.equal(counts.operator.summary_lines, 3);
+});
+
+test("deriveCounts continues to parse untimestamped Playwright summaries", () => {
+  const log = "  310 passed (6.3m)\n  1 skipped";
+  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: {} });
+  assert.deepEqual(counts.operator.executed, { passed: 310, skipped: 1, failed: 0, flaky: 0 });
+  assert.equal(counts.operator.summary_lines, 2);
+});
+
 test("disposition CLI records a SHA-256 for every input file and is byte-reproducible", () => {
   const dir = tmpDir("cli");
   const w = (name, value) => { const p = path.join(dir, name); fs.writeFileSync(p, typeof value === "string" ? value : JSON.stringify(value)); return p; };
