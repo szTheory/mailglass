@@ -64,8 +64,8 @@ Selected seeds: SEED-009 within this envelope, SEED-261010-hjp, and the live-fil
 
 - [x] **UIQ-04**: A maintainer can trace every named feedback item to its current-source disposition, owning requirement, retained scenario and actual behavior evidence.
 - [x] **UIQ-05**: A maintainer running the selected accessibility sweep gets fresh rule/target/state comparisons against approved findings and a failing result for missing, failed or incomplete expected execution.
-- [ ] **UIQ-06**: A maintainer can reproduce source-identified story/real-route fidelity receipts and connected interaction evidence across representative themes, widths, keyboard/focus, zoom and reduced-motion conditions.
-- [ ] **UIQ-07**: A maintainer can see measured added cold/warm PR wall time and runner cost, explicit coverage and justified check placement without weakened existing gates or hidden omissions.
+- [x] **UIQ-06**: A maintainer can reproduce source-identified story/real-route fidelity receipts and connected interaction evidence across representative themes, widths, keyboard/focus, zoom and reduced-motion conditions.
+- [x] **UIQ-07**: A maintainer can see measured added cold/warm PR wall time and runner cost, explicit coverage and justified check placement without weakened existing gates or hidden omissions.
 - [ ] **UIQ-08**: The owner can review the repaired milestone in a documented working preview with current assets, committed task changes and required CI passing on the identified delivery candidate.
 
 ## Acceptance applying to every repair slice
@@ -160,8 +160,8 @@ Requirements and [roadmap](ROADMAP.md) confirmed 2026-10-26. Each of the 31 requ
 | STORY-07 | Phase 178 | Complete |
 | UIQ-04 | Phase 178 | Complete |
 | UIQ-05 | Phase 174 | Complete |
-| UIQ-06 | Phase 178 | Pending |
-| UIQ-07 | Phase 178 | Pending |
+| UIQ-06 | Phase 178 | Complete |
+| UIQ-07 | Phase 178 | Complete |
 | UIQ-08 | Phase 178 | Pending |
 
 **Coverage:** 31 requirements; 31 assigned exactly once; 0 unmapped; 0 duplicated.
