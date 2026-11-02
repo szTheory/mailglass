@@ -268,6 +268,7 @@ Plans:
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
 
 Plans:
+- [ ] 178-34-PLAN.md — Prepare a fresh Cycle 08 candidate and exact-SHA approval, then record bounded hosted/cost proof or a fail-closed stop; Cycle 07 remains historical and Plans 23–24 depend on this plan.
 - [x] 178-33-PLAN.md — Route Inbound window cutoffs through Mailglass.Clock, freeze fixed-date projections, and prove window filtering affects page entries/count; focused files and the full Admin suite pass locally (`8f2afc92`). Cycle 07 remains stopped.
 - [x] 178-32-PLAN.md — Cycle 07 stopped on a required Support Contract Admin failure; no dispatch, cost disposition, or preview. Plans 23–24 remain blocked.
 - [x] 178-31-PLAN.md — Refresh only nimble_options to 1.2.0; locked dev install and warnings-as-errors compile pass. Cycle 06 remains consumed; UIQ-08 stays open pending a new candidate, current exact-source CI and fresh bounded approval.
@@ -358,6 +359,6 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
 | 177. Readable Health and Coherent Account Navigation | 11/11 | Complete    | 2026-10-28 |
-| 178. Preview Authoring and Milestone Review | 29/31 | In Progress | — |
+| 178. Preview Authoring and Milestone Review | 29/32 | In Progress | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.

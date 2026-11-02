@@ -5,15 +5,15 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Plan 178-33 implementation and validation complete on local feature branch
-last_updated: "2026-11-02T16:51:34Z"
+stopped_at: Plan 34 drafted; Cycle 08 exact-SHA approval packet pending review
+last_updated: "2026-11-02T17:06:19Z"
 last_activity: 2026-11-02
-last_activity_desc: Plan 33 passed focused Inbound/Admin projection and full Admin validation; source fix is committed locally as 8f2afc92, while Cycle 07 remains stopped and Plans 23–24 remain blocked.
-state_head: 8f2afc92
+last_activity_desc: Plan 34 rebinds preview and owner-review gates to a fresh Cycle 08 record; Cycle 07 remains stopped, and fresh exact-SHA approval is required before hosted actions.
+state_head: f0618073
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 69
+  total_plans: 70
   completed_plans: 67
   percent: 80
 ---
@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 33 complete; local source fix commit 8f2afc92 is on `gsd/phase178-cycle08-local`. Cycle 07 remains stopped; Plans 23–24 remain blocked and UIQ-08 remains open pending a fresh exact-SHA cycle.
+Plan: 33 complete; Plan 34 drafts Cycle 08 recovery and approval. The local source fix is committed on `gsd/phase178-cycle08-local`; Cycle 07 remains stopped, and Plans 23–24 remain blocked pending fresh exact-SHA hosted and preview gates.
 Status: executing
-Last activity: 2026-11-02 — Plan 33 passed focused Inbound (41/0), focused Admin projection (25/0), and full Admin (1,205/0, one excluded) local validation. Source fix commit 8f2afc92 is local; no new candidate SHA or hosted authority has been established.
+Last activity: 2026-11-02 — Plan 34 aligns Plans 23–24 with Cycle 08 and requires fresh hosted/conditional-preview approval. No Cycle 08 candidate SHA or authority has been established.
 
 Progress: [████████░░] 80%
 
@@ -741,8 +741,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-02T16:37:47.908Z
-Stopped at: Completed 178-32-PLAN.md; Cycle 07 stopped after the required CI failure
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-32-SUMMARY.md
+Stopped at: Plan 33 complete; Cycle 07 remains stopped, and Plan 34 is planned to establish fresh Cycle 08 proof
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-34-PLAN.md
 
 ## Operator Next Steps
 
@@ -757,4 +757,4 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-32-
 
 - UIQ-08 remains open. Cycle 04's route failure and Cycle 05's pre-Compose stop are both preserved; neither approval authorizes another launch.
 - Cycle 06 preview authority is consumed. Do not rerun the old candidate. Plan 31 local lock repair passed; keep UIQ-08 open. The primary context must commit Plan 31, freeze a new exact-source candidate with current required CI, then obtain fresh bounded approval before any preview operation.
-- Cycle 07 stopped on required Support Contract Admin failure for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6; no ci.yml dispatch, cost disposition, or preview. Plans 23–24 remain blocked and UIQ-08 remains open until the regression is resolved and a new candidate receives fresh approval.
+- Cycle 07 stopped on required Support Contract Admin failure for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6 after seven attempt-1 workflows; its dispatch was withheld, cost was not measured, and no preview launched. Plan 33 fixed the local projection-time regression but did not freeze a hosted candidate or renew authority. Plan 34 must first recheck remote/PR/release-ledger identity read-only, then seek fresh separate hosted and conditional-preview approval for Cycle 08. Plans 23–24 remain blocked until matching Cycle 08 hosted/cost proof and its approved preview pass.
