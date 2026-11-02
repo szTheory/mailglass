@@ -25,12 +25,12 @@ RECORD_DIR_REL="reference/demo_app/tmp/phase178_candidate"
 GITHUB_REPO="szTheory/mailglass"
 REQUIRED_CI_CONTEXTS=("CI Green" "Guard Release Trigger")
 DEFAULT_ROUTES=(
+  "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar"
   "/dev/mail"
   "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin"
   "/dev/storybook/preview_authoring"
   "/dev/storybook/preview_chrome"
   "/dev/storybook/primitives/stat_card"
-  "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar"
 )
 
 # Pinned toolchain defaults for any host-side mix the caller runs next to this
@@ -87,6 +87,24 @@ css_triple() {
   fi
   printf '%s %s %s %s\n' "$verdict" "$source_sha" "$built_sha" "$served_sha"
   return "$rc"
+}
+
+# probe_route <private probe directory> <base URL> <route>
+# Prints "<final HTTP status> <effective URL>" after following redirects.
+# Every route shares the short-lived synthetic session held in the cookie jar.
+probe_route() {
+  local probe_dir="$1" base_url="$2" route="$3" cookie_jar="$1/cookies.txt"
+  local status="000" final_url="" out attempt
+  for attempt in 1 2 3; do
+    out="$(curl --silent --show-error --globoff --location \
+      --cookie "$cookie_jar" --cookie-jar "$cookie_jar" \
+      --output "$probe_dir/route.body" \
+      --write-out '%{http_code} %{url_effective}' --max-time 30 "$base_url$route" 2>/dev/null || true)"
+    status="${out%% *}"; final_url="${out#* }"
+    [[ "$status" == 200 ]] && break
+    sleep 5
+  done
+  printf '%s %s\n' "$status" "$final_url"
 }
 
 # allocate_ports
@@ -417,6 +435,7 @@ cleanup_before_compose() {
 }
 on_exit() {
   local rc=$?
+  if [[ -n "${PROBE_DIR:-}" && -d "$PROBE_DIR" ]]; then rm -rf "$PROBE_DIR"; fi
   if [[ $rc -ne 0 ]]; then
     cleanup_before_compose
     if [[ "$COMPOSE_STARTED" == true && -n "${RECORD_PATH:-}" ]]; then
@@ -467,6 +486,10 @@ PHASE178_REC_SHA="$SHA" PHASE178_REC_WORKTREE="$WORKTREE" PHASE178_REC_RUN_PAREN
   write_record "$RECORD_PATH"
 
 PROBE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-phase178-probe.XXXXXX")"
+chmod 700 "$PROBE_DIR"
+COOKIE_JAR="$PROBE_DIR/cookies.txt"
+(umask 077; : >"$COOKIE_JAR")
+chmod 600 "$COOKIE_JAR"
 launch_ok=false
 if compose up --build --detach --wait --wait-timeout 600 demo; then
   launch_ok=true
@@ -486,14 +509,7 @@ fi
 
 if [[ "$launch_ok" == true ]]; then
   for route in "${ROUTES[@]}"; do
-    status="000"; final_url=""
-    for attempt in 1 2 3; do
-      out="$(curl --silent --show-error --globoff --location --output "$PROBE_DIR/route.body" \
-        --write-out '%{http_code} %{url_effective}' --max-time 30 "$BASE_URL$route" 2>/dev/null || true)"
-      status="${out%% *}"; final_url="${out#* }"
-      [[ "$status" == 200 ]] && break
-      sleep 5
-    done
+    read -r status final_url < <(probe_route "$PROBE_DIR" "$BASE_URL" "$route")
     ROUTE_ROWS+="$route"$'\t'"$status"$'\t'"$final_url"$'\n'
     [[ "$status" == 200 ]] || FAILURES+=("HTTP route $route returned ${status:-no-response}")
   done
