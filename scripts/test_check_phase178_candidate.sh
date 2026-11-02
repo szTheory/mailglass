@@ -10,6 +10,7 @@ COST_TOOL="$ROOT_DIR/scripts/phase178_cost_disposition.cjs"
 TEST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/phase178-candidate-selftest.XXXXXX")"
 STUB_BIN="$TEST_DIR/bin"
 STUB_LOG="$TEST_DIR/stub-calls.log"
+CURL_LOG="$TEST_DIR/curl-calls.log"
 PASSED=0
 
 cleanup() {
@@ -37,6 +38,46 @@ exit 0
 STUB
   chmod +x "$STUB_BIN/$tool"
 done
+export CURL_LOG
+cat >"$STUB_BIN/curl" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+cookie="" cookie_jar="" output="" url="" location=false write_out=""
+while (($#)); do
+  case "$1" in
+    --cookie) cookie="$2"; shift 2 ;;
+    --cookie-jar) cookie_jar="$2"; shift 2 ;;
+    --output) output="$2"; shift 2 ;;
+    --write-out) write_out="$2"; shift 2 ;;
+    --location) location=true; shift ;;
+    --silent|--show-error|--globoff) shift ;;
+    --max-time) shift 2 ;;
+    *) url="$1"; shift ;;
+  esac
+done
+[[ -n "$cookie" && "$cookie" == "$cookie_jar" ]] || { printf 'curl did not receive one shared cookie jar\n' >&2; exit 90; }
+[[ -f "$cookie" && -d "$(dirname "$cookie")" ]] || { printf 'curl cookie jar is not pre-created\n' >&2; exit 91; }
+[[ "$location" == true ]] || { printf 'curl redirect following is disabled\n' >&2; exit 92; }
+[[ "$write_out" == '%{http_code} %{url_effective}' ]] || { printf 'curl does not report final status and URL\n' >&2; exit 93; }
+[[ "$output" == "$(dirname "$cookie")/route.body" ]] || { printf 'curl response output escaped probe directory\n' >&2; exit 94; }
+[[ "$(stat -f '%Lp' "$cookie" 2>/dev/null || stat -c '%a' "$cookie")" == 600 ]] || { printf 'cookie jar mode is not 0600\n' >&2; exit 95; }
+printf '%s\n' "$url" >>"$CURL_LOG"
+case "$url" in
+  http://127.0.0.1:5000/demo/login\?return_to=*)
+    [[ ! -s "$cookie" ]] || { printf 'login bootstrap was not first\n' >&2; exit 96; }
+    printf '# Netscape HTTP Cookie File\n127.0.0.1\tFALSE\t/\tFALSE\t0\t_demo_session\tsynthetic-session\n' >"$cookie"
+    effective='http://127.0.0.1:5000/ops/mail?tenant_id=northstar'
+    ;;
+  *)
+    grep -q 'synthetic-session' "$cookie" || { printf 'protected route did not receive login cookie\n' >&2; exit 97; }
+    effective="$url"
+    ;;
+esac
+[[ "$effective" == http://127.0.0.1:5000/* ]] || { printf 'redirect escaped same origin: %s\n' "$effective" >&2; exit 98; }
+printf 'stub response for %s\n' "$url" >"$output"
+printf '200 %s' "$effective"
+STUB
+chmod +x "$STUB_BIN/curl"
 
 # shellcheck source=scripts/check_phase178_candidate.sh
 PHASE178_CANDIDATE_LIB_ONLY=1 source "$LAUNCHER" || die "could not source the launcher in library mode"
@@ -87,6 +128,26 @@ if PHASE178_TEST_PORTS="6000 5415" allocate_ports >/dev/null 2>&1; then die "all
 if PHASE178_TEST_PORTS="6000 6000" allocate_ports >/dev/null 2>&1; then die "allocate_ports accepted identical ports"; fi
 [[ "$(PHASE178_TEST_PORTS="6001 6002" allocate_ports)" == "6001 6002" ]] || die "allocate_ports override did not pass through valid ports"
 ok allocate_ports
+
+# --- route probe cookie reuse ---------------------------------------------
+[[ "${DEFAULT_ROUTES[0]}" == "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar" ]] || die "demo login bootstrap is not the first default route"
+TEST_PROBE_DIR="$TEST_DIR/private-probe"
+mkdir -m 700 "$TEST_PROBE_DIR"
+(umask 077; : >"$TEST_PROBE_DIR/cookies.txt")
+chmod 600 "$TEST_PROBE_DIR/cookies.txt"
+for route in "${DEFAULT_ROUTES[@]}"; do
+  result="$(PATH="$STUB_BIN:$PATH" probe_route "$TEST_PROBE_DIR" "http://127.0.0.1:5000" "$route")" || die "probe_route failed for $route"
+  [[ "${result%% *}" == 200 ]] || die "probe_route did not retain final HTTP 200 for $route: $result"
+  if [[ "$route" == "${DEFAULT_ROUTES[0]}" ]]; then
+    [[ "$result" == "200 http://127.0.0.1:5000/ops/mail?tenant_id=northstar" ]] || die "login redirect final URL was not the expected same-origin return_to: $result"
+  else
+    [[ "$result" == "200 http://127.0.0.1:5000$route" ]] || die "protected route final URL was not retained: $result"
+  fi
+done
+[[ "$(wc -l <"$CURL_LOG" | tr -d ' ')" == "${#DEFAULT_ROUTES[@]}" ]] || die "not every default route was probed exactly once"
+[[ "$(head -n 1 "$CURL_LOG")" == "http://127.0.0.1:5000${DEFAULT_ROUTES[0]}" ]] || die "login bootstrap was not the first curl request"
+[[ "$(stat -f '%Lp' "$TEST_PROBE_DIR/cookies.txt" 2>/dev/null || stat -c '%a' "$TEST_PROBE_DIR/cookies.txt")" == 600 ]] || die "cookie jar permissions changed during route probes"
+ok route-probe-cookie-jar-reuse
 
 # --- ci_contexts_status ----------------------------------------------------
 check_runs() { # check_runs <CI Green conclusion|none> <Guard conclusion|none> [status]
