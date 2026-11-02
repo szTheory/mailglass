@@ -128,12 +128,115 @@
     }
   },
   "authority": {
-    "hosted": null,
-    "preview": null
+    "hosted": {
+      "decision": "approve-all",
+      "sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+      "user_reply": "approve-all",
+      "recorded_at": "2026-11-02T00:41:50Z",
+      "operations": [
+        "git push origin f5138e94cd32daf29720f794cf3fbb464c3f1b86:refs/heads/gsd/v2.10-ui-repairs-storybook (fast-forward only)",
+        "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-pr-body.md (body only; title unchanged)",
+        "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook (once after the exact-SHA PR run has no required-context or Demo Browser Evidence failure)"
+      ]
+    },
+    "preview": {
+      "sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+      "conditional_on": "hosted_completed",
+      "isolated_local_only": true
+    }
   },
   "hosted": {
-    "status": "not_authorized",
-    "runs": []
+    "status": "submitted",
+    "push_result": {
+      "status": "succeeded",
+      "command": "git push origin f5138e94cd32daf29720f794cf3fbb464c3f1b86:refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "ref": "refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "before_sha": "255422cbe6e16c570ccb465246c2394fa3190866",
+      "after_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+      "recorded_at": "2026-11-02T00:42:27Z"
+    },
+    "pr_update_result": {
+      "status": "succeeded",
+      "command": "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-pr-body.md",
+      "scope": "body only; title unchanged",
+      "body_sha256": "2cde938acffe6c13bf267644a886ae58ac1187c15d1ab8cd78a2cc60e86150d8",
+      "pr_url": "https://github.com/szTheory/mailglass/pull/317",
+      "recorded_at": "2026-11-02T00:42:58Z"
+    },
+    "dispatch_result": {
+      "status": "succeeded",
+      "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook",
+      "run_id": 41370082849,
+      "event": "workflow_dispatch",
+      "attempt": 1,
+      "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+      "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849",
+      "recorded_at": "2026-11-02T00:59:46Z"
+    },
+    "runs": [
+      {
+        "id": 41368588479,
+        "event": "pull_request",
+        "attempt": 1,
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41368588479",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "status": "completed",
+        "conclusion": "success",
+        "pr_merge_sha": "9f75a322e66da9f7c745cacd75e9162b7b09fca4",
+        "updated_at": "2026-11-02T01:01:34Z"
+      },
+      {
+        "id": 41370082849,
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "status": "completed",
+        "conclusion": "failure",
+        "updated_at": "2026-11-02T01:18:53Z",
+        "job_results": [
+          {
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "job_id": 125038516238,
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T00:59:47Z",
+            "completed_at": "2026-11-02T01:11:40Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516238"
+          },
+          {
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "job_id": 125038516264,
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-02T01:18:52Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516264"
+          },
+          {
+            "name": "CI Green",
+            "job_id": 125042743650,
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-02T01:15:32Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125042743650"
+          }
+        ],
+        "job_failures": [
+          {
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "job_id": 125038516190,
+            "conclusion": "failure",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516190",
+            "observed_at": "2026-11-02T01:05:20Z",
+            "completed_at": "2026-11-02T01:04:00Z",
+            "log_path": "reference/demo_app/tmp/phase178_candidate/dispatch-preview-capture-advisory.log",
+            "log_sha256": "a3278b3b93c95ef8b7bf4ee34ba6c196cd62302bb35991154bfc03934618dda9",
+            "summary": "Runner lacked inotify-tools; Phoenix file-system/live-reload startup logged the missing executable and the server process exited 1."
+          }
+        ]
+      }
+    ],
+    "stop": null
   },
   "preview": {
     "status": "not_started"
