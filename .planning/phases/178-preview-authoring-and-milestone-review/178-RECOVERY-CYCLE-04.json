@@ -1,0 +1,206 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 4,
+  "created_at": "2026-11-02T04:04:43Z",
+  "status": "preflight_verified",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-03.json",
+    "sha256": "69e13a6c4f3c159ed5e3ea0f2227d621e6240db2bcffbaf0f432065d3b7b4f23"
+  },
+  "previous_stop": {
+    "candidate_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "run_id": 41376300645,
+    "attempt": 2,
+    "job_id": 125076422948,
+    "result": "failed",
+    "reason": "The hosted Chromium End-to-bottom predicate failed after PageDown; an independent browser reproduction found the native scroll-completion timing edge."
+  },
+  "candidate": {
+    "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "branch": "gsd/v2.10-ui-repairs-storybook",
+    "checkout_branch": "main",
+    "source_file": "mailglass_admin/e2e/flows.spec.js",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+    "change": "Wait for the native scrollend event after PageDown before sending End."
+  },
+  "local_evidence": {
+    "scope": "Bounded local verification and independent review; this does not establish hosted success.",
+    "target_scroll_cases": "Inbound and delivery cases passed three times each; 6 passed in 15.8 seconds.",
+    "timing_harness": "12/12 passed with the fix; reverting the hunk caused 3/12 failures.",
+    "independent_review": "No blocking findings; existing accessibility, focus, native-key, and bottom assertions remain intact.",
+    "product_code_changed": false,
+    "dependencies_changed": false
+  },
+  "preapproval": {
+    "observed_at": "2026-11-02T04:06:57Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "candidate_parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "pr": {
+      "number": 317,
+      "state": "OPEN",
+      "draft": true,
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "remote_body_sha256": "db3a36974c9ca33c8790f7c3c33f42fae526620b3f4f19a7a225f3b0f5d0d498"
+    },
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+    "plan_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-28-PLAN.md",
+    "plan_sha256": "207c30d6df5e579d4496db861f85862a6a32dcff289aae255ec1e14e8282c5aa",
+    "approval_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-28-APPROVAL.md",
+    "approval_sha256": "804a465b336f781d86599f57342b525af4d92b7ed983ca29ccd2c7fbdb8dacd4",
+    "body_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md",
+    "body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+    "branch_delta": {
+      "commits": 5,
+      "files": 4,
+      "insertions": 556,
+      "deletions": 0
+    },
+    "main_delta": {
+      "commits": 428,
+      "files": 698,
+      "insertions": 219504,
+      "deletions": 2169
+    },
+    "fast_forward": true,
+    "workflow_budget": {
+      "push": 5,
+      "body_edit": 2,
+      "dispatch": 1,
+      "max_total": 8,
+      "max_attempt": 1,
+      "expected_names": [
+        "CI",
+        "Guard Release Trigger",
+        "PR Title",
+        "Actionlint",
+        "Advisory Matrix"
+      ],
+      "estimate_runner_minutes": 254.62,
+      "estimate_is_dollars": false,
+      "estimate_basis": "Observed prior CI, Advisory Matrix, Guard Release Trigger, PR Title and Actionlint durations; the GitHub timing API's earlier zero billable milliseconds did not establish monetary cost."
+    },
+    "commands": {
+      "push": "git push origin 8e501960bc975ed44b632ba5c74522e0c5d66f8c:refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "body_edit": "gh pr edit 317 --body-file .planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md",
+      "dispatch": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook",
+      "preview": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json"
+    },
+    "stop_rules": [
+      "No retry, rerun, cancel, or additional workflow run.",
+      "Any failed, missing, unclassified, wrong-SHA/event/attempt, or ambiguous result stops remaining operations.",
+      "No preview unless exact-SHA hosted gates pass and cost is reproducible and identity-bound.",
+      "No merge, release, publication, deployment, or change to remote main."
+    ]
+  },
+  "authority": {
+    "hosted": {
+      "decision": "approve-all",
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "user_replies": [
+        "Yes, I approve. Approve all.",
+        "Well, I don't know if this was related to Docker. I just restarted it and cleaned up hard drive space and stuff. So maybe that was it. Unblock us. Sayonara, do you check us? What do you recommend? Let's follow your recommendations."
+      ],
+      "basis": "The user accepted the recommended fresh candidate cycle after the changed-SHA recovery plan was described. Docker restart does not change prior GitHub run results; the exact candidate is independently fixed and locally verified.",
+      "operations": [
+        {
+          "name": "push_candidate",
+          "count": 1,
+          "command": "git push origin 8e501960bc975ed44b632ba5c74522e0c5d66f8c:refs/heads/gsd/v2.10-ui-repairs-storybook"
+        },
+        {
+          "name": "update_pr_body",
+          "count": 1,
+          "command": "gh pr edit 317 --body-file .planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md"
+        },
+        {
+          "name": "dispatch_ci",
+          "count": 1,
+          "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+        }
+      ],
+      "maximum_total_workflow_runs": 8,
+      "maximum_attempt": 1,
+      "maximum_retries": 0
+    },
+    "preview": {
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "conditional_on": "exact_sha_hosted_success_and_reproducible_identity_bound_cost_success",
+      "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json"
+    }
+  },
+  "preflight": {
+    "status": "passed",
+    "verified_at": "2026-11-02T04:08:32Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "hashes": {
+      "candidate_source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+      "plan_sha256": "207c30d6df5e579d4496db861f85862a6a32dcff289aae255ec1e14e8282c5aa",
+      "approval_sha256": "804a465b336f781d86599f57342b525af4d92b7ed983ca29ccd2c7fbdb8dacd4",
+      "prepared_pr_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "cycle_03_sha256": "69e13a6c4f3c159ed5e3ea0f2227d621e6240db2bcffbaf0f432065d3b7b4f23",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "remote": {
+      "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "target_branch": "gsd/v2.10-ui-repairs-storybook",
+      "target_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "pr_number": 317,
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "pr_body_sha256": "db3a36974c9ca33c8790f7c3c33f42fae526620b3f4f19a7a225f3b0f5d0d498"
+    },
+    "candidate_fast_forward": true,
+    "existing_candidate_workflow_runs": [],
+    "workflow_budget": {
+      "push_runs": 5,
+      "body_edit_runs": 2,
+      "dispatch_runs": 1,
+      "maximum_total": 8,
+      "maximum_attempt": 1,
+      "maximum_retries": 0,
+      "expected_trigger_count_certain": true
+    },
+    "approval_bound": {
+      "decision": "approve-all",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "one_time_operations": ["push_candidate", "update_pr_body", "dispatch_ci"],
+      "conditional_preview": "exact_sha_hosted_success_and_reproducible_identity_bound_cost_success"
+    }
+  },
+  "hosted": {
+    "status": "not_started",
+    "operations": {
+      "push_candidate": {"status": "not_run", "count": 0},
+      "update_pr_body": {"status": "not_run", "count": 0},
+      "dispatch_ci": {"status": "not_run", "count": 0}
+    },
+    "runs": [],
+    "stop": null
+  },
+  "cost": {
+    "status": "not_measured",
+    "reproducible": false,
+    "identity_bound": false,
+    "record_path": null
+  },
+  "preview": {
+    "status": "not_started",
+    "record_path": null
+  },
+  "owner_decision": null,
+  "next_actor": "OpenGSD executor after immediate pre-write snapshot verification"
+}
