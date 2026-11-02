@@ -727,6 +727,27 @@ rerun_stop_log: reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-atte
 
 UIQ-06's hosted receipts, UIQ-07's hosted measurement and UIQ-08's required CI are not met on this candidate; the plan stopped with the status above. The three hosted-dependent acceptance rows are open. No advisory-red continuation, hosted receipt, count disposition or cost figure was produced.
 
+## Fresh candidate preapproval package (178-21)
+
+Recorded 2026-11-02T00:21:50Z. This is a preapproval snapshot only. No new-candidate push, PR edit, dispatch or preview has occurred, and `authority.hosted` and `authority.preview` remain `null`.
+
+The candidate is `f5138e94cd32daf29720f794cf3fbb464c3f1b86` (`fix(178-20): repair demo evidence dependencies and ownership`). The local checkout remains on `main`; `candidate.branch` is the future target `gsd/v2.10-ui-repairs-storybook`. Read-only `git ls-remote` returned remote `main` `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b` and target branch `255422cbe6e16c570ccb465246c2394fa3190866`. Both are ancestors of the candidate, and the target branch is not already at the candidate.
+
+Read-only `gh pr view 317` confirmed PR #317 is `OPEN`, draft, titled `chore(ui): v2.10 UI repairs review candidate (do not merge)`, with head branch `gsd/v2.10-ui-repairs-storybook` at `255422cbe6e16c570ccb465246c2394fa3190866` and base `main` at `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`. Its target comparison resolved as `ahead`. The latest old-candidate PR and dispatch runs are stopped at attempt 1: [PR 41358618944](https://github.com/szTheory/mailglass/actions/runs/41358618944) and [dispatch 41358616440](https://github.com/szTheory/mailglass/actions/runs/41358616440); both failed Hex Audit, Demo Browser Evidence and CI Green. These runs do not provide proof for the new SHA.
+
+Measured scope at this snapshot:
+
+- Against remote `main`: 415 commits ahead; 690 files changed, 218107 insertions and 2169 deletions. This includes the existing v2.10 work across phases 174–178 and planning records.
+- Against the current target branch: 19 commits ahead; 21 files changed, 1326 insertions and 25 deletions. The source commits are `af510ff8407ec26d3c156d6765cb69aacc8af0a0` (the three `phoenix_html` lock graph updates) and `f5138e94cd32daf29720f794cf3fbb464c3f1b86` (Demo Browser Evidence dependency, Compose isolation and artifact ownership repair); the remaining 17 commits are planning records.
+
+All six source-file SHA-256 values in `candidate.source_hashes` match both the candidate commit and current worktree. `.planning/release-target.json` matches `HEAD` and candidate, SHA-256 `0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4`.
+
+The copied expected-count input preserves the prior cycle's units and values: Operator Browser Gate `310 passed / 1 skipped / 0 failed / 0 flaky`; Demo `111 demo + 6 hooks + 26 fidelity + 26 Axe = 169` per condition. Baseline run 40414024714 is a successful `push` run on `e326da4dfb59c3a20942acff763d04a79ada974b`, not the stopped candidate. The expected, baseline-run and baseline-jobs inputs were copied byte-for-byte into `reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/`; their SHA-256 values are recorded under `preapproval` in `178-RECOVERY.json`.
+
+The saved successful baseline job timings total 100.68 runner-minutes. The displayed estimate is up to two attempt-1 workflow runs at approximately 100.68 runner-minutes each (about 201.37 total); actual runtime and billed minutes may vary. The hard run-count bound is one push-triggered PR run plus one explicit dispatch, with no rerun. If a required context or Demo Browser Evidence fails in the PR run before dispatch, stop and leave the dispatch unspent.
+
+The exact existing-PR update body is `reference/demo_app/tmp/phase178_candidate/recovery-pr-body.md` (SHA-256 `2cde938acffe6c13bf267644a886ae58ac1187c15d1ab8cd78a2cc60e86150d8`). The owner checkpoint is `reference/demo_app/tmp/phase178_candidate/recovery-approval.md` (SHA-256 `621be6ab899a1e23fe1bca713e1162e0852acfb4936cd93b0f26404d8ae4acf4`). Both packages include the exact candidate, branch refspec, verified links, required one-time actions and stop boundaries. Approval also explicitly covers only an isolated preview of this SHA after hosted success; the separate ship/no-ship decision remains in plan 178-24.
+
 ## Placement, cost and limits, re-run (UIQ-07)
 
 not measured: hosted re-run stopped (required lane red (Hex Audit (Elixir 1.18 / OTP 27))); see rerun_stop_log.

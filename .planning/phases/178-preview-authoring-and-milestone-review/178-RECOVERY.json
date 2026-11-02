@@ -104,6 +104,29 @@
     "asvs_level": 1,
     "unresolved_high": 0
   },
+  "preapproval": {
+    "observed_at": "2026-11-02T00:21:50Z",
+    "candidate_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "branch_sha": "255422cbe6e16c570ccb465246c2394fa3190866",
+    "pr_number": 317,
+    "pr_url": "https://github.com/szTheory/mailglass/pull/317",
+    "pr_state": "OPEN",
+    "is_draft": true,
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "body_path": "reference/demo_app/tmp/phase178_candidate/recovery-pr-body.md",
+    "body_sha256": "2cde938acffe6c13bf267644a886ae58ac1187c15d1ab8cd78a2cc60e86150d8",
+    "checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-approval.md",
+    "checkpoint_sha256": "621be6ab899a1e23fe1bca713e1162e0852acfb4936cd93b0f26404d8ae4acf4",
+    "expected_path": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+    "expected_sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+    "baseline_run": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+    "baseline_jobs": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+    "baseline_hashes": {
+      "baseline-run.raw.json": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+      "baseline-jobs.raw.json": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0"
+    }
+  },
   "authority": {
     "hosted": null,
     "preview": null
