@@ -15,7 +15,7 @@ affects: [UIQ-08, phase-178-owner-review]
 
 # Actuals (#2632)
 actuals:
-  tokens: 6320
+  tokens: 6277
   tasks: 3
   commits: 3
 plan_head_before: 14f3db0c1790bca1b231846438799ca4145b1a9f
@@ -126,10 +126,6 @@ None. The early-exit cleanup ensures the newly added synthetic cookie is removed
 ## Issues Encountered
 
 The sandbox initially denied Git's `.git/index.lock` write. The scoped commits succeeded through the authorized Git operation after confirming only the assigned file paths were staged.
-
-## Known Stubs
-
-The test-only curl stub is deliberate offline simulation. The candidate preview and page-marker checks remain unrun pending fresh Cycle 05 approval.
 
 ## Next Phase Readiness
 
