@@ -165,6 +165,12 @@
     "Do not push, edit the PR, dispatch CI, merge, release, publish, deploy, prune global Docker state, or modify the owner demo."
   ],
   "stopped_at": "detached candidate worktree creation, before Compose and before candidate record creation",
+  "diagnosis": {
+    "status": "likely_executor_sandbox_git_write_denial",
+    "evidence": "The delegated executor later received Operation not permitted when trying to create .git/index.lock for the scoped documentation commit. The preview launcher also failed while creating Git worktree metadata.",
+    "confidence": "inference; the launcher redirected git worktree add stderr, so its exact error was not captured",
+    "remedy_for_a_future_cycle": "Preserve Git stderr and run any newly approved launcher attempt from the primary execution context with Git metadata write permission."
+  },
   "next_actor": "phase_178_owner_or_planner",
-  "next_action": "Investigate the Git worktree creation failure using read-only evidence. Any future preview requires a new plan and fresh one-attempt approval."
+  "next_action": "Apply and review local worktree-failure diagnostics; any future preview requires a new plan and fresh one-attempt approval."
 }

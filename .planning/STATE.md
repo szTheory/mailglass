@@ -734,7 +734,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-02T14:31:08Z
-Stopped at: Cycle 05 attempt consumed; read-only diagnosis of detached worktree creation is next
+Stopped at: Cycle 05 attempt consumed; likely delegated-executor .git write restriction; launcher diagnostics need hardening
 Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-05-SUMMARY.md
 
 ## Operator Next Steps
@@ -742,7 +742,8 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CYC
 - Plan 29 fixed the local login redirect probe and passed its offline regression test; the independent review found no blockers.
 - The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
 - Cycle 05's only approved invocation stopped before Compose because Git could not create the detached candidate worktree. No candidate record or Docker resources were created; the owner demo was untouched.
-- Next: diagnose the worktree failure using read-only evidence. Do not retry the launcher under Cycle 05; any future preview needs a new plan and one-attempt approval.
+- The likely worktree blocker is the delegated executor's read-only `.git` boundary; its scoped staging also failed with `Operation not permitted`. The launcher hid Git stderr, so this remains an inference.
+- Next: expose Git worktree errors in the local launcher and test offline. Do not retry under Cycle 05; any future preview needs a new plan and one-attempt approval from a context allowed to write Git metadata.
 
 ### Blockers
 

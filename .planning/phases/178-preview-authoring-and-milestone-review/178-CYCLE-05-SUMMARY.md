@@ -25,6 +25,6 @@ It exited 1 before Compose with `could not create detached worktree at 8e501960b
 - No retry, relaunch, hosted workflow, PR edit, or product/dependency change occurred. The one approved invocation is consumed.
 - Cycle 04’s earlier HTTP 302 result remains intact. Cycle 05 does not replace or erase that evidence.
 
-## Next action
+## Diagnosis and next action
 
-Use read-only diagnosis to determine why Git could not create the detached worktree. Do not retry under Cycle 05. A future live preview requires a new plan and fresh one-attempt approval. Stop before owner review; there is no running preview to inspect.
+The most likely cause is the delegated executor's read-only `.git` boundary: its later scoped `git add` was denied while creating `.git/index.lock` with `Operation not permitted`. This matches the failed worktree metadata write, but the launcher's suppressed Git stderr means the exact cause is not confirmed. Do not retry under Cycle 05. Before any future run, preserve Git's error output, execute only from a context with Git metadata write permission, and obtain a new plan and fresh one-attempt approval. Stop before owner review; there is no running preview to inspect.
