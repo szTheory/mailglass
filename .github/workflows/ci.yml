@@ -1056,7 +1056,7 @@ jobs:
       - name: Test pinned baseline provisioning
         run: node --test test_js/phase173-baselines.test.cjs
       - name: Test Storybook evidence and review contracts
-        run: node --test scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs
+        run: node --test scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs scripts/check_preview_capture_advisory_setup.test.cjs
       - name: Run demo browser evidence
         id: evidence
         run: bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot
@@ -1140,6 +1140,8 @@ jobs:
       - name: Install Playwright browser
         working-directory: mailglass_admin
         run: npx playwright install --with-deps chromium
+      - name: Install Linux file watcher
+        run: sudo apt-get install --yes --no-install-recommends inotify-tools
       - name: Resolve Chromium binary path
         working-directory: mailglass_admin
         run: |
