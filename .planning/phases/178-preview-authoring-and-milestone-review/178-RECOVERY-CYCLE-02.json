@@ -1,0 +1,75 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 2,
+  "created_at": "2026-11-02T01:47:59Z",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY.json",
+    "sha256": "334cd4a7407677c80f536a38758ea648ef7033cb95b4b4f480418b2ffa259003"
+  },
+  "previous_candidate_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+  "previous_stop": {
+    "reason": "new unclassified Preview Capture Advisory job-level setup failure (missing inotify-tools); required/Demo lanes pass, but Plan 178-17 allows only previously source-classified advisory failures to continue",
+    "run_id": 41370082849,
+    "event": "workflow_dispatch",
+    "attempt": 1,
+    "job_id": 125038516190,
+    "job": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+    "run_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849",
+    "job_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516190",
+    "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/preview-capture-advisory.log",
+    "log_sha256": "01bdbc9906e3ab17fae1e441f62077767e7585bac89fef7727a443d5c164fdd3"
+  },
+  "candidate": {
+    "sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "branch": "gsd/v2.10-ui-repairs-storybook",
+    "checkout_branch": "main",
+    "source_files": [
+      ".github/workflows/ci.yml",
+      "scripts/check_preview_capture_advisory_setup.test.cjs"
+    ],
+    "source_hashes": {
+      ".github/workflows/ci.yml": "7ec7a73e24a608b186030092e73a6f7f5601312ac957a248db60ed0f59499acf",
+      "scripts/check_preview_capture_advisory_setup.test.cjs": "9b267a8fc97441f1c67bef3cc124c07ae463884025a48256d01f8b20938eb49a"
+    }
+  },
+  "local_evidence": {
+    "scope": "Local workflow contract, workflow syntax, and whitespace checks only; this does not establish hosted Ubuntu success or hosted cost.",
+    "checks": {
+      "workflow_contract": {
+        "status": "pass",
+        "command": "node --test scripts/check_preview_capture_advisory_setup.test.cjs",
+        "evidence_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/workflow-contract.log"
+      },
+      "actionlint": {
+        "status": "pass",
+        "command": "actionlint .github/workflows/ci.yml",
+        "evidence_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/actionlint.log"
+      },
+      "diff_check": {
+        "status": "pass",
+        "command": "git diff --check -- .github/workflows/ci.yml scripts/check_preview_capture_advisory_setup.test.cjs",
+        "evidence_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/diff-check.log"
+      }
+    },
+    "evidence_hashes": {
+      "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/workflow-contract.log": "53685579297f393ef479d6ad2cd42f8eeade6bb9cf881b30e3e2eecb372cc0dd",
+      "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/actionlint.log": "d916e7149a9cb21f114af0b986b576f4d9a95229ae88ad9e94672a48fcbe54c9",
+      "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/diff-check.log": "f01b07f31deef3b280ec01a89cbc262caf5c348ca4c47e7d475dce6c8ac8617c"
+    }
+  },
+  "authority": {
+    "hosted": null,
+    "preview": null
+  },
+  "hosted": {
+    "status": "not_authorized",
+    "runs": []
+  },
+  "preview": {
+    "status": "not_started"
+  },
+  "cost": {
+    "status": "not_measured",
+    "reason": "The new candidate has not been run on hosted CI; the prior hosted cycle remains stopped and its approval is not inherited."
+  }
+}
