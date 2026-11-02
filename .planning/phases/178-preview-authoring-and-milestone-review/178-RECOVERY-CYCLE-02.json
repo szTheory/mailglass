@@ -88,15 +88,219 @@
     }
   },
   "hosted": {
-    "status": "not_authorized",
-    "runs": []
+    "status": "stopped",
+    "operations": {
+      "push_candidate": {
+        "status": "succeeded",
+        "count": 1,
+        "command": "git push origin a0a7450cc68afe84e25e69276c654d9e63422499:refs/heads/gsd/v2.10-ui-repairs-storybook",
+        "ref": "refs/heads/gsd/v2.10-ui-repairs-storybook",
+        "before_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "after_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "first_workflow_trigger_created_at": "2026-11-02T02:10:42Z"
+      },
+      "update_pr_body": {
+        "status": "not_run",
+        "count": 0,
+        "command": "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/pr-body.md"
+      },
+      "dispatch_ci": {
+        "status": "not_run",
+        "count": 0,
+        "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+      }
+    },
+    "runs": [
+      {
+        "id": 41376300645,
+        "workflow_name": "CI",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41376300645",
+        "created_at": "2026-11-02T02:10:42Z",
+        "completed_at": "2026-11-02T02:28:14Z",
+        "duration_ms": 1052000,
+        "timing_api": {
+          "billable_ubuntu_total_ms": 0,
+          "run_duration_ms": 1052000,
+          "note": "The GitHub timing endpoint reported zero billable milliseconds; this is not a cost disposition."
+        },
+        "required_ci_green": true,
+        "demo_evidence": true,
+        "preview_capture_advisory": true,
+        "operator_browser_gate": false,
+        "jobs": [
+          {
+            "id": 125060478473,
+            "name": "CI Green",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T02:22:36Z",
+            "completed_at": "2026-11-02T02:22:51Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41376300645/job/125060478473"
+          },
+          {
+            "id": 125057190660,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T02:10:52Z",
+            "completed_at": "2026-11-02T02:26:21Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41376300645/job/125057190660"
+          },
+          {
+            "id": 125057190552,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T02:10:52Z",
+            "completed_at": "2026-11-02T02:14:59Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41376300645/job/125057190552"
+          },
+          {
+            "id": 125057190508,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2026-11-02T02:10:52Z",
+            "completed_at": "2026-11-02T02:28:13Z",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41376300645/job/125057190508",
+            "failed_step": {
+              "name": "Run operator browser gate",
+              "started_at": "2026-11-02T02:13:16Z",
+              "completed_at": "2026-11-02T02:28:09Z",
+              "test": "e2e/flows.spec.js:2466:3 — Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled",
+              "failure": "Expected true, received false; predicate timed out after 5000 ms."
+            }
+          }
+        ]
+      }
+    ],
+    "guard_runs": [
+      {
+        "id": 41376300643,
+        "workflow_name": "Guard Release Trigger",
+        "event": "pull_request",
+        "action": "synchronize",
+        "attempt": 1,
+        "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41376300643",
+        "created_at": "2026-11-02T02:10:42Z",
+        "completed_at": "2026-11-02T02:10:53Z",
+        "duration_ms": 11000,
+        "timing_api": {
+          "billable_ubuntu_total_ms": 0,
+          "run_duration_ms": 11000
+        },
+        "job": {
+          "id": 125057156733,
+          "name": "Guard Release Trigger",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41376300643/job/125057156733"
+        }
+      }
+    ],
+    "additional_push_runs": [
+      {
+        "id": 41376297590,
+        "workflow_name": "PR Title",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41376297590",
+        "created_at": "2026-11-02T02:10:40Z",
+        "completed_at": "2026-11-02T02:10:47Z",
+        "duration_ms": 7000,
+        "timing_api": {
+          "billable_ubuntu_total_ms": 0,
+          "run_duration_ms": 7000
+        }
+      },
+      {
+        "id": 41376300846,
+        "workflow_name": "Actionlint",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41376300846",
+        "created_at": "2026-11-02T02:10:42Z",
+        "completed_at": "2026-11-02T02:11:24Z",
+        "duration_ms": 42000,
+        "timing_api": {
+          "billable_ubuntu_total_ms": 0,
+          "run_duration_ms": 42000
+        }
+      },
+      {
+        "id": 41376300619,
+        "workflow_name": "Advisory Matrix",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41376300619",
+        "created_at": "2026-11-02T02:10:42Z",
+        "completed_at": "2026-11-02T02:23:20Z",
+        "duration_ms": 758000,
+        "timing_api": {
+          "billable_ubuntu_total_ms": 0,
+          "run_duration_ms": 758000
+        }
+      }
+    ],
+    "workflow_run_count": 5,
+    "workflow_run_limit": 4,
+    "workflow_run_cap_exceeded": true,
+    "stop": {
+      "recorded_at": "2026-11-02T02:31:25.872Z",
+      "reason": "Stopped before PR body update and workflow dispatch because the approved push triggered five workflows, exceeding the literal four-workflow total cap: CI, Guard Release Trigger, PR Title, Actionlint, and Advisory Matrix. Independently, the attempt-1 PR CI run failed in Operator Browser Gate at e2e/flows.spec.js:2466:3: the Phase174 inbound overflow keyboard-reachability/navigation-boundary assertion expected true, received false, and timed out after 5 seconds. No body update, dispatch, retry, rerun, cancellation, or preview was performed.",
+      "consumed_operations": [
+        "git push origin a0a7450cc68afe84e25e69276c654d9e63422499:refs/heads/gsd/v2.10-ui-repairs-storybook"
+      ],
+      "unspent_operations": [
+        "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/pr-body.md",
+        "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+      ],
+      "preview_launched": false,
+      "plans_23_24_run": false,
+      "workflow_run_count": 5,
+      "workflow_run_limit": 4,
+      "ci_failure_run_id": 41376300645,
+      "ci_failure_job_id": 125057190508
+    },
+    "post_action_snapshot": {
+      "observed_at": "2026-11-02T02:31:25.872Z",
+      "remote_target_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_number": 317,
+      "pr_title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "pr_base_ref": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_body_sha256": "2cde938acffe6c13bf267644a886ae58ac1187c15d1ab8cd78a2cc60e86150d8",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+      "checkout_branch": "main",
+      "previous_record_sha256": "334cd4a7407677c80f536a38758ea648ef7033cb95b4b4f480418b2ffa259003"
+    }
   },
   "preview": {
     "status": "not_started"
   },
   "cost": {
     "status": "not_measured",
-    "reason": "The new candidate has not been run on hosted CI; the prior hosted cycle remains stopped and its approval is not inherited."
+    "reason": "No reproducible cost disposition was performed. The GitHub timing endpoint reported zero billable milliseconds for the observed run receipts; that response is not a dollar cost and does not establish actual usage."
   },
   "preapproval": {
     "observed_at": "2026-11-02T02:02:02Z",
