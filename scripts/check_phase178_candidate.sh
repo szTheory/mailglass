@@ -89,11 +89,11 @@ css_triple() {
   return "$rc"
 }
 
-# probe_route <private probe directory> <base URL> <route>
+# probe_route <private probe directory> <cookie jar> <base URL> <route>
 # Prints "<final HTTP status> <effective URL>" after following redirects.
 # Every route shares the short-lived synthetic session held in the cookie jar.
 probe_route() {
-  local probe_dir="$1" base_url="$2" route="$3" cookie_jar="$1/cookies.txt"
+  local probe_dir="$1" cookie_jar="$2" base_url="$3" route="$4"
   local status="000" final_url="" out attempt
   for attempt in 1 2 3; do
     out="$(curl --silent --show-error --globoff --location \
@@ -509,7 +509,7 @@ fi
 
 if [[ "$launch_ok" == true ]]; then
   for route in "${ROUTES[@]}"; do
-    read -r status final_url < <(probe_route "$PROBE_DIR" "$BASE_URL" "$route")
+    read -r status final_url < <(probe_route "$PROBE_DIR" "$COOKIE_JAR" "$BASE_URL" "$route")
     ROUTE_ROWS+="$route"$'\t'"$status"$'\t'"$final_url"$'\n'
     [[ "$status" == 200 ]] || FAILURES+=("HTTP route $route returned ${status:-no-response}")
   done

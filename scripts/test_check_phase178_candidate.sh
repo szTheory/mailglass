@@ -57,10 +57,12 @@ while (($#)); do
 done
 [[ -n "$cookie" && "$cookie" == "$cookie_jar" ]] || { printf 'curl did not receive one shared cookie jar\n' >&2; exit 90; }
 [[ -f "$cookie" && -d "$(dirname "$cookie")" ]] || { printf 'curl cookie jar is not pre-created\n' >&2; exit 91; }
+[[ "$(dirname "$cookie")" == "$TEST_PROBE_DIR" ]] || { printf 'curl cookie jar escaped the private test probe directory\n' >&2; exit 99; }
 [[ "$location" == true ]] || { printf 'curl redirect following is disabled\n' >&2; exit 92; }
 [[ "$write_out" == '%{http_code} %{url_effective}' ]] || { printf 'curl does not report final status and URL\n' >&2; exit 93; }
 [[ "$output" == "$(dirname "$cookie")/route.body" ]] || { printf 'curl response output escaped probe directory\n' >&2; exit 94; }
 [[ "$(stat -f '%Lp' "$cookie" 2>/dev/null || stat -c '%a' "$cookie")" == 600 ]] || { printf 'cookie jar mode is not 0600\n' >&2; exit 95; }
+[[ "$(stat -f '%Lp' "$(dirname "$cookie")" 2>/dev/null || stat -c '%a' "$(dirname "$cookie")")" == 700 ]] || { printf 'probe directory mode is not 0700\n' >&2; exit 100; }
 printf '%s\n' "$url" >>"$CURL_LOG"
 case "$url" in
   http://127.0.0.1:5000/demo/login\?return_to=*)
@@ -133,10 +135,12 @@ ok allocate_ports
 [[ "${DEFAULT_ROUTES[0]}" == "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar" ]] || die "demo login bootstrap is not the first default route"
 TEST_PROBE_DIR="$TEST_DIR/private-probe"
 mkdir -m 700 "$TEST_PROBE_DIR"
+COOKIE_JAR="$TEST_PROBE_DIR/cookies.txt"
+export TEST_PROBE_DIR
 (umask 077; : >"$TEST_PROBE_DIR/cookies.txt")
 chmod 600 "$TEST_PROBE_DIR/cookies.txt"
 for route in "${DEFAULT_ROUTES[@]}"; do
-  result="$(PATH="$STUB_BIN:$PATH" probe_route "$TEST_PROBE_DIR" "http://127.0.0.1:5000" "$route")" || die "probe_route failed for $route"
+  result="$(PATH="$STUB_BIN:$PATH" probe_route "$TEST_PROBE_DIR" "$COOKIE_JAR" "http://127.0.0.1:5000" "$route")" || die "probe_route failed for $route"
   [[ "${result%% *}" == 200 ]] || die "probe_route did not retain final HTTP 200 for $route: $result"
   if [[ "$route" == "${DEFAULT_ROUTES[0]}" ]]; then
     [[ "$result" == "200 http://127.0.0.1:5000/ops/mail?tenant_id=northstar" ]] || die "login redirect final URL was not the expected same-origin return_to: $result"
