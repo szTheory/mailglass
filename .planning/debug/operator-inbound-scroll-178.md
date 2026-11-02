@@ -1,5 +1,5 @@
 ---
-status: awaiting_human_verify
+status: resolved
 trigger: "Phase 178 hosted CI Operator Browser Gate timed out on the Phase174 inbound quick-view scroll access test."
 created: 2026-11-02
 updated: 2026-11-02
@@ -17,15 +17,15 @@ updated: 2026-11-02
 
 ## Constraints
 
-- The approved hosted candidate and remote branch are frozen at `a0a7450cc68afe84e25e69276c654d9e63422499`.
-- Do not run hosted workflows, mutate PR #317, merge/release/deploy/publish, or launch a preview.
+- At the beginning of this debug session the candidate was `a0a7450cc68afe84e25e69276c654d9e63422499`. Plan 28 later authorized Cycle 04 for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; its hosted operations and one conditional preview attempt are now consumed. Do not start another run or launch.
+- No merge/release/deploy/publish or further PR, push, workflow, or preview operation is authorized by Cycle 04.
 - Preserve the dirty workspace. Restrict any fix to the failing inbound quick-view scroll behavior or its demonstrably incorrect test contract; do not stage or revert unrelated files.
 - User approved all local diagnostic recommendations. Provision only the existing lockfile-pinned artifacts inside a disposable local container for a controlled Linux reproduction; do not modify repository dependency declarations or locks.
 - User's `approve-all` also authorizes one bounded local AMD64 browser comparison using already pinned Chromium/Playwright versions. Use disposable resources only; do not incur paid-service costs or pull an oversized full CI image. Remove test-specific containers, volumes and networks afterward.
 
 ## Current Focus
 
-assessment: local fix accepted by applicable guardrail signals; exact hosted verification remains stopped and unverified
+assessment: local fix accepted by applicable guardrail signals and exact-SHA hosted Operator Browser Gate passed; Cycle 04 preview remains blocked by a separate login-route 302
 hypothesis: the helper sends End after PageDown has moved but before native PageDown completion; Chromium can ignore End at that late animation transition, leaving the prior page-scroll offset
 bug_class: heisenbug-mandelbug (timing dependent; native completion-boundary and actual-helper local reproductions now available)
 test: completed exact-helper boundary reproduction before/after/revert/reapply and both real production scroll-access regressions with bounded repeats
@@ -218,7 +218,7 @@ reasoning_checkpoint:
 
 ## Resolution
 
-result: root_cause_found_local_fix_verified_hosted_pending
+result: root_cause_found_local_fix_verified_hosted
 root_cause: the shared browser test treats positive PageDown movement as completion, so End can arrive in Chromium's late native PageDown animation-completion interval and be ignored; an application-free reproduction and the unchanged actual helper reproduce the same retained-focus/stuck-page-offset symptom locally
 fix: arm a one-shot native scrollend listener before PageDown and poll its completion before sending End; retain all original accessibility, native keyboard, focus, exact bottom and navigation boundary assertions
 oracle_type: specified — original keyboard-access contract requires real PageDown movement followed by End reaching scrollTop + clientHeight >= scrollHeight - 1; timing boundary samples cover both sides of the native completion interval
@@ -239,13 +239,19 @@ verification:
   amd64_integrity: pass (upstream download MD5/size, zip integrity, x86_64 ELF and browser version; unchanged source fingerprints and relevant diffs)
   amd64_cleanup: pass (own containers, internal network, anonymous DB volume and browser download/extraction removed)
   guardrail_verdict: accepted
-  hosted_verification: pending — no further hosted run is authorized; session remains unresolved
+  hosted_verification: pass — exact candidate 8e501960bc975ed44b632ba5c74522e0c5d66f8c, CI run 41388571351 attempt 1, Operator Browser Gate 310 passed/1 skipped/0 failed/0 flaky; the unchanged inbound scroll-access case passed in the hashed log below
+  hosted_log: reference/demo_app/tmp/phase178_candidate/recovery-cycle-04/41388571351-attempt-1/operator-browser-gate.log
+  hosted_log_sha256: 3284a1e1060317e0b23a5bbcb58f3fe8a9dcd16abc6605bb7a5a6fbc447372e3
 limitations:
   - Earlier macOS ARM64, Linux ARM64 and AMD64 browser comparisons passed unchanged. The new timing-controlled macOS native and exact-helper reproducers now expose the same stuck-offset symptom, so those earlier passes do not rule out the completion-boundary race. No changed-helper hosted run has occurred.
   - The AMD64 browser ran under Docker emulation on existing Ubuntu 24.04 with current minimal OS libraries and Node 24.19.0 for the browser endpoint; its disposable server/test client remained ARM64 with pinned Node 22.14.0 and Elixir 1.18.4/OTP 27. The local Postgres 16-alpine image digest differs from the hosted pin. This isolates browser architecture but is not exact hosted-runner equivalence.
   - This fixes the test's sequencing between two independent keyboard gestures. It does not modify Chromium or promise that a real user's overlapping End during the native animation boundary is repaired; no production accessibility semantics changed.
-  - Local HEAD differs overall from frozen candidate, but relevant source, browser config and dependency locks have no diff between them. These are bounded local behavior checks, not remote exact-candidate approval.
-  - Candidate freeze, hosted stop and all publication restrictions remain in effect. No remote workflow, PR, push, preview or publication action occurred.
+  - Local HEAD differs overall from the frozen candidate, but relevant source, browser config and dependency locks match. The candidate's hosted test evidence is limited to the exact run receipts in Cycle 04 and does not establish that the owner preview is available.
+  - Cycle 04's single preview attempt failed at `/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar` with HTTP 302; no retry or relaunch is authorized. The exact route record and candidate-only cleanup are in `178-RECOVERY-CYCLE-04.json` and `178-DELIVERY.md`.
+
+### Hosted closure (Cycle 04)
+
+The exact-SHA attempt-1 Operator Browser Gate completed successfully on run `41388571351`. Its raw log contains the inbound scroll-access case passing at line 1307, with the related delivery scroll-access case passing at line 1306. The complete summary is 310 passed, 1 skipped, 0 failed, 0 flaky. This closes the hosted verification pending for this test fix; it does not close UIQ-08 or imply a passing preview. The single preview attempt failed on the login route and was cleaned up without touching the owner demo.
 
 ### Commands and outcomes
 

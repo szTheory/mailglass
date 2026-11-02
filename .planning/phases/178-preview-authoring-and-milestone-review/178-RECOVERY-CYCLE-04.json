@@ -2,7 +2,7 @@
   "schema_version": "phase178-recovery-cycle.v1",
   "cycle": 4,
   "created_at": "2026-11-02T04:04:43Z",
-  "status": "hosted_passed_cost_pending",
+  "status": "stopped",
   "previous_record": {
     "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-03.json",
     "sha256": "69e13a6c4f3c159ed5e3ea0f2227d621e6240db2bcffbaf0f432065d3b7b4f23"
@@ -177,7 +177,11 @@
     "approval_bound": {
       "decision": "approve-all",
       "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
-      "one_time_operations": ["push_candidate", "update_pr_body", "dispatch_ci"],
+      "one_time_operations": [
+        "push_candidate",
+        "update_pr_body",
+        "dispatch_ci"
+      ],
       "conditional_preview": "exact_sha_hosted_success_and_reproducible_identity_bound_cost_success"
     }
   },
@@ -265,40 +269,252 @@
       "unclassified_job_failures": 0
     },
     "phase_178_gate_receipts": [
-      {"run_id": 41386942453, "job_id": 125093537090, "name": "CI Green", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125093537090"},
-      {"run_id": 41386942453, "job_id": 125089806719, "name": "Demo Browser Evidence (Docker Compose / Chromium)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806719"},
-      {"run_id": 41386942453, "job_id": 125089806639, "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806639"},
-      {"run_id": 41386942453, "job_id": 125089806710, "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806710"},
-      {"run_id": 41388571351, "job_id": 125099329799, "name": "CI Green", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125099329799"},
-      {"run_id": 41388571351, "job_id": 125094790987, "name": "Demo Browser Evidence (Docker Compose / Chromium)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094790987"},
-      {"run_id": 41388571351, "job_id": 125094791136, "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791136"},
-      {"run_id": 41388571351, "job_id": 125094791015, "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)", "conclusion": "success", "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791015"}
+      {
+        "run_id": 41386942453,
+        "job_id": 125093537090,
+        "name": "CI Green",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125093537090"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806719,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806719"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806639,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806639"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806710,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806710"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125099329799,
+        "name": "CI Green",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125099329799"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094790987,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094790987"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094791136,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791136"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094791015,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791015"
+      }
     ],
     "expected_skipped_jobs": [
-      {"run_id": 41386942424, "name": "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public/mailglass)", "reason": "The candidate workflow explicitly excludes this forward-compatibility lane on pull_request events; it is advisory-only for push, schedule and dispatch."}
+      {
+        "run_id": 41386942424,
+        "name": "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public/mailglass)",
+        "reason": "The candidate workflow explicitly excludes this forward-compatibility lane on pull_request events; it is advisory-only for push, schedule and dispatch."
+      }
     ],
     "runs": [
-      {"run_id": 41386942424, "workflow": "Advisory Matrix", "event": "pull_request", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:10:09Z", "started_at": "2026-11-02T04:10:09Z", "updated_at": "2026-11-02T04:22:54Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942424"},
-      {"run_id": 41386942395, "workflow": "Actionlint", "event": "pull_request", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:10:09Z", "started_at": "2026-11-02T04:10:09Z", "updated_at": "2026-11-02T04:10:46Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942395"},
-      {"run_id": 41386942472, "workflow": "Guard Release Trigger", "event": "pull_request", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:10:09Z", "started_at": "2026-11-02T04:10:09Z", "updated_at": "2026-11-02T04:10:20Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942472"},
-      {"run_id": 41386942453, "workflow": "CI", "event": "pull_request", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:10:09Z", "started_at": "2026-11-02T04:10:09Z", "updated_at": "2026-11-02T04:24:29Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453"},
-      {"run_id": 41386939769, "workflow": "PR Title", "event": "pull_request_target", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:10:08Z", "started_at": "2026-11-02T04:10:08Z", "updated_at": "2026-11-02T04:10:16Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41386939769"},
-      {"run_id": 41388399949, "workflow": "Guard Release Trigger", "event": "pull_request", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:25:40Z", "started_at": "2026-11-02T04:25:40Z", "updated_at": "2026-11-02T04:25:50Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41388399949"},
-      {"run_id": 41388400355, "workflow": "PR Title", "event": "pull_request_target", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:25:41Z", "started_at": "2026-11-02T04:25:41Z", "updated_at": "2026-11-02T04:25:47Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41388400355"},
-      {"run_id": 41388571351, "workflow": "CI", "event": "workflow_dispatch", "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c", "attempt": 1, "status": "completed", "conclusion": "success", "created_at": "2026-11-02T04:27:32Z", "started_at": "2026-11-02T04:27:32Z", "updated_at": "2026-11-02T04:46:35Z", "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351"}
+      {
+        "run_id": 41386942424,
+        "workflow": "Advisory Matrix",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:22:54Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942424"
+      },
+      {
+        "run_id": 41386942395,
+        "workflow": "Actionlint",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:10:46Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942395"
+      },
+      {
+        "run_id": 41386942472,
+        "workflow": "Guard Release Trigger",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:10:20Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942472"
+      },
+      {
+        "run_id": 41386942453,
+        "workflow": "CI",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:24:29Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453"
+      },
+      {
+        "run_id": 41386939769,
+        "workflow": "PR Title",
+        "event": "pull_request_target",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:08Z",
+        "started_at": "2026-11-02T04:10:08Z",
+        "updated_at": "2026-11-02T04:10:16Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386939769"
+      },
+      {
+        "run_id": 41388399949,
+        "workflow": "Guard Release Trigger",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:25:40Z",
+        "started_at": "2026-11-02T04:25:40Z",
+        "updated_at": "2026-11-02T04:25:50Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388399949"
+      },
+      {
+        "run_id": 41388400355,
+        "workflow": "PR Title",
+        "event": "pull_request_target",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:25:41Z",
+        "started_at": "2026-11-02T04:25:41Z",
+        "updated_at": "2026-11-02T04:25:47Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388400355"
+      },
+      {
+        "run_id": 41388571351,
+        "workflow": "CI",
+        "event": "workflow_dispatch",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:27:32Z",
+        "started_at": "2026-11-02T04:27:32Z",
+        "updated_at": "2026-11-02T04:46:35Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351"
+      }
     ],
     "stop": null
   },
   "cost": {
-    "status": "not_measured",
-    "reproducible": false,
-    "identity_bound": false,
-    "record_path": null
+    "status": "measured",
+    "reproducible": true,
+    "identity_bound": true,
+    "record_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-COST-DISPOSITION.json",
+    "gate": "pass_with_supported_overage",
+    "record_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "regeneration": {
+      "method": "bash reference/demo_app/tmp/phase178_candidate/recovery-cycle-04/derive-cycle04-cost.sh <output>",
+      "base_and_final_outputs_compared_byte_identical": true,
+      "input_hash_count": 45,
+      "counts_and_normalized_logs_regenerated_byte_identical": true,
+      "hosted_snapshot": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-04/cycle04-hosted-snapshot.json"
+    },
+    "identity": {
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pilot_source_event": "workflow_dispatch",
+      "dispatch_run_id": "41388571351",
+      "dispatch_artifact_exact_candidate": true,
+      "pull_request_run_id": "41386942453",
+      "pull_request_demo_artifact_source_sha": "ad7f7487023d863497dc49f09fd311805357dcb5",
+      "pull_request_run_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pull_request_demo_artifact_exact_candidate": false,
+      "dispatch_demo_artifact_source_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "dispatch_demo_artifact_exact_candidate": true
+    },
+    "budget_disposition": {
+      "status": "supported_overage",
+      "rule": "178-RESEARCH Q5 / D-12",
+      "dispatch_total_runner_within_budget": false,
+      "cold_pilot_wall_within_budget": false,
+      "warm_pilot_wall_within_budget": true,
+      "decision": "supported_for_this_preapproved_owner_review_cycle"
+    }
   },
   "preview": {
-    "status": "not_started",
-    "record_path": null
+    "status": "stopped",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json",
+    "record_sha256": "29850312cdc0adb772d1541f9c81a9ee345f88b66e469464a2e535eb3f7cecf9",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "launcher_command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json",
+    "launcher_exit_code": 1,
+    "attempts": 1,
+    "completed_at": "2026-11-02T05:00:55.931Z",
+    "result": "fail",
+    "routes": {
+      "http_200": 5,
+      "total": 6,
+      "failed_route": "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+      "failed_status": 302
+    },
+    "css": {
+      "built_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+      "served_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+      "built_served_match": true
+    },
+    "page_marker_checks": "not_run_after_route_gate_failure",
+    "cleanup": {
+      "completed_at": "2026-11-02T05:01:30.224Z",
+      "compose_project": "mailglass-phase178-review-8e501960-20261102045729-58375",
+      "containers_network_volumes": "stopped",
+      "candidate_worktree": "removed",
+      "run_parent": "removed",
+      "demo_mix_lock": "restored_to_candidate_blob",
+      "owner_demo_touched": false
+    },
+    "retry_or_relaunch": false
+  },
+  "stop": {
+    "stage": "preview",
+    "reason": "The single approved launcher attempt exited 1 because the required /demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar route returned HTTP 302. The other five routes returned HTTP 200 and built/served CSS matched; page-marker checks did not run after the route gate failed. The launcher attempt is consumed; no retry or relaunch is authorized.",
+    "requirement_open": "UIQ-08",
+    "next_actor": "phase_178_owner_or_planner"
   },
   "owner_decision": null,
-  "next_actor": "OpenGSD executor for reproducible identity-bound cost disposition; preview remains conditional on cost pass"
+  "next_actor": "phase_178_owner_or_planner"
 }

@@ -1,156 +1,383 @@
 ---
 phase: 178-preview-authoring-and-milestone-review
-verified: 2026-10-29T17:00:00Z
+verified: 2026-11-02T05:06:48Z
 status: gaps_found
-score: 3/5 must-haves verified
+score: 4/5 must-haves verified
 covered_files:
-  - .github/workflows/ci.yml
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-01-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-01-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-02-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-02-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-03-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-03-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-04-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-04-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-05-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-05-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-06-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-06-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-07-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-07-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-08-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-08-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-09-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-09-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-10-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-10-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-11-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-11-SUMMARY.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-12-PLAN.md
-  - .planning/phases/178-preview-authoring-and-milestone-review/178-12-SUMMARY.md
-  - mailglass_admin/e2e/phase178-real-zoom.spec.js
-  - mailglass_admin/e2e/support/storybook-axe-supplement.cjs
-  - mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex
-  - mailglass_admin/lib/mailglass_admin/preview/scenario_label.ex
-  - mailglass_admin/lib/mailglass_admin/preview/sidebar.ex
-  - mailglass_admin/test/mailglass_admin/phase178_prohibition_contract_test.exs
-  - mailglass_admin/test/support/feedback_ledger.ex
-  - reference/persona_spec/quick_view_scenarios.json
-  - scripts/check_phase178_candidate.sh
-  - scripts/phase178_cost_disposition.cjs
-covered_digest: "v4:sha256:37e4634a6e7043d972e83d07268f62ca36a5d80b8d8807582270fae58e4281e4"
+  - ".github/workflows/ci.yml"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-01-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-01-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-02-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-02-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-03-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-03-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-04-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-04-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-05-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-05-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-06-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-06-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-07-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-07-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-08-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-08-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-09-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-09-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-10-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-10-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-11-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-11-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-12-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-12-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-13-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-13-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-14-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-14-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-15-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-15-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-16-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-16-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-17-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-17-SUMMARY.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-18-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-19-PLAN.md"
+  - ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md"
+  - "compose.demo.yml"
+  - "mailglass_admin/e2e/phase178-real-zoom.spec.js"
+  - "mailglass_admin/e2e/support/storybook-axe-supplement.cjs"
+  - "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex"
+  - "mailglass_admin/lib/mailglass_admin/preview/scenario_label.ex"
+  - "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex"
+  - "mailglass_admin/mix.lock"
+  - "mailglass_admin/test/mailglass_admin/phase178_prohibition_contract_test.exs"
+  - "mailglass_admin/test/support/feedback_ledger.ex"
+  - "mailglass_inbound/mix.lock"
+  - "mix.lock"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/ci-green.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/demo-browser-evidence.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/github-artifacts.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/github-jobs.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/github-run.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358616440-attempt-1/hex-audit.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/ci-green.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/demo-browser-evidence.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/github-artifacts.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/github-jobs.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/github-run.raw.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/ci/41358618944-attempt-1/hex-audit.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/axe.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/admin-browser-install.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/admin-browser.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/axe.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-dashboard-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-empty-account-7e372023-375-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-inbound-7e372023-1440-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-outbound-7e372023-1440-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-preview-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/baseline-recipient-expired-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-dashboard.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-empty-account-adverse.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-inbound-primary.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-outbound-primary.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-preview.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/captures/mailglass-evidence-20261101232222-19011-19944-recipient-expired-adverse.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/checkpoint.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/container-timings.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/delivery-1440-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/delivery-320-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/delivery-768-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/delivery-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/delivery-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/demo-browser.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/demo-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/execution-condition.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/fidelity.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/hooks.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/inbound-1440-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/inbound-320-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/inbound-768-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/invoice-preview-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/invoice-preview-375.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/phase173-captures.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/checkpoint.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/dashboard-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/dashboard-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/empty-account-adverse-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/empty-account-adverse-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/inbound-primary-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/inbound-primary-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/outbound-primary-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/outbound-primary-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/preview-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/preview-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/recipient-expired-adverse-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/retained/recipient-expired-adverse-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-expired-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-expired-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-invalid-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-invalid-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-valid-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/unsubscribe-valid-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cost.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/execution.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/fidelity.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/hooks.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/admin-browser-install.log"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/admin-browser.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/axe.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-dashboard-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-empty-account-7e372023-375-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-inbound-7e372023-1440-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-outbound-7e372023-1440-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-preview-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/baseline-recipient-expired-7e372023-375-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-dashboard.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-empty-account-adverse.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-inbound-primary.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-outbound-primary.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-preview.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/captures/mailglass-evidence-20261101232222-19011-19944-recipient-expired-adverse.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/checkpoint.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/container-timings.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/delivery-1440-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/delivery-320-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/delivery-768-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/delivery-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/delivery-light.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/demo-browser.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/demo-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/execution-condition.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/fidelity.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/hooks.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/inbound-1440-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/inbound-320-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/inbound-768-boundary-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/invoice-preview-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/invoice-preview-375.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/phase173-captures.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/checkpoint.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/dashboard-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/dashboard-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/empty-account-adverse-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/empty-account-adverse-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/inbound-primary-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/inbound-primary-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/outbound-primary-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/outbound-primary-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/preview-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/preview-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/recipient-expired-adverse-baseline.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/retained/recipient-expired-adverse-current.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-expired-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-expired-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-invalid-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-invalid-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-valid-1280.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/unsubscribe-valid-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175-compose.override.yml"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/admin-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/axe.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/delivery-investigation-1440-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/delivery-investigation-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/delivery-investigation-320-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/delivery-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/demo-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/fidelity.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/inbound-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/delivery-1440.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/delivery-200-browser-zoom-long-text.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/delivery-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/delivery-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/delivery-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/inbound-1440.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/inbound-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/inbound-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/phase175-layout/inbound-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/runtime.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/execution.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/run.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/admin-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/axe.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/delivery-investigation-1440-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/delivery-investigation-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/delivery-investigation-320-dark.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/delivery-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/demo-playwright-report.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/fidelity.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/inbound-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/delivery-1440.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/delivery-200-browser-zoom-long-text.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/delivery-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/delivery-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/delivery-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/inbound-1440.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/inbound-200-browser-zoom.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/inbound-320.png"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/phase175-layout/inbound-layout.json"
+  - "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/runtime.json"
+  - "reference/persona_spec/quick_view_scenarios.json"
+  - "scripts/check_phase178_candidate.sh"
+  - "scripts/phase178_cost_disposition.cjs"
+  - "scripts/run_demo_browser_evidence.sh"
+  - "scripts/test_run_demo_browser_evidence.sh"
+covered_digest: "v4:sha256:25cb4533500fac7ea550147bbfe2624583359ffa75583d6a73ed46ad6165ed2a"
 behavior_unverified: 0
 overrides_applied: 0
-re_verification: false
+re_verification:
+  previous_status: gaps_found
+  previous_score: 3/5
+  gaps_closed:
+    - "The earlier Demo job failure from a missing @playwright/test module is not reproduced: the current cold/warm local pilot completed the Demo and Admin evidence paths."
+    - "The current local recovery fixes the required Hex Audit lock and the Demo test-dependency and Phase 175 ownership failures; the named local gates and pilot passed."
+  gaps_remaining:
+    - "UIQ-08 remains open because the single isolated candidate preview attempt failed its /demo/login route gate with HTTP 302; page-marker checks did not run."
+  regressions: []
+must_haves:
+  truths:
+    - "Preview offers an intentionally aligned secondary restore-defaults action and useful parsing/validation/read-only guidance without repetitive generic helpers; reset and rendering retain their supported behavior. (PRVUX-05, PRVUX-06)"
+    - "Authors can identify/select a readable scenario with module context secondary, exact technical identity accessible and duplicate humanized labels disambiguated at long/Unicode and narrow widths. (PRVUX-07)"
+    - "Every named feedback item has a current-source disposition and links to its owning requirement, retained production-component scenario and behavior evidence. Stories cover the selected pattern/area/job states, including the Delivery path delivered in Phase 175, with representative pure-to-persisted projection agreement and no missing/failed/zero-case coverage hidden as success. (STORY-07, UIQ-04)"
+    - "Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)"
+    - "The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)"
+advisory:
+  - finding: "The fake-Docker wrapper contract test does not execute the embedded Phase 175 container command or prove volume ownership by itself."
+    category: other
+    reason: "This is a test-scope limit, not a demonstrated defect; the fresh cold/warm local pilot exercised the container path and both evidence checkers successfully."
+    evidence_status: "Local pilot and exact-SHA Cycle 04 hosted Demo and Operator evidence passed; this fake-Docker contract test remains an advisory scope limit."
 gaps:
-  - truth: "Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement (UIQ-07, ROADMAP SC4)"
+  - truth: "SC5: the owner can review the current committed candidate in a working preview with passing required CI, a verified URL runbook and explicit service/artifact dispositions (UIQ-08)."
     status: failed
-    reason: "The only hosted candidate run stopped. Demo Browser Evidence failed in 11-14 s before any capture in both hosted runs (40904249445 dispatch, 40904235961 PR) on candidate 2bdf1816. No 178-COST-DISPOSITION.json exists; the hosted cost/coverage disposition was recorded as 'not measured'. Local measurements exist (Operator Browser Gate 376 s, 311 executed vs 230 baseline) but they are not the setup-inclusive hosted cold/warm measurement the requirement names."
+    reason: "Cycle 04's candidate passed exact-SHA required CI and reproducible identity-bound cost disposition. Its one isolated preview attempt exited 1 because /demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar returned HTTP 302. Five of six routes returned HTTP 200; CSS matched; marker checks were not run after the route gate failed. Candidate resources were cleaned up, and the loopback preview is no longer live."
     artifacts:
-      - path: ".github/workflows/ci.yml"
-        issue: "Line ~1059 'Test Storybook evidence and review contracts' runs mailglass_admin/e2e/support/storybook-axe.test.cjs in the root Demo Browser Evidence job; that job never installs @playwright/test, so the step fails with MODULE_NOT_FOUND."
-      - path: "mailglass_admin/e2e/support/storybook-axe-supplement.cjs"
-        issue: "Line 1 does require('@playwright/test'); fine locally (mailglass_admin deps installed), unresolvable in the Demo job. Introduced in Phase 175 (a65a670d), first exercised on hosted CI by 178-09."
-    missing:
-      - "Make @playwright/test resolvable for the storybook-axe.test.cjs step (install the mailglass_admin/e2e deps in the Demo job) or remove that test from the root Demo job's node --test list and run it in a lane that has the dependency; add a regression guard so the step cannot be hosted-only red again"
-      - "New candidate freeze after the fix, then a fresh owner-approved push/dispatch (plan 178-09 rule: a fix needs a new freeze and a new 178-09-02 approval)"
-      - "Hosted cold and warm Demo evidence run completes; run scripts/phase178_cost_disposition.cjs to write 178-COST-DISPOSITION.json against the <=5 added PR wall minutes / <=10 runner-minutes provisional budget with expected/executed counts and required-vs-advisory placement"
-  - truth: "The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI; temporary services/artifacts have explicit dispositions (UIQ-08, ROADMAP SC5)"
-    status: failed
-    reason: "Plan 178-10 (candidate launch, runbook, 178-DELIVERY.md, service/artifact dispositions, ship/no-ship checkpoint) did not run because its precondition (hosted_status: completed) failed. No runbook or delivery document exists. The two required contexts (CI Green, Guard Release Trigger) are success on the candidate, but the same runs conclude failure overall (Demo Browser Evidence failed; Operator Browser Gate failed in the PR run), so 'passing required CI' is only partially evidenced and the working-preview deliverable is absent."
-    artifacts:
+      - path: ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-04.json"
+        issue: "Records the consumed one-attempt stop, exact failing route, candidate record hash, matching CSS and cleanup."
       - path: ".planning/phases/178-preview-authoring-and-milestone-review/178-DELIVERY.md"
-        issue: "Does not exist (plan 178-10 not run)"
+        issue: "Handoff records hosted receipts and the failed historical route URLs; it does not claim a review-ready live preview."
+      - path: "reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json"
+        issue: "Retained exact-SHA launcher record has final_status=fail; no retry is authorized."
     missing:
-      - "Fix the Demo job defect (above), re-freeze, re-run hosted candidate with owner approval"
-      - "Execute 178-10: launch the identified-SHA candidate preview via scripts/check_phase178_candidate.sh, verify every runbook URL renders, write 178-DELIVERY.md with full URLs, record service/artifact dispositions, present the ship/no-ship checkpoint (a permitted owner hand-off under D-52)"
-      - "Diagnose or classify the PR-run-only Operator Browser Gate failure at mailglass_admin/e2e/flows.spec.js:2453 ('Phase174 scroll access: Inbound overflow is keyboard reachable...'), which passed in the dispatch run on the same SHA"
-partial:
-  - truth: "Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior (UIQ-06, first half of ROADMAP SC4)"
-    status: partial
-    reason: "Local evidence is present: StatCard font-role receipt, real 200% zoom spec at 320 CSS px, width/hook receipts and Chromium cases are recorded in 178-AUTOMATION.md and the 178-08 local gate (Operator Browser Gate 311 executed). The hosted Demo lane that carries the StatCard font-role and retained Preview stories receipt never ran (it failed pre-capture), so those receipts are not reproduced on hosted CI. REQUIREMENTS.md keeps UIQ-06 Pending, which is consistent. Closing the UIQ-07 gap above also closes this one."
-deferred: []
+      - "Classify the expected authentication/redirect behavior for the /demo/login return route and scope a fix or accepted contract in a successor plan."
+      - "Use a newly approved candidate and preview attempt to verify all routes and authenticated page markers before presenting the owner review."
 ---
 
 # Phase 178: Preview Authoring and Milestone Review Verification Report
 
 **Phase Goal:** Authors can select/edit/restore previews coherently, and the owner can review all admitted repairs through a working preview backed by retained production scenarios, reproducible current evidence and measured upkeep cost.
-**Verified:** 2026-10-29
-**Status:** gaps_found
-**Re-verification:** No, initial verification
 
-The author-facing product work (SC1, SC2, SC3) is delivered and verified against code and a green targeted test run. The review and evidence half of the goal (SC4 hosted cost, SC5 working preview) is not delivered: the single hosted candidate run was red on a concrete, fixable defect and plan 178-10 never ran. SUMMARY claims were re-checked against code and read-only `gh` queries; the 178-09/178-10 SUMMARY accounts are accurate.
+**Status:** `gaps_found` — authoring, exact-candidate hosted evidence, and cost disposition are verified. UIQ-08 remains blocked by the single preview route failure recorded in Cycle 04.
+
+**Re-verification:** Yes. This refresh adds the exact-SHA Cycle 04 hosted receipts, reproducible cost result, and terminal preview failure. A successor preview requires the route contract to be classified and a newly approved cycle.
 
 ## Goal Achievement
 
-### Observable Truths
+| # | Observable truth | Status | Evidence |
+|---|---|---|---|
+| 1 | Restore-defaults is an aligned secondary action with useful read-only guidance and supported reset behavior (PRVUX-05/06). | VERIFIED | The prior code/test verification remains valid; recovery changes do not touch Preview authoring source. The targeted Preview behavior remains covered by the recorded `preview_live_test.exs` and `voice_test.exs` results. |
+| 2 | Scenario selection presents a readable label, secondary module context and exact technical identity, including duplicate/long/Unicode cases (PRVUX-07). | VERIFIED | The prior verification confirmed `scenario_label.ex` is wired through `sidebar.ex`; no recovery diff changes those files. The prior recorded scenario and browser checks remain applicable. |
+| 3 | Feedback rows and retained production stories have source, requirement, scenario and behavior evidence without hidden zero-case coverage (STORY-07/UIQ-04). | VERIFIED | The prior ledger/prohibition checks remain valid; today’s recovery does not change ledger or story implementation. Current `REQUIREMENTS.md` still marks STORY-07/UIQ-04 complete. |
+| 4 | Current-source interaction receipts and cold/warm setup-inclusive cost and placement are proven (UIQ-06/UIQ-07). | VERIFIED | Cycle 04 exact candidate hosted Demo and Operator evidence passed; both run count sets match expected. Cost regenerated byte-identically from 45 hashed inputs, binds through the workflow_dispatch artifact to the candidate SHA, and records the full D-12-supported overage without changing gates or counts. |
+| 5 | The owner can inspect the identified committed candidate in a working preview with passing required CI, runbook URLs and dispositions (UIQ-08). | FAILED | Hosted CI and cost passed, but the single local preview attempt failed when `/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar` returned HTTP 302. The loopback project was cleaned up; there is no current preview to inspect, and page-marker checks did not run. |
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | Restore defaults is an aligned secondary action; useful parsing/validation/read-only guidance without repetitive helpers; reset/rendering behavior retained (PRVUX-05, PRVUX-06) | VERIFIED | `assigns_form.ex:73` single form-level `preview-assigns-readonly-note`, `:88-90` `phx-click="reset_assigns"` "Restore defaults". `preview_live_test.exs` and `voice_test.exs` pass (191 tests, 0 failures, seed 0). Review: `reset_assigns`/`preview_live.ex` byte-identical to phase base. |
-| 2 | Readable scenario identity: module secondary, exact technical identity accessible, duplicate humanized labels disambiguated at long/Unicode and narrow widths (PRVUX-07) | VERIFIED | `scenario_label.ex` exists and is wired (`sidebar.ex:27,101`, `ScenarioLabel.build/1`). `scenario_label_test.exs` (24 tests) plus `preview_live_test.exs` selector cases and retained stories pass. 320/390 px browser cases are recorded in the local operator gate (311 executed). |
-| 3 | Every named feedback item has disposition, owning requirement, retained scenario and behavior evidence; stories cover pattern/area/job incl. Delivery path; no missing/failed/zero-case hidden as success (STORY-07, UIQ-04) | VERIFIED | `feedback_ledger_test.exs`, `quick_view_projection_test.exs` ("accounting", projection agreement) and `phase178_prohibition_contract_test.exs` all pass in the 191-test run; the admin lane is full `mix test` (`verify.support_contract.admin` = `test --warnings-as-errors`), so these are merge-blocking. 12/12 rows accounted; Filters is explicitly connected-only; 2 unrendered linked scenarios counted. Hosted `Support Contract Admin` job is success on the candidate. |
-| 4 | Receipts + connected checks reproduce light/dark, widths, keyboard/focus, real zoom, reduced motion; cold/warm setup-inclusive wall time and runner cost measured vs budgets with counts and placement (UIQ-06, UIQ-07) | FAILED | Hosted measurement absent: no `178-COST-DISPOSITION.json`; Demo Browser Evidence red in both runs. Local receipts exist (UIQ-06 partial). See gaps. |
-| 5 | Owner can inspect repaired milestone in a documented working preview tied to a source/candidate, current assets, committed changes, passing required CI; temporary services have dispositions (UIQ-08) | FAILED | `178-DELIVERY.md` and runbook absent; 178-10 not run. Required contexts green but runs conclude failure. See gaps. |
+**Score:** 4/5 truths verified. SC5/UIQ-08 remains open pending route-contract classification and a newly approved preview cycle.
 
-**Score:** 3/5 truths verified (0 present, behavior-unverified)
+## Current Local Recovery Evidence
 
-### Hosted claims re-verified (read-only `gh`)
+These checks were run during the local recovery before this report refresh; they are not hosted evidence:
 
-| Claim | Result |
-|-------|--------|
-| Dispatch run 40904249445 headSha = 2bdf1816...; conclusion failure | Confirmed. CI Green success; every job success except Demo Browser Evidence (failure). |
-| PR run 40904235961 same SHA, failure | Confirmed. Failures: Demo Browser Evidence and Operator Browser Gate. |
-| Demo failure cause | Confirmed: failed log shows `Cannot find module '@playwright/test'`, `MODULE_NOT_FOUND`. `ci.yml:1059` lists `mailglass_admin/e2e/support/storybook-axe.test.cjs`; `storybook-axe-supplement.cjs:1` requires `@playwright/test`; introduced by Phase 175 commit a65a670d. |
-| PR 317 still draft/open/unmerged | Confirmed (`isDraft true`, `OPEN`, `mergedAt null`). |
-| Candidate is ancestor of HEAD | Confirmed. |
-| Cost disposition artifact | Absent, as claimed. |
+| Check | Result | What it establishes |
+|---|---|---|
+| `mix mailglass.audit --kind hex` | PASS | The required scanned lock graphs no longer report the phoenix_html advisory. |
+| Root, Admin and Inbound `mix deps.get --check-locked` | PASS | Each updated lock resolves with the locked package set. |
+| `bash scripts/test_run_demo_browser_evidence.sh` | PASS | The wrapper contract accepts the new Phase 175 dependency-fetch and evidence-ownership contracts. |
+| `bash -n scripts/run_demo_browser_evidence.sh scripts/test_run_demo_browser_evidence.sh` | PASS | Both edited shell scripts parse. |
+| `docker compose -f compose.demo.yml config --quiet` | PASS | The Demo and `demo_e2e` services have valid Compose configuration. |
+| `bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` | PASS | Fresh cold/warm local evidence passed both phase checkers. The Admin test dependencies resolved, assets built, both 26-case Phase 175 Axe suites passed, the host could read Phase 175 artifacts, and run-owned volumes were removed. |
 
-### Required Artifacts
+Evidence directory: `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/`. Its source revision is `afc308405b36da7f4d86bb795129d0acc680517c`; it is a dirty working tree, not a frozen or hosted candidate. The local 2.205-minute measurement is not a hosted runner-minute figure.
 
-| Artifact | Expected | Status | Details |
-|----------|----------|--------|---------|
-| `preview/assigns_form.ex` | Restore defaults + note | VERIFIED | Substantive, wired to live route |
-| `preview/scenario_label.ex` | Pure label/collision table | VERIFIED | Used by `sidebar.ex` |
-| `test/support/feedback_ledger.ex` and ledger tests | UIQ-04 rule | VERIFIED | Tests pass, in default admin lane |
-| `phase178_prohibition_contract_test.exs` | D-15 contract | VERIFIED | Passes |
-| `e2e/phase178-real-zoom.spec.js` | Real zoom | VERIFIED locally | Advisory lane; hosted dispatch Operator Browser Gate success |
-| `scripts/check_phase178_candidate.sh`, `phase178_cost_disposition.cjs` | Tooling | VERIFIED (tooling) | Never produced a hosted disposition |
-| `178-COST-DISPOSITION.json` | Hosted cost record | MISSING | Not produced |
-| `178-DELIVERY.md` | Working-preview runbook | MISSING | 178-10 not run |
+The recovery code is wired: the root/Admin/Inbound locks select phoenix_html 4.4.0; `demo_e2e` receives the existing Mix/Hex and dependency/build volumes; Phase 175 resolves locked test dependencies before the Admin asset build; and the exit trap returns ownership for both Phase 174 and Phase 175 evidence directories. Existing `ci.yml` invokes the runner and uploads the run-owned evidence directory.
 
-### Requirements Coverage
+## Hosted Stop and Plan Boundary
 
-| Requirement | Source | Status | Evidence |
-|-------------|--------|--------|----------|
-| PRVUX-05 | 178-01 | SATISFIED | Truth 1 |
-| PRVUX-06 | 178-01 | SATISFIED | Truth 1 |
-| PRVUX-07 | 178-04 | SATISFIED | Truth 2 |
-| STORY-07 | 178-05/07/11 | SATISFIED | Truth 3 |
-| UIQ-04 | 178-02/05/07/11 | SATISFIED | Truth 3 |
-| UIQ-06 | 178-06/07 | PARTIAL (REQUIREMENTS.md: Pending) | Local receipts only; hosted Demo lane never ran |
-| UIQ-07 | 178-03/08/09 | BLOCKED (Pending) | No hosted cost disposition |
-| UIQ-08 | 178-08/09/10/12 | BLOCKED (Pending) | 178-10 not run; hosted runs red |
+This section is historical context for the earlier Plan 178-17 stop. Cycle 04 later supplied passing exact-SHA hosted evidence and cost disposition; its current preview result is recorded below.
 
-All 8 phase requirement IDs appear in plan frontmatter and REQUIREMENTS.md; no orphans. REQUIREMENTS.md checkbox and traceability state matches these findings.
+Plan17's two approved attempt-1 runs target candidate `255422cbe6e16c570ccb465246c2394fa3190866`:
 
-### Anti-Patterns / Behavioral Spot-Checks
+| Run | Event | Result |
+|---|---|---|
+| `41358618944` | `pull_request` | Hex Audit, Demo Browser Evidence and CI Green failed. |
+| `41358616440` | `workflow_dispatch` | Hex Audit, Demo Browser Evidence and CI Green failed. |
 
-- Ran the targeted admin suite (preview_live, voice, scenario_label, quick_view_projection, feedback_ledger, phase178 prohibition): 191 tests, 0 failures, 1 excluded, seed 0.
-- No debt markers or stubs found in the Preview lib files reviewed. Code review (178-REVIEW.md): 3 warnings fixed, 1 info rejected with reason, 0 open.
-- Blocker (workflow/test wiring): `ci.yml:1059` step runs a test whose dependency the job does not install.
-- Local-only red: core `test/scripts/phase_164_repository_truth_test.exs:261`, caused by the owner's untracked, globally ignored `.gsd/.gitignore` (the file exists and matches `*`). Not a phase 178 defect and not counted.
+The saved Hex Audit log reports `phoenix_html 4.3.0` as vulnerable. The Demo log reports unavailable Hex packages for the Admin test environment and EACCES while the artifact uploader opens a Phase 175 Axe file. Neither run published a Demo Browser Evidence artifact. `178-AUTOMATION.md` records hosted cost and counts as not measured; no `178-COST-DISPOSITION.json` exists. No hosted rerun or remote write followed.
 
-### Human Verification Required
+Plan 178-18 requires `rerun_hosted_status: completed`; the automation record says it is stopped. Plan 178-19 requires a passing 178-18 summary. The Plan17 stop rule therefore keeps both plans unrun on this candidate. The recovery diff must be committed and frozen as a new candidate, and the owner must give fresh approval before any hosted action on it.
 
-None. Per D-52, every open item is machine-observable (a hosted run result, a cost JSON, a launched preview with URL checks). The only owner step in scope, the ship/no-ship checkpoint in plan 178-10, is a permitted hand-off and is gated behind the fix; it is not a human_needed row today.
+## Required Artifacts
 
-### Gaps Summary
+| Artifact | Status | Details |
+|---|---|---|
+| `mix.lock`, `mailglass_admin/mix.lock`, `mailglass_inbound/mix.lock` | VERIFIED locally | All three Hex-audited lockfiles now use 4.4.0. |
+| `compose.demo.yml` | VERIFIED locally | The `demo_e2e` service shares the existing Mix/Hex and dependency/build volumes with `demo`. |
+| `scripts/run_demo_browser_evidence.sh` | VERIFIED locally | Test dependency resolution precedes the Admin build; host ownership is restored for both evidence roots. |
+| `scripts/test_run_demo_browser_evidence.sh` | VERIFIED locally | Includes recovery-contract assertions; the local cold/warm pilot supplies runtime evidence. |
+| `178-COST-DISPOSITION.json` | VERIFIED | Exact candidate run/job evidence, full costs/counts, supported overage and deterministic regeneration are recorded. |
+| `178-DELIVERY.md` | BLOCKED handoff | Hosted receipts, historical route results and cleanup are recorded. No live owner preview is claimed because the `/demo/login` route returned 302. |
 
-Product work is done and sound; the milestone-review evidence is not. One root cause blocks UIQ-06 hosted reproduction, UIQ-07 and UIQ-08: the Demo Browser Evidence job fails before capturing anything because `storybook-axe.test.cjs` (via `storybook-axe-supplement.cjs`) needs `@playwright/test`, which the root Demo job does not install. Fixing it requires a source/workflow change, a new candidate freeze, and a new owner-approved push and dispatch (draft PR #317 can carry it), then 178-10. Also classify the PR-run-only Operator Browser Gate failure at `flows.spec.js:2453`. Plan with `/gsd-plan-phase 178 --gaps`.
+## Key Links and Data Flow
+
+| From | To | Via | Status |
+|---|---|---|---|
+| `.github/workflows/ci.yml` Demo Browser Evidence job | `scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot` | CI step | WIRED; local pilot exercised the same runner. |
+| Compose `demo` service | `demo_e2e` Mix environment and caches | Shared named volumes and `HEX_HOME`/`MIX_HOME` | WIRED; clean local project resolved and compiled the Admin test dependencies. |
+| Phase 175 container evidence | Host artifact directory | Exit-trap `chown` for Phase 174 and Phase 175 roots | WIRED; both local Phase 175 Axe files were host-readable. |
+| Hosted Demo artifact | `178-COST-DISPOSITION.json` | Exact-run receipts and runner/job metadata | WIRED; dispatch artifact binds the exact candidate SHA; PR artifact source is explicitly identified as its merge revision. |
+
+Rendered-value data-flow tracing is not applicable to the recovery changes. The phase's Preview UI data paths were verified in the previous pass and are outside this diff.
+
+## Requirements Coverage
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| PRVUX-05 | SATISFIED | Success Criterion 1 remains verified. |
+| PRVUX-06 | SATISFIED | Success Criterion 1 remains verified. |
+| PRVUX-07 | SATISFIED | Success Criterion 2 remains verified. |
+| STORY-07 | SATISFIED | Success Criterion 3 remains verified. |
+| UIQ-04 | SATISFIED | Success Criterion 3 remains verified. |
+| UIQ-06 | SATISFIED | Exact candidate dispatch artifact and attempt-1 Operator Browser Gate passed, including inbound/delivery scroll access, real zoom and reduced motion. Receipts and counts are retained under Cycle 04. |
+| UIQ-07 | SATISFIED with supported overage | `178-COST-DISPOSITION.json` is identity-bound and byte-reproducible; expected/executed counts match. D-12 supports the narrowly scoped placement disposition; measured overages remain visible. |
+| UIQ-08 | OPEN | Required CI passed but the one preview attempt failed its required `/demo/login` route check (302). The local services were cleaned up; marker checks and owner review remain unverified. |
+
+All eight phase requirement IDs remain represented in the phase plans and `REQUIREMENTS.md`; no orphan requirement was found. UIQ-06 and UIQ-07 are satisfied; UIQ-08 remains open.
+
+## Decision Coverage
+
+All 16 trackable `178-CONTEXT.md` decisions are honored by the current implementation artifacts. This gate is non-blocking.
+
+## Test Quality Audit
+
+The requirement-linked ExUnit tests have no disabled-test markers in the scanned files. The feedback-ledger test writes disposable fixture files under a unique temporary root and reads them through the validator under test; it does not generate expected output from the system under test. No circular test pattern was found.
+
+The wrapper test uses fake Docker and cannot prove real Compose mounts or ownership. The fresh local cold/warm pilot provides that runtime evidence for this working tree. This is an advisory test-scope limit, not a demonstrated failure.
+
+## Anti-Patterns and Human Verification
+
+No TODO/FIXME/XXX debt markers were found in the recovery files. No Phase 178 `<human-check>` blocks were found in the plans. A manual owner review is not actionable because the exact-candidate loopback preview is no longer live; the owner checkpoint remains gated behind a passing successor preview.
+
+## Gaps Summary
+
+Cycle 04 passed the exact-SHA hosted gates, count comparison and reproducible identity-bound cost disposition. Its one preview attempt then failed at the required `/demo/login` return route with HTTP 302; the other five route probes returned 200 and built/served CSS matched. Marker checks did not run, the isolated candidate services and worktree were removed, and the retained owner demo was untouched. UIQ-06/UIQ-07 are satisfied; UIQ-08 remains open. The next actor is the Phase 178 owner/planner, who should classify the route's intended auth/redirect behavior and scope any successor candidate/preview cycle with fresh approval.
+
+## Cycle 04 hosted and preview evidence
+
+- Exact candidate: `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; eight attempt-1 runs total, all expected workflow receipts recorded in `178-RECOVERY-CYCLE-04.json` and `178-AUTOMATION.md`.
+- Hosted candidate evidence: dispatch CI run `41388571351` passed CI Green, Demo Browser Evidence, Operator Browser Gate, and Preview Capture Advisory. Operator log SHA-256: `3284a1e1060317e0b23a5bbcb58f3fe8a9dcd16abc6605bb7a5a6fbc447372e3`; inbound scroll case passed at line 1307.
+- Cost: deterministic regeneration matched byte-for-byte; 45 input hashes. Dispatch added runner time was 16.2833 min versus the 10 min budget and cold preview-pilot wall time was 599531 ms versus 300000 ms. Both overages and the D-12 placement rationale are preserved; no gate or count was removed.
+- Preview: `candidate-8e501960.json` SHA-256 `29850312cdc0adb772d1541f9c81a9ee345f88b66e469464a2e535eb3f7cecf9`; launcher exited 1. `/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar` returned 302. CSS built/served hashes match; page-marker checks were not run. Temporary project resources were stopped and removed.
+- Boundary: no relaunch, hosted retry, PR merge, release, publication, deployment or remote-main change occurred. `178-DELIVERY.md` is a blocked handoff, not a review-ready preview.
 
 ---
 
-_Verified: 2026-10-29_
-_Verifier: Claude (gsd-verifier)_
+_Updated: 2026-11-02T05:06:48Z_
+_Evidence update: Plan 178-28_
