@@ -203,8 +203,21 @@ async function assertPhase174QuickViewScrollAccess(page, dialog, dialogId) {
     }),
     { message: `${dialogId} holds focus before PageDown` }
   ).toBe(dialogId);
+  // A positive offset only proves PageDown started. At Chromium's native
+  // animation-completion boundary, an overlapping End can be ignored.
+  // Arm before the key so even an instant scroll cannot race the listener.
+  await dialog.evaluate(element => {
+    element.__phase174PageDownComplete = false;
+    element.addEventListener("scrollend", () => {
+      element.__phase174PageDownComplete = true;
+    }, { once: true });
+  });
   await page.keyboard.press("PageDown");
   await expect.poll(() => dialog.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await expect.poll(
+    () => dialog.evaluate(element => element.__phase174PageDownComplete),
+    { message: `${dialogId} completes native PageDown before End` }
+  ).toBe(true);
   await expect.poll(
     () => page.evaluate(() => {
       const element = document.activeElement;
