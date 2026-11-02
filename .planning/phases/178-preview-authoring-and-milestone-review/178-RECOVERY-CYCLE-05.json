@@ -127,9 +127,10 @@
     "local_docker_cost": "Local CPU, disk, Docker image/build cache and isolated containers; no dollar estimate."
   },
   "preview": {
-    "status": "not_started",
+    "status": "running",
     "prior_cycle_attempt_is_consumed": true,
-    "attempt_count": 0,
+    "attempt_count": 1,
+    "launch_started_at": "2026-11-02T14:29:25Z",
     "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
     "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
     "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
@@ -143,5 +144,5 @@
     "Do not push, edit the PR, dispatch CI, merge, release, publish, deploy, prune global Docker state, or modify the owner demo."
   ],
   "next_actor": "phase_178_executor",
-  "next_action": "Run the one approved local preview command and complete bounded read-only route/marker verification."
+  "next_action": "Complete the one approved local preview command and bounded read-only route/marker verification; do not retry."
 }
