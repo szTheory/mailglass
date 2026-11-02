@@ -1,0 +1,129 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 6,
+  "created_at": "2026-11-02T14:35:56Z",
+  "status": "prepared",
+  "approval_checkpoint_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-30-APPROVAL.md",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-05.json",
+    "sha256": "f0c4940ba4d6e41c82e32a9f3f2f64aefd64d6dd16fb96316f0e5bbd6ed8c8b8"
+  },
+  "candidate": {
+    "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "source_file": "mailglass_admin/e2e/flows.spec.js",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87"
+  },
+  "local_remediation": {
+    "plan": ".planning/phases/178-preview-authoring-and-milestone-review/178-30-PLAN.md",
+    "summary": ".planning/phases/178-preview-authoring-and-milestone-review/178-30-SUMMARY.md",
+    "commit": "c47d5afe",
+    "launcher_sha256": "d876cb1ac3cdc2aad5c49e0368c35f591dbd9c430adf2c0027680c3780aacee7",
+    "offline_test_sha256": "57e535844c38a40c99340afe7a7433e4fc2e98e9101005d23940327b7c0ca0ab",
+    "verification": {
+      "shell_syntax": "pass",
+      "offline_self_test": "pass (13 checks)",
+      "independent_review": "no blocking findings"
+    },
+    "dependency_changes": false,
+    "candidate_source_changed": false
+  },
+  "preapproval_snapshot": {
+    "observed_at": "2026-11-02T14:35:56Z",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "pr": {
+      "number": 317,
+      "state": "OPEN",
+      "draft": true,
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)"
+    },
+    "required_ci": {
+      "status": "completed_success",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "required_contexts": [
+        "CI Green",
+        "Guard Release Trigger"
+      ],
+      "cost_disposition": ".planning/phases/178-preview-authoring-and-milestone-review/178-COST-DISPOSITION.json",
+      "cost_disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665"
+    },
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "cycle_05_sha256": "f0c4940ba4d6e41c82e32a9f3f2f64aefd64d6dd16fb96316f0e5bbd6ed8c8b8",
+    "cycle_05_summary_sha256": "99449cd3c4335d3d98f22bb1412e5fdd1692215b40d9a77f706ca15517241c39",
+    "plan_30_sha256": "d026ca9f9bcffdc5d34615442aa77fda5edf2876047b25ab084e6e8011a9bace",
+    "summary_30_sha256": "b5d3bc8108efe6654a6c74fc719eddca16a9eaf64d87a49c746c8bfe0bb5feb1"
+  },
+  "preflight": {
+    "verified_at": "2026-11-02T14:35:56Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "launcher_sha256": "d876cb1ac3cdc2aad5c49e0368c35f591dbd9c430adf2c0027680c3780aacee7",
+    "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "pr_state": "OPEN",
+    "pr_draft": true,
+    "required_checks": "CI Green and Guard Release Trigger completed successfully for the exact candidate SHA.",
+    "cycle_05_sha256": "f0c4940ba4d6e41c82e32a9f3f2f64aefd64d6dd16fb96316f0e5bbd6ed8c8b8",
+    "cost_disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "execution_context": "Primary agent context; scoped local Git commits succeeded, unlike the delegated executor's read-only .git sandbox.",
+    "docker_daemon": "available; server 29.5.2",
+    "owner_demo_container_count": 0,
+    "host_disk_available": "239 GiB"
+  },
+  "authority": {
+    "preview": null,
+    "user_decision": null
+  },
+  "allowed_operations_if_approved": {
+    "preview_attempts": 1,
+    "execution_context": "Primary agent /root only; do not delegate launcher invocation to a read-only Git sandbox.",
+    "exact_command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json",
+    "read_only_url_marker_checks": "After a passing launch, verify the documented Plan 178-23 loopback review URLs, page markers, and current CSS identity; do not relaunch.",
+    "failure_cleanup_once": "If launch or post-launch verification fails and a candidate record exists, run exactly once: bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json. If failure occurs before record creation, the launcher exit trap removes the temporary run parent.",
+    "success_disposition": "Keep a fully passing candidate preview running for owner review and report its actual base URL and teardown command."
+  },
+  "resource_scope": {
+    "compose_project_prefix": "mailglass-phase178-review-",
+    "network_binding": "Loopback 127.0.0.1 only, using newly allocated ports",
+    "candidate_resources": "Only the candidate demo and demo_db Compose project, its network and volumes, candidate worktree, temporary run directory, route output, and cookie jar.",
+    "owner_demo": "Do not alter mailglass-storybook-review-demo or unrelated containers, networks, and volumes.",
+    "docker_image_and_global_cache": "No global image/cache prune. Teardown removes this candidate's project resources but does not prune its project-tagged image or global build cache.",
+    "hosted_side_effects": "Zero hosted workflow runs and no PR writes; --require-ci performs read-only check-run lookup."
+  },
+  "hosted": {
+    "status": "cycle_04_passed",
+    "new_workflows_authorized": 0,
+    "new_hosted_writes_authorized": 0
+  },
+  "cost": {
+    "status": "unchanged",
+    "disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "new_hosted_runner_cost": 0,
+    "local_docker_cost": "Local CPU, disk, network downloads on cache miss, Docker image/build cache and isolated containers; no dollar estimate."
+  },
+  "preview": {
+    "status": "not_started",
+    "prior_cycle_attempt_is_consumed": true,
+    "attempt_count": 0,
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json",
+    "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json",
+    "teardown_command": "bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json",
+    "retries": 0,
+    "relaunches": 0
+  },
+  "stop_rules": [
+    "Immediately before launch, recheck candidate, launcher hash, remote refs, PR identity, required checks, release ledger, cost disposition, and prior cycle hash. Stop on any drift.",
+    "Run only from the primary agent context. If Git worktree creation still fails, preserve the surfaced Git diagnostic, stop, and do not retry.",
+    "If any route, marker, CSS, or CI check fails, preserve evidence, teardown only this candidate project once if its record exists, and do not retry.",
+    "Do not push, edit PR, dispatch CI, merge, release, publish, deploy, globally prune Docker state, or modify the owner demo."
+  ],
+  "next_actor": "user",
+  "next_action": "Approve or decline the one-time Cycle 06 local preview operation."
+}

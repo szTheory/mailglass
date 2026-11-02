@@ -273,6 +273,7 @@ Plans:
 - [x] 178-27-PLAN.md
 - [x] 178-28-PLAN.md
 - [x] 178-29-PLAN.md — Persist the demo login session through route probes; offline regression test passes. UIQ-08 awaits fresh Cycle 05 approval.
+- [x] 178-30-PLAN.md — Preserve Git worktree errors and test the diagnostic offline. Cycle 05 remains consumed; Cycle 06 awaits fresh approval.
 - [x] 178-20-PLAN.md
 - [x] 178-21-PLAN.md
 - [x] 178-22-PLAN.md

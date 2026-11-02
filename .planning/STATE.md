@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 29 complete; Cycle 05 attempt stopped before Compose
-Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. The one approved Cycle 05 invocation failed at detached worktree creation; no preview ran.
-Last activity: 2026-11-02 — Cycle 05 launcher stopped before Compose; no candidate record or Docker resources were created.
+Plan: 30 complete; Cycle 06 awaits fresh preview approval
+Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie and worktree diagnostics fixes pass offline. Cycle 05 stopped before Compose; no preview ran.
+Last activity: 2026-11-02 — Plan 30 preserves Git worktree errors; current exact-SHA Cycle 06 checkpoint is prepared.
 
 Progress: [████████░░] 80%
 
@@ -734,8 +734,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-02T14:31:08Z
-Stopped at: Cycle 05 attempt consumed; likely delegated-executor .git write restriction; launcher diagnostics need hardening
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-05-SUMMARY.md
+Stopped at: Plan 30 complete; Cycle 06 checkpoint prepared; waiting for a fresh one-attempt approval
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-30-APPROVAL.md
 
 ## Operator Next Steps
 
@@ -743,7 +743,8 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CYC
 - The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
 - Cycle 05's only approved invocation stopped before Compose because Git could not create the detached candidate worktree. No candidate record or Docker resources were created; the owner demo was untouched.
 - The likely worktree blocker is the delegated executor's read-only `.git` boundary; its scoped staging also failed with `Operation not permitted`. The launcher hid Git stderr, so this remains an inference.
-- Next: expose Git worktree errors in the local launcher and test offline. Do not retry under Cycle 05; any future preview needs a new plan and one-attempt approval from a context allowed to write Git metadata.
+- Plan 30 exposed Git worktree errors and passed its offline test. Cycle 05 remains consumed.
+- Next actor: user decides whether to approve the exact Cycle 06 operation in `178-30-APPROVAL.md`. If approved, run once from the primary agent context and stop on any failure.
 
 ### Blockers
 
