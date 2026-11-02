@@ -275,8 +275,11 @@ mkdir -p "$condition_dir"
 # only within this run's condition directory so the host can enrich/upload them.
 # Preserve their private modes and never follow a link into another directory.
 publish_evidence_ownership() {
-  [ -d "$condition_dir" ] || return 0
-  chown -Rh "$PHASE174_HOST_UID:$PHASE174_HOST_GID" "$condition_dir"
+  for evidence_dir in "$condition_dir" "${PHASE175_EVIDENCE_DIR:-}"; do
+    [ -n "$evidence_dir" ] || continue
+    [ -d "$evidence_dir" ] || continue
+    chown -Rh "$PHASE174_HOST_UID:$PHASE174_HOST_GID" "$evidence_dir"
+  done
 }
 trap 'condition_exit=$?; trap - EXIT; publish_evidence_ownership || exit 1; exit "$condition_exit"' EXIT
 if [ ! -d /cache/playwright ]; then mkdir -p /cache/playwright; fi
@@ -343,6 +346,7 @@ if [ "${PHASE175_ENABLED:-false}" = true ]; then
   mkdir -p "$PHASE175_EVIDENCE_DIR"
   mark=$(now_ms)
   if (cd /workspace/mailglass_admin && \
+    MIX_ENV=test mix deps.get --check-locked && \
     MIX_ENV=test POSTGRES_HOST=demo_db POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres mix mailglass_admin.assets.build && \
     POSTGRES_HOST=demo_db POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres BROWSER_SERVER_PORT=4101 CI=true \
       ./node_modules/.bin/playwright test --config=playwright.config.cjs --workers=1 \

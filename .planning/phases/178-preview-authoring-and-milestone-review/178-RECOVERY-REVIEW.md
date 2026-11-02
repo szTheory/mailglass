@@ -1,6 +1,6 @@
 # Phase 178 Recovery Review
 
-**Status:** In progress; lock-graph review complete, Demo environment/ownership review pending.
+**Status:** Pass; `unresolved_high: 0`.
 **Checkout branch:** `main` (unchanged). The intended remote target ref recorded for the future Plan 21 approval is `gsd/v2.10-ui-repairs-storybook`.
 **Stopped predecessor:** `255422cbe6e16c570ccb465246c2394fa3190866`.
 
@@ -86,4 +86,35 @@ The lock changes introduce no endpoint, authentication path, schema, or addition
 
 ## Task 178-20-02 — Demo environment and evidence ownership
 
-**Status:** Pending review and commit.
+**Disposition:** Pass. **ASVS L1 high-severity findings:** 0.
+
+The Compose change gives `demo_e2e` the same named Mix/Hex, dependency/build, npm, and Playwright caches as `demo`. The runner sets a unique `mailglass-evidence-$RUN_SUFFIX` Compose project name for each evidence run; the retained demo remains under the separate `mailglass-demo` project. The cleanup trap calls `down --volumes --remove-orphans` only for that run-specific project and only after this wrapper has started its services. No host port exposure or new network endpoint was introduced.
+
+The Phase 175 container command now runs `MIX_ENV=test mix deps.get --check-locked` before building Admin assets, using the already locked dependency graph. The exit trap returns ownership for the Phase 174 condition directory and the Phase 175 directory. Both paths are derived from the validated run evidence root, which the existing `resolveEvidenceOutputPath` check confines beneath the evidence root and rejects if a path component is a symlink. The container uses `chown -Rh`; it changes ownership without changing permission bits and does not dereference symlinks. The saved private Axe receipts remain mode `0600`; no `chmod` was introduced, and retained evidence copies use `cp -a`.
+
+The wrapper contract test checks the dependency ordering and ownership loop but does not execute the container command or prove mounts by itself. The saved cold/warm local pilot exercised the real Compose path and both evidence checkers: Phase 174 reports 169/169 expected cases in each condition; Phase 175 reports 10/10 Admin operator cases and 26/26 Axe cases in each condition, with zero Axe violations. The actual `admin_operator_exit_code` is 0 for both conditions, and run-owned volumes were removed. These are local results only.
+
+The current selected-source digests match the saved pilot bytes: Phase 174 `3d663eb790db0894f36ce8de9df0bc10a16e92e6a4133ffe370dc42363a62794`; Phase 175 cold and warm `b0fab6e1575713038c0b743d8b76b5e10796a55441e3e24fb8b12374ebe05cad`. The saved pilot records dirty source revision `afc308405b36da7f4d86bb795129d0acc680517c`; the digest match establishes the reviewed selected bytes but does not turn that local pilot into clean-commit or hosted evidence. `178-VERIFICATION.md` summarizes the passing local Hex audit, three locked-dependency checks, wrapper contract, shell syntax, Compose config, and pilot; raw logs for the three dependency checks were not retained.
+
+| Reviewed source | SHA-256 |
+|---|---|
+| `compose.demo.yml` | `35c152ffccdc1371a425a39dfbb186346a2afd8ff61018b5f5e256931bf2f33a` |
+| `scripts/run_demo_browser_evidence.sh` | `6e4555428db9f797368cf715ff0fd8cbd726ca95f8442ff397a7eb58fbae2473` |
+| `scripts/test_run_demo_browser_evidence.sh` | `8e63f6f7d6f5d7e375b75310adf4e53242e3be8db5293587f6ec8996107ccb8c` |
+
+| Saved evidence | SHA-256 |
+|---|---|
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cost.json` | `f8f99487604e0ab3f5a411fbf13995eb5e5e037ce75e26dcc14954a166094279` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/execution.json` | `627373873100f3c1058458630e98f8b3223c7dac3a4cb0a30af0a57d0b5ffb06` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/axe.json` | `4f8792cdf1dcf6306dabc6b5adaa7217e86247a33bcdeef7c2d0fec6330810b6` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/axe.json` | `44160e726d9ec1cd6b0619fbde7d01062db7682891ddce9b07e004b708f061de` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/run.json` | `d6bf3064f96e525a144eb26578690416daf0741670a8b9a2e830cb27f2755e9a` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/execution.json` | `835f2c64f77d9cdff13da656865c7ca55770823d78292cee32bae6a8c4c08e3e` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/runtime.json` | `e569d3bd9a0ff0bff3a898d3d6eefd43e6ea0db186aa982467695e192a4276ff` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/runtime.json` | `7dfccc5f4e4c52fb347d17dbc8dd54f3cbfa617c19cc677a12e8d29990235961` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/axe.json` | `4f8792cdf1dcf6306dabc6b5adaa7217e86247a33bcdeef7c2d0fec6330810b6` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/axe.json` | `44160e726d9ec1cd6b0619fbde7d01062db7682891ddce9b07e004b708f061de` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/admin-playwright-report.json` | `fbef2696de85cd0f649b3ead88f06f7e7eebfd1f13093da0aa26ba64057a4702` |
+| `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/admin-playwright-report.json` | `d9b9ef013c8139345463f74696d56affb32936eb822307e23289616335175617` |
+
+No high-severity issue was found in the reviewed source scope. The only test-scope limitation is that the wrapper contract alone cannot demonstrate real Compose ownership; the saved dirty-tree pilot supplies local runtime evidence for the exact selected source bytes. Hosted behavior, hosted cost, candidate approval, and preview status remain unverified.
