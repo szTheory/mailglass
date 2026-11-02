@@ -83,10 +83,48 @@
     "docker_or_preview_actions_performed": false
   },
   "authority": {
-    "hosted": null,
-    "preview": null
+    "hosted": {
+      "decision": "approve",
+      "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "recorded_at": "2026-11-02T16:09:10Z",
+      "user_reply": "Okay, yeah, let's follow your recommendations.",
+      "decision_basis": "The orchestrator classified the reply as approve-all for both separately presented scopes.",
+      "operations": [
+        "one_fast_forward_push",
+        "one_pr_body_update",
+        "one_ci_yml_dispatch",
+        "attempt_1_only",
+        "max_8_workflow_runs",
+        "no_retries"
+      ]
+    },
+    "preview": {
+      "decision": "approve",
+      "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "recorded_at": "2026-11-02T16:09:10Z",
+      "user_reply": "Okay, yeah, let's follow your recommendations.",
+      "conditional_on": "hosted_and_cost_gates_pass",
+      "attempts": 1
+    }
   },
-  "approval_checkpoint": null,
+  "approval_checkpoint": {
+    "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "user_reply": "Okay, yeah, let's follow your recommendations.",
+    "recorded_at": "2026-11-02T16:09:10Z",
+    "decision": "approve",
+    "hosted_decision": "approve",
+    "conditional_preview_decision": "approve",
+    "decision_basis": "The orchestrator classified the reply as approve-all for both separately presented scopes.",
+    "operations": [
+      "one_fast_forward_push",
+      "one_pr_body_update",
+      "one_ci_yml_dispatch",
+      "attempt_1_only",
+      "max_8_workflow_runs",
+      "no_retries",
+      "one_conditional_isolated_preview_after_hosted_and_cost_gates_pass"
+    ]
+  },
   "owner_checkpoint": null,
   "owner_decision": null,
   "allowed_operations_if_approved": {
