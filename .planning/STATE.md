@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-14-PLAN.md
-last_updated: "2026-11-01T20:12:06.747Z"
+stopped_at: "Stopped after 178-17: required Hex Audit and Demo Browser Evidence failures; Plans 178-18/19 wait for resolution and fresh approval"
+last_updated: "2026-11-02T00:00:54.656Z"
 last_activity: 2026-11-01
-last_activity_desc: Completed Phase 178 Plan 14; continuing with Plan 15
-state_head: 00143b5a9fe91ba7d1532affe1699ab6c851759b
+last_activity_desc: "Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval"
+state_head: 8a352f8d184602ec5801708a30572702bab1414b
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 57
-  completed_plans: 52
+  total_plans: 60
+  completed_plans: 55
   percent: 80
 ---
 
@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 15 of 19
+Phase: 178 (Preview Authoring and Milestone Review) — READY TO EXECUTE
+Plan: 18 of 19
 Status: Ready to execute
-Last activity: 2026-11-01 — Completed Phase 178 Plan 14; continuing with Plan 15
+Last activity: 2026-11-01 — Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval
 
 Progress: [████████░░] 80%
 
@@ -341,6 +341,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P09 | ~25min | 5 tasks | 3 files |
 | Phase 178 P13 | 29min | 4 tasks | 5 files |
 | Phase 178 P14 | 13min | 2 tasks | 2 files |
+| Phase 178 P15 | 1h 52m | 3 tasks | 11 files |
+| Phase 178 P16 | 53 min | 3 tasks | 1 files |
+| Phase 178 P17 | 6min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -661,6 +664,12 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Move the Playwright require into verifyStoryAccessibility and guard every CI node --test entry file. — The pure helpers can load in the Demo Browser Evidence job without installing mailglass_admin or moving the test out of its evidence lane; the new contract models each CI job's installed roots and fails on eager package loads.
 - [Phase 178]: Count only timestamped Playwright summaries in timestamped GitHub logs, while preserving untimestamped local summaries. — The untimestamped lines after GitHub's notice header repeat list-reporter counts, so excluding them fixes hosted double counting without changing local CI=1 log parsing.
 - [Phase 178]: Measure a failed Operator Browser Gate only from an exact run-and-job advisory-red record. — This enables honest cost measurement for a title that 178-17 classified as advisory while preserving success requirements for Demo, Support and CI Green and refusing unmatched, timed-out or cancelled results.
+- [Phase 178]: Limit the Demo lock refresh to phoenix_html 4.3.0 to 4.4.0, as named by the locked-dependency check.
+- [Phase 178]: Keep phase_164_repository_truth_test.exs:261 as the sole documented local-only CI exception; do not change its unrelated repository-truth contract.
+- [Phase 178]: Keep UIQ-06, UIQ-07 and UIQ-08 hosted-dependent rows pending until hosted verification covers the re-frozen candidate.
+- [Phase 178]: A fresh user-originated approve-all reply authorized the fast-forward push, draft PR 317 body update, and one ci.yml dispatch for candidate 255422cbe6e16c570ccb465246c2394fa3190866.
+- [Phase 178]: The PR and dispatch runs both failed in Demo Browser Evidence and Hex Audit; keep hosted acceptance pending until plan 178-17 classifies the evidence.
+- [Phase 178]: Do not continue Plans 178-18 or 178-19 on candidate 255422cbe6e16c570ccb465246c2394fa3190866. — Both approved attempt-1 hosted runs failed the required Hex Audit because phoenix_html 4.3.0 is flagged by EEF-CVE-2026-117645; Demo Browser Evidence also failed in both runs. Plan 178-17 requires an honest stop and prohibits hosted cost disposition after either red. Resolve the failures, freeze a new candidate, and obtain fresh approval before another hosted run.
 
 ## Quick Tasks Completed
 
@@ -712,8 +721,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-01T20:11:47.486Z
-Stopped at: Completed 178-14-PLAN.md
+Last session: 2026-11-01T23:12:57.420Z
+Stopped at: Stopped after 178-17: required Hex Audit and Demo Browser Evidence failures; Plans 178-18/19 wait for resolution and fresh approval
 Resume file: None
 
 ## Operator Next Steps
@@ -724,3 +733,4 @@ Resume file: None
 ### Blockers
 
 - 178-03: reference/demo_app/mix.lock is behind upstream (bandit 1.14.1, swoosh 1.29.3) so fresh isolated demo launches from main fail 'mix deps.get --check-locked'; blocks isolated-demo gates in 178-05/07/09/10 until a chore(deps) demo lock refresh (see deferred-items.md D-178-03-A)
+- Phase 178 hosted evidence is stopped: candidate 255422cbe6e16c570ccb465246c2394fa3190866 failed required Hex Audit and Demo Browser Evidence in both attempt-1 runs. Plans 178-18 and 178-19 remain unexecuted until the failures are resolved and a new candidate is frozen; obtain fresh approval before additional hosted actions.
