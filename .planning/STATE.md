@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — HALTED
-Plan: 21 of 22
-Status: Halted at Plan 178-22; follow-on plans remain blocked
-Last activity: 2026-11-02 — Captured attempt-1 hosted evidence; stopped on a new Preview Capture Advisory setup failure (missing inotify-tools)
+Phase: 178 (Preview Authoring and Milestone Review) — AWAITING APPROVAL
+Plan: 29 complete; UIQ-08 awaits fresh Cycle 05 preview approval
+Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. No new preview has run.
+Last activity: 2026-11-02 — Prepared Cycle 05 for one exact-SHA local preview attempt after independent review and read-only remote recheck.
 
 Progress: [████████░░] 80%
 
@@ -733,18 +733,16 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T05:08:23.454Z
-Stopped at: Completed 178-28; preview stopped at HTTP 302; UIQ-08 remains open
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-DELIVERY.md
+Last session: 2026-11-02T05:20:27Z
+Stopped at: Plan 29 complete; Cycle 05 checkpoint prepared; waiting for direct approval before one local preview attempt
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md
 
 ## Operator Next Steps
 
-- Phase 178 Plan 22 is halted after the dispatch's new Preview Capture Advisory setup failure (missing `inotify-tools`). All three hosted acceptance rows remain open and hosted cost is not measured.
-- Next: Keep Plans 178-23 and 178-24 stopped. Resolve the blocker through a new approved plan before any later preview or ship work.
+- Plan 29 fixed the local login redirect probe and passed its offline regression test; the independent review found no blockers.
+- The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
+- Next actor: user decides whether to approve the exact operation in `178-29-APPROVAL.md`. If approved, run once and stop on any failure; otherwise leave the preview unlaunched.
 
 ### Blockers
 
-- 178-03: reference/demo_app/mix.lock is behind upstream (bandit 1.14.1, swoosh 1.29.3) so fresh isolated demo launches from main fail 'mix deps.get --check-locked'; blocks isolated-demo gates in 178-05/07/09/10 until a chore(deps) demo lock refresh (see deferred-items.md D-178-03-A)
-- Phase 178 hosted evidence is stopped: candidate 255422cbe6e16c570ccb465246c2394fa3190866 failed required Hex Audit and Demo Browser Evidence in both attempt-1 runs. Plans 178-18 and 178-19 remain unexecuted until the failures are resolved and a new candidate is frozen; obtain fresh approval before additional hosted actions.
-- Phase 178 Plan 22 stopped: dispatch run 41370082849 Preview Capture Advisory failed because inotify-tools is missing; this new job-level setup failure has no prior title/source classification under Plan 17. Hosted cost remains not_measured and UIQ-06/07/08 stay open; Plans 178-23/24 must not run.
-- Phase 178 UIQ-08 remains open: the only Cycle 04 candidate preview attempt exited 1 because /demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar returned HTTP 302. The route/auth contract needs classification before a successor preview plan and fresh approval.
+- UIQ-08 remains open until one freshly approved preview verifies the exact candidate’s routes, page markers, current CSS, and required CI. Cycle 04's failed attempt is consumed and preserved; it cannot authorize another launch.

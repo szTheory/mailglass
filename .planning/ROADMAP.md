@@ -262,7 +262,7 @@ Plans:
 4. Source/URL/asset/font/theme/hook receipts and connected checks reproduce representative light/dark, narrow/wide/container, keyboard/focus, real zoom and reduced-motion behavior. Added cold/warm setup-inclusive wall time and runner cost are measured against the provisional budgets, with expected/executed counts, evidence limits and honest required/advisory placement. (UIQ-06, UIQ-07)
 5. The owner can inspect the repaired milestone in a documented working preview tied to an identified source/candidate with current assets, committed task changes and passing required CI. Temporary services/artifacts have explicit dispositions; machine-observable acceptance has current automated evidence under D-52. (UIQ-08)
 
-**Plans:** 24/26 plans executed (11/12 original executed in 8 waves; 7 gap-closure plans 178-13 to 178-19 in 7 sequential gap waves)
+**Plans:** 24/26 baseline plans executed (11/12 original executed in 8 waves; 7 gap-closure plans 178-13 to 178-19 in 7 sequential gap waves). Recovery plans are tracked separately below.
 **UI hint:** yes
 
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
@@ -272,6 +272,7 @@ Plans:
 - [x] 178-26-PLAN.md
 - [x] 178-27-PLAN.md
 - [x] 178-28-PLAN.md
+- [x] 178-29-PLAN.md — Persist the demo login session through route probes; offline regression test passes. UIQ-08 awaits fresh Cycle 05 approval.
 - [x] 178-20-PLAN.md
 - [x] 178-21-PLAN.md
 - [x] 178-22-PLAN.md

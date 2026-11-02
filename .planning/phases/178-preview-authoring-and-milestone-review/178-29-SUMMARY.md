@@ -129,7 +129,7 @@ The sandbox initially denied Git's `.git/index.lock` write. The scoped commits s
 
 ## Next Phase Readiness
 
-Plan 29's local fix and offline evidence are complete. UIQ-08 is still open; a new Cycle 05 exact-SHA approval is required before one future local preview attempt. No user action is needed to finish this plan.
+Plan 29's local fix and offline evidence are complete. UIQ-08 is still open. The fresh, exact-SHA one-attempt Cycle 05 preview checkpoint is prepared in [178-29-APPROVAL.md](178-29-APPROVAL.md) and [178-RECOVERY-CYCLE-05.json](178-RECOVERY-CYCLE-05.json); direct user approval is required before launching it.
 
 ## Self-Check: PASSED
 
