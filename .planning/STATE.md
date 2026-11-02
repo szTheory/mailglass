@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Cycle 07 exact-SHA authorization checkpoint for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6
-last_updated: "2026-11-02T16:04:49.907Z"
+stopped_at: Completed 178-32-PLAN.md; Cycle 07 stopped after the required CI failure
+last_updated: "2026-11-02T16:37:51.322Z"
 last_activity: 2026-11-02
-last_activity_desc: Plan 32 prepared the Cycle 07 packet for 13451885d680b0f28d80792518dcd1733c8ec0e6; awaiting fresh hosted and conditional-preview decision; no remote writes or preview.
-state_head: 68d88007bc09efcf8ca5dddd7b7783bbbe52bc7b
+last_activity_desc: Plan 32 recorded the Cycle 07 required CI failure for 13451885d680b0f28d80792518dcd1733c8ec0e6; no dispatch, cost disposition, or preview; Plans 23–24 remain blocked.
+state_head: 2ebebc3ddd1c701212927cc30f5df409998f9833
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 68
-  completed_plans: 65
+  completed_plans: 66
   percent: 80
 ---
 
@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 31 complete; Cycle 06 consumed; UIQ-08 remains open pending a new candidate and fresh approval
+Plan: 32 complete; Cycle 07 stopped on required Support Contract Admin failure; Plans 23–24 remain blocked and UIQ-08 remains open.
 Status: executing
-Last activity: 2026-11-02 — Plan 31 complete; local lock repair and compile passed; Cycle 06 remains consumed and UIQ-08 remains open.
+Last activity: 2026-11-02 — Plan 32 recorded Cycle 07's required CI failure and withheld dispatch, cost measurement, and preview.
 
 Progress: [████████░░] 80%
 
@@ -349,6 +349,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P22 | 11m | 1 tasks | 5 files |
 | Phase 178 P28 | 63min | 3 tasks | 7 files |
 | Phase 178 P31 | not measured | 3 tasks | 11 files |
+| Phase 178 P32 | 40 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -686,6 +687,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Refresh only the demo nimble_options lock entry to 1.2.0; keep the separate cowlib advisory visible.
 - [Phase 178]: A consumed Cycle 06 preview approval does not transfer to changed source; any future preview needs a new candidate, current exact-source CI, and fresh bounded approval.
 - [Phase 178]: Keep UIQ-08 open because local dependency installation and compilation do not establish a working owner preview.
+- [Phase 178]: Stop Cycle 07 after the required Support Contract Admin failure; do not dispatch, retry, rerun, or launch a preview.
+- [Phase 178]: Leave Cycle 07 cost unmeasured and preview-ineligible; Plans 23–24 and UIQ-08 remain blocked/open.
 
 ## Quick Tasks Completed
 
@@ -737,9 +740,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T16:04:22.980Z
-Stopped at: Cycle 07 exact-SHA authorization checkpoint for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6
-Resume file: None
+Last session: 2026-11-02T16:37:47.908Z
+Stopped at: Completed 178-32-PLAN.md; Cycle 07 stopped after the required CI failure
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-32-SUMMARY.md
 
 ## Operator Next Steps
 
@@ -754,3 +757,4 @@ Resume file: None
 
 - UIQ-08 remains open. Cycle 04's route failure and Cycle 05's pre-Compose stop are both preserved; neither approval authorizes another launch.
 - Cycle 06 preview authority is consumed. Do not rerun the old candidate. Plan 31 local lock repair passed; keep UIQ-08 open. The primary context must commit Plan 31, freeze a new exact-source candidate with current required CI, then obtain fresh bounded approval before any preview operation.
+- Cycle 07 stopped on required Support Contract Admin failure for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6; no ci.yml dispatch, cost disposition, or preview. Plans 23–24 remain blocked and UIQ-08 remains open until the regression is resolved and a new candidate receives fresh approval.
