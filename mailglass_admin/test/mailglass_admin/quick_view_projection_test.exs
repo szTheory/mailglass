@@ -136,6 +136,9 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
     pure = QuickViewScenarios.inbound(:northstar_normal)
     expected = pure.record
 
+    Mailglass.Clock.Frozen.freeze(DateTime.add(expected.received_at, 24, :hour))
+    on_exit(fn -> Mailglass.Clock.Frozen.unfreeze() end)
+
     newer_times = [
       DateTime.add(expected.received_at, 3_600),
       DateTime.add(expected.received_at, 1_800)
@@ -217,6 +220,9 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   test "Unicode Inbound facts stay exact and foreign Account rows remain excluded" do
     pure = QuickViewScenarios.inbound(:fjordline_single_unicode)
     expected = pure.record
+
+    Mailglass.Clock.Frozen.freeze(DateTime.add(expected.received_at, 24, :hour))
+    on_exit(fn -> Mailglass.Clock.Frozen.unfreeze() end)
 
     %{record: inserted} =
       InboundFixtures.seed_matched!(expected.tenant_id,
