@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared for review. No Cycle 05 preview has been launched and no new preview authority is recorded.
+Approved by the user on 2026-11-02. The preview has not launched yet; the exact preflight passed.
 
 ## Candidate and evidence
 
@@ -27,7 +27,7 @@ After a passing launch, I will fetch the documented Plan 178-23 review URLs from
 
 - One candidate-scoped Docker Compose build and preview, with new loopback ports. A cache miss may download locked build inputs and use local CPU/disk; there is no new hosted runner spend or dollar estimate. The retained owner demo and unrelated containers, networks, and volumes remain untouched.
 - On a passing result, keep the preview running for owner review and report the actual URL and teardown command.
-- If a failed launch wrote its candidate record, preserve it and run this candidate-bound teardown exactly once. A preflight failure before record creation has no candidate resources to clean up:
+- If the launch or any post-launch URL, marker, CSS, or CI check fails, preserve the record and run this candidate-bound teardown exactly once. A preflight failure before record creation has no candidate resources to clean up:
 
 ```sh
 bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json
@@ -42,4 +42,4 @@ Recheck the candidate SHA, launcher hash, PR/head/base refs, required checks, re
 
 ## Decision
 
-**Pending direct user approval.** Reply `Approve Cycle 05 preview as written` to authorize the single local preview command and its bounded read-only URL/marker verification, with failure cleanup as described above. Any other response leaves the preview unlaunched.
+**Approved.** The user replied, “Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve.” This authorizes the one local preview command and its bounded read-only URL/marker verification, with failure cleanup as described above.

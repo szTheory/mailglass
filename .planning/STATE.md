@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — AWAITING APPROVAL
-Plan: 29 complete; UIQ-08 awaits fresh Cycle 05 preview approval
-Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. No new preview has run.
-Last activity: 2026-11-02 — Prepared Cycle 05 for one exact-SHA local preview attempt after independent review and read-only remote recheck.
+Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
+Plan: 29 complete; Cycle 05 preview approved and preflight passed
+Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. One local preview attempt is authorized.
+Last activity: 2026-11-02 — User approved Cycle 05; exact candidate, CI, PR, cost, Docker, and disk preflight passed.
 
 Progress: [████████░░] 80%
 
@@ -733,15 +733,16 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T05:20:27Z
-Stopped at: Plan 29 complete; Cycle 05 checkpoint prepared; waiting for direct approval before one local preview attempt
+Last session: 2026-11-02T14:27:57Z
+Stopped at: Cycle 05 approved; exact preflight passed; one local preview attempt is next
 Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md
 
 ## Operator Next Steps
 
 - Plan 29 fixed the local login redirect probe and passed its offline regression test; the independent review found no blockers.
 - The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
-- Next actor: user decides whether to approve the exact operation in `178-29-APPROVAL.md`. If approved, run once and stop on any failure; otherwise leave the preview unlaunched.
+- Cycle 05 is approved for one isolated local preview and bounded read-only URL/marker verification. Run once and stop on any failure; no hosted workflows or PR writes are included.
+- Docker daemon is available, the owner-demo project had no containers at preflight, and the host reports 240 GiB available. No global Docker cleanup will run.
 
 ### Blockers
 

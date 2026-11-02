@@ -2,7 +2,7 @@
   "schema_version": "phase178-recovery-cycle.v1",
   "cycle": 5,
   "created_at": "2026-11-02T05:20:27Z",
-  "status": "prepared",
+  "status": "approved",
   "approval_checkpoint_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md",
   "previous_record": {
     "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-04.json",
@@ -67,15 +67,41 @@
     "summary_29_sha256": "224be8e92f0d75a1391b01233a2e91d1e7b3af72daa2eebc7b3c7424139b0786"
   },
   "authority": {
-    "preview": null,
-    "user_decision": null
+    "preview": {
+      "decision": "approve",
+      "observed_at": "2026-11-02T14:27:57Z",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "preview_attempts": 1,
+      "allowed_follow_up": "Read-only loopback URL/marker checks and one candidate-scoped teardown only if a failed launch wrote its record.",
+      "user_reply": "Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve."
+    },
+    "user_decision": {
+      "status": "approved",
+      "observed_at": "2026-11-02T14:27:57Z",
+      "user_reply": "Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve."
+    }
+  },
+  "preflight": {
+    "verified_at": "2026-11-02T14:27:53Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "launcher_sha256": "e0ce9e159b69f7ee6289c040a6612520c18a70e8cc24ae2d0553535fae324d93",
+    "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "pr_state": "OPEN",
+    "pr_draft": true,
+    "required_checks": "CI Green and Guard Release Trigger completed successfully for the exact candidate SHA.",
+    "cycle_04_sha256": "38d260ee8e8de9cd65f560f1f7b1f6933e741241a1988b611102fdafe224f9ff",
+    "cost_disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "docker_daemon": "available; server 29.5.2",
+    "owner_demo_container_count": 0,
+    "host_disk_available": "240 GiB"
   },
   "allowed_operations_if_approved": {
     "preview_attempts": 1,
     "exact_command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
     "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
     "read_only_url_marker_checks": "After a passing launcher run, verify the documented Plan 178-23 review URLs and page markers against this loopback preview; do not relaunch.",
-    "failure_cleanup_once": "If the failed launch wrote its candidate record, run exactly once: bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json. If preflight stops before writing a record, no candidate resources exist to clean up.",
+    "failure_cleanup_once": "If the launcher or post-launch URL/marker/CSS/CI check fails and the launcher wrote its candidate record, run exactly once: bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json. If preflight stops before writing a record, no candidate resources exist to clean up.",
     "success_disposition": "Keep the passing preview available for owner review and report its actual base URL and the exact teardown command."
   },
   "resource_scope": {
@@ -86,7 +112,7 @@
     "owner_demo": "Preserve mailglass-storybook-review-demo and all unrelated Docker resources.",
     "docker_image_and_global_cache": "The launch may download locked build inputs on a cache miss and may build a project-tagged image. The existing teardown removes candidate containers, network, volumes, worktree, and run directory; it does not prune Docker images or global build cache.",
     "success": "Leave candidate services running for review.",
-    "failure": "Use only the record-bound teardown command once; do not retry.",
+    "failure": "For any failed launch or post-launch verification after a candidate record exists, use only the record-bound teardown command once; do not retry.",
     "hosted_side_effects": "Zero new workflows; `--require-ci` performs read-only check-run lookup only."
   },
   "hosted": {
@@ -116,6 +142,6 @@
     "If the one preview attempt fails or any required route/marker/CSS/CI check is missing or fails, record the stop and do not retry or relaunch.",
     "Do not push, edit the PR, dispatch CI, merge, release, publish, deploy, prune global Docker state, or modify the owner demo."
   ],
-  "next_actor": "user",
-  "next_action": "Approve or decline this one-time Cycle 05 local preview operation."
+  "next_actor": "phase_178_executor",
+  "next_action": "Run the one approved local preview command and complete bounded read-only route/marker verification."
 }
