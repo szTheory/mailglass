@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: "Stopped after 178-17: required Hex Audit and Demo Browser Evidence failures; Plans 178-18/19 wait for resolution and fresh approval"
-last_updated: "2026-11-02T00:00:54.656Z"
+stopped_at: Completed 178-20-PLAN.md
+last_updated: "2026-11-02T00:12:57.595Z"
 last_activity: 2026-11-01
 last_activity_desc: "Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval"
-state_head: 8a352f8d184602ec5801708a30572702bab1414b
+state_head: ae019b19a417985b8b9b333597c6f476b7979da1
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 60
-  completed_plans: 55
+  completed_plans: 56
   percent: 80
 ---
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — READY TO EXECUTE
-Plan: 18 of 19
+Plan: 19 of 19
 Status: Ready to execute
 Last activity: 2026-11-01 — Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval
 
@@ -344,6 +344,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P15 | 1h 52m | 3 tasks | 11 files |
 | Phase 178 P16 | 53 min | 3 tasks | 1 files |
 | Phase 178 P17 | 6min | 2 tasks | 1 files |
+| Phase 178 P20 | 5m 8s | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -670,6 +671,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: A fresh user-originated approve-all reply authorized the fast-forward push, draft PR 317 body update, and one ci.yml dispatch for candidate 255422cbe6e16c570ccb465246c2394fa3190866.
 - [Phase 178]: The PR and dispatch runs both failed in Demo Browser Evidence and Hex Audit; keep hosted acceptance pending until plan 178-17 classifies the evidence.
 - [Phase 178]: Do not continue Plans 178-18 or 178-19 on candidate 255422cbe6e16c570ccb465246c2394fa3190866. — Both approved attempt-1 hosted runs failed the required Hex Audit because phoenix_html 4.3.0 is flagged by EEF-CVE-2026-117645; Demo Browser Evidence also failed in both runs. Plan 178-17 requires an honest stop and prohibits hosted cost disposition after either red. Resolve the failures, freeze a new candidate, and obtain fresh approval before another hosted run.
+- [Phase 178]: Keep the checkout on main; record gsd/v2.10-ui-repairs-storybook as the future remote target ref.
+- [Phase 178]: Reuse the saved cold/warm pilot only after selected-source digests match the committed recovery bytes.
+- [Phase 178]: Keep hosted, preview, and owner authority unset; UIQ-06/07/08 remain open.
 
 ## Quick Tasks Completed
 
@@ -721,8 +725,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-01T23:12:57.420Z
-Stopped at: Stopped after 178-17: required Hex Audit and Demo Browser Evidence failures; Plans 178-18/19 wait for resolution and fresh approval
+Last session: 2026-11-02T00:12:56.845Z
+Stopped at: Completed 178-20-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
