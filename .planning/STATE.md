@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Plan 31 docs and review are ready; primary context commit metadata is pending before the canonical summary
-last_updated: "2026-11-02T15:28:08.295Z"
+stopped_at: Completed 178-31; Cycle 06 remains consumed; UIQ-08 is open pending a new candidate and fresh approval
+last_updated: "2026-11-02T15:32:13.331Z"
 last_activity: 2026-11-02
-last_activity_desc: Cycle 06 stopped on the stale nimble_options lock; Plan 31 refreshed the local lock and passed locked install/compile; UIQ-08 remains open.
-state_head: 3f40a9f8f1118835fae35c51f835cbeb7e8cdc73
+last_activity_desc: Plan 31 complete; local lock repair and compile passed; Cycle 06 remains consumed and UIQ-08 remains open.
+state_head: d89343e706ce7b750ef4a24b209e0679899f8b65
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 67
-  completed_plans: 64
+  completed_plans: 65
   percent: 80
 ---
 
@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 31 execution work done; summary and commit pending primary context
+Plan: 31 complete; Cycle 06 consumed; UIQ-08 remains open pending a new candidate and fresh approval
 Status: executing
-Last activity: 2026-11-02 — Cycle 06 stopped on the stale nimble_options lock; Plan 31 refreshed the local lock and passed locked install/compile; UIQ-08 remains open.
+Last activity: 2026-11-02 — Plan 31 complete; local lock repair and compile passed; Cycle 06 remains consumed and UIQ-08 remains open.
 
 Progress: [████████░░] 80%
 
@@ -348,6 +348,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P21 | 57m | 3 tasks | 3 files |
 | Phase 178 P22 | 11m | 1 tasks | 5 files |
 | Phase 178 P28 | 63min | 3 tasks | 7 files |
+| Phase 178 P31 | not measured | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -682,6 +683,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Keep hosted cost not_measured and UIQ-06, UIQ-07 and UIQ-08 open; do not run Plans 178-23 or 178-24.
 - [Phase 178]: Cycle 04's D-12 placement disposition is scoped to the preapproved review cycle; all measured overages, counts, and gates remain visible.
 - [Phase 178]: The single preview attempt is consumed after the required demo/login return route returned HTTP 302; UIQ-08 stays open until a newly approved preview passes routes and markers.
+- [Phase 178]: Refresh only the demo nimble_options lock entry to 1.2.0; keep the separate cowlib advisory visible.
+- [Phase 178]: A consumed Cycle 06 preview approval does not transfer to changed source; any future preview needs a new candidate, current exact-source CI, and fresh bounded approval.
+- [Phase 178]: Keep UIQ-08 open because local dependency installation and compilation do not establish a working owner preview.
 
 ## Quick Tasks Completed
 
@@ -733,9 +737,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T15:28:06.952Z
-Stopped at: Plan 31 docs and review are ready; primary context commit metadata is pending before the canonical summary
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-31-PLAN.md
+Last session: 2026-11-02T15:32:12.479Z
+Stopped at: Completed 178-31; Cycle 06 remains consumed; UIQ-08 is open pending a new candidate and fresh approval
+Resume file: None
 
 ## Operator Next Steps
 

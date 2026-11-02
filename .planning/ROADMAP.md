@@ -268,7 +268,7 @@ Plans:
 **Planning focus:** This phase completes the author repairs and final evidence; it must not become the first scenario, accessibility comparison, projection check or cost measurement. Those accompany the owning repairs from Phase 174 onward. Retain the strong existing Preview rendering experience. Unrelated iframe/connect and persistent-disclosure backlog items stay separate unless they directly block admitted acceptance.
 
 Plans:
-- [ ] 178-31-PLAN.md — Local nimble_options lock repair and Cycle 06 stop are verified; canonical summary and commit metadata are pending in the primary context.
+- [x] 178-31-PLAN.md — Refresh only nimble_options to 1.2.0; locked dev install and warnings-as-errors compile pass. Cycle 06 remains consumed; UIQ-08 stays open pending a new candidate, current exact-source CI and fresh bounded approval.
 - [x] 178-25-PLAN.md
 - [x] 178-26-PLAN.md
 - [x] 178-27-PLAN.md
@@ -356,6 +356,6 @@ Every phase obeys [REQUIREMENTS.md](REQUIREMENTS.md#acceptance-applying-to-every
 | 175. Delivery Investigation and Safe Replay | 6/6 | Complete    | 2026-10-27 |
 | 176. Direct Filters and Useful Inbound Evidence | 15/15 | Complete    | 2026-10-28 |
 | 177. Readable Health and Coherent Account Navigation | 11/11 | Complete    | 2026-10-28 |
-| 178. Preview Authoring and Milestone Review | 26/29 | In Progress | — |
+| 178. Preview Authoring and Milestone Review | 27/29 | In Progress | — |
 
 **Coverage:** 31/31 requirements assigned exactly once; 0 orphaned; 0 duplicated. Roadmap approved 2026-10-26; all implementation requirements remain unchecked.
