@@ -266,7 +266,7 @@ gaps:
 
 **Phase Goal:** Authors can select/edit/restore previews coherently, and the owner can review all admitted repairs through a working preview backed by retained production scenarios, reproducible current evidence and measured upkeep cost.
 
-**Status:** `gaps_found` — authoring, exact-candidate hosted evidence, and cost disposition are verified. UIQ-08 remains blocked by the single preview route failure recorded in Cycle 04.
+**Status:** `gaps_found` — authoring, exact-candidate hosted evidence, and cost disposition are verified. UIQ-08 remains open: Cycle 04's route check failed with HTTP 302, and the one approved Cycle 05 invocation stopped before Compose when detached worktree creation failed.
 
 **Re-verification:** Yes. This refresh adds the exact-SHA Cycle 04 hosted receipts, reproducible cost result, and terminal preview failure. A successor preview requires the route contract to be classified and a newly approved cycle.
 
@@ -377,7 +377,11 @@ Cycle 04 passed the exact-SHA hosted gates, count comparison and reproducible id
 - Preview: `candidate-8e501960.json` SHA-256 `29850312cdc0adb772d1541f9c81a9ee345f88b66e469464a2e535eb3f7cecf9`; launcher exited 1. `/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar` returned 302. CSS built/served hashes match; page-marker checks were not run. Temporary project resources were stopped and removed.
 - Boundary: no relaunch, hosted retry, PR merge, release, publication, deployment or remote-main change occurred. `178-DELIVERY.md` is a blocked handoff, not a review-ready preview.
 
+## Cycle 05 follow-up (2026-11-02)
+
+The user approved one new local attempt for the unchanged candidate. Preflight confirmed the candidate/PR refs and required checks, Docker availability, zero owner-demo containers, and 240 GiB host disk availability. The exact launcher command exited 1 at detached worktree creation, before a candidate record or Compose project was created. Its exit trap removed the temporary run parent; a read-only worktree listing contained only the main checkout. No route, CSS, required-CI launcher check, or page-marker verification ran. No teardown was needed because the candidate record and Docker resources did not exist. The attempt is consumed; UIQ-08 remains open and no retry is authorized by Cycle 05. Full result: `178-CYCLE-05-SUMMARY.md` and `178-RECOVERY-CYCLE-05.json`.
+
 ---
 
-_Updated: 2026-11-02T05:06:48Z_
-_Evidence update: Plan 178-28_
+_Updated: 2026-11-02T14:31:08Z_
+_Evidence updates: Plans 178-28 and Cycle 05 stop_

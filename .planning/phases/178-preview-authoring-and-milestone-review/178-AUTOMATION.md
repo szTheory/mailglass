@@ -477,7 +477,15 @@ Every row without a status token is closed by the test or command it cites. A pe
 | UIQ-08 | A hosted-only missing-package red in any `ci.yml` `node --test` step is caught by a required lane | `test/scripts/ci_node_test_requires_contract_test.exs` | `mix_task_tests`, `core_deterministic_suite` (required) | source: automated |
 | UIQ-08 | The phase diff has a standard-depth review with every finding dispositioned, and no gate was weakened | `178-REVIEW.md` for `61e90275..dd392b87`; `178-REVIEW-DISPOSITION.md` `Gap-closure review` for `dd392b87..<rerun_gate_head_sha>`; `rerun-gate/gate-integrity.log`; checked by the 178-15 task 1 verifies | planning record | source: automated |
 | UIQ-08 | The frozen candidate has both remote refs as ancestors, so the push is a plain fast-forward, and no source changed after the freeze | 178-15 task 3 verify: `rerun_candidate_sha`, both `git merge-base --is-ancestor` checks, and no source diff after the gate head or candidate | planning record | source: automated |
-| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | 178-22 task 1 required-CI/exact-SHA verify and 178-23 runbook URL verifies on `candidate.sha` | `ci_green` aggregate (required) | source: automated; status: open (hosted stopped: new unclassified Preview Capture Advisory setup failure; preview not launched) |
+| UIQ-08 | The hosted candidate has required CI green, and the preview runs the exact SHA | Cycle 04 exact-SHA CI receipts; Cycle 04 preview record; Cycle 05 stop in `178-RECOVERY-CYCLE-05.json` | `ci_green` aggregate (required) | source: automated; status: open (Cycle 04 login route returned HTTP 302; Cycle 05 stopped before Compose during worktree creation) |
+
+## Cycle 05 preview attempt (2026-11-02)
+
+- **Authority:** The user approved one local attempt for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; the authorization and preflight are recorded in [178-RECOVERY-CYCLE-05.json](178-RECOVERY-CYCLE-05.json).
+- **Command:** `bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json`.
+- **Result:** Exit 1 before Compose. The launcher reported `could not create detached worktree at 8e501960bc975ed44b632ba5c74522e0c5d66f8c`; stderr from `git worktree add` is suppressed by the launcher, so the underlying Git error is unknown.
+- **Cleanup:** No candidate record was written and no Compose project started. The launcher exit handler removed its temporary run parent; `git worktree list` contains only the main checkout. No teardown command was run because there was no record or candidate Docker resource. The owner demo was untouched.
+- **Stop:** This single Cycle 05 invocation is consumed. No retry, relaunch, hosted workflow, PR write, URL probe, marker check or owner review occurred. UIQ-08 remains open pending read-only diagnosis and a newly planned/approved attempt.
 
 The UIQ-08 ship/no-ship review (plan 178-10, the owner decision) is the only owner hand-off allowed by D-52. It is a judgment on shipping, not an acceptance row, and nothing in the table above waits on it.
 

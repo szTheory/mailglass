@@ -2,7 +2,8 @@
   "schema_version": "phase178-recovery-cycle.v1",
   "cycle": 5,
   "created_at": "2026-11-02T05:20:27Z",
-  "status": "approved",
+  "status": "stopped",
+  "result_recorded_at": "2026-11-02T14:31:08Z",
   "approval_checkpoint_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md",
   "previous_record": {
     "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-04.json",
@@ -127,22 +128,43 @@
     "local_docker_cost": "Local CPU, disk, Docker image/build cache and isolated containers; no dollar estimate."
   },
   "preview": {
-    "status": "running",
+    "status": "stopped_before_compose",
     "prior_cycle_attempt_is_consumed": true,
     "attempt_count": 1,
     "launch_started_at": "2026-11-02T14:29:25Z",
+    "launch_completed_at": "2026-11-02T14:29:25Z",
+    "launcher_exit_code": 1,
+    "result": "fail",
     "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
     "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
     "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "candidate_record_written": false,
+    "compose_started": false,
+    "base_url": null,
+    "routes": null,
+    "css": null,
+    "ci_status": "not_checked_by_launcher",
+    "failure_reason": "Launcher exited 1: could not create detached worktree at 8e501960bc975ed44b632ba5c74522e0c5d66f8c. The launcher redirects git worktree add stderr, so the underlying Git error was not captured.",
+    "cleanup": {
+      "status": "verified",
+      "launcher_exit_trap_removed_temporary_run_parent": true,
+      "git_worktree_list_contains_only_main_checkout": true,
+      "candidate_record_absent": true,
+      "compose_project_created": false,
+      "candidate_docker_resources_created": false,
+      "teardown_invocation": "not run; no candidate record or Compose resources existed",
+      "owner_demo_touched": false
+    },
     "teardown_command": "bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
     "retries": 0,
     "relaunches": 0
   },
   "stop_rules": [
     "Before launch, stop if the candidate, launcher hash, remote refs, PR identity, exact-SHA required checks, release ledger, cost disposition, or prior-cycle record differs from this checkpoint.",
-    "If the one preview attempt fails or any required route/marker/CSS/CI check is missing or fails, record the stop and do not retry or relaunch.",
+    "The one approved launcher invocation failed before Compose while creating its detached worktree. Preserve this stop and do not retry or relaunch under Cycle 05.",
     "Do not push, edit the PR, dispatch CI, merge, release, publish, deploy, prune global Docker state, or modify the owner demo."
   ],
-  "next_actor": "phase_178_executor",
-  "next_action": "Complete the one approved local preview command and bounded read-only route/marker verification; do not retry."
+  "stopped_at": "detached candidate worktree creation, before Compose and before candidate record creation",
+  "next_actor": "phase_178_owner_or_planner",
+  "next_action": "Investigate the Git worktree creation failure using read-only evidence. Any future preview requires a new plan and fresh one-attempt approval."
 }

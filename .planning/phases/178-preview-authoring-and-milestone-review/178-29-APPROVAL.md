@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved by the user on 2026-11-02. The preview has not launched yet; the exact preflight passed.
+The user approved one attempt. It stopped before Docker Compose because Git could not create the detached candidate worktree. No retry is permitted under this approval.
 
 ## Candidate and evidence
 
@@ -42,4 +42,4 @@ Recheck the candidate SHA, launcher hash, PR/head/base refs, required checks, re
 
 ## Decision
 
-**Approved.** The user replied, “Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve.” This authorizes the one local preview command and its bounded read-only URL/marker verification, with failure cleanup as described above.
+**Consumed; stopped before Compose.** The user approved one attempt and the exact command was invoked once. It exited 1 at detached worktree creation, before writing a candidate record or starting Compose. The temporary run parent was removed by the launcher's exit handler; no teardown invocation was needed. Cycle 05 does not authorize a retry.

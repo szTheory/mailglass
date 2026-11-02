@@ -1,5 +1,9 @@
 # Phase 178 Cycle 04 delivery status
 
+## Cycle 05 follow-up
+
+Cycle 05 was approved for one exact-candidate attempt. The launcher exited 1 before Compose because it could not create the detached candidate worktree. No preview record or URL was produced, no candidate containers started, and no route/marker checks ran. The launcher's exit handler removed the temporary run parent; the owner demo was untouched. The one attempt is consumed. See [178-CYCLE-05-SUMMARY.md](178-CYCLE-05-SUMMARY.md) and [178-RECOVERY-CYCLE-05.json](178-RECOVERY-CYCLE-05.json). This remains a blocked handoff, not a review-ready preview.
+
 **Status: blocked before owner preview.** The hosted candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c` passed the exact-SHA CI and cost gates. The single authorized isolated preview launch then exited 1 because one required route returned HTTP 302. The launcher attempt is consumed; no retry or relaunch was made. This is a failure record and handoff, not a review-ready preview or a ship recommendation.
 
 ## Candidate and hosted receipts

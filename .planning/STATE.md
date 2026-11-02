@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 29 complete; Cycle 05 preview approved and preflight passed
-Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. One local preview attempt is authorized.
-Last activity: 2026-11-02 — User approved Cycle 05; exact candidate, CI, PR, cost, Docker, and disk preflight passed.
+Plan: 29 complete; Cycle 05 attempt stopped before Compose
+Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie-persistence fix and offline test pass. The one approved Cycle 05 invocation failed at detached worktree creation; no preview ran.
+Last activity: 2026-11-02 — Cycle 05 launcher stopped before Compose; no candidate record or Docker resources were created.
 
 Progress: [████████░░] 80%
 
@@ -733,17 +733,17 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T14:27:57Z
-Stopped at: Cycle 05 approved; exact preflight passed; one local preview attempt is next
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md
+Last session: 2026-11-02T14:31:08Z
+Stopped at: Cycle 05 attempt consumed; read-only diagnosis of detached worktree creation is next
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-05-SUMMARY.md
 
 ## Operator Next Steps
 
 - Plan 29 fixed the local login redirect probe and passed its offline regression test; the independent review found no blockers.
 - The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
-- Cycle 05 is approved for one isolated local preview and bounded read-only URL/marker verification. Run once and stop on any failure; no hosted workflows or PR writes are included.
-- Docker daemon is available, the owner-demo project had no containers at preflight, and the host reports 240 GiB available. No global Docker cleanup will run.
+- Cycle 05's only approved invocation stopped before Compose because Git could not create the detached candidate worktree. No candidate record or Docker resources were created; the owner demo was untouched.
+- Next: diagnose the worktree failure using read-only evidence. Do not retry the launcher under Cycle 05; any future preview needs a new plan and one-attempt approval.
 
 ### Blockers
 
-- UIQ-08 remains open until one freshly approved preview verifies the exact candidate’s routes, page markers, current CSS, and required CI. Cycle 04's failed attempt is consumed and preserved; it cannot authorize another launch.
+- UIQ-08 remains open. Cycle 04's route failure and Cycle 05's pre-Compose stop are both preserved; neither approval authorizes another launch.
