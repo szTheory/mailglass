@@ -146,7 +146,7 @@
     }
   },
   "hosted": {
-    "status": "submitted",
+    "status": "stopped",
     "push_result": {
       "status": "succeeded",
       "command": "git push origin f5138e94cd32daf29720f794cf3fbb464c3f1b86:refs/heads/gsd/v2.10-ui-repairs-storybook",
@@ -183,7 +183,63 @@
         "status": "completed",
         "conclusion": "success",
         "pr_merge_sha": "9f75a322e66da9f7c745cacd75e9162b7b09fca4",
-        "updated_at": "2026-11-02T01:01:34Z"
+        "updated_at": "2026-11-02T01:01:34Z",
+        "dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/artifact",
+        "run_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/github-run.raw.json",
+        "jobs_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/github-jobs.raw.json",
+        "artifacts_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/github-artifacts.raw.json",
+        "raw_pages_files": [
+          "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/github-jobs.pages.raw.json",
+          "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/github-artifacts.pages.raw.json"
+        ],
+        "file_hashes": {
+          "run": "23ec9afd9cb18fd3d65fa6069ce217e58162ee967ef4db8b3fd16fa56464e96b",
+          "jobs_pages": "d4e6c08b79f97c85c358ad5522bcc4c773666be74e6d05c8dc23562c301a5e64",
+          "jobs": "86d26b709918a01f19f8a52e232306646f8538e96f107e54f887caf796b9acaa",
+          "artifacts_pages": "c17dd357e47360199165ae431319d310f392cf8a71099b72c660600867871327",
+          "artifacts": "4ee19a7bcc006d57103cf732cae9c2f867eff39fe415255dc36fc4c96fb128ba",
+          "operator_log": "263d8a74ffa2206b2928f70391a2b11187b01b8c5bba92fc0c33962376e5c2e2",
+          "ci_green_log": "293271add6d695bb64ce683eddcae7dfca9abdd6c3fc6c7c33189f1db8d1d67f",
+          "artifact_manifest": "c9f33bc976dd76f36a07b1b448446e25d7a1a279d9de44f70d5b74551c563265"
+        },
+        "artifact_manifest_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/artifact-files.sha256",
+        "artifact_file_count": 152,
+        "demo_artifact": {
+          "id": 13108148318,
+          "name": "demo-browser-evidence-41368588479-1",
+          "expired": false,
+          "size_in_bytes": 7899108,
+          "created_at": "2026-11-02T00:58:13Z",
+          "files_manifest": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/artifact-files.sha256"
+        },
+        "demo_job": {
+          "id": 125033994991,
+          "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41368588479/job/125033994991"
+        },
+        "operator_job": {
+          "id": 125033995003,
+          "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41368588479/job/125033995003",
+          "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/operator-gate.log",
+          "log_sha256": "263d8a74ffa2206b2928f70391a2b11187b01b8c5bba92fc0c33962376e5c2e2"
+        },
+        "ci_green_job": {
+          "id": 125038236790,
+          "name": "CI Green",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41368588479/job/125038236790",
+          "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/ci-green.log",
+          "log_sha256": "293271add6d695bb64ce683eddcae7dfca9abdd6c3fc6c7c33189f1db8d1d67f"
+        },
+        "job_failures": [],
+        "attempt_dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1",
+        "artifact_dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41368588479-attempt-1/artifact"
       },
       {
         "id": 41370082849,
@@ -223,23 +279,175 @@
         ],
         "job_failures": [
           {
+            "id": 125038516190,
             "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
-            "job_id": 125038516190,
             "conclusion": "failure",
             "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516190",
+            "job_id": 125038516190,
             "observed_at": "2026-11-02T01:05:20Z",
             "completed_at": "2026-11-02T01:04:00Z",
             "log_path": "reference/demo_app/tmp/phase178_candidate/dispatch-preview-capture-advisory.log",
-            "log_sha256": "a3278b3b93c95ef8b7bf4ee34ba6c196cd62302bb35991154bfc03934618dda9",
-            "summary": "Runner lacked inotify-tools; Phoenix file-system/live-reload startup logged the missing executable and the server process exited 1."
+            "summary": "Runner lacked inotify-tools; Phoenix file-system/live-reload startup logged the missing executable and the server process exited 1.",
+            "raw_log_path": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/preview-capture-advisory.log",
+            "raw_log_sha256": "01bdbc9906e3ab17fae1e441f62077767e7585bac89fef7727a443d5c164fdd3",
+            "log_sha256": "a3278b3b93c95ef8b7bf4ee34ba6c196cd62302bb35991154bfc03934618dda9"
           }
-        ]
+        ],
+        "dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/artifact",
+        "run_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-run.raw.json",
+        "jobs_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-jobs.raw.json",
+        "artifacts_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-artifacts.raw.json",
+        "raw_pages_files": [
+          "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-jobs.pages.raw.json",
+          "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-artifacts.pages.raw.json"
+        ],
+        "file_hashes": {
+          "run": "2a605ca24258461ff518d9d383a59f9cabf10d87359ee04aaccc268885989fe2",
+          "jobs_pages": "1e9bb509fe78b4a48fa6e6409e1bcf9ff1b6f9b6f202d051239eaa5a953d6e2a",
+          "jobs": "59ee45c4155a4875af2195d0cd61b1f7e7aba973888a8803707fe4e60cb5135b",
+          "artifacts_pages": "ce160d6f68f5febb3b5bb292118c89d8f6dbf3a6ce2f93e9839dba8b23834598",
+          "artifacts": "f3701f3d92d0ced2dff14eb538788b0bf491bbaf35e8205446c439622c7fcdf1",
+          "operator_log": "ec366a77010e8ed41f2bb52c7a68bfa46d928635cab5fd1665b4849f8d7a1bc6",
+          "ci_green_log": "e487a3faf64943f6047e83ad9c69e8b8ac3715ca0e278ee32ddbdc2ce68c3e82",
+          "artifact_manifest": "5fdf7f8e3498e80a6dd8815b0c1d83f1edba8f53a017936af91906f6ceb1c14a",
+          "preview_capture_advisory_log": "01bdbc9906e3ab17fae1e441f62077767e7585bac89fef7727a443d5c164fdd3"
+        },
+        "artifact_manifest_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/artifact-files.sha256",
+        "artifact_file_count": 152,
+        "demo_artifact": {
+          "id": 13109153535,
+          "name": "demo-browser-evidence-41370082849-1",
+          "expired": false,
+          "size_in_bytes": 7885790,
+          "created_at": "2026-11-02T01:11:37Z",
+          "files_manifest": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/artifact-files.sha256"
+        },
+        "demo_job": {
+          "id": 125038516238,
+          "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516238"
+        },
+        "operator_job": {
+          "id": 125038516264,
+          "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516264",
+          "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/operator-gate.log",
+          "log_sha256": "ec366a77010e8ed41f2bb52c7a68bfa46d928635cab5fd1665b4849f8d7a1bc6"
+        },
+        "ci_green_job": {
+          "id": 125042743650,
+          "name": "CI Green",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125042743650",
+          "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/ci-green.log",
+          "log_sha256": "e487a3faf64943f6047e83ad9c69e8b8ac3715ca0e278ee32ddbdc2ce68c3e82"
+        },
+        "attempt_dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1",
+        "artifact_dir": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/artifact"
       }
     ],
-    "stop": null
+    "stop": {
+      "reason": "new unclassified Preview Capture Advisory job-level setup failure (missing inotify-tools); required/Demo lanes pass, but Plan 178-17 allows only previously source-classified advisory failures to continue",
+      "run_id": 41370082849,
+      "event": "workflow_dispatch",
+      "attempt": 1,
+      "job_id": 125038516190,
+      "job": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+      "placement": "advisory; excluded from the ci_green needs list in .github/workflows/ci.yml",
+      "run_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849",
+      "job_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516190",
+      "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/preview-capture-advisory.log",
+      "log_sha256": "01bdbc9906e3ab17fae1e441f62077767e7585bac89fef7727a443d5c164fdd3",
+      "formatted_log": "reference/demo_app/tmp/phase178_candidate/dispatch-preview-capture-advisory.log",
+      "formatted_log_sha256": "a3278b3b93c95ef8b7bf4ee34ba6c196cd62302bb35991154bfc03934618dda9",
+      "consumed_operations": [
+        "git push origin f5138e94cd32daf29720f794cf3fbb464c3f1b86:refs/heads/gsd/v2.10-ui-repairs-storybook",
+        "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-pr-body.md",
+        "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+      ],
+      "unspent_operations": [],
+      "preview_launched": false,
+      "plans_23_24_run": false
+    },
+    "receipts": [],
+    "operator_receipts": [],
+    "advisory_reds": [
+      {
+        "run_id": 41370082849,
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "job_id": 125038516190,
+        "title": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "job_conclusion": "failure",
+        "placement": "advisory (not a CI Green dependency)",
+        "classification": "new job-level setup failure; not previously source-classified",
+        "reason": "missing inotify-tools prevented the file_system/live-reload worker from starting; server process exited 1",
+        "eligible_to_continue": false,
+        "run_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849",
+        "job_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125038516190",
+        "log": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/preview-capture-advisory.log",
+        "log_sha256": "01bdbc9906e3ab17fae1e441f62077767e7585bac89fef7727a443d5c164fdd3",
+        "formatted_log": "reference/demo_app/tmp/phase178_candidate/dispatch-preview-capture-advisory.log",
+        "formatted_log_sha256": "a3278b3b93c95ef8b7bf4ee34ba6c196cd62302bb35991154bfc03934618dda9",
+        "classification_source": ".github/workflows/ci.yml preview_capture_advisory job and ci_green needs list"
+      }
+    ],
+    "required_checks_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-check-runs.raw.json",
+    "required_checks_pages_file": "reference/demo_app/tmp/demo_browser_evidence/ci/41370082849-attempt-1/github-check-runs.pages.raw.json",
+    "required_checks_sha256": "041a7f18429dcdf45ae4fa2db1a89ce86c334e68b0d56b59524679ecc00f2b98",
+    "required_checks": [
+      {
+        "name": "CI Green",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "details_url": "https://github.com/szTheory/mailglass/actions/runs/41370082849/job/125042743650",
+        "started_at": "2026-11-02T01:15:17Z",
+        "completed_at": "2026-11-02T01:15:32Z"
+      },
+      {
+        "name": "CI Green",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "details_url": "https://github.com/szTheory/mailglass/actions/runs/41368588479/job/125038236790",
+        "started_at": "2026-11-02T00:58:39Z",
+        "completed_at": "2026-11-02T00:58:54Z"
+      },
+      {
+        "name": "Guard Release Trigger",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "details_url": "https://github.com/szTheory/mailglass/actions/runs/41368627407/job/125034072013",
+        "started_at": "2026-11-02T00:42:56Z",
+        "completed_at": "2026-11-02T00:43:03Z"
+      },
+      {
+        "name": "Guard Release Trigger",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+        "details_url": "https://github.com/szTheory/mailglass/actions/runs/41368588377/job/125033957660",
+        "started_at": "2026-11-02T00:42:29Z",
+        "completed_at": "2026-11-02T00:42:36Z"
+      }
+    ],
+    "observed_at": "2026-11-02T01:33:36.378Z",
+    "required_checks_pages_sha256": "089ea8880f471f46a64f52fd090833d17676bf90dd2b13d789e92a0654d3ed5b"
   },
   "preview": {
     "status": "not_started"
   },
-  "owner_decision": null
+  "owner_decision": null,
+  "cost": {
+    "status": "not_measured",
+    "reason": "hosted cycle stopped on a new unclassified Preview Capture Advisory job-level setup failure; no deterministic cost/count/placement disposition was derived",
+    "disposition_file_absent": true
+  }
 }
