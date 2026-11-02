@@ -107,6 +107,15 @@ probe_route() {
   printf '%s %s\n' "$status" "$final_url"
 }
 
+# add_candidate_worktree <path> <sha>
+# Keeps Git's failure diagnostic visible so launch stops are actionable.
+add_candidate_worktree() {
+  local worktree_path="$1" sha="$2" output
+  if ! output="$(git worktree add --detach "$worktree_path" "$sha" 2>&1)"; then
+    fail "could not create detached worktree at $sha: ${output:-git worktree add failed without a diagnostic}"
+  fi
+}
+
 # allocate_ports
 # Prints "<http port> <db port>": two distinct free loopback ports, never the
 # owner review demo defaults 4015 / 5415. PHASE178_TEST_PORTS="a b" is a
@@ -445,7 +454,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
-git worktree add --detach "$WORKTREE" "$SHA" >/dev/null 2>&1 || fail "could not create detached worktree at $SHA"
+add_candidate_worktree "$WORKTREE" "$SHA"
 [[ "$(git -C "$WORKTREE" rev-parse HEAD)" == "$SHA" ]] || fail "worktree HEAD differs from requested SHA"
 [[ -z "$(git -C "$WORKTREE" status --porcelain --untracked-files=all)" ]] || fail "new candidate worktree is not clean"
 [[ -f "$WORKTREE/compose.demo.yml" ]] || fail "candidate $SHA has no compose.demo.yml"

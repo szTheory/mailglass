@@ -85,6 +85,32 @@ chmod +x "$STUB_BIN/curl"
 PHASE178_CANDIDATE_LIB_ONLY=1 source "$LAUNCHER" || die "could not source the launcher in library mode"
 set +e # the launcher enables errexit; this harness asserts return codes itself
 
+# --- worktree diagnostic visibility ---------------------------------------
+WORKTREE_STUB_BIN="$TEST_DIR/worktree-stub-bin"
+mkdir -p "$WORKTREE_STUB_BIN"
+cat >"$WORKTREE_STUB_BIN/git" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "${1:-} ${2:-}" == "worktree add" ]] || exit 99
+printf '%s\n' 'fatal: simulated Git metadata permission denial' >&2
+exit 1
+STUB
+chmod +x "$WORKTREE_STUB_BIN/git"
+WORKTREE_STUB_PATH="$TEST_DIR/candidate-worktree"
+WORKTREE_STUB_SHA="8e501960bc975ed44b632ba5c74522e0c5d66f8c"
+WORKTREE_FAILURE_OUTPUT="$(
+  PATH="$WORKTREE_STUB_BIN:$PATH" bash -c '
+    PHASE178_CANDIDATE_LIB_ONLY=1 source "$1"
+    add_candidate_worktree "$2" "$3"
+  ' _ "$LAUNCHER" "$WORKTREE_STUB_PATH" "$WORKTREE_STUB_SHA" 2>&1
+)"
+WORKTREE_FAILURE_STATUS=$?
+[[ "$WORKTREE_FAILURE_STATUS" -eq 1 ]] || die "failed git worktree helper returned the wrong status"
+[[ "$WORKTREE_FAILURE_OUTPUT" == *"could not create detached worktree at $WORKTREE_STUB_SHA"* ]] || die "launcher context was missing from the worktree error"
+[[ "$WORKTREE_FAILURE_OUTPUT" == *"simulated Git metadata permission denial"* ]] || die "Git's underlying worktree diagnostic was hidden"
+[[ ! -e "$WORKTREE_STUB_PATH" ]] || die "the offline worktree test created a real candidate path"
+ok worktree-failure-diagnostic-visible
+
 # --- extract_css_href ------------------------------------------------------
 HASH32="0123456789abcdef0123456789abcdef"
 printf '<html><link rel="stylesheet" href="/dev/mail/css-%s"></html>' "$HASH32" >"$TEST_DIR/with.html"
