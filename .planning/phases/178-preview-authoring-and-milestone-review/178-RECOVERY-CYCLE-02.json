@@ -58,8 +58,34 @@
     }
   },
   "authority": {
-    "hosted": null,
-    "preview": null
+    "hosted": {
+      "decision": "approve-all",
+      "sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "user_reply": "Yes, I approve. Approve all.",
+      "recorded_at": "2026-11-02T02:08:49Z",
+      "operations": [
+        {
+          "name": "push_candidate",
+          "count": 1,
+          "command": "git push origin a0a7450cc68afe84e25e69276c654d9e63422499:refs/heads/gsd/v2.10-ui-repairs-storybook"
+        },
+        {
+          "name": "update_pr_body",
+          "count": 1,
+          "command": "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/pr-body.md"
+        },
+        {
+          "name": "dispatch_ci",
+          "count": 1,
+          "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+        }
+      ]
+    },
+    "preview": {
+      "sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "conditional_on": "hosted_and_reproducible_cost_success",
+      "command": "bash scripts/check_phase178_candidate.sh --sha a0a7450cc68afe84e25e69276c654d9e63422499 --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-a0a7450c.json"
+    }
   },
   "hosted": {
     "status": "not_authorized",
@@ -71,5 +97,47 @@
   "cost": {
     "status": "not_measured",
     "reason": "The new candidate has not been run on hosted CI; the prior hosted cycle remains stopped and its approval is not inherited."
+  },
+  "preapproval": {
+    "observed_at": "2026-11-02T02:02:02Z",
+    "candidate_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "branch_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+    "pr_number": 317,
+    "pr_title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+    "pr_state": "OPEN",
+    "is_draft": true,
+    "pr_head_sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+    "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "remote_pr_body_sha256": "2cde938acffe6c13bf267644a886ae58ac1187c15d1ab8cd78a2cc60e86150d8",
+    "body_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/pr-body.md",
+    "body_sha256": "fbd2f553e15f227dbd6ae32af8ee6a6bc7741cbac11767a7a0d2bf296230a4d9",
+    "checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-02/approval-checkpoint.md",
+    "checkpoint_sha256": "e232b65ec24e50da7be544e87b4d3b97295cb71ba102abe6f02e9ff0b517b771",
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "main_delta": {
+      "commits": 423,
+      "files": 695,
+      "insertions": 218948,
+      "deletions": 2169
+    },
+    "branch_delta": {
+      "commits": 8,
+      "files": 9,
+      "insertions": 862,
+      "deletions": 21
+    },
+    "target_ancestor": true,
+    "expected_path": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+    "expected_sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+    "baseline_run_path": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+    "baseline_run_sha256": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+    "baseline_jobs_path": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+    "baseline_jobs_sha256": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+    "ci_run_limit": 2,
+    "guard_run_limit": 2,
+    "workflow_run_limit": 4,
+    "attempt_limit": 1,
+    "estimated_runner_minutes": 203.37
   }
 }
