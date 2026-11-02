@@ -23,3 +23,7 @@ Handle it as a screen story (operator/overview) with northstar/fjordline/helios 
 - Each item links to the section of the UI where the operator can act on it or get the information needed to fix it.
 
 The redesign changes the layout and hierarchy only. Every item stays specific and each keeps its deep link. Add a story or e2e check that every item's link lands on a filtered view that shows the matching records. The owner said it works "in theory", so verify that it does in practice.
+
+## Reaffirmed 2026-10-26
+
+The running demo's light-mode screenshot again felt crowded, with the activity column and freshness/Refresh grouping competing with the issue list. The current component confirms a 2:1 desktop grid; the design diagnosis remains a hypothesis to compare in rendered compositions. [Upstream scope](../research/ui-quality-engine/UPSTREAM-SCOPE.md) puts this in the next repair envelope. Compare a constrained primary list plus deliberate secondary grouping against a one-column flow at real container widths; don't presume that padding alone or one column automatically solves it. Preserve the actionable links and independent truthful populations. No UI change was made by this note.

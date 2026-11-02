@@ -20,10 +20,13 @@ defmodule MailglassAdmin.ComponentsTest do
   import Phoenix.LiveViewTest
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Inbound.ReplayModal, as: InboundReplayModal
   alias MailglassAdmin.Inbound.FiltersForm, as: InboundFiltersForm
   alias MailglassAdmin.Operator.DeliveriesList
   alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.QuickView
+  alias MailglassAdmin.Operator.ReplayAction
+  alias MailglassAdmin.Operator.ReplayModal, as: OperatorReplayModal
   alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
 
   test "outcome help distinguishes provider delivery from mailbox processing" do
@@ -405,6 +408,57 @@ defmodule MailglassAdmin.ComponentsTest do
     assert html =~ ~s(id="inspection-outcome-trigger")
   end
 
+  describe "Phase 176 message_identity recipient label" do
+    @describetag :phase176
+
+    defp identity_line(context, recipient) do
+      html =
+        render_component(&Components.message_identity/1,
+          subject: "Hello",
+          recipient: recipient,
+          status: :accept,
+          context: context,
+          id: "identity-#{context}"
+        )
+
+      [line] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("p.text-body.text-secondary")
+
+      {line |> Floki.text() |> String.replace(~r/\s+/, " ") |> String.trim(),
+       line |> Floki.find("span.text-base-content") |> Floki.text()}
+    end
+
+    test "context :inbound labels the recipient 'Delivered to'" do
+      {text, value} = identity_line(:inbound, "support@example.com")
+      assert String.starts_with?(text, "Delivered to")
+      assert value == "support@example.com"
+      refute String.starts_with?(text, "To ")
+    end
+
+    test "context :delivery keeps 'To'" do
+      {text, value} = identity_line(:delivery, "billing@northstar.example")
+      assert String.starts_with?(text, "To ")
+      assert value == "billing@northstar.example"
+      refute text =~ "Delivered to"
+    end
+
+    test "a missing Inbound recipient reads 'Delivered to' then 'Not recorded by provider'" do
+      {text, value} = identity_line(:inbound, nil)
+      assert String.starts_with?(text, "Delivered to")
+      assert value == "Not recorded by provider"
+      refute text =~ "Recipient not recorded"
+    end
+
+    test "a missing Delivery recipient keeps 'Recipient not recorded'" do
+      {text, value} = identity_line(:delivery, nil)
+      assert String.starts_with?(text, "To ")
+      assert value == "Recipient not recorded"
+      refute text =~ "Not recorded by provider"
+    end
+  end
+
   test "technical details disclose exact IDs without opening by default" do
     html =
       render_component(&Components.technical_details/1,
@@ -431,6 +485,116 @@ defmodule MailglassAdmin.ComponentsTest do
     refute html =~ "Technical details"
   end
 
+  @tag :phase175
+  test "Phase 175 Delivery entry component carries quick-view origin with exact identity" do
+    candidate = %{
+      webhook_event_id: "f2bf8e9e-6be2-4d68-a391-dc90e737c340",
+      provider_event_id: "same visible label",
+      provider: "postmark",
+      webhook_timestamp: ~U[2026-10-27 10:00:00Z],
+      delivery_provider_message_id: "pm-component"
+    }
+
+    html =
+      render_component(&ReplayAction.replay_action/1,
+        replay_targets: %{status: :exact, candidate: candidate},
+        origin: "quick_view",
+        button_id: "operator-quick-view-replay-open-btn"
+      )
+
+    assert html =~ ~s(id="operator-quick-view-replay-open-btn")
+    assert html =~ ~s(phx-value-origin="quick_view")
+    assert html =~ "Replay is ready."
+    refute html =~ ~s(phx-value-webhook_event_id="#{candidate.webhook_event_id}")
+  end
+
+  @tag :phase175
+  test "Phase 175 Delivery entry component leaves unavailable replay explanatory and non-actionable" do
+    html =
+      render_component(&ReplayAction.replay_action/1,
+        replay_targets: %{status: :unavailable, reason: :missing_replay_linkage},
+        origin: "quick_view",
+        button_id: "operator-quick-view-replay-open-btn"
+      )
+
+    assert html =~ "Replay is unavailable."
+    assert html =~ "Historical rows without exact webhook linkage"
+    refute html =~ ~s(id="operator-quick-view-replay-open-btn")
+    refute html =~ ~s(data-testid="operator-replay-open")
+  end
+
+  describe "Phase 175 shared replay dialog shell" do
+    @describetag :phase175
+
+    test "Inbound wrapper keeps recorded Mailbox identity inside the accessible shell" do
+      html =
+        render_component(&InboundReplayModal.replay_modal/1,
+          open?: true,
+          record: %{id: "inbound-東京", tenant_id: "tenant-東京"},
+          review: %{
+            review_id: "review-inbound-東京",
+            record_id: "inbound-東京",
+            tenant_id: "tenant-東京",
+            eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.箱"}
+          }
+        )
+
+      assert_shared_replay_shell(html,
+        dialog_id: "inbound-replay-modal",
+        close_id: "inbound-replay-close",
+        confirm_id: "inbound-replay-confirm"
+      )
+
+      assert html =~ "inbound-東京"
+      assert html =~ "Recorded Mailbox: MyApp.Mailboxes.箱"
+      refute html =~ "provider receipt"
+      [confirm] = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
+
+      classes = confirm |> Floki.attribute("class") |> hd() |> String.split()
+      assert "btn-primary" in classes
+      refute "btn-error" in classes
+    end
+
+    test "Delivery wrapper uses the shell and retains stored webhook consequences" do
+      candidate = %{
+        webhook_event_id: "webhook-event-東京",
+        provider_event_id: "provider-event-東京",
+        provider: "postmark",
+        webhook_timestamp: ~U[2026-10-27 10:00:00Z],
+        delivery_provider_message_id: "provider-message-東京"
+      }
+
+      html =
+        render_component(&OperatorReplayModal.replay_modal/1,
+          open?: true,
+          delivery: %{id: "delivery-東京"},
+          replay_targets: %{status: :exact, candidate: candidate},
+          selected_target_id: candidate.webhook_event_id,
+          review_id: "review-東京",
+          account_label: "Account 東京"
+        )
+
+      assert_shared_replay_shell(html,
+        dialog_id: "operator-replay-modal",
+        close_id: "operator-replay-close",
+        confirm_id: "operator-replay-confirm"
+      )
+
+      assert html =~ "Account 東京"
+      assert html =~ "webhook-event-東京"
+      assert html =~ "POSTMARK"
+      assert html =~ "may add Events or update Deliveries and suppressions across this Account"
+      refute html =~ "Recorded Mailbox"
+      refute html =~ "redeliver through the provider"
+      [confirm] = Floki.find(Floki.parse_document!(html), "#operator-replay-confirm")
+
+      assert Floki.attribute(confirm, "class")
+             |> hd()
+             |> String.split()
+             |> Enum.member?("btn-primary")
+    end
+  end
+
   test "clickable identifiers expose the exact value and shared copy feedback" do
     html =
       render_component(&Components.copy_value/1, value: "exact-record-id", label: "Delivery ID")
@@ -438,8 +602,22 @@ defmodule MailglassAdmin.ComponentsTest do
     [button] = Floki.find(Floki.parse_document!(html), "button")
     assert Floki.attribute(button, "data-copy-value") == ["exact-record-id"]
     assert Floki.attribute(button, "data-copy-toast") == ["Delivery ID copied."]
-    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID"]
+    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID: exact-record-id"]
     assert Floki.text(button) =~ "exact-record-id"
+  end
+
+  test "a copy control's accessible name carries a hostile value as one escaped attribute" do
+    value = ~s(a"b<c>d' onclick="x">)
+
+    html = render_component(&Components.copy_value/1, value: value, label: "To address")
+
+    assert [button] = Floki.find(Floki.parse_document!(html), "button")
+    assert Floki.attribute(button, "aria-label") == ["Copy To address: " <> value]
+    assert Floki.attribute(button, "data-copy-value") == [value]
+
+    {"button", attrs, _children} = button
+    names = attrs |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "title", "type"]
   end
 
   describe "timestamp/1" do
@@ -1439,6 +1617,27 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   defp card_body, do: [%{inner_block: fn _, _ -> "card body" end}]
+
+  defp assert_shared_replay_shell(html, ids) do
+    document = Floki.parse_document!(html)
+    [dialog] = Floki.find(document, "##{Keyword.fetch!(ids, :dialog_id)}")
+    [shell] = Floki.find(document, ".motion-tab-swap")
+    [close] = Floki.find(document, "##{Keyword.fetch!(ids, :close_id)}")
+    [confirm] = Floki.find(document, "##{Keyword.fetch!(ids, :confirm_id)}")
+
+    assert Floki.attribute(dialog, "role") == ["dialog"]
+    assert Floki.attribute(dialog, "aria-modal") == ["true"]
+    assert Floki.attribute(dialog, "aria-labelledby") != []
+    assert Floki.attribute(dialog, "aria-describedby") != []
+    assert Floki.attribute(dialog, "phx-hook") == ["ModalFocusTrap"]
+    assert Floki.attribute(shell, "class") |> hd() |> String.split() |> Enum.member?("p-md")
+    assert Floki.find(document, ~s([data-focus-trap="start"])) != []
+    assert Floki.find(document, ~s([data-focus-trap="end"])) != []
+    assert Floki.attribute(close, "aria-label") == ["Close"]
+    assert Floki.attribute(close, "phx-click") == ["close_replay"]
+
+    assert Floki.text(confirm) =~ "Confirm replay"
+  end
 
   defp assert_all(html, markers) do
     Enum.each(markers, fn marker -> assert html =~ marker end)

@@ -1,8 +1,9 @@
 defmodule Storybook.Primitives.ThemePicker do
   @moduledoc false
   # Three-choice theme picker (System/Light/Dark). Theme-sensitive (selected
-  # segment paints the Glass accent). Template-level data-theme bridge per
-  # PROJECT D-08. Covers the gallery's selection + disabled states.
+  # segment paints the Glass accent). Static selection examples only: these do
+  # not resolve or follow the operating-system preference. Template-level
+  # data-theme bridge per PROJECT D-08. Covers selection + disabled states.
   use PhoenixStorybook.Story, :component
 
   def function, do: &MailglassAdmin.Components.theme_picker/1

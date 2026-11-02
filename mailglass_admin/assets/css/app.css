@@ -337,10 +337,6 @@
   max-width: 42rem;
 }
 
-.mg-scope-identity {
-  max-width: 18rem;
-}
-
 .mg-scope-menu {
   width: min(22rem, calc(100vw - 2rem));
 }
@@ -483,6 +479,28 @@ code, pre, .mono {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 .mono {
+  overflow-wrap: anywhere;
+}
+
+/* The PhoenixStorybook iframe has its own base typography reset. Keep the
+   production roles on the actual sandbox owner so that reset cannot replace
+   its inherited UI face or the display/code faces. The global rules above
+   remain the defaults for production surfaces outside the admin shell. */
+.mg-admin-root {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+.mg-admin-root h1,
+.mg-admin-root h2,
+.mg-admin-root h3 {
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  letter-spacing: -0.02em;
+}
+.mg-admin-root code,
+.mg-admin-root pre,
+.mg-admin-root .mono {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.mg-admin-root .mono {
   overflow-wrap: anywhere;
 }
 [data-testid="inbound-timeline-run"] p {
@@ -658,6 +676,17 @@ code, pre, .mono {
   container-type: inline-size;
 }
 
+/* Health reads as one left-aligned column. The cap is a named 42rem rule:
+   max-w-2xl resolves to --spacing-2xl (48px) in this design system. Above the
+   cap the rest of the row is intentionally empty. */
+.operator-health-layout {
+  container-type: inline-size;
+}
+
+.operator-health-column {
+  max-width: 42rem;
+}
+
 .operator-deliveries-table {
   display: none;
 }
@@ -666,8 +695,11 @@ code, pre, .mono {
   display: block;
 }
 
-/* Narrow chrome has two deliberate rows: identity/theme, then account scope.
-   Keep native radio names and 44px targets while hiding their redundant text. */
+/* Narrow chrome is one topbar row: logo and the Appearance picker. The Account
+   control no longer lives here; it heads the scope group in the mobile band
+   (see SurfaceNav). Keep native radio names and 44px targets while hiding their
+   redundant text. Below md the Account menu spans the group instead of the md+
+   capped width. */
 @media (max-width: 767px) {
   .mg-admin-root [data-testid="admin-shell-topbar"] {
     display: grid;
@@ -695,30 +727,8 @@ code, pre, .mono {
     display: none;
   }
 
-  .mg-admin-root [data-testid="operator-account-context"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .mg-admin-root [data-testid="operator-account-context"] > details {
+  .mg-admin-root [data-account-scope] .mg-scope-menu {
     width: 100%;
-  }
-
-  .mg-admin-root [data-testid="operator-account-context"] .mg-scope-menu {
-    width: 100%;
-  }
-
-  .mg-admin-root [data-testid="operator-account-switcher"] {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .mg-admin-root [data-testid="operator-account-switcher"] > span > .text-secondary {
-    display: none;
-  }
-
-  .mg-admin-root [data-testid="operator-account-label"] {
-    max-width: none;
   }
 }
 

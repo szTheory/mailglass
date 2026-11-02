@@ -1,0 +1,96 @@
+{
+  "expectedCaseCount": 6,
+  "executedCaseCount": 6,
+  "cases": [
+    {
+      "width": 320,
+      "recordId": "97a8129d-1a0f-4e82-8f24-ff24c769d65b",
+      "subject": "Browser support — résumé routing diagnostics across multiple accounts",
+      "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
+      "viewportWidth": 320,
+      "documentWidth": 320,
+      "overflow": [],
+      "screenshot": "mailglass_admin/test-results/phase175-layout/inbound-320.png"
+    },
+    {
+      "width": 375,
+      "recordId": "97a8129d-1a0f-4e82-8f24-ff24c769d65b",
+      "subject": "Browser support — résumé routing diagnostics across multiple accounts",
+      "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
+      "viewportWidth": 375,
+      "documentWidth": 375,
+      "overflow": []
+    },
+    {
+      "width": 768,
+      "recordId": "97a8129d-1a0f-4e82-8f24-ff24c769d65b",
+      "subject": "Browser support — résumé routing diagnostics across multiple accounts",
+      "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "recordId": "97a8129d-1a0f-4e82-8f24-ff24c769d65b",
+      "subject": "Browser support — résumé routing diagnostics across multiple accounts",
+      "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
+      "viewportWidth": 1280,
+      "documentWidth": 1280,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "recordId": "97a8129d-1a0f-4e82-8f24-ff24c769d65b",
+      "subject": "Browser support — résumé routing diagnostics across multiple accounts",
+      "mailbox": "Elixir.MailglassAdmin.TestSupport.InboundTestMailbox",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "overflow": [],
+      "screenshot": "mailglass_admin/test-results/phase175-layout/inbound-1440.png"
+    }
+  ],
+  "realZoom": {
+    "caseId": "layout:inbound:real-200-percent-zoom",
+    "url": "http://127.0.0.1:4101/ops/mail/inbound?full=1&inbound_id=f4846216-bd8d-423d-8b92-ffdb0f95df8e&tenant_id=browser-tenant&window_hours=168",
+    "recordId": "f4846216-bd8d-423d-8b92-ffdb0f95df8e",
+    "source": {
+      "initial": {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "devicePixelRatio": 2
+      },
+      "effective": {
+        "viewportWidth": 320,
+        "viewportHeight": 380,
+        "documentWidth": 320,
+        "devicePixelRatio": 4
+      },
+      "tabZoom": {
+        "tabId": 886260287,
+        "factor": 2
+      }
+    },
+    "dialog": {
+      "clientHeight": 346,
+      "scrollHeight": 847,
+      "overflowY": "auto",
+      "account": "Account\n        \n          browser-tenant\n        \n      \n      \n    \n    \n      \n        \n          browser-tenant\n          browser-tenant\n        \n      \n        \n          deny-reveal\n          deny-reveal\n        \n      \n    \n  \n  \n  \n    browser-tenant\n  \n  \n    Switching to deny-reveal…",
+      "closeTarget": {
+        "width": 53.971527099609375,
+        "height": 43.97679901123047,
+        "layoutWidth": 54,
+        "layoutHeight": 44
+      },
+      "primaryTarget": {
+        "width": 135.600341796875,
+        "height": 43.976806640625,
+        "layoutWidth": 136,
+        "layoutHeight": 44
+      },
+      "focusWrap": true,
+      "originId": "inbound-replay-open-btn"
+    },
+    "screenshot": "mailglass_admin/test-results/phase175-layout/inbound-200-browser-zoom.png"
+  }
+}

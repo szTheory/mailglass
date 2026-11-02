@@ -80,6 +80,8 @@ services:
     environment:
       CI: ${CI:-true}
       DEMO_BASE_URL: http://demo:4015
+      HEX_HOME: /cache/hex
+      MIX_HOME: /cache/mix
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
       npm_config_cache: /cache/npm
       DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-dev-demo}
@@ -94,8 +96,18 @@ services:
       && npm --prefix assets run test:e2e:ci"
     volumes:
       - .:/workspace
+      - mailglass_demo_mix:/cache/mix
+      - mailglass_demo_hex:/cache/hex
       - mailglass_demo_npm:/cache/npm
       - mailglass_demo_playwright:/cache/playwright
+      - mailglass_demo_root_deps:/workspace/deps
+      - mailglass_demo_root_build:/workspace/_build
+      - mailglass_demo_app_deps:/workspace/reference/demo_app/deps
+      - mailglass_demo_app_build:/workspace/reference/demo_app/_build
+      - mailglass_demo_admin_deps:/workspace/mailglass_admin/deps
+      - mailglass_demo_admin_build:/workspace/mailglass_admin/_build
+      - mailglass_demo_inbound_deps:/workspace/mailglass_inbound/deps
+      - mailglass_demo_inbound_build:/workspace/mailglass_inbound/_build
 
 volumes:
   mailglass_demo_pg:

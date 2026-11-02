@@ -84,6 +84,16 @@ defmodule MailglassAdmin.Operator.RepairStateTest do
     assert RepairState.authorization_feedback("Replay is not authorized.") ==
              "Replay is not authorized."
 
+    assert RepairState.dialog_feedback({:authorization, :stale_auth, "private diagnostic"}) ==
+             %{kind: :error, text: "Recent authentication is required."}
+
+    assert RepairState.dialog_feedback({:authorization, :unauthorized, "private diagnostic"}) ==
+             %{
+               kind: :error,
+               text:
+                 "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+             }
+
     assert RepairState.flash_failure(:unknown_provider) =~ "before normalization"
     assert RepairState.flash_failure(:invalid_raw_payload) =~ "unavailable for replay"
     assert RepairState.flash_failure(:replay_failed) =~ "host's investigation guidance"

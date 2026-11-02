@@ -325,13 +325,13 @@ defmodule MailglassInbound.Internal.Operator.Records do
   end
 
   defp maybe_filter_window(query, nil) do
-    since = DateTime.add(DateTime.utc_now(), -@default_window_hours, :hour)
+    since = DateTime.add(Mailglass.Clock.utc_now(), -@default_window_hours, :hour)
     where(query, [rec: record], record.received_at >= ^since)
   end
 
   defp maybe_filter_window(query, window_hours)
        when is_integer(window_hours) and window_hours > 0 do
-    since = DateTime.add(DateTime.utc_now(), -window_hours, :hour)
+    since = DateTime.add(Mailglass.Clock.utc_now(), -window_hours, :hour)
     where(query, [rec: record], record.received_at >= ^since)
   end
 

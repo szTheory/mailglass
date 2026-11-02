@@ -1,0 +1,3602 @@
+{
+  "config": {
+    "configFile": "/workspace/reference/demo_app/assets/playwright.config.cjs",
+    "rootDir": "/workspace/reference/demo_app/assets/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "undefined//commit/",
+        "commitHash": "",
+        "buildHref": "undefined//actions/runs/"
+      },
+      "gitCommit": {
+        "shortHash": "bf4baa5f",
+        "hash": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+        "subject": "chore(design): preserve prescribed brand typography in detector",
+        "body": "chore(design): preserve prescribed brand typography in detector\n",
+        "author": {
+          "name": "szTheory",
+          "email": "szTheory@users.noreply.github.com",
+          "time": 1793104546000
+        },
+        "committer": {
+          "name": "szTheory",
+          "email": "szTheory@users.noreply.github.com",
+          "time": 1793104546000
+        },
+        "branch": "main"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/reference/demo_app/assets/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "ci": {
+            "commitHref": "undefined//commit/",
+            "commitHash": "",
+            "buildHref": "undefined//actions/runs/"
+          },
+          "gitCommit": {
+            "shortHash": "bf4baa5f",
+            "hash": "bf4baa5fee1ca53be3038daa44cfd1f8b10e737e",
+            "subject": "chore(design): preserve prescribed brand typography in detector",
+            "body": "chore(design): preserve prescribed brand typography in detector\n",
+            "author": {
+              "name": "szTheory",
+              "email": "szTheory@users.noreply.github.com",
+              "time": 1793104546000
+            },
+            "committer": {
+              "name": "szTheory",
+              "email": "szTheory@users.noreply.github.com",
+              "time": 1793104546000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/reference/demo_app/assets/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "cohort.spec.js",
+      "file": "cohort.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "persona cohort — RATCHET-04 rich demo_app run",
+          "file": "cohort.spec.js",
+          "line": 45,
+          "column": 6,
+          "specs": [
+            {
+              "title": "account picker lists the two deliveries-bearing personas; helios-void absent",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 248,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:05.194Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50a6ab7daf7b9177ab60-21b0fe658ac08fb39387",
+              "file": "cohort.spec.js",
+              "line": 58,
+              "column": 3
+            },
+            {
+              "title": "fjordline-aps edge values render: long-ID + long-mailable truncated, recipient verbatim, nil reject_reason no reason line",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 574,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:05.560Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50a6ab7daf7b9177ab60-f6b6ef5ecedcdb43f870",
+              "file": "cohort.spec.js",
+              "line": 82,
+              "column": 3
+            },
+            {
+              "title": "northstar high-count lifecycle renders without horizontal overflow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 190,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:06.141Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50a6ab7daf7b9177ab60-02e7219a4bdf72b82237",
+              "file": "cohort.spec.js",
+              "line": 153,
+              "column": 3
+            },
+            {
+              "title": "helios-void direct URL renders the empty state, not a crash",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 202,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:06.338Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "50a6ab7daf7b9177ab60-be009c08f3270bb5d121",
+              "file": "cohort.spec.js",
+              "line": 169,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "demo.spec.js",
+      "file": "demo.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "mailglass demo evidence",
+          "file": "demo.spec.js",
+          "line": 39,
+          "column": 6,
+          "specs": [
+            {
+              "title": "built-in unsubscribe pages keep their copy within narrow viewports",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 366,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:06.551Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e55eebcb6d281b4de51c-f178af465e4620ff95dc",
+              "file": "demo.spec.js",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "dashboard links to preview and operator surfaces",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 199,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:06.930Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e55eebcb6d281b4de51c-43f1a1635a9711f277ac",
+              "file": "demo.spec.js",
+              "line": 113,
+              "column": 3
+            },
+            {
+              "title": "preview distinguishes the public component and AtlasDesk HTML authoring paths",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 829,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:07.136Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e55eebcb6d281b4de51c-5edab372a2421534a4e9",
+              "file": "demo.spec.js",
+              "line": 140,
+              "column": 3
+            },
+            {
+              "title": "outbound operator opens with seeded delivery evidence",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 295,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:07.973Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e55eebcb6d281b4de51c-40e1932a466da072f612",
+              "file": "demo.spec.js",
+              "line": 294,
+              "column": 3
+            },
+            {
+              "title": "inbound operator opens with seeded support mailbox evidence",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 291,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:08.274Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e55eebcb6d281b4de51c-d93f4b29878b499ff190",
+              "file": "demo.spec.js",
+              "line": 315,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "outbound-replay.spec.js",
+      "file": "outbound-replay.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "demo outbound replay",
+          "file": "outbound-replay.spec.js",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "outbound replay from the demo completes and records a new event",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 703,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:08.574Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d032f282294ac5f098df-c3a2460720c3c79f108e",
+              "file": "outbound-replay.spec.js",
+              "line": 19,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "persona-screenshots.spec.js",
+      "file": "persona-screenshots.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "persona-critic screenshot seam (METHOD-01 evidence producer)",
+          "file": "persona-screenshots.spec.js",
+          "line": 146,
+          "column": 6,
+          "specs": [
+            {
+              "title": "shot overview-northstar-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 729,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:09.289Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-26f6805cbf2173ecbee2",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 705,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:10.030Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-9a0a8bc5a800085ff34d",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 723,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:10.742Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-c2d946665b264795a7bc",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 708,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:11.470Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-eb6c62213bcc767bc04a",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 700,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:12.184Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-fe7ac4997ee3a68431c1",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:12.892Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-1c9b7fc719637991d93e",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-northstar-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:13.614Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-43e3b43f4eef089db887",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 713,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:14.336Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-ba0379fc7b150908b77b",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 711,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:15.055Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-5f94d8a02512d3197c45",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 682,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:15.773Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0ffd1f5be3352af1423e",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 695,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:16.460Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0fae27536c0e5111a12c",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 685,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:17.162Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-d27ad65001ec6fe53b85",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 898,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:17.853Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-c471e16b685fff0c67bd",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-fjordline-aps-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 703,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:18.757Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-c9340fbeff7aa1e2a932",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 718,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:19.466Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-ab02220f80dd564fb8a0",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 688,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:20.190Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-5bba0f32fd56c26caa57",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 706,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:20.884Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-50a29ffd62c79e9d1aa7",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 691,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:21.596Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-791f4ac32945df381903",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 705,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:22.292Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-1a955ba930963b02c07d",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 717,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:23.004Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-e2aafbdf3b6ccfab6708",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot overview-helios-void-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 714,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:23.729Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-aa7039f096329e6a8f0a",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 761,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:24.450Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0dcea48d9d14bbf5e015",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 759,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:25.217Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-5e12c62d770040299f7c",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 749,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:25.981Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-e857a271019c92694ec1",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 741,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:26.737Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-32e4b75d36e8f42d3d73",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 831,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:27.485Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-d0b364746348820d0317",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 794,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:28.324Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-d0f8af7fcc4000af660e",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-northstar-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 740,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:29.123Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-1032df3ab83e76690af0",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 715,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:29.869Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-baaeae41861ac27b9f23",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 725,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:30.591Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-073802f78c798dc94972",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 722,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:31.322Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-94d671eef3cf1f1de633",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 708,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:32.051Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-fd5ef5e3dc52596ad547",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 723,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:32.765Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-a5a4cbeae7e9a772063c",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 711,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:33.495Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-7d77b896404ab2805eab",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-fjordline-aps-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:34.212Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-f2e6a41614283a844be1",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 708,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:34.935Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-ca704c7f591e3f59a5d1",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:35.650Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0ee43ffc4c09c58a3509",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 682,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:36.374Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0ea06ffa4bbf483066ad",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 691,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:37.064Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-55e1b0895218852bb185",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-320-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 688,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:37.760Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-b0ed0f855c98a4b38afa",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-768-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 677,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:38.453Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-b584515102959c5129f2",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot deliveries-helios-void-1440-system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 665,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:39.137Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-9617a3c6c84791b4fff3",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-northstar-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 725,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:39.808Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-5fc9031fda8bf85116b8",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-northstar-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 736,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:40.539Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-4267086cf003325b5d55",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-northstar-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 746,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:41.282Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-f57300bd16578ca8d507",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-northstar-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 742,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:42.034Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-5c69f625b6e36b65fed7",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-fjordline-aps-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 696,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:42.781Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-930c6f56a3f7933c9aef",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-fjordline-aps-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 715,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:43.484Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0957df0bfc131ea98bd4",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-fjordline-aps-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 686,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:44.205Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-6b8be9f2fa13e2e56820",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-fjordline-aps-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 696,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:44.898Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-7ac7ff2b65ea7c73226e",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-helios-void-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 701,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:45.601Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-057531028993d114446e",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-helios-void-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 714,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:46.308Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-a1338b198b8a0a284b95",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-helios-void-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 676,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:47.028Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0680114a4c1fcedaacec",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot inbound-helios-void-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 693,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:47.711Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-9a1f64557d355dbaf3c2",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot preview-any-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 764,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:48.409Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-05a4e33e8c2fa81d57a3",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot preview-any-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 756,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:49.179Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-e6835e89d74185f800f5",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot preview-any-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 779,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:49.942Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-1eaed7ac306c64caccc5",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot preview-any-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 798,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:50.726Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-dd380ab2d1d0b28a7228",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot gallery-any-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1994,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:51.530Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-61d7a30b7e7cc46a5609",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot gallery-any-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2086,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:53.531Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-0e73ede5ec9056010828",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot gallery-any-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1619,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:55.622Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-6770e7ed7835ec69c186",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot gallery-any-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1619,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:57.247Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-e307520bd2fa836d9f4a",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot storybook-any-375-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 705,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:58.873Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-58fae0c5c227439f7514",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot storybook-any-375-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 648,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:20:59.586Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-f836ef1b056f67bb0684",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot storybook-any-1440-light",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 662,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:00.242Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-d823dbc20439b05a8577",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            },
+            {
+              "title": "shot storybook-any-1440-dark",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 658,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:00.912Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-62a5031fdec838ce27d4",
+              "file": "persona-screenshots.spec.js",
+              "line": 163,
+              "column": 9
+            }
+          ]
+        },
+        {
+          "title": "review surfaces",
+          "file": "persona-screenshots.spec.js",
+          "line": 187,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 448,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:01.576Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-677729af5e030e11fbbe",
+              "file": "persona-screenshots.spec.js",
+              "line": 191,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "working preview readiness",
+          "file": "persona-screenshots.spec.js",
+          "line": 237,
+          "column": 6,
+          "specs": [
+            {
+              "title": "serves the expected routes and the committed Admin CSS at its mount path",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 447,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "{\"event\":\"working-preview-readiness\",\"candidateSha\":\"bf4baa5fee1ca53be3038daa44cfd1f8b10e737e\",\"routes\":[\"/dev/mail\",\"/dev/mail/gallery\",\"/dev/storybook/primitives/nav_link?variation_id=active_light\"],\"adminCss\":{\"source\":{\"path\":\"mailglass_admin/assets/css/app.css\",\"sha256\":\"0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5\"},\"built\":{\"path\":\"mailglass_admin/priv/static/app.css\",\"sha256\":\"b74a52501d325bc14e8201ab6fe94c77686d38c3d8ce6f4d674ec51a689e475b\"},\"served\":{\"path\":\"/dev/mail/css-4d5b256c0670b2313d25704dfa62f709\",\"sha256\":\"b74a52501d325bc14e8201ab6fe94c77686d38c3d8ce6f4d674ec51a689e475b\",\"md5\":\"4d5b256c0670b2313d25704dfa62f709\"}},\"narrowViewport\":375}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:02.030Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "98740bfd6b31439990ef-7ca71c07c62cbefa4594",
+              "file": "persona-screenshots.spec.js",
+              "line": 238,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "phase173-evidence.spec.js",
+      "file": "phase173-evidence.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "dashboard links to preview and operator surfaces",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 321,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:02.487Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c91a49a10b61c8c65fd3-a5f00c252bf561734600",
+          "file": "phase173-evidence.spec.js",
+          "line": 244,
+          "column": 1
+        },
+        {
+          "title": "outbound operator opens with seeded delivery evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 453,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:02.821Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c91a49a10b61c8c65fd3-99bc3a4824ac53201cf7",
+          "file": "phase173-evidence.spec.js",
+          "line": 286,
+          "column": 1
+        },
+        {
+          "title": "inbound operator opens with seeded support mailbox evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 395,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:03.279Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c91a49a10b61c8c65fd3-8c01f716d3e5c128198b",
+          "file": "phase173-evidence.spec.js",
+          "line": 311,
+          "column": 1
+        },
+        {
+          "title": "empty account stays isolated and explains the absence of deliveries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 200,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:03.680Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c91a49a10b61c8c65fd3-71e31b8b4551ad53a963",
+          "file": "phase173-evidence.spec.js",
+          "line": 335,
+          "column": 1
+        },
+        {
+          "title": "recipient browser shows a truthful expired unsubscribe state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 154,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:03.888Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c91a49a10b61c8c65fd3-c4d047e298245be9ea95",
+          "file": "phase173-evidence.spec.js",
+          "line": 358,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "quick-views.spec.js",
+      "file": "quick-views.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Phase174 tracer opens a real Delivery and its retained production story",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 673,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:04.054Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-6df2a24e3e6af5029070",
+          "file": "quick-views.spec.js",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "Phase174 delivery keyboard navigation preserves selection context and focus return",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 465,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:04.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-cf93c91d4e3d983841d1",
+          "file": "quick-views.spec.js",
+          "line": 83,
+          "column": 1
+        },
+        {
+          "title": "Phase174 delivery first, last, single, empty, and nil-position states remain truthful",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 892,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:05.203Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-9bf4617665201ddc1ce9",
+          "file": "quick-views.spec.js",
+          "line": 138,
+          "column": 1
+        },
+        {
+          "title": "Phase174 delivery retained variants preserve exact scenario facts and bounded theme captures",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 544,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:06.100Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-1fd5a08a673fc5fd00a9",
+          "file": "quick-views.spec.js",
+          "line": 210,
+          "column": 1
+        },
+        {
+          "title": "Phase174 delivery scenario manifest accounts for rendered and real-route-only cases",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:06.650Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-c236fca7f098864b9fda",
+          "file": "quick-views.spec.js",
+          "line": 261,
+          "column": 1
+        },
+        {
+          "title": "Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1378,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:06.669Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-4650fff39d8c2891d4d3",
+          "file": "quick-views.spec.js",
+          "line": 303,
+          "column": 1
+        },
+        {
+          "title": "Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 365,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:08.052Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-53f488bef3ce0a5d72b6",
+          "file": "quick-views.spec.js",
+          "line": 428,
+          "column": 1
+        },
+        {
+          "title": "Phase174 inbound manifest selects exactly five variants and preserves route-only emptiness",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T13:21:08.424Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "059d11fb8ae5dd1c2200-ae4cee21adf7cf5fd5cf",
+          "file": "quick-views.spec.js",
+          "line": 457,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "storybook-fidelity.spec.js",
+      "file": "storybook-fidelity.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Phase174 themes",
+          "file": "storybook-fidelity.spec.js",
+          "line": 170,
+          "column": 6,
+          "specs": [
+            {
+              "title": "delivery story owns Light, Dark, and live System review themes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2134,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "PHASE174_THEME_RECEIPT {\"story\":\"delivery\",\"caseId\":\"theme:delivery:northstar_normal\",\"storyUrl\":\"http://demo:4015/dev/storybook/quick_views/delivery?variation_id=northstar_normal\",\"iframeUrl\":\"about:srcdoc\",\"owner\":\"quick-view-story\",\"systemLight\":{\"selectedPreference\":\"system\",\"resolvedScheme\":\"light\",\"osPreference\":\"light\",\"dataTheme\":\"mailglass-light\",\"base100\":\"#f8fbfd\",\"baseContent\":\"#0d1b2a\"},\"systemDark\":{\"selectedPreference\":\"system\",\"resolvedScheme\":\"dark\",\"osPreference\":\"dark\",\"dataTheme\":\"mailglass-dark\",\"base100\":\"#0d1b2a\",\"baseContent\":\"#eaf6fb\"},\"production\":{\"light\":\"mailglass-light\",\"dark\":\"mailglass-dark\"},\"explicitThemeStability\":true,\"selectionPreserved\":true,\"hostPreferencePersisted\":false}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:08.438Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-0d8e7cec8241fe5d60f0",
+              "file": "storybook-fidelity.spec.js",
+              "line": 172,
+              "column": 5
+            },
+            {
+              "title": "inbound story owns Light, Dark, and live System review themes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1564,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "PHASE174_THEME_RECEIPT {\"story\":\"inbound\",\"caseId\":\"theme:inbound:northstar_normal\",\"storyUrl\":\"http://demo:4015/dev/storybook/quick_views/inbound?variation_id=northstar_normal\",\"iframeUrl\":\"about:srcdoc\",\"owner\":\"quick-view-story\",\"systemLight\":{\"selectedPreference\":\"system\",\"resolvedScheme\":\"light\",\"osPreference\":\"light\",\"dataTheme\":\"mailglass-light\",\"base100\":\"#f8fbfd\",\"baseContent\":\"#0d1b2a\"},\"systemDark\":{\"selectedPreference\":\"system\",\"resolvedScheme\":\"dark\",\"osPreference\":\"dark\",\"dataTheme\":\"mailglass-dark\",\"base100\":\"#0d1b2a\",\"baseContent\":\"#eaf6fb\"},\"production\":{\"light\":\"mailglass-light\",\"dark\":\"mailglass-dark\"},\"explicitThemeStability\":true,\"selectionPreserved\":true,\"hostPreferencePersisted\":false}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:10.583Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-ad53f1e7865602ba1012",
+              "file": "storybook-fidelity.spec.js",
+              "line": 172,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "Phase174 fonts",
+          "file": "storybook-fidelity.spec.js",
+          "line": 378,
+          "column": 6,
+          "specs": [
+            {
+              "title": "delivery loads production CSS, all font bytes, and computed roles",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 590,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:12.152Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-d10e4d122b8e109692ff",
+              "file": "storybook-fidelity.spec.js",
+              "line": 380,
+              "column": 5
+            },
+            {
+              "title": "inbound loads production CSS, all font bytes, and computed roles",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 626,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:12.747Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-c56be8da0840a71a59b2",
+              "file": "storybook-fidelity.spec.js",
+              "line": 380,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "Phase174 widths",
+          "file": "storybook-fidelity.spec.js",
+          "line": 606,
+          "column": 6,
+          "specs": [
+            {
+              "title": "delivery normal and boundary quick views fit bounded responsive widths",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7461,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:13.376Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-d9c297a633009c74695c",
+              "file": "storybook-fidelity.spec.js",
+              "line": 608,
+              "column": 5
+            },
+            {
+              "title": "inbound normal and boundary quick views fit bounded responsive widths",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7880,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:20.844Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3bc46e527d9152ae94ab-c337096c9596623045cb",
+              "file": "storybook-fidelity.spec.js",
+              "line": 608,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "storybook-hooks.spec.js",
+      "file": "storybook-hooks.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Phase174 hooks",
+          "file": "storybook-hooks.spec.js",
+          "line": 169,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Storybook owns its iframe hook and both pinned Demo surfaces complete real cycles",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3063,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T13:21:28.733Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c88d26e8ce32b5cdb6c0-eee450977ca2b80fa481",
+              "file": "storybook-hooks.spec.js",
+              "line": 180,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T13:20:04.643Z",
+    "duration": 87185.614,
+    "expected": 98,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

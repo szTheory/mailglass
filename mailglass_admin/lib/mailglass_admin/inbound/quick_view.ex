@@ -20,6 +20,8 @@ defmodule MailglassAdmin.Inbound.QuickView do
   attr(:detail_error, :atom, default: nil)
   attr(:outside_results?, :boolean, default: false)
   attr(:account_labels, :map, default: %{})
+  attr(:replay_eligibility, :map, default: nil)
+  attr(:replay_open?, :boolean, default: false)
   attr(:full_path, :string, required: true)
   attr(:close_path, :string, required: true)
   attr(:previous_path, :string, default: nil)
@@ -36,17 +38,20 @@ defmodule MailglassAdmin.Inbound.QuickView do
         tabindex="-1"
         data-testid="inbound-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
         id="inbound-quick-view"
         data-testid="inbound-quick-view"
         role="dialog"
         aria-modal="true"
         aria-labelledby="inbound-quick-view-title"
+        tabindex="0"
         phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
-        class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
+        class={[
+          "mg-detail-panel motion-overlay border-l border-base-300 bg-base-100 p-lg shadow-overlay",
+          if(@replay_open?, do: "mg-layer-base", else: "mg-layer-overlay-panel")
+        ]}
         phx-remove={
           JS.hide(
             time: 150,
@@ -56,7 +61,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       >
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
-        <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
+        <div class="flex flex-wrap items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="inbound-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>
@@ -152,7 +157,28 @@ defmodule MailglassAdmin.Inbound.QuickView do
             </div>
         <% end %>
 
-        <div :if={@record} class="mt-lg border-t border-base-300 pt-md">
+        <div :if={@record} class="mt-lg space-y-md border-t border-base-300 pt-md">
+          <div class="space-y-xs">
+            <h3 class="text-body font-bold text-base-content">Replay</h3>
+            <button
+              :if={replay_eligible?(@replay_eligibility)}
+              id="inbound-quick-replay-open-btn"
+              type="button"
+              phx-click="open_replay"
+              phx-value-origin="quick"
+              data-testid="inbound-quick-replay-open"
+              class="btn btn-primary min-h-11 px-md"
+            >
+              Review inbound replay
+            </button>
+            <p
+              :if={!replay_eligible?(@replay_eligibility)}
+              data-testid="inbound-quick-replay-unavailable"
+              class="max-w-prose text-body text-secondary [overflow-wrap:anywhere]"
+            >
+              {replay_unavailable_copy(@replay_eligibility)}
+            </p>
+          </div>
           <.link
             patch={@full_path}
             data-testid="inbound-quick-view-full"
@@ -167,6 +193,41 @@ defmodule MailglassAdmin.Inbound.QuickView do
     </div>
     """
   end
+
+  defp replay_eligible?(%{status: :eligible, mailbox: mailbox})
+       when is_binary(mailbox) and mailbox != "",
+       do: true
+
+  defp replay_eligible?(_eligibility), do: false
+
+  defp replay_unavailable_copy(%{reason: :no_prior_match}),
+    do:
+      "No mailbox matched this message when it was received, so there is no recorded Mailbox to replay."
+
+  defp replay_unavailable_copy(%{reason: :execution_history_missing}),
+    do: "No execution history is recorded for this message."
+
+  defp replay_unavailable_copy(%{reason: :invalid_mailbox}),
+    do: "The original Mailbox binding is missing or unsafe, so its identity cannot be resolved."
+
+  defp replay_unavailable_copy(%{reason: :mailbox_unavailable}),
+    do: "The recorded Mailbox is not available in this deployment."
+
+  defp replay_unavailable_copy(%{reason: :missing_evidence}),
+    do: "Stored inbound evidence is unavailable."
+
+  defp replay_unavailable_copy(%{reason: :record_unavailable}),
+    do: "This record is no longer available in the selected Account."
+
+  defp replay_unavailable_copy(%{reason: :read_unavailable}),
+    do: "Eligibility could not be checked because inbound data is temporarily unavailable."
+
+  defp replay_unavailable_copy(%{reason: :package_unavailable}),
+    do: "Inbound support is unavailable, so replay eligibility could not be checked."
+
+  defp replay_unavailable_copy(_eligibility),
+    do:
+      "Replay eligibility could not be checked. Open full detail or refresh the record before replaying."
 
   attr(:dir, :string, required: true)
   attr(:path, :string, default: nil)
@@ -195,7 +256,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       data-testid={"inbound-quick-view-#{@dir}"}
       aria-label={@label}
       title={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
     >
       {render_slot(@inner_block)}
     </.link>

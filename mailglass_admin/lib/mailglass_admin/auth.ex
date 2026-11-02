@@ -39,7 +39,8 @@ defmodule MailglassAdmin.Auth do
           optional(:recent_auth_at) => DateTime.t() | nil
         }
   @typedoc since: "0.1.0"
-  @type success :: {:ok, actor()} | {:ok, %{required(:actor) => actor(), optional(:assigns) => map()}}
+  @type success ::
+          {:ok, actor()} | {:ok, %{required(:actor) => actor(), optional(:assigns) => map()}}
   @typedoc since: "0.1.0"
   @type failure_reason :: :unauthorized | :stale_auth
   @typedoc since: "0.1.0"
@@ -51,7 +52,8 @@ defmodule MailglassAdmin.Auth do
   @callback authorize(action(), context :: map()) :: result()
 
   @doc since: "0.1.0"
-  @spec authorize(module(), action(), map()) :: {:ok, %{actor: actor(), assigns: map()}} | failure()
+  @spec authorize(module(), action(), map()) ::
+          {:ok, %{actor: actor(), assigns: map()}} | failure()
   def authorize(module, action, context) when is_atom(module) do
     unless Code.ensure_loaded?(module) and function_exported?(module, :authorize, 2) do
       raise ArgumentError,
@@ -82,7 +84,8 @@ defmodule MailglassAdmin.Auth do
     {:ok, %{actor: normalize_actor(actor), assigns: %{}}}
   end
 
-  defp normalize_result({:error, reason, details}) when reason in [:unauthorized, :stale_auth] and is_map(details) do
+  defp normalize_result({:error, reason, details})
+       when reason in [:unauthorized, :stale_auth] and is_map(details) do
     {:error, reason, details}
   end
 
@@ -105,12 +108,18 @@ defmodule MailglassAdmin.Auth do
 
   defp normalize_recent_auth_at(nil), do: nil
   defp normalize_recent_auth_at(%DateTime{} = value), do: value
-  defp normalize_recent_auth_at(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")
+
+  defp normalize_recent_auth_at(%NaiveDateTime{} = value),
+    do: DateTime.from_naive!(value, "Etc/UTC")
 
   defp normalize_recent_auth_at(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
-      {:ok, parsed, _offset} -> parsed
-      _ -> raise ArgumentError, "recent_auth_at must be a DateTime, NaiveDateTime, ISO8601 string, or nil"
+      {:ok, parsed, _offset} ->
+        parsed
+
+      _ ->
+        raise ArgumentError,
+              "recent_auth_at must be a DateTime, NaiveDateTime, ISO8601 string, or nil"
     end
   end
 

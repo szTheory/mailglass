@@ -21,6 +21,9 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
 
   @doc """
   Inserts a canonical inbound record. Returns the inserted `%InboundRecord{}`.
+
+  Contact lists are optional: `from:`, `to:`, `cc:` and `reply_to:` each take a list
+  of `%{address: ..., name: ...}` maps and default to `[]`.
   """
   def insert_record!(tenant_id, opts \\ []) do
     {:ok, record} =
@@ -30,6 +33,10 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         provider_message_id: Keyword.get(opts, :provider_message_id, unique("pmid")),
         envelope_recipient: Keyword.get(opts, :recipient, "support@example.com"),
         subject: Keyword.get(opts, :subject, "Inbound fixture"),
+        from: Keyword.get(opts, :from, []),
+        to: Keyword.get(opts, :to, []),
+        cc: Keyword.get(opts, :cc, []),
+        reply_to: Keyword.get(opts, :reply_to, []),
         headers: Keyword.get(opts, :headers, %{}),
         received_at: Keyword.get(opts, :received_at, DateTime.utc_now())
       })
@@ -59,6 +66,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         inbound_record_id: record_id,
         provider: Keyword.get(opts, :provider, "mailgun"),
         raw_payload: Keyword.get(opts, :raw_payload, %{"ok" => true}),
+        raw_mime: Keyword.get(opts, :raw_mime),
         raw_headers: Keyword.get(opts, :raw_headers, %{}),
         verification_facts: verification_facts,
         parse_warnings: Keyword.get(opts, :parse_warnings, %{})
@@ -121,6 +129,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_matched!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
+    mailbox = Keyword.get(opts, :mailbox, @fixture_mailbox)
 
     evidence =
       insert_evidence!(
@@ -128,13 +137,13 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         record.id,
         opts
         |> Keyword.get(:evidence, [])
-        |> Keyword.put_new(:route_binding, {:matched, @fixture_mailbox})
+        |> Keyword.put_new(:route_binding, {:matched, mailbox})
       )
 
     fresh =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :fresh,
-        mailbox: mailbox_name(),
+        mailbox: mailbox_name(mailbox),
         outcome: :accept,
         executed_at: hours_ago(2)
       )
@@ -142,7 +151,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
     replay =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :replay,
-        mailbox: mailbox_name(),
+        mailbox: mailbox_name(mailbox),
         outcome: :accept,
         executed_at: hours_ago(1)
       )
@@ -214,7 +223,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   defp default_mailbox(:no_match), do: nil
   defp default_mailbox(_outcome), do: mailbox_name()
 
-  defp mailbox_name, do: Atom.to_string(@fixture_mailbox)
+  defp mailbox_name(mailbox \\ @fixture_mailbox), do: Atom.to_string(mailbox)
 
   defp default_reason(outcome) when outcome in [:reject, :bounce], do: "fixture reason"
   defp default_reason(_outcome), do: nil

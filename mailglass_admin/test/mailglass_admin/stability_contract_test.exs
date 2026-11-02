@@ -13,8 +13,11 @@ defmodule MailglassAdmin.StabilityContractTest do
            {{^kind, ^name, ^arity}, _, _, _, _} -> true
            _ -> false
          end) do
-      {{^kind, ^name, ^arity}, _, _, _, meta} -> meta
-      nil -> flunk("missing #{inspect(kind)} #{inspect(module)}.#{name}/#{arity} in compiled docs")
+      {{^kind, ^name, ^arity}, _, _, _, meta} ->
+        meta
+
+      nil ->
+        flunk("missing #{inspect(kind)} #{inspect(module)}.#{name}/#{arity} in compiled docs")
     end
   end
 
@@ -32,8 +35,12 @@ defmodule MailglassAdmin.StabilityContractTest do
 
     test "router macros are annotated" do
       assert entry_meta!(MailglassAdmin, :function, :version, 0)[:since] == "0.1.0"
-      assert entry_meta!(MailglassAdmin.Router, :macro, :mailglass_admin_routes, 2)[:since] == "0.1.0"
-      assert entry_meta!(MailglassAdmin.Router, :macro, :mailglass_operator_routes, 2)[:since] == "0.1.0"
+
+      assert entry_meta!(MailglassAdmin.Router, :macro, :mailglass_admin_routes, 2)[:since] ==
+               "0.1.0"
+
+      assert entry_meta!(MailglassAdmin.Router, :macro, :mailglass_operator_routes, 2)[:since] ==
+               "0.1.0"
     end
 
     test "auth callback, helper functions, and public types are annotated" do

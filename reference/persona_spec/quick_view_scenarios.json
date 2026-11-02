@@ -1,0 +1,2238 @@
+{
+  "schema_version": "quick-view-scenarios.v1",
+  "scenarios": [
+    {
+      "id": "qv-delivery-normal",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator checks the outcome and account context for one selected Delivery.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "normal",
+      "reason": "Keeps one real production quick-view component visible at a typical multi-record position.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-normal",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-normal",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 2, "total": 16},
+        "previous_id": "phase174-northstar-first",
+        "next_id": "phase174-northstar-third"
+      }
+    },
+    {
+      "id": "qv-delivery-first",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_first",
+      "role_job": "An operator starts at the first Delivery and can see the unavailable previous boundary.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "first",
+      "reason": "Retains a reachable first-record boundary with position and accessible unavailable navigation.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-first",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-first",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 1, "total": 16},
+        "previous_id": null,
+        "next_id": "phase174-northstar-second"
+      }
+    },
+    {
+      "id": "qv-delivery-last",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_last",
+      "role_job": "An operator finishes at the last Delivery and can see the unavailable next boundary.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "last",
+      "reason": "Retains the final-record boundary without suggesting another result exists.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-last",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-last",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 16, "total": 16},
+        "previous_id": "phase174-northstar-before-last",
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-delivery-single-unicode",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "fjordline_single_unicode",
+      "role_job": "An operator inspects the only Fjordline Delivery with exact long and Unicode facts.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "fjordline-aps",
+      "state": "single-unicode",
+      "reason": "Exercises the real Fjordline persona's exact long identifier and canonical subject; Unicode sender names remain source metadata and are not exposed by this quick view.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-connected-route-and-persisted-projection",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "recipient": "bjorn.hansen@fjordline-aps.example",
+          "subject": "Welcome to Fjordline A/S",
+          "status": "sent",
+          "last_event_type": "delivered",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "postmark",
+          "provider_message_id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "mailable": "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName"
+        },
+        "position": {"index": 1, "total": 1},
+        "previous_id": null,
+        "next_id": null
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "Mailglass.Operator.Deliveries.list_recent_deliveries_page/2",
+        "materializer": "MailglassAdmin.TestSupport.OperatorFixtures.seed_persona_cohort!/0",
+        "component": "MailglassAdmin.Operator.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "recipient", "subject", "provider", "provider_message_id", "mailable", "status", "last_event_type", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "last_event_at uses independent materializer anchors and is checked as a DateTime"],
+        "source_only_facts": ["The canonical delivered Event reject_reason is nil; it is not part of the list projection or quick-view component."]
+      }
+    },
+    {
+      "id": "qv-delivery-empty",
+      "story_path": null,
+      "variation_id": null,
+      "role_job": "An operator opens the real Deliveries collection for an Account with no records.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "helios-void",
+      "state": "empty",
+      "reason": "Helios is realized by absence; a story cannot select a Delivery that does not exist.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "connected-real-route-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": false
+    },
+    {
+      "id": "delivery-investigation-northstar-normal",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "northstar_complete",
+      "role_job": "An operator reads one Account-scoped Delivery, its current suppression evidence, and one exact stored webhook request.",
+      "source": ["mailglass_admin/test/support/operator_fixtures.ex#seed_persona_cohort!/0", "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex#detail_header/1", "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator/replay_action.ex#replay_action/1", "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1"],
+      "cohort": "northstar",
+      "state": "normal-permitted-review",
+      "reason": "Retains the complete production-component composition and an exact reviewable request; connected execution and persistence remain proved only on the real route.",
+      "owning_requirements": ["UXF-12", "OUTUX-07", "OUTUX-08", "REPLAY-04", "REPLAY-05", "REPLAY-06", "REPLAY-07", "REPLAY-08", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-suppression-refresh", "fb-replay-review", "fb-technical-details", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": {"address": "ops@northstar.example", "scope": "address_stream", "reason": "complaint", "source": "provider_event", "stream": "transactional", "expires_at": "2026-11-03T12:00:00Z", "removal_policy": "blocked"},
+        "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_story_delivery_01", "provider_event_id": "evt_story_delivery_01", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}},
+        "selected_target_id": "wh_evt_story_delivery_01",
+        "review_id": "story-northstar-exact",
+        "modal_open?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-fjordline-long-unicode",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "fjordline_long_unicode",
+      "role_job": "An operator reads a long Delivery identity and exact request without losing Account or action context.",
+      "source": ["reference/persona_spec/quick_view_scenarios.json#qv-delivery-single-unicode", "reference/persona_spec/personas.ex#spec/0", "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex#detail_header/1", "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1"],
+      "cohort": "fjordline-aps",
+      "state": "long-unicode",
+      "reason": "Carries canonical Fjordline identifiers and module identity through the full investigation composition; connected projection equality is checked at the scoped read boundary.",
+      "owning_requirements": ["UXF-12", "OUTUX-08", "REPLAY-06", "STORY-07"],
+      "proof_boundary": "story-render-and-persisted-projection",
+      "feedback_ids": ["fb-technical-details", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG", "recipient": "bjorn.hansen@fjordline-aps.example", "subject": "Welcome to Fjordline A/S", "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-26T12:00:00Z", "provider": "postmark", "provider_message_id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG", "mailable": "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": {"address": "bjorn.hansen@fjordline-aps.example", "scope": "address", "reason": "manual", "source": "host_policy", "stream": "transactional", "expires_at": null, "removal_policy": "supported"},
+        "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG", "provider_event_id": "provider_evt_fjordline_long_identifier_01JXW9ZQKB3V1N4P2RMT7FHCG", "delivery_provider_message_id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG", "provider": "postmark", "webhook_timestamp": "2026-10-26T12:00:00Z"}},
+        "selected_target_id": "wh_evt_fjordline_01JXW9ZQKB3V1N4P2RMT7FHCG",
+        "review_id": "story-fjordline-exact",
+        "modal_open?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-suppression-stale",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "suppression_stale",
+      "role_job": "An operator sees that the last suppression match is retained but may be out of date after a failed refresh.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator_live.ex#retry_suppression/2"],
+      "cohort": "northstar",
+      "state": "stale-retained-match",
+      "reason": "Keeps the last retrieved match visible with an explicit stale label and reachable Retry suppression read action.",
+      "owning_requirements": ["OUTUX-07", "OUTUX-08", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-suppression-refresh"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "stale",
+        "suppression_state": {"address": "ops@northstar.example", "scope": "address_stream", "reason": "complaint", "source": "provider_event", "stream": "transactional", "expires_at": "2026-11-03T12:00:00Z", "removal_policy": "blocked"},
+        "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_story_delivery_01", "provider_event_id": "evt_story_delivery_01", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}},
+        "selected_target_id": "wh_evt_story_delivery_01",
+        "modal_open?": false
+      }
+    },
+    {
+      "id": "delivery-investigation-suppression-unavailable",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "suppression_unavailable",
+      "role_job": "An operator sees that the scoped suppression read failed and no prior match is available to show.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1", "mailglass_admin/lib/mailglass_admin/operator_live.ex#retry_suppression/2"],
+      "cohort": "northstar",
+      "state": "unavailable-no-prior-fact",
+      "reason": "Renders an unavailable read without fabricating a suppression record or implying that no match exists.",
+      "owning_requirements": ["OUTUX-07", "OUTUX-08", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-suppression-refresh"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "unavailable",
+        "suppression_state": null,
+        "replay_targets": {"status": "unavailable", "reason": "read_unavailable"},
+        "modal_open?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-unknown-expiry",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "unknown_expiry",
+      "role_job": "An operator distinguishes an unrecorded suppression expiry from a permanent rule.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex#suppression_card/1"],
+      "cohort": "northstar",
+      "state": "unknown-expiry",
+      "reason": "Retains the existing honest unknown-expiry copy and read-only removal policy with no invented mutation control.",
+      "owning_requirements": ["OUTUX-08", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-suppression-refresh"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": {"address": "ops@northstar.example", "scope": "address_stream", "reason": "complaint", "source": "provider_event", "stream": "transactional", "expires_at": null, "removal_policy": "blocked"},
+        "replay_targets": {"status": "unavailable", "reason": "missing_replay_linkage"},
+        "modal_open?": false
+      }
+    },
+    {
+      "id": "delivery-investigation-replay-ambiguous",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "replay_ambiguous",
+      "role_job": "An operator reviews an ambiguous exact target set and must choose one stored request deliberately.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "lib/mailglass/operator/replay_targets.ex#for_delivery/2"],
+      "cohort": "northstar",
+      "state": "replay-ambiguous",
+      "reason": "Shows both exact candidate identities without defaulting a target; the connected action-time check remains authoritative.",
+      "owning_requirements": ["REPLAY-04", "REPLAY-05", "REPLAY-06", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-replay-review"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": null,
+        "replay_targets": {"status": "ambiguous", "candidates": [{"webhook_event_id": "wh_evt_story_candidate_a", "provider_event_id": "evt_story_candidate_a", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}, {"webhook_event_id": "wh_evt_story_candidate_b", "provider_event_id": "evt_story_candidate_b", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:59:00Z"}]},
+        "selected_target_id": null,
+        "review_id": "story-ambiguous-review",
+        "modal_open?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-replay-unavailable",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "replay_unavailable",
+      "role_job": "An operator sees why a Delivery without exact webhook linkage cannot be replayed.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "lib/mailglass/operator/replay_targets.ex#for_delivery/2"],
+      "cohort": "northstar",
+      "state": "replay-unavailable",
+      "reason": "Retains the honest missing-linkage explanation and renders no enabled confirmation action.",
+      "owning_requirements": ["REPLAY-04", "REPLAY-05", "REPLAY-06", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-replay-review"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": null,
+        "replay_targets": {"status": "unavailable", "reason": "missing_replay_linkage"},
+        "modal_open?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-replay-denied",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "replay_denied",
+      "role_job": "An operator reads a safe denied replay outcome while the exact request remains identifiable.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex#dialog_feedback/1"],
+      "cohort": "northstar",
+      "state": "replay-denied",
+      "reason": "Static feedback illustrates the safe copy; the connected authorization boundary is the only proof of denial behavior.",
+      "owning_requirements": ["REPLAY-06", "REPLAY-08", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-replay-review"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": null,
+        "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_story_delivery_01", "provider_event_id": "evt_story_delivery_01", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}},
+        "selected_target_id": "wh_evt_story_delivery_01",
+        "review_id": "story-denied-review",
+        "feedback": {"text": "Replay isn’t allowed for your account. Ask an Account administrator to review access."},
+        "modal_open?": true,
+        "consumed?": true
+      }
+    },
+    {
+      "id": "delivery-investigation-replay-failed",
+      "story_path": "/dev/storybook/delivery_investigation",
+      "theme_owner": "delivery-investigation-story",
+      "theme_picker_testid": "delivery-investigation-review-theme",
+      "dialog_title": "Review webhook replay",
+      "variation_id": "replay_failed",
+      "role_job": "An operator reads a safe replay failure and fresh-review action before trying again.",
+      "source": ["mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex#replay_modal/1", "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex#dialog_feedback/1"],
+      "cohort": "northstar",
+      "state": "replay-failed",
+      "reason": "Static feedback illustrates a mounted recovery state; the connected command and fresh eligibility read are proved on the real route.",
+      "owning_requirements": ["REPLAY-06", "REPLAY-08", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-replay-review"],
+      "rendered": true,
+      "projection": {
+        "delivery": {"id": "phase175-northstar-lifecycle", "recipient": "ops@northstar.example", "subject": null, "status": "sent", "last_event_type": "delivered", "last_event_at": "2026-10-27T12:00:00Z", "provider": "postmark", "provider_message_id": "pm_northstar_lifecycle", "mailable": "Mailglass.Example.NorthstarMailer", "stream": "transactional"},
+        "position": {"index": 1, "total": 1},
+        "suppression_read_state": "ready",
+        "suppression_state": null,
+        "replay_targets": {"status": "exact", "candidate": {"webhook_event_id": "wh_evt_story_delivery_01", "provider_event_id": "evt_story_delivery_01", "delivery_provider_message_id": "pm_northstar_lifecycle", "provider": "postmark", "webhook_timestamp": "2026-10-27T11:58:00Z"}},
+        "selected_target_id": "wh_evt_story_delivery_01",
+        "review_id": "story-failed-review",
+        "feedback": {"text": "Replay couldn’t be completed. Review current eligibility before trying again."},
+        "modal_open?": true,
+        "consumed?": true
+      }
+    },
+    {
+      "id": "qv-inbound-normal",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator checks one selected Inbound message's outcome and account context.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "normal",
+      "reason": "Retains an ordinary account-scoped message and a reachable position between both navigation controls.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-persisted-projection",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-normal",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "accept",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox"
+        },
+        "position": {"index": 3, "total": 6},
+        "previous_id": "phase174-inbound-previous",
+        "next_id": "phase174-inbound-next"
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "MailglassAdmin.OptionalDeps.MailglassInbound.list_records_page/2",
+        "materializer": "MailglassAdmin.TestSupport.InboundFixtures.seed_matched!/2",
+        "component": "MailglassAdmin.Inbound.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "envelope_recipient", "subject", "provider", "outcome", "mailbox", "received_at", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "received_at is compared at second precision to remove database subsecond precision"],
+        "rendered_exactly": ["recipient", "subject", "accepted outcome", "provider", "Account", "mailbox label", "position", "record id"]
+      }
+    },
+    {
+      "id": "qv-inbound-first",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_first",
+      "role_job": "An operator starts at the first Inbound message and sees that there is no previous result.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "first",
+      "reason": "Retains the first-result position with the native disabled previous button.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-first",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 1, "total": 6},
+        "previous_id": null,
+        "next_id": "phase174-inbound-second"
+      }
+    },
+    {
+      "id": "qv-inbound-last",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_last",
+      "role_job": "An operator finishes at the last Inbound message and sees that there is no next result.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "last",
+      "reason": "Retains the last-result position with the native disabled next button.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-last",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 6, "total": 6},
+        "previous_id": "phase174-inbound-before-last",
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-inbound-single-unicode",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "fjordline_single_unicode",
+      "role_job": "An operator checks a single Inbound message with exact long and Unicode facts.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "fjordline-aps",
+      "state": "single-unicode",
+      "reason": "Carries the canonical Fjordline recipient and contact-name literals into a synthetic Inbound projection without claiming the Demo seed materializes that cohort.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-persisted-projection",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "tenant_id": "fjordline-aps",
+          "envelope_recipient": "bjorn.hansen@fjordline-aps.example",
+          "subject": "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎",
+          "outcome": "accept",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "postmark",
+          "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox"
+        },
+        "position": {"index": 1, "total": 1},
+        "previous_id": null,
+        "next_id": null
+      },
+      "projection_evidence": {
+        "status": "persisted-production-component",
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "read_boundary": "MailglassAdmin.OptionalDeps.MailglassInbound.list_records_page/2",
+        "materializer": "MailglassAdmin.TestSupport.InboundFixtures.seed_matched!/2",
+        "component": "MailglassAdmin.Inbound.QuickView.quick_view/1",
+        "fields_compared": ["tenant_id", "envelope_recipient", "subject", "provider", "outcome", "mailbox", "received_at", "position"],
+        "normalizations": ["selected record id is generated for persistence and checked in each render independently", "received_at is compared at second precision to remove database subsecond precision"],
+        "rendered_exactly": ["recipient", "subject", "accepted outcome", "provider", "Account", "mailbox label", "record id"],
+        "foreign_account": "A matched record for other-account is absent from the fjordline-aps scoped page."
+      }
+    },
+    {
+      "id": "qv-inbound-unavailable",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "selected_unavailable",
+      "role_job": "An operator sees the truthful unavailable state for a selected Inbound record.",
+      "source": ["mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex#detail_error_copy/1"],
+      "cohort": "northstar",
+      "state": "unavailable",
+      "reason": "Uses the existing read-unavailable branch and does not fabricate a selected record or Full detail destination.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": null,
+        "selected_id": "phase174-inbound-unavailable",
+        "detail_error": "read_unavailable",
+        "outside_results?": false,
+        "position": null,
+        "previous_id": null,
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-inbound-empty",
+      "story_path": null,
+      "variation_id": null,
+      "role_job": "An operator opens the real Inbound collection for an Account with no records.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "helios-void",
+      "state": "empty",
+      "reason": "Helios Inbound absence is checked on the connected collection route; no selected message exists for a Storybook variation.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "connected-real-route-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": false
+    },
+    {
+      "id": "inbound-evidence-normal-contacts",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "normal_contacts",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "normal-contacts",
+      "reason": "Retains an ordinary message: display-named sender, two To, one Cc, a distinct Delivered to recipient and redacted raw source.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-normal-contacts",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-normal-contacts",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            },
+            {
+              "address": "billing@northstar.example",
+              "name": "Northstar Billing"
+            }
+          ],
+          "cc": [
+            {"address": "team.lead@example.com", "name": "Team Lead"}
+          ],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-long-local-part",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "long_local_part",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "long-local-part",
+      "reason": "Keeps one unbreakable dotted local part visible untruncated beside its copy control at narrow widths.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-long-local-part",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-long-local-part",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-unicode",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "unicode",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "unicode",
+      "reason": "Keeps Unicode local parts, domains and display names exact in the sender and To lists.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-unicode",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-unicode",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {"address": "用户@例子.广告"}
+          ],
+          "to": [
+            {
+              "address": "zoe@example.com",
+              "name": "Zoë Ångström-Łukasiewicz"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-spoofed-display-name",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "spoofed_display_name",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "spoofed-display-name",
+      "reason": "Shows the spoof cue when the display name embeds a different address than the real sender.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-spoofed-display-name",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-spoofed-display-name",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "sender@mailer.example",
+              "name": "billing@paypal.example"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-many-recipients",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "many_recipients",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "many-recipients",
+      "reason": "Collapses seven To addresses to five and offers Show 2 more.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-many-recipients",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-many-recipients",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "recipient1@example.com",
+              "name": "Recipient 1"
+            },
+            {
+              "address": "recipient2@example.com",
+              "name": "Recipient 2"
+            },
+            {
+              "address": "recipient3@example.com",
+              "name": "Recipient 3"
+            },
+            {
+              "address": "recipient4@example.com",
+              "name": "Recipient 4"
+            },
+            {
+              "address": "recipient5@example.com",
+              "name": "Recipient 5"
+            },
+            {
+              "address": "recipient6@example.com",
+              "name": "Recipient 6"
+            },
+            {
+              "address": "recipient7@example.com",
+              "name": "Recipient 7"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-missing-headers",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "missing_headers",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "missing-headers",
+      "reason": "Says plainly that the From header, To header and envelope recipient were not recorded.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-missing-headers",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-missing-headers",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": null,
+          "from": [],
+          "to": [],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-unparseable",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "unparseable",
+      "role_job": "An operator reads who sent one stored Inbound message and who it was delivered to.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "unparseable",
+      "reason": "Labels a sender value that is not an address as unparseable while keeping the original text copyable.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-inbound-addresses"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-unparseable",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-unparseable",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {"address": "not an address"}
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {
+            "body-plain": "Synthetic body for the redacted story state."
+          },
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-unknown",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_unknown",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-unknown",
+      "reason": "Renders Unavailable, never 0 bytes, when stored evidence cannot say its payload size or header count.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-unknown",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-unknown",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": null,
+          "raw_headers": null,
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "redacted"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-empty-revealed",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_empty_revealed",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-empty-revealed",
+      "reason": "Reveals a provider payload that was genuinely empty and says so.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-empty-revealed",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-empty-revealed",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {},
+          "raw_headers": {},
+          "raw_mime": null,
+          "verification_facts": {}
+        },
+        "reveal_state": "revealed"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-large-revealed",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_large_revealed",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-large-revealed",
+      "reason": "Reveals a multi-kilobyte raw source in a scrollable, focusable region with a thousands-separated size.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-large-revealed",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-large-revealed",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {},
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": "From: Alex Rivera <alex.rivera@example.com>\r\nTo: Northstar Support <support@northstar.example>\r\nSubject: Synthetic multi-kilobyte message for the revealed raw-source state\r\nMessage-ID: <176-large@mail-gateway.example.com>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nLine 01: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 02: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 03: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 04: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 05: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 06: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 07: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 08: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 09: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 10: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 11: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 12: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 13: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 14: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 15: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 16: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 17: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 18: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 19: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 20: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 21: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 22: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 23: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 24: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 25: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 26: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 27: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 28: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 29: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 30: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 31: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 32: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 33: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 34: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 35: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 36: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 37: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 38: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 39: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\nLine 40: synthetic body text for the Phase 176 raw provider source story, reserved example domains only.\r\n",
+          "verification_facts": {}
+        },
+        "reveal_state": "revealed"
+      }
+    },
+    {
+      "id": "inbound-evidence-evidence-denied",
+      "story_path": "/dev/storybook/inbound_evidence",
+      "theme_owner": "inbound-evidence-story",
+      "theme_picker_testid": "inbound-evidence-review-theme",
+      "variation_id": "evidence_denied",
+      "role_job": "An operator decides whether to reveal the raw provider source of one stored Inbound message.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex#detail_header/1",
+        "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex#evidence_card/1"
+      ],
+      "cohort": "northstar",
+      "state": "evidence-denied",
+      "reason": "Shows the denied reveal copy and keeps every raw byte absent.",
+      "owning_requirements": ["INUX-05", "INUX-06"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-storybook-fidelity", "fb-raw-source-hierarchy"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "inbound-evidence-evidence-denied",
+          "tenant_id": "northstar",
+          "provider": "mailgun",
+          "provider_message_id": "mg-176-evidence-denied",
+          "subject": "Synthetic worst-case message",
+          "received_at": "2026-10-28T09:30:00Z",
+          "envelope_recipient": "support@northstar.example",
+          "from": [
+            {
+              "address": "alex.rivera@example.com",
+              "name": "Alex Rivera"
+            }
+          ],
+          "to": [
+            {
+              "address": "support@northstar.example",
+              "name": "Northstar Support"
+            }
+          ],
+          "cc": [],
+          "reply_to": []
+        },
+        "mailbox": "Elixir.MyApp.Mailboxes.SupportMailbox",
+        "outcome": "accept",
+        "evidence": {
+          "provider": "mailgun",
+          "raw_payload": {"body-plain": "DENIED-SENTINEL-176-08-must-never-render"},
+          "raw_headers": {
+            "Message-ID": "<176-synthetic@mail-gateway.example.com>",
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Synthetic-Fixture": "phase-176",
+            "MIME-Version": "1.0"
+          },
+          "raw_mime": "DENIED-SENTINEL-176-08-raw-mime-must-never-render",
+          "verification_facts": {}
+        },
+        "reveal_state": "denied"
+      }
+    },
+    {
+      "id": "health-overview-northstar-normal",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator confirms that an Account with recent mail and no recorded problems reads as healthy.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "normal-no-issues",
+      "reason": "Mirrors exactly what the real route derives for tenant northstar after the persona cohort seed: one outbound delivery, no inbound messages and no issue rows.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 1
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-helios-empty",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "helios_empty",
+      "role_job": "An operator sees that an Account with no mail in the period is quiet, not healthy.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "helios-void",
+      "state": "empty-no-activity",
+      "reason": "Retains the zero-activity verdict for an Account with no Deliveries and no Inbound messages.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 0
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=helios-void&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=helios-void&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-stale",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "stale",
+      "role_job": "An operator sees which results are older than the rest after a partial refresh failed.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "stale-partial-refresh",
+      "reason": "Retains the stale failed-webhook row with its Not refreshed marker and the dated stale notice alongside fresh rows.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [
+          {
+            "testid": "operator-health-deliveries-failed",
+            "count": 2,
+            "label": "Failed deliveries",
+            "help": "Sending failed before a successful handoff to the provider.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=failed&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": false
+          },
+          {
+            "testid": "operator-overview-health-failures",
+            "count": 3,
+            "label": "Failed webhook attempts",
+            "help": "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+            "surface": "deliveries",
+            "path": "/ops/mail?support_focus=failed_ingest&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": true
+          },
+          {
+            "testid": "operator-overview-health-orphans",
+            "count": 1,
+            "label": "Unmatched events",
+            "help": "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
+            "surface": "deliveries",
+            "path": "/ops/mail?support_focus=orphan_backlog&tenant_id=northstar&view=deliveries&window_hours=168",
+            "stale": false
+          }
+        ],
+        "activity": {
+          "deliveries": {
+            "total": 14
+          },
+          "inbound": {
+            "total": 6
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "stale",
+            "checked_at": "2026-10-28T08:55:00Z"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-unavailable",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "unavailable",
+      "role_job": "An operator is told the check is incomplete when panels could not be read, instead of seeing a false all-clear.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "northstar",
+      "state": "unavailable-incomplete",
+      "reason": "Retains the incomplete verdict, the unavailable notices and the unavailable Inbound activity link.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [],
+        "activity": {
+          "deliveries": {
+            "total": 3
+          },
+          "inbound": null
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "unavailable"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "unavailable"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168"
+      }
+    },
+    {
+      "id": "health-overview-fjordline-long-unicode",
+      "story_path": "/dev/storybook/health_overview",
+      "theme_owner": "health-overview-story",
+      "theme_picker_testid": "health-overview-review-theme",
+      "variation_id": "fjordline_long_unicode",
+      "role_job": "An operator reads long, Unicode and HTML-looking issue text and very large counts without layout loss or injected markup.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex#overview/1",
+        "mailglass_admin/lib/mailglass_admin/operator_live.ex#health_issues/7"
+      ],
+      "cohort": "fjordline-aps",
+      "state": "long-unicode-large-counts",
+      "reason": "Carries a long Unicode/RTL/emoji/HTML-looking label and ten-digit counts to prove escaping and wrapping through the production component.",
+      "owning_requirements": [
+        "OUTUX-06"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-health-crowding"
+      ],
+      "rendered": true,
+      "projection": {
+        "issues": [
+          {
+            "testid": "operator-health-deliveries-failed",
+            "count": 1234567890,
+            "label": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 failed deliveries for the transactional welcome stream, with an extraordinarily long and unbroken label",
+            "help": "Sending failed before a successful handoff to the provider.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=failed&tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+            "stale": false
+          },
+          {
+            "testid": "operator-health-deliveries-bounced",
+            "count": 7,
+            "label": "Bounced deliveries",
+            "help": "The provider reported that these messages could not be delivered.",
+            "surface": "deliveries",
+            "path": "/ops/mail?event=bounced&tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+            "stale": false
+          }
+        ],
+        "activity": {
+          "deliveries": {
+            "total": 1234567890
+          },
+          "inbound": {
+            "total": 0
+          }
+        },
+        "states": {
+          "failed_ingest": {
+            "status": "ready"
+          },
+          "orphan_backlog": {
+            "status": "ready"
+          },
+          "delivery_activity": {
+            "status": "ready"
+          },
+          "inbound_activity": {
+            "status": "ready"
+          }
+        },
+        "window_copy": "Last 7 days",
+        "window_description": "Activity and recorded issues for this account during this period.",
+        "observed_at": "2026-10-28T09:30:00Z",
+        "deliveries_path": "/ops/mail?tenant_id=fjordline-aps&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=fjordline-aps&window_hours=168"
+      }
+    },
+    {
+      "id": "account-scope-none",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "none",
+      "role_job": "An operator with no readable Account sees a plain statement instead of a picker.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "helios-void",
+      "state": "no-accounts",
+      "reason": "Retains the No Accounts yet static prompt: no choice, no details control.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": null,
+        "tenant_options": [],
+        "account_labels": {},
+        "tenant_state": "none",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-one",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "one",
+      "role_job": "An operator with exactly one Account sees its name, not a fake picker.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "northstar",
+      "state": "single-account",
+      "reason": "Retains the static named Account: one option means no choice.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "northstar",
+        "tenant_options": [
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "northstar": "Northstar Logistics"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-many",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "many",
+      "role_job": "An operator with several Accounts sees a compact picker whose menu lists every option.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "northstar",
+      "state": "many-accounts",
+      "reason": "Retains the picker with three options and the selected Account named in the control.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "northstar",
+        "tenant_options": [
+          {
+            "id": "fjordline-aps",
+            "label": "Fjordline A/S"
+          },
+          {
+            "id": "helios-void",
+            "label": "Helios Trial"
+          },
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "northstar": "Northstar Logistics",
+          "fjordline-aps": "Fjordline A/S",
+          "helios-void": "Helios Trial"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "account-scope-long-label",
+      "story_path": "/dev/storybook/account_scope",
+      "theme_owner": "account-scope-story",
+      "theme_picker_testid": "account-scope-review-theme",
+      "variation_id": "long_label",
+      "role_job": "An operator reads a long Unicode, RTL, emoji and HTML-looking Account label without overflow or injected markup.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/operator/shell.ex#account_context/1",
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1"
+      ],
+      "cohort": "fjordline-aps",
+      "state": "long-unicode-label",
+      "reason": "Retains the Fjordline long label in both the control and the menu, escaped and wrapped.",
+      "owning_requirements": [
+        "UXF-09"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "selected_tenant_id": "fjordline-aps",
+        "tenant_options": [
+          {
+            "id": "fjordline-aps",
+            "label": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 Account <b>bold</b>"
+          },
+          {
+            "id": "northstar",
+            "label": "Northstar Logistics"
+          }
+        ],
+        "account_labels": {
+          "fjordline-aps": "Fjordline A/S <img src=x onerror=alert(1)> Zoë Ångström-Łukasiewicz 山田太郎 مرحبا بالعالم 😀 Account <b>bold</b>",
+          "northstar": "Northstar Logistics"
+        },
+        "tenant_state": "selected",
+        "page_uri": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "layout": "sidebar",
+        "overview_path": "/ops/mail?tenant_id=northstar&view=overview&window_hours=168",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar&window_hours=168",
+        "preview_path": "/dev/mail",
+        "inbound_available": true,
+        "active": "deliveries"
+      }
+    },
+    {
+      "id": "preview-chrome-valid-return",
+      "story_path": "/dev/storybook/preview_chrome",
+      "theme_owner": "preview-chrome-story",
+      "theme_picker_testid": "preview-chrome-review-theme",
+      "variation_id": "valid_return",
+      "role_job": "A maintainer opens Preview from Deliveries and sees a plain way back, with no Account identity shown.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1",
+        "mailglass_admin/lib/mailglass_admin/preview/return_context.ex#back_label/1"
+      ],
+      "cohort": "none",
+      "state": "valid-return",
+      "reason": "Retains the Back to Deliveries link with the scope label; the Account stays only inside link targets.",
+      "owning_requirements": [
+        "UXF-09",
+        "UXF-10"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "layout": "sidebar",
+        "active": "preview",
+        "preview_path": "/dev/mail",
+        "overview_path": "/ops/mail?tenant_id=northstar",
+        "deliveries_path": "/ops/mail?tenant_id=northstar&view=deliveries",
+        "inbound_path": "/ops/mail/inbound?tenant_id=northstar",
+        "inbound_available": true,
+        "return_href": "/ops/mail?tenant_id=northstar&view=deliveries&window_hours=168",
+        "return_label": "Back to Deliveries"
+      }
+    },
+    {
+      "id": "preview-chrome-direct-entry",
+      "story_path": "/dev/storybook/preview_chrome",
+      "theme_owner": "preview-chrome-story",
+      "theme_picker_testid": "preview-chrome-review-theme",
+      "variation_id": "direct_entry",
+      "role_job": "A maintainer who opens Preview directly sees no Back link and no Account identity.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/surface_nav.ex#nav/1",
+        "mailglass_admin/lib/mailglass_admin/preview/return_context.ex#back_label/1"
+      ],
+      "cohort": "none",
+      "state": "direct-entry",
+      "reason": "Retains the no-return-context chrome: scope label, section links and no Back link.",
+      "owning_requirements": [
+        "UXF-09",
+        "UXF-10"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-account-context"
+      ],
+      "rendered": true,
+      "projection": {
+        "layout": "sidebar",
+        "active": "preview",
+        "preview_path": "/dev/mail",
+        "overview_path": "/ops/mail",
+        "deliveries_path": "/ops/mail",
+        "inbound_path": "/ops/mail/inbound",
+        "inbound_available": true,
+        "return_href": null,
+        "return_label": null
+      }
+    },
+    {
+      "id": "preview-authoring-typed-values",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "typed_values",
+      "role_job": "A template author edits a scenario's typed values and sees every editable field, the read-only values and one note that explains them.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "typed-values",
+      "reason": "Retains the mixed editable and read-only authoring form with a bordered Restore defaults action and a single read-only note, beside the readable selector.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset",
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "label": {"type": "string", "value": "Original"},
+            "quantity": {"type": "integer", "value": 3},
+            "ratio": {"type": "float", "value": 1.5},
+            "enabled?": {"type": "boolean", "value": true},
+            "due_on": {"type": "date", "value": "2026-10-09"},
+            "metadata": {"type": "map", "value": {"source": {"type": "string", "value": "fixture"}}},
+            "mode": {"type": "atom", "value": "preview"},
+            "scheduled_at": {"type": "datetime", "value": "2026-10-09T12:00:00Z"}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-no-editable",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "no_editable",
+      "role_job": "A template author opens a scenario whose values are all read-only and is told plainly that there is nothing to edit here.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "no-editable",
+      "reason": "Retains the no-editable message with no read-only note, so a scenario with only atoms, maps and DateTimes does not explain a list that is not there.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "mode": {"type": "atom", "value": "preview"},
+            "metadata": {"type": "map", "value": {"source": {"type": "string", "value": "fixture"}}},
+            "scheduled_at": {"type": "datetime", "value": "2026-10-09T12:00:00Z"}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-field-error",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "field_error",
+      "role_job": "A template author types 3.5 into a whole-number field and sees one specific error tied to that field.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "field-error",
+      "reason": "Retains the parse error on a number field: the specific message, aria-invalid, and an aria-describedby that names only the error.",
+      "owning_requirements": [
+        "PRVUX-05",
+        "PRVUX-06",
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-reset"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "label": {"type": "string", "value": "Original"},
+            "quantity": {"type": "integer", "value": 3},
+            "enabled?": {"type": "boolean", "value": true}
+          },
+          "draft_assigns": {
+            "quantity": {"type": "string", "value": "3.5"}
+          },
+          "field_errors": {
+            "quantity": "Enter a whole number."
+          }
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "magic_link"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "invite_admin",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-long-unicode",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "long_unicode",
+      "role_job": "A template author selects a scenario with a long non-ASCII name and reads a humanized label above the exact technical identity, wrapped on one narrow screen.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "long-unicode",
+      "reason": "Retains the readable selector trigger for a long Unicode scenario: humanized primary, Mailable, and the raw Module.scenario atom as visible wrapping monospace text.",
+      "owning_requirements": [
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "user_name": {"type": "string", "value": "Ada"},
+            "plan": {"type": "atom", "value": "free"},
+            "admin?": {"type": "boolean", "value": false}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "MailglassDemoWeb.Mailers.AccountMailer", "scenarios": ["invite_admin", "welcome_\u00fcberraschung_\u6771\u4eac__with_a_deliberately_long_name"]}
+          ],
+          "current_mailable": "MailglassDemoWeb.Mailers.AccountMailer",
+          "current_scenario": "welcome_überraschung_東京__with_a_deliberately_long_name",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": false
+        }
+      }
+    },
+    {
+      "id": "preview-authoring-duplicate-label",
+      "story_path": "/dev/storybook/preview_authoring",
+      "theme_owner": "preview-authoring-story",
+      "theme_picker_testid": "preview-authoring-review-theme",
+      "variation_id": "duplicate_label",
+      "role_job": "A template author opens the menu and can tell two scenarios that humanize to the same label apart, and two Mailables that share a leaf name.",
+      "source": [
+        "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex#assigns_form/1",
+        "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex#menu/1"
+      ],
+      "cohort": "none",
+      "state": "duplicate-label",
+      "reason": "Retains the open menu with a same-label collision falling back to raw atoms and two ReceiptMailer leaves told apart by namespace.",
+      "owning_requirements": [
+        "PRVUX-07",
+        "STORY-07"
+      ],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": [
+        "fb-preview-identity"
+      ],
+      "rendered": true,
+      "projection": {
+        "form": {
+          "scenario_assigns": {
+            "user_name": {"type": "string", "value": "Ada"},
+            "plan": {"type": "atom", "value": "free"},
+            "admin?": {"type": "boolean", "value": false}
+          },
+          "draft_assigns": {},
+          "field_errors": {}
+        },
+        "menu": {
+          "mailables": [
+            {"module": "Northstar.Billing.ReceiptMailer", "scenarios": ["welcome_überraschung_東京__with_a_deliberately_long_name", "welcome_überraschung_東京_with_a_deliberately_long_name"]},
+            {"module": "Fjordline.Billing.ReceiptMailer", "scenarios": ["invoice_paid"]}
+          ],
+          "current_mailable": "Northstar.Billing.ReceiptMailer",
+          "current_scenario": "welcome_überraschung_東京_with_a_deliberately_long_name",
+          "device_width": 768,
+          "mount_path": "/dev/mail",
+          "open": true
+        }
+      }
+    }
+  ],
+  "axe_selection": [
+    {"scenario_id": "qv-delivery-normal", "state": "normal", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-first", "state": "first", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-last", "state": "last", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-single-unicode", "state": "single-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Delivery record or story variation exists for this real absence state."},
+    {"scenario_id": "delivery-investigation-northstar-normal", "state": "normal-permitted-review", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "delivery-investigation-fjordline-long-unicode", "state": "long-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "delivery-investigation-suppression-stale", "state": "stale-retained-match", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "delivery-investigation-suppression-unavailable", "state": "unavailable-no-prior-fact", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-and-story-render", "reason": "Unavailable is covered by the normal production story/connected route; the selected accessibility sample uses the stale retained evidence state."},
+    {"scenario_id": "delivery-investigation-unknown-expiry", "state": "unknown-expiry", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "story-render-only", "reason": "The unknown-expiry copy is a separate retained story assertion; the accessibility sample uses the long technical-value case."},
+    {"scenario_id": "delivery-investigation-replay-ambiguous", "state": "replay-ambiguous", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "delivery-investigation-replay-unavailable", "state": "replay-unavailable", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "story-render-only", "reason": "No exact target can enable confirmation; the available presentation is verified by the named retained story assertion."},
+    {"scenario_id": "delivery-investigation-replay-denied", "state": "replay-denied", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-and-story-render", "reason": "The connected authorization result is verified on the real route; this static error variation is not a separate axe sample."},
+    {"scenario_id": "delivery-investigation-replay-failed", "state": "replay-failed", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-and-story-render", "reason": "The connected failure and fresh-review behavior is verified on the real route; this static error variation is not a separate axe sample."},
+    {"scenario_id": "qv-inbound-normal", "state": "normal", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-first", "state": "first", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-last", "state": "last", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-single-unicode", "state": "single-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-unavailable", "state": "unavailable", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Inbound record or story variation exists for this real absence state."}
+  ],
+  "feedback": [
+    {
+      "id": "fb-health-crowding",
+      "label": "Health crowding, freshness/Refresh grouping, activity hierarchy",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex", "symbol": "MailglassAdmin.Operator.HealthOverview"}],
+      "owner_requirements": ["OUTUX-06"],
+      "owner_phase": "177",
+      "scenario_ids": [
+        "health-overview-northstar-normal",
+        "health-overview-helios-empty",
+        "health-overview-stale",
+        "health-overview-unavailable",
+        "health-overview-fjordline-long-unicode"
+      ],
+      "status": "automated",
+      "disposition": "Health is one left-aligned 42rem reading column: a grouped observation block, fixed-order 44px issue rows with subordinate per-issue help, adjacent stale and unavailable notices, and a subordinate Recent activity section. The composition was chosen by a bounded 252-measurement comparison (Winner A) and is held by population, geometry, axe, link-landing and focus gates. Stories prove rendering only; every issue link is proven on the real route.",
+      "evidence_pointer": ".planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#health-composition-outux-06"
+    },
+    {
+      "id": "fb-preview-reset",
+      "label": "Preview reset alignment/weight and repetitive helpers",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex", "symbol": "MailglassAdmin.Preview.AssignsForm"}],
+      "owner_requirements": ["PRVUX-05", "PRVUX-06"],
+      "owner_phase": "178",
+      "scenario_ids": [
+        "preview-authoring-typed-values",
+        "preview-authoring-no-editable",
+        "preview-authoring-field-error"
+      ],
+      "status": "automated",
+      "disposition": "Restore defaults is now a bordered, aligned action with the unchanged reset handler. The repeated generic value helpers are gone: read-only values share one note, and an all-read-only scenario shows the no-editable message with no note. A field error names the specific problem and is the only description of its control. Parsing and validation are unchanged.",
+      "evidence_pointer": ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#preview-authoring-prvux-05-prvux-06"
+    },
+    {
+      "id": "fb-preview-identity",
+      "label": "Readable selected Preview scenario/module identity",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar.menu/1"}],
+      "owner_requirements": ["PRVUX-07"],
+      "owner_phase": "178",
+      "scenario_ids": [
+        "preview-authoring-typed-values",
+        "preview-authoring-long-unicode",
+        "preview-authoring-duplicate-label"
+      ],
+      "status": "automated",
+      "disposition": "The selector shows a humanized scenario label first, the Mailable second, and the exact Module.scenario identity as visible wrapping monospace text, with no middle-dot join. Scenarios that humanize to the same label fall back to their raw atoms, and Mailables that share a leaf are told apart by namespace. URLs are unchanged.",
+      "evidence_pointer": ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#readable-scenario-selector-prvux-07"
+    },
+    {
+      "id": "fb-account-context",
+      "label": "Compact Account context and coherent Preview return",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/shell.ex", "symbol": "MailglassAdmin.Operator.Shell"}, {"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar"}],
+      "owner_requirements": ["UXF-09", "UXF-10"],
+      "owner_phase": "177",
+      "scenario_ids": [
+        "account-scope-none",
+        "account-scope-one",
+        "account-scope-many",
+        "account-scope-long-label",
+        "preview-chrome-valid-return",
+        "preview-chrome-direct-entry"
+      ],
+      "status": "automated",
+      "disposition": "The Account control heads the Health, Deliveries and Inbound group it scopes and offers a picker only when there is a real choice; Preview sits outside the group, shows no Account identity, and returns to the originating Account through a validated closed-set return context. Stories prove rendering only; scope and return are proven on the real routes and in the reference demo.",
+      "evidence_pointer": ".planning/phases/177-readable-health-and-coherent-account-navigation/177-AUTOMATION.md#account-scope-and-preview-return-uxf-09-uxf-10"
+    },
+    {
+      "id": "fb-auto-apply-filters",
+      "label": "Auto-apply both collections, no Apply",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator_live.ex", "symbol": "validate_filters/2 and apply_filters/2"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound_live.ex", "symbol": "validate_filters/2 and apply_filters/2"}],
+      "owner_requirements": ["FILTER-01", "FILTER-02", "FILTER-03", "FILTER-04"],
+      "owner_phase": "176",
+      "scenario_ids": [],
+      "proof_boundary": "connected-real-route-only",
+      "status": "automated",
+      "disposition": "Both live lists auto-apply: select changes and Enter commit straight to the canonical URL with no Apply control, and debounced Search edits add one history entry each. Back and Forward restore the filters with the search focused, a Clear during a pending debounce ends cleared, and a failed read shows an error with Retry rather than an empty population. FILTER-01 through FILTER-04 are connected-only, so there is no Storybook scenario; the cases run on the real routes in mailglass_admin/e2e/phase176-filters.spec.js.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths-roadmap-success-criteria"
+    },
+    {
+      "id": "fb-quiet-quick-view-arrows",
+      "label": "Quiet quick-view arrows on both surfaces",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex", "symbol": "MailglassAdmin.Operator.QuickView.nav_button/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex", "symbol": "MailglassAdmin.Inbound.QuickView.nav_button/1"}],
+      "owner_requirements": ["UXF-11"],
+      "owner_phase": "174",
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
+      "status": "resolved",
+      "disposition": "Enabled navigation uses unoutlined 44px ghost-arrow links with accessible names, visible hover and focus states, and readable position. At Delivery boundaries the unavailable control is a generic inert span with screen-reader text and no link/button semantics; Inbound keeps its native disabled button. The two adapters retain their intended, different boundary semantics. Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js and phase173-evidence.spec.js cover tracer, Delivery and Inbound cases; the 320/375/768/1280/1440 light/dark matrix and exact current Axe report are indexed in mailglass_admin/docs/phase174-review.md. Routes: /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound.",
+      "evidence_pointer": "mailglass_admin/docs/phase174-review.md#feedback-disposition",
+      "projection_evidence": {
+        "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
+        "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],
+        "connected_real_route_only": ["qv-delivery-empty", "qv-inbound-empty"],
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs"
+      }
+    },
+    {
+      "id": "fb-raw-source-hierarchy",
+      "label": "Raw provider source hierarchy and privacy/reveal grouping",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "MailglassAdmin.Inbound.RoutingTrace"}],
+      "owner_requirements": ["INUX-06"],
+      "owner_phase": "176",
+      "scenario_ids": ["inbound-evidence-evidence-unknown", "inbound-evidence-evidence-empty-revealed", "inbound-evidence-evidence-large-revealed", "inbound-evidence-evidence-denied"],
+      "status": "automated",
+      "disposition": "The production EvidenceCard groups the raw source heading, reveal control and privacy copy with compact facts, and one source selector drives both byte size and the revealed text. Reveal stays authorization-gated and shows only the safe source allowlist; unknown, empty-revealed, large-revealed and denied evidence are each rendered truthfully, and denial is announced rather than shown as zero. Stories prove rendering only; reveal and denial are proven on the real route.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage"
+    },
+    {
+      "id": "fb-suppression-refresh",
+      "label": "Suppression Refresh/Retry and truthful wording",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex", "symbol": "MailglassAdmin.Operator.SuppressionCard"}],
+      "owner_requirements": ["OUTUX-07", "OUTUX-08"],
+      "owner_phase": "175",
+      "scenario_ids": ["delivery-investigation-suppression-stale", "delivery-investigation-suppression-unavailable", "delivery-investigation-unknown-expiry"],
+      "status": "automated",
+      "disposition": "Account-scoped Refresh uses a real retry and preserves retained evidence as stale on failure; unavailable evidence and unknown expiry remain distinct, and unknown expiry is not described as permanent.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#suppression-refresh-and-policy-outux-07-outux-08"
+    },
+    {
+      "id": "fb-inbound-addresses",
+      "label": "Complete ordinary authorized Inbound addresses",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "sender_display/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "recipient_display/1"}],
+      "owner_requirements": ["INUX-05"],
+      "owner_phase": "176",
+      "scenario_ids": ["inbound-evidence-normal-contacts", "inbound-evidence-long-local-part", "inbound-evidence-unicode", "inbound-evidence-spoofed-display-name", "inbound-evidence-many-recipients", "inbound-evidence-missing-headers", "inbound-evidence-unparseable"],
+      "status": "automated",
+      "disposition": "Ordinary authorized contacts show complete addresses: long local parts, Unicode, spoofed display names, many recipients, missing headers and unparseable headers all render through the production DetailHeader, with the envelope recipient kept distinct from header contacts. The visible address is also in the accessible name. Raw source, routing/header/matcher diagnostics, telemetry and logs stay separately protected.",
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#requirements-coverage"
+    },
+    {
+      "id": "fb-storybook-fidelity",
+      "label": "Storybook navigation, fonts/themes/hooks and stories beyond primitives",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "reference/demo_app/lib/mailglass_demo_web/router.ex", "symbol": "MailglassDemoWeb.StorybookRoutes"}, {"path": "reference/demo_app/dev/mailglass_demo_web/storybook.ex", "symbol": "MailglassDemoWeb.Storybook.js_body/0 (production hook registration and story-local Light/Dark/System adapter)"}, {"path": "reference/demo_app/storybook/quick_views/delivery.story.exs", "symbol": "Storybook.QuickViews.Delivery"}, {"path": "reference/demo_app/storybook/quick_views/inbound.story.exs", "symbol": "Storybook.QuickViews.Inbound"}, {"path": "mailglass_admin/lib/mailglass_admin/controllers/assets.ex", "symbol": "MailglassAdmin.Controllers.Assets.call/2"}, {"path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex", "symbol": "MailglassAdmin.Operator.QuickView.quick_view/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex", "symbol": "MailglassAdmin.Inbound.QuickView.quick_view/1"}, {"path": "reference/demo_app/storybook/primitives/stat_card.story.exs", "symbol": "Storybook.Primitives.StatCard"}],
+      "owner_requirements": ["STORY-03", "STORY-04", "STORY-05", "STORY-06", "STORY-07"],
+      "owner_phase": "174",
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
+      "status": "automated",
+      "disposition": "The generated root, Theme Picker, sidebar, direct story, internal assets, and retained production Delivery/Inbound quick views work under /dev/storybook. Fresh cold/warm evidence covers exact production CSS and loaded font faces, story-owned Light/Dark/System behavior under live OS changes, real iframe hook registration/mount/remove/remount and route cycles, and the strict 18-case Admin Axe comparison. The scan has zero violations and zero untriaged findings; its 50 incomplete findings remain explicit and are not claimed as passes. Phase 178 closed the two remaining items. The serif StatCard feedback has a computed font-role receipt: the demo case 'Phase 178 StatCard story uses the production font roles' in reference/demo_app/assets/e2e/phase178-stories.spec.js compares the label, value and UI roles of the light and dark StatCard stories with the same component rendered by the production Admin gallery from the same CSS bytes, and asserts no serif fallback and loaded production faces. Real browser zoom is covered by the five Phase 178 real-zoom cases in mailglass_admin/e2e/phase178-real-zoom.spec.js (Delivery and Inbound quick views, Health, Account, and the Deliveries and Inbound filters at 320 CSS px under actual 200% tab zoom) and by the extended Phase 171 actual-zoom case for Preview Restore defaults and the technical identity line. The reproduction commands and receipts are in 178-AUTOMATION.md. Current stories: /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/primitives/stat_card, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets.",
+      "evidence_pointer": ".planning/phases/178-preview-authoring-and-milestone-review/178-AUTOMATION.md#storybook-fidelity-and-real-zoom-uiq-06",
+      "projection_evidence": {
+        "persisted_scenarios": ["qv-delivery-single-unicode", "qv-inbound-normal", "qv-inbound-single-unicode"],
+        "rendered_only_for_projection_agreement": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-inbound-first", "qv-inbound-last", "qv-inbound-unavailable"],
+        "connected_real_route_only": ["qv-delivery-empty", "qv-inbound-empty"],
+        "test": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs"
+      }
+    },
+    {
+      "id": "fb-replay-review",
+      "label": "Quick-view replay, truthful availability, concise dialog/X, success toast and inline errors/retry",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/replay_action.ex", "symbol": "MailglassAdmin.Operator.ReplayAction"}, {"path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex", "symbol": "MailglassAdmin.Operator.ReplayModal"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex", "symbol": "MailglassAdmin.Inbound.ReplayModal"}],
+      "owner_requirements": ["REPLAY-04", "REPLAY-05", "REPLAY-06", "REPLAY-07", "REPLAY-08"],
+      "owner_phase": "175",
+      "scenario_ids": ["delivery-investigation-northstar-normal", "delivery-investigation-replay-ambiguous", "delivery-investigation-replay-unavailable", "delivery-investigation-replay-denied", "delivery-investigation-replay-failed"],
+      "status": "automated",
+      "disposition": "Exact target, no-fallback, permitted/unavailable/ambiguous/denied/failed outcomes, shared dialog keyboard/focus behavior, visible failure recovery, accessible success toast, and durable actual audit outcome are covered. Provider delivery is not claimed.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#replay-path-replay-04-through-replay-08"
+    },
+    {
+      "id": "fb-technical-details",
+      "label": "Technical evidence visible by default on full detail",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex", "symbol": "MailglassAdmin.Operator.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}],
+      "owner_requirements": ["UXF-12"],
+      "owner_phase": "175",
+      "scenario_ids": ["delivery-investigation-northstar-normal", "delivery-investigation-fjordline-long-unicode"],
+      "status": "automated",
+      "disposition": "Grouped Delivery and Inbound full-detail technical fields are visible without expansion. Current connected-route assertions verify exact identity, bounded values, and no horizontal overflow; compact quick-view technical details remain a distinct presentation.",
+      "evidence_pointer": ".planning/phases/175-delivery-investigation-and-safe-replay/175-AUTOMATION.md#technical-evidence-uxf-12"
+    }
+  ]
+}

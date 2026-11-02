@@ -3,9 +3,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { test, expect } = require("@playwright/test");
 const { resetDisposableEvidence } = require("../scripts/check-persona-reset-target.cjs");
+const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "../../../../");
-const EVIDENCE_DIR = path.resolve(__dirname, "../../tmp/demo_browser_evidence");
+const EVIDENCE_DIR = resolveEvidenceOutputPath(process.env.DEMO_BROWSER_EVIDENCE_DIR);
 const CAPTURE_DIR = path.join(EVIDENCE_DIR, "captures");
 const MANIFEST_PATH = path.join(EVIDENCE_DIR, "phase173-captures.json");
 const RUN_ID = process.env.DEMO_EVIDENCE_RUN_ID || "";

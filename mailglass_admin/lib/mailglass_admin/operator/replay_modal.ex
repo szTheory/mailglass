@@ -13,71 +13,55 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:delivery, :map, default: nil)
   attr(:replay_targets, :map, default: nil)
   attr(:selected_target_id, :string, default: nil)
+  attr(:target_changed?, :boolean, default: false)
   attr(:review_id, :string, default: nil)
   attr(:account_label, :string, default: nil)
   attr(:pending?, :boolean, default: false)
   attr(:consumed?, :boolean, default: false)
+  attr(:feedback, :map, default: nil)
 
   def replay_modal(assigns) do
     ~H"""
     <%= if @open? and @delivery do %>
-      <div
-        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 flex items-center justify-center overflow-hidden p-4"
-        phx-remove={
-          JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
-        }
+      <Components.replay_dialog
+        id="operator-replay-modal"
+        title_id="replay-modal-title"
+        description_id="replay-modal-description"
+        close_id="operator-replay-close"
+        close_event="close_replay"
       >
-        <div
-          id="operator-replay-modal"
-          data-testid="operator-replay-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="replay-modal-title"
-          aria-describedby="replay-modal-description"
-          phx-hook="ModalFocusTrap"
-          phx-mounted={JS.focus(to: "#operator-replay-close")}
-          phx-key="Escape"
-          phx-window-keydown="close_replay"
-          class="motion-overlay mg-layer-overlay-panel mg-inbound-replay-dialog relative my-md w-full shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-lg shadow-overlay"
-          phx-remove={
-            JS.hide(
-              time: 150,
-              transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"}
-            )
-          }
-        >
-          <%!-- Wrap to the last currently focusable action: Confirm when enabled, otherwise Cancel. --%>
-          <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
-          <div class="flex items-start justify-between gap-md">
-            <div class="space-y-1">
-              <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
-                Review webhook replay
-              </h2>
-              <p id="replay-modal-description" class="text-body text-secondary">
-                Replay reprocesses the full stored request through current normalization. It may add Events or update Delivery and suppression records for multiple Deliveries in this Account. It does not resend outbound mail or prove provider receipt.
-              </p>
-            </div>
-
-            <button
-              id="operator-replay-close"
-              type="button"
-              phx-click="close_replay"
-              class="btn btn-ghost min-h-11 px-4"
-            >
-              Close replay review
-            </button>
-          </div>
-
+        <:title>Review webhook replay</:title>
+        <:description>
+          Reprocesses this stored webhook through current normalization. It may add Events or update Deliveries and suppressions across this Account. It does not resend mail or prove provider receipt.
+        </:description>
+        <:body>
           <%= case @replay_targets do %>
             <% %{status: :exact, candidate: candidate} -> %>
-              <div class="mt-6 space-y-4">
-                <p class="text-body text-base-content">
-                  Review the exact stored request before confirming.
-                </p>
-                <.target_card candidate={candidate} selected={true} />
+              <div class="mt-lg space-y-4">
+                <%= if candidate.webhook_event_id == @selected_target_id do %>
+                  <p class="text-body text-base-content">
+                    Review the exact stored request before confirming.
+                  </p>
+                  <.target_card candidate={candidate} selected={true} />
+                <% else %>
+                  <p class="text-body text-base-content">
+                    <%= if @target_changed? do %>
+                      This exact request changed. Review the current request before confirming.
+                    <% else %>
+                      Review the exact stored request before confirming.
+                    <% end %>
+                  </p>
+                  <form
+                    id="operator-replay-targets"
+                    phx-change="choose_replay_target"
+                    class="space-y-3"
+                  >
+                    <.target_choice candidate={candidate} selected={false} />
+                  </form>
+                <% end %>
               </div>
             <% %{status: :ambiguous, candidates: candidates} -> %>
-              <div class="mt-6 space-y-4">
+              <div class="mt-lg space-y-4">
                 <p class="text-body text-base-content">
                   Replay is <span class="font-bold">{RepairState.availability_label(:ambiguous)}</span>.
                   Choose the exact stored request to review. No request is selected for you.
@@ -93,25 +77,34 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 </form>
               </div>
             <% %{status: :unavailable, reason: reason} -> %>
-              <div class="mt-6 space-y-4">
-                <div class="rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
+              <div class="mt-lg space-y-4">
+                <div class="rounded-box border border-warning bg-warning/10 p-md text-body text-base-content">
                   <p class="font-bold">Replay unavailable</p>
                   <p class="mt-1">
                     Replay is <span class="font-bold">{RepairState.availability_label(:unavailable)}</span>. {RepairState.unavailable_reason_copy(
                       reason
                     )}
                   </p>
+                  <button
+                    :if={reason == :read_unavailable}
+                    type="button"
+                    phx-click="review_replay_again"
+                    data-testid="operator-replay-review-again"
+                    class="btn btn-ghost mt-3 min-h-11"
+                  >
+                    Review again
+                  </button>
                 </div>
               </div>
             <% _ -> %>
-              <div class="mt-6 rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
+              <div class="mt-lg rounded-box border border-warning bg-warning/10 p-md text-body text-base-content">
                 Replay target resolution is still loading for this delivery.
               </div>
           <% end %>
 
           <div
             :if={reviewed_target(@replay_targets, @selected_target_id)}
-            class="mt-6 rounded-box border border-base-300 bg-base-200 p-4"
+            class="mt-lg rounded-box border border-base-300 bg-base-200 p-md"
             data-testid="operator-replay-reviewed-target"
           >
             <p class="mb-3 text-label font-bold text-base-content">Reviewed request</p>
@@ -122,29 +115,59 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Stored webhook/request ID</dt>
-                <dd class="mono mt-1 break-all text-base-content">{reviewed_target(@replay_targets, @selected_target_id).webhook_event_id}</dd>
+                <dd class="mono mt-1 break-all text-base-content">
+                  {reviewed_target(@replay_targets, @selected_target_id).webhook_event_id}
+                </dd>
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Provider</dt>
-                <dd class="mt-1 break-words text-base-content">{String.upcase(reviewed_target(@replay_targets, @selected_target_id).provider || "unknown")}</dd>
+                <dd class="mt-1 break-words text-base-content">
+                  {String.upcase(
+                    reviewed_target(@replay_targets, @selected_target_id).provider || "unknown"
+                  )}
+                </dd>
               </div>
               <div class="min-w-0">
                 <dt class="text-label text-secondary">Received</dt>
-                <dd class="mt-1 break-words text-base-content"><Components.timestamp at={reviewed_target(@replay_targets, @selected_target_id).webhook_timestamp} /></dd>
+                <dd class="mt-1 break-words text-base-content">
+                  <Components.timestamp at={
+                    reviewed_target(@replay_targets, @selected_target_id).webhook_timestamp
+                  } />
+                </dd>
               </div>
             </dl>
+          </div>
+
+          <div
+            :if={@feedback}
+            role="status"
+            aria-live="polite"
+            data-testid="operator-replay-feedback"
+            class="mt-lg rounded-box border border-error/40 bg-error/10 p-md text-body text-base-content"
+          >
+            <p>{@feedback.text}</p>
+            <button
+              type="button"
+              phx-click="review_replay_again"
+              disabled={@pending?}
+              data-testid="operator-replay-review-again"
+              class="btn btn-ghost mt-3 min-h-11 px-md"
+            >
+              Review again
+            </button>
           </div>
 
           <p :if={@pending?} role="status" aria-live="polite" class="mt-4 text-body text-secondary">
             Replaying the reviewed request…
           </p>
-
-          <div class="mt-6 flex flex-wrap justify-end gap-sm">
+        </:body>
+        <:actions>
+          <div class="mt-lg flex flex-wrap justify-end gap-sm">
             <button
               id="operator-replay-cancel"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost min-h-11 px-5"
+              class="btn btn-ghost min-h-11 px-md"
             >
               Cancel
             </button>
@@ -158,15 +181,13 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               disabled={@pending? or @consumed?}
               aria-live="polite"
               data-testid="operator-replay-confirm"
-              class="btn btn-error min-h-11 px-5"
+              class="btn btn-primary min-h-11 px-md"
             >
               {if(@pending?, do: "Replaying…", else: "Confirm replay")}
             </button>
           </div>
-          <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
-          <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
-        </div>
-      </div>
+        </:actions>
+      </Components.replay_dialog>
     <% end %>
     """
   end
@@ -240,7 +261,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <p class="text-body font-bold text-base-content">
             {String.upcase(@candidate.provider || "unknown")}
           </p>
-          <p data-testid="operator-replay-target-id" class="mono text-label text-secondary">
+          <p
+            data-testid="operator-replay-target-id"
+            class="mono min-w-0 break-all text-label text-secondary"
+          >
             {@candidate.webhook_event_id}
           </p>
         </div>
@@ -252,11 +276,15 @@ defmodule MailglassAdmin.Operator.ReplayModal do
       <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
         <div>
           <dt class="text-label uppercase font-bold">Provider event</dt>
-          <dd class="mt-1 text-base-content">{present(@candidate.provider_event_id)}</dd>
+          <dd class="mono min-w-0 break-all mt-1 text-base-content">
+            {present(@candidate.provider_event_id)}
+          </dd>
         </div>
         <div>
           <dt class="text-label uppercase font-bold">Delivery linkage</dt>
-          <dd class="mt-1 text-base-content">{present(@candidate.delivery_provider_message_id)}</dd>
+          <dd class="mono min-w-0 break-all mt-1 text-base-content">
+            {present(@candidate.delivery_provider_message_id)}
+          </dd>
         </div>
       </dl>
     </div>
@@ -287,7 +315,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
   defp target_card_class(selected) do
     [
-      "rounded-box border p-4",
+      "rounded-box border p-md",
       selected && "border-error bg-error/5",
       !selected && "border-base-300 bg-base-200"
     ]

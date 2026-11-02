@@ -66,6 +66,12 @@ defmodule MailglassAdmin.TestAdopter.Router do
         :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
         :"Elixir.MailglassAdmin.Fixtures.StubMailer",
         :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
+      ],
+      # Phase 177 D-18: the alt Preview mount returns to the alt operator mount.
+      navigation: [
+        overview_path: "/secure/console",
+        deliveries_path: "/secure/console?view=deliveries",
+        inbound_path: "/secure/console/inbound"
       ]
     )
   end
@@ -120,7 +126,11 @@ defmodule MailglassAdmin.TestAdopter.Router do
       unauthorized_path: "/login",
       # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
       # routing-trace card has declared inbound routes to reflect.
-      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
+      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter,
+      # Phase 177 D-18: the alt operator mount links to the alt Preview mount.
+      navigation: [
+        preview_path: "/alt/dev/console"
+      ]
     )
   end
 end
@@ -131,7 +141,13 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   alias MailglassAdmin.TestSupport.OperatorFixtures
 
   def ready(conn, _params) do
-    text(conn, "ok")
+    if Application.get_env(:mailglass_admin, :operator_browser_server_ready?, false) do
+      text(conn, "ok")
+    else
+      conn
+      |> put_status(:service_unavailable)
+      |> text("starting")
+    end
   end
 
   def reset(conn, _params) do
@@ -193,6 +209,9 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
 
         "phase169-support-empty" ->
           {:ok, OperatorFixtures.seed_phase169_support_empty!()}
+
+        "phase177-health-all" ->
+          {:ok, OperatorFixtures.seed_phase177_health_all!()}
 
         _ ->
           :unknown
@@ -374,6 +393,12 @@ defmodule MailglassAdmin.TestOperatorAuth do
     {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
   end
 
+  # Phase 177 D-05: the host owns Account authorization. A sentinel Account id
+  # lets tests prove a crafted `tenant_id` is denied by the host on arrival.
+  def authorize(:operator_access, %{params: %{"tenant_id" => "forbidden-account"}}) do
+    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
+  end
+
   def authorize(:operator_access, %{actor: actor}) do
     {:ok,
      %{
@@ -399,12 +424,16 @@ defmodule MailglassAdmin.TestOperatorAuth do
         }
       )
       when is_struct(recent_auth_at, DateTime) do
-    record_destructive_call(delivery.id, target.webhook_event_id)
-
-    if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
-      {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
+    if :persistent_term.get({__MODULE__, :delivery_replay_revoked}, false) do
+      {:error, :unauthorized, %{message: "Replay is not authorized."}}
     else
-      {:error, :stale_auth, %{message: "Recent authentication is required."}}
+      record_destructive_call(delivery.id, target.webhook_event_id)
+
+      if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
+        {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
+      else
+        {:error, :stale_auth, %{message: "Recent authentication is required."}}
+      end
     end
   end
 

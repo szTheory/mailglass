@@ -43,3 +43,11 @@ priority: follow-up PR right after #302 merges ("owner review fixes"); taste ite
 
 ## Answered (no change)
 - `/dev/unsubscribe/:state` is a dev preview of the web page mailglass serves to an email's RECIPIENT when they click the unsubscribe link (RFC 8058 List-Unsubscribe). Its three states are valid, invalid and expired. Consider labelling it clearly in the demo index.
+
+## Reaffirmed during live review — 2026-10-26
+
+The owner repeated items 1 (auto-apply both collections), 3 (useful ordinary full Inbound addresses) and 5 (raw-source card hierarchy), and supplied additional Health/Preview/control screenshots. These are still open product refinements; the already-covered Phase 173.1 demo authorization and browser fixes stay completed. New observations and source evidence are in [the current feedback register](2026-10-26-owner-review-health-preview-controls.md).
+
+Current address inventory makes item 3 precise: ordinary recipient displays inspected are already full; `Inbound.DetailHeader.sender_display/1` still masks From. Show complete ordinary authorized contact values with truthful missing/multiple-address handling. Raw source, sensitive routing/header/matcher diagnostics, telemetry and logs retain separate protections; don't globally delete masking helpers or blanket-unmask traces as a shortcut.
+
+The owner requested deeper upstream scoping only, leaving requirements, phases and execution to OpenGSD. [Current scope](../research/ui-quality-engine/UPSTREAM-SCOPE.md) makes unresolved feedback next-envelope input alongside retained scenarios, not work deferred until the whole Storybook catalogue exists. Auto-apply and ordinary address usefulness are settled directions, not questions to reinterview. Custom date ranges and account-aware Preview remain separately scoped. Replay X-close/success-toast and inline-error/retry requests remain explicit.

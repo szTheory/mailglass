@@ -224,7 +224,8 @@ defmodule MailglassAdmin.TokenParityTest do
     assert source_css =~ ~r/--size-control-lg:\s*52px;/
     assert tokens =~ "--mg-color-surface-raised: #FFFFFF;"
     assert gallery =~ "/dev/mail/gallery"
-    assert demo_router =~ "live_storybook(\"/storybook\""
+    assert demo_router =~ "live_storybook(\"/dev/storybook\""
+    assert demo_router =~ "assets_path: \"/dev/storybook/assets\""
 
     assert storybook =~
              "css_path: \"/dev/mail/css-\" <> MailglassAdmin.Controllers.Assets.css_hash()"

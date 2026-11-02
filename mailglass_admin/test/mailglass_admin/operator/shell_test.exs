@@ -187,7 +187,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert html =~ "Preview"
     end
 
-    test "orders shared surface nav with Health first and Preview second" do
+    test "orders shared surface nav with the Account-scoped surfaces first and Preview last" do
       assigns = %{}
 
       html =
@@ -213,7 +213,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
         |> Enum.map(&Floki.text/1)
         |> Enum.map(&String.trim/1)
 
-      assert labels == ["Health", "Preview", "Deliveries", "Inbound"]
+      assert labels == ["Health", "Deliveries", "Inbound", "Preview"]
     end
   end
 

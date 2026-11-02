@@ -1,0 +1,10 @@
+{
+  "command": "node --test --test-reporter=tap --test-name-pattern='validateReport rejects a missing report before comparison' mailglass_admin/e2e/support/storybook-axe.test.cjs",
+  "exitCode": 1,
+  "targetTest": "validateReport rejects a missing report before comparison",
+  "targetFile": "mailglass_admin/e2e/support/storybook-axe.test.cjs",
+  "expected": "validateReport(null, callerIdentity) returns valid=false with a report error",
+  "actual": "The fail-open RED adapter returned valid=true because the comparator has not been implemented.",
+  "output": "TAP version 13\n# Subtest: validateReport rejects a missing report before comparison\nnot ok 1 - validateReport rejects a missing report before comparison\n  ---\n  duration_ms: 0.696584\n  type: 'test'\n  location: '/Users/jon/projects/mailglass/mailglass_admin/e2e/support/storybook-axe.test.cjs:117:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    expected invalid report; errors were []\n    \n    true !== false\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    assertInvalidValidation (/Users/jon/projects/mailglass/mailglass_admin/e2e/support/storybook-axe.test.cjs:107:10)\n    TestContext.<anonymous> (/Users/jon/projects/mailglass/mailglass_admin/e2e/support/storybook-axe.test.cjs:118:3)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1402:25)\n    Test.start (node:internal/test_runner/test:1262:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 36.27875\n",
+  "semanticAssessment": "The named target test was discovered and executed. It failed on its assertion that a missing report must be rejected; the current fail-open RED adapter accepted it, which is the intended missing behavior under test. No syntax, discovery, fixture, import or unrelated failure occurred."
+}

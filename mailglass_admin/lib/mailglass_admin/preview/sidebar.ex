@@ -23,6 +23,8 @@ defmodule MailglassAdmin.Preview.Sidebar do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Preview.ReturnContext
+  alias MailglassAdmin.Preview.ScenarioLabel
 
   attr(:mailables, :list, required: true)
   attr(:current_mailable, :atom, default: nil)
@@ -30,6 +32,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
   attr(:testid, :string, default: "preview-mailables-picker")
 
   @doc """
@@ -68,6 +71,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
               device_width={@device_width}
               admin_chrome_theme={@admin_chrome_theme}
               mount_path={@mount_path}
+              return_query={@return_query}
             />
           </li>
         <% end %>
@@ -82,7 +86,9 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
   attr(:testid, :string, default: "preview-mailables-picker")
+  attr(:open, :boolean, default: false)
 
   @doc """
   Renders a compact grouped menu for switching the current email preview.
@@ -92,10 +98,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
   than a second navigation column.
   """
   def menu(assigns) do
+    labels = ScenarioLabel.build(assigns.mailables)
+
     assigns =
       assigns
-      |> assign(:current_mailable_label, current_mailable_label(assigns.current_mailable))
-      |> assign(:current_scenario_label, current_scenario_label(assigns.current_scenario))
+      |> assign(:labels, labels)
+      |> assign(:identity, identity(labels, assigns.current_mailable, assigns.current_scenario))
 
     ~H"""
     <div class="grid w-full min-w-0 max-w-4xl gap-xs">
@@ -109,6 +117,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
       <details
         data-testid={@testid}
         data-picker-variant="menu"
+        open={@open}
         class="group relative mg-layer-dropdown min-w-0 w-full"
       >
         <summary
@@ -122,9 +131,33 @@ defmodule MailglassAdmin.Preview.Sidebar do
               data-testid="preview-email-menu-active-identity"
               class="block min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere] text-body"
             >
-              <span class="font-bold text-base-content">{@current_mailable_label}</span>
-              <span :if={@current_scenario_label} class="font-normal text-secondary">
-                {" · "}{@current_scenario_label}
+              <span :if={@identity.placeholder} class="font-bold text-base-content">
+                {@identity.placeholder}
+              </span>
+              <span
+                :if={@identity.scenario}
+                data-testid="preview-email-menu-active-scenario"
+                class="block font-bold text-base-content"
+              >
+                {@identity.scenario}
+              </span>
+              <span
+                :if={@identity.mailable}
+                data-testid="preview-email-menu-active-mailable"
+                class={
+                  if @identity.scenario,
+                    do: "block text-secondary",
+                    else: "block font-bold text-base-content"
+                }
+              >
+                {@identity.mailable}
+              </span>
+              <span
+                :if={@identity.technical}
+                data-testid="preview-email-menu-active-technical"
+                class="block font-mono text-label text-secondary whitespace-normal [overflow-wrap:anywhere]"
+              >
+                {@identity.technical}
               </span>
             </span>
           </span>
@@ -154,6 +187,8 @@ defmodule MailglassAdmin.Preview.Sidebar do
                   device_width={@device_width}
                   admin_chrome_theme={@admin_chrome_theme}
                   mount_path={@mount_path}
+                  return_query={@return_query}
+                  labels={@labels}
                 />
               </li>
             <% end %>
@@ -174,17 +209,30 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
+  # Label table from `ScenarioLabel.build/1` over the whole menu. Left nil, the
+  # entry builds one for itself (no cross-Mailable disambiguation).
+  attr(:labels, :map, default: nil)
 
   def mailable_menu_entry(%{reflection: list} = assigns) when is_list(list) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <ul data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
             <.link
               patch={
-                scenario_path(@mount_path, @mod, scenario_name, @device_width, @admin_chrome_theme)
+                scenario_path(
+                  @mount_path,
+                  @mod,
+                  scenario_name,
+                  @device_width,
+                  @admin_chrome_theme,
+                  @return_query
+                )
               }
               aria-current={
                 scenario_selected?(@current_mailable, @current_scenario, @mod, scenario_name) &&
@@ -200,7 +248,17 @@ defmodule MailglassAdmin.Preview.Sidebar do
                 menu_scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
               ]}
             >
-              <span class="min-w-0 flex-1 truncate">{Atom.to_string(scenario_name)}</span>
+              <span class="min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]">
+                <span data-testid="preview-email-menu-option-label" class="block">
+                  {ScenarioLabel.scenario_label(@labels, @mod, scenario_name)}
+                </span>
+                <span
+                  data-testid="preview-email-menu-option-technical"
+                  class="block font-mono text-label text-secondary"
+                >
+                  {Atom.to_string(scenario_name)}
+                </span>
+              </span>
               <Components.icon
                 :if={scenario_selected?(@current_mailable, @current_scenario, @mod, scenario_name)}
                 name="hero-check"
@@ -215,9 +273,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
   end
 
   def mailable_menu_entry(%{reflection: :no_previews} = assigns) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <div class="flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary">
           <span class="min-w-0 flex-1 truncate">No previews defined</span>
@@ -229,12 +289,14 @@ defmodule MailglassAdmin.Preview.Sidebar do
   end
 
   def mailable_menu_entry(%{reflection: {:error, _msg}} = assigns) do
+    assigns = with_labels(assigns)
+
     ~H"""
     <div class="grid gap-xs">
-      <.mailable_menu_label mod={@mod} />
+      <.mailable_menu_label mod={@mod} label={ScenarioLabel.module_label(@labels, @mod)} />
       <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <.link
-          patch={broken_path(@mount_path, @mod)}
+          patch={broken_path(@mount_path, @mod, @return_query)}
           title="This Mailable raised while rendering"
           class="mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 hover:text-base-content"
         >
@@ -247,17 +309,25 @@ defmodule MailglassAdmin.Preview.Sidebar do
     """
   end
 
-  defp mailable_menu_label(assigns) do
-    {_namespace, leaf} = module_parts(assigns.mod)
-    assigns = assign(assigns, leaf: leaf)
+  defp with_labels(%{labels: nil} = assigns) do
+    assign(assigns, :labels, ScenarioLabel.build([{assigns.mod, assigns.reflection}]))
+  end
 
+  defp with_labels(assigns), do: assigns
+
+  # The visible text is the Mailable leaf unless another Mailable shares that
+  # leaf; the full module stays in the title.
+  attr(:mod, :atom, required: true)
+  attr(:label, :string, required: true)
+
+  defp mailable_menu_label(assigns) do
     ~H"""
     <div
       data-testid="preview-email-menu-group-label"
       class="min-w-0 px-sm pt-xs pb-0 text-label font-bold uppercase text-secondary"
       title={inspect(@mod)}
     >
-      <span class="block truncate">{@leaf}</span>
+      <span class="block truncate">{@label}</span>
     </div>
     """
   end
@@ -269,6 +339,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:device_width, :integer, default: 768)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
+  attr(:return_query, :list, default: [])
 
   # Function component dispatched by reflection shape. Phoenix.Component
   # requires `def` (not `defp`) for `<.mailable_entry ... />` invocation.
@@ -283,7 +354,14 @@ defmodule MailglassAdmin.Preview.Sidebar do
           <li>
             <.link
               patch={
-                scenario_path(@mount_path, @mod, scenario_name, @device_width, @admin_chrome_theme)
+                scenario_path(
+                  @mount_path,
+                  @mod,
+                  scenario_name,
+                  @device_width,
+                  @admin_chrome_theme,
+                  @return_query
+                )
               }
               class={[
                 "mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors",
@@ -312,7 +390,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: {:error, _msg}} = assigns) do
     ~H"""
     <.link
-      patch={broken_path(@mount_path, @mod)}
+      patch={broken_path(@mount_path, @mod, @return_query)}
       title="This Mailable raised while rendering"
       class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
@@ -352,16 +430,30 @@ defmodule MailglassAdmin.Preview.Sidebar do
     end
   end
 
-  defp current_mailable_label(nil), do: "Choose an email"
-
-  defp current_mailable_label(mod) do
-    {_namespace, leaf} = module_parts(mod)
-    leaf
+  # Trigger content for the selected scenario: humanized primary, Mailable as
+  # secondary context, and the exact technical identity (D-04). With nothing
+  # selected only the placeholder renders, with no technical line.
+  defp identity(_labels, nil, _scenario) do
+    %{placeholder: "Choose an email", scenario: nil, mailable: nil, technical: nil}
   end
 
-  defp current_scenario_label(nil), do: nil
-  defp current_scenario_label(:__error__), do: "render error"
-  defp current_scenario_label(scenario), do: Atom.to_string(scenario)
+  defp identity(labels, mod, nil) do
+    %{
+      placeholder: nil,
+      scenario: nil,
+      mailable: ScenarioLabel.module_label(labels, mod),
+      technical: ScenarioLabel.technical(mod, nil)
+    }
+  end
+
+  defp identity(labels, mod, scenario) do
+    %{
+      placeholder: nil,
+      scenario: ScenarioLabel.scenario_label(labels, mod, scenario),
+      mailable: ScenarioLabel.module_label(labels, mod),
+      technical: ScenarioLabel.technical(mod, scenario)
+    }
+  end
 
   defp email_count_label(mailables) do
     count =
@@ -391,14 +483,22 @@ defmodule MailglassAdmin.Preview.Sidebar do
   # relative (`./`) reference would resolve against the parent directory and
   # drop the mount's final segment (e.g. `/dev/mail` -> `/dev/<Mailable>`),
   # 404-ing the `/:mailable/:scenario` route. Build absolute paths instead.
-  defp scenario_path(mount_path, mod, scenario, width, _admin_chrome_theme) do
-    scenario_base_path(mount_path, mod, scenario) <>
-      "?width=" <>
-      Integer.to_string(width)
+  #
+  # `return_query` carries the validated Phase 177 return context
+  # (`return_surface`, `return_tenant_id`) across Preview-internal links. An
+  # empty list appends nothing, so direct-entry URLs stay byte-identical.
+  defp scenario_path(mount_path, mod, scenario, width, _admin_chrome_theme, return_query) do
+    ReturnContext.append_query(
+      scenario_base_path(mount_path, mod, scenario) <> "?width=" <> Integer.to_string(width),
+      return_query
+    )
   end
 
-  defp broken_path(mount_path, mod) do
-    scenario_base_path(mount_path, mod, "__error__")
+  defp broken_path(mount_path, mod, return_query) do
+    ReturnContext.append_query(
+      scenario_base_path(mount_path, mod, "__error__"),
+      return_query
+    )
   end
 
   # Active-item highlight: matches current mailable AND scenario.

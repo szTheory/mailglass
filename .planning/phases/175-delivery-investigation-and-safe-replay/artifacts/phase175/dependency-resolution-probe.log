@@ -1,0 +1,17 @@
+1472692952d9ddbd91df7a116a4b5cf28f717ca3369a7a04bf80cc94b39711d7  mix.lock
+Resolving Hex dependencies...
+Resolution completed in 0.027s
+Unchanged:
+  cowlib 2.21.0 VULNERABLE!
+    EEF-CVE-2026-43966 (MEDIUM)
+    aka: CVE-2026-43966, GHSA-w4f7-4cxr-rv3c
+    HTTP Response Splitting via Non-VCHAR Bytes in cow_http_struct_hd:escape_string/2
+    https://osv.dev/vulnerability/EEF-CVE-2026-43966
+* Updating phoenix_live_view (Hex package)
+* Updating makeup (Hex package)
+Found packages with security advisories, see above for details
+* boundary (Hex package) (mix)
+  locked at 0.11.0 (boundary) b9297a96
+* websock_adapter (Hex package) (mix)
+  locked at 0.6.0 (websock_adapter) 50021a85
+1472692952d9ddbd91df7a116a4b5cf28f717ca3369a7a04bf80cc94b39711d7  mix.lock

@@ -34,8 +34,8 @@ defmodule MailglassAdmin.Operator.ReplayModalTest do
       assert html =~ "Selected target"
       assert html =~ "Review webhook replay"
       assert html =~ "Northstar Logistics"
-      assert html =~ "full stored request"
-      assert html =~ "does not resend outbound mail"
+      assert html =~ "Choose the exact stored request to review. No request is selected for you."
+      assert html =~ "does not resend mail or prove provider receipt"
       assert html =~ "Reviewed request"
       assert html =~ "hero-check-circle"
       assert html =~ ~s(phx-click="close_replay")
@@ -97,7 +97,7 @@ defmodule MailglassAdmin.Operator.ReplayModalTest do
       assert html =~ "Replaying the reviewed request…"
       assert html =~ "Replaying…"
       assert html =~ " disabled"
-      assert html =~ "Close replay review"
+      assert html =~ ~s(aria-label="Close")
       refute html =~ "cancelled"
     end
   end

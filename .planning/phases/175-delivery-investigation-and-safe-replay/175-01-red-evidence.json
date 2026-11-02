@@ -1,0 +1,10 @@
+{
+  "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 elixir -r /private/tmp/phase175_tap_formatter.exs -S mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/components_test.exs --only phase175 --trace --formatter Phase175TAPFormatter",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test Phase 175 Delivery entry component carries quick-view origin with exact identity\nnot ok 2 - test Phase 175 Delivery entry component leaves unavailable replay explanatory and non-actionable\nnot ok 3 - test operator surface Phase 175 Delivery entry exposes replay from the selected quick and full detail\nok 4 - test operator surface Phase 175 Delivery entry discards a review after the selected delivery changes\nnot ok 5 - test operator surface Phase 175 Delivery entry keeps same-looking ambiguous requests separate\nnot ok 6 - test operator surface Phase 175 Delivery entry explains unavailable replay and rejects forged identities\n1..6\n",
+  "targetTest": "test operator surface Phase 175 Delivery entry exposes replay from the selected quick and full detail",
+  "targetFile": "operator_live_test.exs",
+  "expected": "The selected Delivery exposes its exact replay entry in Quick view.",
+  "actual": "The target assertion failed because the Quick view HTML has no operator-quick-view-replay-open-btn.",
+  "semanticAssessment": "The named target executed and failed on the planned missing Quick view replay-entry assertion. The corrected suite executed six Phase 175 cases; the changed-selection case passed, five planned entry/availability cases failed, and no compile, load, or fixture setup fault occurred."
+}

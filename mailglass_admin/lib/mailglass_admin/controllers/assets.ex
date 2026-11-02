@@ -61,6 +61,12 @@ defmodule MailglassAdmin.Controllers.Assets do
                         )
   @external_resource @phoenix_js
   @external_resource @phoenix_live_view_js
+  @hooks_path Path.expand("../../../priv/static/hooks.js", __DIR__)
+  @external_resource @hooks_path
+  @hooks File.read!(@hooks_path)
+  @hooks_hash Base.encode16(:crypto.hash(:md5, @hooks), case: :lower)
+  @storybook_hooks_js @hooks <>
+                        "\n;(() => {\n  window.storybook = window.storybook || {}\n  window.storybook.Hooks = window.MailglassAdminHooks\n})();\n"
   @live_socket_bootstrap """
   // js-enabled marker (set synchronously in <head>, before <body> paints): the
   // timestamp skeleton CSS is scoped to `.mg-js` so it only applies when JS will
@@ -72,110 +78,7 @@ defmodule MailglassAdmin.Controllers.Assets do
       .querySelector("meta[name='csrf-token']")
       ?.getAttribute("content")
 
-    const Hooks = {
-      ModalFocusTrap: {
-        mounted() {
-          this.handleFocusIn = (event) => {
-            const sentinel = event.target.closest?.("[data-focus-trap]")
-            if (!sentinel || !this.el.contains(sentinel)) return
-
-            const controls = [...this.el.querySelectorAll(
-              "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
-            )].filter((element) =>
-              !element.hasAttribute("data-focus-trap") &&
-              element.getClientRects().length > 0 &&
-              getComputedStyle(element).visibility !== "hidden"
-            )
-
-            const target = sentinel.dataset.focusTrap === "start"
-              ? controls[controls.length - 1]
-              : controls[0]
-            target?.focus()
-          }
-          this.el.addEventListener("focusin", this.handleFocusIn)
-        },
-        destroyed() {
-          this.el.removeEventListener("focusin", this.handleFocusIn)
-        }
-      },
-      PreviewTabs: {
-        mounted() {
-          this.syncTabStops = () => {
-            const tabs = [...this.el.querySelectorAll('[role="tab"]')]
-            const focusedTab = tabs.find((tab) => tab.id === this.focusedTabId)
-            const selectedTab = tabs.find((tab) => tab.getAttribute("aria-selected") === "true")
-            const tabStop = focusedTab || selectedTab
-
-            tabs.forEach((tab) => {
-              tab.tabIndex = tab === tabStop ? 0 : -1
-            })
-          }
-
-          this.handleFocusIn = (event) => {
-            const tab = event.target.closest?.('[role="tab"]')
-            if (!tab || !this.el.contains(tab)) return
-            this.focusedTabId = tab.id
-            this.syncTabStops()
-          }
-
-          this.handleKeydown = (event) => {
-            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-
-            const current = event.target.closest?.('[role="tab"]')
-            if (!current || !this.el.contains(current)) return
-
-            const tabs = [...this.el.querySelectorAll('[role="tab"]')]
-            const currentIndex = tabs.indexOf(current)
-            let nextIndex
-
-            if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length
-            else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
-            else if (event.key === "Home") nextIndex = 0
-            else if (event.key === "End") nextIndex = tabs.length - 1
-            else return
-
-            event.preventDefault()
-            const next = tabs[nextIndex]
-            this.focusedTabId = next.id
-            this.syncTabStops()
-            next.focus()
-          }
-
-          this.el.addEventListener("focusin", this.handleFocusIn)
-          this.el.addEventListener("keydown", this.handleKeydown)
-          this.syncTabStops()
-        },
-        updated() {
-          this.syncTabStops()
-        },
-        destroyed() {
-          this.el.removeEventListener("focusin", this.handleFocusIn)
-          this.el.removeEventListener("keydown", this.handleKeydown)
-        }
-      },
-      PreviewPanelScroll: {
-        mounted() {
-          this.handleKeydown = (event) => {
-            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-
-            let distance
-            if (event.key === "PageDown" || event.key === " ") distance = this.el.clientHeight * 0.8
-            else if (event.key === "PageUp") distance = -this.el.clientHeight * 0.8
-            else if (event.key === "ArrowDown") distance = 40
-            else if (event.key === "ArrowUp") distance = -40
-            else return
-
-            event.preventDefault()
-            this.el.scrollTop += distance
-          }
-
-          this.el.addEventListener("keydown", this.handleKeydown)
-        },
-        destroyed() {
-          this.el.removeEventListener("keydown", this.handleKeydown)
-        }
-      }
-    }
+    const Hooks = window.MailglassAdminHooks
 
     const liveSocket = new LiveView.LiveSocket("/live", Phoenix.Socket, {
       params: csrfToken ? { _csrf_token: csrfToken } : {},
@@ -410,7 +313,7 @@ defmodule MailglassAdmin.Controllers.Assets do
   })();
   """
   @js Enum.map_join([@phoenix_js, @phoenix_live_view_js], "\n", &File.read!/1) <>
-        "\n" <> @live_socket_bootstrap
+        "\n" <> @hooks <> "\n" <> @live_socket_bootstrap
   @js_hash Base.encode16(:crypto.hash(:md5, @js), case: :lower)
 
   # ---- Logo ----
@@ -444,6 +347,14 @@ defmodule MailglassAdmin.Controllers.Assets do
   @spec js_hash() :: String.t()
   def js_hash, do: @js_hash
 
+  @doc false
+  @spec hooks_hash() :: String.t()
+  def hooks_hash, do: @hooks_hash
+
+  @doc false
+  @spec hooks_body() :: binary()
+  def hooks_body, do: @hooks
+
   @doc "Content hash used to version the embedded favicon URL."
   @spec favicon_hash() :: String.t()
   def favicon_hash, do: @favicon_hash
@@ -456,10 +367,14 @@ defmodule MailglassAdmin.Controllers.Assets do
   # Router emits `get "/css-:md5", MailglassAdmin.Controllers.Assets, :css`
   # which calls `init(:css)` once at compile time + `call(conn, :css)`
   # on every request.
-  def init(action) when action in [:css, :js, :font, :logo, :favicon], do: action
+  def init(action) when action in [:css, :js, :hooks, :font, :logo, :favicon], do: action
 
   def call(conn, :css), do: serve(conn, @css, "text/css; charset=utf-8")
   def call(conn, :js), do: serve(conn, @js, "application/javascript; charset=utf-8")
+
+  def call(conn, :hooks),
+    do: serve(conn, @storybook_hooks_js, "application/javascript; charset=utf-8")
+
   def call(conn, :logo), do: serve(conn, @logo, "image/svg+xml")
   def call(conn, :favicon), do: serve(conn, @favicon, "image/svg+xml")
 

@@ -22,7 +22,8 @@ defmodule MailglassAdmin.DiscoveryTest do
                :welcome_enterprise,
                :typed_values,
                :recoverable,
-               :welcome_überraschung_東京__with_a_deliberately_long_name
+               :welcome_überraschung_東京__with_a_deliberately_long_name,
+               :welcome_überraschung_東京_with_a_deliberately_long_name
              ],
              "scenarios must preserve HappyMailer.preview_props/0 order"
     end
