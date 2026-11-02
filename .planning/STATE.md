@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-21-PLAN.md; next-plan execution left for the owner
-last_updated: "2026-11-02T01:25:22.588Z"
+stopped_at: Halted 178-22 after the unclassified advisory setup failure; Plans 178-23/24 not run
+last_updated: "2026-11-02T01:37:00.941Z"
 last_activity: 2026-11-01
 last_activity_desc: "Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval"
-state_head: 4897e924386426ab150ebf18bd75356514daf9c0
+state_head: 3bb10b62a838755af6e2e58681e0ad853e598ff5
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 60
-  completed_plans: 57
+  completed_plans: 58
   percent: 80
 ---
 
@@ -35,10 +35,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — READY TO EXECUTE
-Plan: 19 of 19
-Status: Ready to execute
-Last activity: 2026-11-01 — Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval
+Phase: 178 (Preview Authoring and Milestone Review) — HALTED
+Plan: 20 of 22
+Status: Halted at Plan 178-22; follow-on plans remain blocked
+Last activity: 2026-11-02 — Captured attempt-1 hosted evidence; stopped on a new Preview Capture Advisory setup failure (missing inotify-tools)
 
 Progress: [████████░░] 80%
 
@@ -346,6 +346,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P17 | 6min | 2 tasks | 1 files |
 | Phase 178 P20 | 5m 8s | 3 tasks | 9 files |
 | Phase 178 P21 | 57m | 3 tasks | 3 files |
+| Phase 178 P22 | 11m | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -676,6 +677,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Reuse the saved cold/warm pilot only after selected-source digests match the committed recovery bytes.
 - [Phase 178]: Keep hosted, preview, and owner authority unset; UIQ-06/07/08 remain open.
 - [Phase 178]: Owner approved exactly three one-time hosted operations for candidate f5138e94cd32daf29720f794cf3fbb464c3f1b86; the conditional preview was not launched after the dispatch workflow finished with an advisory failure.
+- [Phase 178]: Preview Capture Advisory is advisory in ci.yml, but this new missing-inotify-tools setup failure lacks a prior source classification, so Plan 178-22 stopped with the failure preserved.
+- [Phase 178]: Keep hosted cost not_measured and UIQ-06, UIQ-07 and UIQ-08 open; do not run Plans 178-23 or 178-24.
 
 ## Quick Tasks Completed
 
@@ -727,16 +730,17 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T01:25:21.902Z
-Stopped at: Completed 178-21-PLAN.md; next-plan execution left for the owner
+Last session: 2026-11-02T01:37:00.033Z
+Stopped at: Halted 178-22 after the unclassified advisory setup failure; Plans 178-23/24 not run
 Resume file: None
 
 ## Operator Next Steps
 
-- Phase 178 plan 14 is complete. Gap-only execution continues with plan 15; plan 16 pauses before remote actions for the owner's new approval.
-- Next: `$gsd-execute-phase 178 --gaps-only`.
+- Phase 178 Plan 22 is halted after the dispatch's new Preview Capture Advisory setup failure (missing `inotify-tools`). All three hosted acceptance rows remain open and hosted cost is not measured.
+- Next: Keep Plans 178-23 and 178-24 stopped. Resolve the blocker through a new approved plan before any later preview or ship work.
 
 ### Blockers
 
 - 178-03: reference/demo_app/mix.lock is behind upstream (bandit 1.14.1, swoosh 1.29.3) so fresh isolated demo launches from main fail 'mix deps.get --check-locked'; blocks isolated-demo gates in 178-05/07/09/10 until a chore(deps) demo lock refresh (see deferred-items.md D-178-03-A)
 - Phase 178 hosted evidence is stopped: candidate 255422cbe6e16c570ccb465246c2394fa3190866 failed required Hex Audit and Demo Browser Evidence in both attempt-1 runs. Plans 178-18 and 178-19 remain unexecuted until the failures are resolved and a new candidate is frozen; obtain fresh approval before additional hosted actions.
+- Phase 178 Plan 22 stopped: dispatch run 41370082849 Preview Capture Advisory failed because inotify-tools is missing; this new job-level setup failure has no prior title/source classification under Plan 17. Hosted cost remains not_measured and UIQ-06/07/08 stay open; Plans 178-23/24 must not run.
