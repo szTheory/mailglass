@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-20-PLAN.md
-last_updated: "2026-11-02T00:12:57.595Z"
+stopped_at: Completed 178-21-PLAN.md; next-plan execution left for the owner
+last_updated: "2026-11-02T01:25:22.588Z"
 last_activity: 2026-11-01
 last_activity_desc: "Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval"
-state_head: ae019b19a417985b8b9b333597c6f476b7979da1
+state_head: 4897e924386426ab150ebf18bd75356514daf9c0
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 60
-  completed_plans: 56
+  completed_plans: 57
   percent: 80
 ---
 
@@ -345,6 +345,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P16 | 53 min | 3 tasks | 1 files |
 | Phase 178 P17 | 6min | 2 tasks | 1 files |
 | Phase 178 P20 | 5m 8s | 3 tasks | 9 files |
+| Phase 178 P21 | 57m | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -674,6 +675,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Keep the checkout on main; record gsd/v2.10-ui-repairs-storybook as the future remote target ref.
 - [Phase 178]: Reuse the saved cold/warm pilot only after selected-source digests match the committed recovery bytes.
 - [Phase 178]: Keep hosted, preview, and owner authority unset; UIQ-06/07/08 remain open.
+- [Phase 178]: Owner approved exactly three one-time hosted operations for candidate f5138e94cd32daf29720f794cf3fbb464c3f1b86; the conditional preview was not launched after the dispatch workflow finished with an advisory failure.
 
 ## Quick Tasks Completed
 
@@ -725,8 +727,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T00:12:56.845Z
-Stopped at: Completed 178-20-PLAN.md
+Last session: 2026-11-02T01:25:21.902Z
+Stopped at: Completed 178-21-PLAN.md; next-plan execution left for the owner
 Resume file: None
 
 ## Operator Next Steps
