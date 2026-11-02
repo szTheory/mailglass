@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "cycle": 7,
+  "created_at": "2026-11-02T16:01:04.862Z",
+  "status": "awaiting_owner_decision",
+  "result_recorded_at": null,
+  "stopped_at": null,
+  "approval_checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/approval.md",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-06.json",
+    "cycle": 6,
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "preview_status": "startup_failed_lock_drift",
+    "preview_attempts_consumed": 1,
+    "owner_demo_touched": false
+  },
+  "candidate": {
+    "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "parent": "f77e490614d9e9d98c4019ca8313eea64373c29c",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_before_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "commits_ahead": 21,
+    "files_changed": 31,
+    "insertions": 3653,
+    "deletions": 179,
+    "demo_lock_path": "reference/demo_app/mix.lock",
+    "demo_lock_sha256": "f4fe601bc03dbccf0bca72acc0307897a090ecdd9b96a5c039c687cd92a3f7cd"
+  },
+  "local_remediation": {
+    "plan": "178-31",
+    "summary": ".planning/phases/178-preview-authoring-and-milestone-review/178-31-SUMMARY.md",
+    "change": "Refresh only the demo nimble_options lock entry from 1.1.1 to 1.2.0.",
+    "locked_install": {
+      "command": "asdf exec mix deps.get --check-locked",
+      "exit_code": 0,
+      "log": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/locked-install.log",
+      "log_sha256": "1cb490cdc4af728530b49a05d05abf81d62f9c7386bc5c02ee82423a4b4d511f"
+    },
+    "compile": {
+      "command": "asdf exec mix compile --warnings-as-errors",
+      "exit_code": 0,
+      "log": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/compile.log",
+      "log_sha256": "9272db557eb38edadc368dfe168c3c8356a059537c11457df26e88b2caaea3bc"
+    }
+  },
+  "preapproval_snapshot": {
+    "observed_at": "2026-11-02T16:01:04.862Z",
+    "repository": "szTheory/mailglass",
+    "remote_main": {
+      "sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "is_ancestor_of_candidate": true
+    },
+    "target": {
+      "branch": "gsd/v2.10-ui-repairs-storybook",
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "candidate_is_fast_forward": true
+    },
+    "pr317": {
+      "number": 317,
+      "state": "open",
+      "draft": true,
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "updated_at": "2026-11-02T04:25:38Z"
+    },
+    "release_ledger": {
+      "path": ".planning/release-target.json",
+      "sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    }
+  },
+  "preflight": {
+    "status": "pass",
+    "remote_reads_only": true,
+    "candidate_sha_frozen_from_committed_head": true,
+    "candidate_is_fast_forward": true,
+    "remote_main_unchanged_from_base": true,
+    "remote_writes_performed": false,
+    "hosted_operations_performed": false,
+    "docker_or_preview_actions_performed": false
+  },
+  "authority": {
+    "hosted": null,
+    "preview": null
+  },
+  "approval_checkpoint": null,
+  "owner_checkpoint": null,
+  "owner_decision": null,
+  "allowed_operations_if_approved": {
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "fast_forward_pushes": 1,
+    "pr_body_updates": 1,
+    "ci_yml_dispatches": 1,
+    "dispatch_condition": "Only after the exact-SHA candidate PR run has no required-context or Demo Browser Evidence failure.",
+    "workflow_attempts": "attempt 1 only",
+    "max_total_workflow_runs": 8,
+    "retries_or_reruns": 0,
+    "conditional_preview_attempts": 1,
+    "preview_condition": "Separate explicit approval for this SHA and only after exact-SHA hosted and cost gates pass.",
+    "prohibited": [
+      "merge",
+      "release",
+      "publication",
+      "deployment",
+      "push to main",
+      "additional PR edits",
+      "additional dispatches",
+      "workflow retries or reruns",
+      "candidate substitution"
+    ]
+  },
+  "resource_scope": {
+    "historical_two_run_estimate_runner_minutes": 223,
+    "estimate_basis": "Prior PR run 106.1667 runner-minutes plus prior dispatch run 116.9667 runner-minutes.",
+    "actual_usage_varies": true,
+    "dollar_estimate": null,
+    "hosted_cost_status": "not_measured",
+    "local_preview_resources": "If separately approved and eligible, local CPU, disk, Docker image/build cache, network downloads on cache miss, and isolated containers; no dollar estimate."
+  },
+  "hosted": {
+    "status": "not_started",
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "push_result": null,
+    "pr_update_result": null,
+    "dispatch_result": null,
+    "runs": [],
+    "stop": null
+  },
+  "cost": {
+    "status": "not_measured",
+    "reproducible": false,
+    "identity_bound": false,
+    "gate": "not_evaluated",
+    "preview_eligible": false,
+    "artifact": null,
+    "input_copies": [
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/expected.json",
+        "sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/baseline-run.raw.json",
+        "sha256": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/baseline-jobs.raw.json",
+        "sha256": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+        "byte_identical": true
+      }
+    ]
+  },
+  "preview": {
+    "status": "not_started",
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "prior_cycle_attempt_is_consumed": true,
+    "attempt_count": 0,
+    "authorization_required": "Fresh explicit conditional approval after hosted and cost gates pass."
+  },
+  "packet_hashes": {
+    "approval": "a454e7108e69976d51c7c781d60546e50e59cc87bf4a3cdb5bf7782a5ea80aa0",
+    "pr_body": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba"
+  },
+  "stop_rules": [
+    "A missing or ambiguous owner reply leaves all authority unset.",
+    "A changed candidate SHA, remote main, target ref, PR state/base/head/body, or release-ledger digest requires a new checkpoint and fresh approval.",
+    "Any failed required or Demo lane, unexpected workflow trigger, changed ref, missing receipt, ambiguous result, or unclassified setup failure stops Cycle 07 without retry.",
+    "At most eight total attempt-1 workflow runs, one push, one PR body update, one ci.yml dispatch, and one separately approved conditional local preview."
+  ],
+  "next_actor": "The user provides a fresh direct decision for the exact hosted package and a separate decision on the conditional preview.",
+  "next_action": "Do not perform remote writes, dispatch, Docker actions, or preview work before the fresh reply is recorded against this candidate SHA."
+}
