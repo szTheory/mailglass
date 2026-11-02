@@ -2,7 +2,7 @@
   "schema_version": "phase178-recovery-cycle.v1",
   "cycle": 6,
   "created_at": "2026-11-02T14:35:56Z",
-  "status": "prepared",
+  "status": "approved",
   "approval_checkpoint_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-30-APPROVAL.md",
   "previous_record": {
     "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-05.json",
@@ -60,7 +60,7 @@
     "summary_30_sha256": "b5d3bc8108efe6654a6c74fc719eddca16a9eaf64d87a49c746c8bfe0bb5feb1"
   },
   "preflight": {
-    "verified_at": "2026-11-02T14:35:56Z",
+    "verified_at": "2026-11-02T14:54:30Z",
     "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
     "launcher_sha256": "d876cb1ac3cdc2aad5c49e0368c35f591dbd9c430adf2c0027680c3780aacee7",
     "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
@@ -73,11 +73,23 @@
     "execution_context": "Primary agent context; scoped local Git commits succeeded, unlike the delegated executor's read-only .git sandbox.",
     "docker_daemon": "available; server 29.5.2",
     "owner_demo_container_count": 0,
-    "host_disk_available": "239 GiB"
+    "host_disk_available": "237 GiB"
   },
   "authority": {
-    "preview": null,
-    "user_decision": null
+    "preview": {
+      "decision": "approve",
+      "observed_at": "2026-11-02T14:54:30Z",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "preview_attempts": 1,
+      "execution_context": "Primary agent /root",
+      "allowed_follow_up": "Bounded read-only loopback URL/marker/CSS checks and one candidate-scoped teardown if verification fails and a record exists.",
+      "user_reply": "yes"
+    },
+    "user_decision": {
+      "status": "approved",
+      "observed_at": "2026-11-02T14:54:30Z",
+      "user_reply": "yes"
+    }
   },
   "allowed_operations_if_approved": {
     "preview_attempts": 1,
@@ -108,7 +120,7 @@
     "local_docker_cost": "Local CPU, disk, network downloads on cache miss, Docker image/build cache and isolated containers; no dollar estimate."
   },
   "preview": {
-    "status": "not_started",
+    "status": "authorized",
     "prior_cycle_attempt_is_consumed": true,
     "attempt_count": 0,
     "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
@@ -124,6 +136,6 @@
     "If any route, marker, CSS, or CI check fails, preserve evidence, teardown only this candidate project once if its record exists, and do not retry.",
     "Do not push, edit PR, dispatch CI, merge, release, publish, deploy, globally prune Docker state, or modify the owner demo."
   ],
-  "next_actor": "user",
-  "next_action": "Approve or decline the one-time Cycle 06 local preview operation."
+  "next_actor": "phase_178_executor",
+  "next_action": "Run the one approved local preview command from the primary context, then verify bounded read-only URLs/markers."
 }

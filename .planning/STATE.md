@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 30 complete; Cycle 06 awaits fresh preview approval
-Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie and worktree diagnostics fixes pass offline. Cycle 05 stopped before Compose; no preview ran.
-Last activity: 2026-11-02 — Plan 30 preserves Git worktree errors; current exact-SHA Cycle 06 checkpoint is prepared.
+Plan: 30 complete; Cycle 06 approved for one preview attempt
+Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie and worktree diagnostics fixes pass offline. Cycle 05 stopped before Compose; Cycle 06 is approved.
+Last activity: 2026-11-02 — User approved Cycle 06; exact-SHA, CI, PR, cost, Docker, and disk preflight passed.
 
 Progress: [████████░░] 80%
 
@@ -733,8 +733,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T14:31:08Z
-Stopped at: Plan 30 complete; Cycle 06 checkpoint prepared; waiting for a fresh one-attempt approval
+Last session: 2026-11-02T14:54:30Z
+Stopped at: Cycle 06 approved; exact preflight passed; one primary-context preview attempt is next
 Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-30-APPROVAL.md
 
 ## Operator Next Steps
@@ -744,7 +744,7 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-30-
 - Cycle 05's only approved invocation stopped before Compose because Git could not create the detached candidate worktree. No candidate record or Docker resources were created; the owner demo was untouched.
 - The likely worktree blocker is the delegated executor's read-only `.git` boundary; its scoped staging also failed with `Operation not permitted`. The launcher hid Git stderr, so this remains an inference.
 - Plan 30 exposed Git worktree errors and passed its offline test. Cycle 05 remains consumed.
-- Next actor: user decides whether to approve the exact Cycle 06 operation in `178-30-APPROVAL.md`. If approved, run once from the primary agent context and stop on any failure.
+- Cycle 06 is approved for one exact-SHA local preview and bounded read-only URL/marker verification from the primary agent context. Run once and stop on any failure; no hosted workflows or PR writes are included.
 
 ### Blockers
 

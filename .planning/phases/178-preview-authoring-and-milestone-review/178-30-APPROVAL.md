@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared for review. No Cycle 06 preview has been launched and no new authority is recorded.
+Approved by the user on 2026-11-02. The Cycle 06 preview has not launched yet; the exact preflight passed.
 
 ## What happened and what changed
 
@@ -16,7 +16,7 @@ Prepared for review. No Cycle 06 preview has been launched and no new authority 
 - Candidate remains `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; remote `main` and target refs are unchanged.
 - PR #317 is open/draft at the exact candidate SHA. The required `CI Green` and `Guard Release Trigger` checks are completed successfully.
 - The existing exact-candidate cost disposition is unchanged; no new hosted workflow or runner spend is included.
-- Docker server 29.5.2 is available, the owner-demo project has zero containers, and the host reports 239 GiB available.
+- Docker server 29.5.2 is available, the owner-demo project has zero containers, and the host reports 237 GiB available.
 - Updated launcher SHA-256: `d876cb1ac3cdc2aad5c49e0368c35f591dbd9c430adf2c0027680c3780aacee7`.
 
 ## The one operation requiring fresh approval
@@ -44,4 +44,4 @@ bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase
 
 ## Decision
 
-**Pending direct user approval.** Approving authorizes only the exact one-time local preview and bounded read-only URL/marker verification described here. Cycle 05's approval cannot be reused.
+**Approved.** The user replied “yes” on 2026-11-02. This authorizes only the exact one-time local preview and bounded read-only URL/marker verification described here. Cycle 05's approval cannot be reused.
