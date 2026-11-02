@@ -5,16 +5,16 @@ milestone_name: UI Repairs & Faithful Storybook
 current_phase: 178
 current_phase_name: Preview Authoring and Milestone Review
 status: executing
-stopped_at: Completed 178-28; preview stopped at HTTP 302; UIQ-08 remains open
-last_updated: "2026-11-02T05:08:24.059Z"
+stopped_at: Plan 31 docs and review are ready; primary context commit metadata is pending before the canonical summary
+last_updated: "2026-11-02T15:28:08.295Z"
 last_activity: 2026-11-02
-last_activity_desc: "Stopped after Phase 178 Plan 17: Hex Audit and Demo Browser Evidence failed; plans 178-18/19 wait for resolution and fresh approval"
-state_head: 4a8d329a561abf7fa012cb9b14d9a95b05c9a1a4
+last_activity_desc: Cycle 06 stopped on the stale nimble_options lock; Plan 31 refreshed the local lock and passed locked install/compile; UIQ-08 remains open.
+state_head: 3f40a9f8f1118835fae35c51f835cbeb7e8cdc73
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 64
-  completed_plans: 62
+  total_plans: 67
+  completed_plans: 64
   percent: 80
 ---
 
@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 30 complete; Cycle 06 approved for one preview attempt
-Status: Hosted proof and cost disposition pass for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c`; local cookie and worktree diagnostics fixes pass offline. Cycle 05 stopped before Compose; Cycle 06 is approved.
-Last activity: 2026-11-02 — User approved Cycle 06; exact-SHA, CI, PR, cost, Docker, and disk preflight passed.
+Plan: 31 execution work done; summary and commit pending primary context
+Status: executing
+Last activity: 2026-11-02 — Cycle 06 stopped on the stale nimble_options lock; Plan 31 refreshed the local lock and passed locked install/compile; UIQ-08 remains open.
 
 Progress: [████████░░] 80%
 
@@ -733,9 +733,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T14:54:30Z
-Stopped at: Cycle 06 approved; exact preflight passed; one primary-context preview attempt is next
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-30-APPROVAL.md
+Last session: 2026-11-02T15:28:06.952Z
+Stopped at: Plan 31 docs and review are ready; primary context commit metadata is pending before the canonical summary
+Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-31-PLAN.md
 
 ## Operator Next Steps
 
@@ -744,8 +744,9 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-30-
 - Cycle 05's only approved invocation stopped before Compose because Git could not create the detached candidate worktree. No candidate record or Docker resources were created; the owner demo was untouched.
 - The likely worktree blocker is the delegated executor's read-only `.git` boundary; its scoped staging also failed with `Operation not permitted`. The launcher hid Git stderr, so this remains an inference.
 - Plan 30 exposed Git worktree errors and passed its offline test. Cycle 05 remains consumed.
-- Cycle 06 is approved for one exact-SHA local preview and bounded read-only URL/marker verification from the primary agent context. Run once and stop on any failure; no hosted workflows or PR writes are included.
+- Cycle 06 is consumed: the candidate failed during startup because its demo lock was stale after the same-day nimble_options 1.2.0 release; candidate-only teardown completed. Do not rerun candidate 8e501960bc975ed44b632ba5c74522e0c5d66f8c. UIQ-08 remains open. Any next preview requires a new exact candidate, current exact-SHA CI evidence, and fresh bounded approval.
 
 ### Blockers
 
 - UIQ-08 remains open. Cycle 04's route failure and Cycle 05's pre-Compose stop are both preserved; neither approval authorizes another launch.
+- Cycle 06 preview authority is consumed. Do not rerun the old candidate. Plan 31 local lock repair passed; keep UIQ-08 open. The primary context must commit Plan 31, freeze a new exact-source candidate with current required CI, then obtain fresh bounded approval before any preview operation.

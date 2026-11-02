@@ -1,4 +1,14 @@
-# Phase 178 Cycle 04 delivery status
+# Phase 178 Cycle 06 delivery status
+
+## Current status: blocked before owner preview
+
+Cycle 06's single approved preview attempt for candidate `8e501960bc975ed44b632ba5c74522e0c5d66f8c` exited 1 during isolated demo startup. The candidate's lock pinned `nimble_options` 1.1.1 while Mix resolved 1.2.0; the Compose project did not become healthy. The retained exact-SHA CI lookup passed, but there is no live preview: no routes were checked, CSS identity was not checked, and page-marker checks did not run. The generated loopback URL `http://127.0.0.1:54666` is historical and unavailable.
+
+Candidate evidence is retained at `reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.json` (SHA-256 `444e8c576ab43fb447fd11da77581d60012ad2249550382635c4fb0b079c9380`) and `reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/candidate-8e501960.compose.log` (SHA-256 `b7ff3c2dc50db558e12c38ea7891a376dfba26677a556fa3557d6413657ec5c3`). Teardown completed at `2026-11-02T14:56:20.649Z`: the candidate Compose containers/network/volumes stopped, its worktree and run parent were removed, and its demo lock was restored to the candidate blob. The retained owner demo was untouched. The one attempt is consumed; no retry or relaunch is authorized by Cycle 06. See [178-CYCLE-06-SUMMARY.md](178-CYCLE-06-SUMMARY.md) and [178-RECOVERY-CYCLE-06.json](178-RECOVERY-CYCLE-06.json).
+
+Plan 178-31 refreshed only the local demo lock entry from `nimble_options` 1.1.1 to 1.2.0. The locked dev dependency check and `mix compile --warnings-as-errors` passed. Hex's release metadata records 1.2.0 as inserted on 2026-11-02; the startup drift was separate from the unchanged `cowlib` 2.21.0 advisory ([Hex release metadata](https://hex.pm/api/packages/nimble_options/releases/1.2.0), [cowlib advisory](https://osv.dev/vulnerability/EEF-CVE-2026-43966)). The successful local repair does not change the candidate SHA, transfer the old hosted receipts to changed source, or renew preview authority. UIQ-08 remains open until a newly identified candidate has current exact-source CI and a fresh bounded approval for any preview attempt.
+
+## Historical Cycle 04 delivery status
 
 ## Cycle 05 follow-up
 
