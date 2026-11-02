@@ -730,3 +730,13 @@ UIQ-06's hosted receipts, UIQ-07's hosted measurement and UIQ-08's required CI a
 ## Placement, cost and limits, re-run (UIQ-07)
 
 not measured: hosted re-run stopped (required lane red (Hex Audit (Elixir 1.18 / OTP 27))); see rerun_stop_log.
+
+## Recovery cycle (178-20; local-only candidate freeze)
+
+The local recovery source was reviewed and frozen after the stopped candidate `255422cbe6e16c570ccb465246c2394fa3190866`. Candidate source SHA: `f5138e94cd32daf29720f794cf3fbb464c3f1b86`, committed on the unchanged local checkout branch `main`. The `branch` field in `.planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY.json` records the intended remote target ref `gsd/v2.10-ui-repairs-storybook` for the separately approved Plan 21 action; no local branch was created or switched.
+
+The review and SHA-256 source/evidence ledger are in `.planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-REVIEW.md` and `178-RECOVERY.json`. All six candidate source blobs match the reviewed working files. The saved local pilot source revision was dirty (`afc308405b36da7f4d86bb795129d0acc680517c`), but its Phase 174 and Phase 175 selected-source digests match the frozen candidate's selected bytes. The pilot's cold/warm passes and 2.205-minute added local time are local provenance only; hosted runner cost remains `null`.
+
+Authority remains unset: `authority.hosted` and `authority.preview` are `null`, `hosted.status` is `not_authorized`, `preview.status` is `not_started`, and `owner_decision` is `null`. UIQ-06 hosted receipts, UIQ-07 hosted cost/count disposition, and UIQ-08 remain open. The historical `candidate_sha`, `rerun_candidate_sha`, `rerun_owner_decision`, and `rerun_hosted_status` above are unchanged; the stop on candidate `255422cbe6e16c570ccb465246c2394fa3190866` remains in force. Plans 178-18 and 178-19 were not run or cleared.
+
+Any source edit after `f5138e94cd32daf29720f794cf3fbb464c3f1b86` invalidates this freeze and requires a new review, source/evidence hash record, candidate SHA, and fresh approval before a hosted action. Plan 178-20 did not push, edit a PR, dispatch a workflow, run hosted CI, or launch a preview.

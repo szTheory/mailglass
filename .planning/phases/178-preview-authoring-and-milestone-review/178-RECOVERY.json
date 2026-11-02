@@ -1,0 +1,119 @@
+{
+  "schema_version": "phase178-recovery.v1",
+  "created_at": "2026-11-02T00:10:28Z",
+  "stopped_candidate": "255422cbe6e16c570ccb465246c2394fa3190866",
+  "candidate": {
+    "sha": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+    "branch": "gsd/v2.10-ui-repairs-storybook",
+    "checkout_branch": "main",
+    "source_files": [
+      "mix.lock",
+      "mailglass_admin/mix.lock",
+      "mailglass_inbound/mix.lock",
+      "compose.demo.yml",
+      "scripts/run_demo_browser_evidence.sh",
+      "scripts/test_run_demo_browser_evidence.sh"
+    ],
+    "source_hashes": {
+      "mix.lock": "8cd8ecc6b5ed71e796918da4d1484cb8be20fbc3347d5c9b58cd317c839ee429",
+      "mailglass_admin/mix.lock": "28c99a59e14ba54a2d2c25caf497ab0739b1a3dc422e5a426b3ba0ff15ce5c42",
+      "mailglass_inbound/mix.lock": "00fbc7902afaa6b1dbfbb7665b34ad8b4a0e96f4f7da4ca66d523c248bc7841c",
+      "compose.demo.yml": "35c152ffccdc1371a425a39dfbb186346a2afd8ff61018b5f5e256931bf2f33a",
+      "scripts/run_demo_browser_evidence.sh": "6e4555428db9f797368cf715ff0fd8cbd726ca95f8442ff397a7eb58fbae2473",
+      "scripts/test_run_demo_browser_evidence.sh": "8e63f6f7d6f5d7e375b75310adf4e53242e3be8db5293587f6ec8996107ccb8c"
+    }
+  },
+  "local_evidence": {
+    "pilot_dir": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944",
+    "pilot_run_id": "mailglass-evidence-20261101232222-19011-19944",
+    "pilot_source_revision": "afc308405b36da7f4d86bb795129d0acc680517c",
+    "verified_against_candidate": "f5138e94cd32daf29720f794cf3fbb464c3f1b86",
+    "source_digests": {
+      "phase174": "3d663eb790db0894f36ce8de9df0bc10a16e92e6a4133ffe370dc42363a62794",
+      "phase175_cold_and_warm": "b0fab6e1575713038c0b743d8b76b5e10796a55441e3e24fb8b12374ebe05cad"
+    },
+    "source_hashes": {
+      "mix.lock": "8cd8ecc6b5ed71e796918da4d1484cb8be20fbc3347d5c9b58cd317c839ee429",
+      "mailglass_admin/mix.lock": "28c99a59e14ba54a2d2c25caf497ab0739b1a3dc422e5a426b3ba0ff15ce5c42",
+      "mailglass_inbound/mix.lock": "00fbc7902afaa6b1dbfbb7665b34ad8b4a0e96f4f7da4ca66d523c248bc7841c",
+      "compose.demo.yml": "35c152ffccdc1371a425a39dfbb186346a2afd8ff61018b5f5e256931bf2f33a",
+      "scripts/run_demo_browser_evidence.sh": "6e4555428db9f797368cf715ff0fd8cbd726ca95f8442ff397a7eb58fbae2473",
+      "scripts/test_run_demo_browser_evidence.sh": "8e63f6f7d6f5d7e375b75310adf4e53242e3be8db5293587f6ec8996107ccb8c"
+    },
+    "gates": {
+      "hex_audit": {
+        "status": "pass",
+        "command": "mix mailglass.audit --kind hex",
+        "evidence": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md#current-local-recovery-evidence",
+        "raw_command_log_saved": false
+      },
+      "locked_dependency_resolution": {
+        "status": "pass",
+        "command": "mix deps.get --check-locked in root, Admin, and Inbound projects",
+        "evidence": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md#current-local-recovery-evidence",
+        "raw_command_logs_saved": false
+      },
+      "wrapper_contract": {
+        "status": "pass",
+        "command": "bash scripts/test_run_demo_browser_evidence.sh",
+        "evidence": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md#current-local-recovery-evidence"
+      },
+      "shell_syntax": {
+        "status": "pass",
+        "command": "bash -n scripts/run_demo_browser_evidence.sh scripts/test_run_demo_browser_evidence.sh",
+        "evidence": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md#current-local-recovery-evidence"
+      },
+      "compose_config": {
+        "status": "pass",
+        "command": "docker compose -f compose.demo.yml config --quiet",
+        "evidence": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md#current-local-recovery-evidence"
+      },
+      "cold_warm_pilot": {
+        "status": "pass",
+        "command": "bash scripts/run_demo_browser_evidence.sh --phase174 --phase175 --pilot",
+        "scope": "local only; not a frozen or hosted run",
+        "phase174_expected_and_executed_per_condition": 169,
+        "phase175_admin_expected_and_executed_per_condition": 10,
+        "phase175_axe_expected_and_executed_per_condition": 26,
+        "phase175_axe_violations_per_condition": 0,
+        "phase175_admin_exit_code_per_condition": 0,
+        "added_local_minutes": 2.205,
+        "hosted_runner_minutes": null,
+        "evidence": "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944"
+      }
+    },
+    "evidence_hashes": {
+      ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md": "c6f7cb00c4c32b8cb512d60ffca6a63eee7fc5d95c91730163bb01dd3f34b8d1",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cost.json": "f8f99487604e0ab3f5a411fbf13995eb5e5e037ce75e26dcc14954a166094279",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/execution.json": "627373873100f3c1058458630e98f8b3223c7dac3a4cb0a30af0a57d0b5ffb06",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/cold/axe.json": "4f8792cdf1dcf6306dabc6b5adaa7217e86247a33bcdeef7c2d0fec6330810b6",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase174/warm/axe.json": "44160e726d9ec1cd6b0619fbde7d01062db7682891ddce9b07e004b708f061de",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/run.json": "d6bf3064f96e525a144eb26578690416daf0741670a8b9a2e830cb27f2755e9a",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/execution.json": "835f2c64f77d9cdff13da656865c7ca55770823d78292cee32bae6a8c4c08e3e",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/runtime.json": "e569d3bd9a0ff0bff3a898d3d6eefd43e6ea0db186aa982467695e192a4276ff",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/runtime.json": "7dfccc5f4e4c52fb347d17dbc8dd54f3cbfa617c19cc677a12e8d29990235961",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/axe.json": "4f8792cdf1dcf6306dabc6b5adaa7217e86247a33bcdeef7c2d0fec6330810b6",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/axe.json": "44160e726d9ec1cd6b0619fbde7d01062db7682891ddce9b07e004b708f061de",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/cold/admin-playwright-report.json": "fbef2696de85cd0f649b3ead88f06f7e7eebfd1f13093da0aa26ba64057a4702",
+      "reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261101232222-19011-19944/phase175/warm/admin-playwright-report.json": "d9b9ef013c8139345463f74696d56affb32936eb822307e23289616335175617"
+    }
+  },
+  "review": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-REVIEW.md",
+    "status": "pass",
+    "asvs_level": 1,
+    "unresolved_high": 0
+  },
+  "authority": {
+    "hosted": null,
+    "preview": null
+  },
+  "hosted": {
+    "status": "not_authorized",
+    "runs": []
+  },
+  "preview": {
+    "status": "not_started"
+  },
+  "owner_decision": null
+}
