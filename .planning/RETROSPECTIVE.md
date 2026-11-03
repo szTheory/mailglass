@@ -915,6 +915,53 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 
 ---
 
+## Milestone: v2.10 — UI Repairs & Faithful Storybook
+
+**Shipped:** 2026-11-02
+**Phases:** 5 (174–178) | **Plans:** 76 | **Tasks:** 117 | **Requirements:** 31
+**Audit:** tech_debt, no blockers; 15/15 integration paths and 7/7 end-to-end flows passed. Closeout override: 9 newly acknowledged deferred records and 34 carried forward.
+
+### What Was Built
+
+- Quieter Delivery and Inbound navigation, direct filters, readable Health, clear Account scope, safe return navigation, and more useful replay and suppression flows.
+- Preview authoring improvements for restoring defaults and selecting scenarios with readable, disambiguated identities.
+- Production-faithful Storybook navigation, themes, fonts, shared hooks, retained scenarios, and current-source accessibility/fidelity evidence.
+- A documented owner-review preview tied to candidate 5ad5329, successful route and marker checks, exact-SHA hosted evidence, and a measured cost disposition.
+
+### What Worked
+
+- A three-source requirement cross-check matched the requirements file, phase verifications, and plan summaries; independent milestone audit found no requirement, integration, or flow gaps.
+- Connected LiveView tests proved Account-change authorization before reads, while retained production-component stories made repaired states easier to review.
+- Exact-candidate receipts, expected/executed counts, cleanup evidence, and an independent verifier preserved the limits of the preview and hosted evidence.
+- The closeout recorded the remaining debt instead of rewriting the historical browser and test outcomes.
+
+### What Was Inefficient
+
+- Phase 178 required several candidate and recovery cycles before the accepted preview. The explicit candidate and authority boundaries prevented unsafe retries, but the repeated hosted evidence work was costly.
+- The Demo Browser Evidence job added 714 seconds and 11.9 runner minutes in the recorded pull-request run. Total time to CI Green was still 288 seconds faster than baseline because other work overlapped, while runner use increased.
+- The required runner-minute comparison exceeded its 10-minute budget by 8.43 minutes in the pull-request run and 6.5 minutes in the dispatch run. These are single-run observations, not causal estimates; the one-cycle overage disposition applies only to this review.
+
+### Patterns Established
+
+- Reuse the host-owned operator_access contract for Account changes; check changed tenant identity before handling parameters without rerunning the full mount lifecycle.
+- Keep Storybook stories on production components and shared hooks, with connected-route evidence for host authorization and persisted outcomes.
+- Bind preview receipts, current-source scenarios, expected/executed counts, hosted cost, and cleanup to the exact reviewed candidate.
+
+### Key Lessons
+
+1. A retained failed attempt can be superseded by later exact-candidate evidence without erasing the original failure.
+2. Closeout readiness must follow the independent verifier’s latest report, not an earlier evidence-handoff status.
+3. Measure the expensive browser job separately from total wall time: parallel execution shortened CI Green while runner use rose.
+4. Keep cost overages and previously deferred debt visible, and do not treat a supported one-cycle disposition as a new standing budget.
+
+### Cost Observations
+
+- The milestone ran from 2026-10-26 to 2026-11-02: 5 phases, 76 plans, 117 tasks, and 31 requirements.
+- From the v2.9 tag to the pre-close HEAD, Git reports 775 changed files, 226,675 insertions, and 2,544 deletions; this committed-range statistic excludes the existing uncommitted working-tree changes.
+- In the final candidate comparison, pull-request and dispatch CI Green were 288 and 273 seconds faster than baseline, while runner usage increased by 18.43 and 16.5 minutes. The Demo Browser Evidence job was the largest measured addition. The cost artifacts explicitly limit these conclusions to one observed cycle.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Plans | Primary lesson |
@@ -925,3 +972,4 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 | v2.7 | 5 | 75 | Settle an authority model before installing it, and order lifecycle proof after the archive — evidence captured before the state it describes is finalized cannot be true. |
 | v2.8 | 2 | 10 | A control is complete only when its pass path and cannot-check semantics are executable, not merely its failure path. |
 | v2.9 | 7 | 43 | Prove demo-host behavior end to end; library-green paths can still be denied by the host adapter the owner actually clicks through. |
+| v2.10 | 5 | 76 | Exact-candidate evidence and independent verification close UI work; retain measured runner overruns and deferred debt transparently. |
