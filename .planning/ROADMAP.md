@@ -30,7 +30,7 @@
 - ✅ **v2.1 Postgres + Admin URL Hardening** — Phases 138-140 (shipped 2026-07-08) — [archive](milestones/v2.1-ROADMAP.md)
 - ✅ **v2.2 CI Signal Integrity & Supply-Chain Hygiene** — Phases 141-144 (shipped 2026-07-31) — [archive](milestones/v2.2-ROADMAP.md)
 - ✅ **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (shipped 2026-08-02) — [archive](milestones/v2.3-ROADMAP.md)
-- ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
+- ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04; phase history retained in the v2.5 archive)
 - ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (shipped 2026-08-04) — [archive](milestones/v2.5-ROADMAP.md)
 - ✅ **v2.6 Engineering Quality Ratchet** — Phases 155-160 (shipped 2026-08-21) — [archive](milestones/v2.6-ROADMAP.md)
 - ✅ **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161-165 (shipped 2026-09-15) — [archive](milestones/v2.7-ROADMAP.md)
