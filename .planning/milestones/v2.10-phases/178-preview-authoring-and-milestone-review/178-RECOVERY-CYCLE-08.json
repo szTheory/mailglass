@@ -1,0 +1,1979 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 8,
+  "created_at": "2026-11-02T17:10:19.348Z",
+  "status": "stopped",
+  "result_recorded_at": "2026-11-02T17:40:10.920Z",
+  "stopped_at": "2026-11-02T17:25:28.044Z",
+  "approval_checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/approval.md",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-07.json",
+    "cycle": 7,
+    "sha256": "f6de25ca9282d681437bcb14d668db9cbec6435cf2f14b83c8cd4c5da4dd07c3",
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "status": "stopped_after_required_failure",
+    "hosted_status": "stopped"
+  },
+  "candidate": {
+    "sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "parent": "f0618073587ef6541069b84669c5c24887f607a6",
+    "local_branch": "gsd/phase178-cycle08-local",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_before_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "commits_ahead": 9,
+    "commits_behind": 0,
+    "files_changed": 15,
+    "insertions": 1511,
+    "deletions": 49,
+    "demo_lock_path": "reference/demo_app/mix.lock",
+    "demo_lock_sha256": "f4fe601bc03dbccf0bca72acc0307897a090ecdd9b96a5c039c687cd92a3f7cd"
+  },
+  "local_remediation": {
+    "plan": "178-33",
+    "summary": ".planning/phases/178-preview-authoring-and-milestone-review/178-33-SUMMARY.md",
+    "fix_commit": "8f2afc92",
+    "summary_commit": "f0618073587ef6541069b84669c5c24887f607a6",
+    "change": "Use Mailglass.Clock.utc_now/0 for inbound operator time-window cutoffs; freeze fixed-date projection tests and cover page total_count filtering.",
+    "verification": {
+      "inbound_records": "41 tests, 0 failures",
+      "admin_projection": "25 tests, 0 failures",
+      "admin_full_suite": "1,205 tests, 0 failures, 1 excluded",
+      "diff_check": "passed"
+    },
+    "hosted_or_preview_claims": false
+  },
+  "preapproval_snapshot": {
+    "observed_at": "2026-11-02T17:10:19.348Z",
+    "repository": "szTheory/mailglass",
+    "remote_main": {
+      "sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "is_ancestor_of_candidate": true
+    },
+    "target": {
+      "branch": "gsd/v2.10-ui-repairs-storybook",
+      "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "candidate_is_fast_forward": true,
+      "commits_ahead": 9
+    },
+    "pr317": {
+      "number": 317,
+      "state": "open",
+      "draft": true,
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+      "updated_at": "2026-11-02T16:10:48Z"
+    },
+    "release_ledger": {
+      "path": ".planning/release-target.json",
+      "sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "hosted_runs_for_candidate": {
+      "count": 0,
+      "items": []
+    }
+  },
+  "cycle07_snapshot_comparison": {
+    "status": "matches",
+    "fields": {
+      "main": true,
+      "target": true,
+      "pr_state": true,
+      "pr_draft": true,
+      "pr_base": true,
+      "pr_head": true,
+      "pr_body": true,
+      "ledger": true
+    }
+  },
+  "preflight": {
+    "status": "pass",
+    "remote_reads_only": true,
+    "candidate_sha_frozen_from_committed_head": true,
+    "candidate_is_fast_forward": true,
+    "remote_main_unchanged_from_cycle07": true,
+    "remote_writes_performed": true,
+    "hosted_operations_performed": true,
+    "docker_or_preview_actions_performed": false
+  },
+  "authority": {
+    "hosted": {
+      "decision": "approve",
+      "sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "recorded_at": "2026-11-02T17:20:17.163Z",
+      "user_reply": "I approve following your recommendations.",
+      "operations": [
+        "one_fast_forward_push",
+        "one_pr_body_update",
+        "one_ci_yml_dispatch",
+        "attempt_1_only",
+        "max_8_workflow_runs",
+        "no_retries",
+        "no_reruns",
+        "no_cancellations"
+      ]
+    },
+    "preview": {
+      "decision": "approve",
+      "sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "recorded_at": "2026-11-02T17:20:17.163Z",
+      "user_reply": "I approve following your recommendations.",
+      "conditional_on": "hosted_and_cost_gates_pass",
+      "attempts": 1
+    }
+  },
+  "approval_checkpoint": {
+    "sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "user_reply": "I approve following your recommendations.",
+    "recorded_at": "2026-11-02T17:20:17.163Z",
+    "hosted_decision": "approve",
+    "preview_decision": "approve",
+    "decision": "approve_both_scopes",
+    "decision_basis": "The owner approved the immediately preceding exact-SHA choice, whose recommended option was both the bounded hosted sequence and the separately conditional one-attempt preview.",
+    "operations": [
+      "one_fast_forward_push",
+      "one_pr_body_update",
+      "one_ci_yml_dispatch",
+      "attempt_1_only",
+      "max_8_workflow_runs",
+      "no_retries",
+      "no_reruns",
+      "no_cancellations",
+      "one_conditional_isolated_preview_after_hosted_and_cost_gates_pass"
+    ]
+  },
+  "owner_checkpoint": null,
+  "owner_decision": null,
+  "allowed_operations_if_approved": {
+    "candidate_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "fast_forward_pushes": 1,
+    "pr_body_updates": 1,
+    "ci_yml_dispatches": 1,
+    "dispatch_condition": "Only after the exact-SHA candidate PR run has no required-context or Demo Browser Evidence failure.",
+    "workflow_attempts": "attempt 1 only",
+    "max_total_workflow_runs": 8,
+    "retries_or_reruns": 0,
+    "cancellations": 0,
+    "conditional_preview_attempts": 1,
+    "preview_condition": "Separate explicit approval for this SHA and only after exact-SHA hosted and cost gates pass.",
+    "prohibited": [
+      "merge",
+      "release",
+      "publication",
+      "deployment",
+      "push to main",
+      "additional PR edits",
+      "additional dispatches",
+      "workflow retries or reruns",
+      "cancellations",
+      "candidate substitution"
+    ]
+  },
+  "resource_scope": {
+    "historical_two_run_estimate_runner_minutes": 223,
+    "estimate_basis": "Prior PR run 106.1667 runner-minutes plus prior dispatch run 116.9667 runner-minutes.",
+    "actual_usage_varies": true,
+    "dollar_estimate": null,
+    "hosted_cost_status": "not_measured",
+    "local_preview_resources": "If separately approved and eligible, local CPU, disk, Docker image/build cache, network downloads on cache miss, and isolated containers; no dollar estimate."
+  },
+  "hosted": {
+    "status": "stopped",
+    "candidate_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "push_result": {
+      "status": "succeeded",
+      "command": "git push origin 0942d667c50247b7794bc52cbadcc2b65a850d61:refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "ref": "refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "before_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "after_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "recorded_at": "2026-11-02T17:20:38.552Z",
+      "local_tracking_ref_update_warning": "GitHub confirmed the branch fast-forward, but git could not refresh local refs/remotes/origin/gsd/v2.10-ui-repairs-storybook because .git is read-only in this environment; no push retry was made."
+    },
+    "pr_update_result": null,
+    "dispatch_result": null,
+    "operations_used": {
+      "fast_forward_pushes": 1,
+      "pr_body_updates": 0,
+      "ci_yml_dispatches": 0,
+      "workflow_runs": 5,
+      "retries_or_reruns": 0,
+      "cancellations": 0
+    },
+    "runs": [
+      {
+        "id": 41490274563,
+        "name": "Guard Release Trigger",
+        "workflow_path": ".github/workflows/guard-release-trigger.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T17:20:44Z",
+        "updated_at": "2026-11-02T17:21:17Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41490274563",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "artifacts": [],
+        "downloaded_artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/run-41490274563.raw.json",
+            "sha256": "cc2bb81543705e6f80ca93b4083916ba212338f5355e696bfd0f3c24441c5d7c",
+            "bytes": 14055
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/jobs-41490274563.raw.json",
+            "sha256": "2a64128e3fa5332f13b2577c0e62c4f15882d15d4b6c61119fa0c03104c21a3a",
+            "bytes": 2731
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274563.raw.json",
+            "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+            "bytes": 42
+          }
+        },
+        "job_logs": [
+          {
+            "job_id": 125431164374,
+            "name": "Guard Release Trigger",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431164374.txt",
+            "sha256": "4d5346b09ba14b1417dd99f1fbb150af76ee4e1ec9c7bd19f0ebc613050ce946",
+            "bytes": 36140,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274563/job/125431164374"
+          }
+        ]
+      },
+      {
+        "id": 41490274739,
+        "name": "Actionlint",
+        "workflow_path": ".github/workflows/actionlint.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T17:20:44Z",
+        "updated_at": "2026-11-02T17:21:28Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41490274739",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "artifacts": [],
+        "downloaded_artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/run-41490274739.raw.json",
+            "sha256": "53480acff253c335619755fba9ba9edc60eca50849abc50f585661f2217511ee",
+            "bytes": 14032
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/jobs-41490274739.raw.json",
+            "sha256": "5630a83a1e17a566c669669e3a74080e5b5f34ab9587e2ce127cd0fd8ea3d628",
+            "bytes": 3192
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274739.raw.json",
+            "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+            "bytes": 42
+          }
+        },
+        "job_logs": [
+          {
+            "job_id": 125431163966,
+            "name": "actionlint",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431163966.txt",
+            "sha256": "147d8b0102a0bd7a92530a10e340fca7c404630dedc1ba5ae4ae3d70ab585d4b",
+            "bytes": 38257,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274739/job/125431163966"
+          }
+        ]
+      },
+      {
+        "id": 41490274743,
+        "name": "Advisory Matrix",
+        "workflow_path": ".github/workflows/advisory-matrix.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T17:20:44Z",
+        "updated_at": "2026-11-02T17:34:04Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743",
+        "job_total": 6,
+        "completed_jobs": 6,
+        "failed_jobs": [
+          {
+            "id": 125431165309,
+            "name": "Inbound Full Suite Advisory (schema mailglass)",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165309",
+            "log_sha256": "2b6eef379d46ff6f87dacfe5a488aa9297dd1799b0ebd59d10ba602149e2b80c"
+          },
+          {
+            "id": 125431165466,
+            "name": "Inbound Full Suite Advisory (schema public)",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165466",
+            "log_sha256": "eec7d0a6247565524fd4e9faa27281d0e058e51a36fdabab2c17022a8bb51000"
+          }
+        ],
+        "artifacts": [],
+        "downloaded_artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/run-41490274743.raw.json",
+            "sha256": "f83fba0f85385e50b06d49130c2b040dfb36117d2345ec4ad687782e2a62f856",
+            "bytes": 14043
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/jobs-41490274743.raw.json",
+            "sha256": "bb52b01c473b8b4eba8ddb4712bd163682903426abfc3c01e49524b3a7cdd028",
+            "bytes": 24030
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274743.raw.json",
+            "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+            "bytes": 42
+          }
+        },
+        "job_logs": [
+          {
+            "job_id": 125431165299,
+            "name": "Provider Compatibility Advisory (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165299.txt",
+            "sha256": "e5d5c281f1710b5457657aa6cee921ea649d085598a1010485754a28f3abbe77",
+            "bytes": 50246,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165299"
+          },
+          {
+            "job_id": 125431165309,
+            "name": "Inbound Full Suite Advisory (schema mailglass)",
+            "status": "completed",
+            "conclusion": "failure",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165309.txt",
+            "sha256": "2b6eef379d46ff6f87dacfe5a488aa9297dd1799b0ebd59d10ba602149e2b80c",
+            "bytes": 12838205,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165309"
+          },
+          {
+            "job_id": 125431165418,
+            "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165418.txt",
+            "sha256": "8839dde0ac49b0b7523870ae3a81d86c3f833e55a6f4e386b5ca01cf09bd3d49",
+            "bytes": 183918,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165418"
+          },
+          {
+            "job_id": 125431165466,
+            "name": "Inbound Full Suite Advisory (schema public)",
+            "status": "completed",
+            "conclusion": "failure",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165466.txt",
+            "sha256": "eec7d0a6247565524fd4e9faa27281d0e058e51a36fdabab2c17022a8bb51000",
+            "bytes": 20100187,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165466"
+          },
+          {
+            "job_id": 125431165579,
+            "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165579.txt",
+            "sha256": "82078aa192b9c9eeb26f89fc5100e07663f6d37b6a01e850f8b60c4a3c9fb68a",
+            "bytes": 187040,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165579"
+          }
+        ]
+      },
+      {
+        "id": 41490274664,
+        "name": "CI",
+        "workflow_path": ".github/workflows/ci.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T17:20:44Z",
+        "updated_at": "2026-11-02T17:37:55Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664",
+        "job_total": 26,
+        "completed_jobs": 26,
+        "failed_jobs": [
+          {
+            "id": 125431297027,
+            "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297027",
+            "log_sha256": "0d395d5a54c5c009404307c97d307d6ad7a2fe161598f0cc469f87e9e6b0b985"
+          },
+          {
+            "id": 125439721179,
+            "name": "CI Green",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125439721179",
+            "log_sha256": "b39e993f932dee30d97d2062c02fb349cc20667b7c7aa853f622a9e84a2dd342"
+          }
+        ],
+        "artifacts": [
+          {
+            "id": 13164511353,
+            "name": "trust-runner-repo-head-41490274664",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13164413196,
+            "name": "demo-browser-evidence-41490274664-1",
+            "size_in_bytes": 7900247,
+            "expired": false
+          },
+          {
+            "id": 13163947635,
+            "name": "preview-capture-advisory-41490274664",
+            "size_in_bytes": 2774466,
+            "expired": false
+          },
+          {
+            "id": 13163503029,
+            "name": "trust-runner-clean-baseline-41490274664",
+            "size_in_bytes": 896,
+            "expired": false
+          }
+        ],
+        "downloaded_artifacts": [
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/axe.json",
+            "sha256": "d50acc250d8744b5be696347b5bdae0683fcbced574d4866c7c38544324a6c57",
+            "bytes": 111076
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/admin-browser-install.log",
+            "sha256": "7a9761c4ed341c6463ae83d98b5394ee161c3d7fb70233c9bf76bf4601637316",
+            "bytes": 4554
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/admin-browser.json",
+            "sha256": "66373987891ae5d6b57a0a3c048aaff331f30ef0feffb8fef73b0fc674a7cc4c",
+            "bytes": 552
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/axe.json",
+            "sha256": "2fc825fb07e5404229f9e2ead233a024ec2886945cbb57d78b3fde0be6a9bba2",
+            "bytes": 111076
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-dashboard-7e372023-375-light.png",
+            "sha256": "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4",
+            "bytes": 130074
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-empty-account-7e372023-375-dark.png",
+            "sha256": "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7",
+            "bytes": 44110
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-inbound-7e372023-1440-dark.png",
+            "sha256": "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c",
+            "bytes": 155863
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-outbound-7e372023-1440-light.png",
+            "sha256": "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791",
+            "bytes": 258982
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-preview-7e372023-375-light.png",
+            "sha256": "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206",
+            "bytes": 82875
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/baseline-recipient-expired-7e372023-375-light.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-dashboard.png",
+            "sha256": "bcd7c0aa9fc7efdbf31f097ecb3c8bc3bbf449f098ca426cecbffd8a1b48943b",
+            "bytes": 82322
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-empty-account-adverse.png",
+            "sha256": "8bdd6450c7612da4acd879e7e1680b1d33a88cd80b41d1c10fe424d42ff7bcd7",
+            "bytes": 39505
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-inbound-primary.png",
+            "sha256": "508e247dcc4adb5eaf0cf7fb58669b346ecaec386e558cc9f2decb9716a210a4",
+            "bytes": 112641
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-outbound-primary.png",
+            "sha256": "b4e87fa93d7b04d112ae546670d0bf72976819b30d5200461b9b35e9742aff57",
+            "bytes": 103985
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-preview.png",
+            "sha256": "da1a629b2be4e19eba0c019a97d72cfd0f0b41a7bb2953a628a268ce1f69307e",
+            "bytes": 44159
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/captures/mailglass-evidence-41490274664-1-recipient-expired-adverse.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/checkpoint.json",
+            "sha256": "d376cd0f5e2b602a7894fe9e619a5ac1f35204bc1cf6580e81cbc035e5cca502",
+            "bytes": 21438
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/container-timings.json",
+            "sha256": "aed1174d41f53bf634b1d96c69be35a180163b3b7cbafbd449f23652c812ba41",
+            "bytes": 213
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/delivery-1440-boundary-dark.png",
+            "sha256": "d5265eee3382e6a3983829626667095c50f05210f058a7d453df071c4f91132c",
+            "bytes": 31052
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/delivery-320-boundary-dark.png",
+            "sha256": "1d0ce8f99c837b57b4a1549fcd411f3ad2001f7b71b8eaab26988e27dbf378ec",
+            "bytes": 29233
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/delivery-768-boundary-dark.png",
+            "sha256": "6def2b84000943ed60902a7e08525cbee6a00012737e5b6d71ad8709f5d4d5f8",
+            "bytes": 37494
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/delivery-dark.png",
+            "sha256": "22af01415e489ca1b7290cdb4b754a7ab776db91b2e979ae502e1412928209d8",
+            "bytes": 3542
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/delivery-light.png",
+            "sha256": "5d35a90e12839453866a6ffe1a5b69e254c765f6b3c1c8603e0968bb35cc38d8",
+            "bytes": 3423
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/demo-browser.json",
+            "sha256": "5ccd614c24c1be48760d79057d1c5a5fcc560ece12e363e04ca21d8dc64f09c6",
+            "bytes": 457
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/demo-playwright-report.json",
+            "sha256": "595bc34b597e4f2c4c1cbedf05a85381ad61170bf0635f930133f0460418de43",
+            "bytes": 162426
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/execution-condition.json",
+            "sha256": "6a23fc75454887bb8d4a15713a76f1827ef2777e759c39ca98337888a9b0a42d",
+            "bytes": 14653
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/fidelity.json",
+            "sha256": "7b77438efa5b750edae97283ad480486f787446fab99f0431145ff66c96cf19b",
+            "bytes": 72715
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/hooks.json",
+            "sha256": "ed387acb0631a8abf6a073ccad0fe763c80ea2387318baa3624003ed82b384e6",
+            "bytes": 8118
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/inbound-1440-boundary-dark.png",
+            "sha256": "ccdbe2d7ad684408047cc5767b51a3f572fc756d19b2c1ea5f7974d866ff02d3",
+            "bytes": 30140
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/inbound-320-boundary-dark.png",
+            "sha256": "f4e70042a40dbc8286c2bd9d38f58dffb90c5b6a57adc655a74b846bb263df34",
+            "bytes": 26835
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/inbound-768-boundary-dark.png",
+            "sha256": "3895946a9bbb2b141a69f345195e43482ae08e705a50bb928e93c58661b772dd",
+            "bytes": 34553
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/invoice-preview-320.png",
+            "sha256": "6a42cbb5028702b436067d8f4c1fb46def1bc21238c614803fd33565d524db5c",
+            "bytes": 38299
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/invoice-preview-375.png",
+            "sha256": "caa3cf3cdc06f9e62ca8c788f7f564ae3456436df43c5330b434ddd326e51635",
+            "bytes": 37877
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/phase173-captures.json",
+            "sha256": "0a08512ce0c0a28d43c79ceb4e886f9151edbd8f075949a837ebb7de940a3c9b",
+            "bytes": 14252
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/playwright-report.json",
+            "sha256": "595bc34b597e4f2c4c1cbedf05a85381ad61170bf0635f930133f0460418de43",
+            "bytes": 162426
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/checkpoint.json",
+            "sha256": "d376cd0f5e2b602a7894fe9e619a5ac1f35204bc1cf6580e81cbc035e5cca502",
+            "bytes": 21438
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/dashboard-baseline.png",
+            "sha256": "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4",
+            "bytes": 130074
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/dashboard-current.png",
+            "sha256": "bcd7c0aa9fc7efdbf31f097ecb3c8bc3bbf449f098ca426cecbffd8a1b48943b",
+            "bytes": 82322
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/empty-account-adverse-baseline.png",
+            "sha256": "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7",
+            "bytes": 44110
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/empty-account-adverse-current.png",
+            "sha256": "8bdd6450c7612da4acd879e7e1680b1d33a88cd80b41d1c10fe424d42ff7bcd7",
+            "bytes": 39505
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/inbound-primary-baseline.png",
+            "sha256": "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c",
+            "bytes": 155863
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/inbound-primary-current.png",
+            "sha256": "508e247dcc4adb5eaf0cf7fb58669b346ecaec386e558cc9f2decb9716a210a4",
+            "bytes": 112641
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/outbound-primary-baseline.png",
+            "sha256": "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791",
+            "bytes": 258982
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/outbound-primary-current.png",
+            "sha256": "b4e87fa93d7b04d112ae546670d0bf72976819b30d5200461b9b35e9742aff57",
+            "bytes": 103985
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/preview-baseline.png",
+            "sha256": "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206",
+            "bytes": 82875
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/preview-current.png",
+            "sha256": "da1a629b2be4e19eba0c019a97d72cfd0f0b41a7bb2953a628a268ce1f69307e",
+            "bytes": 44159
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/recipient-expired-adverse-baseline.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/retained/recipient-expired-adverse-current.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-expired-1280.png",
+            "sha256": "1b983cbfa6a2b64a5dfce420d2d517bf0973e01165013aacc81ab31830e5c508",
+            "bytes": 25265
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-expired-320.png",
+            "sha256": "365a586628fd55598517a57b85b449b6c769871d956368dcd032a56484fb764f",
+            "bytes": 20805
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-invalid-1280.png",
+            "sha256": "9e4946362b33e52f05512b477c5621a041a36979cfd567cb6ecf5e2d9c01553f",
+            "bytes": 23811
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-invalid-320.png",
+            "sha256": "3a8e3cb451819cd4b7f1af60b0f7ac668785639c181ebc9f924a749d687c00d1",
+            "bytes": 19745
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-valid-1280.png",
+            "sha256": "88acd05d5c4f9cd2d55885d1e554ce534706d1ca8941b4e4ecf3e5f291f432bd",
+            "bytes": 37123
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cold/unsubscribe-valid-320.png",
+            "sha256": "5b7f8b9b5adf5de3f685ed910ba5a67624453e15b8f63412f6438ee61d57815e",
+            "bytes": 32876
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/cost.json",
+            "sha256": "8a1378a930d8d19447cc84ec51142856ddadd547b60d272f2576dae95c91b171",
+            "bytes": 5695
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/execution.json",
+            "sha256": "58a27be84392fd8e1af9a733b17df6c09cb2be3452cfdd65b7a9fb37bcd5f9dc",
+            "bytes": 49335
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/fidelity.json",
+            "sha256": "6f5cded3e531a2eb775a2c7fe98b36900806342c1120e1caf5a431e956e42372",
+            "bytes": 72715
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/hooks.json",
+            "sha256": "b08c6f5293206851c8dcce61cf247ae94e198a5730f0e38d66de20d7e0b5d76a",
+            "bytes": 8118
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/admin-browser-install.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/admin-browser.json",
+            "sha256": "3013c3cf7f4eb5f16be01fb9826583446bb5068b48ae534b260fad8908df34c1",
+            "bytes": 549
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/axe.json",
+            "sha256": "d50acc250d8744b5be696347b5bdae0683fcbced574d4866c7c38544324a6c57",
+            "bytes": 111076
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-dashboard-7e372023-375-light.png",
+            "sha256": "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4",
+            "bytes": 130074
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-empty-account-7e372023-375-dark.png",
+            "sha256": "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7",
+            "bytes": 44110
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-inbound-7e372023-1440-dark.png",
+            "sha256": "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c",
+            "bytes": 155863
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-outbound-7e372023-1440-light.png",
+            "sha256": "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791",
+            "bytes": 258982
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-preview-7e372023-375-light.png",
+            "sha256": "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206",
+            "bytes": 82875
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/baseline-recipient-expired-7e372023-375-light.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-dashboard.png",
+            "sha256": "bcd7c0aa9fc7efdbf31f097ecb3c8bc3bbf449f098ca426cecbffd8a1b48943b",
+            "bytes": 82322
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-empty-account-adverse.png",
+            "sha256": "8bdd6450c7612da4acd879e7e1680b1d33a88cd80b41d1c10fe424d42ff7bcd7",
+            "bytes": 39505
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-inbound-primary.png",
+            "sha256": "43cbdb71b4ff831ccd1c3bca03bd6b9354f2e4ae361a3e40959a147fdf648b40",
+            "bytes": 112737
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-outbound-primary.png",
+            "sha256": "a76a9aefa56a0293a3b99f83e4fd42b02b38b6c37c8f5767977b2f50b91b466e",
+            "bytes": 104679
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-preview.png",
+            "sha256": "da1a629b2be4e19eba0c019a97d72cfd0f0b41a7bb2953a628a268ce1f69307e",
+            "bytes": 44159
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/captures/mailglass-evidence-41490274664-1-recipient-expired-adverse.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/checkpoint.json",
+            "sha256": "d47bbe82aab961e6792a92a12f4a6210957442b4ac40bbd835b47428a147c140",
+            "bytes": 21438
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/container-timings.json",
+            "sha256": "ac7b5656fe48f5449c59a4b7121151c4fde732d26893e2d545e1aa225e7bc62f",
+            "bytes": 209
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/delivery-1440-boundary-dark.png",
+            "sha256": "d5265eee3382e6a3983829626667095c50f05210f058a7d453df071c4f91132c",
+            "bytes": 31052
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/delivery-320-boundary-dark.png",
+            "sha256": "1d0ce8f99c837b57b4a1549fcd411f3ad2001f7b71b8eaab26988e27dbf378ec",
+            "bytes": 29233
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/delivery-768-boundary-dark.png",
+            "sha256": "6def2b84000943ed60902a7e08525cbee6a00012737e5b6d71ad8709f5d4d5f8",
+            "bytes": 37494
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/delivery-dark.png",
+            "sha256": "22af01415e489ca1b7290cdb4b754a7ab776db91b2e979ae502e1412928209d8",
+            "bytes": 3542
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/delivery-light.png",
+            "sha256": "5d35a90e12839453866a6ffe1a5b69e254c765f6b3c1c8603e0968bb35cc38d8",
+            "bytes": 3423
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/demo-browser.json",
+            "sha256": "19360d411340b4aa0ef6f7349f04b19613ebc35c35657f626e9bf4c1e459bdf9",
+            "bytes": 455
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/demo-playwright-report.json",
+            "sha256": "93163de64ed532cce3009a5e74d47bcf1b82f8f1c2fe9a621bfaf6390c1ee055",
+            "bytes": 162427
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/execution-condition.json",
+            "sha256": "ad81be36c5e6a29681ecd3eb78c0780977bf83fbf4e8011c7f0e753853d94a08",
+            "bytes": 14637
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/fidelity.json",
+            "sha256": "6f5cded3e531a2eb775a2c7fe98b36900806342c1120e1caf5a431e956e42372",
+            "bytes": 72715
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/hooks.json",
+            "sha256": "b08c6f5293206851c8dcce61cf247ae94e198a5730f0e38d66de20d7e0b5d76a",
+            "bytes": 8118
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/inbound-1440-boundary-dark.png",
+            "sha256": "ccdbe2d7ad684408047cc5767b51a3f572fc756d19b2c1ea5f7974d866ff02d3",
+            "bytes": 30140
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/inbound-320-boundary-dark.png",
+            "sha256": "f4e70042a40dbc8286c2bd9d38f58dffb90c5b6a57adc655a74b846bb263df34",
+            "bytes": 26835
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/inbound-768-boundary-dark.png",
+            "sha256": "3895946a9bbb2b141a69f345195e43482ae08e705a50bb928e93c58661b772dd",
+            "bytes": 34553
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/invoice-preview-320.png",
+            "sha256": "6a42cbb5028702b436067d8f4c1fb46def1bc21238c614803fd33565d524db5c",
+            "bytes": 38299
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/invoice-preview-375.png",
+            "sha256": "caa3cf3cdc06f9e62ca8c788f7f564ae3456436df43c5330b434ddd326e51635",
+            "bytes": 37877
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/phase173-captures.json",
+            "sha256": "693cc0b740c95f7dacafb5f7b0210d2ad34da0e25da4c1880307b69380a284eb",
+            "bytes": 14252
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/playwright-report.json",
+            "sha256": "93163de64ed532cce3009a5e74d47bcf1b82f8f1c2fe9a621bfaf6390c1ee055",
+            "bytes": 162427
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/checkpoint.json",
+            "sha256": "d47bbe82aab961e6792a92a12f4a6210957442b4ac40bbd835b47428a147c140",
+            "bytes": 21438
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/dashboard-baseline.png",
+            "sha256": "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4",
+            "bytes": 130074
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/dashboard-current.png",
+            "sha256": "bcd7c0aa9fc7efdbf31f097ecb3c8bc3bbf449f098ca426cecbffd8a1b48943b",
+            "bytes": 82322
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/empty-account-adverse-baseline.png",
+            "sha256": "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7",
+            "bytes": 44110
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/empty-account-adverse-current.png",
+            "sha256": "8bdd6450c7612da4acd879e7e1680b1d33a88cd80b41d1c10fe424d42ff7bcd7",
+            "bytes": 39505
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/inbound-primary-baseline.png",
+            "sha256": "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c",
+            "bytes": 155863
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/inbound-primary-current.png",
+            "sha256": "43cbdb71b4ff831ccd1c3bca03bd6b9354f2e4ae361a3e40959a147fdf648b40",
+            "bytes": 112737
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/outbound-primary-baseline.png",
+            "sha256": "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791",
+            "bytes": 258982
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/outbound-primary-current.png",
+            "sha256": "a76a9aefa56a0293a3b99f83e4fd42b02b38b6c37c8f5767977b2f50b91b466e",
+            "bytes": 104679
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/preview-baseline.png",
+            "sha256": "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206",
+            "bytes": 82875
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/preview-current.png",
+            "sha256": "da1a629b2be4e19eba0c019a97d72cfd0f0b41a7bb2953a628a268ce1f69307e",
+            "bytes": 44159
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/recipient-expired-adverse-baseline.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/retained/recipient-expired-adverse-current.png",
+            "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+            "bytes": 21194
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-expired-1280.png",
+            "sha256": "1b983cbfa6a2b64a5dfce420d2d517bf0973e01165013aacc81ab31830e5c508",
+            "bytes": 25265
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-expired-320.png",
+            "sha256": "365a586628fd55598517a57b85b449b6c769871d956368dcd032a56484fb764f",
+            "bytes": 20805
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-invalid-1280.png",
+            "sha256": "9e4946362b33e52f05512b477c5621a041a36979cfd567cb6ecf5e2d9c01553f",
+            "bytes": 23811
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-invalid-320.png",
+            "sha256": "3a8e3cb451819cd4b7f1af60b0f7ac668785639c181ebc9f924a749d687c00d1",
+            "bytes": 19745
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-valid-1280.png",
+            "sha256": "88acd05d5c4f9cd2d55885d1e554ce534706d1ca8941b4e4ecf3e5f291f432bd",
+            "bytes": 37123
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase174/warm/unsubscribe-valid-320.png",
+            "sha256": "5b7f8b9b5adf5de3f685ed910ba5a67624453e15b8f63412f6438ee61d57815e",
+            "bytes": 32876
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/admin-playwright-report.json",
+            "sha256": "20b51ba0c50a1d72adb31d118dc3eba161bb072a689e85de4ed17c020d0b5975",
+            "bytes": 18989
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/axe.json",
+            "sha256": "2fc825fb07e5404229f9e2ead233a024ec2886945cbb57d78b3fde0be6a9bba2",
+            "bytes": 111076
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/delivery-investigation-1440-dark.png",
+            "sha256": "fb78bbdad74419eabf6aecd3f263a2178d5de8bc2d6881fe2825c651ed2b4276",
+            "bytes": 195229
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/delivery-investigation-200-browser-zoom.png",
+            "sha256": "a3d2c06e612137dcbcabfec3b5d6508304288414369787546ebb6883b76a452b",
+            "bytes": 133179
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/delivery-investigation-320-dark.png",
+            "sha256": "cca6e546d3903de847e727feb1b745c2cc8dee60b421d53fa7c087f0a20b27e4",
+            "bytes": 54935
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/delivery-layout.json",
+            "sha256": "0fd01aaa10ee5a5721598ee89af1aa2147601afbdd52ded48a64d97c2d1354f0",
+            "bytes": 3165
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/demo-playwright-report.json",
+            "sha256": "595bc34b597e4f2c4c1cbedf05a85381ad61170bf0635f930133f0460418de43",
+            "bytes": 162426
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/fidelity.json",
+            "sha256": "6d6cd9698b9cc584f898f92d8eba893a64f14de348767f814891102d742f0762",
+            "bytes": 33969
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/inbound-layout.json",
+            "sha256": "343ae84c055b7757c66a846d715e8de23b7d50d54cf0e0c9db7f96b34c81134e",
+            "bytes": 3506
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/delivery-1440.png",
+            "sha256": "289070ee48b09e3c5170999dbc9665af30f3d35960fa4f0379123132de45b948",
+            "bytes": 102794
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/delivery-200-browser-zoom-long-text.png",
+            "sha256": "f2f5312316a333b7797f90799a114049a70e5a98e114f64cfe2c4c9051cee9df",
+            "bytes": 204582
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/delivery-200-browser-zoom.png",
+            "sha256": "13b705887370197f116db11eeb8d890eaa379f5453321cbd821eb73a76a7f5b2",
+            "bytes": 205824
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/delivery-320.png",
+            "sha256": "770f0935c8205d7ec802d59a6f9aa8c8cd2a74baae76dc4d688ea3a529b03682",
+            "bytes": 93253
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/delivery-layout.json",
+            "sha256": "0fd01aaa10ee5a5721598ee89af1aa2147601afbdd52ded48a64d97c2d1354f0",
+            "bytes": 3165
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/inbound-1440.png",
+            "sha256": "51ca23442197b55fcc6156da5789304f1b1db469826cce75311d3801a460575a",
+            "bytes": 124862
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/inbound-200-browser-zoom.png",
+            "sha256": "90e8e26da9d88f2e2c0b63a5b644d0eb496d64197df3298eaa33edbeb3c14053",
+            "bytes": 302451
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/inbound-320.png",
+            "sha256": "87f86fdd3fcdf752a94ebe0f8ddcd7fc7089c8537f903f7f246453ae0de8beca",
+            "bytes": 125603
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/phase175-layout/inbound-layout.json",
+            "sha256": "343ae84c055b7757c66a846d715e8de23b7d50d54cf0e0c9db7f96b34c81134e",
+            "bytes": 3506
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/cold/runtime.json",
+            "sha256": "859b5c0cb558e3f0283ed7da4280047e5087e9cb3b3ce2a52adda097726673ec",
+            "bytes": 405
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/execution.json",
+            "sha256": "970a58030296857ae0ebc79c0df89a1a45be5032e9848cd0b5590d0aae18750b",
+            "bytes": 42391
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/run.json",
+            "sha256": "66224f9f9e694d191622d3226e89b20c21d8e8721b8a9297e6db83540674e61d",
+            "bytes": 22202
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/admin-playwright-report.json",
+            "sha256": "ccda6cbf45f3bd2f9546f74b6693cbba91cfb285f0c703a99684e503af700501",
+            "bytes": 18989
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/axe.json",
+            "sha256": "d50acc250d8744b5be696347b5bdae0683fcbced574d4866c7c38544324a6c57",
+            "bytes": 111076
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/delivery-investigation-1440-dark.png",
+            "sha256": "fb78bbdad74419eabf6aecd3f263a2178d5de8bc2d6881fe2825c651ed2b4276",
+            "bytes": 195229
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/delivery-investigation-200-browser-zoom.png",
+            "sha256": "a3d2c06e612137dcbcabfec3b5d6508304288414369787546ebb6883b76a452b",
+            "bytes": 133179
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/delivery-investigation-320-dark.png",
+            "sha256": "cca6e546d3903de847e727feb1b745c2cc8dee60b421d53fa7c087f0a20b27e4",
+            "bytes": 54935
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/delivery-layout.json",
+            "sha256": "0bb1418c0a606bbf0de66683f006e497779e43835daadba08d61c0f11cfa5cab",
+            "bytes": 3164
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/demo-playwright-report.json",
+            "sha256": "93163de64ed532cce3009a5e74d47bcf1b82f8f1c2fe9a621bfaf6390c1ee055",
+            "bytes": 162427
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/fidelity.json",
+            "sha256": "10bf3281384cbc1aa1676329f710026d1316f805f6870f26feebf107a5b56954",
+            "bytes": 33970
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/inbound-layout.json",
+            "sha256": "ae85218b0a828127edaa2b57a0c4fa22d103bb1df1f3256d2583346e84d42b6b",
+            "bytes": 3504
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/delivery-1440.png",
+            "sha256": "339a673b4efe0de874c3c4945bbeca48393b3748f2891feac58934e26e0459da",
+            "bytes": 103456
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/delivery-200-browser-zoom-long-text.png",
+            "sha256": "6505a73e945ac71845dc79b3de1a64c5001475a12a62ddd399a70f67ac13a329",
+            "bytes": 203391
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/delivery-200-browser-zoom.png",
+            "sha256": "fdefdfa55fa7b92b774165519c1942f71d10cce398e01558df55d56c3539b4cc",
+            "bytes": 204472
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/delivery-320.png",
+            "sha256": "ab19c9b070d32cb645093fccd4774c378d6f1ed103d9ccd507028e3c352f1bf2",
+            "bytes": 93721
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/delivery-layout.json",
+            "sha256": "0bb1418c0a606bbf0de66683f006e497779e43835daadba08d61c0f11cfa5cab",
+            "bytes": 3164
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/inbound-1440.png",
+            "sha256": "339a806794062a6e85753971008a653c118d31e85a8a2283a00720e238d0e891",
+            "bytes": 125234
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/inbound-200-browser-zoom.png",
+            "sha256": "90e8e26da9d88f2e2c0b63a5b644d0eb496d64197df3298eaa33edbeb3c14053",
+            "bytes": 302451
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/inbound-320.png",
+            "sha256": "42fa2f7dabc53e61a12d3e0b07055e925449a98c893e5e2daa56d6b6d5f0059d",
+            "bytes": 125091
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/phase175-layout/inbound-layout.json",
+            "sha256": "ae85218b0a828127edaa2b57a0c4fa22d103bb1df1f3256d2583346e84d42b6b",
+            "bytes": 3504
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175/warm/runtime.json",
+            "sha256": "161a43ce2cecec68a49f5367951701012ee6ff0891cb0bda0f78dbc6e98254c4",
+            "bytes": 403
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/demo-browser-evidence-41490274664-1/phase175-compose.override.yml",
+            "sha256": "cfaba76c3c5145c5e77341c8fb855f8892d9e27fcc25fdfcbd4f21b5931ab8c2",
+            "bytes": 80
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/checkpoint.json",
+            "sha256": "d05debec18042fe54b2b3bc5b9d47c35892ba7036203c21c8e1dca339d714b8f",
+            "bytes": 50840
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/manifest.json",
+            "sha256": "0aa5acaeb8235e8f8b2e894baaa1f68052b636820ef424a18d85407ca78584a2",
+            "bytes": 50725
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w1024--dark.png",
+            "sha256": "b2b3f678b4d858f8c8f0a9eec80addbe052366facaa30fbd853bf9daf1140bb5",
+            "bytes": 77174
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w1024--light.png",
+            "sha256": "d043a80477a8557a6ece2160d91f5552a003d6f15e18cbd2a8680457c508b624",
+            "bytes": 76920
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w375--dark.png",
+            "sha256": "d9eded24a5496261578a776a388ab62b5207c03f48c35771e432396e5a586ae1",
+            "bytes": 61626
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w375--light.png",
+            "sha256": "be00d892c56ba02713cd147a8afcc785780cfff95bd0cac0f06f07f4181366d9",
+            "bytes": 61593
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w768--dark.png",
+            "sha256": "220f3023df10bac3b903f80a4e9eb9d7d54c317195191ec3ab35048784400928",
+            "bytes": 75878
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--recoverable--w768--light.png",
+            "sha256": "a807c438adc0e26816c6e6ab905c910470af6198578e79ceaa8d5b50d99d4c9b",
+            "bytes": 75377
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w1024--dark.png",
+            "sha256": "5f6e34047c8431e8274677e64807a5714246fd923dbbe3fbb54519577c4315b8",
+            "bytes": 108537
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w1024--light.png",
+            "sha256": "75eee7e6e55258ed34e52b9b0b83556a966d777e65ecf434f37cb3f03c3a187d",
+            "bytes": 107966
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w375--dark.png",
+            "sha256": "f7dff562f5be796d8fcf8f3f9f7b26ccc0c5d5abc4b71b7d914abb51fcf5b04c",
+            "bytes": 88832
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w375--light.png",
+            "sha256": "3335577e38088cc8cc2d5d088f3067ef4fce7d88a1c484b3792f41e4df9e74c4",
+            "bytes": 88741
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w768--dark.png",
+            "sha256": "cd4d719569f7e9869fbe28a48957688554d7bf5eb8d5569959267d46763fb7a3",
+            "bytes": 106960
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--typed_values--w768--light.png",
+            "sha256": "44cca2136c567d94f49502284404adc7736fe983aa8923b2a910b487b08e547f",
+            "bytes": 106029
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w1024--dark.png",
+            "sha256": "0cbae4c921aebc733aa69ae4af98fe4d08b414fcd9e98b07c803b2994c468761",
+            "bytes": 87198
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w1024--light.png",
+            "sha256": "6093fab4478e02fb4457eae288d9fbc6bf4a56f1c373273e12c732d4191de429",
+            "bytes": 86953
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w375--dark.png",
+            "sha256": "264958a815c941924949868927aa1248e469e354136bced67d49552fd6176c28",
+            "bytes": 70222
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w375--light.png",
+            "sha256": "8bba0cbe17ec64109cc6471dea7d19be672708dd0885da075740a3b1cd5bd297",
+            "bytes": 70308
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w768--dark.png",
+            "sha256": "5bfac8fd842a9e7ac9a6e9ac4c23999ba921d83ff43c99e25f23e2efa635f7e1",
+            "bytes": 86526
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_default--w768--light.png",
+            "sha256": "d3ea7f8e935d08a388b11813b9a862c8b6ffc28a8ef14fa0e17ad859b34ccebc",
+            "bytes": 86026
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w1024--dark.png",
+            "sha256": "19fbf7a0760a66397f6902f3bbba834be8a41267229258187d54337ffc9c2fca",
+            "bytes": 90613
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w1024--light.png",
+            "sha256": "ec89322454e7a27d800f6dfd89ef51ea76d6b395d43cdba10a5c7046d90e9e4c",
+            "bytes": 90400
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w375--dark.png",
+            "sha256": "7948689af1c62d7c13b5220515bab2fb75bab4194f3bf946e5188c0af7940549",
+            "bytes": 73917
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w375--light.png",
+            "sha256": "2dd1533099e928f1a65daf449cb72b7549a370e7d7319a3e6025ab32eeb0b83b",
+            "bytes": 73852
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w768--dark.png",
+            "sha256": "883bfb3ed3eb149a292e75a00952c80a7a5eece1caa6c8637ab309f225660f8a",
+            "bytes": 90023
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_enterprise--w768--light.png",
+            "sha256": "c0e5d26e5c49163c6d40b74c757080aafb5a1a77933987e5f0efe6ab82c24c59",
+            "bytes": 89573
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w1024--dark.png",
+            "sha256": "ba9c8d7f6ec92b16c3e99236f8e43191cf2cf8e866a38e64edb65ae1ebc470b6",
+            "bytes": 97322
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w1024--light.png",
+            "sha256": "c5a0c94ad98c448b184a7c3b68c1025f0f6cd0f3545d7febce3a83ad7fc849f3",
+            "bytes": 97126
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w375--dark.png",
+            "sha256": "708818e2edbb408eb0fcf1ca89b81c2990dc12f87ea8ded92795763eb12b189d",
+            "bytes": 78049
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w375--light.png",
+            "sha256": "fa18b46ba7f1d75c452ac77300718edd753baa2d7d45417d73bfa9d44d819e35",
+            "bytes": 77751
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w768--dark.png",
+            "sha256": "a8d26ac134a72fd3fdbcba920b6c258bc64cf5c3a5b841c7385b113e579b4a6b",
+            "bytes": 96885
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京__with_a_deliberately_long_name--w768--light.png",
+            "sha256": "1a851067a42a39bde026c39fd9fe3a7b1ad84bca845b2701c19c8f23b062f196",
+            "bytes": 96300
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w1024--dark.png",
+            "sha256": "86cdda867d185c2fc8cf043c3b66ff4b2c1030f8f5b901d362f7c555f9113334",
+            "bytes": 98106
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w1024--light.png",
+            "sha256": "f451246be5f6a9aa716770164450d61306325d64697789d509df43fbf2956b6f",
+            "bytes": 97940
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w375--dark.png",
+            "sha256": "174a5cda2a657bc4bf2e63d547be75d42c958e35a3d00b5b5905768696dda925",
+            "bytes": 79263
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w375--light.png",
+            "sha256": "e97746679242b52c3fa18739c37716ecab61fd98a41673ac7e3b061b2b56d2f0",
+            "bytes": 79121
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w768--dark.png",
+            "sha256": "40fc3ca001ba53c0ad2047382953046b2825263b366a613afc83239976b70429",
+            "bytes": 97735
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/preview-capture-advisory-41490274664/screenshots/MailglassAdmin__Fixtures__HappyMailer--welcome_überraschung_東京_with_a_deliberately_long_name--w768--light.png",
+            "sha256": "2270070563590d814df6d70824226e9a2e8ee3389a110f8d4a4f2361c8dce44f",
+            "bytes": 97217
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/trust-runner-clean-baseline-41490274664/checkpoint.json",
+            "sha256": "24858ca83da8ba49e7c2a2b500bc4c5aae676134f408b7e2928ea0bf95b2e29a",
+            "bytes": 2040
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664/trust-runner-repo-head-41490274664/checkpoint.json",
+            "sha256": "24858ca83da8ba49e7c2a2b500bc4c5aae676134f408b7e2928ea0bf95b2e29a",
+            "bytes": 2040
+          }
+        ],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/run-41490274664.raw.json",
+            "sha256": "67aed49b628a03491f3f2b79b97e9f564ebcdb64dadcc1db52309e8f749d7e99",
+            "bytes": 14017
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/jobs-41490274664.raw.json",
+            "sha256": "af4aeab4da55307d2a20decabb175c508724d947473ad5a9d3b4db024def0b29",
+            "bytes": 108716
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490274664.raw.json",
+            "sha256": "b149c096844285d9b4c34465e306837391163cca28963fa71fb5d163b2c0b7c9",
+            "bytes": 3600
+          }
+        },
+        "job_logs": [
+          {
+            "job_id": 125431165266,
+            "name": "Branch Protection Advisory",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165266.txt",
+            "sha256": "6a1cd4fba34eb338b98c7edd7b88cbc6004ca3b7f3cf4c19e1ca84497258d986",
+            "bytes": 15877,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431165266"
+          },
+          {
+            "job_id": 125431165748,
+            "name": "Detect Non-Doc Changes",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165748.txt",
+            "sha256": "0c2e3b4c5bb2acaf082e501eb20e14a639b88e6be23ee9aa961a9ff21932affb",
+            "bytes": 37015,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431165748"
+          },
+          {
+            "job_id": 125431296814,
+            "name": "Support Contract Core (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431296814.txt",
+            "sha256": "ac9de33f1fac0363815ce203467b8c0c35788b9658f02abd1a15810b7bb7c544",
+            "bytes": 171208,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431296814"
+          },
+          {
+            "job_id": 125431296858,
+            "name": "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431296858.txt",
+            "sha256": "5642ca4055fa1e8283ec66ae91c7661b6e9194ccacf34e6edd8a2bc42671e9d6",
+            "bytes": 32805,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431296858"
+          },
+          {
+            "job_id": 125431296877,
+            "name": "Mix Task Tests (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431296877.txt",
+            "sha256": "6058ff695e92fce8079152688dfed826ec985682fbdc5dec32637d15fcb585fb",
+            "bytes": 105649,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431296877"
+          },
+          {
+            "job_id": 125431296880,
+            "name": "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431296880.txt",
+            "sha256": "63f31077bf988c413f34bf9c77462ea4ae24e4b0db9ec666e2d3a3842cfebef5",
+            "bytes": 29779,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431296880"
+          },
+          {
+            "job_id": 125431296976,
+            "name": "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431296976.txt",
+            "sha256": "3fdaf30f355e4996c2d209f55f7c2a83ae78ff9741a225e5ca1dc93d5c39663e",
+            "bytes": 27432,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431296976"
+          },
+          {
+            "job_id": 125431297027,
+            "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "failure",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297027.txt",
+            "sha256": "0d395d5a54c5c009404307c97d307d6ad7a2fe161598f0cc469f87e9e6b0b985",
+            "bytes": 443757,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297027"
+          },
+          {
+            "job_id": 125431297035,
+            "name": "Hex Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297035.txt",
+            "sha256": "dd0302f7d87dce46bbb839a9e07997af766f6ced1c1269c2c7d3414cdeb213a9",
+            "bytes": 32978,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297035"
+          },
+          {
+            "job_id": 125431297096,
+            "name": "Design System Conformance (shell gates)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297096.txt",
+            "sha256": "2464c702a6527586a060397073fcc50cf561e010fb2b26cad50fe4848e2fc9c3",
+            "bytes": 15329,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297096"
+          },
+          {
+            "job_id": 125431297122,
+            "name": "Support Contract Admin (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297122.txt",
+            "sha256": "ca3d74fa61733e6f9f2f6ffa6961a6bf9ceb60fde8ab3831b1bf8090453695d5",
+            "bytes": 171972,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297122"
+          },
+          {
+            "job_id": 125431297127,
+            "name": "Format Check (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297127.txt",
+            "sha256": "833f97c5cc84f3f54cf492dbedd2e648b451a9386cf289e1ec1103fd41325442",
+            "bytes": 22643,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297127"
+          },
+          {
+            "job_id": 125431297139,
+            "name": "Core Deterministic Suite (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297139.txt",
+            "sha256": "6bcf62495d389b7215a7c1f94b6b9ea2fe84d28318da2036dcf9343e9f0e1370",
+            "bytes": 191974,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297139"
+          },
+          {
+            "job_id": 125431297157,
+            "name": "Deps Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297157.txt",
+            "sha256": "f9dc78374f9339731b973c1d006f625feecf7ae5737d6c265e7834c716a9947e",
+            "bytes": 32879,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297157"
+          },
+          {
+            "job_id": 125431297220,
+            "name": "Installer Golden Gate (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297220.txt",
+            "sha256": "251ea029023d98ff6bd3a4cb39b17bb2f8beaffd080e439faabe4aa2a180270e",
+            "bytes": 51837,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297220"
+          },
+          {
+            "job_id": 125431297221,
+            "name": "Installer Host Smoke",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297221.txt",
+            "sha256": "a56e5e89e45daff5c414aa1f90fff5cd1fe55420fdad79599baa8f991fcf822f",
+            "bytes": 258984,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297221"
+          },
+          {
+            "job_id": 125431297239,
+            "name": "Dialyzer (Elixir 1.18 / OTP 27) (1.18, 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297239.txt",
+            "sha256": "eed947e5a1886d12a7876b0ad2696ec0c91dbf6d8f18f200a8ecb7ff8861ced4",
+            "bytes": 54313,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297239"
+          },
+          {
+            "job_id": 125431297327,
+            "name": "Inbound Dialyzer (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297327.txt",
+            "sha256": "b1df700ea3c151db858054e67a327fbfe2d64e1d7576cd63c889bdd58d54bc05",
+            "bytes": 34426,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297327"
+          },
+          {
+            "job_id": 125431297336,
+            "name": "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297336.txt",
+            "sha256": "6fe489580adf41e0373d637a61a42b5b7cc0f3c575c3123d6ea8245b83308511",
+            "bytes": 33599,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297336"
+          },
+          {
+            "job_id": 125431297367,
+            "name": "Credo Strict (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297367.txt",
+            "sha256": "a61610265f1c871461a08889104d630cf157232a3e09ffa11ec2231eedfd810a",
+            "bytes": 51116,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297367"
+          },
+          {
+            "job_id": 125431297382,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297382.txt",
+            "sha256": "482a04ef64c8c8f120a02cf9544b5f66b74f89104ff3259fea088afca53665bd",
+            "bytes": 191224,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297382"
+          },
+          {
+            "job_id": 125431297393,
+            "name": "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297393.txt",
+            "sha256": "b3aa6f2b75463270e19b70d690a5a1778d6d4e7f58fb1fe42d820b1de7dfd305",
+            "bytes": 73062,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297393"
+          },
+          {
+            "job_id": 125431297396,
+            "name": "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297396.txt",
+            "sha256": "be13f61c7b9fc5556918fb2a892764bf2edc6970593bcb95a7cde5a22e109a68",
+            "bytes": 83300,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297396"
+          },
+          {
+            "job_id": 125431297405,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297405.txt",
+            "sha256": "dcaae0086c3dd403e4055226eb9c74379941da43a291531b27fe552030046772",
+            "bytes": 539788,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297405"
+          },
+          {
+            "job_id": 125431297731,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297731.txt",
+            "sha256": "cdadf8d6aff9b243a7862f46ada83ecd139a0d9f079b5dffdc67ea796abd423e",
+            "bytes": 97782,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297731"
+          },
+          {
+            "job_id": 125439721179,
+            "name": "CI Green",
+            "status": "completed",
+            "conclusion": "failure",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125439721179.txt",
+            "sha256": "b39e993f932dee30d97d2062c02fb349cc20667b7c7aa853f622a9e84a2dd342",
+            "bytes": 19689,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125439721179"
+          }
+        ]
+      },
+      {
+        "id": 41490269425,
+        "name": "PR Title",
+        "workflow_path": ".github/workflows/pr-title.yml",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T17:20:42Z",
+        "updated_at": "2026-11-02T17:20:52Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41490269425",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "artifacts": [],
+        "downloaded_artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/run-41490269425.raw.json",
+            "sha256": "310ccb7fc5d9d60106f75e9087583c47bd9a2b35deb919b155d5e945c8f07450",
+            "bytes": 14036
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/jobs-41490269425.raw.json",
+            "sha256": "50fd7f13210768d8fd02df51c0e2dd6167fbe103dbe87af6924094f73581adec",
+            "bytes": 1921
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/artifacts-41490269425.raw.json",
+            "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+            "bytes": 42
+          }
+        },
+        "job_logs": [
+          {
+            "job_id": 125431148815,
+            "name": "Conventional PR Title",
+            "status": "completed",
+            "conclusion": "success",
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431148815.txt",
+            "sha256": "dac5b8b768bc731d4fdfa55992c3d76ec7ab68202efdb5a7f76bdc54115cf0ba",
+            "bytes": 2524,
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41490269425/job/125431148815"
+          }
+        ]
+      }
+    ],
+    "stop": {
+      "reason": "required_lane_failed_and_unclassified_advisory_failures",
+      "detected_at": "2026-11-02T17:25:28.044Z",
+      "candidate_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "workflow_run_id": 41490274664,
+      "workflow_name": "CI",
+      "event": "pull_request",
+      "attempt": 1,
+      "failed_job_id": 125431297027,
+      "failed_job_name": "Inbound Test (Elixir 1.18 / OTP 27)",
+      "failed_job_conclusion": "failure",
+      "failed_job_url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125431297027",
+      "dispatch_withheld": true,
+      "pr_body_update_withheld": true,
+      "no_retry_or_rerun": true,
+      "no_cancellation": true,
+      "other_attempt_1_runs_left_to_finish": false,
+      "failure_log_status": "captured",
+      "additional_failures": [
+        {
+          "id": 125439721179,
+          "name": "CI Green",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41490274664/job/125439721179",
+          "failure_log": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125439721179.txt",
+            "sha256": "b39e993f932dee30d97d2062c02fb349cc20667b7c7aa853f622a9e84a2dd342",
+            "status": "captured"
+          },
+          "conclusion": "failure"
+        },
+        {
+          "id": 125431165309,
+          "name": "Inbound Full Suite Advisory (schema mailglass)",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165309",
+          "failure_log": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165309.txt",
+            "sha256": "2b6eef379d46ff6f87dacfe5a488aa9297dd1799b0ebd59d10ba602149e2b80c",
+            "status": "captured"
+          },
+          "conclusion": "failure"
+        },
+        {
+          "id": 125431165466,
+          "name": "Inbound Full Suite Advisory (schema public)",
+          "url": "https://github.com/szTheory/mailglass/actions/runs/41490274743/job/125431165466",
+          "failure_log": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431165466.txt",
+            "sha256": "eec7d0a6247565524fd4e9faa27281d0e058e51a36fdabab2c17022a8bb51000",
+            "status": "captured"
+          },
+          "conclusion": "failure"
+        }
+      ],
+      "classification": "Inbound Test is outside the Plan 17 advisory exceptions; both Inbound Full Suite Advisory schema failures are also outside the only permitted Plan 17 advisory classes (Operator Browser Gate or Preview Capture Advisory). Stop without retry.",
+      "failure_log": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/job-log-125431297027.txt",
+        "sha256": "0d395d5a54c5c009404307c97d307d6ad7a2fe161598f0cc469f87e9e6b0b985",
+        "status": "captured"
+      },
+      "failure_diagnosis": {
+        "test_file": "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs",
+        "line": 48,
+        "assertion": "remote_reference_violations(sources) == []",
+        "actual_violation": {
+          "source": "lib/mailglass_inbound/internal/operator/records.ex",
+          "reference": "Mailglass.Clock"
+        },
+        "expected": "no undeclared Mailglass core references",
+        "remediation_hint": "The existing allowlist entry for records.ex names Mailglass.Tenancy but omits the newly used shared Mailglass.Clock module.",
+        "ci_test_result": "481 tests, 1 failure, 3 excluded",
+        "advisory_schema_results": "481 tests, 1 failure in each schema",
+        "ci_green": "CI Green failed after the Inbound Test lane failure; no additional dispatch was attempted.",
+        "advisory_matrix": "The Inbound Full Suite Advisory failed the same ArchitecturePortTest assertion in both schema prefixes; Plan 17 permits only classified Operator Browser Gate or Preview Capture Advisory failures to continue.",
+        "demo_browser_evidence": "success",
+        "operator_browser_gate": "success",
+        "support_contract_admin": "success"
+      },
+      "ended_at": "2026-11-02T17:39:22.823Z",
+      "run_count": 5,
+      "failure_findings": [
+        {
+          "run_id": 41490274664,
+          "job_id": 125431297027,
+          "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+          "conclusion": "failure",
+          "required_lane": true
+        },
+        {
+          "run_id": 41490274664,
+          "job_id": 125439721179,
+          "name": "CI Green",
+          "conclusion": "failure",
+          "required_lane": true
+        },
+        {
+          "run_id": 41490274743,
+          "job_id": 125431165309,
+          "name": "Inbound Full Suite Advisory (schema mailglass)",
+          "conclusion": "failure",
+          "classification": "not an allowed Plan 17 advisory class"
+        },
+        {
+          "run_id": 41490274743,
+          "job_id": 125431165466,
+          "name": "Inbound Full Suite Advisory (schema public)",
+          "conclusion": "failure",
+          "classification": "not an allowed Plan 17 advisory class"
+        }
+      ],
+      "pr_body_still_contains_cycle07_candidate": true,
+      "pr_body_current_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+      "remote_candidate_branch_advanced": true,
+      "local_tracking_ref_update_warning": "GitHub confirmed the branch fast-forward, but git could not refresh local refs/remotes/origin/gsd/v2.10-ui-repairs-storybook because .git is read-only in this environment; no push retry was made."
+    },
+    "gates": {
+      "automatic_pr_run_id": null,
+      "ci_green": "failure",
+      "guard_release_trigger": "not_run",
+      "demo_browser_evidence": "success",
+      "support_contract_admin": "not_run",
+      "dispatch_gate": "blocked_by_required_failure",
+      "inbound_test": "failure",
+      "inbound_full_suite_advisory": "failure"
+    },
+    "evidence_manifests": {
+      "hosted": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/hosted-evidence.sha256",
+        "sha256": "1b319a80e467c0f21f279396ddd4641dc9b98c7d35d9ee44e00b9ebb89a5a188",
+        "entries": 241
+      },
+      "job_logs": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/hosted-job-logs.sha256",
+        "sha256": "7016275aec304a86ffd036272a9ffab3bd37afb56e19f545009e3737d50e04aa",
+        "entries": 34
+      },
+      "artifacts": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/hosted-artifacts.sha256",
+        "sha256": "be7d57462323d4bddc1ccdf2d1dafe5397faac6f0bc17d25e3a5aac255b260de",
+        "entries": 192
+      }
+    }
+  },
+  "cost": {
+    "status": "not_measured",
+    "reproducible": false,
+    "identity_bound": false,
+    "gate": "not_evaluated",
+    "preview_eligible": false,
+    "artifact": null,
+    "input_copies": [
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/disposition-inputs/expected.json",
+        "sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/disposition-inputs/baseline-run.raw.json",
+        "sha256": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-08/disposition-inputs/baseline-jobs.raw.json",
+        "sha256": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+        "byte_identical": true
+      }
+    ]
+  },
+  "preview": {
+    "status": "not_started",
+    "candidate_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "prior_cycle_attempt_is_consumed": true,
+    "attempt_count": 0,
+    "authorization_required": "Fresh explicit conditional approval after hosted and cost gates pass.",
+    "eligible": false
+  },
+  "packet_hashes": {
+    "approval": "3d0e1f77a1e1238b2cab669f3328f5f663262be4dfb678819d72bb8122ed47c0",
+    "pr_body": "33d2c765f5aa00db036dcfda5e15c127b9d171064eab6f354e986a6277322bb5"
+  },
+  "stop_rules": [
+    "A missing, ambiguous, or declined owner decision leaves authority unset and performs no hosted or preview action.",
+    "A changed candidate SHA, remote main, target ref, PR state/base/head/body, or release-ledger digest requires a new checkpoint and fresh approval.",
+    "Any failed required or Demo lane, unexpected workflow trigger, changed ref, missing receipt, ambiguous result, or unclassified setup failure stops Cycle 08 without retry.",
+    "At most eight total attempt-1 workflow runs, one push, one PR body update, one ci.yml dispatch, and one separately approved conditional local preview."
+  ],
+  "next_actor": "Executor",
+  "next_action": "Plan34 Cycle08 is closed as stopped. The local follow-up is to add Mailglass.Clock to the records.ex allowlist in architecture_port_test.exs, validate locally, then prepare a new exact-SHA candidate and fresh hosted approval; do not use Cycle08 authority for the new SHA.",
+  "post_push_pre_pr_update_snapshot": {
+    "observed_at": "2026-11-02T17:20:38.552Z",
+    "prepush_checks": {
+      "head_matches_candidate": true,
+      "branch_matches": true,
+      "main_matches_snapshot": true,
+      "target_matches_snapshot": true,
+      "target_is_ancestor": true,
+      "main_is_ancestor": true,
+      "pr_open": true,
+      "pr_draft": true,
+      "pr_base_matches": true,
+      "pr_head_matches": true,
+      "pr_title_matches": true,
+      "pr_body_matches": true,
+      "ledger_matches": true,
+      "no_existing_candidate_runs": true,
+      "approval_matches": true,
+      "budget_unspent": true
+    }
+  },
+  "post_stop_snapshot": {
+    "observed_at": "2026-11-02T17:40:10.831Z",
+    "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "target_branch_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "pr_state": "open",
+    "pr_draft": true,
+    "pr_base_branch": "main",
+    "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+    "pr_head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "pr_body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "pr_body_update_performed": false,
+    "workflow_dispatch_count": 0
+  },
+  "final_validation": {
+    "verified_at": "2026-11-02T17:40:10.920Z",
+    "manifest_files_checked": 467,
+    "cycle07_record_unchanged": true,
+    "post_stop_snapshot_matches_expected": true,
+    "all_runs_attempt1_exact_sha": true,
+    "no_preview_or_cost_claim": true
+  }
+}

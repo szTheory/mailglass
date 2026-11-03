@@ -8,31 +8,23 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.10 UI Repairs & Faithful Storybook
+## Current State
 
-**Goal:** Resolve recorded operator and author UI friction through integrated repairs, faithful retained production-component scenarios, and proof at the real affected boundary.
+**v2.10 UI Repairs & Faithful Storybook completed and archived 2026-11-02.** All 31 requirements across Phases 174–178 were satisfied and all five phase verification reports passed. The milestone audit found no blockers: 15/15 integration paths and 7/7 end-to-end flows passed. The closeout is an override because 9 open deferred records were acknowledged; 34 earlier acknowledgements remain carried forward. See the archived audit and .planning/STATE.md for the disclosed follow-ups.
 
-**Scope confirmed:** 2026-10-26. Formalize only the next envelope from [UPSTREAM-SCOPE.md](research/ui-quality-engine/UPSTREAM-SCOPE.md), the current scope authority; the [rolling proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md) projects later envelopes without admitting them to this milestone. Continue phase numbering at 174.
+The core value remains **email you can see, audit, and trust before it ships**. This milestone improved operator and maintainer workflows without changing Mailglass's transactional-email focus. No next milestone has been approved; use $gsd-new-milestone to define its goals.
 
-**Target features:**
-- Health hierarchy, compact Account context and coherent host-supported navigation, preserving actionable issues and truthful scope.
-- Auto-apply selects and debounced text on Deliveries and Inbound, preserving canonical URLs, useful Back, focus, pagination reset, validation and account isolation.
-- Restrained quick-view navigation and discoverable, truthful replay with shared dialog presentation, X-close, requested success toast and explicit in-dialog failure/retry outcomes.
-- Complete ordinary authorized Inbound contact values, useful technical details visible on full detail, and coherent raw-source/suppression presentation without widening sensitive evidence access.
-- Preview restore-defaults/action/helper treatment and readable scenario/module identity, preserving account-independent sample rendering.
-- Storybook mount/font/theme/hook fidelity established early; realistic retained scenarios and real-route checks accompany each repair. Complete one Delivery investigation path as an early integration proof.
+## Completed Milestone: v2.10 UI Repairs & Faithful Storybook
 
-**Selected seeds:** SEED-009 (bounded to this envelope), SEED-261010-hjp, and only the live-filter portion of SEED-261010-gad. Custom date ranges remain deferred.
+**Shipped and archived 2026-11-02.** Five phases, 76 plans, and 117 tasks completed.
 
-**Boundaries:** Preserve the shipped brand, domain, authorization, Account, exact replay and rendering contracts. No exhaustive Gallery migration, fully storied app, six-profile quota, generic view/fixture framework, capability/provider growth, custom date ranges, account-aware Preview, interactive unsubscribe submission, Gallery-route removal, rebrand, CI-wide redesign or judge service. F7 token-route mounting remains a named following-envelope candidate. Preview return context needs a narrow validated host-supported seam if admitted; it must not expand auth/session contracts. Prefer existing dependencies and incremental presentation extraction.
+**Delivered:** Operator UI repairs across Health, Account navigation, Deliveries, Inbound, replay, and Preview, with production-faithful retained Storybook scenarios and source-bound verification evidence.
 
-**Phase 174 completed 2026-10-27:** All six requirements and 20/20 truths passed; three former UAT checkpoints now have automated proof, with 148/148 acceptance cases in both cold and warm conditions. No owner verification remains. Source identity, replayable receipts and limits are recorded in [174-AUTOMATION.md](phases/174-faithful-storybook-and-quiet-quick-views/174-AUTOMATION.md). Next: plan Phase 175.
+**Validated requirements:** 31/31 across Phases 174–178. Full statements are archived in [v2.10-REQUIREMENTS.md](milestones/v2.10-REQUIREMENTS.md); phase details and outcomes are in [v2.10-ROADMAP.md](milestones/v2.10-ROADMAP.md).
 
-**Phase 176 completed 2026-10-28:** FILTER-01–04, INUX-05 and INUX-06 passed 5/5 goal-backward must-haves after gap round 176-11..15. That round fixed four defects: the evidence card's size and reveal read different stored fields; copy controls hid the address from assistive technology; an empty narrower window removed the filter toolbar; and the mobile filter toggle hid desktop filters. Prohibitions P9–P13 are mutation-proven in `phase176_prohibition_contract_test.exs`. Local gate: core 81, Admin 878 (1 excluded), inbound 480 (3 properties), browser 31, 0 failures. Security 37/37 closed. No owner UAT. Advisory GR-WR-01 is open: the Deliveries status region keeps its committed text across PubSub refreshes, even when the read state changes. Next: plan Phase 177.
+**Audit:** tech_debt, no blockers; 15/15 integration paths and 7/7 flows passed. Nine newly open deferred records were acknowledged at close, with 34 carried forward. See [v2.10-MILESTONE-AUDIT.md](milestones/v2.10-MILESTONE-AUDIT.md) and .planning/STATE.md.
 
-**Verification:** D-52 applies. Use synthetic normal/empty/long-Unicode cohorts, relevant reachable boundary/failure/permission states, representative themes and viewport/container widths, keyboard/focus, and explicit System/reduced-motion/real-zoom ownership. Fresh axe comparisons and expected/executed counts precede ratchet claims. Measure added cold/warm CI cost against provisional ≤5 wall minutes / ≤10 runner-minutes; these are pilot budgets, not measured facts. Existing required gates retain their meaning.
-
-**Automation default (D-52 reaffirmed 2026-10-27):** Target zero owner UAT. Convert observable checks to integration/browser/smoke/seam assertions and finish routine repairs; add CI coverage only where it has recurring value. Record proof and close covered UAT rows without confirmation. Carry forward only an explicit irreducible human decision, with its reason. Missing test wiring and agent-reviewable layout are engineering work. Follow [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default), including its no-repeat-UAT rule.
+**Next:** No milestone is approved yet. Start with $gsd-new-milestone; retain the convergence posture and require concrete adopter pull or a contract gap for broader feature work.
 
 ## Completed Milestone: v2.9 Operator, Preview & Email UI Refinement
 
@@ -52,7 +44,9 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Phase 168 reconciled the preserved local workspace with merged cleanup and recorded the checkout and assets served by the preview.
 
-## Current State
+<details><summary>Historical state through v2.9</summary>
+
+## Historical State Through v2.9
 
 **v2.9 Operator, Preview & Email UI Refinement SHIPPED and ARCHIVED 2026-10-26.** All 28 requirements across Phases 168–173 and inserted Phase 173.1 are satisfied. The milestone audit (`status: tech_debt`, no blockers) records 28/28 requirements, 7/7 phases, 11/14 integration seams, and 6/7 flows. Phase 173 delivered owner-accepted candidate `4ed3ada1` (required CI 34/0). Phase 173.1 fixed demo outbound replay, which had always been denied, and the Demo Browser Evidence red, with the code-review fixes in PR #307. Remaining debt is the demo unsubscribe-link flow (F7: library token routes are not mounted in the demo), Inbound components that copy the Operator ones, partial Gallery/Storybook coverage, and three dead LiveView handlers. Artifacts are archived to `.planning/milestones/v2.9-ROADMAP.md`, `v2.9-REQUIREMENTS.md`, `v2.9-MILESTONE-AUDIT.md`, and `v2.9-phases/`. The close is an `override_closeout`: the verification projection marks all seven reports `stale` because later phases touched their covered files, so the audit re-derived every verdict at `44219dfe`. Six open artifacts were acknowledged and are disclosed in `.planning/STATE.md`. v2.9 merged to `main` with `feat` commits; Hex publication follows the release-cadence rule below and is a separate, owner-attended release ceremony.
 
@@ -183,6 +177,8 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
+</details>
+
 ## Completed Milestone: v2.8 Truthful Repo
 
 **Opened 2026-09-17; shipped 2026-09-19.** Hard timebox: 5 working days / WIP limit 1 open PR. Two phases, no third.
@@ -244,15 +240,19 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 - Close with a clean working state, accurate docs, no unexplained red automation, and an explicit disposition
   for every audited item.
 
-## Active Requirements
+## Validated Requirements: v2.10 (SHIPPED 2026-11-02)
 
-**v2.10 UI Repairs & Faithful Storybook** — scope, all 31 [requirements](REQUIREMENTS.md), and the [roadmap](ROADMAP.md) approved 2026-10-26 from the current upstream brief and unresolved owner feedback. Phases 174–178 map every requirement exactly once. Ready to plan Phase 174; implementation has not started.
+- ✓ UXF-11, STORY-03–06, UIQ-05 — quiet quick-view navigation, faithful Storybook foundations, and fresh accessibility evidence — Phase 174.
+- ✓ UXF-12, OUTUX-07–08, REPLAY-04–08 — readable detail evidence, truthful suppression, and safe Delivery/Inbound replay — Phase 175.
+- ✓ FILTER-01–04, INUX-05–06 — direct filters, useful Inbound contact/raw-source evidence, and truthful read states — Phase 176.
+- ✓ UXF-09–10, OUTUX-06 — clear Account scope, validated Preview return navigation, and readable Health — Phase 177.
+- ✓ PRVUX-05–07, STORY-07, UIQ-04, UIQ-06–08 — Preview authoring, retained production scenarios, source-bound fidelity, cost evidence, and owner review proof — Phase 178.
 
-- [ ] Resolve all admitted Health, Account/navigation, collection-filter, quick-view, evidence, suppression, replay and Preview feedback with a current-source disposition for every row.
-- [ ] Establish trustworthy Storybook navigation, assets, typography, themes and hooks, then retain realistic scenarios invoking production presentation alongside the repaired jobs/areas.
-- [ ] Prove interactions at their connected boundaries, preserve trust contracts, and record fresh coverage/accessibility/fidelity and measured cost evidence without speculative infrastructure.
+All 31 v2.10 requirements are validated in the archived [requirements record](milestones/v2.10-REQUIREMENTS.md).
 
-The following whole-job expansion and conditional consolidation envelopes remain future scope. [Current brief](research/ui-quality-engine/UPSTREAM-SCOPE.md), [proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md), and [thread](threads/ui-quality-engine.md) retain their rationale. Demo auth/browser fixes, dead-handler cleanup and theme-doc cleanup already completed after v2.9 stay completed. CI efficiency remains separate.
+## Next Milestone Goals
+
+No next milestone has been approved. Start with $gsd-new-milestone to review adopter needs and define the next scope. Preserve the convergence posture: default to maintenance, release hygiene, and docs accuracy unless concrete adopter pull or a contract gap justifies new capability. The broader whole-job and conditional-consolidation envelopes remain proposals, not admitted work.
 
 ## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
@@ -1108,6 +1108,12 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 - A non-default time window counts as a filter on both collections. A blank URL window normalizes quietly to the default.
 - An invalid URL filter keeps its note through later edits and reconnects (`filter_url_invalid`). A rejected enum value stays selected as "Not applied: <value>" (D-12, D-13 as written).
 
+### v2.10 durable decision outcomes
+
+- Keep Account membership policy with the host. The existing operator_access callback runs on arrival and before handling a changed tenant_id; unrelated patches do not reauthorize, and Account changes do not rerun the full on_mount lifecycle. Validated in Phase 177.
+- Retain production Admin components and shared hooks in Storybook stories, while connected-route evidence remains the proof boundary for host authorization and persisted outcomes. Validated across Phases 174–178.
+- Bind fidelity and accessibility claims to current-source scenarios and expected/executed case sets; measure added hosted/cold/warm cost without weakening required CI gates. Validated in Phase 178.
+
 ### Phase 175 implementation decisions
 
 - Keep outbound webhook replay and Inbound Mailbox replay as distinct commands with distinct consequence copy. Neither claims resend, provider receipt, or delivery.
@@ -1214,7 +1220,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-28 after Phase 176 gap closure and verification (5/5 passed); ready to plan Phase 177.*
+*Last updated: 2026-11-02 after the v2.10 milestone closeout review.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

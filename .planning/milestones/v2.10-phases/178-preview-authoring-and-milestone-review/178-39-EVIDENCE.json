@@ -1,0 +1,390 @@
+{
+  "schema": "phase178-final-evidence.v1",
+  "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+  "readiness": "ready_for_independent_verification",
+  "checked_at": "2026-11-03T00:49:03.177Z",
+  "source_hashes": {
+    ".planning/.continue-here.md": "ad218807d2ee4a9aef51cb1220863e22862f831b53ecd0b605e491ae6363a044",
+    ".planning/METHODOLOGY.md": "b8d3692e194839c2caf75bde694d2e32dbb71c62fd0c1f3e8bcccf8dcb6cfa13",
+    ".planning/PROJECT.md": "c19d84ae4ae01367f68040a55c306b98bb7afd4e97e754dd9ec3667442d05a0d",
+    ".planning/REQUIREMENTS.md": "58f2f2fdd17d8e393209559d39f4eb53b0701b09004979dd70d9075fb32ad834",
+    ".planning/ROADMAP.md": "9bc5e0983aef9a648902acf1a2ab72b9f13ac8294059c74dee8e2c287f88996a",
+    ".planning/STATE.md": "39cd57427b1516ee1b8f74ad9a469947240cdc00f901875ca2aed9c173f2d96f",
+    ".planning/config.json": "8e86ad797e88989cc7cd2b698e5d44dc9a314e1673b81164fe80188d37b4825d",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-24-SUMMARY.md": "89f6c025a1457b216e8c5fb36844302d3aa5ef0fd0ad4f091d4f7aa8276dbdb4",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-29-PLAN.md": "2d9fe8eab6e9aaf81c842a44da0904704d96afb5dbaa3a812ccc29d42991fe61",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-36-SUMMARY.md": "1eb04e1deb7cea057c21d00021256d6587d453f2004afd77156bd698a0faa34d",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-37-SUMMARY.md": "4edd40c1656e243fa617a9711132b6655aad5f3bd99a541583a4792cf0dacc41",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-38-SUMMARY.md": "115e7015d3fcf2e2530b6aee45214e97357f6c58fa8d243981fa0b8e3b95584a",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-39-PLAN.md": "0594b87cd902165559a870781b6f83d7dc20b6bae37cf61e7b84e570933288b4",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-CONTEXT.md": "c6e4aba3941fee6a4a50e36c4d12219fe68694c900984c5ea5ce7c79a23f8b93",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-09-COST-DISPOSITION.json": "57232ac8cf6b20e5b045b6346ea0f2436e43ff7009ff0b305f01028ca737f6da",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-DELIVERY.md": "950213d829677a7ad019fe5ddbbd5fef219699c47d7b58ba0caa46baae48490d",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-09.json": "c8d5426a5bf4128f75f0a9bfd604e50a84f090f63d7aa41ad9368ef2e6a6dad8",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-RESEARCH.md": "beb49057da29374e824402ff039fd3a3391f19c007807ff90e1ed55d55b59b44",
+    ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md": "35574fe11cb066ad45a5c69c51755d1f8abd0532c93ab7a260721847a101090b",
+    "AGENTS.md": "482c14f17e16f71843ff054f97970fbca76480d731d0873cd917365d36308eda",
+    "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs": "538d2dc60ef52815ba1ca9b866118dc4254eb126e4a0f66bdfbeb851b6cb8523",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-1-failure.txt": "04a8d5fe3c9e667867c8887bc7b0b685644058b8322320c05bc81e669ecc9394",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.compose.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.json": "5fa30c14e04cba86d745f34d5f0acd8a67ef7cd6ee6a501b1eae5928f63c262f",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.log": "bd9dd138c8ef0567ca9f7fcd142fc878cf53e2327a8117990324f438deb95bc6",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.json": "0d6a952f607746ee42bd554292aa915a8981568cd6b23904528c14d795901caa",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.log": "16361512e0ae2865a7eb2980a24fd19d16e2c692e937647d7fb187b912bcdc79",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/jobs.raw.json": "79352c655f9929c087f59447a0ea9d6be0eb9bbb291948bd4db57cfdb57c7a79",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/log.txt.gz": "5e43d32c7e9668e223da33f9c8d4ac4a2701009c56b6c79f267087ecc1850736",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/run.raw.json": "771925ac1b383a106722dd09d60acef71c25bf9cb54917da5b4d4f63aa47c80f",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/jobs.raw.json": "73ef606abf70636c783af21af3717ab5ea6075455aa3b67c9c9f8e76178913e3",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/log.txt.gz": "eabe1bac91bfd96ef2d4fe1f7b9dbac415974059701333ec421ab9dd3c8e9e26",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/run.raw.json": "3223cbcb59471e7c929c3a5316225828cde1eb4e2be1cd0193a0fcc4d38c8faa",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/jobs.raw.json": "df5cd1e1bf4f6d88cb8c8003bd3c1d70845ef237703913feaadf78c4609e1894",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/log.txt.gz": "38026f51a00ac221c4087e571dbc1f63ed4a30595d64ff218aa9af2d5f70a5b3",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/run.raw.json": "79aaed375ab03444f86f49a0b08ff6257028ac84fbeeca90697b562c0ea50cc0",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/artifacts.raw.json": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/jobs.raw.json": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/log.txt.gz": "8930c96d4b87b281d30afda0479c7153fef4fa22453b8d0131e7d12fe13017d9",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/run.raw.json": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/jobs.raw.json": "2bdf5b085b03a5e2b7dd4422d086f1901f072e3243e09b9b7893b7b7577f99a6",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/log.txt.gz": "4c0ab9c37abf06f737fb36f7124a4607517b8e917485780adbad7b912c9213e9",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/run.raw.json": "98807c209436f318494ae750327f7ccf07ec6219e9c5678d0cb6e4294cbb70a2",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/jobs.raw.json": "9ca64b9dfff32d69f1349d2a5c495fcf1ab32b6ef5d301551f7033343741b099",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/log.txt.gz": "bd51f8db1d3aac32b95f55bb2a98fcfa7c17b9a029f85cf856331f7fc6577b49",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/run.raw.json": "f0073161b2f6a9a12fe5e81442fbba3c4c75ba88f4d45b37ab0d384c64f428d9",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/artifacts.raw.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/jobs.raw.json": "f4af391f87a89d8f2c06f130ea16d00a11e09c32430cc8bce1f2c43e4126bc7e",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/log.txt.gz": "0b703710158b64c1a01892967fe6f8dfdfd2f0b16a5f0f25bd6278022674976d",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/run.raw.json": "3af490c000f854788b98a8ea35ea37753223d8fa5e257897cf2085098caef64d",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/artifacts.raw.json": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/jobs.raw.json": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/log.txt.gz": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+    "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/run.raw.json": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc",
+    "reference/demo_app/tmp/phase178_candidate/recovery-ship-checkpoint.md": "fcab0b7c0b4b45f3567aca7d988ccf0c3784d1de69358a0d2f927dc285a48a68"
+  },
+  "facts": {
+    "historical_cycle04": {
+      "source": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md",
+      "route": "/demo/login",
+      "http_status": 302,
+      "outcome": "failed",
+      "page_marker_checks": "not_run",
+      "failure_reclassified": false,
+      "remedy_plan": "178-29"
+    },
+    "current_cycle09": {
+      "source": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-09.json",
+      "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "attempt": 3,
+      "outcome": "completed",
+      "route_statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "reviewed_pages": 17,
+      "urls": [
+        {
+          "category": "invite_admin_restore_defaults",
+          "url": "http://127.0.0.1:65275/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768",
+          "marker": "preview-assigns-form",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.773Z"
+        },
+        {
+          "category": "dev_mail_selector_identity",
+          "url": "http://127.0.0.1:65275/dev/mail",
+          "marker": "preview-mailables-picker",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.786Z"
+        },
+        {
+          "category": "preview_authoring_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/preview_authoring",
+          "marker": "preview-authoring-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.852Z"
+        },
+        {
+          "category": "preview_chrome_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/preview_chrome",
+          "marker": "preview-chrome-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.888Z"
+        },
+        {
+          "category": "stat_card_light",
+          "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_light",
+          "marker": "mailglass-light",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.912Z"
+        },
+        {
+          "category": "stat_card_dark",
+          "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_dark",
+          "marker": "mailglass-dark",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:55.934Z"
+        },
+        {
+          "category": "delivery_investigation_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/delivery_investigation",
+          "marker": "delivery-investigation-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.002Z"
+        },
+        {
+          "category": "inbound_evidence_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/inbound_evidence",
+          "marker": "inbound-evidence-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.051Z"
+        },
+        {
+          "category": "health_overview_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/health_overview",
+          "marker": "health-overview-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.085Z"
+        },
+        {
+          "category": "account_scope_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/account_scope",
+          "marker": "account-scope-story",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.123Z"
+        },
+        {
+          "category": "quick_view_story",
+          "url": "http://127.0.0.1:65275/dev/storybook/quick_views/delivery",
+          "marker": "quick-view-review-theme",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.144Z"
+        },
+        {
+          "category": "operator_health",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+          "marker": "operator-health-layout",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.162Z"
+        },
+        {
+          "category": "deliveries_quick_view",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24",
+          "marker": "operator-quick-view",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.178Z"
+        },
+        {
+          "category": "deliveries_filters",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fevent%3Dbounced%26tenant_id%3Dnorthstar%26view%3Ddeliveries%26window_hours%3D168",
+          "marker": "operator-filters",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.190Z"
+        },
+        {
+          "category": "deliveries_investigation",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24%26full%3D1",
+          "marker": "operator-detail-column",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.210Z"
+        },
+        {
+          "category": "deliveries_replay",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1bb-7d31-b5cf-c1ec3b9b5d91%26full%3D1",
+          "marker": "operator-replay-open",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.230Z"
+        },
+        {
+          "category": "inbound",
+          "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar",
+          "marker": "inbound-overview",
+          "http_status": 200,
+          "marker_found": true,
+          "verified_at": "2026-11-02T22:15:56.244Z"
+        }
+      ],
+      "required_contexts": {
+        "CI_Green": "success",
+        "Guard_Release_Trigger": "success"
+      },
+      "built_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+      "served_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2"
+    },
+    "owner_review": {
+      "source": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-09.json",
+      "checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-ship-checkpoint.md",
+      "checkpoint_sha256": "fcab0b7c0b4b45f3567aca7d988ccf0c3784d1de69358a0d2f927dc285a48a68",
+      "decision": {
+        "decision": "ship",
+        "user_reply": "yeah this is fine i accept it",
+        "recorded_at": "2026-11-02T22:33:51.927Z",
+        "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "scope": "review_acceptance_and_candidate_scoped_cleanup_only",
+        "cleanup_completed_at": "2026-11-02T22:34:52.974Z"
+      }
+    },
+    "cleanup": {
+      "source": ".planning/phases/178-preview-authoring-and-milestone-review/178-24-SUMMARY.md",
+      "completed_at": "2026-11-02T22:34:05.103Z",
+      "dispositions": [
+        {
+          "name": "demo_mix_lock",
+          "status": "restored",
+          "detail": "reference/demo_app/mix.lock equals the blob at 5ad5329a"
+        },
+        {
+          "name": "compose_down",
+          "status": "stopped",
+          "detail": "project mailglass-phase178-review-5ad5329a-20261102220948-70209 (containers, network, volumes)"
+        },
+        {
+          "name": "worktree",
+          "status": "removed",
+          "detail": "/tmp/mailglass-phase178.GgdmcFYt/candidate"
+        },
+        {
+          "name": "run_parent",
+          "status": "removed",
+          "detail": "/tmp/mailglass-phase178.GgdmcFYt"
+        }
+      ],
+      "disposable_clone_status": "removed",
+      "candidate_image_status": "removed_after_owner_acceptance",
+      "service_dispositions": {
+        "candidate_project": "removed_after_owner_acceptance",
+        "candidate_services": [
+          "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo-1",
+          "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo_db-1"
+        ],
+        "owner_demo": "unchanged",
+        "unrelated_services": "untouched"
+      },
+      "shared_buildx_cache_preserved": true
+    }
+  },
+  "discrepancies": {
+    "stale_verification": {
+      "source": ".planning/phases/178-preview-authoring-and-milestone-review/178-VERIFICATION.md",
+      "gap": "SC5/UIQ-08",
+      "historical_cycle04_failure_preserved": true,
+      "later_evidence": [
+        ".planning/phases/178-preview-authoring-and-milestone-review/178-38-SUMMARY.md",
+        ".planning/phases/178-preview-authoring-and-milestone-review/178-24-SUMMARY.md"
+      ],
+      "assessment": "pending_independent_verification"
+    },
+    "hosted_lifecycle": {
+      "recorded_status": "submitted",
+      "completed_conclusion": "success",
+      "completed_evidence": "final_gates_conclusion_completed_at",
+      "source_record_unchanged": true
+    },
+    "launcher_snapshot": {
+      "original_sha256": "fa66c9fded231ab031e3abbf093e759b313cef578cc7c32b999d33b01030d3c3",
+      "current_sha256": "0d6a952f607746ee42bd554292aa915a8981568cd6b23904528c14d795901caa",
+      "only_mutation": "teardown"
+    },
+    "removed_probe_paths": "disposed_runtime_resources_not_missing_permanent_receipts"
+  },
+  "evidence_limits": {
+    "browser": "Chromium",
+    "fixtures": "synthetic",
+    "live_preview": false,
+    "url_status": "historical_after_cleanup",
+    "prior_failed_attempts": "preserved_not_reclassified",
+    "removed_probes": "recorded_digests_only",
+    "cost": {
+      "gate": "pass_with_supported_overage",
+      "measurements": {
+        "pull_request_total_runner_minutes_delta": 18.433333333333323,
+        "pull_request_total_runner_minutes_limit": 10,
+        "pull_request_runner_minutes_excess": 8.433333333333323,
+        "workflow_dispatch_total_runner_minutes_delta": 16.5,
+        "workflow_dispatch_total_runner_minutes_limit": 10,
+        "workflow_dispatch_runner_minutes_excess": 6.5,
+        "pull_request_wall_to_ci_green_delta_seconds": -288,
+        "workflow_dispatch_wall_to_ci_green_delta_seconds": -273,
+        "wall_to_ci_green_limit_minutes": 5,
+        "pull_request_demo_job_delta_seconds": 714,
+        "pull_request_demo_job_delta_runner_minutes": 11.9,
+        "workflow_dispatch_demo_job_delta_seconds": 478,
+        "workflow_dispatch_demo_job_delta_runner_minutes": 7.966666666666667,
+        "pilot_cold_wall_ms": 442073,
+        "pilot_cold_wall_limit_ms": 300000,
+        "pilot_cold_runner_minutes": 7.367883333333333,
+        "pilot_warm_wall_ms": 222653,
+        "pilot_warm_runner_minutes": 3.7108833333333333,
+        "total_cycle_workflow_count": 8,
+        "total_cycle_runner_minutes": 267.60333333333335
+      },
+      "limitations": [
+        "One pull_request and one workflow_dispatch attempt; observed runner/setup variance is not a causal incremental PR cost estimate.",
+        "Runner minutes are summed job elapsed time, not a dollar quote or provider billing ledger.",
+        "The pull_request browser artifact identifies merge checkout 214c3c58ae5e25cdf49c2b4206d416bbb8048761, whose parents are base main and the exact candidate. Exact-source identity is established by the workflow_dispatch artifact.",
+        "Total Cycle 09 runner time sums all eight attempt-1 workflows; the 10-runner-minute comparison is the existing per-CI-run same-profile budget against the saved baseline."
+      ],
+      "disposition_scope": "one_preapproved_owner_review_cycle"
+    }
+  },
+  "authority_boundary": {
+    "allowed_writes": [
+      ".planning/phases/178-preview-authoring-and-milestone-review/178-39-EVIDENCE.json",
+      ".planning/phases/178-preview-authoring-and-milestone-review/178-39-SUMMARY.md"
+    ],
+    "historical_approvals": "consumed_not_renewed",
+    "new_runtime_authority": false,
+    "new_remote_authority": false,
+    "new_cost_window": false,
+    "new_approval_window": false,
+    "prohibited_actions": [
+      "hosted_ci",
+      "preview",
+      "network",
+      "browser_fetch",
+      "docker",
+      "build",
+      "install",
+      "test_suite",
+      "github_write",
+      "push",
+      "source_change",
+      "merge",
+      "release",
+      "publication",
+      "deployment",
+      "new_candidate",
+      "new_cost_pilot"
+    ],
+    "outcome_records": "read_only",
+    "plans_18_19": "superseded_unrun",
+    "commit_or_push_outputs": false,
+    "verdict_owner": "independent_gsd_verifier",
+    "on_missing_proof": "retain_gaps_found_report_specific_missing_proof",
+    "completion_owner": "orchestrator_after_independent_verdict"
+  }
+}
+

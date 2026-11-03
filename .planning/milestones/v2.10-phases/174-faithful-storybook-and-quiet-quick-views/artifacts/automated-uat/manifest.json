@@ -1,0 +1,102 @@
+[
+  {
+    "path": "chrome-red.log",
+    "bytes": 547,
+    "sha256": "dd0b5f0c2b6d3088a4ce6edef15b60f5927dc87e692b6dd0a1678d678f9a09f1"
+  },
+  {
+    "path": "delivery-320-dark.png",
+    "bytes": 29261,
+    "sha256": "4557428bc10ce5defb34a1992647bb3b7a3f80229f38fb15dc4fac07e53e344d"
+  },
+  {
+    "path": "inbound-320-dark.png",
+    "bytes": 25976,
+    "sha256": "286c2d4bfc3c4ec5b72b6167c15af33ad8b831dcbff4e9b6c48c2af76c2e2046"
+  },
+  {
+    "path": "phase174/cold/admin-browser.json",
+    "bytes": 565,
+    "sha256": "cd988077353d525caca5d4306734a394aa1bff81e40dd3a146d23a920b13601f"
+  },
+  {
+    "path": "phase174/cold/axe.json",
+    "bytes": 95725,
+    "sha256": "e67b2a608d0df0adc071398c3b36cca27ec7562c9e7aca25c7067c659d62dfa4"
+  },
+  {
+    "path": "phase174/cold/demo-browser.json",
+    "bytes": 470,
+    "sha256": "24cbcbc8c5f617b537d0c0558f6635f28065886bc071697aae2c1ff79ee45f47"
+  },
+  {
+    "path": "phase174/cold/demo-playwright-report.json",
+    "bytes": 122477,
+    "sha256": "57964d036c7e04718e8aba7b6e49d67e78de28a071df748f346d8bd3b0e2124a"
+  },
+  {
+    "path": "phase174/cold/fidelity.json",
+    "bytes": 72160,
+    "sha256": "bb30d5785c6b50830b594157354012bb0f7654aef6f4a8565b4532e727a13451"
+  },
+  {
+    "path": "phase174/cold/hooks.json",
+    "bytes": 8131,
+    "sha256": "c8299ef0a081b51ca37ad3b022d1374f01953807be8216718e7b1cb62db87940"
+  },
+  {
+    "path": "phase174/cost.json",
+    "bytes": 5391,
+    "sha256": "49374ab4915db587adb65fae7197588a440c8410f0b7f806ec67e0d8ec110199"
+  },
+  {
+    "path": "phase174/execution.json",
+    "bytes": 43211,
+    "sha256": "1c8c2fd818933cd4dacbba788a610dfd529c416f9fe4958af246c67b0de21f3d"
+  },
+  {
+    "path": "phase174/warm/admin-browser.json",
+    "bytes": 562,
+    "sha256": "f8615f75fa53c5a2274b4a64d88dd95994fbc22b22db2748336f76748a0fca81"
+  },
+  {
+    "path": "phase174/warm/axe.json",
+    "bytes": 95725,
+    "sha256": "106310ac2bdfc6a80ae4f56e325e3ce9b11ffe7e3602e78b6416c0eab6c4cb97"
+  },
+  {
+    "path": "phase174/warm/demo-browser.json",
+    "bytes": 467,
+    "sha256": "827c869659b08df81a01de8eddad9b51bbedb7ee7bf359726d96e2f7e0b320ce"
+  },
+  {
+    "path": "phase174/warm/demo-playwright-report.json",
+    "bytes": 122475,
+    "sha256": "a890f05eec45c9faacfc6fcdc98c05df5aefe3698d066f1570f88dd0ba3e481f"
+  },
+  {
+    "path": "phase174/warm/fidelity.json",
+    "bytes": 72160,
+    "sha256": "52abcc60cd6045b8d54e4130f25c1c8277c0123c6550a2e5b047cced7e91f52c"
+  },
+  {
+    "path": "phase174/warm/hooks.json",
+    "bytes": 8131,
+    "sha256": "2f25b4992c4f7a4e354672cfbcc27053f3166f97500f6a4523537d1e28a139c3"
+  },
+  {
+    "path": "prohibition-request.json",
+    "bytes": 403,
+    "sha256": "4002324ddb3accd4adcdab9065955d4c7845a4e15d8b1cd1c596eba5ddfe1a24"
+  },
+  {
+    "path": "prohibition-result.json",
+    "bytes": 381,
+    "sha256": "e5781e677945484890f9dc0ccea0b906a7263cfbd10bd15b6e0f4884792b483f"
+  },
+  {
+    "path": "summary.json",
+    "bytes": 1739,
+    "sha256": "51b4bb729b6f1f73c732b409a741b899358411c49487b9f12874998e0e701965"
+  }
+]

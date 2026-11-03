@@ -1,5 +1,30 @@
 # Milestones
 
+## v2.10 UI Repairs & Faithful Storybook (Shipped: 2026-11-02)
+
+**Phases completed:** 5 phases, 76 plans, 117 tasks
+
+**Key accomplishments:**
+- Delivery and Inbound investigation/recovery now preserve exact targets, Account authorization, truthful outcomes, and useful retained evidence.
+- Direct filters, ordinary Inbound contact evidence, readable Health, and coherent Account navigation now behave consistently across connected routes.
+- Preview authoring is clearer, and Storybook uses production components and shared hooks with retained accessibility and fidelity scenarios.
+- Exact-candidate hosted checks, cost receipts, and independent verification make the final review evidence reproducible.
+
+**Audit:** `tech_debt`, no blockers; 31/31 requirements, 5/5 phases, 15/15 integration paths, and 7/7 end-to-end flows passed. All five phases are Nyquist-compliant ([audit](milestones/v2.10-MILESTONE-AUDIT.md)).
+
+**Closeout type:** `override_closeout`.
+
+**Known verification overrides:** 9 newly acknowledged, 34 carried forward from prior closes (see `STATE.md` Deferred Items).
+
+### Known Gaps / Tech Debt
+
+- Phase 176 retains review findings on Storybook theme wiring, browser timing reliability, payload-size wording, address parsing/spoof cues, filter synchronization, and stale-state details, plus deferred focus, zoom, accessibility, and copy polish.
+- The demo grants logged-in operators `support_lead` and does not model per-user Account membership denial; connected tests cover the host authorization seam and changed-Account deny-before-read behavior.
+- Phase 178's fake-Docker wrapper test does not independently prove embedded startup or volume ownership; retained cold/warm runtime and exact-candidate evidence cover the runtime path.
+- Cycle 09 runner-minute use exceeded budget by 8.43 minutes on the PR run and 6.5 minutes on dispatch. This one-cycle disposition does not change the standing budget; details are in `RETROSPECTIVE.md`.
+
+---
+
 ## v2.9 Operator, Preview & Email UI Refinement (Shipped: 2026-10-26)
 
 **Phases completed:** 7 phases, 43 plans, 82 tasks

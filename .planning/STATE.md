@@ -2,45 +2,46 @@
 gsd_state_version: "1.0"
 milestone: v2.10
 milestone_name: UI Repairs & Faithful Storybook
-current_phase: 178
-current_phase_name: Preview Authoring and Milestone Review
-status: executing
-stopped_at: Plan 34 drafted; Cycle 08 exact-SHA approval packet pending review
-last_updated: "2026-11-02T17:06:19Z"
-last_activity: 2026-11-02
-last_activity_desc: Plan 34 rebinds preview and owner-review gates to a fresh Cycle 08 record; Cycle 07 remains stopped, and fresh exact-SHA approval is required before hosted actions.
-state_head: f0618073
+status: Awaiting next milestone
+stopped_at: milestone v2.10 closeout complete; awaiting next milestone
+last_updated: "2026-11-03T04:56:31Z"
+last_activity: 2026-11-03
+last_activity_desc: Milestone v2.10 completed and archived
+state_head: 2700133fc25b94012e14f14de11cefc0c597f568
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 70
-  completed_plans: 67
-  percent: 80
+  completed_phases: 5
+  total_plans: 76
+  completed_plans: 76
+  percent: 100
+current_phase: 178
+current_phase_name: Preview Authoring and Milestone Review
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-27)
+See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 178 — Preview Authoring and Milestone Review
+**Current focus:** v2.10 is archived; no next milestone has been approved
 
-> **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
-> has since been corrected — `## Operator Next Steps
-
-- Phase 175 is complete: 8/8 UAT rows closed `source: automated` by `mailglass_admin/test/mailglass_admin/phase175_prohibition_contract_test.exs` (16 tests, one red mutation per prohibition). Full admin suite 677/0 under `--seed 0`; VERIFICATION `passed`; security has 0 open threats. No owner verification is outstanding.
-- Next: `/gsd-discuss-phase 176` (no CONTEXT.md yet). D-52 and `.planning/METHODOLOGY.md` apply, including the 2026-10-27 judgment-tier prohibition clause: author must-NOT items as `verification: test`.
+> The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 178 (Preview Authoring and Milestone Review) — EXECUTING
-Plan: 33 complete; Plan 34 drafts Cycle 08 recovery and approval. The local source fix is committed on `gsd/phase178-cycle08-local`; Cycle 07 remains stopped, and Plans 23–24 remain blocked pending fresh exact-SHA hosted and preview gates.
-Status: executing
-Last activity: 2026-11-02 — Plan 34 aligns Plans 23–24 with Cycle 08 and requires fresh hosted/conditional-preview approval. No Cycle 08 candidate SHA or authority has been established.
+Phase: Milestone v2.10 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-02 — Milestone v2.10 completed and archived
 
-Progress: [████████░░] 80%
+## Current handoff — 2026-11-02
+
+- v2.10 is archived with 31/31 requirements, five passing phase verifications, 15/15 integration paths, and 7/7 end-to-end flows. Nine open deferred records were acknowledged at close; 34 prior acknowledgements remain carried forward.
+- **Next actor: owner.** No next milestone is approved. When the Mailglass brand book is ready, use `$gsd-new-milestone` to define the next scope.
+- PR #317 remains open/draft. Preserve the existing uncommitted working tree; do not stage `.planning/config.json`, `prompt.txt`, or old artifacts. Do not run superseded Plans 18 and 19 or begin another milestone before the brand book is ready.
+- The durable strategy and source references are in `.planning/research/ui-quality-engine/FUTURE-DESIGN-STRATEGY.md`.
 
 ## v2.9 Roadmap Shape (historical; shipped and archived)
 
@@ -152,7 +153,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 147
+- Total plans completed: 188
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -175,6 +176,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 175 | 6 | - | - |
 | 176 | 15 | - | - |
 | 177 | 11 | - | - |
+| 178 | 41 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -350,6 +352,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P28 | 63min | 3 tasks | 7 files |
 | Phase 178 P31 | not measured | 3 tasks | 11 files |
 | Phase 178 P32 | 40 min | 3 tasks | 8 files |
+| Phase 178 P37 | 9 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -702,6 +705,15 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
+| deferred_items | Phase 174/deferred-items.md (v2.10): Windows ledger row 48 mismatch | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 176/deferred-items.md (v2.10): old replay copy assertion; later recorded as fixed | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 176/deferred-items.md (v2.10): old browser assertions for replaced layout and replay action | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 176/deferred-items.md (v2.10): later record says earlier browser failures were fixed as spec drift | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 176/deferred-items.md (v2.10): deferred formatting, Credo, and existing axe aria-selected findings | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 177/deferred-items.md (v2.10): pre-existing Deliveries axe cases time out opening replay | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 177/deferred-items.md (v2.10): pre-existing test, formatting, Credo, and browser findings | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 178/deferred-items.md (v2.10): demo lock drift blocks fresh isolated launch | acknowledged | 2026-11-02 | v2.10 |
+| deferred_items | Phase 178/deferred-items.md (v2.10): Phase 174 checker expects scenarios added by later phases | acknowledged | 2026-11-02 | v2.10 |
 | debug_sessions | delivery-detail-overflow-168 | diagnosed | 2026-10-26 | v2.9 |
 | debug_sessions | operator-browser-gate-pr302 | awaiting_human_verify | 2026-10-26 | v2.9 |
 | seeds | SEED-261010-gad (operator date range and live filters) | dormant | 2026-10-26 | v2.9 |
@@ -740,11 +752,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T16:37:47.908Z
-Stopped at: Plan 33 complete; Cycle 07 remains stopped, and Plan 34 is planned to establish fresh Cycle 08 proof
-Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-34-PLAN.md
+Last session: 2026-11-02T22:40:00Z
+Stopped at: Owner browser verification required for Phases 176 and 177
+Resume file: .planning/.continue-here.md
 
-## Operator Next Steps
+## Historical operator next steps — superseded 2026-11-02
 
 - Plan 29 fixed the local login redirect probe and passed its offline regression test; the independent review found no blockers.
 - The candidate, PR, required checks, and cost disposition remain unchanged from Cycle 04. The prepared Cycle 05 checkpoint requests one local Docker preview plus bounded read-only URL/marker verification; no hosted action is included.
@@ -753,8 +765,14 @@ Resume file: .planning/phases/178-preview-authoring-and-milestone-review/178-34-
 - Plan 30 exposed Git worktree errors and passed its offline test. Cycle 05 remains consumed.
 - Cycle 06 is consumed: the candidate failed during startup because its demo lock was stale after the same-day nimble_options 1.2.0 release; candidate-only teardown completed. Do not rerun candidate 8e501960bc975ed44b632ba5c74522e0c5d66f8c. UIQ-08 remains open. Any next preview requires a new exact candidate, current exact-SHA CI evidence, and fresh bounded approval.
 
-### Blockers
+### Historical blockers — superseded 2026-11-02
 
 - UIQ-08 remains open. Cycle 04's route failure and Cycle 05's pre-Compose stop are both preserved; neither approval authorizes another launch.
 - Cycle 06 preview authority is consumed. Do not rerun the old candidate. Plan 31 local lock repair passed; keep UIQ-08 open. The primary context must commit Plan 31, freeze a new exact-source candidate with current required CI, then obtain fresh bounded approval before any preview operation.
 - Cycle 07 stopped on required Support Contract Admin failure for candidate 13451885d680b0f28d80792518dcd1733c8ec0e6 after seven attempt-1 workflows; its dispatch was withheld, cost was not measured, and no preview launched. Plan 33 fixed the local projection-time regression but did not freeze a hosted candidate or renew authority. Plan 34 must first recheck remote/PR/release-ledger identity read-only, then seek fresh separate hosted and conditional-preview approval for Cycle 08. Plans 23–24 remain blocked until matching Cycle 08 hosted/cost proof and its approved preview pass.
+- Cycle 08 is stopped on the required Inbound Test failure at architecture_port_test.exs:48: records.ex now uses the shared Mailglass.Clock, but its architecture allowlist admits only Mailglass.Tenancy. Both schema advisory suites failed the same assertion. CI Demo Browser Evidence passed. The candidate is at the remote target and PR head; the PR body still describes Cycle 07 because the approved body edit was withheld at the failure gate. Do not retry Cycle 08. Add the clock to the architecture allowlist, validate locally, then create a new candidate and obtain fresh exact-SHA approval. Cost remains unmeasured; no preview launched; Plans 23–24 and UIQ-06/07/08 remain blocked/open.
+- Cycle 09 candidate 5ad5329a6d0f17da0edce3af6b4a987bc3219023 adds the shared clock to the inbound architecture-port allowlist and passed its local checks. Plan 36 used one fast-forward push, one PR body update, and one dispatch; all eight attempt-1 workflows passed. Exact-SHA browser and count evidence passed. The source-bound cost record supports the measured overage only for this preapproved owner-review cycle. PR #317 remains draft and `main` is unchanged. Plan 37 used the separately approved attempt 2; Buildx could not write activity metadata and the preview never became healthy. Candidate teardown and owner-demo comparison passed, and evidence copies are hash-verified. Do not relaunch under Plan 37. UIQ-08 remains open and Plan 24 is blocked; a successor plan should set `BUILDX_CONFIG` under a unique `/private/tmp` directory and verify the `desktop-linux` builder identity before any new launch ([Docker docs](https://docs.docker.com/build/building/variables/#buildx_config)). Cycle 08 remains byte-identical.
+
+## Operator Next Steps
+
+- Start the next milestone with $gsd-new-milestone

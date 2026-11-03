@@ -1,0 +1,512 @@
+{
+  "schema_version": "phase175-run.v1",
+  "phase": 175,
+  "run_id": "mailglass-evidence-20261027215211-71763-23440",
+  "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+  "mode": "local",
+  "pilot": true,
+  "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+  "source_digest": "fd66af7e2e43cf303e39135b7cdc1ec73d239eb012c0632b013a55cd27127e73",
+  "source": {
+    "hash_method": "sha256(sorted(path\\0byte_length\\0file_sha256\\n))",
+    "input_paths": [
+      ".github/workflows/ci.yml",
+      "compose.demo.yml",
+      "mailglass_admin/assets/css/app.css",
+      "mailglass_admin/docs/storybook-axe-approved.json",
+      "mailglass_admin/e2e/flows.spec.js",
+      "mailglass_admin/e2e/phase175-inbound.spec.js",
+      "mailglass_admin/e2e/storybook-axe.spec.js",
+      "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+      "mailglass_admin/e2e/support/storybook-axe.cjs",
+      "mailglass_admin/e2e/support/storybook-axe.test.cjs",
+      "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+      "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+      "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex",
+      "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+      "mailglass_admin/mix.lock",
+      "mailglass_admin/package-lock.json",
+      "mailglass_admin/package.json",
+      "mailglass_admin/playwright.config.cjs",
+      "mailglass_admin/playwright.storybook.config.cjs",
+      "mailglass_admin/priv/static/app.css",
+      "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+      "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+      "mailglass_admin/priv/static/fonts/inter-400.woff2",
+      "mailglass_admin/priv/static/fonts/inter-700.woff2",
+      "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+      "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+      "mailglass_admin/priv/static/hooks.js",
+      "mailglass_admin/test/support/admin_bootstrap.ex",
+      "mailglass_admin/test/support/operator_browser_server.ex",
+      "mailglass_admin/test/support/operator_fixtures.ex",
+      "reference/demo_app/assets/e2e/cohort.spec.js",
+      "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+      "reference/demo_app/assets/e2e/demo.spec.js",
+      "reference/demo_app/assets/e2e/outbound-replay.spec.js",
+      "reference/demo_app/assets/e2e/persona-screenshots.spec.js",
+      "reference/demo_app/assets/e2e/phase173-evidence.spec.js",
+      "reference/demo_app/assets/e2e/quick-views.spec.js",
+      "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+      "reference/demo_app/assets/e2e/storybook-hooks.spec.js",
+      "reference/demo_app/assets/package-lock.json",
+      "reference/demo_app/assets/package.json",
+      "reference/demo_app/assets/playwright.config.cjs",
+      "reference/demo_app/assets/scripts/check-demo-browser-deps.cjs",
+      "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs",
+      "reference/demo_app/assets/scripts/check-persona-reset-target.cjs",
+      "reference/demo_app/assets/scripts/evidence-output-path.cjs",
+      "reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+      "reference/demo_app/Dockerfile",
+      "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+      "reference/demo_app/lib/mailglass_demo_web/router.ex",
+      "reference/demo_app/mix.lock",
+      "reference/demo_app/storybook/primitives/theme_picker.story.exs",
+      "reference/demo_app/storybook/quick_views/delivery.story.exs",
+      "reference/demo_app/storybook/quick_views/inbound.story.exs",
+      "reference/persona_spec/quick_view_scenarios.ex",
+      "reference/persona_spec/quick_view_scenarios.json",
+      "scripts/check_phase174_evidence.cjs",
+      "scripts/check_phase174_evidence.test.cjs",
+      "scripts/check_phase175_evidence.cjs",
+      "scripts/check_phase175_evidence.test.cjs",
+      "scripts/ci_green_policy.sh",
+      "scripts/gsd-regression-gate.sh",
+      "scripts/phase174-review-claims.cjs",
+      "scripts/phase174-review-claims.test.cjs",
+      "scripts/prepare_phase173_baselines.cjs",
+      "scripts/run_demo_browser_evidence.sh",
+      "test/fixtures/phase174-overstated-review.cjs"
+    ],
+    "files": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "bytes": 62839,
+        "sha256": "4633141d9a615de87c0f76fbf30d6d377ca08039928d927ae0634e3e5afc1216"
+      },
+      {
+        "path": "compose.demo.yml",
+        "bytes": 4050,
+        "sha256": "9fdfbe795a9b50bd3906057dec9332f7df798cf4aefdc550a1b4ca8d0c702dc0"
+      },
+      {
+        "path": "mailglass_admin/assets/css/app.css",
+        "bytes": 30098,
+        "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+      },
+      {
+        "path": "mailglass_admin/docs/storybook-axe-approved.json",
+        "bytes": 208120,
+        "sha256": "824aa248575a7647b1677fff0b5fb667d08728e7c33b8345270baf8f17b716e1"
+      },
+      {
+        "path": "mailglass_admin/e2e/flows.spec.js",
+        "bytes": 131270,
+        "sha256": "d45e94c1420ae3eda93691f93d5447d2f3d030f4a67c3a9ed8c50c3cd013b577"
+      },
+      {
+        "path": "mailglass_admin/e2e/phase175-inbound.spec.js",
+        "bytes": 17982,
+        "sha256": "2f56a780deb0a875d9b51b791a6e9f93c8fdae759940db883ffa890ee053d4c3"
+      },
+      {
+        "path": "mailglass_admin/e2e/storybook-axe.spec.js",
+        "bytes": 12645,
+        "sha256": "d6d388dddb5e77abb82e04824df25c50fba2a4f55f5d031850bac183655d541c"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe-supplement.cjs",
+        "bytes": 8677,
+        "sha256": "9d2a43b0584c42fab0a2acdda414f7bc1fd783f444f039e4d69491f8c4fac648"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe.cjs",
+        "bytes": 23380,
+        "sha256": "5cea94555e3256eaee1a4ca7927ef0aab1e5720fdbc0efac0e4ffc3c8ec0d686"
+      },
+      {
+        "path": "mailglass_admin/e2e/support/storybook-axe.test.cjs",
+        "bytes": 15613,
+        "sha256": "c3bd8107c288ac0752ac7537d0f1b8e4413683dfcec2eafa3960ac43cc976933"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
+        "bytes": 17029,
+        "sha256": "b8fa2b5cbea5679eaeac48c7575ac60014893a1a0871e7e6230ec24c8af2170e"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+        "bytes": 75242,
+        "sha256": "e04aa4d0043d6233eef9ee963d3f66f052aac37f1b50be1f602e66ea5463695d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex",
+        "bytes": 6426,
+        "sha256": "2140230156dd6493d7b58d04294b6d684ff1b6feb1ea3db52b8584ce39ea9bd2"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+        "bytes": 10715,
+        "sha256": "8b8038d84e6e33ec6d6b114710501640e0b9cf40b4820bf245b2f7a81005382d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+        "bytes": 19243,
+        "sha256": "d990223fba0b18539bb9bcb20bba9dcd60928ba89a357f425775eaab793b74a1"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
+        "bytes": 6250,
+        "sha256": "642554c0e51e1de8fd67ff7172f2d2d8e702f68c23c706a088ff55afb23624a5"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+        "bytes": 101508,
+        "sha256": "7be4f03edf187893b4725087b381f937782a3b7a1fecf08cff1ac9786b848959"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/destructive_action.ex",
+        "bytes": 1548,
+        "sha256": "463877703385a64b4d87c8aafc0cf77efd0c7062d66ff705c1e9067522843387"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
+        "bytes": 9324,
+        "sha256": "c87dce4a3ebf1e547b2246c8c0b37cd53cc7ab86d70914d71aebc7c1eb7da78d"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/repair_state.ex",
+        "bytes": 10104,
+        "sha256": "c00810694caa4c60924e46fcf9040fa79e28ddace0d40bb207a6669fb7edcb4a"
+      },
+      {
+        "path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+        "bytes": 12931,
+        "sha256": "edda49244a08b419d88d4e2b22d7e6664a70fba470ec7cdb65db524a749e73b0"
+      },
+      {
+        "path": "mailglass_admin/mix.lock",
+        "bytes": 19402,
+        "sha256": "098389f684d25e259e3e7bf68c0040540727df8bc8c27cdc3bc827c38f351423"
+      },
+      {
+        "path": "mailglass_admin/package-lock.json",
+        "bytes": 3092,
+        "sha256": "7c21d914768e7034c8595aa5e4a1c8959c40ce8d10e3b9f871a92eec8282be58"
+      },
+      {
+        "path": "mailglass_admin/package.json",
+        "bytes": 410,
+        "sha256": "f28226522bfa5607acf97023a716a4a32db3cbd522c2daacdb404dfe352f3b9f"
+      },
+      {
+        "path": "mailglass_admin/playwright.config.cjs",
+        "bytes": 2199,
+        "sha256": "2892adba319c2305b6f1b6b0b7cee5de41857a490a697f515b1601d8b32cb074"
+      },
+      {
+        "path": "mailglass_admin/playwright.storybook.config.cjs",
+        "bytes": 590,
+        "sha256": "b1b7d4c35edc22fc8f3446de5dcd9bdec4321dc26b918f4c783cfb9694969f2a"
+      },
+      {
+        "path": "mailglass_admin/priv/static/app.css",
+        "bytes": 137731,
+        "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-400.woff2",
+        "bytes": 10180,
+        "sha256": "6fb6d369366499c3cb499183ba9fdebb3ccbbc259d8ebcd7d738519d9574d340"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/ibm-plex-mono-700.woff2",
+        "bytes": 10152,
+        "sha256": "bedf8f843a0b5c1b7cf9efcc12590a2dfffc8a7b806ffff73ad1ebebf260078a"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-400.woff2",
+        "bytes": 23396,
+        "sha256": "384c8fc185e86cb09d4536a12ec8092363502350373bdd067352a3111ac5f626"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-700.woff2",
+        "bytes": 23932,
+        "sha256": "ec6aab29115563f7a189c0df4e09df2f78bc773893a663d69fde2a01bb1169a0"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-400.woff2",
+        "bytes": 24908,
+        "sha256": "13b7701a70fa25bcb4779872af7324f35d3c790bd632acaaa1b2c832b92e17be"
+      },
+      {
+        "path": "mailglass_admin/priv/static/fonts/inter-tight-700.woff2",
+        "bytes": 26084,
+        "sha256": "b22c0b7ab571ec8b221c07b795b725a4d23d4a55c07304cc988d41946ebb7258"
+      },
+      {
+        "path": "mailglass_admin/priv/static/hooks.js",
+        "bytes": 4437,
+        "sha256": "87aa55436b1c87fe07102e7dd02a524fe496ed8c12234afa30e3f05b824dd761"
+      },
+      {
+        "path": "mailglass_admin/test/support/admin_bootstrap.ex",
+        "bytes": 6869,
+        "sha256": "c0a6dfa15741344539bf67019b1670abc9992e4a156550fffd99f2de1fa64d8e"
+      },
+      {
+        "path": "mailglass_admin/test/support/operator_browser_server.ex",
+        "bytes": 3869,
+        "sha256": "db3e2cd9ecd58d433fa1c2ae8113f1ee8e5e1ade8086e33191035c36134c0c01"
+      },
+      {
+        "path": "mailglass_admin/test/support/operator_fixtures.ex",
+        "bytes": 38926,
+        "sha256": "864591bf8ddc64c9cdc7e5bcc0946ecf9dc538e9a647ef97213c93d203c92af3"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/cohort.spec.js",
+        "bytes": 9671,
+        "sha256": "d0abe36e6f6bc180de237a0901fa7044980c0c4490c7145e0cbd74a26dccff20"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+        "bytes": 8220,
+        "sha256": "902009f32c8c1503d5ef912322dbc53be55b77a2ba3454b8300414085cf29719"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/demo.spec.js",
+        "bytes": 15899,
+        "sha256": "dfc98491d159c8c9d4f30b5054676b097e7c7fffa03b7c49c4f094e5dea0c983"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/outbound-replay.spec.js",
+        "bytes": 4023,
+        "sha256": "422ead33a4189bdc69d4b84fe13ca8665519d37d540eedc3fba10edbb7c61eec"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/persona-screenshots.spec.js",
+        "bytes": 16166,
+        "sha256": "ee7238d283262742f1885a84e478bdb9570ffb684b938f90bd719a7ba315266f"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/phase173-evidence.spec.js",
+        "bytes": 16378,
+        "sha256": "d8795fc6b0198927dd43e752c3248af121b74105cded83b733dcbdc4d23b5e16"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/quick-views.spec.js",
+        "bytes": 28055,
+        "sha256": "5b1426c7938029b5772ce6b5c1f0ad11020a4965c3025936fb87f4a483c1fce2"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/storybook-fidelity.spec.js",
+        "bytes": 60074,
+        "sha256": "8c26ae4beb6afb7f6ce259b07062a85cd34312d5e3ff6a9a9fdf7aa42d500a96"
+      },
+      {
+        "path": "reference/demo_app/assets/e2e/storybook-hooks.spec.js",
+        "bytes": 24615,
+        "sha256": "7e91d570b827b7013abe89ba1c58f4c23bd638b119137a6ef9a8c305d3abe873"
+      },
+      {
+        "path": "reference/demo_app/assets/package-lock.json",
+        "bytes": 2223,
+        "sha256": "ba025dde6183e206b32ad32b386e50501472dcf28448f8c504fce9aa5ce4dc80"
+      },
+      {
+        "path": "reference/demo_app/assets/package.json",
+        "bytes": 331,
+        "sha256": "9bcef845d405e990b361cf60020bbb5d484fb16ecbc3823f273e294070a2444c"
+      },
+      {
+        "path": "reference/demo_app/assets/playwright.config.cjs",
+        "bytes": 2062,
+        "sha256": "30f48cad82edc48ac00133beda32846e36b36539c4859e7feb10a28a6f5839cd"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-demo-browser-deps.cjs",
+        "bytes": 4751,
+        "sha256": "3e7264a0039b7d82e54fea40f2d91663f9e924b69b01ab1503ad5e9ac4acb07b"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs",
+        "bytes": 20771,
+        "sha256": "fa08f40cc6857df92b80a80e230d123abc72835393a56c62a8c2a813e96c9a43"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/check-persona-reset-target.cjs",
+        "bytes": 2156,
+        "sha256": "a57c397fb41cf591f563d78abab6fa3ecf2258a7183c9a65465523e599978551"
+      },
+      {
+        "path": "reference/demo_app/assets/scripts/evidence-output-path.cjs",
+        "bytes": 1092,
+        "sha256": "c85f07e9e3e160db2e3b0d09193fd44648b9bc8bb89d1674d118f21de33f47e9"
+      },
+      {
+        "path": "reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+        "bytes": 6722,
+        "sha256": "728241450be128bee8dc516ff1f6918847e0d72f0167539ddac42b5bd610c45b"
+      },
+      {
+        "path": "reference/demo_app/Dockerfile",
+        "bytes": 943,
+        "sha256": "6dd95c7ea5739d8b31d228b50c8501d1699ead53329e641d85fa12cd049c71e5"
+      },
+      {
+        "path": "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+        "bytes": 9631,
+        "sha256": "120832712144ebea86a47c1423a78e7e7e1a635efd0cd3d72cda7f9933e0b607"
+      },
+      {
+        "path": "reference/demo_app/lib/mailglass_demo_web/router.ex",
+        "bytes": 4601,
+        "sha256": "04ab7553a3ad85105e07d80d7ed00109b689ff2f13e12f3905eb50a6814c03fc"
+      },
+      {
+        "path": "reference/demo_app/mix.lock",
+        "bytes": 25214,
+        "sha256": "1472692952d9ddbd91df7a116a4b5cf28f717ca3369a7a04bf80cc94b39711d7"
+      },
+      {
+        "path": "reference/demo_app/storybook/primitives/theme_picker.story.exs",
+        "bytes": 1659,
+        "sha256": "49bcf2adef9b56338483fac11835a0d907d3814136d42b99e7a685c0f45311d7"
+      },
+      {
+        "path": "reference/demo_app/storybook/quick_views/delivery.story.exs",
+        "bytes": 2834,
+        "sha256": "ca90aefbd618f234ce33bc1fd0ebd0bef6d3893d2277b9b0573f0fdac8aedcf5"
+      },
+      {
+        "path": "reference/demo_app/storybook/quick_views/inbound.story.exs",
+        "bytes": 2936,
+        "sha256": "9ac3c872b7ef7bed55374d725e8dd6d2094bf9b36ed4bbc294150cb821096177"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.ex",
+        "bytes": 10699,
+        "sha256": "a6a8ec5cc8c4f1b4d4d20aed1d7779edddc63ce704967a4e989ba280a9a13fce"
+      },
+      {
+        "path": "reference/persona_spec/quick_view_scenarios.json",
+        "bytes": 54206,
+        "sha256": "d4bf4742110d1b51c4c4f102fd550435824acf2b8e6d8fe1c50e30c49275f59b"
+      },
+      {
+        "path": "scripts/check_phase174_evidence.cjs",
+        "bytes": 42410,
+        "sha256": "12c3183fe31474852cebfd2fede078fc0c819d667c0f00b3b20741f7ef2fd652"
+      },
+      {
+        "path": "scripts/check_phase174_evidence.test.cjs",
+        "bytes": 27406,
+        "sha256": "28a33b913fa0f270bcce071ca3f81367b5af3aa2a939f28259cbb14e4c36c41e"
+      },
+      {
+        "path": "scripts/check_phase175_evidence.cjs",
+        "bytes": 43292,
+        "sha256": "9466214590ac1f82e571235a2395cacbc2abd24ceb54122cba1cd28bd05a62b6"
+      },
+      {
+        "path": "scripts/check_phase175_evidence.test.cjs",
+        "bytes": 23355,
+        "sha256": "6af52e70dd04664e4fe9d29b353d4ef518ed465d32c89b1293c6b8a12b489817"
+      },
+      {
+        "path": "scripts/ci_green_policy.sh",
+        "bytes": 3407,
+        "sha256": "0807008d11a396daf52e5cf6e317142c231842c04171bc8817329fb3185ace9b"
+      },
+      {
+        "path": "scripts/gsd-regression-gate.sh",
+        "bytes": 4724,
+        "sha256": "6648a73ad88bcdc8b13af592cfaa076109fd015a103af141e423499949741a87"
+      },
+      {
+        "path": "scripts/phase174-review-claims.cjs",
+        "bytes": 1703,
+        "sha256": "13c82e033df4de0841e9e253da3ecf51abb783cd0ed82f20d34a4ac1396308df"
+      },
+      {
+        "path": "scripts/phase174-review-claims.test.cjs",
+        "bytes": 1679,
+        "sha256": "075a5786ba8f9421a0fb4100979ed36f31f2dbca3c6ab22e44572dbd7409a520"
+      },
+      {
+        "path": "scripts/prepare_phase173_baselines.cjs",
+        "bytes": 1593,
+        "sha256": "f4e908c4aa3473da7337ab285a6fac065f201ae61dd15994a998bab028e86719"
+      },
+      {
+        "path": "scripts/run_demo_browser_evidence.sh",
+        "bytes": 39075,
+        "sha256": "997b489467f3deb66484531acb67290d2f2a657384596a23c051843f25cef512"
+      },
+      {
+        "path": "test/fixtures/phase174-overstated-review.cjs",
+        "bytes": 278,
+        "sha256": "c628af8272d4c0880008a26de7c7063e8159acd47d2e639065408ee9d9cc2c72"
+      }
+    ],
+    "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+    "source_digest": "fd66af7e2e43cf303e39135b7cdc1ec73d239eb012c0632b013a55cd27127e73"
+  },
+  "phase174_source_digest": "76f14c1b37d7d57ec51f0cfbe5fcf66655ac48b83feaeeb31c81220892286d93",
+  "serial": true,
+  "conditions": [
+    "cold",
+    "warm"
+  ],
+  "checker_ms": 1,
+  "condition_runtime": [
+    {
+      "condition": "cold",
+      "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+      "source_digest": "fd66af7e2e43cf303e39135b7cdc1ec73d239eb012c0632b013a55cd27127e73",
+      "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+      "admin_operator_ms": 21809,
+      "admin_operator_exit_code": 0,
+      "timings_ms": {
+        "demo_scan": 97830,
+        "admin_axe_scan": 42931,
+        "admin_operator": 21809
+      }
+    },
+    {
+      "condition": "warm",
+      "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+      "source_digest": "fd66af7e2e43cf303e39135b7cdc1ec73d239eb012c0632b013a55cd27127e73",
+      "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+      "admin_operator_ms": 22093,
+      "admin_operator_exit_code": 0,
+      "timings_ms": {
+        "demo_scan": 96716,
+        "admin_axe_scan": 42660,
+        "admin_operator": 22093
+      }
+    }
+  ],
+  "reset": {
+    "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+    "host_http_port": "50838",
+    "host_db_port": "50839",
+    "demo_database": "mailglass_demo_phase175_05",
+    "admin_database": "mailglass_test",
+    "reset_credential_recorded": false
+  },
+  "cleanup": {
+    "completed": true,
+    "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+    "teardown_ms": 2268,
+    "volumes_removed": true
+  }
+}

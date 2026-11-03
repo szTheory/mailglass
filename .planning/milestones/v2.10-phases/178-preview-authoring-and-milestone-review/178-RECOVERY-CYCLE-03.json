@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "cycle": 3,
+  "status": "failed",
+  "authorization": {
+    "recorded_at": "2026-11-02 03:20:41 UTC",
+    "candidate_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "user_reply": "Well, I don't know if this was related to Docker. I just restarted it and cleaned up hard drive space and stuff. So maybe that was it. Unblock us. Sayonara, do you check us? What do you recommend? Let's follow your recommendations.",
+    "basis": "The user accepted the recommendation to authorize a fresh, bounded hosted validation budget.",
+    "operation": {
+      "kind": "rerun_failed_job_once",
+      "run_id": 41376300645,
+      "job_database_id": 125057190508,
+      "job_name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+      "command": "gh run rerun 41376300645 --job 125057190508",
+      "maximum_additional_workflow_attempts": 1,
+      "maximum_target_job_attempts": 1,
+      "target_job_timeout_minutes": 30,
+      "dependency": "The changes gate is the target job's only declared dependency; --job reruns its dependency if required."
+    },
+    "excluded": [
+      "PR body update",
+      "workflow_dispatch",
+      "additional reruns/retries",
+      "preview",
+      "merge, release, deploy, or publish"
+    ]
+  },
+  "preflight": {
+    "checked_at": "2026-11-02 03:20:41 UTC",
+    "run": {
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 1,
+      "event": "pull_request",
+      "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499"
+    },
+    "failed_job": {
+      "database_id": 125057190508,
+      "conclusion": "failure"
+    },
+    "pull_request": {
+      "number": 317,
+      "state": "OPEN",
+      "draft": true,
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "base_branch": "main"
+    },
+    "local_evidence": {
+      "macos": "unchanged target passed, including repeated diagnostics",
+      "linux_arm64": "unchanged target passed",
+      "linux_amd64_chromium_1217": "one unchanged target passed under Docker emulation with ARM64 server",
+      "limitation": "None of the local runs exactly matches the hosted runner; this retry checks whether the hosted failure is transient."
+    },
+    "docker_note": "Restarting local Docker cannot alter the already completed GitHub run; this rerun tests the hosted gate against the same frozen candidate."
+  },
+  "execution": {
+    "run_attempt": 2,
+    "target_job_database_id": 125076422948,
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2026-11-02T03:20:54Z",
+    "completed_at": "2026-11-02T03:41:19Z",
+    "duration": "20m25s",
+    "test_summary": "309 passed, 1 failed, 1 skipped; original and Playwright retry #1 both failed at the End-to-bottom scroll predicate",
+    "failure": "End followed PageDown by 166.5ms and did not advance scrollTop from 630 to the bottom; focus remained on the dialog"
+  },
+  "result": {
+    "conclusion": "failed",
+    "candidate_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "artifact_id": 13114671922,
+    "artifact_name": "operator-browser-timeout-evidence-41376300645-node-22",
+    "artifact_sha256": "c06750adca61e75e5721573b39ced7e61f25924da6641025e81fb7314fa98d83",
+    "next_action": "Fix the native scroll animation race locally; any hosted validation of a new SHA requires fresh exact-candidate approval."
+  }
+}
