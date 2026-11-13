@@ -2136,7 +2136,7 @@
       "proof_boundary": "connected-real-route-only",
       "status": "automated",
       "disposition": "Both live lists auto-apply: select changes and Enter commit straight to the canonical URL with no Apply control, and debounced Search edits add one history entry each. Back and Forward restore the filters with the search focused, a Clear during a pending debounce ends cleared, and a failed read shows an error with Retry rather than an empty population. FILTER-01 through FILTER-04 are connected-only, so there is no Storybook scenario; the cases run on the real routes in mailglass_admin/e2e/phase176-filters.spec.js.",
-      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths-roadmap-success-criteria"
+      "evidence_pointer": ".planning/phases/176-direct-filters-and-useful-inbound-evidence/176-VERIFICATION.md#observable-truths"
     },
     {
       "id": "fb-quiet-quick-view-arrows",
