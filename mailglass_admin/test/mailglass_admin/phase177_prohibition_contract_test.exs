@@ -434,12 +434,12 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       end
     end
 
-    test "the docs detector rejects a claim that the Account switch re-runs host authorization" do
+    test "the docs detector distinguishes Account checks from blanket patch or on_mount claims" do
       for text <- [
             "Switching the Account re-runs host authorization on every patch.",
             "An Account switch re-authorizes the operator through on_mount.",
-            "The push_patch switch re-checks authorization for the new Account.",
-            "Switching Accounts\nre-runs host\nauthorization."
+            "Every URL patch re-checks authorization for the new Account.",
+            "Every Account\npatch re-runs host\nauthorization."
           ] do
         assert reauthorization_claim_violations("doc.md", text) != [],
                "docs detector missed #{inspect(text)}"
@@ -450,6 +450,8 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       for text <- [
             "Switching the Account patches the URL. Host authorization runs when the Operator mounts.",
             "An Account switch does not re-run host authorization.",
+            "The push_patch switch re-checks authorization for the new Account.",
+            "The Account change check runs before handle_params and does not rerun full on_mount.",
             "Replay reruns one exact stored mailbox execution.",
             "The on_mount hook runs once per mount."
           ] do
@@ -839,8 +841,8 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     end
   end
 
-  describe "docs do not claim patch-time re-authorization" do
-    test "no mailglass doc or moduledoc claims the Account switch re-runs host authorization" do
+  describe "docs describe Account authorization without overstating patch timing" do
+    test "no mailglass doc or moduledoc claims every patch or full on_mount repeats authorization" do
       files = doc_files()
 
       assert length(files) > 10, "expected the package docs and moduledocs, got #{length(files)}"
@@ -1191,8 +1193,9 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     label ++ names
   end
 
-  # Docs: no sentence claims that an Account switch (a push_patch) re-runs host
-  # authorization. Negated statements ("does not re-run") are honest and pass.
+  # Docs may say that a changed Account key reaches the host callback. Reject a
+  # blanket claim that every patch reauthorizes, or a claim that the full
+  # on_mount lifecycle is replayed for an Account switch.
   defp reauthorization_claim_violations(path, text) do
     negated =
       ~r/\b(does not|doesn't|do not|don't|never|not|without|cannot|can't)\s+(?:\w+\s+){0,3}?(?:re-?runs?|re-?authori|re-?check|re-?evaluat)/i
@@ -1203,12 +1206,35 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     |> Enum.filter(fn sentence ->
       sentence = Regex.replace(negated, sentence, "")
 
-      Regex.match?(~r/\b(switch(es|ing)?|push_patch|patch(es|ed)?)\b/i, sentence) and
-        Regex.match?(~r/\b(authori[sz]\w*|on_mount)\b/i, sentence) and
+      patch_scope? =
+        Regex.match?(~r/\b(patch(es|ed)?|push_patch|switch(es|ing)?)\b/i, sentence)
+
+      authorization? =
+        Regex.match?(~r/\b(authori[sz]\w*|auth(?:entication|orization)?)\b/i, sentence)
+
+      repeated_check? =
         Regex.match?(
           ~r/\b(re-?runs?|re-?ran|re-?authori[sz]\w*|re-?checks?|re-?evaluat\w*|re-?execut\w*|re-?invok\w*)\b/i,
           sentence
         )
+
+      blanket_patch_scope? =
+        Regex.match?(
+          ~r/\b(every|each|all|any)\s+(?:URL\s+|Account\s+|tenant\s+)?(?:patch(es|ed)?|push_patch|switch(es|ing)?)\b/i,
+          sentence
+        ) or
+          Regex.match?(~r/\bon\s+(?:every|each|all)\s+(?:Account\s+)?patch(es|ed)?\b/i, sentence)
+
+      full_on_mount_reentry? =
+        Regex.match?(~r/\b(switch(es|ing)?|patch(es|ed)?|push_patch)\b/i, sentence) and
+          Regex.match?(~r/\bon_mount\b/i, sentence) and
+          Regex.match?(
+            ~r/\b(re-?runs?|re-?ran|re-?authori[sz]\w*|re-?execut\w*|re-?invok\w*)\b/i,
+            sentence
+          )
+
+      (patch_scope? and authorization? and repeated_check? and blanket_patch_scope?) or
+        full_on_mount_reentry?
     end)
     |> Enum.map(&"#{Path.relative_to(path, @package_root)}: #{&1}")
   end

@@ -22,7 +22,7 @@ The stable admin seams are:
   authorization seam
 - the explicit operator session contract for `subject_id`, optional
   `tenant_id`, optional `auth_method`, and optional `recent_auth_at`
-- mount-time authorization through `:operator_access`
+- arrival and Account-change authorization through `:operator_access`
 - action-time authorization through `:destructive_action`
 - action-time authorization through `:replay_inbound` (inbound replay)
 - action-time authorization through `:reveal_raw` (revealing an inbound
@@ -47,27 +47,31 @@ not promise any internal assign names beyond the documented actor semantics.
 
 ## Authorization timing
 
-Authorization is split across two stable moments:
+Authorization is split across arrival, Account changes, and action-time checks:
 
-- `:operator_access` runs at mount time to decide whether the operator surface
-  can be entered at all.
+- `:operator_access` runs on arrival to decide whether the operator surface can
+  be entered. When the URL's `tenant_id` parameter changes, the same host
+  callback receives the proposed params before the LiveView handles them; the
+  host can grant or deny that Account change.
 - Action-time checks run immediately before a sensitive operation:
   `:destructive_action` before outbound replay, `:replay_inbound` before inbound
   replay, and `:reveal_raw` before an inbound message's raw source is revealed.
+- A filter, page, or selection patch that leaves `tenant_id` unchanged does not
+  call `:operator_access` again. An Account change runs the host callback; it
+  does not rerun the full LiveView `on_mount` lifecycle.
 
 This means mount-time access is not treated as blanket approval for later
 destructive actions. Adopters keep ownership of the policy through
 the `MailglassAdmin.Auth` `authorize/2` callback.
 
-`:operator_access` is a global grant to the Mailglass operator data available
-through the host's configured persistence scope. An authorized operator may
-select any `tenant_id` in that scope; the actor's optional `tenant_id` and the
-activity-derived Account options do not form a per-account membership list.
-Account options help operators navigate, while each read and live-update
-subscription remains scoped to the selected `tenant_id`. Hosts that need
-per-account operator membership must enforce it at their own boundary; the
-current stable auth contract does not provide a separate Account-selection
-authorization action.
+The actor's optional `tenant_id` and the activity-derived Account options do
+not form a per-account membership list. Account options help operators
+navigate, while each read and live-update subscription remains scoped to the
+selected `tenant_id`. An authorized Account can still be opened by URL when it
+has no activity-derived option. Hosts that need per-account operator
+membership enforce it in their existing `:operator_access` callback when the
+`tenant_id` parameter changes; the library does not add a separate
+Account-selection action.
 
 The reference demo grants every action to its logged-in demo operator for
 demonstration only. Hosts own the policy and should deny by default.

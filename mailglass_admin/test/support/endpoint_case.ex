@@ -371,6 +371,7 @@ defmodule MailglassAdmin.TestOperatorAuth do
   @behaviour MailglassAdmin.Auth
 
   @max_age_seconds 900
+  @operator_access_calls_key {__MODULE__, :operator_access_calls}
 
   def reset_destructive_calls!, do: :persistent_term.put({__MODULE__, :destructive_calls}, [])
   def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
@@ -384,27 +385,21 @@ defmodule MailglassAdmin.TestOperatorAuth do
     |> Enum.reverse()
   end
 
-  def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
-    {:error, :unauthorized,
-     %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+  def reset_operator_access_calls!(subject_id),
+    do: :persistent_term.put({@operator_access_calls_key, subject_id}, [])
+
+  def clear_operator_access_calls!(subject_id),
+    do: :persistent_term.erase({@operator_access_calls_key, subject_id})
+
+  def operator_access_calls(subject_id) do
+    {@operator_access_calls_key, subject_id}
+    |> :persistent_term.get([])
+    |> Enum.reverse()
   end
 
-  def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do
-    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
-  end
-
-  # Phase 177 D-05: the host owns Account authorization. A sentinel Account id
-  # lets tests prove a crafted `tenant_id` is denied by the host on arrival.
-  def authorize(:operator_access, %{params: %{"tenant_id" => "forbidden-account"}}) do
-    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
-  end
-
-  def authorize(:operator_access, %{actor: actor}) do
-    {:ok,
-     %{
-       actor: Map.put_new(actor, :auth_method, actor[:auth_method] || "password"),
-       assigns: %{operator_access_checked?: true}
-     }}
+  def authorize(:operator_access, context) do
+    record_operator_access_call(context)
+    authorize_operator_access(context)
   end
 
   def authorize(:destructive_action, %{actor: %{subject_id: nil}}) do
@@ -477,6 +472,57 @@ defmodule MailglassAdmin.TestOperatorAuth do
     {:ok, %{actor: actor}}
   end
 
+  defp authorize_operator_access(%{actor: %{subject_id: nil}}) do
+    {:error, :unauthorized,
+     %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+  end
+
+  defp authorize_operator_access(%{actor: %{subject_id: "blocked"}}) do
+    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
+  end
+
+  # Phase 177 D-05: the host owns Account authorization. A sentinel Account id
+  # lets tests prove a crafted `tenant_id` is denied by the host on arrival.
+  defp authorize_operator_access(%{params: %{"tenant_id" => "forbidden-account"}}) do
+    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
+  end
+
+  defp authorize_operator_access(%{params: %{"tenant_id" => "custom-denied-account"}}) do
+    {:error, :unauthorized,
+     %{message: "The host denied this Account.", to: "/host-account-denied"}}
+  end
+
+  defp authorize_operator_access(%{params: %{"tenant_id" => "default-denied-account"}}) do
+    {:error, :unauthorized, %{}}
+  end
+
+  defp authorize_operator_access(%{params: %{"tenant_id" => "stale-account"}}) do
+    {:error, :stale_auth, %{}}
+  end
+
+  defp authorize_operator_access(%{
+         params: %{"tenant_id" => "normalized-actor-account"},
+         actor: actor
+       }) do
+    {:ok,
+     %{
+       actor: Map.put(actor, :recent_auth_at, DateTime.utc_now()),
+       assigns: %{operator_account_auth_probe?: true}
+     }}
+  end
+
+  defp authorize_operator_access(%{params: %{"tenant_id" => "plain-actor-account"}, actor: actor}) do
+    {:ok, Map.put(actor, :auth_method, "host-session")}
+  end
+
+  defp authorize_operator_access(%{actor: actor}) do
+    {:ok,
+     %{
+       actor: Map.put_new(actor, :auth_method, actor[:auth_method] || "password"),
+       assigns: %{operator_access_checked?: true}
+     }}
+  end
+
   defp record_inbound_replay_call(record_id) do
     key = {__MODULE__, :inbound_replay_calls}
     :persistent_term.put(key, [record_id | :persistent_term.get(key, [])])
@@ -493,6 +539,25 @@ defmodule MailglassAdmin.TestOperatorAuth do
       ]
     )
   end
+
+  defp record_operator_access_call(%{actor: %{subject_id: subject_id}} = context)
+       when is_binary(subject_id) do
+    if String.starts_with?(subject_id, "account-auth-") do
+      key = {@operator_access_calls_key, subject_id}
+
+      call = %{
+        action: :operator_access,
+        params: context.params,
+        session: Map.take(context.session, ~w(subject_id tenant_id auth_method recent_auth_at)),
+        actor: context.actor,
+        connected?: not is_nil(context.socket.transport_pid)
+      }
+
+      :persistent_term.put(key, [call | :persistent_term.get(key, [])])
+    end
+  end
+
+  defp record_operator_access_call(_context), do: :ok
 end
 
 defmodule MailglassAdmin.TestAdopter.Endpoint do
