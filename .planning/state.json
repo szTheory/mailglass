@@ -16,7 +16,7 @@
     {
       "number": "176",
       "name": "Direct Filters and Useful Inbound Evidence",
-      "status": "complete"
+      "status": "in_progress"
     },
     {
       "number": "177",
@@ -26,13 +26,13 @@
     {
       "number": "178",
       "name": "Preview Authoring and Milestone Review",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 5 of 5 · 80% · executing"
+    "command": "$gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-10-29T16:04:28.463Z"
+  "updated_at": "2026-11-03T04:54:13.526Z"
 }

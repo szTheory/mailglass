@@ -37,3 +37,7 @@ After the remaining operator UI reaches a strong baseline; revisit when planning
 - `mailglass_admin/lib/mailglass_admin/inbound_live.ex`
 - `lib/mailglass/operator/deliveries.ex`
 - User discussion on 2026-10-10: custom date ranges for debugging, plus earlier explicit request to plant instant filtering/search as a future GSD seed.
+
+## Owner reaffirmation — 2026-10-26
+
+Auto-apply is now an explicit next-envelope direction for both collections: immediate selects, debounced text and canonical URL state, with meaningful Back/focus/pagination/error behavior. [Current upstream scope](../research/ui-quality-engine/UPSTREAM-SCOPE.md) supplies the research input; OpenGSD owns formal admission and plans. **Custom date ranges are separate and are not prerequisite for removing Apply.** Lifecycle remains dormant until formal promotion; this note records direction, not execution or a new milestone.

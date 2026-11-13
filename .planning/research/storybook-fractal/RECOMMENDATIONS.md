@@ -1,5 +1,7 @@
 # Fractal Storybook: Research and Recommendations
 
+> **Refined 2026-10-26:** the current synthesis is [UI quality engine recommendations](../ui-quality-engine/RECOMMENDATIONS.md), with a [measured inventory](../ui-quality-engine/INVENTORY.md) and [rolling milestone proposal](../ui-quality-engine/MILESTONE-PROPOSAL.md). Keep this note as research history. Current source/live inspection corrects several assumptions below: pinned 1.2.0 supports native data-attribute theming; root/sidebar navigation loses `/dev`; sandbox typography overrides production fonts; provider evidence need not contain a complete monotonic event chain; fresh axe findings must actually be compared; and published Gallery-route retirement needs a compatibility disposition. The newer synthesis governs future planning.
+
 **Status:** recommended, not yet scheduled. Seed: `.planning/seeds/SEED-009-fractal-storybook.md`.
 **Raised by:** the owner, 2026-10-25, who called it "the next major opportunity" for mailglass UI quality.
 **Inputs:**

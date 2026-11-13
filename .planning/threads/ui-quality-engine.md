@@ -1,6 +1,6 @@
 # Thread: Fractal Storybook and UI quality
 
-Opened/refreshed: 2026-10-26. Status: v2.10 UI Repairs & Faithful Storybook active; requirements and roadmap approved; implementation not started.
+Opened: 2026-10-26. Refreshed: 2026-11-02. Status: v2.10 UI Repairs & Faithful Storybook remains active; Phase 178's owner review was accepted and candidate resources were cleaned up; phase and milestone closeout remain.
 
 ## Formal milestone admission — 2026-10-26
 
@@ -39,7 +39,7 @@ The upstream sequence is a rolling proposal, not three implementation commitment
 
 The [2026-10-26 owner review register](../todos/2026-10-26-owner-review-health-preview-controls.md) captures the latest screenshots and reaffirms previously deferred filters, raw-source hierarchy and useful Inbound addresses. The three scoping reviews distinguish settled directions from finite downstream hypotheses. Ordinary To is already full; the remaining concrete ordinary address defect is masked detail From. Suppression Refresh/Retry remains necessary pending proven equivalent invalidation. Preview is not account-scoped and current static links do not preserve dynamic Account return. Start from the existing three cohorts; six profiles are not prerequisite.
 
-## Current live inspection
+## Historical live inspection — 2026-10-26
 
 - Started isolated Compose project `mailglass-storybook-review`; HTTP 4015, Postgres 5415.
 - Open in Chrome: `http://localhost:4015/dev/storybook/primitives/stat_card`.
@@ -52,4 +52,16 @@ Stop only this review stack with `COMPOSE_PROJECT_NAME=mailglass-storybook-revie
 
 ## Next action
 
-Run `$gsd-plan-phase 174` to plan Faithful Storybook and Quiet Quick Views; `$gsd-discuss-phase 174` is available for additional context gathering. Read the approved requirements/roadmap plus `UPSTREAM-SCOPE.md`; reuse the settled research and investigate only actual implementation uncertainties. Milestone initialization is complete; no product implementation has begun.
+Phase 174–177 implementation and Phase 178's accepted Cycle 09 review have since advanced the milestone beyond the historical planning state above. After a context reset, run `$gsd-resume-work` to restore the reconciled Phase 178 handoff; let it route the remaining phase verification/closeout. Keep the historical stopped Plans 18 and 19 unrun. After v2.10 is fully closed, pause before admitting a new milestone until the Mailglass brand book is ready.
+
+## Owner direction after v2.10 — 2026-11-02
+
+The owner wants to finish v2.10, then pause new milestone work until the new Mailglass brand book is ready. The accepted v2.10 UI work remains useful; its visual direction should not be treated as the final brand baseline. When work resumes, use the brand book to drive a focused design-system and JTBD/user-flow pass. Continue with the existing `phoenix_storybook` path while useful; consider Fablebook only after its readiness evidence is complete and the owner chooses to switch. Avoid over-investing in interim visual direction or adding dependencies without a clear payoff.
+
+High-signal recommendations and source commits are in [Future Mailglass design direction](../research/ui-quality-engine/FUTURE-DESIGN-STRATEGY.md). This note is strategic context, not new v2.10 scope or milestone approval.
+
+## Current phase handoff — 2026-11-02
+
+- Plan 24 records the owner's acceptance of Cycle 09 candidate `5ad5329a6d0f17da0edce3af6b4a987bc3219023`; its preview, project image, worktree, run parent, and disposable clone were removed with candidate-scoped cleanup.
+- PR #317 remains open/draft. No merge, release, publication, deployment, or GitHub write occurred. The recovery JSON and ignored checkpoint retain the review evidence and cleanup results.
+- Plans 18 and 19 remain historical stopped outcomes by design; do not rerun them as part of this handoff. Resolve remaining Phase 178 verification and milestone closeout only after restoring current state.
