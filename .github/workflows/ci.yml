@@ -953,7 +953,7 @@ jobs:
 
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
@@ -1071,7 +1071,7 @@ jobs:
 
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
