@@ -65,7 +65,7 @@ sha256_file() {
 extract_css_href() {
   local file="$1" match
   [[ -f "$file" ]] || return 1
-  match="$(grep -oE "href=[\"'][^\"']*/dev/mail/css-[a-f0-9]{32}[\"']" "$file" | head -n 1 || true)"
+  match="$(grep -oE "href=[\"']/dev/mail/css-[a-f0-9]{32}[\"']" "$file" | head -n 1 || true)"
   [[ -n "$match" ]] || return 1
   match="${match#href=}"
   match="${match#[\"\']}"
@@ -89,18 +89,121 @@ css_triple() {
   return "$rc"
 }
 
+# same_origin_redirect <current URL> <Location>
+# Prints a resolved redirect URL only when its scheme, hostname and port match
+# the candidate origin. Reject malformed URLs and URL credentials.
+same_origin_redirect() {
+  python3 - "$1" "$2" <<'PY'
+import sys
+from urllib.parse import urljoin, urlsplit
+
+current, location = sys.argv[1:]
+try:
+    source = urlsplit(current)
+    target = urlsplit(urljoin(current, location))
+    source_port = source.port or (443 if source.scheme.lower() == "https" else 80)
+    target_port = target.port or (443 if target.scheme.lower() == "https" else 80)
+    valid = (
+        source.scheme.lower() == target.scheme.lower()
+        and (source.hostname or "").lower() == (target.hostname or "").lower()
+        and source_port == target_port
+        and target.username is None
+        and target.password is None
+        and target.scheme.lower() in ("http", "https")
+    )
+except ValueError:
+    valid = False
+if not valid:
+    raise SystemExit(1)
+print(target.geturl())
+PY
+}
+
+# resolve_candidate_route <base URL> <route>
+# Accepts one root-relative path only, then resolves it through the same origin
+# check used for redirect targets before any request can be made.
+resolve_candidate_route() {
+  local base_url="$1" route="$2"
+  python3 - "$route" <<'PY' || return 1
+import sys
+import unicodedata
+from urllib.parse import urlsplit
+
+route = sys.argv[1]
+if not route.startswith("/") or route.startswith("//") or "\\" in route:
+    raise SystemExit(1)
+if any(unicodedata.category(char) == "Cc" for char in route):
+    raise SystemExit(1)
+try:
+    parts = urlsplit(route)
+except ValueError:
+    raise SystemExit(1)
+if parts.scheme or parts.netloc or parts.username is not None or parts.password is not None:
+    raise SystemExit(1)
+PY
+  same_origin_redirect "$base_url" "$route"
+}
+
 # probe_route <private probe directory> <cookie jar> <base URL> <route>
-# Prints "<final HTTP status> <effective URL>" after following redirects.
-# Every route shares the short-lived synthetic session held in the cookie jar.
+# Prints "<final HTTP status> <effective URL>". Redirects are resolved one at
+# a time and rejected before another request unless they stay on the exact
+# candidate origin. Every route shares the short-lived synthetic cookie jar.
 probe_route() {
   local probe_dir="$1" cookie_jar="$2" base_url="$3" route="$4"
-  local status="000" final_url="" out attempt
+  local response_file="${5:-$1/route.body}"
+  local status="000" final_url="" out attempt current_url initial_url location next_url hop
+  [[ "$response_file" == "$probe_dir/"* ]] || return 1
+  if ! initial_url="$(resolve_candidate_route "$base_url" "$route")"; then
+    note "rejected unsafe candidate route before request"
+    printf 'route_rejected %s\n' "$base_url"
+    return 0
+  fi
   for attempt in 1 2 3; do
-    out="$(curl --silent --show-error --globoff --location \
-      --cookie "$cookie_jar" --cookie-jar "$cookie_jar" \
-      --output "$probe_dir/route.body" \
-      --write-out '%{http_code} %{url_effective}' --max-time 30 "$base_url$route" 2>/dev/null || true)"
-    status="${out%% *}"; final_url="${out#* }"
+    current_url="$initial_url"
+    for hop in 0 1 2 3 4 5 6 7 8 9 10; do
+      : >"$probe_dir/route.headers"
+      out="$(curl --silent --show-error --globoff --max-redirs 0 \
+        --cookie "$cookie_jar" --cookie-jar "$cookie_jar" \
+        --dump-header "$probe_dir/route.headers" --output "$response_file" \
+        --write-out '%{http_code} %{url_effective}' --max-time 30 "$current_url" 2>/dev/null || true)"
+      status="${out%% *}"
+      final_url="${out#* }"
+      [[ -n "$status" && "$status" != "$out" ]] || { status="000"; final_url="$current_url"; break; }
+
+      if [[ "$status" =~ ^30[12378]$ ]]; then
+        location="$(awk '
+          /^HTTP\// { count = 0; value = ""; next }
+          tolower($1) == "location:" {
+            count += 1
+            sub(/^[^:]*:[[:space:]]*/, "")
+            sub(/\r$/, "")
+            value = $0
+          }
+          END { if (count == 1) print value; else if (count > 1) exit 2 }
+        ' "$probe_dir/route.headers" 2>/dev/null)" || {
+          status="redirect_rejected"
+          final_url="$current_url"
+          break 2
+        }
+        if [[ -z "$location" ]] || ! next_url="$(same_origin_redirect "$current_url" "$location")"; then
+          note "rejected redirect from $current_url to ${location:-<missing Location>} (outside the candidate origin)"
+          status="redirect_rejected"
+          final_url="$current_url"
+          break 2
+        fi
+        current_url="$next_url"
+        if [[ "$hop" -eq 10 ]]; then
+          status="redirect_limit"
+          final_url="$current_url"
+          break 2
+        fi
+        continue
+      fi
+
+      final_url="$current_url"
+      break
+    done
+    [[ "$status" == "redirect_rejected" || "$status" == "redirect_limit" ]] && break
     [[ "$status" == 200 ]] && break
     sleep 5
   done
@@ -240,8 +343,100 @@ restore_worktree_demo_lock() {
 }
 
 # ---------------------------------------------------------------------------
-# Record writing (reads only whitelisted PHASE178_REC_* variables: no env dump)
+# Ownership marker and record writing (whitelisted variables only; no env dump)
 # ---------------------------------------------------------------------------
+
+write_ownership_marker() {
+  local marker="$1"
+  read -r -d '' js <<'NODE' || true
+const fs = require("node:fs");
+const env = process.env;
+const marker = {
+  schema_version: "phase178-owner.v1",
+  compose_project: env.PHASE178_OWNER_PROJECT,
+  source_sha: env.PHASE178_OWNER_SHA,
+  run_id: env.PHASE178_OWNER_RUN_ID,
+  run_parent: env.PHASE178_OWNER_RUN_PARENT,
+  worktree: env.PHASE178_OWNER_WORKTREE
+};
+if (!marker.compose_project || !marker.source_sha || !marker.run_id || !marker.run_parent || !marker.worktree) {
+  throw new Error("incomplete Phase 178 ownership binding");
+}
+fs.writeFileSync(process.argv[1], JSON.stringify(marker, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+fs.chmodSync(process.argv[1], 0o600);
+NODE
+  node -e "$js" "$marker"
+}
+
+# verify_owner_binding <record> <marker>
+# The record is user-editable evidence, so its cleanup identity is accepted
+# only when every identity field agrees with the private run marker.
+verify_owner_binding() {
+  node - "$1" "$2" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [recordPath, markerPath] = process.argv.slice(2);
+try {
+  const record = JSON.parse(fs.readFileSync(recordPath, "utf8"));
+  const markerStat = fs.lstatSync(markerPath);
+  const runParent = record.run_parent;
+  if (!runParent || !/^\/tmp\/mailglass-phase178\.[A-Za-z0-9]+$/.test(runParent)) throw new Error("invalid run parent");
+  if (path.resolve(runParent) !== runParent) throw new Error("run parent is not canonical");
+  if (record.ownership_marker !== path.join(runParent, ".phase178-owner.json")) throw new Error("ownership marker path does not match the run parent");
+  if (markerPath !== path.join(runParent, ".phase178-owner.json")) throw new Error("unexpected ownership marker path");
+  if (record.schema_version !== "phase178-candidate.v1") throw new Error("unsupported candidate record schema");
+  if (record.worktree !== path.join(runParent, "candidate")) throw new Error("worktree path does not match the run parent");
+  if (!/^[0-9a-f]{40}$/.test(record.source_sha || "")) throw new Error("invalid source SHA");
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(record.run_id || "")) throw new Error("invalid run identifier");
+  if (!markerStat.isFile() || markerStat.uid !== process.getuid() || (markerStat.mode & 0o777) !== 0o600) throw new Error("ownership marker must be a private regular file");
+  const parentStat = fs.lstatSync(runParent);
+  if (!parentStat.isDirectory() || parentStat.uid !== process.getuid() || (parentStat.mode & 0o777) !== 0o700) throw new Error("run parent must be a private directory");
+  try {
+    const worktreeStat = fs.lstatSync(record.worktree);
+    if (!worktreeStat.isDirectory()) throw new Error("candidate worktree is not a real directory");
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const marker = JSON.parse(fs.readFileSync(markerPath, "utf8"));
+  if (marker.schema_version !== "phase178-owner.v1") throw new Error("unsupported ownership marker schema");
+  for (const field of ["compose_project", "source_sha", "run_id", "run_parent", "worktree"]) {
+    if (!record[field] || record[field] !== marker[field]) throw new Error(`${field} does not match the ownership marker`);
+  }
+  if (!/^mailglass-phase178-review-[A-Za-z0-9][A-Za-z0-9._-]*$/.test(marker.compose_project)) throw new Error("unsafe Compose project");
+  if (marker.source_sha !== record.source_sha || marker.run_parent !== runParent || marker.worktree !== record.worktree) throw new Error("ownership binding is inconsistent");
+  process.exit(0);
+} catch (error) {
+  process.stderr.write(`${error.message}\n`);
+  process.exit(1);
+}
+NODE
+}
+
+verify_owner_marker() {
+  node - "$1" "$2" "$3" "$4" "$5" "$6" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [markerPath, project, sha, runId, runParent, worktree] = process.argv.slice(2);
+try {
+  const stat = fs.lstatSync(markerPath);
+  const parent = fs.lstatSync(runParent);
+  const marker = JSON.parse(fs.readFileSync(markerPath, "utf8"));
+  if (!stat.isFile() || stat.uid !== process.getuid() || (stat.mode & 0o777) !== 0o600) throw new Error("ownership marker is not private");
+  if (!parent.isDirectory() || parent.uid !== process.getuid() || (parent.mode & 0o777) !== 0o700) throw new Error("run parent is not private");
+  try {
+    const worktreeStat = fs.lstatSync(worktree);
+    if (!worktreeStat.isDirectory()) throw new Error("candidate worktree is not a real directory");
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (marker.schema_version !== "phase178-owner.v1" || marker.compose_project !== project || marker.source_sha !== sha || marker.run_id !== runId || marker.run_parent !== runParent || marker.worktree !== worktree) throw new Error("ownership marker does not match this run");
+  if (markerPath !== path.join(runParent, ".phase178-owner.json")) throw new Error("ownership marker path is inconsistent");
+} catch (error) {
+  process.stderr.write(`${error.message}\n`);
+  process.exit(1);
+}
+NODE
+}
 
 write_record() {
   local out="$1" js
@@ -257,8 +452,10 @@ const routes = lines(env.PHASE178_REC_ROUTES).map((line) => {
 const record = {
   schema_version: "phase178-candidate.v1",
   source_sha: env.PHASE178_REC_SHA,
+  run_id: env.PHASE178_REC_RUN_ID,
   worktree: env.PHASE178_REC_WORKTREE,
   run_parent: env.PHASE178_REC_RUN_PARENT,
+  ownership_marker: env.PHASE178_REC_OWNERSHIP_MARKER,
   compose_project: env.PHASE178_REC_PROJECT,
   base_url: env.PHASE178_REC_BASE_URL || null,
   ports: { http: Number(env.PHASE178_REC_HTTP_PORT) || null, database: Number(env.PHASE178_REC_DB_PORT) || null },
@@ -287,30 +484,48 @@ NODE
 # ---------------------------------------------------------------------------
 
 do_teardown() {
-  local record="$1" fields project worktree run_parent
+  local record="$1" project worktree run_parent sha run_id marker fields
   [[ -f "$record" ]] || fail "teardown record not found: $record"
+  run_parent="$(node -e '
+const r = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+if (!/^\/tmp\/mailglass-phase178\.[A-Za-z0-9]+$/.test(r.run_parent || "")) process.exit(1);
+process.stdout.write(r.run_parent);
+' "$record")" || fail "teardown refused: record has an invalid or missing run parent"
+  marker="$run_parent/.phase178-owner.json"
+  verify_owner_binding "$record" "$marker" || fail "teardown refused: record does not match the private ownership marker"
   fields="$(node -e '
 const r = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
-process.stdout.write([r.compose_project || "", r.worktree || "", r.run_parent || ""].join("\n") + "\n");
+process.stdout.write([r.compose_project, r.worktree, r.run_parent, r.source_sha, r.run_id].join("\n") + "\n");
 ' "$record")" || fail "teardown record is not readable JSON: $record"
-  { read -r project; read -r worktree; read -r run_parent; } <<<"$fields"
+  { read -r project; read -r worktree; read -r run_parent; read -r sha; read -r run_id; } <<<"$fields"
 
   assert_safe_project "$project" || fail "teardown refused: unsafe Compose project in record"
-  [[ "$run_parent" =~ ^/tmp/mailglass-phase178\.[A-Za-z0-9]+$ ]] ||
-    fail "teardown refused: run parent '$run_parent' is not a /tmp/mailglass-phase178.* directory created by this launcher"
-  [[ "$worktree" == "$run_parent/candidate" ]] ||
-    fail "teardown refused: worktree '$worktree' is not <run parent>/candidate"
 
-  local dispositions="" status detail sha
+  local dispositions="" docker_commands_ok=true docker_verified=true cleanup_ok=true
   add_disposition() { dispositions+="$1"$'\t'"$2"$'\t'"$3"$'\n'; printf 'teardown %-22s %-10s %s\n' "$1" "$2" "$3"; }
-
-  sha="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).source_sha || "")' "$record")"
+  local_resource_list() {
+    case "$1" in
+      containers) docker ps -aq --filter "label=com.docker.compose.project=$project" ;;
+      volumes) docker volume ls -q --filter "label=com.docker.compose.project=$project" ;;
+      networks) docker network ls -q --filter "label=com.docker.compose.project=$project" ;;
+      *) return 2 ;;
+    esac
+  }
+  remove_local_resource() {
+    case "$1" in
+      containers) docker rm -f "$2" ;;
+      volumes) docker volume rm -f "$2" ;;
+      networks) docker network rm "$2" ;;
+      *) return 2 ;;
+    esac
+  }
 
   if [[ -d "$worktree" && "$sha" =~ ^[0-9a-f]{40}$ ]]; then
     if restore_worktree_demo_lock "$worktree" "$sha"; then
       add_disposition demo_mix_lock restored "reference/demo_app/mix.lock equals the blob at ${sha:0:8}"
     else
       add_disposition demo_mix_lock failed "could not restore reference/demo_app/mix.lock"
+      cleanup_ok=false
     fi
   else
     add_disposition demo_mix_lock skipped "worktree already absent"
@@ -321,38 +536,67 @@ process.stdout.write([r.compose_project || "", r.worktree || "", r.run_parent ||
       add_disposition compose_down stopped "project $project (containers, network, volumes)"
     else
       add_disposition compose_down failed "docker compose -p $project down failed"
+      docker_commands_ok=false
     fi
   else
-    # Worktree already gone: remove only resources labelled with this exact project.
-    local ids
-    ids="$(docker ps -aq --filter "label=com.docker.compose.project=$project" 2>/dev/null || true)"
-    if [[ -n "$ids" ]]; then
-      # shellcheck disable=SC2086
-      docker rm -f $ids >/dev/null 2>&1 || true
-    fi
-    local vols
-    vols="$(docker volume ls -q --filter "label=com.docker.compose.project=$project" 2>/dev/null || true)"
-    if [[ -n "$vols" ]]; then
-      # shellcheck disable=SC2086
-      docker volume rm -f $vols >/dev/null 2>&1 || true
-    fi
-    docker network rm "${project}_default" >/dev/null 2>&1 || true
-    add_disposition compose_down label-sweep "worktree absent; removed resources labelled project=$project only"
+    add_disposition compose_down label_sweep "Compose file unavailable; sweeping resources labelled project=$project only"
   fi
 
-  if [[ -d "$worktree" ]]; then
+  # Sweep by exact Compose project label even after `compose down`, then query
+  # all three resource classes again. A command error is a failed cleanup even
+  # if a later query happens to show no resources.
+  local kind items item query_failed
+  for kind in containers volumes networks; do
+    if ! items="$(local_resource_list "$kind" 2>/dev/null)"; then
+      add_disposition "${kind}_sweep" failed "could not list project-labeled $kind"
+      docker_commands_ok=false
+      continue
+    fi
+    query_failed=false
+    while IFS= read -r item; do
+      [[ -n "$item" ]] || continue
+      if ! remove_local_resource "$kind" "$item" >/dev/null 2>&1; then
+        add_disposition "${kind}_remove" failed "could not remove project-labeled $kind resource $item"
+        docker_commands_ok=false
+        query_failed=true
+      fi
+    done <<<"$items"
+    [[ "$query_failed" == true ]] || add_disposition "${kind}_sweep" removed "removed project-labeled $kind"
+  done
+
+  for kind in containers volumes networks; do
+    if ! items="$(local_resource_list "$kind" 2>/dev/null)"; then
+      add_disposition "${kind}_verification" failed "could not verify project-labeled $kind are absent"
+      docker_verified=false
+      continue
+    fi
+    if [[ -n "$items" ]]; then
+      add_disposition "${kind}_verification" failed "project-labeled $kind remain: ${items//$'\n'/, }"
+      docker_verified=false
+    else
+      add_disposition "${kind}_verification" verified "no project-labeled $kind remain"
+    fi
+  done
+  [[ "$docker_commands_ok" == true ]] || docker_verified=false
+  if [[ "$docker_verified" != true ]]; then cleanup_ok=false; fi
+
+  if [[ "$cleanup_ok" == true && -d "$worktree" ]]; then
     if git -C "$REPO_ROOT" worktree remove --force "$worktree" >/dev/null 2>&1; then
       add_disposition worktree removed "$worktree"
     else
       add_disposition worktree failed "git worktree remove failed for $worktree"
+      cleanup_ok=false
     fi
+  elif [[ -d "$worktree" ]]; then
+    add_disposition worktree retained "cleanup was not verified; retained $worktree for recovery"
   else
     add_disposition worktree absent "$worktree"
   fi
-  git -C "$REPO_ROOT" worktree prune >/dev/null 2>&1 || true
 
-  if [[ -d "$run_parent" ]]; then
-    rm -rf "$run_parent" && add_disposition run_parent removed "$run_parent" || add_disposition run_parent failed "$run_parent"
+  if [[ "$cleanup_ok" != true ]]; then
+    add_disposition run_parent retained "cleanup was not verified; recovery marker and configuration retained at $run_parent"
+  elif [[ -d "$run_parent" ]]; then
+    add_disposition run_parent removing "Docker resources and candidate worktree verified clean"
   else
     add_disposition run_parent absent "$run_parent"
   fi
@@ -370,8 +614,37 @@ record.teardown = {
 };
 fs.writeFileSync(file, JSON.stringify(record, null, 2) + "\n");
 ' "$record"
-  if printf '%s' "$dispositions" | awk -F'\t' '$2=="failed"{bad=1} END{exit bad?0:1}'; then
-    fail "teardown finished with failed dispositions; see $record"
+
+  if [[ "$cleanup_ok" != true ]]; then
+    fail "teardown could not verify complete cleanup; retained recovery files at $run_parent and updated $record"
+  fi
+  if [[ -d "$run_parent" ]]; then
+    if rm -rf "$run_parent"; then
+      dispositions+="run_parent"$'\t'"removed"$'\t'"$run_parent"$'\n'
+      PHASE178_REC_DISPOSITIONS="$dispositions" node -e '
+const fs = require("node:fs");
+const file = process.argv[1];
+const record = JSON.parse(fs.readFileSync(file, "utf8"));
+record.teardown.dispositions = (process.env.PHASE178_REC_DISPOSITIONS || "").split("\n").filter(Boolean).map((line) => {
+  const [name, status, detail] = line.split("\t");
+  return { name, status, detail };
+});
+fs.writeFileSync(file, JSON.stringify(record, null, 2) + "\n");
+' "$record"
+    else
+      dispositions+="run_parent"$'\t'"failed"$'\t'"could not remove $run_parent"$'\n'
+      PHASE178_REC_DISPOSITIONS="$dispositions" node -e '
+const fs = require("node:fs");
+const file = process.argv[1];
+const record = JSON.parse(fs.readFileSync(file, "utf8"));
+record.teardown.dispositions = (process.env.PHASE178_REC_DISPOSITIONS || "").split("\n").filter(Boolean).map((line) => {
+  const [name, status, detail] = line.split("\t");
+  return { name, status, detail };
+});
+fs.writeFileSync(file, JSON.stringify(record, null, 2) + "\n");
+' "$record"
+      fail "teardown could not remove verified-clean run directory $run_parent; see $record"
+    fi
   fi
   printf 'phase178 candidate teardown complete: %s\n' "$record"
 }
@@ -426,20 +699,32 @@ if [[ "$REQUIRE_CI" == true ]]; then command -v gh >/dev/null 2>&1 || fail "--re
 # ---------------------------------------------------------------------------
 # Detached worktree at exactly the SHA
 # ---------------------------------------------------------------------------
+if ! read -r HTTP_PORT DB_PORT < <(allocate_ports); then fail "could not allocate review ports"; fi
+RUN_ID="$(date -u +%Y%m%d%H%M%S)-$$"
+PROJECT="${PROJECT_PREFIX}${SHA:0:8}-${RUN_ID}"
+assert_safe_project "$PROJECT" || fail "generated an unsafe Compose project name"
+BASE_URL="http://127.0.0.1:$HTTP_PORT"
 RUN_PARENT="$(mktemp -d /tmp/mailglass-phase178.XXXXXXXX)"
 WORKTREE="$RUN_PARENT/candidate"
+OWNERSHIP_MARKER="$RUN_PARENT/.phase178-owner.json"
 COMPOSE_STARTED=false
-PROJECT=""
-HTTP_PORT=""
-DB_PORT=""
-BASE_URL=""
+if [[ -z "$RECORD_PATH" ]]; then RECORD_PATH="$REPO_ROOT/$RECORD_DIR_REL/$PROJECT.json"; fi
+TEARDOWN_CMD="bash scripts/check_phase178_candidate.sh --teardown $RECORD_PATH"
 declare -a FAILURES=()
 
 cleanup_before_compose() {
   if [[ "$COMPOSE_STARTED" == false && -n "${RUN_PARENT:-}" && -d "$RUN_PARENT" ]]; then
-    git -C "$REPO_ROOT" worktree remove --force "$WORKTREE" >/dev/null 2>&1 || true
-    git -C "$REPO_ROOT" worktree prune >/dev/null 2>&1 || true
-    rm -rf "$RUN_PARENT"
+    if ! verify_owner_marker "$OWNERSHIP_MARKER" "$PROJECT" "$SHA" "$RUN_ID" "$RUN_PARENT" "$WORKTREE" >/dev/null 2>&1; then
+      note "pre-Compose cleanup refused: ownership marker is missing or inconsistent; recovery directory retained at $RUN_PARENT"
+      return
+    fi
+    if [[ -d "$WORKTREE" ]] && ! git -C "$REPO_ROOT" worktree remove --force "$WORKTREE" >/dev/null 2>&1; then
+      note "pre-Compose cleanup could not remove candidate worktree; recovery directory retained at $RUN_PARENT"
+      return
+    fi
+    if ! rm -rf "$RUN_PARENT"; then
+      note "pre-Compose cleanup could not remove run directory; retained at $RUN_PARENT"
+    fi
   fi
 }
 on_exit() {
@@ -454,21 +739,16 @@ on_exit() {
 }
 trap on_exit EXIT
 
+PHASE178_OWNER_PROJECT="$PROJECT" PHASE178_OWNER_SHA="$SHA" PHASE178_OWNER_RUN_ID="$RUN_ID" \
+  PHASE178_OWNER_RUN_PARENT="$RUN_PARENT" PHASE178_OWNER_WORKTREE="$WORKTREE" \
+  write_ownership_marker "$OWNERSHIP_MARKER"
+
 add_candidate_worktree "$WORKTREE" "$SHA"
 [[ "$(git -C "$WORKTREE" rev-parse HEAD)" == "$SHA" ]] || fail "worktree HEAD differs from requested SHA"
 [[ -z "$(git -C "$WORKTREE" status --porcelain --untracked-files=all)" ]] || fail "new candidate worktree is not clean"
 [[ -f "$WORKTREE/compose.demo.yml" ]] || fail "candidate $SHA has no compose.demo.yml"
 
-if ! read -r HTTP_PORT DB_PORT < <(allocate_ports); then fail "could not allocate review ports"; fi
-RUN_SUFFIX="$(date -u +%Y%m%d%H%M%S)-$$"
-PROJECT="${PROJECT_PREFIX}${SHA:0:8}-${RUN_SUFFIX}"
-assert_safe_project "$PROJECT" || fail "generated an unsafe Compose project name"
-BASE_URL="http://127.0.0.1:$HTTP_PORT"
-
-if [[ -z "$RECORD_PATH" ]]; then RECORD_PATH="$REPO_ROOT/$RECORD_DIR_REL/$PROJECT.json"; fi
 mkdir -p "$(dirname "$RECORD_PATH")"
-
-TEARDOWN_CMD="bash scripts/check_phase178_candidate.sh --teardown $RECORD_PATH"
 
 compose() {
   MAILGLASS_DEMO_HTTP_PORT="$HTTP_PORT" MAILGLASS_DEMO_DB_PORT="$DB_PORT" \
@@ -485,14 +765,15 @@ CI_CONTEXTS_JSON=""
 FINAL_STATUS="fail"
 
 note "project $PROJECT, ports http=$HTTP_PORT db=$DB_PORT, worktree $WORKTREE"
-COMPOSE_STARTED=true
 # Write a provisional record first so --teardown works even if the launch dies.
-PHASE178_REC_SHA="$SHA" PHASE178_REC_WORKTREE="$WORKTREE" PHASE178_REC_RUN_PARENT="$RUN_PARENT" \
+PHASE178_REC_SHA="$SHA" PHASE178_REC_RUN_ID="$RUN_ID" PHASE178_REC_OWNERSHIP_MARKER="$OWNERSHIP_MARKER" \
+  PHASE178_REC_WORKTREE="$WORKTREE" PHASE178_REC_RUN_PARENT="$RUN_PARENT" \
   PHASE178_REC_PROJECT="$PROJECT" PHASE178_REC_BASE_URL="$BASE_URL" PHASE178_REC_HTTP_PORT="$HTTP_PORT" \
   PHASE178_REC_DB_PORT="$DB_PORT" PHASE178_REC_FINAL_STATUS="fail" PHASE178_REC_CI_STATUS="$CI_STATUS" \
   PHASE178_REC_FAILURES="launch in progress" PHASE178_REC_TEARDOWN="$TEARDOWN_CMD" \
   PHASE178_REC_RETAINED="$PROJECT (demo + demo_db) at $BASE_URL" \
   write_record "$RECORD_PATH"
+COMPOSE_STARTED=true
 
 PROBE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-phase178-probe.XXXXXX")"
 chmod 700 "$PROBE_DIR"
@@ -523,18 +804,23 @@ if [[ "$launch_ok" == true ]]; then
     [[ "$status" == 200 ]] || FAILURES+=("HTTP route $route returned ${status:-no-response}")
   done
 
-  if curl --silent --show-error --globoff --location --fail --output "$PROBE_DIR/preview.html" --max-time 30 "$BASE_URL/dev/mail"; then
-    if SERVED_CSS_PATH="$(extract_css_href "$PROBE_DIR/preview.html")"; then
-      if curl --silent --show-error --globoff --location --fail --output "$PROBE_DIR/served.css" --max-time 30 "$BASE_URL$SERVED_CSS_PATH"; then
+  html_probe="$(probe_route "$PROBE_DIR" "$COOKIE_JAR" "$BASE_URL" "/dev/mail" "$PROBE_DIR/preview.html")"
+  read -r html_status _ <<<"$html_probe"
+  if [[ "$html_status" == 200 ]]; then
+    if SERVED_CSS_PATH="$(extract_css_href "$PROBE_DIR/preview.html")" &&
+      [[ "$SERVED_CSS_PATH" =~ ^/dev/mail/css-[a-f0-9]{32}$ ]]; then
+      css_probe="$(probe_route "$PROBE_DIR" "$COOKIE_JAR" "$BASE_URL" "$SERVED_CSS_PATH" "$PROBE_DIR/served.css")"
+      read -r css_status _ <<<"$css_probe"
+      if [[ "$css_status" == 200 ]]; then
         css_line="$(css_triple "$WORKTREE/mailglass_admin/assets/css/app.css" "$WORKTREE/mailglass_admin/priv/static/app.css" "$PROBE_DIR/served.css" || true)"
         read -r css_verdict SOURCE_CSS_SHA BUILT_CSS_SHA SERVED_CSS_SHA <<<"$css_line"
         [[ "$css_verdict" == match ]] || FAILURES+=("served Admin CSS bytes differ from the candidate bundle")
       else
-        FAILURES+=("versioned Admin CSS route could not be fetched")
+        FAILURES+=("versioned Admin CSS route could not be fetched: ${css_status:-no-response}")
       fi
     else
       SERVED_CSS_PATH=""
-      FAILURES+=("/dev/mail has no versioned mount-rooted Admin CSS link")
+      FAILURES+=("/dev/mail has no root-relative versioned Admin CSS link")
     fi
   else
     FAILURES+=("/dev/mail HTML could not be fetched for CSS identity")
@@ -567,7 +853,8 @@ if [[ "$REQUIRE_CI" == true && "$CI_STATUS" != pass ]]; then FINAL_STATUS="fail"
 
 FAILURE_TEXT=""
 if [[ ${#FAILURES[@]} -gt 0 ]]; then FAILURE_TEXT="$(printf '%s\n' "${FAILURES[@]}")"; fi
-PHASE178_REC_SHA="$SHA" PHASE178_REC_WORKTREE="$WORKTREE" PHASE178_REC_RUN_PARENT="$RUN_PARENT" \
+PHASE178_REC_SHA="$SHA" PHASE178_REC_RUN_ID="$RUN_ID" PHASE178_REC_OWNERSHIP_MARKER="$OWNERSHIP_MARKER" \
+  PHASE178_REC_WORKTREE="$WORKTREE" PHASE178_REC_RUN_PARENT="$RUN_PARENT" \
   PHASE178_REC_PROJECT="$PROJECT" PHASE178_REC_BASE_URL="$BASE_URL" PHASE178_REC_HTTP_PORT="$HTTP_PORT" \
   PHASE178_REC_DB_PORT="$DB_PORT" PHASE178_REC_ROUTES="$ROUTE_ROWS" PHASE178_REC_SERVED_CSS_PATH="$SERVED_CSS_PATH" \
   PHASE178_REC_SOURCE_CSS="$SOURCE_CSS_SHA" PHASE178_REC_BUILT_CSS="$BUILT_CSS_SHA" PHASE178_REC_SERVED_CSS="$SERVED_CSS_SHA" \

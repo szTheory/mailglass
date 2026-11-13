@@ -98,6 +98,24 @@ function pilotCost() {
   };
 }
 
+function expectedCounts(operator = { passed: 310, skipped: 1, failed: 0, flaky: 0 }, demo = {
+  demo: 98, hooks: 6, fidelity: 26, axe: 18, total: 148
+}) {
+  return { operator, demo };
+}
+
+function countInputs(operatorLog = "310 passed\n1 skipped", demoCost = pilotCost(), expected = expectedCounts()) {
+  return {
+    operatorLog,
+    demoCost,
+    expected
+  };
+}
+
+function validCounts() {
+  return tool.deriveCounts(countInputs());
+}
+
 function tmpDir(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `phase178-cost-test-${label}-`));
 }
@@ -186,7 +204,7 @@ test("deriveDisposition reports per-job deltas, run wall and runner-minutes for 
     dispatch: { run: dispatchRun, jobs: dispatchJobs },
     pr: { run: prRun, jobs: prJobs },
     sha: SHA_A,
-    counts: {}
+    ...countInputs()
   });
   assert.equal(out.schema_version, "phase178-cost-disposition.v1");
   assert.equal(out.source_revision, SHA_A);
@@ -218,11 +236,11 @@ test("deriveDisposition reports per-job deltas, run wall and runner-minutes for 
 test("deriveDisposition never omits a requested job and needs at least one run", () => {
   const missing = { jobs: dispatchJobs.jobs.filter((j) => j.name !== SUPPORT) };
   assert.throws(() => tool.deriveDisposition({
-    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: missing }, sha: SHA_A, counts: {}
+    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: missing }, sha: SHA_A, ...countInputs()
   }), new RegExp(SUPPORT.replace(/[()/]/g, "\\$&")));
-  assert.throws(() => tool.deriveDisposition({ baselineRun, baselineJobs, sha: SHA_A, counts: {} }), /at least one/i);
+  assert.throws(() => tool.deriveDisposition({ baselineRun, baselineJobs, sha: SHA_A }), /at least one/i);
   assert.throws(() => tool.deriveDisposition({
-    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_B, counts: {}
+    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_B, ...countInputs()
   }), /head_sha|identity|candidate/i);
 });
 
@@ -230,7 +248,7 @@ test("disposition measures an Operator advisory red only when a recorded advisor
   const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
   const entry = advisoryRed("300");
   const out = tool.deriveDisposition({
-    baselineRun, baselineJobs, pr: failedPr, sha: SHA_A, counts: {}, advisoryReds: [entry]
+    baselineRun, baselineJobs, pr: failedPr, sha: SHA_A, ...countInputs(), advisoryReds: [entry]
   });
   const measured = out.runs.pull_request.jobs[OPERATOR];
   assert.equal(measured.candidate_seconds, 610);
@@ -240,7 +258,7 @@ test("disposition measures an Operator advisory red only when a recorded advisor
     title: entry.title, key: entry.key, matched: entry.matched, log_sha256: entry.log_sha256
   }]);
   const successful = tool.deriveDisposition({
-    baselineRun, baselineJobs, pr: { run: prRun, jobs: prJobs }, sha: SHA_A, counts: {}
+    baselineRun, baselineJobs, pr: { run: prRun, jobs: prJobs }, sha: SHA_A, ...countInputs()
   });
   assert.deepEqual(out.runs.pull_request.jobs[DEMO], successful.runs.pull_request.jobs[DEMO]);
   assert.deepEqual(out.runs.pull_request.jobs[SUPPORT], successful.runs.pull_request.jobs[SUPPORT]);
@@ -251,7 +269,7 @@ test("disposition measures an Operator advisory red only when a recorded advisor
 test("an unmatched Operator advisory red still fails the disposition", () => {
   const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
   const derive = ({ dispatch, ...options } = {}) => tool.deriveDisposition({
-    baselineRun, baselineJobs, dispatch, pr: failedPr, sha: SHA_A, counts: {}, ...options
+    baselineRun, baselineJobs, dispatch, pr: failedPr, sha: SHA_A, ...countInputs(), ...options
   });
   assert.throws(() => derive(), /did not complete successfully.*failure/);
   assert.throws(() => derive({ dispatch: { run: dispatchRun, jobs: dispatchJobs }, advisoryReds: [advisoryRed("200")] }), /job succeeded/);
@@ -263,7 +281,7 @@ test("Demo, Support, CI Green and non-failure Operator conclusions reject an adv
   const failedPr = { run: prRun, jobs: withConclusion(prJobs, OPERATOR, "failure") };
   const validRed = advisoryRed("300");
   const derive = (candidate = failedPr.jobs, advisoryReds = [validRed]) => tool.deriveDisposition({
-    baselineRun, baselineJobs, pr: { run: prRun, jobs: candidate }, sha: SHA_A, counts: {}, advisoryReds
+    baselineRun, baselineJobs, pr: { run: prRun, jobs: candidate }, sha: SHA_A, ...countInputs(), advisoryReds
   });
   assert.throws(() => derive(
     withConclusion(prJobs, DEMO, "failure"), [advisoryRed("300", DEMO)]
@@ -288,12 +306,16 @@ test("advisory red input is validated, hashed and unmatched CLI reds exit non-ze
     baselineJobs: write("baseline-jobs.json", baselineJobs),
     prRun: write("pr-run.json", prRun),
     prJobs: write("pr-jobs.json", failedPrJobs),
-    successfulPrJobs: write("successful-pr-jobs.json", prJobs)
+    successfulPrJobs: write("successful-pr-jobs.json", prJobs),
+    operatorLog: write("operator-gate.log", "310 passed\n1 skipped"),
+    demoCost: write("demo-cost.json", pilotCost()),
+    expected: write("expected.json", expectedCounts())
   };
   const validEntry = advisoryRed("300");
   const validFile = write("advisory-reds.txt", `${advisoryRedLine(validEntry)}\n`);
   const baseArgs = ["disposition", "--baseline-run", files.baselineRun, "--baseline-jobs", files.baselineJobs,
-    "--pr-run", files.prRun, "--pr-jobs", files.prJobs, "--sha", SHA_A, "--counts", "{}"]; 
+    "--pr-run", files.prRun, "--pr-jobs", files.prJobs, "--sha", SHA_A,
+    "--operator-log", files.operatorLog, "--demo-cost", files.demoCost, "--expected", files.expected];
   const out1 = path.join(dir, "out1.json");
   const out2 = path.join(dir, "out2.json");
   tool.cli([...baseArgs, "--advisory-reds", validFile, "--out", out1]);
@@ -301,11 +323,15 @@ test("advisory red input is validated, hashed and unmatched CLI reds exit non-ze
   assert.equal(fs.readFileSync(out1, "utf8"), fs.readFileSync(out2, "utf8"));
   const result = JSON.parse(fs.readFileSync(out1, "utf8"));
   assert.equal(result.input_hashes.advisory_reds, tool.sha256File(validFile));
+  assert.equal(result.input_hashes.count_operator_log, tool.sha256File(files.operatorLog));
+  assert.equal(result.input_hashes.count_demo_cost, tool.sha256File(files.demoCost));
+  assert.equal(result.input_hashes.count_expected, tool.sha256File(files.expected));
 
   const emptyFile = write("empty-advisory-reds.txt", "");
   const emptyOut = path.join(dir, "empty-out.json");
   tool.cli(["disposition", "--baseline-run", files.baselineRun, "--baseline-jobs", files.baselineJobs,
-    "--pr-run", files.prRun, "--pr-jobs", files.successfulPrJobs, "--sha", SHA_A, "--counts", "{}",
+    "--pr-run", files.prRun, "--pr-jobs", files.successfulPrJobs, "--sha", SHA_A,
+    "--operator-log", files.operatorLog, "--demo-cost", files.demoCost, "--expected", files.expected,
     "--advisory-reds", emptyFile, "--out", emptyOut]);
   assert.equal(JSON.parse(fs.readFileSync(emptyOut, "utf8")).input_hashes.advisory_reds, tool.sha256File(emptyFile));
 
@@ -323,7 +349,7 @@ test("advisory red input is validated, hashed and unmatched CLI reds exit non-ze
 
 test("pilot_conditions copies cold and warm measurements and flags the budgets", () => {
   const out = tool.deriveDisposition({
-    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_A, counts: {},
+    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_A, ...countInputs(),
     pilotCost: pilotCost(), pilotSourceEvent: "workflow_dispatch", identityBound: true
   });
   assert.equal(out.pilot_conditions.source_event, "workflow_dispatch");
@@ -338,7 +364,7 @@ test("pilot_conditions copies cold and warm measurements and flags the budgets",
   const noWarm = pilotCost();
   noWarm.conditions = noWarm.conditions.filter((c) => c.condition !== "warm");
   assert.throws(() => tool.deriveDisposition({
-    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_A, counts: {},
+    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_A, ...countInputs(),
     pilotCost: noWarm, pilotSourceEvent: "workflow_dispatch", identityBound: true
   }), /warm/);
 });
@@ -357,7 +383,10 @@ test("deriveCounts parses Playwright summary lines behind GitHub timestamps and 
   const counts = tool.deriveCounts({
     operatorLog: log,
     demoCost: pilotCost(),
-    expected: { operator: { passed: 123, skipped: 1, failed: 0, flaky: 2 }, demo: { demo: 98, total: 149 } }
+    expected: expectedCounts(
+      { passed: 123, skipped: 1, failed: 0, flaky: 2 },
+      { demo: 98, hooks: 6, fidelity: 26, axe: 18, total: 149 }
+    )
   });
   assert.deepEqual(counts.operator.executed, { passed: 123, skipped: 1, failed: 1, flaky: 2 });
   assert.equal(counts.operator.mismatch, true);
@@ -367,7 +396,7 @@ test("deriveCounts parses Playwright summary lines behind GitHub timestamps and 
   assert.deepEqual(counts.demo.mismatches.map((m) => [m.condition, m.key, m.expected, m.executed]), [
     ["cold", "total", 149, 148], ["warm", "total", 149, 148]
   ]);
-  assert.throws(() => tool.deriveCounts({ operatorLog: `${ts}nothing useful`, demoCost: pilotCost(), expected: {} }), /summary/i);
+  assert.throws(() => tool.deriveCounts({ operatorLog: `${ts}nothing useful`, demoCost: pilotCost(), expected: expectedCounts() }), /summary/i);
 });
 
 test("deriveCounts ignores GitHub notice continuation lines in timestamped logs", () => {
@@ -381,16 +410,77 @@ test("deriveCounts ignores GitHub notice continuation lines in timestamped logs"
     `${ts}  1 skipped`,
     `${ts}  309 passed (15.0m)`
   ].join("\n");
-  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: {} });
+  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: expectedCounts(
+    { passed: 309, skipped: 1, failed: 1, flaky: 0 }
+  ) });
   assert.deepEqual(counts.operator.executed, { passed: 309, skipped: 1, failed: 1, flaky: 0 });
   assert.equal(counts.operator.summary_lines, 3);
 });
 
 test("deriveCounts continues to parse untimestamped Playwright summaries", () => {
   const log = "  310 passed (6.3m)\n  1 skipped";
-  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: {} });
+  const counts = tool.deriveCounts({ operatorLog: log, demoCost: pilotCost(), expected: expectedCounts(
+    { passed: 310, skipped: 1, failed: 0, flaky: 0 }
+  ) });
   assert.deepEqual(counts.operator.executed, { passed: 310, skipped: 1, failed: 0, flaky: 0 });
   assert.equal(counts.operator.summary_lines, 2);
+});
+
+test("deriveCounts rejects missing, empty, partial or invalid expected count input", () => {
+  const base = { operatorLog: "310 passed\n1 skipped", demoCost: pilotCost() };
+  assert.throws(() => tool.deriveCounts({ ...base }), /expected counts/);
+  assert.throws(() => tool.deriveCounts({ ...base, expected: {} }), /must not be empty/);
+  assert.throws(() => tool.deriveCounts({ ...base, expected: { operator: { passed: 310 }, demo: expectedCounts().demo } }), /expected\.operator.*missing.*skipped/);
+  assert.throws(() => tool.deriveCounts({ ...base, expected: { operator: expectedCounts().operator, demo: { total: 148 } } }), /expected\.demo.*missing.*demo/);
+  assert.throws(() => tool.deriveCounts({ ...base, expected: expectedCounts({ passed: -1, skipped: 1, failed: 0, flaky: 0 }) }), /nonnegative integer/);
+  assert.throws(() => tool.deriveCounts({ ...base, expected: expectedCounts({ passed: 310.5, skipped: 1, failed: 0, flaky: 0 }) }), /nonnegative integer/);
+});
+
+test("deriveCounts requires exactly one complete cold and warm Demo condition", () => {
+  const expected = expectedCounts();
+  const base = { operatorLog: "310 passed\n1 skipped", expected };
+  const empty = pilotCost();
+  empty.conditions = [];
+  assert.throws(() => tool.deriveCounts({ ...base, demoCost: empty }), /exactly one cold and one warm/);
+
+  const missingWarm = pilotCost();
+  missingWarm.conditions = missingWarm.conditions.filter((condition) => condition.condition !== "warm");
+  assert.throws(() => tool.deriveCounts({ ...base, demoCost: missingWarm }), /exactly one cold and one warm/);
+
+  const duplicateCold = pilotCost();
+  duplicateCold.conditions[1] = { ...duplicateCold.conditions[1], condition: "cold" };
+  assert.throws(() => tool.deriveCounts({ ...base, demoCost: duplicateCold }), /duplicate cold/);
+
+  const partialCounts = pilotCost();
+  delete partialCounts.conditions[1].executed_counts.axe;
+  assert.throws(() => tool.deriveCounts({ ...base, demoCost: partialCounts }), /warm\.executed_counts.*missing.*axe/);
+});
+
+test("disposition recomputes counts from raw inputs and rejects self-consistent forged counts", () => {
+  const base = {
+    baselineRun, baselineJobs, dispatch: { run: dispatchRun, jobs: dispatchJobs }, sha: SHA_A
+  };
+  assert.throws(() => tool.deriveDisposition({ ...base }), /operator log input is required/);
+
+  const forged = tool.deriveCounts({
+    operatorLog: "999 passed\n1 skipped",
+    demoCost: pilotCost(),
+    expected: expectedCounts({ passed: 999, skipped: 1, failed: 0, flaky: 0 })
+  });
+  assert.equal(forged.operator.mismatch, false);
+
+  const rawInputs = countInputs(
+    "310 passed\n1 skipped",
+    pilotCost(),
+    expectedCounts({ passed: 999, skipped: 1, failed: 0, flaky: 0 })
+  );
+  const disposition = tool.deriveDisposition({ ...base, ...rawInputs });
+  assert.equal(disposition.counts.operator.mismatch, true);
+  assert.deepEqual(disposition.counts.operator.mismatches, [
+    { key: "passed", expected: 999, executed: 310 }
+  ]);
+  assert.throws(() => tool.deriveDisposition({ ...base, ...rawInputs, counts: forged }), /precomputed counts are not accepted/);
+  assert.throws(() => tool.deriveDisposition({ ...base, counts: forged }), /precomputed counts are not accepted/);
 });
 
 test("disposition CLI records a SHA-256 for every input file and is byte-reproducible", () => {
@@ -399,23 +489,34 @@ test("disposition CLI records a SHA-256 for every input file and is byte-reprodu
   const files = {
     br: w("baseline-run.json", baselineRun), bj: w("baseline-jobs.json", baselineJobs),
     dr: w("dispatch-run.json", dispatchRun), dj: w("dispatch-jobs.json", dispatchJobs),
-    cost: w("cost.json", pilotCost()), counts: w("counts.json", { operator: { executed: { passed: 1 } } }),
+    cost: w("cost.json", pilotCost()),
+    operatorLog: w("operator-gate.log", "310 passed\n1 skipped"),
+    demoCost: w("demo-cost.json", pilotCost()),
+    expected: w("expected.json", expectedCounts()),
     extra: w("extra-input.txt", "evidence")
   };
   const argv = (out) => ["disposition", "--baseline-run", files.br, "--baseline-jobs", files.bj,
     "--dispatch-run", files.dr, "--dispatch-jobs", files.dj, "--pilot-cost", files.cost,
     "--pilot-source-event", "workflow_dispatch", "--identity-bound", "true", "--sha", SHA_A,
-    "--counts", files.counts, "--input", files.extra, "--out", out];
+    "--operator-log", files.operatorLog, "--demo-cost", files.demoCost, "--expected", files.expected,
+    "--input", files.extra, "--out", out];
   const out1 = path.join(dir, "out1.json");
   const out2 = path.join(dir, "out2.json");
   tool.cli(argv(out1));
   tool.cli(argv(out2));
   assert.equal(fs.readFileSync(out1, "utf8"), fs.readFileSync(out2, "utf8"));
   const result = JSON.parse(fs.readFileSync(out1, "utf8"));
-  for (const [key, file] of [["pilot_cost", files.cost], ["counts", files.counts], ["input:extra-input.txt", files.extra]]) {
+  for (const [key, file] of [
+    ["pilot_cost", files.cost],
+    ["count_operator_log", files.operatorLog],
+    ["count_demo_cost", files.demoCost],
+    ["count_expected", files.expected],
+    ["input:extra-input.txt", files.extra]
+  ]) {
     assert.equal(result.input_hashes[key], tool.sha256File(file), key);
   }
-  assert.deepEqual(result.counts, { operator: { executed: { passed: 1 } } });
+  assert.deepEqual(result.counts, validCounts());
+  assert.throws(() => tool.cli([...argv(path.join(dir, "old-counts.json")), "--counts", "{}"]), /--counts is no longer accepted/);
   assert.throws(() => tool.cli(["ci-job", "--run", files.dr, "--jobs", files.dj, "--job-name", DEMO, "--out", files.dr]), /input/i);
   fs.rmSync(dir, { recursive: true, force: true });
 });
@@ -475,7 +576,7 @@ test("reproduces the retained Phase 174 ci-job, cost enrichment and disposition 
 
   const disposition = tool.deriveDisposition({
     baselineRun: read("baseline-run.raw.json"), baselineJobs: read("baseline-jobs.raw.json"),
-    dispatch: { run: rawRun, jobs: rawJobs }, sha: rawRun.head_sha, counts: {}
+    dispatch: { run: rawRun, jobs: rawJobs }, sha: rawRun.head_sha, ...countInputs()
   });
   const demo = disposition.runs.workflow_dispatch.jobs[DEMO];
   assert.equal(demo.delta_seconds * 1000, 314000);

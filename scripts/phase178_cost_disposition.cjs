@@ -16,7 +16,8 @@
 //                [--dispatch-run <raw> --dispatch-jobs <raw>] [--pr-run <raw> --pr-jobs <raw>]
 //                [--pilot-cost <cost.json> --pilot-source-event workflow_dispatch|pull_request --identity-bound true|false]
 //                [--advisory-reds <file>] # 178-17 rerun_advisory_red lines; sole exception for a failed Operator job
-//                --sha <candidate> --counts <file|'{}'> [--input <path>]... --out <path>
+//                --operator-log <saved log> --demo-cost <cost.json> --expected <json>
+//                --sha <candidate> [--input <path>]... --out <path>
 
 const crypto = require("node:crypto");
 const fs = require("node:fs");
@@ -337,6 +338,56 @@ function enrichCost(downloaded, ciJob, baselineRun, baselineJobs) {
 // ---------------------------------------------------------------------------
 
 const SUMMARY_KEYS = { passed: "passed", skipped: "skipped", failed: "failed", flaky: "flaky" };
+const OPERATOR_COUNT_KEYS = Object.freeze(["passed", "skipped", "failed", "flaky"]);
+const DEMO_COUNT_KEYS = Object.freeze(["demo", "hooks", "fidelity", "axe", "total"]);
+const DEMO_CONDITIONS = Object.freeze(["cold", "warm"]);
+
+function requireCountObject(value, keys, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be an object containing ${keys.join(", ")}`);
+  }
+  const actualKeys = Object.keys(value);
+  const missing = keys.filter((key) => !Object.prototype.hasOwnProperty.call(value, key));
+  const unexpected = actualKeys.filter((key) => !keys.includes(key));
+  if (missing.length > 0) fail(`${label} is missing required count key(s): ${missing.join(", ")}`);
+  if (unexpected.length > 0) fail(`${label} has unsupported count key(s): ${unexpected.join(", ")}`);
+  for (const key of keys) {
+    if (!Number.isSafeInteger(value[key]) || value[key] < 0) {
+      fail(`${label}.${key} must be a nonnegative integer`);
+    }
+  }
+  return value;
+}
+
+function requireExpectedCounts(expected) {
+  if (!expected || typeof expected !== "object" || Array.isArray(expected)) {
+    fail("expected counts must be a nonempty object with operator and demo objects");
+  }
+  if (Object.keys(expected).length === 0) fail("expected counts must not be empty");
+  const operator = requireCountObject(expected.operator, OPERATOR_COUNT_KEYS, "expected.operator");
+  const demo = requireCountObject(expected.demo, DEMO_COUNT_KEYS, "expected.demo");
+  return { operator, demo };
+}
+
+function requireDemoConditions(demoCost) {
+  if (!demoCost || !Array.isArray(demoCost.conditions)) fail("demo cost receipt has no conditions array");
+  if (demoCost.conditions.length !== DEMO_CONDITIONS.length) {
+    fail("demo cost receipt must contain exactly one cold and one warm condition");
+  }
+  const byName = new Map();
+  for (const condition of demoCost.conditions) {
+    if (!condition || !DEMO_CONDITIONS.includes(condition.condition)) {
+      fail(`demo cost receipt has an unsupported condition ${condition && condition.condition}`);
+    }
+    if (byName.has(condition.condition)) fail(`demo cost receipt has duplicate ${condition.condition} condition`);
+    requireCountObject(condition.executed_counts, DEMO_COUNT_KEYS, `demo cost ${condition.condition}.executed_counts`);
+    byName.set(condition.condition, condition);
+  }
+  for (const name of DEMO_CONDITIONS) {
+    if (!byName.has(name)) fail(`demo cost receipt has no ${name} condition`);
+  }
+  return byName;
+}
 
 function parsePlaywrightSummary(log) {
   const executed = { passed: 0, skipped: 0, failed: 0, flaky: 0 };
@@ -358,28 +409,26 @@ function parsePlaywrightSummary(log) {
   return { executed, summary_lines: lines };
 }
 
-function compareCounts(expected, executed, shorthandKey) {
-  if (expected === undefined || expected === null) return [];
-  const wanted = typeof expected === "number" ? { [shorthandKey]: expected } : expected;
+function compareCounts(expected, executed) {
   const mismatches = [];
-  for (const key of Object.keys(wanted)) {
+  for (const key of Object.keys(expected)) {
     const value = executed[key];
-    if (value !== wanted[key]) mismatches.push({ key, expected: wanted[key], executed: value === undefined ? null : value });
+    if (value !== expected[key]) mismatches.push({ key, expected: expected[key], executed: value === undefined ? null : value });
   }
   return mismatches;
 }
 
 function deriveCounts({ operatorLog, demoCost, expected }) {
-  const want = expected || {};
+  const want = requireExpectedCounts(expected);
   const operator = parsePlaywrightSummary(operatorLog);
-  const operatorMismatches = compareCounts(want.operator, operator.executed, "passed");
-  if (!demoCost || !Array.isArray(demoCost.conditions)) fail("demo cost receipt has no conditions");
+  const operatorMismatches = compareCounts(want.operator, operator.executed);
+  const conditions = requireDemoConditions(demoCost);
   const demo = {};
   const demoMismatches = [];
-  for (const condition of demoCost.conditions) {
-    if (!condition.executed_counts) fail(`demo cost condition ${condition.condition} has no executed_counts`);
+  for (const conditionName of DEMO_CONDITIONS) {
+    const condition = conditions.get(conditionName);
     demo[condition.condition] = { executed: condition.executed_counts, expected_in_receipt: condition.expected_counts || null };
-    for (const mismatch of compareCounts(want.demo, condition.executed_counts, "total")) {
+    for (const mismatch of compareCounts(want.demo, condition.executed_counts)) {
       demoMismatches.push({ condition: condition.condition, ...mismatch });
     }
   }
@@ -508,10 +557,20 @@ function sortedObject(object) {
 }
 
 function deriveDisposition(options) {
-  const { baselineRun, baselineJobs, dispatch, pr, sha, counts } = options;
+  const { baselineRun, baselineJobs, dispatch, pr, sha } = options;
   if (!baselineRun || !baselineJobs) fail("baseline run and jobs inputs are required");
   if (!dispatch && !pr) fail("disposition needs at least one measured run (dispatch or pull_request)");
   if (!/^[0-9a-f]{40}$/.test(String(sha))) fail("--sha must be a full 40-character lowercase hex candidate SHA");
+  if (Object.prototype.hasOwnProperty.call(options, "counts")) {
+    fail("precomputed counts are not accepted; provide operatorLog, demoCost and expected inputs");
+  }
+  if (typeof options.operatorLog !== "string") fail("operator log input is required");
+  if (!options.demoCost || typeof options.demoCost !== "object") fail("demo cost input is required");
+  const counts = deriveCounts({
+    operatorLog: options.operatorLog,
+    demoCost: options.demoCost,
+    expected: options.expected
+  });
   const advisoryReds = options.advisoryReds === undefined ? [] : options.advisoryReds;
   if (!Array.isArray(advisoryReds)) fail("advisory reds must be an array");
   const measuredRuns = [dispatch, pr].filter(Boolean);
@@ -538,7 +597,7 @@ function deriveDisposition(options) {
     baseline_run_id: String(baselineRun.id),
     runs,
     pilot_conditions: pilot,
-    counts: counts === undefined ? {} : counts,
+    counts,
     input_hashes: sortedObject(options.inputHashes || {})
   };
 }
@@ -623,6 +682,9 @@ function cli(argv = process.argv.slice(2)) {
     return writeOutput(flags, ["--operator-log", "--demo-cost", "--expected"], counts);
   }
   if (command === "disposition") {
+    if (flags["--counts"] !== undefined) {
+      fail("--counts is no longer accepted; provide --operator-log, --demo-cost and --expected");
+    }
     const hashes = {};
     const hashed = (role, file) => { hashes[role] = sha256File(file); return file; };
     const pair = (runFlag, jobsFlag, role) => {
@@ -636,6 +698,9 @@ function cli(argv = process.argv.slice(2)) {
     const baselineJobs = readJson(hashed("baseline_jobs", need(flags, "--baseline-jobs")));
     const dispatch = pair("--dispatch-run", "--dispatch-jobs", "dispatch");
     const pr = pair("--pr-run", "--pr-jobs", "pr");
+    const operatorLogFile = hashed("count_operator_log", need(flags, "--operator-log"));
+    const demoCostFile = hashed("count_demo_cost", need(flags, "--demo-cost"));
+    const expectedFile = hashed("count_expected", need(flags, "--expected"));
     let advisoryReds = [];
     if (flags["--advisory-reds"] !== undefined) {
       const advisoryRedsFile = hashed("advisory_reds", flags["--advisory-reds"]);
@@ -643,10 +708,6 @@ function cli(argv = process.argv.slice(2)) {
     }
     let pilotCost = null;
     if (flags["--pilot-cost"] !== undefined) pilotCost = readJson(hashed("pilot_cost", flags["--pilot-cost"]));
-    let counts;
-    const countsArg = need(flags, "--counts");
-    if (countsArg === "{}") counts = {};
-    else counts = readJson(hashed("counts", countsArg));
     for (const file of flags["--input"] || []) {
       const key = `input:${path.basename(file)}`;
       if (key in hashes) fail(`duplicate --input name ${path.basename(file)}`);
@@ -655,7 +716,9 @@ function cli(argv = process.argv.slice(2)) {
     const disposition = deriveDisposition({
       baselineRun, baselineJobs, dispatch, pr,
       sha: need(flags, "--sha"),
-      counts,
+      operatorLog: fs.readFileSync(operatorLogFile, "utf8"),
+      demoCost: readJson(demoCostFile),
+      expected: readJson(expectedFile),
       pilotCost,
       advisoryReds,
       pilotSourceEvent: flags["--pilot-source-event"],
@@ -664,7 +727,7 @@ function cli(argv = process.argv.slice(2)) {
     });
     return writeOutput(flags, [
       "--baseline-run", "--baseline-jobs", "--dispatch-run", "--dispatch-jobs", "--pr-run", "--pr-jobs",
-      "--pilot-cost", "--counts", "--advisory-reds", "--input"
+      "--operator-log", "--demo-cost", "--expected", "--pilot-cost", "--advisory-reds", "--input"
     ], disposition);
   }
   return fail(`unknown subcommand '${command || ""}'; expected ci-job, enrich-cost, counts or disposition`);
