@@ -1,0 +1,46 @@
+{
+  "repo": "szTheory/mailglass-brand",
+  "commit": "240bdd214746b956162b8d4f2f82d4b178106eff",
+  "url": "https://raw.githubusercontent.com/szTheory/mailglass-brand/240bdd214746b956162b8d4f2f82d4b178106eff/mailglass-brand.zip",
+  "sha256": "ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b",
+  "size": 1943435,
+  "book": {
+    "version": "2.0",
+    "date": "2026-11-13"
+  },
+  "root": "mailglass-brand/",
+  "owned_dirs": [
+    "brandbook/v2"
+  ],
+  "shipped": [
+    {
+      "from": "brand.json",
+      "to": "brandbook/v2/brand.json",
+      "sha256": "c2f77d011e11b472cfc7ecfedb4de550b79822d2a77f280ce49a00e8b7dd08f9",
+      "bytes": 49366,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/fonts/OFL-FunnelDisplay.txt",
+      "to": "brandbook/v2/OFL-FunnelDisplay.txt",
+      "sha256": "a32303f6ea3542927121212a9e4f3fe3548741e6d448d9dc6f29e97cf50102e6",
+      "bytes": 4382,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+      "to": "brandbook/v2/OFL-AtkinsonHyperlegibleNext.txt",
+      "sha256": "aca6a428580965d2297d1b718042dd427c2a9443ece3b0d02d758e161e0c4030",
+      "bytes": 4431,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt",
+      "to": "brandbook/v2/OFL-AtkinsonHyperlegibleMono.txt",
+      "sha256": "1ebb31cf7393164f20d10c1d48406cddb5314feff8465531cf1e4ba37e9dd740",
+      "bytes": 4436,
+      "license": "OFL-1.1"
+    }
+  ],
+  "note": "Offline verification (test/scripts/brand_pin_test.exs) is merge-blocking. The online check (mix run --no-start scripts/brand_pin.exs check) is advisory. Update with: mix run --no-start scripts/brand_pin.exs update --commit <sha> --expect-sha256 <hex>, and bump @expected_zip_sha256 in the same chore(brand) commit; never hand-edit."
+}
