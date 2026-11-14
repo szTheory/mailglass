@@ -1136,8 +1136,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   # every existing call site (including audit_allowlist_test.exs) keeps
   # working with zero edits.
   @doc false
-  def unaccepted_audit_findings(output),
-    do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_audit_findings(output)
+  def unaccepted_audit_findings(
+        output,
+        entries \\ Mailglass.SupplyChain.AcceptedAdvisories.entries()
+      ),
+      do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_audit_findings(output, entries)
 
   # SUPPLY-01: Step 14 — the `mix deps.audit` gate. `mix deps.audit` (mix_audit)
   # scans mix.lock against the mirego/elixir-security-advisories DB. On PR the lane
@@ -1189,8 +1192,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   # this corrects the prior stale claim that a GHSA finding was never
   # auto-suppressed).
   @doc false
-  def unaccepted_deps_audit_findings(output),
-    do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_deps_audit_findings(output)
+  def unaccepted_deps_audit_findings(
+        output,
+        entries \\ Mailglass.SupplyChain.AcceptedAdvisories.entries()
+      ),
+      do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_deps_audit_findings(output, entries)
 
   # SUPPLY-03: OSV-staleness forcing function. Every accepted-advisory entry is
   # checked against OSV.dev on every publish run so an allowlist entry cannot

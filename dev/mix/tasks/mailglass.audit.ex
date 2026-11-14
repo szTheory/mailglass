@@ -105,15 +105,18 @@ defmodule Mix.Tasks.Mailglass.Audit do
   defp full_path(dir), do: Path.join(File.cwd!(), dir)
 
   @doc false
-  def evaluate(:hex, dir_outputs) do
+  def evaluate(kind, dir_outputs, entries \\ AcceptedAdvisories.entries())
+
+  def evaluate(:hex, dir_outputs, entries) do
     {blocking, accepted, matched_ids} =
       Enum.reduce(dir_outputs, {[], [], MapSet.new()}, fn {dir, output, status},
                                                           {blocking, accepted, matched} ->
-        dir_matched = AcceptedAdvisories.matched_hex_audit_ids(output)
+        dir_matched = AcceptedAdvisories.matched_hex_audit_ids(output, entries)
 
         blocking =
           if status != 0 do
-            case {AcceptedAdvisories.unaccepted_audit_findings(output), MapSet.size(dir_matched)} do
+            case {AcceptedAdvisories.unaccepted_audit_findings(output, entries),
+                  MapSet.size(dir_matched)} do
               {[], 0} ->
                 blocking ++ [unclassified_failure(dir, :hex, status)]
 
@@ -142,25 +145,26 @@ defmodule Mix.Tasks.Mailglass.Audit do
 
     blocking =
       blocking ++
-        Enum.map(AcceptedAdvisories.expired_entries(), fn entry ->
+        Enum.map(AcceptedAdvisories.expired_entries(Date.utc_today(), entries), fn entry ->
           "Delivery blocked: accepted advisory #{entry.id}'s recheck_by " <>
             "(#{entry.recheck_by}) has passed. Re-verify upstream status and update or " <>
             "remove the entry."
         end) ++
-        Enum.map(AcceptedAdvisories.unused_entries(matched_ids), fn entry ->
+        Enum.map(AcceptedAdvisories.unused_entries(matched_ids, entries), fn entry ->
           "Delivery blocked: allowlist entry #{entry.id} matches no current finding — remove it."
         end)
 
     if blocking == [], do: {:ok, accepted}, else: {:error, blocking}
   end
 
-  def evaluate(:deps, dir_outputs) do
+  def evaluate(:deps, dir_outputs, entries) do
     blocking =
       Enum.reduce(dir_outputs, [], fn {dir, output, status}, blocking ->
         if status != 0 do
-          matched = AcceptedAdvisories.matched_deps_audit_ids(output)
+          matched = AcceptedAdvisories.matched_deps_audit_ids(output, entries)
 
-          case {AcceptedAdvisories.unaccepted_deps_audit_findings(output), MapSet.size(matched)} do
+          case {AcceptedAdvisories.unaccepted_deps_audit_findings(output, entries),
+                MapSet.size(matched)} do
             {[], 0} ->
               blocking ++ [unclassified_failure(dir, :deps, status)]
 

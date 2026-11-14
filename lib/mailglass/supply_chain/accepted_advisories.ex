@@ -9,7 +9,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   @moduledoc """
   The single source of truth for advisories `mailglass` deliberately allows
   past `mix hex.audit` / `mix deps.audit` gates because no upstream fix exists
-  yet. Both `mix mailglass.publish.check` (publish gate) and
+  yet. The allowlist is currently empty: every advisory finding blocks. Both `mix mailglass.publish.check` (publish gate) and
   `mix mailglass.audit` (CI gate, `dev/mix/tasks/mailglass.audit.ex`) read this
   module exclusively — there is no second copy of the allowlist anywhere in
   the repo.
@@ -21,10 +21,15 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   Matching against a finding is exact `:id`-or-`:aliases`-member equality
   against ONE entry — never fuzzy, prefix, or cross-package.
 
+  When the allowlist has entries, each carries the fields above. The query
+  functions take an optional trailing `entries` argument (defaulting to the
+  real allowlist) so tests can exercise matching, alias, expiry and unused
+  logic against a fixture without a real entry existing.
+
   ## Expiry and staleness
 
-  `expired_entries/1` flags any entry whose `:recheck_by` date has passed
-  (strictly after — an entry due today does not yet block). `unused_entries/1`
+  `expired_entries/2` flags any entry whose `:recheck_by` date has passed
+  (strictly after — an entry due today does not yet block). `unused_entries/2`
   flags any entry that matched no current `hex.audit` finding across all three
   scanned Mix projects, so a suppression that is no longer needed cannot
   silently age forever. Both checks are local and deterministic — they never
@@ -32,14 +37,14 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
 
   ## Known limitation
 
-  `unused_entries/1`'s "used" signal comes only from `matched_hex_audit_ids/1`,
+  `unused_entries/2`'s "used" signal comes only from `matched_hex_audit_ids/2`,
   which is populated only by `--kind hex` runs of `mix mailglass.audit`. A
   future allowlist entry that is detectable ONLY by `mix deps.audit` (e.g. a
   GHSA-only id absent from the EEF-CVE database) would therefore be
   perpetually reported "unused" by every `--kind hex` run, pressuring a
   maintainer to delete a legitimately-needed suppression. This fails loud, not
   silent, so it does not reintroduce VULN-06's silent-aging defect for the
-  entries shipped so far (all EEF-CVE-keyed and hex.audit-native). It is
+  entries shipped so far (all were EEF-CVE-keyed and hex.audit-native). It is
   nonetheless a real constraint on who may add future entries: if such an
   entry is ever needed, widen the "used" signal to also aggregate `--kind
   deps` matches — that widening is deliberately not built speculatively here.
@@ -55,43 +60,20 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
           recheck_by: Date.t()
         }
 
-  # cowlib (transitive via cowboy/plug_cowboy/phoenix; unavoidable for any web
-  # server) — upstream has PERMANENTLY declined to fix this, on principle
-  # (ninenines/cowlib#167, 2026-08-06). The sibling EEF-CVE-2026-43969 entry
-  # was removed when cowlib 2.21.0 shipped its fix (OSV fixed: 2.21.0) and
-  # `unused_entries/1` flagged it. This is not a "not yet fixed" holding
-  # pattern; see each entry's :reason for the source-verified evidence and the
-  # named falsifiable re-check for the next recheck_by cycle.
-  @entries [
-    %{
-      id: "EEF-CVE-2026-43966",
-      aliases: ["GHSA-w4f7-4cxr-rv3c"],
-      package: "cowlib",
-      severity: "MEDIUM",
-      reason:
-        "HTTP Response Splitting via non-VCHAR bytes. Permanently declined by upstream, not " <>
-          "pending: all six fix PRs on ninenines/cowlib (#154, #163, #164, #165, #166, #169) " <>
-          "were closed unmerged by the maintainer on principle — \"Both CVEs are invalid " <>
-          "because this type of validation is done at a different level... Neither Gun nor " <>
-          "Cowboy are vulnerable\" (ninenines/cowlib#167, 2026-08-06; " <>
-          "https://ninenines.eu/articles/security-strategy/). Directly verified against " <>
-          "cowlib 2.20.0 source on 2026-09-17: cow_cookie:cookie/1 emits values verbatim and " <>
-          "cow_http_struct_hd:escape_string/2 escapes only backslash and double-quote, " <>
-          "passing CR/LF through. OSV re-confirmed this advisory on 2026-09-09 — one day " <>
-          "after cowlib 2.20.0 shipped to Hex on 2026-09-08 — with a SEMVER range carrying an " <>
-          "introduced: 2.9.0 event and no fixed event. No upgrade escape exists: cowlib " <>
-          "2.21.0 (2026-10) closed sibling EEF-CVE-2026-43969 (OSV fixed: 2.21.0) but OSV " <>
-          "still lists no fixed event for this advisory and hex.audit still reports it " <>
-          "against cowlib 2.21.0, the newest release. mailglass inherits the " <>
-          "framework-layer mitigation via plug_cowboy: Cowboy 2.16.0+ " <>
-          "invalid_response_headers and Gun 2.4.0+ invalid_request_headers. Absent from " <>
-          "mirego's mix_audit DB under cowlib entirely (GHSA-w4f7-4cxr-rv3c 404s — an " <>
-          "upstream data gap, not a suppression). Next recheck: does a cowlib release above " <>
-          "2.21.0 escape non-VCHAR bytes, or does OSV add a fixed event.",
-      accepted_on: ~D[2026-07-28],
-      recheck_by: ~D[2027-03-17]
-    }
-  ]
+  # The allowlist is intentionally EMPTY. It may only grow with a sourced,
+  # falsifiable reason (see each entry's :reason for the shape: upstream
+  # evidence plus a named re-check). History:
+  #
+  #   * EEF-CVE-2026-43969 (cowlib) was retired when cowlib 2.21.0 shipped its
+  #     fix (OSV fixed: 2.21.0) and `unused_entries/1` flagged it.
+  #   * EEF-CVE-2026-43966 (cowlib, GHSA-w4f7-4cxr-rv3c) was retired
+  #     2026-11-13: the lock refresh to cowlib 2.22.0 means `mix hex.audit` no
+  #     longer reports it in the root, mailglass_admin or mailglass_inbound
+  #     projects, so `unused_entries/1` flagged the entry as matching no
+  #     current finding. Upstream had declined the fix on principle
+  #     (ninenines/cowlib#167, 2026-08-06); that stance no longer matters to
+  #     the gate because the finding is gone.
+  @entries []
 
   @doc "Returns the full accepted-advisory allowlist."
   @spec entries() :: [entry()]
@@ -104,7 +86,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   # Public (with @doc false) only so the security-critical allowlist behaviour
   # is unit-testable; not part of this module's user-facing contract.
   @doc false
-  def unaccepted_audit_findings(output) do
+  def unaccepted_audit_findings(output, entries \\ @entries) do
     lines = String.split(output, "\n")
 
     retired =
@@ -123,7 +105,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
           _ -> []
         end
       end)
-      |> Enum.reject(fn {_pkg, id} -> matches_any_entry?(id) end)
+      |> Enum.reject(fn {_pkg, id} -> matches_any_entry?(id, entries) end)
       |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
 
     retired ++ advisories
@@ -138,20 +120,20 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   # Public (with @doc false) only so this security-critical parser is
   # unit-testable.
   @doc false
-  def unaccepted_deps_audit_findings(output) do
+  def unaccepted_deps_audit_findings(output, entries \\ @entries) do
     output
     |> deps_audit_findings()
-    |> Enum.reject(fn {_pkg, id} -> matches_any_entry?(id) end)
+    |> Enum.reject(fn {_pkg, id} -> matches_any_entry?(id, entries) end)
     |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
   end
 
   @doc false
-  @spec matched_deps_audit_ids(String.t()) :: MapSet.t(String.t())
-  def matched_deps_audit_ids(output) do
+  @spec matched_deps_audit_ids(String.t(), [entry()]) :: MapSet.t(String.t())
+  def matched_deps_audit_ids(output, entries \\ @entries) do
     output
     |> deps_audit_findings()
     |> Enum.flat_map(fn {_pkg, id} ->
-      case matching_entry(id) do
+      case matching_entry(id, entries) do
         nil -> []
         entry -> [entry.id]
       end
@@ -159,15 +141,15 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
     |> MapSet.new()
   end
 
-  # Same line-scanning shape as unaccepted_audit_findings/1's advisory
+  # Same line-scanning shape as unaccepted_audit_findings/2's advisory
   # extraction, but KEEPS only the ids matching an entry (instead of
   # rejecting them), mapping each surviving hit to its entry's canonical
   # `:id` — so a hit via alias still contributes the entry's `:id`, not the
   # raw finding id, to the returned set. This is the sole "used" signal for
-  # unused_entries/1 (see moduledoc "Known limitation").
+  # unused_entries/2 (see moduledoc "Known limitation").
   @doc false
-  @spec matched_hex_audit_ids(String.t()) :: MapSet.t(String.t())
-  def matched_hex_audit_ids(output) do
+  @spec matched_hex_audit_ids(String.t(), [entry()]) :: MapSet.t(String.t())
+  def matched_hex_audit_ids(output, entries \\ @entries) do
     output
     |> String.split("\n")
     |> Enum.flat_map(fn line ->
@@ -177,7 +159,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
       end
     end)
     |> Enum.flat_map(fn id ->
-      case matching_entry(id) do
+      case matching_entry(id, entries) do
         nil -> []
         entry -> [entry.id]
       end
@@ -190,9 +172,9 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   (`Date.compare(today, recheck_by) == :gt`) — an entry due today does not
   yet block; it blocks starting the day after.
   """
-  @spec expired_entries(Date.t()) :: [entry()]
-  def expired_entries(today \\ Date.utc_today()) do
-    Enum.filter(@entries, fn entry -> Date.compare(today, entry.recheck_by) == :gt end)
+  @spec expired_entries(Date.t(), [entry()]) :: [entry()]
+  def expired_entries(today \\ Date.utc_today(), entries \\ @entries) do
+    Enum.filter(entries, fn entry -> Date.compare(today, entry.recheck_by) == :gt end)
   end
 
   @doc """
@@ -201,12 +183,12 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   `--kind hex` run of `mix mailglass.audit`. An entry counts as "used" if it
   matched a finding in ANY scanned directory.
   """
-  @spec unused_entries(MapSet.t(String.t())) :: [entry()]
-  def unused_entries(matched_ids) do
-    Enum.reject(@entries, &MapSet.member?(matched_ids, &1.id))
+  @spec unused_entries(MapSet.t(String.t()), [entry()]) :: [entry()]
+  def unused_entries(matched_ids, entries \\ @entries) do
+    Enum.reject(entries, &MapSet.member?(matched_ids, &1.id))
   end
 
-  defp matches_any_entry?(id), do: matching_entry(id) != nil
+  defp matches_any_entry?(id, entries), do: matching_entry(id, entries) != nil
 
   defp deps_audit_findings(output) do
     {findings, _pkg} =
@@ -230,7 +212,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
     Enum.reverse(findings)
   end
 
-  defp matching_entry(id) do
-    Enum.find(@entries, fn entry -> entry.id == id or id in entry.aliases end)
+  defp matching_entry(id, entries) do
+    Enum.find(entries, fn entry -> entry.id == id or id in entry.aliases end)
   end
 end
