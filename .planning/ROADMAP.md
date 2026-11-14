@@ -122,9 +122,16 @@ Plans:
 **Plan budget**: about 4 (bundle reproducibility is time-boxed; fallback is committing the assembly script as-is behind the same `--check` gate)
 
 Plans:
+**Wave 1**
 - [ ] 180-01-PLAN.md — `--check` drift gate: prose scan exclusion, compare module, alias step 1 in the required admin lane, contract test, corrected CI claims (BRPIPE-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 180-02-PLAN.md — `<html>` owns the theme: delete six nested `data-theme` sites, color-scheme frame backdrop, one-specimen gallery, root-only contract test (BRPIPE-02)
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 180-03-PLAN.md — Theme-ownership browser matrix (advisory) and rework of every e2e spec that pinned a nested theme (BRPIPE-02)
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 180-04-PLAN.md — Before-catalog: catalog seed, capture spec and driver, up to 80 captures (<= 15 MB, fixed matrix with documented cut order) at a unique path, required-lane manifest test in the same PR (BRPIPE-03)
 **UI hint**: yes
 
