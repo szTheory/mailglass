@@ -1,0 +1,3 @@
+# A locally unzipped brand book never enters the tree; the pin lives in brandbook/brand.pin.json.
+/brand/
+/mailglass-brand/
