@@ -13,7 +13,7 @@
 - [x] **BRPOL-02**: A pure, unit-tested status map classifies all 26 status/event atoms as Sent, Delivered, Delayed, Failed, Not sent, or "not a delivery status"; the open question of whether "Not sent" is ever a persisted `Delivery.status :suppressed` row is answered from code and recorded.
 - [x] **BRPOL-03**: `MailglassAdmin.Copy` holds the status-label and renamed-word map, and a copy contract test fails when a screen string drifts from it.
 - [x] **BRPOL-04**: The brand book is pinned by zip sha256 (`ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`) with a tamper test; the full book stays out of the repo and only shipped assets are copied in.
-- [ ] **BRPOL-05**: Trademark, image and register search results for the name and mark are recorded in the repo.
+- [x] **BRPOL-05**: Trademark, image and register search results for the name and mark are recorded in the repo.
 
 ### Pipeline and Catalog (BRPIPE)
 
@@ -77,7 +77,7 @@ Updated during roadmap creation (2026-11-13).
 | BRPOL-02 | Phase 179 | Complete |
 | BRPOL-03 | Phase 179 | Complete |
 | BRPOL-04 | Phase 179 | Complete |
-| BRPOL-05 | Phase 179 | Pending |
+| BRPOL-05 | Phase 179 | Complete |
 | BRPIPE-01 | Phase 180 | Pending |
 | BRPIPE-02 | Phase 180 | Pending |
 | BRPIPE-03 | Phase 180 | Pending |

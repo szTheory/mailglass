@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 179
 current_phase_name: Compatibility Policy, Status Map and Brand Pin
 status: executing
-stopped_at: Completed 179-03-PLAN.md
-last_updated: "2026-11-14T04:47:19.560Z"
+stopped_at: Completed 179-04-PLAN.md
+last_updated: "2026-11-14T05:07:05.672Z"
 last_activity: 2026-11-13
 last_activity_desc: Phase 179 execution started
-state_head: ed0d69822c2fc3fad6e22d2ae7045624fe64be5b
+state_head: 9942eeff97cbcd53da8c254e8151c1682c015f2a
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 179 (Compatibility Policy, Status Map and Brand Pin) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-11-13 — Phase 179 execution started
 
@@ -368,6 +368,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P37 | 9 | 3 tasks | 8 files |
 | Phase 179 P01 | 85min | 3 tasks | 9 files |
 | Phase 179 P03 | 24 min | 3 tasks | 8 files |
+| Phase 179 P04 | 17 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -713,6 +714,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 179]: Brand pin verifier is scripts/brand_pin.exs tested from core test/scripts (never under lib/mix/tasks); offline verify is merge-blocking, the TLS-verified online check is advisory
 - [Phase 179]: The /brand/ and /mailglass-brand/ ignore rules live in brandbook/.gitignore; the root .gitignore stays untouched because phase 164 audits every line of six ignore files
 - [Phase 179]: brand pin owned-dir listing walks with File.ls and lstat so hidden files and symlinks count as unlisted; no .gitattributes is added
+- [Phase 179]: [179-04] Trademark gate: allowed only when not blocked, before expires, and (clear with register_checked true, or a populated owner_override); the committed record stays caution with register_checked false — Research assumption A4 adopted; expiry applies to the override path too; a clear or register claim without register evidence is an invalid record, not a soft deny.
+- [Phase 179]: [179-04] owner_override must be mirrored by an identical acknowledged constant in the test, and agent-named by values are rejected even when acknowledged; owner-only authorship is a runbook review rule — A test cannot observe who authored a commit, so the control is the mirrored constant plus the agent-name rejection; the authorship rule is stated for reviewers in TRADEMARK-SEARCH.md.
 
 ## Quick Tasks Completed
 
@@ -773,8 +776,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-14T04:47:19.513Z
-Stopped at: Completed 179-03-PLAN.md
+Last session: 2026-11-14T05:07:05.635Z
+Stopped at: Completed 179-04-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
