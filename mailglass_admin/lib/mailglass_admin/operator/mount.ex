@@ -19,6 +19,27 @@ defmodule MailglassAdmin.Operator.Mount do
 
   @spec on_mount(map(), map(), map(), Socket.t()) :: {:cont, Socket.t()} | {:halt, Socket.t()}
   def on_mount(opts, params, session, socket) when is_map(session) or is_list(opts) do
+    case authorize_access(opts, params, session, socket) do
+      {:ok, socket} ->
+        socket =
+          socket
+          |> remember_authorized_tenant(params)
+          |> Phoenix.LiveView.attach_hook(
+            :mailglass_admin_account_authorization,
+            :handle_params,
+            fn incoming_params, _uri, current_socket ->
+              authorize_account_change(opts, session, incoming_params, current_socket)
+            end
+          )
+
+        {:cont, socket}
+
+      {:error, reason, details} ->
+        {:halt, deny(socket, reason, details, opts)}
+    end
+  end
+
+  defp authorize_access(opts, params, session, socket) do
     auth_context = %{
       params: params,
       session: session,
@@ -38,11 +59,40 @@ defmodule MailglassAdmin.Operator.Mount do
           })
           |> assign_extra(extra_assigns)
 
-        {:cont, socket}
+        {:ok, socket}
 
       {:error, reason, details} ->
-        {:halt, deny(socket, reason, details, opts)}
+        {:error, reason, details}
     end
+  end
+
+  defp authorize_account_change(opts, session, params, socket) do
+    if tenant_param_key(params) == socket.private[:mailglass_admin_authorized_tenant] do
+      {:cont, socket}
+    else
+      case authorize_access(opts, params, session, socket) do
+        {:ok, authorized_socket} ->
+          {:cont, remember_authorized_tenant(authorized_socket, params)}
+
+        {:error, reason, details} ->
+          {:halt, deny(socket, reason, details, opts)}
+      end
+    end
+  end
+
+  defp tenant_param_key(params) do
+    case Map.fetch(params, "tenant_id") do
+      {:ok, value} -> {:present, value}
+      :error -> :absent
+    end
+  end
+
+  defp remember_authorized_tenant(socket, params) do
+    Phoenix.LiveView.put_private(
+      socket,
+      :mailglass_admin_authorized_tenant,
+      tenant_param_key(params)
+    )
   end
 
   defp assign_extra(socket, extra_assigns) do

@@ -1,5 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
+const { accountSwitcher } = require("./support/account.cjs");
 
 async function openInbound(page) {
   const reset = await page.request.get("/ops/browser-reset");
@@ -169,19 +170,16 @@ test("outcome filters hide all-outcome stats and clearing restores them", async 
   const before = await accepted.innerText();
 
   await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
-  await expect(summary).toBeVisible();
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/outcome=accept/);
   await expect(summary).toHaveCount(0);
   await expect(page.getByTestId("inbound-result-count")).toBeVisible();
   await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
 
   await page.getByLabel("Time window", { exact: true }).selectOption("24");
-  await expect(summary).toHaveCount(0);
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/window_hours=24/);
+  await expect(summary).toHaveCount(0);
   await page.getByLabel("Search", { exact: true }).fill("no-matching-message-7f2a");
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(page).toHaveURL(/search=no-matching-message-7f2a/);
   await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(1);
 
   await page.getByTestId("inbound-filters").getByRole("button", { name: "Clear filters", exact: true }).click();
@@ -195,7 +193,7 @@ test("outcome filters hide all-outcome stats and clearing restores them", async 
 test("account menu closes when the operator clicks outside it", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openInbound(page);
-  const switcher = page.getByTestId("operator-account-switcher");
+  const switcher = accountSwitcher(page);
   const accounts = page.getByRole("list", { name: "Available Accounts" });
   await switcher.click();
   await expect(accounts).toBeVisible();
@@ -215,7 +213,7 @@ for (const width of [1440, 390]) {
     const quick = page.getByTestId("inbound-quick-view");
     await expect(quick.getByText("Subject", { exact: true })).toBeVisible();
     await expect(quick.locator("#inbound-quick-technical details, #inbound-quick-technical summary")).toHaveCount(0);
-    const copy = quick.getByRole("button", { name: "Copy Record ID", exact: true });
+    const copy = quick.getByRole("button", { name: /^Copy Record ID: / });
     const expected = await copy.getAttribute("data-copy-value");
     await copy.click();
     await expect(page.getByTestId("copy-toast")).toContainText("Record ID copied.");
@@ -228,8 +226,8 @@ for (const width of [1440, 390]) {
     const next = quick.getByRole("link", { name: "Next inbound record", exact: true });
     await expect(next.locator(".hero-chevron-down")).toHaveCSS("mask-image", /url\(/);
     await next.click();
-    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).not.toHaveAttribute("data-copy-value", expected);
+    await expect(quick.getByRole("button", { name: /^Copy Record ID: / })).not.toHaveAttribute("data-copy-value", expected);
     await quick.getByRole("link", { name: "Previous inbound record", exact: true }).click();
-    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).toHaveAttribute("data-copy-value", expected);
+    await expect(quick.getByRole("button", { name: /^Copy Record ID: / })).toHaveAttribute("data-copy-value", expected);
   });
 }

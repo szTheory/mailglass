@@ -20,11 +20,14 @@ defmodule MailglassAdmin.Operator.QuickView do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.ReplayAction
   alias Phoenix.LiveView.JS
 
   attr(:delivery, :map, default: nil)
   attr(:detail_error, :atom, default: nil)
   attr(:account_labels, :map, default: %{})
+  attr(:replay_targets, :map, default: nil)
+  attr(:replay_command_feedback, :string, default: nil)
   attr(:full_path, :string, required: true)
   attr(:close_path, :string, required: true)
   attr(:previous_path, :string, default: nil)
@@ -42,14 +45,14 @@ defmodule MailglassAdmin.Operator.QuickView do
         tabindex="-1"
         data-testid="operator-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
         id="operator-quick-view"
         data-testid="operator-quick-view"
         role="dialog"
         aria-modal="true"
         aria-labelledby="operator-quick-view-title"
+        tabindex="0"
         phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
@@ -62,7 +65,7 @@ defmodule MailglassAdmin.Operator.QuickView do
       >
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
-        <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
+        <div class="flex flex-wrap items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="operator-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>
@@ -161,6 +164,12 @@ defmodule MailglassAdmin.Operator.QuickView do
                   </dd>
                 </div>
               </Components.technical_details>
+              <ReplayAction.replay_action
+                replay_targets={@replay_targets}
+                origin="quick_view"
+                button_id="operator-quick-view-replay-open-btn"
+                replay_command_feedback={@replay_command_feedback}
+              />
             </div>
         <% end %>
 
@@ -188,11 +197,12 @@ defmodule MailglassAdmin.Operator.QuickView do
   defp nav_button(%{path: nil} = assigns) do
     ~H"""
     <span
-      aria-disabled="true"
-      aria-label={@label}
+      tabindex="-1"
       title={@label}
-      class="btn btn-ghost min-h-11 min-w-11 opacity-40"
+      data-testid={"operator-quick-view-#{@dir}"}
+      class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
     >
+      <span class="sr-only">{@label} unavailable</span>
       {render_slot(@inner_block)}
     </span>
     """
@@ -205,7 +215,7 @@ defmodule MailglassAdmin.Operator.QuickView do
       data-testid={"operator-quick-view-#{@dir}"}
       aria-label={@label}
       title={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
     >
       {render_slot(@inner_block)}
     </.link>

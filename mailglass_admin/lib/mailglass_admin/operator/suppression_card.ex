@@ -37,14 +37,18 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       </div>
 
       <p
-        :if={@read_state == :unavailable}
+        :if={@read_state in [:stale, :unavailable]}
         role="status"
         data-testid="operator-suppression-unavailable"
+        aria-live="polite"
         class="mb-md text-body text-secondary"
       >
-        The current Mailglass suppression read is unavailable. Other Delivery details and recorded Events remain visible.
-        <span :if={@has_match?}>
+        Couldn’t refresh suppression evidence. Try again.
+        <span :if={@read_state == :stale and @has_match?}>
           The match below is the last retrieved record and may be out of date.
+        </span>
+        <span :if={@read_state == :unavailable}>
+          Other Delivery details and recorded Events remain visible.
         </span>
       </p>
 
@@ -77,19 +81,19 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
             <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :stream)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold text-secondary">Expires at</dt>
+            <dt class="text-label font-bold text-secondary">Expiry date</dt>
             <dd class="mt-xs break-words text-body text-base-content">
               <Components.timestamp
                 :if={match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}
                 at={@suppression_state.expires_at}
               />
               <span :if={not match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}>
-                Unavailable
+                Expiry date not recorded
               </span>
             </dd>
           </div>
           <div class="sm:col-span-2">
-            <dt class="text-label font-bold text-secondary">Public removal command</dt>
+            <dt class="text-label font-bold text-secondary">Removal policy</dt>
             <dd class="mt-xs text-body text-secondary">{removal_copy(@suppression_state)}</dd>
           </div>
         </dl>
@@ -104,15 +108,21 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       <button
         type="button"
         phx-click="retry_suppression"
+        phx-disable-with="Refreshing suppression…"
+        phx-hook="SuppressionRefreshFocus"
+        id="operator-suppression-refresh-action"
         class="btn btn-ghost mt-md min-h-11"
         data-testid="operator-suppression-refresh"
       >
-        {if @read_state == :unavailable, do: "Retry suppression read", else: "Refresh suppression"}
+        {if @read_state in [:stale, :unavailable],
+          do: "Retry suppression read",
+          else: "Refresh suppression"}
       </button>
     </Components.card>
     """
   end
 
+  defp headline(_state, :stale), do: "Stale"
   defp headline(_state, :unavailable), do: "Unavailable"
 
   defp headline(state, _read_state) when is_map(state) and map_size(state) > 0,
@@ -133,15 +143,17 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   defp scope_label(:address_stream), do: "Address + stream · Account-local"
   defp scope_label(_), do: "Unavailable"
 
-  defp removal_copy(%{removal_policy: :blocked, reason: reason}) do
-    "The public Mailglass removal command blocks #{label(reason)} records."
+  defp removal_copy(%{removal_policy: :blocked, reason: reason})
+       when reason in [:complaint, :unsubscribe] do
+    "Mailglass does not allow removal of #{label(reason)} suppressions."
   end
 
-  defp removal_copy(%{removal_policy: :supported, reason: reason}) do
-    "The public Mailglass removal command permits #{label(reason)} records."
+  defp removal_copy(%{removal_policy: :supported, reason: reason})
+       when reason in [:hard_bounce, :manual, :policy, :invalid_recipient] do
+    "Mailglass allows removal of #{label(reason)} suppressions."
   end
 
-  defp removal_copy(_), do: "Unavailable"
+  defp removal_copy(_), do: "Removal policy not recorded."
 
   defp label(nil), do: "Unavailable"
 

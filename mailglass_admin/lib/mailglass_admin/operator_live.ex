@@ -28,12 +28,14 @@ defmodule MailglassAdmin.OperatorLive do
     DeliveriesList,
     DetailHeader,
     DestructiveAction,
+    FilterCommit,
     FiltersForm,
     HealthOverview,
     QuickView,
     RepairState,
     ReplayAction,
     ReplayModal,
+    ResultsStatus,
     SupportCards,
     SuppressionCard
   }
@@ -48,7 +50,7 @@ defmodule MailglassAdmin.OperatorLive do
   # timestamp arithmetic comfortably inside their supported ranges.
   @max_window_hours 1_000_000
   @deliveries_per_page 20
-  @event_filter_error "Status was not applied. Choose a listed status."
+  @event_filter_error "Latest recorded event was not applied. Choose a listed event."
   @window_filter_error "Time window was not applied. Choose a positive listed time window."
   @window_options [
     {"Last 24 hours", "24"},
@@ -71,6 +73,10 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:deliveries_page_meta, empty_page_meta())
       |> assign(:deliveries_read_state, :ready)
       |> assign(:deliveries_loaded_for, nil)
+      |> assign(:deliveries_loaded_at, nil)
+      |> assign(:results_status_text, initial_results_status_text())
+      |> assign(:pending_commit_kind, nil)
+      |> assign(:last_commit_kind, nil)
       |> assign(:selected_delivery, nil)
       |> assign(:requested_delivery_id, nil)
       |> assign(:quick_view_focus_return_id, nil)
@@ -79,6 +85,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:selected_timeline_event, nil)
       |> assign(:suppression_state, nil)
       |> assign(:suppression_read_state, :ready)
+      |> assign(:suppression_scope_key, nil)
       |> assign(:suppression_count, nil)
       |> assign(:support_summary, nil)
       |> assign(:support_state, default_support_state())
@@ -93,8 +100,13 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_history, [])
       |> assign(:replay_history_read_state, :ready)
       |> assign(:replay_command_feedback, nil)
+      |> assign(:replay_dialog_feedback, nil)
       |> assign(:replay_modal_open?, false)
+      |> assign(:replay_origin, nil)
+      |> assign(:replay_focus_return_id, nil)
       |> assign(:replay_selected_target_id, nil)
+      |> assign(:replay_target_changed?, false)
+      |> assign(:replay_review_scope, nil)
       |> assign(:replay_review_snapshot, nil)
       |> assign(:replay_review_id, nil)
       |> assign(:replay_review_consumed?, false)
@@ -117,6 +129,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_params, default_filter_params())
       |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
       |> assign(:filter_errors, %{})
+      |> assign(:filter_error_source, nil)
+      |> assign(:filter_url_invalid, %{})
       |> assign(:page_title, "mailglass — Operator")
 
     {:ok, socket}
@@ -167,6 +181,7 @@ defmodule MailglassAdmin.OperatorLive do
 
       socket =
         socket
+        |> settle_commit_kind()
         |> assign(:base_path, URI.parse(uri).path || "/operator")
         |> assign(:page_uri, uri)
         |> assign(:dark_chrome, theme_choice == :dark)
@@ -174,6 +189,8 @@ defmodule MailglassAdmin.OperatorLive do
         |> assign(:filter_params, filter_params)
         |> assign(:filter_form, to_form(filter_draft_params(params, filter_params), as: :filters))
         |> assign(:filter_errors, filter_errors)
+        |> assign(:filter_error_source, if(map_size(filter_errors) > 0, do: :url))
+        |> assign(:filter_url_invalid, filter_errors)
         |> assign(:support_state, support_state)
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_state, tenant_state)
@@ -218,7 +235,8 @@ defmodule MailglassAdmin.OperatorLive do
 
     {:noreply,
      push_patch(socket,
-       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id)
+       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id),
+       replace: true
      )}
   end
 
@@ -241,31 +259,17 @@ defmodule MailglassAdmin.OperatorLive do
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    if map_size(filter_errors) == 0 do
-      path =
-        if socket.assigns[:view] == :deliveries do
-          build_path_with_view(socket.assigns.base_path, normalized, socket.assigns.dark_chrome)
-        else
-          build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-        end
-
-      # Applying filters that don't change the location is a no-op: push_patch to the
-      # current URL would still re-run handle_params and re-render (reloading the list
-      # and re-localizing timestamps) for no reason — the visible "flicker on Apply".
-      if same_location?(socket.assigns.page_uri, path) do
-        {:noreply, socket}
-      else
-        {:noreply, push_patch(socket, to: path)}
-      end
-    else
-      {:noreply,
-       socket
-       |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-       |> assign(:filter_errors, filter_errors)}
-    end
+    commit_filters(socket, filters, :enter)
   end
+
+  # phx-auto-recover: after a reconnect the browser resends the form it still holds. Treat
+  # it as a commit that never adds history (D-11): valid and different restores the URL
+  # with replace, invalid stays a draft, identical is a no-op.
+  def handle_event("recover_filters", %{"filters" => filters}, socket) do
+    commit_filters(socket, filters, :recover)
+  end
+
+  def handle_event("recover_filters", _params, socket), do: {:noreply, socket}
 
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
@@ -274,14 +278,8 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
-  def handle_event("validate_filters", %{"filters" => filters}, socket) do
-    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
-
-    {:noreply,
-     socket
-     |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
-     |> assign(:filter_errors, filter_errors)
-     |> assign(:provider_options, load_provider_options(normalized))}
+  def handle_event("validate_filters", %{"filters" => filters} = params, socket) do
+    commit_filters(socket, filters, FilterCommit.kind_for_target(params["_target"]))
   end
 
   def handle_event("select_delivery", %{"id" => delivery_id} = params, socket) do
@@ -344,10 +342,19 @@ defmodule MailglassAdmin.OperatorLive do
       "view" => "deliveries"
     }
 
-    {:noreply,
-     push_patch(socket,
-       to: build_path(socket.assigns.base_path, filter_params, nil, socket.assigns.dark_chrome)
-     )}
+    path = build_path(socket.assigns.base_path, filter_params, nil, socket.assigns.dark_chrome)
+
+    # Clear with nothing applied changes nothing: no patch, no history entry. It still
+    # resets a draft the operator typed but never committed.
+    if same_location?(socket.assigns.page_uri, path) do
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(socket.assigns.filter_params, as: :filters))
+       |> assign(:filter_errors, %{})
+       |> assign(:filter_error_source, nil)}
+    else
+      {:noreply, push_commit(socket, path, :clear)}
+    end
   end
 
   def handle_event("open_support_exemplar", params, socket) do
@@ -378,27 +385,46 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
-  def handle_event("open_replay", _params, socket) do
-    replay_targets =
-      load_replay_targets(
-        socket.assigns.filter_params,
-        socket.assigns.selected_delivery,
-        socket.assigns[:operator_read_fault]
-      )
+  def handle_event("open_replay", params, socket) do
+    expected_origin = if socket.assigns.full_detail?, do: "full_detail", else: "quick_view"
 
-    selected_target_id = default_replay_target_id(replay_targets)
-    review_id = Ecto.UUID.generate()
+    if Map.get(params, "origin", expected_origin) == expected_origin do
+      replay_targets =
+        load_replay_targets(
+          socket.assigns.filter_params,
+          socket.assigns.selected_delivery,
+          socket.assigns[:operator_read_fault]
+        )
 
-    {:noreply,
-     socket
-     |> assign(:replay_targets, replay_targets)
-     |> assign(:replay_modal_open?, true)
-     |> assign(:replay_command_feedback, nil)
-     |> assign(:replay_selected_target_id, selected_target_id)
-     |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
-     |> assign(:replay_review_id, review_id)
-     |> assign(:replay_review_consumed?, false)
-     |> assign(:replay_pending?, false)}
+      selected_target_id = default_replay_target_id(replay_targets)
+      review_id = Ecto.UUID.generate()
+      origin = if expected_origin == "full_detail", do: :full_detail, else: :quick_view
+
+      focus_return_id =
+        if origin == :full_detail,
+          do: "replay-open-btn",
+          else: "operator-quick-view-replay-open-btn"
+
+      review_scope = replay_review_scope(socket.assigns.selected_delivery)
+
+      {:noreply,
+       socket
+       |> assign(:replay_targets, replay_targets)
+       |> assign(:replay_modal_open?, true)
+       |> assign(:replay_origin, origin)
+       |> assign(:replay_focus_return_id, focus_return_id)
+       |> assign(:replay_command_feedback, nil)
+       |> assign(:replay_dialog_feedback, nil)
+       |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_target_changed?, false)
+       |> assign(:replay_review_scope, review_scope)
+       |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+       |> assign(:replay_review_id, review_id)
+       |> assign(:replay_review_consumed?, false)
+       |> assign(:replay_pending?, false)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("close_replay", _params, socket) do
@@ -462,6 +488,9 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("retry_suppression", _params, socket) do
+    suppression_scope =
+      suppression_scope_key(socket.assigns.filter_params, socket.assigns.selected_delivery)
+
     case read_suppression(
            socket.assigns.filter_params,
            socket.assigns.selected_delivery,
@@ -471,10 +500,25 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply,
          socket
          |> assign(:suppression_state, suppression)
-         |> assign(:suppression_read_state, :ready)}
+         |> assign(:suppression_read_state, :ready)
+         |> assign(:suppression_scope_key, suppression_scope)
+         |> push_event("mailglass:suppression-refresh-complete", %{})}
 
       {:error, :unavailable} ->
-        {:noreply, assign(socket, :suppression_read_state, :unavailable)}
+        previous_suppression =
+          if socket.assigns[:suppression_scope_key] == suppression_scope do
+            socket.assigns[:suppression_state]
+          end
+
+        read_state =
+          if has_suppression_facts?(previous_suppression), do: :stale, else: :unavailable
+
+        {:noreply,
+         socket
+         |> assign(:suppression_state, previous_suppression)
+         |> assign(:suppression_read_state, read_state)
+         |> assign(:suppression_scope_key, suppression_scope)
+         |> push_event("mailglass:suppression-refresh-complete", %{})}
     end
   end
 
@@ -489,13 +533,20 @@ defmodule MailglassAdmin.OperatorLive do
     message =
       if refreshed?,
         do: "Email health refreshed.",
-        else: "Some health data could not be refreshed."
+        else: "Some health checks couldn't be refreshed. Showing the last results retrieved."
 
     {:noreply, push_event(socket, "mailglass:toast", %{message: message, error: !refreshed?})}
   end
 
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
-    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
+    socket = select_frozen_replay_target(socket, webhook_event_id)
+
+    socket =
+      if socket.assigns.replay_review_consumed?,
+        do: socket,
+        else: assign(socket, :replay_dialog_feedback, nil)
+
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -503,8 +554,27 @@ defmodule MailglassAdmin.OperatorLive do
         %{"replay" => %{"webhook_event_id" => webhook_event_id}},
         socket
       ) do
-    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
+    handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket)
   end
+
+  def handle_event(
+        "review_replay_again",
+        _params,
+        %{
+          assigns: %{
+            replay_modal_open?: true,
+            replay_review_scope: %{tenant_id: tenant_id, delivery_id: delivery_id}
+          }
+        } = socket
+      ) do
+    if replay_review_scope_matches?(socket) do
+      refresh_replay_review(socket, tenant_id, delivery_id)
+    else
+      {:noreply, replay_dialog_failure(socket, :review_changed)}
+    end
+  end
+
+  def handle_event("review_replay_again", _params, socket), do: {:noreply, socket}
 
   def handle_event(
         "confirm_replay",
@@ -521,9 +591,11 @@ defmodule MailglassAdmin.OperatorLive do
       socket
       |> assign(:replay_review_consumed?, true)
       |> assign(:replay_pending?, true)
+      |> assign(:replay_dialog_feedback, nil)
       |> assign(:replay_command_feedback, nil)
 
-    with %{id: delivery_id, tenant_id: tenant_id} <-
+    with true <- replay_review_scope_matches?(socket),
+         %{id: delivery_id, tenant_id: tenant_id} <-
            socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
            read_confirmation_delivery(socket, tenant_id, delivery_id),
@@ -550,72 +622,45 @@ defmodule MailglassAdmin.OperatorLive do
              webhook_event_id: target.webhook_event_id,
              actor: socket.assigns.operator_actor
            }) do
+      feedback = RepairState.command_feedback(result)
+      full_detail? = socket.assigns.replay_origin == :full_detail
+
       {:noreply,
        socket
        |> clear_flash()
-       |> assign(:replay_command_feedback, RepairState.command_feedback(result))
-       |> assign_delivery_state(socket.assigns.filter_params, delivery_id, true, false)
-       |> close_replay_modal()}
+       |> assign(:replay_command_feedback, feedback)
+       |> assign_delivery_state(socket.assigns.filter_params, delivery_id, full_detail?, false)
+       |> close_replay_modal()
+       |> push_event("mailglass:toast", %{message: feedback, error: false})}
     else
       {:error, :no_selected_delivery} ->
-        {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+        {:noreply, replay_dialog_failure(socket, :no_selected_delivery)}
+
+      false ->
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
 
       {:error, :unavailable} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(
-           :info,
-           "Replay is unavailable for this delivery. Review it again before retrying."
-         )}
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
 
       {:error, :read_unavailable} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> assign(:replay_review_consumed?, false)
-         |> put_flash(
-           :info,
-           "Current records could not be refreshed. The exact reviewed request is retained."
-         )}
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
 
       {:error, :review_changed} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(
-           :info,
-           "This webhook request changed or is no longer eligible. Review the current request before replaying."
-         )}
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
 
       {:error, :target_required} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(:info, "Choose one webhook target before confirming replay.")}
+        {:noreply, replay_dialog_failure(socket, :target_required)}
 
-      {:error, {:auth, message}} ->
-        {:noreply,
-         socket
-         |> assign(:replay_pending?, false)
-         |> put_flash(:info, RepairState.authorization_feedback(message))}
+      {:error, {:auth, reason, message}} ->
+        {:noreply, replay_dialog_failure(socket, {:authorization, reason, message})}
 
-      {:error, reason} ->
-        {:noreply,
-         socket
-         |> assign_delivery_state(
-           socket.assigns.filter_params,
-           get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]),
-           true,
-           false
-         )
-         |> assign(:replay_pending?, false)
-         |> put_flash(:error, RepairState.flash_failure(reason))}
+      {:error, _reason} ->
+        {:noreply, replay_dialog_failure(socket, :command_failure)}
     end
   end
 
   def handle_event("confirm_replay", _params, %{assigns: %{selected_delivery: nil}} = socket) do
-    {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+    {:noreply, replay_dialog_failure(socket, :no_selected_delivery)}
   end
 
   def handle_event("confirm_replay", _params, socket), do: {:noreply, socket}
@@ -678,6 +723,7 @@ defmodule MailglassAdmin.OperatorLive do
       theme_choice={@theme_choice}
       selected_tenant_id={@selected_tenant_id}
       tenant_options={@tenant_options}
+      tenant_state={@tenant_state}
       account_labels={@account_labels}
       page_uri={@page_uri}
       title={if @view == :overview, do: "Email health", else: "Deliveries"}
@@ -695,33 +741,6 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="grid grid-cols-[1fr_auto] items-center gap-x-sm gap-y-xs text-label text-secondary sm:flex sm:flex-wrap sm:gap-sm">
-                  <div class="inline-flex items-center gap-xs">
-                    <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
-                    <Components.field_help
-                      id="operator-health-window-help"
-                      label="observation period"
-                      text={health_window_description(@health_window)}
-                    />
-                  </div>
-                  <div class="contents sm:ml-auto sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-sm">
-                    <p
-                      data-testid="operator-health-last-checked"
-                      class="order-3 col-span-2 text-right sm:order-none"
-                    >
-                      Last checked <Components.timestamp at={@health_observed_at} />
-                    </p>
-                    <button
-                      type="button"
-                      phx-click="retry_health"
-                      class="btn btn-ghost order-2 min-h-11 sm:order-none"
-                    >
-                      <Components.icon name="hero-arrow-path" class="h-4 w-4" />
-                      <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
-                      <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
-                    </button>
-                  </div>
-                </div>
                 <HealthOverview.overview
                   issues={
                     health_issues(
@@ -740,6 +759,9 @@ defmodule MailglassAdmin.OperatorLive do
                     build_path_with_view(@base_path, health_filters(@filter_params), @dark_chrome)
                   }
                   inbound_path={health_inbound_path(@inbound_path, @filter_params)}
+                  window_copy={health_window_copy(@health_window)}
+                  window_description={health_window_description(@health_window)}
+                  observed_at={@health_observed_at}
                 />
               </div>
             <% else %>
@@ -762,6 +784,18 @@ defmodule MailglassAdmin.OperatorLive do
             <% end %>
           </div>
         <% else %>
+          <%!-- One persistent status region for the Deliveries surface: it exists from first
+              render and its text changes only when a read settles, never on drafts. --%>
+          <div
+            id="operator-results-status"
+            data-testid="operator-results-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            class="sr-only"
+          >
+            {@results_status_text}
+          </div>
           <%= cond do %>
             <% @deliveries == [] and @deliveries_read_state == :ready and
                 is_nil(@requested_delivery_id) and @deliveries_page_meta.total_count == 0 and
@@ -770,7 +804,9 @@ defmodule MailglassAdmin.OperatorLive do
                   The filters toolbar, the Open-delivery CTA, and the entire master-detail grid (and
                   therefore the "Select a delivery…" helper nested inside it) are all withheld.
                   An in-progress invalid filter submission (@filter_errors non-empty) is NOT genuine
-                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
+                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters.
+                  A non-default time window is a filter too (filters_active?/1), so a window that
+                  contains nothing keeps the toolbar and the way back. --%>
               <div class="space-y-lg">
                 <section
                   data-testid="operator-deliveries-empty-pane"
@@ -884,13 +920,24 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-filters"
                   class="border-b border-base-300 pb-md"
                 >
+                  <%!-- The class (shared with Inbound, already in the committed bundle) keeps the
+                      desktop breakpoint working after a mobile close; no inline display is written. --%>
                   <button
                     type="button"
-                    phx-click={JS.toggle(to: "#operator-filter-panel")}
+                    phx-click={
+                      JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
+                      |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                    }
                     data-testid="operator-filters-toggle"
+                    aria-controls="operator-filter-panel"
+                    aria-expanded="false"
                     class="btn btn-ghost !h-11 min-h-11 md:hidden"
                   >
-                    Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
+                    Filters
+                    <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
+                      ({applied_filter_count(@filter_params)} applied)
+                    </span>
+                    <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                   </button>
 
                   <div id="operator-filter-panel" class="hidden md:block">
@@ -899,40 +946,49 @@ defmodule MailglassAdmin.OperatorLive do
                       id="operator-filters"
                       phx-change="validate_filters"
                       phx-submit="apply_filters"
+                      phx-auto-recover="recover_filters"
                       class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                     >
-                      <input
-                        id="filters_tenant_id"
-                        type="hidden"
-                        name={@filter_form[:tenant_id].name}
-                        value={@filter_form[:tenant_id].value}
-                      />
                       <FiltersForm.fields
                         form={@filter_form}
                         provider_options={@provider_options}
                         event_values={@event_values}
                         window_options={@window_options}
                         errors={@filter_errors}
+                        committed_search={@filter_params["search"] || ""}
                       />
 
                       <div class="flex flex-wrap gap-2">
                         <button
-                          type="submit"
-                          phx-disable-with="Applying filters…"
-                          class="btn btn-primary min-h-11 w-40 px-5"
-                        >
-                          Apply filters
-                        </button>
-                        <button
                           type="button"
                           phx-click="clear_filters"
-                          class="btn btn-ghost min-h-11 px-5"
+                          class="btn btn-ghost min-h-11 px-md"
                         >
                           Clear filters
                         </button>
                       </div>
                     </.form>
                   </div>
+
+                  <%!-- Outside the collapsible panel so the label stays visible when the mobile
+                      panel is closed. Not live-announced: the invalid field already is (D-12/D-13).
+                      The URL note follows the committed URL (D-13): it stays while the URL carries an
+                      invalid value, whatever the draft does. The draft note shows whenever a change
+                      event leaves the draft invalid (D-12). Both may show together; each is true. --%>
+                  <p
+                    :if={@filter_error_source == :draft}
+                    data-testid="filters-draft-pending-note"
+                    class="mt-sm text-label text-secondary"
+                  >
+                    Showing results for your previous filters until the highlighted field is fixed.
+                  </p>
+                  <p
+                    :if={map_size(@filter_url_invalid) > 0}
+                    data-testid="filters-url-invalid-note"
+                    class="mt-sm text-label text-secondary"
+                  >
+                    <span :for={note <- url_invalid_notes(@filter_url_invalid)} class="block">{note}</span>
+                  </p>
                 </section>
 
                 <%!-- LIST PAGE: filters lead the collection; supporting evidence follows.
@@ -986,6 +1042,7 @@ defmodule MailglassAdmin.OperatorLive do
                       }
                       selected_delivery={@selected_delivery}
                       data_state={@deliveries_read_state}
+                      loaded_at={@deliveries_loaded_at}
                       filters_active?={filters_active?(@filter_params)}
                     />
                   </aside>
@@ -1073,23 +1130,31 @@ defmodule MailglassAdmin.OperatorLive do
                 position={record_position(@deliveries, @selected_delivery, @deliveries_page_meta)}
                 keyboard?={not @replay_modal_open?}
                 focus_return_id={@quick_view_focus_return_id}
+                replay_targets={@replay_targets}
+                replay_command_feedback={@replay_command_feedback}
               />
 
               <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
               <span
                 :if={@replay_modal_open?}
                 phx-mounted={JS.focus(to: "#operator-replay-close")}
-                phx-remove={JS.focus(to: "#replay-open-btn")}
+                phx-remove={
+                  if @replay_focus_return_id,
+                    do: JS.focus(to: "##{@replay_focus_return_id}"),
+                    else: %JS{}
+                }
               />
               <ReplayModal.replay_modal
                 open?={@replay_modal_open?}
                 delivery={@selected_delivery}
                 replay_targets={@replay_targets}
                 selected_target_id={@replay_selected_target_id}
+                target_changed?={@replay_target_changed?}
                 review_id={@replay_review_id}
                 account_label={Accounts.label(@selected_tenant_id, @account_labels)}
                 pending?={@replay_pending?}
                 consumed?={@replay_review_consumed?}
+                feedback={@replay_dialog_feedback}
               />
           <% end %>
         <% end %>
@@ -1140,6 +1205,10 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp refresh_visible_state(%{assigns: %{view: :deliveries}} = socket) do
+    # D-16: the polite status region speaks after a commit (handle_params) or a Retry, never
+    # on another actor's background activity. The rows refresh; the announced text is kept.
+    status_text = socket.assigns.results_status_text
+
     socket
     |> assign(:provider_options, load_provider_options(socket.assigns.filter_params))
     |> assign_delivery_state(
@@ -1148,6 +1217,7 @@ defmodule MailglassAdmin.OperatorLive do
       socket.assigns.full_detail?,
       support_focus?(socket.assigns.support_state)
     )
+    |> assign(:results_status_text, status_text)
   end
 
   defp refresh_visible_state(socket) do
@@ -1162,11 +1232,15 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp clear_surface_state(socket) do
     socket
+    |> assign(:pending_commit_kind, nil)
+    |> assign(:last_commit_kind, nil)
     |> assign(:view, :overview)
     |> assign(:full_detail?, false)
     |> assign(:deliveries, [])
     |> assign(:deliveries_page_meta, empty_page_meta())
     |> assign(:deliveries_read_state, :ready)
+    |> assign(:deliveries_loaded_at, nil)
+    |> assign(:results_status_text, initial_results_status_text())
     |> assign(:selected_delivery, nil)
     |> assign(:requested_delivery_id, nil)
     |> assign(:timeline_events, [])
@@ -1174,6 +1248,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_timeline_event, nil)
     |> assign(:suppression_state, nil)
     |> assign(:suppression_read_state, :ready)
+    |> assign(:suppression_scope_key, nil)
     |> assign(:support_summary, nil)
     |> assign(:health_panel_states, default_health_panel_states())
     |> assign(:health_observed_at, nil)
@@ -1187,9 +1262,50 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_selected_target_id, nil)
   end
 
+  # Committed filters only (the URL-backed params, never the draft), so the mobile toggle
+  # tells the truth about what the list is narrowed by. The default window is not a filter;
+  # any other window is (it shares non_default_window?/1 with filters_active?/1).
+  defp applied_filter_count(filter_params) do
+    ["search", "event", "provider"]
+    |> Enum.count(&(not is_nil(blank_to_nil(filter_params[&1]))))
+    |> Kernel.+(if non_default_window?(filter_params["window_hours"]), do: 1, else: 0)
+  end
+
+  # A present, non-blank window different from the default is a filter; the default 168 h
+  # (written out or implied) is not.
+  defp non_default_window?(window_hours) do
+    case blank_to_nil(window_hours) do
+      nil -> false
+      window -> window != Integer.to_string(@default_window_hours)
+    end
+  end
+
+  # One label per filter the URL carried invalid, so fallback results are never unlabelled.
+  defp url_invalid_notes(filter_errors) do
+    [
+      {"event", "Showing results without the Latest recorded event filter."},
+      {"window_hours", "Showing results for the default time window instead."}
+    ]
+    |> Enum.filter(fn {field, _note} -> Map.has_key?(filter_errors, field) end)
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  defp initial_results_status_text do
+    ResultsStatus.text(%{
+      collection: :deliveries,
+      state: :ready,
+      count: 0,
+      filters_active?: false,
+      loaded_at: nil
+    })
+  end
+
+  # A non-default time window narrows the list, so it is a filter (as on Inbound): an empty
+  # window must keep the toolbar and the filtered-empty pane, not the genuine no-data pane.
   defp filters_active?(filter_params) do
     Map.drop(filter_params, ["tenant_id", "window_hours", "page"]) !=
-      Map.drop(default_filter_params(), ["tenant_id", "window_hours", "page"])
+      Map.drop(default_filter_params(), ["tenant_id", "window_hours", "page"]) or
+      non_default_window?(filter_params["window_hours"])
   end
 
   defp normalize_filter_params_with_errors(params) do
@@ -1217,11 +1333,76 @@ defmodule MailglassAdmin.OperatorLive do
      ])}
   end
 
+  # Every filter change is a commit (D-01). The Account comes from the server, never the
+  # payload (D-09); an invalid draft stays a draft and never patches; a commit that
+  # resolves to the current location is a no-op.
+  defp commit_filters(socket, filters, kind) do
+    filters = FilterCommit.commit_params(filters, socket.assigns.selected_tenant_id)
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
+
+    if map_size(filter_errors) == 0 do
+      path = commit_path(socket, normalized)
+
+      # A commit that lands on the current URL would still re-run handle_params and
+      # re-render for nothing; skip it and just keep the draft in step.
+      if same_location?(socket.assigns.page_uri, path) do
+        {:noreply,
+         socket
+         |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
+         |> assign(:filter_errors, %{})
+         |> assign(:filter_error_source, nil)}
+      else
+        {:noreply, push_commit(socket, path, kind)}
+      end
+    else
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
+       |> assign(:filter_errors, filter_errors)
+       |> assign(:filter_error_source, :draft)}
+    end
+  end
+
+  # The only place a commit patch is pushed. The pending kind is assigned here and nowhere
+  # else, so a no-op or invalid commit can never mislabel the next non-commit patch.
+  defp push_commit(socket, path, kind) do
+    replace? = FilterCommit.history_kind(kind, socket.assigns.last_commit_kind) == :replace
+
+    socket
+    |> assign(:pending_commit_kind, kind)
+    |> push_patch(to: path, replace: replace?)
+  end
+
+  # Moves the kind of the commit that produced this patch into last_commit_kind. A patch
+  # that arrives without a pending kind (Back/Forward, pagination links, the Account
+  # canonicalization) is not a commit and ends any in-flight search edit.
+  defp settle_commit_kind(socket) do
+    socket
+    |> assign(:last_commit_kind, socket.assigns.pending_commit_kind)
+    |> assign(:pending_commit_kind, nil)
+  end
+
+  defp commit_path(socket, normalized) do
+    if socket.assigns[:view] == :deliveries do
+      build_path_with_view(
+        socket.assigns.base_path,
+        normalized,
+        socket.assigns.dark_chrome,
+        socket.assigns.support_state
+      )
+    else
+      build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+    end
+  end
+
   defp filter_draft_params(params, normalized) do
+    # A blank value is "nothing chosen", not a draft to preserve: the select shows the
+    # normalized default rather than an empty Custom period.
     Enum.reduce(["event", "window_hours"], normalized, fn key, draft ->
-      if Map.has_key?(params, key),
-        do: Map.put(draft, key, normalize_string(Map.get(params, key))),
-        else: draft
+      case normalize_string(Map.get(params, key)) do
+        "" -> draft
+        value -> Map.put(draft, key, value)
+      end
     end)
   end
 
@@ -1393,6 +1574,14 @@ defmodule MailglassAdmin.OperatorLive do
         else: reraise(error, __STACKTRACE__)
   end
 
+  defp suppression_scope_key(_filter_params, nil), do: nil
+
+  defp suppression_scope_key(filter_params, delivery) do
+    {filter_params["tenant_id"], String.downcase(delivery.recipient), delivery.stream}
+  end
+
+  defp has_suppression_facts?(state), do: is_map(state) and map_size(state) > 0
+
   defp find_selected_delivery(_deliveries, nil), do: nil
 
   defp find_selected_delivery(deliveries, delivery_id),
@@ -1503,6 +1692,13 @@ defmodule MailglassAdmin.OperatorLive do
           {[], page_meta_without_entries(empty_page_meta()), :error}
       end
 
+    # The load time belongs to the rows on screen: stamped only by a successful read and
+    # carried unchanged through a failed one (an :error read shows no rows at all).
+    deliveries_loaded_at =
+      if deliveries_read_state == :ready,
+        do: DateTime.utc_now() |> DateTime.truncate(:second),
+        else: socket.assigns[:deliveries_loaded_at]
+
     {selected_delivery, detail_error} =
       resolve_selected_delivery(
         deliveries,
@@ -1512,14 +1708,11 @@ defmodule MailglassAdmin.OperatorLive do
       )
 
     replay_targets =
-      if full?,
-        do:
-          load_replay_targets(
-            filter_params,
-            selected_delivery,
-            socket.assigns[:operator_read_fault]
-          ),
-        else: nil
+      load_replay_targets(
+        filter_params,
+        selected_delivery,
+        socket.assigns[:operator_read_fault]
+      )
 
     {replay_history, replay_history_read_state} =
       if full?,
@@ -1548,9 +1741,11 @@ defmodule MailglassAdmin.OperatorLive do
           ),
         else: nil
 
+    current_suppression_scope =
+      if full?, do: suppression_scope_key(filter_params, selected_delivery), else: nil
+
     previous_suppression =
-      if get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]) ==
-           selected_delivery_id do
+      if socket.assigns[:suppression_scope_key] == current_suppression_scope do
         socket.assigns[:suppression_state]
       end
 
@@ -1561,8 +1756,14 @@ defmodule MailglassAdmin.OperatorLive do
                selected_delivery,
                socket.assigns[:operator_read_fault]
              ) do
-          {:ok, state} -> {state, :ready}
-          {:error, :unavailable} -> {previous_suppression, :unavailable}
+          {:ok, state} ->
+            {state, :ready}
+
+          {:error, :unavailable} ->
+            read_state =
+              if has_suppression_facts?(previous_suppression), do: :stale, else: :unavailable
+
+            {previous_suppression, read_state}
         end
       else
         {nil, :ready}
@@ -1588,6 +1789,17 @@ defmodule MailglassAdmin.OperatorLive do
         else: socket.assigns[:deliveries_loaded_for]
       )
     )
+    |> assign(:deliveries_loaded_at, deliveries_loaded_at)
+    |> assign(
+      :results_status_text,
+      ResultsStatus.text(%{
+        collection: :deliveries,
+        state: deliveries_read_state,
+        count: Map.get(page_meta, :total_count),
+        filters_active?: filters_active?(filter_params),
+        loaded_at: deliveries_loaded_at
+      })
+    )
     |> assign(:selected_delivery, selected_delivery)
     |> assign(:requested_delivery_id, selected_delivery_id)
     |> assign(:timeline_events, timeline)
@@ -1595,6 +1807,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_timeline_event, selected_timeline_event)
     |> assign(:suppression_state, suppression)
     |> assign(:suppression_read_state, suppression_read_state)
+    |> assign(:suppression_scope_key, current_suppression_scope)
     |> assign(:support_summary, support_summary)
     |> assign(:suppression_count, suppression_count)
     |> assign(:health_panel_states, health_panel_states)
@@ -1742,6 +1955,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
     |> assign(:suppression_read_state, :ready)
+    |> assign(:suppression_scope_key, nil)
     |> assign(:detail_error, nil)
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])
@@ -1987,12 +2201,89 @@ defmodule MailglassAdmin.OperatorLive do
   defp close_replay_modal(socket) do
     socket
     |> assign(:replay_modal_open?, false)
+    |> assign(:replay_origin, nil)
+    |> assign(:replay_focus_return_id, nil)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
+    |> assign(:replay_target_changed?, false)
+    |> assign(:replay_dialog_feedback, nil)
+    |> assign(:replay_review_scope, nil)
     |> assign(:replay_review_snapshot, nil)
     |> assign(:replay_review_id, nil)
     |> assign(:replay_review_consumed?, false)
     |> assign(:replay_pending?, false)
   end
+
+  defp refresh_replay_review(socket, tenant_id, delivery_id) do
+    with %{id: ^delivery_id, tenant_id: ^tenant_id} <-
+           read_confirmation_delivery(socket, tenant_id, delivery_id),
+         {:ok, replay_targets} <- read_confirmation_targets(socket, tenant_id, delivery_id) do
+      prior_target_id = socket.assigns.replay_selected_target_id
+      selected_target_id = reviewed_replay_selection(replay_targets, prior_target_id)
+
+      feedback =
+        if is_binary(prior_target_id) and is_nil(selected_target_id) and
+             replay_targets.status in [:exact, :ambiguous] do
+          RepairState.dialog_feedback(:review_changed)
+        end
+
+      target_changed? =
+        socket.assigns.replay_target_changed? or
+          (is_binary(prior_target_id) and is_nil(selected_target_id) and
+             replay_targets.status in [:exact, :ambiguous])
+
+      {:noreply,
+       socket
+       |> assign(:replay_targets, replay_targets)
+       |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_target_changed?, target_changed?)
+       |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+       |> assign(:replay_review_id, Ecto.UUID.generate())
+       |> assign(:replay_review_consumed?, false)
+       |> assign(:replay_pending?, false)
+       |> assign(:replay_dialog_feedback, feedback)}
+    else
+      {:error, _reason} ->
+        {:noreply, replay_dialog_failure(socket, :read_unavailable)}
+
+      _other ->
+        {:noreply, replay_dialog_failure(socket, :review_changed)}
+    end
+  end
+
+  defp replay_dialog_failure(socket, reason) do
+    socket
+    |> assign(:replay_pending?, false)
+    |> assign(:replay_dialog_feedback, RepairState.dialog_feedback(reason))
+  end
+
+  defp replay_review_scope(%{id: delivery_id, tenant_id: tenant_id}) do
+    %{tenant_id: tenant_id, delivery_id: delivery_id}
+  end
+
+  defp replay_review_scope(_delivery), do: nil
+
+  defp replay_review_scope_matches?(%{
+         assigns: %{
+           replay_review_scope: %{tenant_id: tenant_id, delivery_id: delivery_id},
+           filter_params: %{"tenant_id" => tenant_id},
+           selected_delivery: %{id: delivery_id, tenant_id: tenant_id}
+         }
+       }),
+       do: true
+
+  defp replay_review_scope_matches?(_socket), do: false
+
+  defp reviewed_replay_selection(%{status: :exact, candidate: candidate}, prior_target_id) do
+    if candidate.webhook_event_id == prior_target_id, do: prior_target_id, else: nil
+  end
+
+  defp reviewed_replay_selection(%{status: :ambiguous, candidates: candidates}, prior_target_id) do
+    if Enum.any?(candidates, &(&1.webhook_event_id == prior_target_id)),
+      do: prior_target_id,
+      else: nil
+  end
+
+  defp reviewed_replay_selection(_replay_targets, _prior_target_id), do: nil
 
   defp replay_review_snapshot(socket, %{status: status, candidates: candidates})
        when status in [:exact, :ambiguous] do
@@ -2012,7 +2303,9 @@ defmodule MailglassAdmin.OperatorLive do
     snapshot = socket.assigns[:replay_review_snapshot]
 
     if snapshot && Enum.any?(snapshot.candidates, &(&1.webhook_event_id == target_id)) do
-      assign(socket, :replay_selected_target_id, target_id)
+      socket
+      |> assign(:replay_selected_target_id, target_id)
+      |> assign(:replay_target_changed?, false)
     else
       assign(socket, :replay_selected_target_id, nil)
     end
@@ -2069,13 +2362,8 @@ defmodule MailglassAdmin.OperatorLive do
       filter_params
       |> Map.merge(%{"delivery_id" => delivery_id})
       |> Map.merge(support_state_to_params(support_state))
-      |> Enum.reject(fn
-        {"page", "1"} -> true
-        {_key, value} -> is_nil(blank_to_nil(value))
-      end)
-      |> Map.new()
 
-    case URI.encode_query(params) do
+    case FilterCommit.encode_query(params) do
       "" -> base_path
       query -> base_path <> "?" <> query
     end
@@ -2174,13 +2462,27 @@ defmodule MailglassAdmin.OperatorLive do
     current = URI.parse(current_uri)
     target = URI.parse(target_path)
 
+    # Entry URLs often omit window_hours while commit targets carry it, so both queries are
+    # canonicalized (default window filled) before the comparison.
     (current.path || "/") == (target.path || "/") and
-      URI.decode_query(current.query || "") == URI.decode_query(target.query || "")
+      canonical_location_query(current.query) == canonical_location_query(target.query)
   end
 
-  defp build_path_with_view(base_path, filter_params, _dark_chrome) do
+  defp canonical_location_query(query) do
+    (query || "")
+    |> URI.decode_query()
+    |> FilterCommit.canonical_current_query()
+    |> URI.decode_query()
+  end
+
+  defp build_path_with_view(
+         base_path,
+         filter_params,
+         _dark_chrome,
+         support_state \\ default_support_state()
+       ) do
     filter_params_with_view = Map.put(filter_params, "view", "deliveries")
-    build_path(base_path, filter_params_with_view, nil, false)
+    build_path(base_path, filter_params_with_view, nil, false, support_state)
   end
 
   defp unmatched_events_path(base_path, filter_params, dark_chrome, support_summary) do
@@ -2305,7 +2607,9 @@ defmodule MailglassAdmin.OperatorLive do
       integer when is_integer(integer) and integer <= @max_window_hours ->
         {Integer.to_string(integer), nil}
 
-      _ when raw_string == "" and not is_map_key(params, "window_hours") ->
+      # A blank window (key absent or present-but-empty) is "no window chosen", read as the
+      # default exactly as Inbound does; only a non-blank invalid value is an error (D-13).
+      _ when raw_string == "" ->
         {Integer.to_string(@default_window_hours), nil}
 
       _ ->

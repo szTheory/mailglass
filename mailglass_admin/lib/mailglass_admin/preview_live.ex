@@ -50,6 +50,7 @@ defmodule MailglassAdmin.PreviewLive do
   alias MailglassAdmin.Preview.AssignsForm
   alias MailglassAdmin.Preview.DeviceFrame
   alias MailglassAdmin.Preview.Discovery
+  alias MailglassAdmin.Preview.ReturnContext
   alias MailglassAdmin.Preview.Sidebar
   alias MailglassAdmin.Preview.Tabs
   alias MailglassAdmin.PubSub.Topics
@@ -75,6 +76,7 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:admin_chrome_theme, nil)
       |> assign(:preview_frame_dark_chrome, false)
       |> assign(:admin_navigation, session_navigation(session))
+      |> assign(:return_context, nil)
       |> assign(:base_path, nil)
       |> assign(:mount_path, nil)
       |> assign(:page_uri, nil)
@@ -97,6 +99,7 @@ defmodule MailglassAdmin.PreviewLive do
   @impl true
   def handle_params(%{"mailable" => mod_str, "scenario" => name_str} = params, uri, socket) do
     params = params_with_query(params, uri)
+    socket = assign_return_context(socket, params)
 
     if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
       {:noreply, redirect(socket, to: redirect_path)}
@@ -162,6 +165,7 @@ defmodule MailglassAdmin.PreviewLive do
 
   def handle_params(params, uri, socket) do
     params = params_with_query(params, uri)
+    socket = assign_return_context(socket, params)
 
     if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
       {:noreply, redirect(socket, to: redirect_path)}
@@ -182,7 +186,8 @@ defmodule MailglassAdmin.PreviewLive do
       case first_scenario_path(
              socket.assigns.mount_path || MailglassAdmin.MountPath.base(base_path),
              socket.assigns.mailables,
-             device_width
+             device_width,
+             ReturnContext.query_pairs(socket.assigns.return_context)
            ) do
         "#" -> {:noreply, socket}
         path -> {:noreply, redirect(socket, to: path)}
@@ -331,6 +336,8 @@ defmodule MailglassAdmin.PreviewLive do
           deliveries_path={@surface_paths.deliveries}
           inbound_path={@surface_paths.inbound}
           inbound_available?={not is_nil(@surface_paths.inbound)}
+          return_href={@return_context && @return_context.href}
+          return_label={@return_context && ReturnContext.back_label(@return_context.surface)}
         />
       </:sidebar>
       <:mobile_nav>
@@ -342,12 +349,14 @@ defmodule MailglassAdmin.PreviewLive do
           deliveries_path={@surface_paths.deliveries}
           inbound_path={@surface_paths.inbound}
           inbound_available?={not is_nil(@surface_paths.inbound)}
+          return_href={@return_context && @return_context.href}
+          return_label={@return_context && ReturnContext.back_label(@return_context.surface)}
         />
       </:mobile_nav>
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          See how your emails look in HTML and plain text.
+          Renders the scenarios in each Mailable's <code class="mono">preview_props/0</code>. It doesn't read Deliveries or Inbound messages from any Account.
         </p>
       </:page_header>
 
@@ -366,6 +375,7 @@ defmodule MailglassAdmin.PreviewLive do
                   device_width={@device_width}
                   admin_chrome_theme={@admin_chrome_theme}
                   mount_path={@mount_path}
+                  return_query={ReturnContext.query_pairs(@return_context)}
                 />
               </div>
 
@@ -485,6 +495,7 @@ defmodule MailglassAdmin.PreviewLive do
                     device_width={@device_width}
                     admin_chrome_theme={@admin_chrome_theme}
                     mount_path={@mount_path}
+                    return_query={ReturnContext.query_pairs(@return_context)}
                   />
                   <div
                     data-testid="preview-header-controls"
@@ -679,13 +690,13 @@ defmodule MailglassAdmin.PreviewLive do
   # known mount path (`/dev/mail`, `/admin/preview`, …) rather than a relative
   # `./` reference — the mount path has no trailing slash, so a relative URL
   # would resolve against the parent and drop the final segment.
-  defp first_scenario_path(mount_path, mailables, device_width) do
+  defp first_scenario_path(mount_path, mailables, device_width, query_pairs) do
     case first_previewable(mailables) do
       {mod, scenario} ->
         path =
           MailglassAdmin.Preview.Sidebar.scenario_base_path(mount_path, mod, scenario)
 
-        build_capture_url(path, Integer.to_string(device_width))
+        build_capture_url(path, Integer.to_string(device_width), query_pairs)
 
       nil ->
         "#"
@@ -740,6 +751,21 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp session_navigation(_session), do: %{}
 
+  defp preview_surface_paths(%{return_context: %{tenant_id: tenant_id} = context} = assigns) do
+    navigation = assigns[:admin_navigation] || %{}
+
+    %{
+      preview:
+        ReturnContext.append_query(
+          current_preview_path(assigns),
+          ReturnContext.query_pairs(context)
+        ),
+      overview: surface_href(navigation, "overview", :overview_path, tenant_id),
+      deliveries: surface_href(navigation, "deliveries", :deliveries_path, tenant_id),
+      inbound: surface_href(navigation, "inbound", :inbound_path, tenant_id)
+    }
+  end
+
   defp preview_surface_paths(assigns) do
     navigation = assigns[:admin_navigation] || %{}
 
@@ -749,6 +775,12 @@ defmodule MailglassAdmin.PreviewLive do
       deliveries: navigation_path(navigation, :deliveries_path),
       inbound: navigation_path(navigation, :inbound_path)
     }
+  end
+
+  # A configured path that is not a local absolute path cannot carry the Account
+  # id, so it falls back to the static host path exactly as direct entry does.
+  defp surface_href(navigation, surface, key, tenant_id) do
+    ReturnContext.surface_href(navigation, surface, tenant_id) || navigation_path(navigation, key)
   end
 
   defp current_preview_path(assigns) do
@@ -787,7 +819,8 @@ defmodule MailglassAdmin.PreviewLive do
         to:
           build_capture_url(
             socket.assigns.base_path,
-            Integer.to_string(socket.assigns.device_width)
+            Integer.to_string(socket.assigns.device_width),
+            ReturnContext.query_pairs(socket.assigns.return_context)
           )
       )
     else
@@ -795,7 +828,19 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
-  defp build_capture_url(base_path, width), do: base_path <> "?width=" <> width
+  defp build_capture_url(base_path, width, query_pairs) do
+    ReturnContext.append_query(base_path <> "?width=" <> width, query_pairs)
+  end
+
+  # The Back link destination is derived from host navigation only; request
+  # params merely name a closed-set surface and an opaque Account id (D-01).
+  defp assign_return_context(socket, params) do
+    assign(
+      socket,
+      :return_context,
+      ReturnContext.resolve(params, socket.assigns.admin_navigation)
+    )
+  end
 
   # Frame-aware chrome-theme redirect builder (D-05). The `theme` segment is the
   # closed tri-state set the theme_picker emits ("system"|"light"|"dark"); it is

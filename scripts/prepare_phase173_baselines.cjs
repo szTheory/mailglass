@@ -4,11 +4,13 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { validatePinnedBaselines } = require("../reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs");
+const { resolveEvidenceOutputPath } = require("../reference/demo_app/assets/scripts/evidence-output-path.cjs");
 const { writePinnedFile } = require("./phase173_json_output.cjs");
 
 const workspaceRoot = path.resolve(__dirname, "..");
 const sourceRoot = path.join(workspaceRoot, "reference/demo_app/assets/baselines/phase173");
-const outputRoot = path.join(workspaceRoot, "reference/demo_app/tmp/demo_browser_evidence");
+const outputRoot = resolveEvidenceOutputPath(process.env.DEMO_BROWSER_EVIDENCE_DIR ||
+  path.join(workspaceRoot, "reference/demo_app/tmp/demo_browser_evidence"));
 
 function prepareBaselines(source, output, trustedRoot) {
   const baselines = validatePinnedBaselines(source);

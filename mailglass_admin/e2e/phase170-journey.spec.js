@@ -2,6 +2,7 @@ const { test, expect, chromium } = require("@playwright/test");
 const { createHash } = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { accountSwitcher } = require("./support/account.cjs");
 
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
@@ -90,7 +91,7 @@ test.describe("Phase 170 connected", () => {
     await expect(detail).toContainText(recordId);
     await expect(detail).toContainText("browser-tenant");
     await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Initial processing");
-    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-caption")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
     const reveal = page.getByTestId("inbound-evidence-reveal");
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
@@ -98,7 +99,7 @@ test.describe("Phase 170 connected", () => {
     await page.keyboard.press("Enter");
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByTestId("inbound-evidence-raw")).toBeVisible();
-    await page.getByTestId("inbound-evidence-re-redact").click();
+    await reveal.click();
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
 
     const snapshot = page.getByTestId("inbound-timeline-snapshot");
@@ -111,13 +112,15 @@ test.describe("Phase 170 connected", () => {
     await expect(modal).toContainText("browser-tenant");
     await expect(modal).toContainText(recordId);
     await expect(modal).toContainText("Recorded Mailbox:");
-    await expect(modal.getByRole("button", { name: "Close replay review" })).toBeFocused();
+    await expect(modal.getByRole("button", { name: "Close", exact: true })).toBeFocused();
     await modal.getByTestId("inbound-replay-confirm").click();
-    const feedback = page.getByTestId("inbound-replay-feedback");
-    await expect(feedback).toContainText(/Replay run recorded|Replay failed|Replay was already submitted/);
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText("Replay run recorded. Mailbox outcome: Accepted.");
+    await expect(toast).not.toContainText(/delivered|sent/i);
     await expect(modal).toHaveCount(0);
     await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
-    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns);
+    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns + 1);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns + 1);
@@ -176,10 +179,14 @@ test.describe("Phase 170 connected", () => {
     expect(mutation.status, mutation.body).toBe(200);
 
     await page.getByTestId("inbound-replay-confirm").click();
+    const modal = page.getByTestId("inbound-replay-modal");
     await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
-      "Replay review is stale. Reopen it to check the recorded Mailbox again."
+      "Replay review is stale. Review again to check the selected record and recorded Mailbox."
     );
-    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
 
@@ -194,7 +201,11 @@ test.describe("Phase 170 connected", () => {
     await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
       "Replay blocked: this action is not authorized for the current operator."
     );
-    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    const modal = page.getByTestId("inbound-replay-modal");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("button", { name: "Review again", exact: true })).toBeVisible();
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
 
@@ -219,9 +230,9 @@ test.describe("Phase 170 connected", () => {
       click();
     });
 
-    await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
-      /Replay run recorded|Replay was already submitted|Replay is already in progress/
-    );
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toContainText("Replay run recorded. Mailbox outcome: Accepted.");
     await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh history" }).click();
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount + 1);
@@ -271,7 +282,7 @@ test.describe("Phase 170 connected", () => {
 
     const unavailable = page.getByTestId("inbound-read-unavailable");
     await expect(unavailable).toBeVisible();
-    await expect(unavailable).toContainText("Inbound records could not be loaded.");
+    await expect(unavailable).toContainText("The read failed. Your filters are unchanged.");
     await expect(unavailable).not.toContainText("synthetic browser inbound connection failure");
     await expect(page.getByTestId("inbound-empty-truly")).toHaveCount(0);
     await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(0);
@@ -334,7 +345,7 @@ test.describe("Phase 170 rendered", () => {
     await page.keyboard.press("Enter");
     await expect(reveal).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator("[data-testid=\"inbound-evidence-status\"]")).toContainText("Raw source revealed");
-    await page.getByTestId("inbound-evidence-re-redact").focus();
+    await reveal.focus();
     await page.keyboard.press("Enter");
     await expect(reveal).toBeFocused();
 
@@ -378,7 +389,7 @@ test.describe("Phase 170 rendered", () => {
       const geometry = await overflowState(zoomPage);
       expect(geometry.viewport).toBe(720);
       expect(geometry.document, `actual 200% zoom should not scroll horizontally: ${geometry.offenders}`).toBeLessThanOrEqual(720);
-      const accountControl = await zoomPage.getByTestId("operator-account-switcher").boundingBox();
+      const accountControl = await accountSwitcher(zoomPage).boundingBox();
       expect(accountControl.x + accountControl.width, "Account control remains fully visible at actual 200% zoom").toBeLessThanOrEqual(720);
       const appearanceControl = await zoomPage.getByRole("group", { name: "Appearance" }).boundingBox();
       expect(appearanceControl.x + appearanceControl.width, "appearance controls remain fully visible at actual 200% zoom").toBeLessThanOrEqual(720);

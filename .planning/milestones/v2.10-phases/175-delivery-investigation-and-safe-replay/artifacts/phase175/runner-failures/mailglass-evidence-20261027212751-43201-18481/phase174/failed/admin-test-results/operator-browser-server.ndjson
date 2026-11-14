@@ -1,0 +1,10 @@
+{"kind":"stage","elapsed_ms":0,"lane":"browser","schema_version":1,"stage":"booting"}
+{"kind":"stage","elapsed_ms":3,"lane":"browser","schema_version":1,"stage":"starting_mailglass_app"}
+{"kind":"stage","elapsed_ms":4,"lane":"browser","schema_version":1,"stage":"mailglass_started"}
+{"kind":"stage","elapsed_ms":222,"lane":"browser","schema_version":1,"stage":"sandbox_owner_started"}
+{"kind":"stage","elapsed_ms":223,"lane":"browser","schema_version":1,"stage":"admin_bootstrap_complete"}
+{"kind":"stage","elapsed_ms":267,"lane":"browser","schema_version":1,"stage":"fixtures_seeded"}
+{"kind":"stage","elapsed_ms":268,"lane":"browser","schema_version":1,"stage":"tcp_probe_ok"}
+{"kind":"stage","elapsed_ms":339,"lane":"browser","schema_version":1,"stage":"http_probe"}
+{"kind":"stage","elapsed_ms":347,"lane":"browser","schema_version":1,"stage":"http_probe"}
+{"kind":"stage","elapsed_ms":347,"lane":"browser","schema_version":1,"stage":"ready"}

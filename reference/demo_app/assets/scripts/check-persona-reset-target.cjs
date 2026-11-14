@@ -1,5 +1,6 @@
 const SAFE_HOSTS = new Set(["127.0.0.1", "localhost", "demo"]);
-const PROJECT_ID = /^mailglass-evidence-[0-9]{14}-[0-9]+-[0-9]+$/;
+// Local runs use timestamp/PID/random; hosted runs use GitHub run ID/attempt.
+const PROJECT_ID = /^mailglass-evidence-(?:[0-9]{14}-[0-9]+-[0-9]+|[1-9][0-9]*-[1-9][0-9]*)$/;
 
 function evidenceOrigin(env) {
   const raw = env.DEMO_BASE_URL;

@@ -27,7 +27,13 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
         end)
 
       assert output =~ "Preview capture dry-run"
-      assert output =~ "matrix entries: 10"
+      # Six HappyMailer scenarios (Phase 178 added the single-underscore
+      # Unicode scenario that forces the selector's raw-atom fallback) x two widths.
+      assert output =~ "matrix entries: 12"
+
+      assert output =~
+               "MailglassAdmin.Fixtures.HappyMailer:welcome_überraschung_東京_with_a_deliberately_long_name width=375 theme=dark"
+
       assert output =~ "width(s): 375, 768"
       assert output =~ "theme(s): dark"
       assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_default width=375 theme=dark"

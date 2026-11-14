@@ -30,36 +30,39 @@
 - ✅ **v2.1 Postgres + Admin URL Hardening** — Phases 138-140 (shipped 2026-07-08) — [archive](milestones/v2.1-ROADMAP.md)
 - ✅ **v2.2 CI Signal Integrity & Supply-Chain Hygiene** — Phases 141-144 (shipped 2026-07-31) — [archive](milestones/v2.2-ROADMAP.md)
 - ✅ **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (shipped 2026-08-02) — [archive](milestones/v2.3-ROADMAP.md)
-- ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
+- ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04; phase history retained in the v2.5 archive)
 - ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (shipped 2026-08-04) — [archive](milestones/v2.5-ROADMAP.md)
 - ✅ **v2.6 Engineering Quality Ratchet** — Phases 155-160 (shipped 2026-08-21) — [archive](milestones/v2.6-ROADMAP.md)
 - ✅ **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161-165 (shipped 2026-09-15) — [archive](milestones/v2.7-ROADMAP.md)
 - ✅ **v2.8 Truthful Repo** — Phases 166-167 (shipped 2026-09-19) — [archive](milestones/v2.8-ROADMAP.md)
 - ✅ **v2.9 Operator, Preview & Email UI Refinement** — Phases 168-173, 173.1 (shipped 2026-10-26) — [archive](milestones/v2.9-ROADMAP.md)
+- ✅ **v2.10 UI Repairs & Faithful Storybook** — Phases 174–178 (shipped 2026-11-02) — [archive](milestones/v2.10-ROADMAP.md)
 
-## Archived phases
+## Phases
 
 <details>
-<summary>✅ v2.9 Operator, Preview & Email UI Refinement (Phases 168-173, 173.1) — SHIPPED 2026-10-26</summary>
+<summary>✅ v2.10 UI Repairs & Faithful Storybook (Phases 174–178) — SHIPPED 2026-11-02</summary>
 
-- [x] Phase 168: Shared Workspace and Usable Baseline (10/10 plans) — completed 2026-10-08
-- [x] Phase 169: Outbound Investigation and Recovery (5/5 plans) — completed 2026-10-07
-- [x] Phase 170: Inbound Investigation and Recovery (8/8 plans) — completed 2026-10-09
-- [x] Phase 171: Developer Preview (4/4 plans) — completed 2026-10-09
-- [x] Phase 172: Recipient Output and Built-in Pages (3/3 plans) — completed 2026-10-09
-- [x] Phase 173: Consistency and Delivery Evidence (8/8 plans) — completed 2026-10-25
-- [x] Phase 173.1: Address tech debt: demo auth + browser evidence (INSERTED) (5/5 plans) — completed 2026-10-25
+- [x] Phase 174: Faithful Storybook and Quiet Quick Views (6/6 plans) — completed 2026-10-27
+- [x] Phase 175: Delivery Investigation and Safe Replay (6/6 plans) — completed 2026-10-27
+- [x] Phase 176: Direct Filters and Useful Inbound Evidence (16/16 plans) — completed 2026-11-03
+- [x] Phase 177: Readable Health and Coherent Account Navigation (11/11 plans) — completed 2026-11-03
+- [x] Phase 178: Preview Authoring and Milestone Review (37/37 plans) — completed 2026-11-02
 
-Full phase detail: [milestones/v2.9-ROADMAP.md](milestones/v2.9-ROADMAP.md) · phase artifacts: `milestones/v2.9-phases/` · audit: [milestones/v2.9-MILESTONE-AUDIT.md](milestones/v2.9-MILESTONE-AUDIT.md)
+Full phase detail: [milestones/v2.10-ROADMAP.md](milestones/v2.10-ROADMAP.md) · phase artifacts: `milestones/v2.10-phases/` · audit: [milestones/v2.10-MILESTONE-AUDIT.md](milestones/v2.10-MILESTONE-AUDIT.md)
 
 </details>
 
 <details>
-<summary>✅ v2.8 Truthful Repo (Phases 166-167) — SHIPPED 2026-09-19</summary>
+<summary>✅ v2.9 Operator, Preview & Email UI Refinement (Phases 168–173, 173.1) — SHIPPED 2026-10-26</summary>
 
-- [x] Phase 166: Earned Greens and Controls That Can Pass (6/6 plans) — completed 2026-09-19
-- [x] Phase 167: Truthful Documentation and the Standing Control (4/4 plans) — completed 2026-09-19
+Seven phases completed: 43 plans, 82 tasks. Full phase detail: [milestones/v2.9-ROADMAP.md](milestones/v2.9-ROADMAP.md) · phase artifacts: `milestones/v2.9-phases/` · audit: [milestones/v2.9-MILESTONE-AUDIT.md](milestones/v2.9-MILESTONE-AUDIT.md)
 
-Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/`
+</details>
+
+<details>
+<summary>✅ v2.8 Truthful Repo (Phases 166–167) — SHIPPED 2026-09-19</summary>
+
+Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/` · audit: [milestones/v2.8-MILESTONE-AUDIT.md](milestones/v2.8-MILESTONE-AUDIT.md)
 
 </details>

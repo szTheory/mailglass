@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.Fixtures.HappyMailer do
   @moduledoc """
-  Fixture mailable with a healthy `preview_props/0` callback returning five
+  Fixture mailable with a healthy `preview_props/0` callback returning six
   scenarios. Discovery tests assert this produces the expected scenario
   keyword list (CONTEXT D-11); LiveView tests mount the `:welcome_default`
   scenario to drive sidebar/tabs/assigns-form coverage.
@@ -24,6 +24,13 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
       },
       recoverable: %{response: "first"},
       welcome_überraschung_東京__with_a_deliberately_long_name: %{
+        user_name: "Ada",
+        plan: :free,
+        admin?: false
+      },
+      # Humanizes to the same label as the double-underscore scenario above, so
+      # the selector must fall back to raw atoms to tell them apart (D-06).
+      welcome_überraschung_東京_with_a_deliberately_long_name: %{
         user_name: "Ada",
         plan: :free,
         admin?: false
@@ -89,6 +96,16 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
     |> Mailglass.Message.html_body("<p>Surprise, #{assigns.user_name}!</p>")
     |> Mailglass.Message.text_body("Surprise, #{assigns.user_name}!")
     |> Mailglass.Message.put_function(:welcome_überraschung_東京__with_a_deliberately_long_name)
+  end
+
+  def welcome_überraschung_東京_with_a_deliberately_long_name(assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("A single-underscore surprise for #{assigns.user_name}")
+    |> Mailglass.Message.html_body("<p>Single surprise, #{assigns.user_name}!</p>")
+    |> Mailglass.Message.text_body("Single surprise, #{assigns.user_name}!")
+    |> Mailglass.Message.put_function(:welcome_überraschung_東京_with_a_deliberately_long_name)
   end
 end
 

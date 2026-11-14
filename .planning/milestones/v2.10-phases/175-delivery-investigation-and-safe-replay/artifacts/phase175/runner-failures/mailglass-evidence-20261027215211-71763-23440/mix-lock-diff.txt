@@ -1,0 +1,19 @@
+diff --git a/reference/demo_app/mix.lock b/reference/demo_app/mix.lock
+index 5967eba6..7b03b899 100644
+--- a/reference/demo_app/mix.lock
++++ b/reference/demo_app/mix.lock
+@@ -1,6 +1,6 @@
+ %{
+   "bandit": {:hex, :bandit, "1.14.0", "555af34f126edb98d8b6b95bbeba4d5f4c3af21e37535d791f32db2365c532fb", [:mix], [{:hpax, "~> 1.1", [hex: :hpax, repo: "hexpm", optional: false]}, {:plug, "~> 1.18", [hex: :plug, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}, {:thousand_island, "~> 1.6", [hex: :thousand_island, repo: "hexpm", optional: false]}, {:websock, "~> 0.5", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "2d07630e4bf77b55240881386f7629bcc2f87426a299860b2d31c4ad77a48746"},
+-  "boundary": {:hex, :boundary, "0.11.0", "56cff565b5565930765e02782281b022935fe8c2e1504543c8c1b44b85893b40", [:mix], [], "hexpm", "b9297a96ea14c0e63dbd77b8135e0d483f9c6f34ed1c9dee4b3fea82c596f55a"},
++  "boundary": {:hex, :boundary, "0.12.0", "62f14a7e0433279e4f0b3befd76f961496b0776f73de0d473d547e268e303f0a", [:mix], [], "hexpm", "72e60fb369b3c2429e8ddcbd7ececd315bc2e0a0416e11c22679824523c283ba"},
+   "cowboy": {:hex, :cowboy, "2.20.0", "63f6e3afa7e14201498142a10d00379f5e11761f69e69782807c713627f6bc73", [:make, :rebar3], [{:cowlib, ">= 2.21.0 and < 3.0.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, ">= 1.8.0 and < 3.0.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm", "a0be47464a2887f71c061ce90723dc17441c9b81ba9569cd9b596eb0367d1edd"},
+   "cowboy_telemetry": {:hex, :cowboy_telemetry, "0.4.0", "f239f68b588efa7707abce16a84d0d2acf3a0f50571f8bb7f56a15865aae820c", [:rebar3], [{:cowboy, "~> 2.7", [hex: :cowboy, repo: "hexpm", optional: false]}, {:telemetry, "~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "7d98bac1ee4565d31b62d59f8823dfd8356a169e7fcbb83831b8a5397404c9de"},
+   "cowlib": {:hex, :cowlib, "2.21.0", "3ea757c79784bdbdebac7857ce3adf2290af6b8680d4248c75e40ced2e98c89e", [:make, :rebar3], [], "hexpm", "0960248773762a5319b3c17285028bc76f54f58ef0f9451367401bdf67b46274"},
+@@ -57,5 +57,5 @@
+   "thousand_island": {:hex, :thousand_island, "1.6.0", "d6ad7c2220c96a270cc8ca1586ec4d8bde648a4a3a53f003ce093f41beec0288", [:mix], [{:telemetry, "~> 0.4 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "4d4720470f091fc21a1311777c2ac66916c43621bffc068590c9f9bb3cd057a3"},
+   "uuidv7": {:hex, :uuidv7, "1.0.0", "659179b2e248b98f96e7e988b882d369c055b6ae7a836237ccca52cd4d0f6988", [:mix], [{:ecto, "~> 3.12", [hex: :ecto, repo: "hexpm", optional: false]}], "hexpm", "0ecd337108456f7d8b1a9a54ef435443d3f8c10a5b685bd866ef9e396b444cbc"},
+   "websock": {:hex, :websock, "0.5.3", "2f69a6ebe810328555b6fe5c831a851f485e303a7c8ce6c5f675abeb20ebdadc", [:mix], [], "hexpm", "6105453d7fac22c712ad66fab1d45abdf049868f253cf719b625151460b8b453"},
+-  "websock_adapter": {:hex, :websock_adapter, "0.6.0", "73db5ab8aaefd1a876a97ce3e6afc96562625de69ef17a4e04426e034849d0b8", [:mix], [{:bandit, ">= 0.6.0", [hex: :bandit, repo: "hexpm", optional: true]}, {:plug, "~> 1.14", [hex: :plug, repo: "hexpm", optional: false]}, {:plug_cowboy, "~> 2.6", [hex: :plug_cowboy, repo: "hexpm", optional: true]}, {:websock, "~> 0.5", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "50021a85bce8f203b086705d9e0c5415e2c7eb05d319111b0428fe71f9934617"},
++  "websock_adapter": {:hex, :websock_adapter, "0.7.0", "4f9c0a6048dea3f3c6146f3f004b32c5916bc95b4b3644badae88556d9e2007f", [:mix], [{:bandit, ">= 0.6.0", [hex: :bandit, repo: "hexpm", optional: true]}, {:plug, "~> 1.14", [hex: :plug, repo: "hexpm", optional: false]}, {:plug_cowboy, "~> 2.6", [hex: :plug_cowboy, repo: "hexpm", optional: true]}, {:roadrunner_plug, "~> 0.1", [hex: :roadrunner_plug, repo: "hexpm", optional: true]}, {:websock, "~> 0.5", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "a7243f803540425d4890e4c7bc0af9b2519e3935b6c01d9a924ba63527549d65"},
+ }

@@ -22,7 +22,8 @@ defmodule MailglassInbound.ArchitecturePortTest do
         "Mailglass.Webhook.Providers.SES.TrustPolicy"
       ]),
     "lib/mailglass_inbound/internal/operator/detail.ex" => MapSet.new(["Mailglass.Tenancy"]),
-    "lib/mailglass_inbound/internal/operator/records.ex" => MapSet.new(["Mailglass.Tenancy"]),
+    "lib/mailglass_inbound/internal/operator/records.ex" =>
+      MapSet.new(["Mailglass.Clock", "Mailglass.Tenancy"]),
     "lib/mailglass_inbound/internal/operator/summary.ex" => MapSet.new(["Mailglass.Tenancy"]),
     "lib/mailglass_inbound/internal/operator/timeline.ex" => MapSet.new(["Mailglass.Tenancy"]),
     "lib/mailglass_inbound/internal/replay.ex" => MapSet.new(["Mailglass.Tenancy"]),

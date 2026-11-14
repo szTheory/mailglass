@@ -38,3 +38,7 @@ Surface this seed during the next milestone that includes inbound admin usabilit
 At implementation time, compare immediate filter application with the current explicit-submit behavior. Consider debouncing free-text search, preserving shareable URL state and browser history, loading/error feedback, stale-request handling, keyboard/accessibility behavior, and the existing distinction between mailbox-outcome list filtering and summary counts. Keep the interaction simple; avoid adding a dependency unless the existing LiveView/browser primitives cannot support the chosen behavior cleanly.
 
 Captured as a follow-up seed so this interaction change can wait until the rest of the inbound UI is a strong baseline.
+
+## Owner reaffirmation — 2026-10-26
+
+The owner reaffirmed auto-apply for both Inbound and Deliveries; the direction is settled for the next repair-scope candidate, not a fresh comparison of whether an Apply button should remain. [Upstream scope](../research/ui-quality-engine/UPSTREAM-SCOPE.md) recommends the existing form→URL→handle_params lifecycle with immediate selects and native text debounce; OpenGSD resolves implementation/history/failure evidence. No custom search controller or dependency is implied. Lifecycle remains dormant until formal promotion; no milestone or code was changed here.

@@ -1,0 +1,2986 @@
+{
+  "schema": "phase178-recovery-cycle.v1",
+  "cycle": 9,
+  "status": "stopped",
+  "prepared_at": "2026-11-02T17:51:16.590Z",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-08.json",
+    "sha256": "a2873c1c78d1274019e7b2957b0458f6fa480becbc68f4942d5fad178911f2f8"
+  },
+  "candidate": {
+    "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "parent": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "local_branch": "gsd/phase178-cycle08-local",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_before_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "commits_ahead": 1,
+    "commits_behind": 0,
+    "files_changed": 1,
+    "source_files": [
+      "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs"
+    ],
+    "source_hashes": {
+      "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs": "538d2dc60ef52815ba1ca9b866118dc4254eb126e4a0f66bdfbeb851b6cb8523"
+    },
+    "git_blob_shas": {
+      "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs": "55727779e811cb833d4ca738527666ba74336ad3"
+    },
+    "commit_subject": "test(inbound): allow shared clock architecture edge",
+    "demo_lock_path": "reference/demo_app/mix.lock",
+    "demo_lock_sha256": "f4fe601bc03dbccf0bca72acc0307897a090ecdd9b96a5c039c687cd92a3f7cd"
+  },
+  "preapproval_snapshot": {
+    "captured_at": "2026-11-02T17:51:16.590Z",
+    "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "remote_target_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+    "pr": {
+      "number": 317,
+      "url": "https://github.com/szTheory/mailglass/pull/317",
+      "state": "OPEN",
+      "is_draft": true,
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "base_ref": "main",
+      "head_ref": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba"
+    },
+    "release_ledger": {
+      "path": ".planning/release-target.json",
+      "sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "candidate_is_fast_forward_from_target": true,
+    "main_is_push_target": false,
+    "rechecked_at": "2026-11-02T18:09:36Z"
+  },
+  "local_evidence": {
+    "checks": {
+      "architecture_contract": {
+        "status": "pass",
+        "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.13 mix test test/mailglass_inbound/architecture_port_test.exs",
+        "exit_code": 0,
+        "result": "3 tests, 0 failures"
+      },
+      "inbound_unit_suite": {
+        "status": "pass",
+        "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.13 mix test --exclude property",
+        "exit_code": 0,
+        "result": "3 properties, 481 tests, 0 failures, 3 excluded"
+      },
+      "inbound_convergence_property": {
+        "status": "pass",
+        "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.13 mix test --only property",
+        "exit_code": 0,
+        "result": "Finished in 174.8 seconds; 3 properties, 481 tests, 0 failures, 481 excluded"
+      },
+      "format_check": {
+        "status": "pass",
+        "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.13 mix format --check-formatted test/mailglass_inbound/architecture_port_test.exs",
+        "exit_code": 0
+      },
+      "diff_check": {
+        "status": "pass",
+        "command": "git diff --check 0942d667c50247b7794bc52cbadcc2b65a850d61..5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "exit_code": 0
+      }
+    },
+    "receipt": {
+      "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/local-verification-receipts.md",
+      "sha256": "6eecdae3fad5b3bcdc8912d50f952253a88bf9010a94cf540d81edff025ac843",
+      "kind": "concise tool-result transcript; not raw test logs"
+    }
+  },
+  "packet": {
+    "approval_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/approval.md",
+    "approval_sha256": "909b189539e5e38474dd88abec2830ea60d291ecd3409806538b55374e7bb87a",
+    "pr_body_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/pr-body.md",
+    "pr_body_sha256": "35e7d2e43077e2b2a6dae47a18c3b8e2dc75b0427f73790241b30be2af6d8a2f"
+  },
+  "approval_checkpoint": {
+    "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "user_reply": "So, what do you mean my separate host and conditional preview choices? That's a lot. Can you give me like a very human readable summary that is not AI slop? And also, I feel like I shouldn't have to apply. I'll give you approvals for all these specific SH SHA hashes. Like, if you're just asking if you can push up your work remotely in a PR, yeah, you can always do that as long as there's no PII in the Git commits. That's fine. But then also, whenever you see CI running, I want you to have like lessons learned for this being an outstanding rule. That you lessons learned going forward. Like if CI is slow, look for low hanging fruits for optimization and make it faster so that we're not wasting time and resources. But otherwise, yeah, I do approve you to pushing up work to make a PR and stuff or whatever is best practice there.",
+    "recorded_at": "2026-11-02T18:03:40Z",
+    "hosted_decision": "approve",
+    "preview_decision": "deferred",
+    "decision": "hosted_approved_preview_deferred",
+    "decision_basis": "The owner gave standing permission for no-PII review-branch/PR delivery and its normal or phase-required CI, without per-SHA reapproval. This active packet binds that permission to the current Cycle 09 candidate and its existing run limits. The reply did not authorize a local preview, so preview authority remains unset.",
+    "operations": [
+      "one_fast_forward_push",
+      "one_pr_body_update",
+      "one_ci_yml_dispatch",
+      "attempt_1_only",
+      "max_8_workflow_runs",
+      "no_retries",
+      "no_reruns",
+      "no_cancellations"
+    ]
+  },
+  "authority": {
+    "hosted": {
+      "decision": "approve",
+      "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "recorded_at": "2026-11-02T18:03:40Z",
+      "user_reply": "So, what do you mean my separate host and conditional preview choices? That's a lot. Can you give me like a very human readable summary that is not AI slop? And also, I feel like I shouldn't have to apply. I'll give you approvals for all these specific SH SHA hashes. Like, if you're just asking if you can push up your work remotely in a PR, yeah, you can always do that as long as there's no PII in the Git commits. That's fine. But then also, whenever you see CI running, I want you to have like lessons learned for this being an outstanding rule. That you lessons learned going forward. Like if CI is slow, look for low hanging fruits for optimization and make it faster so that we're not wasting time and resources. But otherwise, yeah, I do approve you to pushing up work to make a PR and stuff or whatever is best practice there.",
+      "operations": [
+        "one_fast_forward_push",
+        "one_pr_body_update",
+        "one_ci_yml_dispatch",
+        "attempt_1_only",
+        "max_8_workflow_runs",
+        "no_retries",
+        "no_reruns",
+        "no_cancellations"
+      ],
+      "condition": "Recheck candidate SHA, remote refs, PR #317 state/base/head/body and release-ledger digest before each write; dispatch only after exact-SHA required and Demo gates pass."
+    },
+    "preview": {
+      "decision": "approve",
+      "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "recorded_at": "2026-11-02T19:08:06Z",
+      "user_reply": "yes u dont have to ask me either going forward for this kind of thing plz...",
+      "conditional_on": "hosted_and_cost_gates_pass",
+      "scope": "One isolated loopback preview for this exact candidate; the same bounded preview authority applies to candidates in already approved phase plans after their exact-SHA hosted and cost gates pass.",
+      "operations": [
+        "one_isolated_loopback_preview",
+        "attempt_1_only",
+        "no_retry_or_relaunch",
+        "candidate_scoped_resources",
+        "no_merge_release_publication_or_deployment"
+      ]
+    },
+    "preview_recovery": {
+      "decision": "approve",
+      "user_reply": "approve attempt 2",
+      "recorded_at": "2026-11-02T20:00:05Z",
+      "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "attempt": 2,
+      "scope": "one_attempt_2_loopback_preview_only",
+      "operations": [
+        "launch_once",
+        "no_retry_or_relaunch",
+        "candidate_scoped_cleanup",
+        "no_GitHub_write_or_CI",
+        "no_merge_release_publication_deployment"
+      ]
+    },
+    "preview_recovery_attempts": [
+      {
+        "decision": "approve",
+        "user_reply": "run once",
+        "recorded_at": "2026-11-02T22:08:35.562Z",
+        "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "attempt": 3,
+        "scope": "one_attempt_3_loopback_preview_only",
+        "operations": [
+          "launch_once",
+          "no_retry_or_relaunch",
+          "candidate_scoped_cleanup",
+          "no_GitHub_write_or_CI",
+          "no_merge_release_publication_deployment"
+        ]
+      }
+    ]
+  },
+  "owner_decision": {
+    "decision": "ship",
+    "user_reply": "yeah this is fine i accept it",
+    "recorded_at": "2026-11-02T22:33:51.927Z",
+    "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "scope": "review_acceptance_and_candidate_scoped_cleanup_only",
+    "cleanup_completed_at": "2026-11-02T22:34:52.974Z"
+  },
+  "hosted": {
+    "status": "submitted",
+    "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "push_result": {
+      "status": "success",
+      "completed_at": "2026-11-02T18:10:37.630Z",
+      "remote_branch": "gsd/v2.10-ui-repairs-storybook",
+      "from": "0942d667c50247b7794bc52cbadcc2b65a850d61",
+      "to": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "method": "non-forced fast-forward"
+    },
+    "pr_update_result": {
+      "status": "success",
+      "updated_at": "2026-11-02T18:31:28.891Z",
+      "method": "body-only",
+      "old_body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+      "new_body_sha256": "35e7d2e43077e2b2a6dae47a18c3b8e2dc75b0427f73790241b30be2af6d8a2f"
+    },
+    "dispatch_result": {
+      "status": "submitted",
+      "run_id": 41501525366,
+      "event": "workflow_dispatch",
+      "attempt": 1,
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366",
+      "submitted_at": "2026-11-02T18:32:22Z"
+    },
+    "operations_used": {
+      "fast_forward_pushes": 1,
+      "pr_body_updates": 1,
+      "ci_yml_dispatches": 1,
+      "workflow_runs": 8,
+      "retries_or_reruns": 0,
+      "cancellations": 0
+    },
+    "runs": [
+      {
+        "id": 41497959738,
+        "name": "PR Title",
+        "workflow_path": ".github/workflows/pr-title.yml",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:10:01Z",
+        "updated_at": "2026-11-02T18:10:09Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497959738",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "runner_minutes": 0.08,
+        "duration_seconds": 8,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/run.raw.json",
+            "bytes": 12499,
+            "sha256": "771925ac1b383a106722dd09d60acef71c25bf9cb54917da5b4d4f63aa47c80f"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/jobs.raw.json",
+            "bytes": 1421,
+            "sha256": "79352c655f9929c087f59447a0ea9d6be0eb9bbb291948bd4db57cfdb57c7a79"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41497959738,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/log.txt",
+            "raw_bytes": 4688,
+            "raw_sha256": "87e59117e06247e9b9cd1a64f8bf117cdfb8778bd4cf13c1c9ac1db8c9589450",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/log.txt.gz",
+            "compressed_bytes": 1044,
+            "compressed_sha256": "5e43d32c7e9668e223da33f9c8d4ac4a2701009c56b6c79f267087ecc1850736",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125457761585,
+            "name": "Conventional PR Title",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:04Z",
+            "completed_at": "2026-11-02T18:10:09Z",
+            "duration_seconds": 5
+          }
+        ],
+        "artifacts": []
+      },
+      {
+        "id": 41497963277,
+        "name": "Guard Release Trigger",
+        "workflow_path": ".github/workflows/guard-release-trigger.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:10:02Z",
+        "updated_at": "2026-11-02T18:10:18Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963277",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "runner_minutes": 0.2,
+        "duration_seconds": 16,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/run.raw.json",
+            "bytes": 12518,
+            "sha256": "3223cbcb59471e7c929c3a5316225828cde1eb4e2be1cd0193a0fcc4d38c8faa"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/jobs.raw.json",
+            "bytes": 1961,
+            "sha256": "73ef606abf70636c783af21af3717ab5ea6075455aa3b67c9c9f8e76178913e3"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41497963277,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/log.txt",
+            "raw_bytes": 53739,
+            "raw_sha256": "39e46593aeb2747538b664e85599f389ee712e756eade304d80466a7e48af8c8",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/log.txt.gz",
+            "compressed_bytes": 7463,
+            "compressed_sha256": "eabe1bac91bfd96ef2d4fe1f7b9dbac415974059701333ec421ab9dd3c8e9e26",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125457771594,
+            "name": "Guard Release Trigger",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:10:17Z",
+            "duration_seconds": 12
+          }
+        ],
+        "artifacts": []
+      },
+      {
+        "id": 41497963281,
+        "name": "Advisory Matrix",
+        "workflow_path": ".github/workflows/advisory-matrix.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:10:02Z",
+        "updated_at": "2026-11-02T18:10:06Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963281",
+        "job_total": 6,
+        "completed_jobs": 6,
+        "failed_jobs": [],
+        "runner_minutes": 29.98,
+        "duration_seconds": 769,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/run.raw.json",
+            "bytes": 12506,
+            "sha256": "79aaed375ab03444f86f49a0b08ff6257028ac84fbeeca90697b562c0ea50cc0"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/jobs.raw.json",
+            "bytes": 16602,
+            "sha256": "df5cd1e1bf4f6d88cb8c8003bd3c1d70845ef237703913feaadf78c4609e1894"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41497963281,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/log.txt",
+            "raw_bytes": 73718187,
+            "raw_sha256": "c3fae09b8c752d816d7aeb3ebea6d1e83250436478517947d3dae1ed29994d18",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/log.txt.gz",
+            "compressed_bytes": 3350950,
+            "compressed_sha256": "38026f51a00ac221c4087e571dbc1f63ed4a30595d64ff218aa9af2d5f70a5b3",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125457772167,
+            "name": "Inbound Full Suite Advisory (schema mailglass)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:13:36Z",
+            "duration_seconds": 211
+          },
+          {
+            "id": 125457772647,
+            "name": "Provider Compatibility Advisory (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:11:54Z",
+            "duration_seconds": 109
+          },
+          {
+            "id": 125457772686,
+            "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:04Z",
+            "completed_at": "2026-11-02T18:22:50Z",
+            "duration_seconds": 766
+          },
+          {
+            "id": 125457772768,
+            "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:18:19Z",
+            "duration_seconds": 494
+          },
+          {
+            "id": 125457772858,
+            "name": "Inbound Full Suite Advisory (schema public)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:13:44Z",
+            "duration_seconds": 219
+          },
+          {
+            "id": 125457774935,
+            "name": "Core Full Suite Next Toolchain Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})",
+            "status": "completed",
+            "conclusion": "skipped",
+            "started_at": "2026-11-02T18:10:03Z",
+            "completed_at": "2026-11-02T18:10:02Z",
+            "duration_seconds": -1
+          }
+        ],
+        "artifacts": []
+      },
+      {
+        "id": 41497963359,
+        "name": "CI",
+        "workflow_path": ".github/workflows/ci.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:10:02Z",
+        "updated_at": "2026-11-02T18:10:19Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359",
+        "job_total": 26,
+        "completed_jobs": 26,
+        "failed_jobs": [],
+        "runner_minutes": 119.12,
+        "duration_seconds": 1081,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/run.raw.json",
+            "bytes": 12480,
+            "sha256": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/jobs.raw.json",
+            "bytes": 74801,
+            "sha256": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/artifacts.raw.json",
+            "bytes": 2935,
+            "sha256": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa"
+          },
+          "log": {
+            "run_id": 41497963359,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/log.txt",
+            "raw_bytes": 65824136,
+            "raw_sha256": "e94c226aaaefbb1a26895081631582e148e8d939f875bb9508f2d7b02493fb3c",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/log.txt.gz",
+            "compressed_bytes": 3755177,
+            "compressed_sha256": "8930c96d4b87b281d30afda0479c7153fef4fa22453b8d0131e7d12fe13017d9",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125457772354,
+            "name": "Branch Protection Advisory",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:04Z",
+            "completed_at": "2026-11-02T18:10:14Z",
+            "duration_seconds": 10
+          },
+          {
+            "id": 125457772691,
+            "name": "Detect Non-Doc Changes",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:04Z",
+            "completed_at": "2026-11-02T18:10:12Z",
+            "duration_seconds": 8
+          },
+          {
+            "id": 125457856778,
+            "name": "Support Contract Core (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:22:21Z",
+            "duration_seconds": 727
+          },
+          {
+            "id": 125457856815,
+            "name": "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:11:40Z",
+            "duration_seconds": 86
+          },
+          {
+            "id": 125457856862,
+            "name": "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:23Z",
+            "duration_seconds": 129
+          },
+          {
+            "id": 125457856915,
+            "name": "Format Check (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:10:41Z",
+            "duration_seconds": 27
+          },
+          {
+            "id": 125457856944,
+            "name": "Installer Host Smoke",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:13Z",
+            "completed_at": "2026-11-02T18:16:21Z",
+            "duration_seconds": 368
+          },
+          {
+            "id": 125457856945,
+            "name": "Credo Strict (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:35Z",
+            "duration_seconds": 141
+          },
+          {
+            "id": 125457857154,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:14:55Z",
+            "duration_seconds": 281
+          },
+          {
+            "id": 125457857170,
+            "name": "Mix Task Tests (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:16:47Z",
+            "duration_seconds": 393
+          },
+          {
+            "id": 125457857276,
+            "name": "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:01Z",
+            "duration_seconds": 107
+          },
+          {
+            "id": 125457857365,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:28:03Z",
+            "duration_seconds": 1069
+          },
+          {
+            "id": 125457857419,
+            "name": "Deps Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:01Z",
+            "duration_seconds": 107
+          },
+          {
+            "id": 125457857482,
+            "name": "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:56Z",
+            "duration_seconds": 162
+          },
+          {
+            "id": 125457857519,
+            "name": "Installer Golden Gate (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:19Z",
+            "duration_seconds": 125
+          },
+          {
+            "id": 125457857534,
+            "name": "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:14:58Z",
+            "duration_seconds": 284
+          },
+          {
+            "id": 125457857539,
+            "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:16:40Z",
+            "duration_seconds": 386
+          },
+          {
+            "id": 125457857561,
+            "name": "Dialyzer (Elixir 1.18 / OTP 27) (1.18, 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:15Z",
+            "completed_at": "2026-11-02T18:13:20Z",
+            "duration_seconds": 185
+          },
+          {
+            "id": 125457857573,
+            "name": "Core Deterministic Suite (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:25:40Z",
+            "duration_seconds": 926
+          },
+          {
+            "id": 125457857606,
+            "name": "Hex Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:22Z",
+            "duration_seconds": 128
+          },
+          {
+            "id": 125457857616,
+            "name": "Support Contract Admin (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:19Z",
+            "completed_at": "2026-11-02T18:14:20Z",
+            "duration_seconds": 241
+          },
+          {
+            "id": 125457857656,
+            "name": "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:12:15Z",
+            "duration_seconds": 121
+          },
+          {
+            "id": 125457857678,
+            "name": "Design System Conformance (shell gates)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:10:25Z",
+            "duration_seconds": 11
+          },
+          {
+            "id": 125457857734,
+            "name": "Inbound Dialyzer (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:15Z",
+            "completed_at": "2026-11-02T18:13:12Z",
+            "duration_seconds": 177
+          },
+          {
+            "id": 125457857735,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:14Z",
+            "completed_at": "2026-11-02T18:25:49Z",
+            "duration_seconds": 935
+          },
+          {
+            "id": 125466296472,
+            "name": "CI Green",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:25:42Z",
+            "completed_at": "2026-11-02T18:25:55Z",
+            "duration_seconds": 13
+          }
+        ],
+        "artifacts": [
+          {
+            "id": 13168161001,
+            "name": "trust-runner-clean-baseline-41497963359",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13168006641,
+            "name": "trust-runner-repo-head-41497963359",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13167058323,
+            "name": "preview-capture-advisory-41497963359",
+            "size_in_bytes": 2773659,
+            "expired": false
+          },
+          {
+            "id": 13166934984,
+            "name": "demo-browser-evidence-41497963359-1",
+            "size_in_bytes": 7895318,
+            "expired": false
+          }
+        ]
+      },
+      {
+        "id": 41497963451,
+        "name": "Actionlint",
+        "workflow_path": ".github/workflows/actionlint.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:10:02Z",
+        "updated_at": "2026-11-02T18:10:05Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963451",
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "runner_minutes": 0.85,
+        "duration_seconds": 55,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/run.raw.json",
+            "bytes": 12495,
+            "sha256": "98807c209436f318494ae750327f7ccf07ec6219e9c5678d0cb6e4294cbb70a2"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/jobs.raw.json",
+            "bytes": 2242,
+            "sha256": "2bdf5b085b03a5e2b7dd4422d086f1901f072e3243e09b9b7893b7b7577f99a6"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41497963451,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/log.txt",
+            "raw_bytes": 64296,
+            "raw_sha256": "e979df554882143d11e21d51a771862602d50c1e818a2d4f9d8fd31fcdd6e95f",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/log.txt.gz",
+            "compressed_bytes": 10092,
+            "compressed_sha256": "4c0ab9c37abf06f737fb36f7124a4607517b8e917485780adbad7b912c9213e9",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125457771624,
+            "name": "actionlint",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:10:05Z",
+            "completed_at": "2026-11-02T18:10:56Z",
+            "duration_seconds": 51
+          }
+        ],
+        "artifacts": []
+      },
+      {
+        "id": 41501371720,
+        "name": "PR Title",
+        "workflow_path": ".github/workflows/pr-title.yml",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:31:24Z",
+        "updated_at": "2026-11-02T18:31:31Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501371720",
+        "duration_seconds": 7,
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "runner_minutes": 0.07,
+        "jobs": [
+          {
+            "id": 125469413870,
+            "name": "Conventional PR Title",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:31:26Z",
+            "completed_at": "2026-11-02T18:31:30Z",
+            "duration_seconds": 4
+          }
+        ],
+        "artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/run.raw.json",
+            "bytes": 12499,
+            "sha256": "3af490c000f854788b98a8ea35ea37753223d8fa5e257897cf2085098caef64d"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/jobs.raw.json",
+            "bytes": 1421,
+            "sha256": "f4af391f87a89d8f2c06f130ea16d00a11e09c32430cc8bce1f2c43e4126bc7e"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41501371720,
+            "raw_bytes": 4686,
+            "raw_sha256": "574652ba87f046df78bc8a66973fada2bdef2c861af3ab696f6137481c9de20c",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/log.txt.gz",
+            "compressed_bytes": 1043,
+            "compressed_sha256": "0b703710158b64c1a01892967fe6f8dfdfd2f0b16a5f0f25bd6278022674976d",
+            "verified_round_trip": true
+          }
+        }
+      },
+      {
+        "id": 41501370811,
+        "name": "Guard Release Trigger",
+        "workflow_path": ".github/workflows/guard-release-trigger.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:31:23Z",
+        "updated_at": "2026-11-02T18:31:34Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501370811",
+        "duration_seconds": 11,
+        "job_total": 1,
+        "completed_jobs": 1,
+        "failed_jobs": [],
+        "runner_minutes": 0.12,
+        "jobs": [
+          {
+            "id": 125469408905,
+            "name": "Guard Release Trigger",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:31:26Z",
+            "completed_at": "2026-11-02T18:31:33Z",
+            "duration_seconds": 7
+          }
+        ],
+        "artifacts": [],
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/run.raw.json",
+            "bytes": 12518,
+            "sha256": "f0073161b2f6a9a12fe5e81442fbba3c4c75ba88f4d45b37ab0d384c64f428d9"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/jobs.raw.json",
+            "bytes": 1961,
+            "sha256": "9ca64b9dfff32d69f1349d2a5c495fcf1ab32b6ef5d301551f7033343741b099"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/artifacts.raw.json",
+            "bytes": 32,
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "log": {
+            "run_id": 41501370811,
+            "raw_bytes": 53739,
+            "raw_sha256": "5e3d4197d188514813784673b651b137862ac2c61c50fd50b64f04d736ebc4b3",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/log.txt.gz",
+            "compressed_bytes": 7430,
+            "compressed_sha256": "bd51f8db1d3aac32b95f55bb2a98fcfa7c17b9a029f85cf856331f7fc6577b49",
+            "verified_round_trip": true
+          }
+        }
+      },
+      {
+        "id": 41501525366,
+        "name": "CI",
+        "workflow_path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T18:32:22Z",
+        "updated_at": "2026-11-02T18:51:20Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366",
+        "job_total": 26,
+        "completed_jobs": 26,
+        "failed_jobs": [],
+        "runner_minutes": 117.18,
+        "duration_seconds": 1138,
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/run.raw.json",
+            "bytes": 12428,
+            "sha256": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/jobs.raw.json",
+            "bytes": 74801,
+            "sha256": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/artifacts.raw.json",
+            "bytes": 2935,
+            "sha256": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2"
+          },
+          "log": {
+            "run_id": 41501525366,
+            "raw_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/log.txt",
+            "raw_bytes": 61530931,
+            "raw_sha256": "60ad04b28e2262532f20b65609b0967a865f140018c3ab9b9792692358c559a9",
+            "compressed_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/log.txt.gz",
+            "compressed_bytes": 3723528,
+            "compressed_sha256": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+            "verified_round_trip": true
+          }
+        },
+        "jobs": [
+          {
+            "id": 125469946953,
+            "name": "Detect Non-Doc Changes",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:26Z",
+            "completed_at": "2026-11-02T18:32:36Z",
+            "duration_seconds": 10
+          },
+          {
+            "id": 125469947485,
+            "name": "Branch Protection Advisory",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:25Z",
+            "completed_at": "2026-11-02T18:32:43Z",
+            "duration_seconds": 18
+          },
+          {
+            "id": 125470064005,
+            "name": "Mix Task Tests (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:38:55Z",
+            "duration_seconds": 377
+          },
+          {
+            "id": 125470064016,
+            "name": "Format Check (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:32:56Z",
+            "duration_seconds": 18
+          },
+          {
+            "id": 125470064091,
+            "name": "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:34:28Z",
+            "duration_seconds": 110
+          },
+          {
+            "id": 125470064148,
+            "name": "Installer Host Smoke",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:38:50Z",
+            "duration_seconds": 372
+          },
+          {
+            "id": 125470064249,
+            "name": "Support Contract Core (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:39Z",
+            "completed_at": "2026-11-02T18:43:02Z",
+            "duration_seconds": 623
+          },
+          {
+            "id": 125470064374,
+            "name": "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:34:48Z",
+            "duration_seconds": 130
+          },
+          {
+            "id": 125470064431,
+            "name": "Core Deterministic Suite (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:48:14Z",
+            "duration_seconds": 936
+          },
+          {
+            "id": 125470064444,
+            "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:38:45Z",
+            "duration_seconds": 367
+          },
+          {
+            "id": 125470064533,
+            "name": "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:39Z",
+            "completed_at": "2026-11-02T18:37:15Z",
+            "duration_seconds": 276
+          },
+          {
+            "id": 125470064606,
+            "name": "Credo Strict (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:48Z",
+            "completed_at": "2026-11-02T18:35:21Z",
+            "duration_seconds": 153
+          },
+          {
+            "id": 125470064611,
+            "name": "Inbound Dialyzer (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:35:59Z",
+            "duration_seconds": 201
+          },
+          {
+            "id": 125470064622,
+            "name": "Dialyzer (Elixir 1.18 / OTP 27) (1.18, 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:33:06Z",
+            "completed_at": "2026-11-02T18:35:09Z",
+            "duration_seconds": 123
+          },
+          {
+            "id": 125470064716,
+            "name": "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:39Z",
+            "completed_at": "2026-11-02T18:35:42Z",
+            "duration_seconds": 183
+          },
+          {
+            "id": 125470064720,
+            "name": "Support Contract Admin (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:37:24Z",
+            "duration_seconds": 286
+          },
+          {
+            "id": 125470064742,
+            "name": "Hex Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:33:21Z",
+            "completed_at": "2026-11-02T18:34:45Z",
+            "duration_seconds": 84
+          },
+          {
+            "id": 125470064745,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:48Z",
+            "completed_at": "2026-11-02T18:44:27Z",
+            "duration_seconds": 699
+          },
+          {
+            "id": 125470064751,
+            "name": "Design System Conformance (shell gates)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:45Z",
+            "completed_at": "2026-11-02T18:32:56Z",
+            "duration_seconds": 11
+          },
+          {
+            "id": 125470064778,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:38Z",
+            "completed_at": "2026-11-02T18:51:19Z",
+            "duration_seconds": 1121
+          },
+          {
+            "id": 125470064803,
+            "name": "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:39Z",
+            "completed_at": "2026-11-02T18:34:28Z",
+            "duration_seconds": 109
+          },
+          {
+            "id": 125470064853,
+            "name": "Installer Golden Gate (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:53Z",
+            "completed_at": "2026-11-02T18:35:01Z",
+            "duration_seconds": 128
+          },
+          {
+            "id": 125470064924,
+            "name": "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:33:07Z",
+            "completed_at": "2026-11-02T18:34:54Z",
+            "duration_seconds": 107
+          },
+          {
+            "id": 125470064981,
+            "name": "Deps Audit (Elixir 1.18 / OTP 27)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:58Z",
+            "completed_at": "2026-11-02T18:35:06Z",
+            "duration_seconds": 128
+          },
+          {
+            "id": 125470065010,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:32:57Z",
+            "completed_at": "2026-11-02T18:40:24Z",
+            "duration_seconds": 447
+          },
+          {
+            "id": 125478449475,
+            "name": "CI Green",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-02T18:48:16Z",
+            "completed_at": "2026-11-02T18:48:30Z",
+            "duration_seconds": 14
+          }
+        ],
+        "artifacts": [
+          {
+            "id": 13170360340,
+            "name": "preview-capture-advisory-41501525366",
+            "size_in_bytes": 2772408,
+            "expired": false
+          },
+          {
+            "id": 13169750516,
+            "name": "trust-runner-clean-baseline-41501525366",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13169726533,
+            "name": "demo-browser-evidence-41501525366-1",
+            "size_in_bytes": 7902564,
+            "expired": false
+          },
+          {
+            "id": 13169680828,
+            "name": "trust-runner-repo-head-41501525366",
+            "size_in_bytes": 896,
+            "expired": false
+          }
+        ]
+      }
+    ],
+    "stop": null,
+    "initial_run_list": {
+      "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/workflow-list-after-push.raw.json",
+      "sha256": "139429c3b39d2a46074ae2c57e625f0958fa990cee0141345e4aef6cfaf363a1"
+    },
+    "initial_gates": {
+      "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "all_runs_attempt_1": true,
+      "all_workflows_success": true,
+      "required_contexts": {
+        "CI Green": "success",
+        "Guard Release Trigger": "success"
+      },
+      "browser_lanes": {
+        "Demo Browser Evidence": "success",
+        "Operator Browser Gate": "success"
+      },
+      "observed_at": "2026-11-02T18:30:55.678Z"
+    },
+    "downloaded_evidence": {
+      "artifact_root": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/downloaded-artifacts",
+      "artifact_file_count": 192,
+      "artifact_bytes": 13736278,
+      "manifest": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/downloaded-artifact-manifest.json",
+        "sha256": "8831c821b863b74e731f862b214b50d5507546b923cc577924b5261bf3e08cf6"
+      },
+      "log_manifest": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/log-manifest.json",
+        "sha256": "f2d8eb639622992a71c8a5e9784bf3007c822b6880703ac065f788c49ad303d6"
+      },
+      "merge_revision": {
+        "sha": "214c3c58ae5e25cdf49c2b4206d416bbb8048761",
+        "parents": [
+          "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+          "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+        ],
+        "expected_parents": [
+          "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+          "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+        ],
+        "parents_match": true,
+        "raw": {
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/pr-merge-commit-214c3c58ae5e25cdf49c2b4206d416bbb8048761.raw.json",
+          "bytes": 2631,
+          "sha256": "7d61179f34f675071a577ae071bee6fc0aaa0eb2a10fcbec760b76fc825513aa"
+        },
+        "interpretation": "PR browser artifacts ran on GitHub merge commit whose parents are base main and the exact candidate SHA."
+      },
+      "dispatch": {
+        "artifact_root": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifacts",
+        "artifact_file_count": 192,
+        "artifact_bytes": 13740033,
+        "manifest": {
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifact-manifest.json",
+          "sha256": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b"
+        },
+        "demo_cost": {
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifacts/demo-browser-evidence-41501525366-1/phase174/cost.json",
+          "sha256": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9",
+          "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff"
+        },
+        "preview_capture_advisory": {
+          "artifact_id": 13170360340,
+          "artifact_name": "preview-capture-advisory-41501525366",
+          "manifest_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifacts/preview-capture-advisory-41501525366/manifest.json",
+          "manifest_sha256": "258237a6d6f9b1e85f722deffe5734e58465cfb6bbac407a3ab04e546c6c8daa",
+          "capture_count": 36,
+          "candidate_revisions": [
+            "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+          ]
+        },
+        "log": {
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/log.txt.gz",
+          "raw_bytes": 61530931,
+          "raw_sha256": "60ad04b28e2262532f20b65609b0967a865f140018c3ab9b9792692358c559a9",
+          "compressed_bytes": 3723528,
+          "compressed_sha256": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+          "verified_round_trip": true
+        }
+      }
+    },
+    "edited_run_list": {
+      "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/workflow-list-after-pr-edit.raw.json",
+      "sha256": "8dfc4b62ac452d5f400c3c39828b1bfce72a04c72f600de259ebcba80fdd76d3"
+    },
+    "pr_edit_gates": {
+      "status": "pass",
+      "run_ids": [
+        41501370811,
+        41501371720
+      ],
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "attempt": 1,
+      "observed_at": "2026-11-02T18:32:08.826Z"
+    },
+    "dispatch_run_list": {
+      "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/workflow-list-after-dispatch.raw.json",
+      "sha256": "1d653ee8c1d4d48b9636ec22d7ace671dfc26d9da0f16cbcd745a8857df8b106",
+      "total_count": 8
+    },
+    "completed_at": "2026-11-02T18:51:20Z",
+    "conclusion": "success",
+    "dispatch_artifact": {
+      "id": 13169726533,
+      "run_id": 41501525366,
+      "run_attempt": 1,
+      "event": "workflow_dispatch",
+      "name": "demo-browser-evidence-41501525366-1",
+      "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff",
+      "conditions": [
+        {
+          "condition": "cold",
+          "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff",
+          "expected_counts": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "executed_counts": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        },
+        {
+          "condition": "warm",
+          "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff",
+          "expected_counts": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "executed_counts": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        }
+      ],
+      "cost_file": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifacts/demo-browser-evidence-41501525366-1/phase174/cost.json",
+        "bytes": 5677,
+        "sha256": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9"
+      },
+      "manifest": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/downloaded-artifact-manifest.json",
+        "sha256": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b",
+        "file_count": 192,
+        "bytes": 13740033
+      },
+      "source_revision_matches_candidate": true,
+      "all_source_revision_fields_match_candidate": true
+    },
+    "final_gates": {
+      "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "all_runs_attempt_1": true,
+      "all_runs_success": true,
+      "total_workflow_runs": 8,
+      "workflow_run_list_sha256": "1d653ee8c1d4d48b9636ec22d7ace671dfc26d9da0f16cbcd745a8857df8b106",
+      "required_contexts": {
+        "CI_Green": "success",
+        "Guard_Release_Trigger": "success"
+      },
+      "browser_lanes": {
+        "Demo_Browser_Evidence": "success",
+        "Operator_Browser_Gate": "success"
+      },
+      "preview_capture_advisory": "success",
+      "expected_executed_counts": "match",
+      "dispatch_artifact_source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "observed_at": "2026-11-02T18:51:20Z"
+    }
+  },
+  "cost": {
+    "status": "measured",
+    "reproducible": true,
+    "identity_bound": true,
+    "gate": "pass_with_supported_overage",
+    "preview_eligible": true,
+    "artifact": ".planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-09-COST-DISPOSITION.json",
+    "input_copies": [
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/expected.json",
+        "sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/baseline-run.raw.json",
+        "sha256": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/baseline-jobs.raw.json",
+        "sha256": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+        "byte_identical": true
+      }
+    ],
+    "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "artifact_sha256": "57232ac8cf6b20e5b045b6346ea0f2436e43ff7009ff0b305f01028ca737f6da",
+    "raw_generator_sha256": "4555af90263b83b22ad31bb5e93ec7b711043661f04fca2814dc52d005ee3488",
+    "reproducibility": {
+      "raw_outputs_byte_identical": true,
+      "raw_output_paths": [
+        "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/generated-disposition.raw.json",
+        "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/generated-disposition-repeat.raw.json"
+      ],
+      "raw_output_sha256": "4555af90263b83b22ad31bb5e93ec7b711043661f04fca2814dc52d005ee3488",
+      "finalizer_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/cycle09-finalize-cost.js",
+      "finalizer_sha256": "c1254c0b97f84feedc46061708232435a39e779f4bc6d098859b7378a3fc2886",
+      "final_outputs_byte_identical": true
+    },
+    "input_hashes": {
+      "advisory_reds": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_jobs": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+      "baseline_run": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+      "counts": "eeaeeced05c839929773b8b192eee91d19eb5e9533cabc2779350468d4476846",
+      "dispatch_jobs": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1",
+      "dispatch_run": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc",
+      "input:counts-pr.json": "eeaeeced05c839929773b8b192eee91d19eb5e9533cabc2779350468d4476846",
+      "input:dispatch-artifact-manifest.json": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b",
+      "input:dispatch-artifacts.raw.json": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2",
+      "input:dispatch-full-log.txt.gz": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+      "input:dispatch-log-meta.json": "82523c9d8c3bb4477c6a0e5eb6f1fe5464029d6b142021d751ad1732330e889d",
+      "input:expected.json": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+      "input:initial-ci-log-manifest.json": "f2d8eb639622992a71c8a5e9784bf3007c822b6880703ac065f788c49ad303d6",
+      "input:operator-gate-dispatch.log": "57066c5b05b1617624e285e6d6bbc9e6db969d4cdc2609a4884c059e98a5f5f0",
+      "input:operator-gate-pr.log": "586ee22fb5bd6bc4ec3376d7b9d40f73fec42a263abbdf8c3e2c38cd72070a58",
+      "input:pr-artifacts.raw.json": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa",
+      "input:pr-merge-commit.raw.json": "7d61179f34f675071a577ae071bee6fc0aaa0eb2a10fcbec760b76fc825513aa",
+      "input:pr-pilot-cost.json": "1f66b379984ca2a6e1a81ef0b737a0346cbb9237d873b3932f2b5493e3910212",
+      "pilot_cost": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9",
+      "pr_jobs": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9",
+      "pr_run": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc"
+    },
+    "source_identity": {
+      "pull_request": {
+        "run_id": "41497963359",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "artifact_id": 13166934984,
+        "artifact_name": "demo-browser-evidence-41497963359-1",
+        "artifact_source_revision": "214c3c58ae5e25cdf49c2b4206d416bbb8048761",
+        "merge_parents": [
+          "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+          "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+        ],
+        "expected_merge_parents": [
+          "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+          "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+        ],
+        "merge_parents_match": true,
+        "artifact_source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff"
+      },
+      "workflow_dispatch": {
+        "run_id": "41501525366",
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "artifact_id": 13169726533,
+        "artifact_name": "demo-browser-evidence-41501525366-1",
+        "artifact_source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "artifact_source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff",
+        "source_revision_matches_candidate": true,
+        "all_source_revision_fields_match_candidate": true,
+        "artifact_manifest_sha256": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b",
+        "cost_file_sha256": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9"
+      },
+      "expected_counts_sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+      "count_inputs_match_candidate": true
+    },
+    "counts_match": true,
+    "cycle_metrics": {
+      "workflow_count": 8,
+      "attempt_count": 8,
+      "runner_minutes_all_workflows": 267.60333333333335,
+      "ci_runs": {
+        "pull_request": {
+          "run_id": "41497963359",
+          "duration_seconds": 1081,
+          "runner_minutes": 119.11666666666666
+        },
+        "workflow_dispatch": {
+          "run_id": "41501525366",
+          "duration_seconds": 1138,
+          "runner_minutes": 117.18333333333337
+        }
+      }
+    },
+    "budget_disposition": {
+      "schema_version": "phase178-cycle09-placement.v1",
+      "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "decision": "supported_for_this_preapproved_owner_review_cycle",
+      "rule": "178-RESEARCH.md question 5 and 178-CONTEXT.md D-12: measured cost overages may be supported only with a candidate-specific explanation of advisory/required lane placement; do not weaken gates or hide omissions.",
+      "measurements": {
+        "pull_request_total_runner_minutes_delta": 18.433333333333323,
+        "pull_request_total_runner_minutes_limit": 10,
+        "pull_request_runner_minutes_excess": 8.433333333333323,
+        "workflow_dispatch_total_runner_minutes_delta": 16.5,
+        "workflow_dispatch_total_runner_minutes_limit": 10,
+        "workflow_dispatch_runner_minutes_excess": 6.5,
+        "pull_request_wall_to_ci_green_delta_seconds": -288,
+        "workflow_dispatch_wall_to_ci_green_delta_seconds": -273,
+        "wall_to_ci_green_limit_minutes": 5,
+        "pull_request_demo_job_delta_seconds": 714,
+        "pull_request_demo_job_delta_runner_minutes": 11.9,
+        "workflow_dispatch_demo_job_delta_seconds": 478,
+        "workflow_dispatch_demo_job_delta_runner_minutes": 7.966666666666667,
+        "pilot_cold_wall_ms": 442073,
+        "pilot_cold_wall_limit_ms": 300000,
+        "pilot_cold_runner_minutes": 7.367883333333333,
+        "pilot_warm_wall_ms": 222653,
+        "pilot_warm_runner_minutes": 3.7108833333333333,
+        "total_cycle_workflow_count": 8,
+        "total_cycle_runner_minutes": 267.60333333333335
+      },
+      "placement_justification": {
+        "demo_browser_evidence": "The draft PR branch contains the UI, Storybook, and review-evidence work being presented. Demo Browser Evidence emits exact-candidate cold/warm receipts and visual/accessibility evidence needed for this owner review. It stays outside CI Green and completes concurrently; the PR and dispatch runs both retained all 169 expected demo checks in both conditions. The PR artifact is the expected GitHub merge checkout, with base main and this exact candidate as its parents; the dispatch artifact is bound directly to the candidate SHA.",
+        "operator_browser_gate": "Keep the browser flow, keyboard, focus, and connected-state acceptance lane for the same review candidate. It completed 310 tests with one expected guarded skip and zero failed/flaky tests. It runs outside CI Green; no assertions or scenarios were removed.",
+        "ci_green": "Preserve every CI Green dependency and every required Phase 178 gate. CI Green completed 288 seconds sooner than baseline in the pull_request run and 273 seconds sooner in the exact-SHA dispatch run, even though summed runner time was over the per-run budget. The two browser jobs are evaluated separately and do not delay this aggregate's wall time.",
+        "cold_pilot": "Keep both cold and warm measurements: the cold condition proves the cache-miss setup and the warm condition proves reuse. Cold used 7.37 runner-minutes (within the 10-minute runner limit) but its 7m22 wall time exceeded the 5-minute wall threshold; dropping the cold condition would hide setup cost and weaken the measurement.",
+        "scope": "This supports measured overage only for this one preapproved, exact-candidate owner-review cycle. It does not redefine ordinary PR budgets, waive later cost review, or justify skipping the path-aware CI follow-up for genuinely inbound-only changes. No job, assertion, expected count, or gate was removed or weakened."
+      },
+      "preserved_gates": [
+        "CI Green",
+        "Guard Release Trigger",
+        "Demo Browser Evidence",
+        "Operator Browser Gate",
+        "Preview Capture Advisory",
+        "PR Title",
+        "Actionlint",
+        "Advisory Matrix"
+      ],
+      "limitations": [
+        "One pull_request and one workflow_dispatch attempt; observed runner/setup variance is not a causal incremental PR cost estimate.",
+        "Runner minutes are summed job elapsed time, not a dollar quote or provider billing ledger.",
+        "The pull_request browser artifact identifies merge checkout 214c3c58ae5e25cdf49c2b4206d416bbb8048761, whose parents are base main and the exact candidate. Exact-source identity is established by the workflow_dispatch artifact.",
+        "Total Cycle 09 runner time sums all eight attempt-1 workflows; the 10-runner-minute comparison is the existing per-CI-run same-profile budget against the saved baseline."
+      ],
+      "source_cost_artifact": ".planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-09-COST-DISPOSITION.json",
+      "source_cost_artifact_sha256": "57232ac8cf6b20e5b045b6346ea0f2436e43ff7009ff0b305f01028ca737f6da"
+    }
+  },
+  "preview": {
+    "status": "completed",
+    "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "attempt_count": 3,
+    "intended_record_path": "reference/demo_app/tmp/phase178_candidate/candidate-5ad5329a.json",
+    "launch_failure_receipt": {
+      "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-1-failure.txt",
+      "sha256": "04a8d5fe3c9e667867c8887bc7b0b685644058b8322320c05bc81e669ecc9394",
+      "exit_code": 1,
+      "cause": "The sandbox denied creation of .git/worktrees/candidate because .git is read-only. The launcher stopped before Docker Compose or candidate services started."
+    },
+    "service_dispositions": {
+      "candidate_project": "removed_after_owner_acceptance",
+      "candidate_services": [
+        "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo-1",
+        "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo_db-1"
+      ],
+      "owner_demo": "unchanged",
+      "unrelated_services": "untouched"
+    },
+    "artifact_dispositions": {
+      "candidate_project_containers_volumes_network": "removed",
+      "candidate_worktree": "removed",
+      "candidate_run_parent": "removed",
+      "candidate_image_tag": "removed",
+      "disposable_clone": "removed",
+      "launcher_record_and_log": "retained_in_workspace",
+      "checkpoint": "retained_in_workspace",
+      "github_artifacts": "retained_until_expiry",
+      "shared_buildx_cache": "preserved",
+      "unrelated_services": "untouched"
+    },
+    "stop": {
+      "reason": "sandbox_read_only_git_metadata",
+      "message": "The sole Plan 23 launch attempt failed before worktree creation. Plan 23 forbids retry or relaunch; UIQ-08 remains open."
+    },
+    "eligible": true,
+    "authorized": true,
+    "recovery_attempt": {
+      "attempt": 2,
+      "outcome": "stopped",
+      "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "temp_parent": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2",
+      "clone_root": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/repo",
+      "execution_root": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/repo",
+      "remote": "https://github.com/szTheory/mailglass.git",
+      "branch": "gsd/v2.10-ui-repairs-storybook",
+      "local_branch": "gsd/phase178-cycle08-local",
+      "local_branch_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "detached_head": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "remote_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "clone_common_git_dir": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/repo/.git",
+      "preflight_status": "pass",
+      "prepared_at": "2026-11-02T19:59:38Z",
+      "clone_clean": true,
+      "receipt_verification": {
+        "verified_at": "2026-11-02T19:59:38Z",
+        "hosted_run_count": 8,
+        "hosted_runs": [
+          {
+            "run_id": 41497959738,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "771925ac1b383a106722dd09d60acef71c25bf9cb54917da5b4d4f63aa47c80f",
+            "jobs_sha256": "79352c655f9929c087f59447a0ea9d6be0eb9bbb291948bd4db57cfdb57c7a79",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "5e43d32c7e9668e223da33f9c8d4ac4a2701009c56b6c79f267087ecc1850736",
+            "log_raw_sha256": "87e59117e06247e9b9cd1a64f8bf117cdfb8778bd4cf13c1c9ac1db8c9589450",
+            "log_raw_bytes": 4688,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41497963277,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "3223cbcb59471e7c929c3a5316225828cde1eb4e2be1cd0193a0fcc4d38c8faa",
+            "jobs_sha256": "73ef606abf70636c783af21af3717ab5ea6075455aa3b67c9c9f8e76178913e3",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "eabe1bac91bfd96ef2d4fe1f7b9dbac415974059701333ec421ab9dd3c8e9e26",
+            "log_raw_sha256": "39e46593aeb2747538b664e85599f389ee712e756eade304d80466a7e48af8c8",
+            "log_raw_bytes": 53739,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41497963281,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "79aaed375ab03444f86f49a0b08ff6257028ac84fbeeca90697b562c0ea50cc0",
+            "jobs_sha256": "df5cd1e1bf4f6d88cb8c8003bd3c1d70845ef237703913feaadf78c4609e1894",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "38026f51a00ac221c4087e571dbc1f63ed4a30595d64ff218aa9af2d5f70a5b3",
+            "log_raw_sha256": "c3fae09b8c752d816d7aeb3ebea6d1e83250436478517947d3dae1ed29994d18",
+            "log_raw_bytes": 73718187,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41497963359,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc",
+            "jobs_sha256": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9",
+            "artifacts_sha256": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa",
+            "log_compressed_sha256": "8930c96d4b87b281d30afda0479c7153fef4fa22453b8d0131e7d12fe13017d9",
+            "log_raw_sha256": "e94c226aaaefbb1a26895081631582e148e8d939f875bb9508f2d7b02493fb3c",
+            "log_raw_bytes": 65824136,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41497963451,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "98807c209436f318494ae750327f7ccf07ec6219e9c5678d0cb6e4294cbb70a2",
+            "jobs_sha256": "2bdf5b085b03a5e2b7dd4422d086f1901f072e3243e09b9b7893b7b7577f99a6",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "4c0ab9c37abf06f737fb36f7124a4607517b8e917485780adbad7b912c9213e9",
+            "log_raw_sha256": "e979df554882143d11e21d51a771862602d50c1e818a2d4f9d8fd31fcdd6e95f",
+            "log_raw_bytes": 64296,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41501371720,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "3af490c000f854788b98a8ea35ea37753223d8fa5e257897cf2085098caef64d",
+            "jobs_sha256": "f4af391f87a89d8f2c06f130ea16d00a11e09c32430cc8bce1f2c43e4126bc7e",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "0b703710158b64c1a01892967fe6f8dfdfd2f0b16a5f0f25bd6278022674976d",
+            "log_raw_sha256": "574652ba87f046df78bc8a66973fada2bdef2c861af3ab696f6137481c9de20c",
+            "log_raw_bytes": 4686,
+            "raw_path_present": false,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41501370811,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "f0073161b2f6a9a12fe5e81442fbba3c4c75ba88f4d45b37ab0d384c64f428d9",
+            "jobs_sha256": "9ca64b9dfff32d69f1349d2a5c495fcf1ab32b6ef5d301551f7033343741b099",
+            "artifacts_sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+            "log_compressed_sha256": "bd51f8db1d3aac32b95f55bb2a98fcfa7c17b9a029f85cf856331f7fc6577b49",
+            "log_raw_sha256": "5e3d4197d188514813784673b651b137862ac2c61c50fd50b64f04d736ebc4b3",
+            "log_raw_bytes": 53739,
+            "raw_path_present": false,
+            "verified_round_trip": true
+          },
+          {
+            "run_id": 41501525366,
+            "attempt": 1,
+            "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+            "status": "completed",
+            "conclusion": "success",
+            "run_sha256": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc",
+            "jobs_sha256": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1",
+            "artifacts_sha256": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2",
+            "log_compressed_sha256": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+            "log_raw_sha256": "60ad04b28e2262532f20b65609b0967a865f140018c3ab9b9792692358c559a9",
+            "log_raw_bytes": 61530931,
+            "raw_path_present": true,
+            "verified_round_trip": true
+          }
+        ],
+        "attempt1_failure_sha256": "04a8d5fe3c9e667867c8887bc7b0b685644058b8322320c05bc81e669ecc9394",
+        "cost_artifact_sha256": "57232ac8cf6b20e5b045b6346ea0f2436e43ff7009ff0b305f01028ca737f6da",
+        "dispatch_artifact": {
+          "run_id": 41501525366,
+          "run_attempt": 1,
+          "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "cost_file_sha256": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9"
+        },
+        "log_verification_note": "The recorded compressed bytes were SHA-256 verified; decompression matched every recorded raw SHA-256 and byte count. Receipt JSON and compressed evidence were not changed."
+      },
+      "owner_demo_snapshot_before": [],
+      "owner_demo_count_before": 0,
+      "prelaunch_verified_at": "2026-11-02T20:03:15Z",
+      "prelaunch_docker_server": "29.5.2",
+      "prelaunch_hosted_run_count": 8,
+      "prelaunch_cost_gate": "pass_with_supported_overage",
+      "launch_invoked_at": "2026-11-02T20:03:15Z",
+      "stop_reason": "The single launcher invocation failed because Docker Buildx could not write its activity metadata (operation not permitted); the isolated review Compose project did not become healthy.",
+      "launch_invocation_count": 1,
+      "launcher_exit_code": 1,
+      "launcher_final_status": "fail",
+      "launcher_source_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "launcher_ci_status": "pass",
+      "launcher_failures": [
+        "isolated review Compose project did not become healthy",
+        "demo container log saved to /private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.compose.log"
+      ],
+      "compose_project": "mailglass-phase178-review-5ad5329a-20261102200318-97852",
+      "failed_base_url": "http://127.0.0.1:61745",
+      "candidate_worktree_path": "/tmp/mailglass-phase178.xPpXGTjh/candidate",
+      "run_parent": "/tmp/mailglass-phase178.xPpXGTjh",
+      "execution_record_path": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.json",
+      "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.json",
+      "execution_log_path": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.log",
+      "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.log",
+      "compose_log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.compose.log",
+      "execution_root_disposition": "removed_after_candidate_teardown_and_hash_verified_copy",
+      "temp_parent_disposition": "removed_after_candidate_teardown_and_hash_verified_copy",
+      "owner_demo_snapshot_after": [],
+      "owner_demo_count_after": 0,
+      "owner_demo_snapshot_verified_at": "2026-11-02T20:06:45Z",
+      "post_teardown_verified_at": "2026-11-02T20:06:45Z",
+      "post_teardown_resources": {
+        "candidate_containers": [],
+        "candidate_volumes": [],
+        "candidate_networks": [],
+        "candidate_worktree_exists": false,
+        "candidate_run_parent_exists": false,
+        "execution_clone_exists": false,
+        "owner_demo_running_containers": []
+      },
+      "teardown": {
+        "completed_at": "2026-11-02T20:03:39.882Z",
+        "dispositions": [
+          {
+            "name": "demo_mix_lock",
+            "status": "restored",
+            "detail": "reference/demo_app/mix.lock equals the blob at 5ad5329a"
+          },
+          {
+            "name": "compose_down",
+            "status": "stopped",
+            "detail": "project mailglass-phase178-review-5ad5329a-20261102200318-97852 (containers, network, volumes)"
+          },
+          {
+            "name": "worktree",
+            "status": "removed",
+            "detail": "/tmp/mailglass-phase178.xPpXGTjh/candidate"
+          },
+          {
+            "name": "run_parent",
+            "status": "removed",
+            "detail": "/tmp/mailglass-phase178.xPpXGTjh"
+          }
+        ]
+      },
+      "copied_artifacts": [
+        {
+          "source_path": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.json",
+          "destination_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.json",
+          "source_sha256": "5fa30c14e04cba86d745f34d5f0acd8a67ef7cd6ee6a501b1eae5928f63c262f",
+          "destination_sha256": "5fa30c14e04cba86d745f34d5f0acd8a67ef7cd6ee6a501b1eae5928f63c262f",
+          "bytes": 1927,
+          "byte_identical": true,
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.json",
+          "sha256": "5fa30c14e04cba86d745f34d5f0acd8a67ef7cd6ee6a501b1eae5928f63c262f"
+        },
+        {
+          "source_path": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.log",
+          "destination_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.log",
+          "source_sha256": "bd9dd138c8ef0567ca9f7fcd142fc878cf53e2327a8117990324f438deb95bc6",
+          "destination_sha256": "bd9dd138c8ef0567ca9f7fcd142fc878cf53e2327a8117990324f438deb95bc6",
+          "bytes": 1226,
+          "byte_identical": true,
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.log",
+          "sha256": "bd9dd138c8ef0567ca9f7fcd142fc878cf53e2327a8117990324f438deb95bc6"
+        },
+        {
+          "source_path": "/private/tmp/mailglass-phase178-cycle09-5ad5329a.s9ryb2/preview-attempt-2.compose.log",
+          "destination_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.compose.log",
+          "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "destination_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "byte_identical": true,
+          "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.compose.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "urls": [],
+      "route_css_marker_evidence": "not_collected_preview_never_became_healthy",
+      "plan24_eligible": false,
+      "prior_plan23_stop_preserved": true,
+      "receipt_source_disposition": "temporary_parent_removed_after_all_three_artifacts_were_hash_verified_in_evidence_storage"
+    },
+    "plan24_eligible": true,
+    "recovery_attempts": [
+      {
+        "attempt": 3,
+        "outcome": "completed",
+        "preflight_status": "pass",
+        "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "temp_parent": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah",
+        "clone_root": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/repo",
+        "execution_root": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/repo",
+        "remote": "https://github.com/szTheory/mailglass.git",
+        "branch": "gsd/v2.10-ui-repairs-storybook",
+        "local_branch": "gsd/phase178-cycle08-local",
+        "local_branch_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "detached_head": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "remote_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "clone_common_git_dir": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/repo/.git",
+        "clone_clean": true,
+        "clone_disposition": "retained_for_plan24",
+        "buildx_config": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/buildx-config",
+        "buildx_config_mode": "700",
+        "buildx_config_disposition": "removed",
+        "buildx_probe_outputs": {
+          "ls": {
+            "path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/buildx-ls.txt",
+            "sha256": "fdbe705bddf36a014fd7a4d79c73ad0c508b03d3602f394ad61d1dcdff3686f1"
+          },
+          "inspect": {
+            "path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/buildx-inspect.txt",
+            "sha256": "88914b08002a6965c5efa95aeda00abf668acb3080401595f1dbb045eca5954a"
+          }
+        },
+        "builder": {
+          "name": "desktop-linux",
+          "selected": true,
+          "endpoint": "desktop-linux",
+          "driver": "docker",
+          "status": "running",
+          "ls_sha256": "fdbe705bddf36a014fd7a4d79c73ad0c508b03d3602f394ad61d1dcdff3686f1",
+          "inspect_sha256": "88914b08002a6965c5efa95aeda00abf668acb3080401595f1dbb045eca5954a"
+        },
+        "github_auth_status": "pass",
+        "prepared_at": "2026-11-02T20:59:26.701Z",
+        "scope": "one_attempt_3_loopback_preview_only",
+        "approval_status": "approved_and_invoked_once",
+        "owner_decision": {
+          "decision": "approve",
+          "user_reply": "run once",
+          "recorded_at": "2026-11-02T22:08:35.562Z",
+          "sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "attempt": 3,
+          "scope": "one_attempt_3_loopback_preview_only",
+          "operations": [
+            "launch_once",
+            "no_retry_or_relaunch",
+            "candidate_scoped_cleanup",
+            "no_GitHub_write_or_CI",
+            "no_merge_release_publication_deployment"
+          ]
+        },
+        "attempt_count": 3,
+        "launcher_invocation_count": 1,
+        "plan24_eligible": true,
+        "image_disposition": "retained_for_owner_review",
+        "preserved_evidence_hashes": {
+          "attempt1_object_sha256": "a0dd64dd5ac2299365205ca3cc4366d14fb374362b44e5957b6f0835f2324a61",
+          "attempt2_object_sha256": "567d662f03ecf5ef0219c405b735a3dffbec188819c3684aa03d61e7859b124d",
+          "hosted_runs_sha256": "f6b329770d40b490e43176be2c012f9b7c76a54b982316463003f75504baceb6",
+          "cost_record_sha256": "ca25899e032f624e94809246196f352b49c5b36caa52df8a280cd627a25fdcc1",
+          "files": [
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-1-failure.txt",
+              "sha256": "04a8d5fe3c9e667867c8887bc7b0b685644058b8322320c05bc81e669ecc9394"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.json",
+              "sha256": "5fa30c14e04cba86d745f34d5f0acd8a67ef7cd6ee6a501b1eae5928f63c262f"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.log",
+              "sha256": "bd9dd138c8ef0567ca9f7fcd142fc878cf53e2327a8117990324f438deb95bc6"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-2.compose.log",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-37-SUMMARY.md",
+              "sha256": "4edd40c1656e243fa617a9711132b6655aad5f3bd99a541583a4792cf0dacc41"
+            },
+            {
+              "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-CYCLE-09-COST-DISPOSITION.json",
+              "sha256": "57232ac8cf6b20e5b045b6346ea0f2436e43ff7009ff0b305f01028ca737f6da"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/run.raw.json",
+              "sha256": "771925ac1b383a106722dd09d60acef71c25bf9cb54917da5b4d4f63aa47c80f"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/jobs.raw.json",
+              "sha256": "79352c655f9929c087f59447a0ea9d6be0eb9bbb291948bd4db57cfdb57c7a79"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497959738/log.txt.gz",
+              "sha256": "5e43d32c7e9668e223da33f9c8d4ac4a2701009c56b6c79f267087ecc1850736"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/run.raw.json",
+              "sha256": "3223cbcb59471e7c929c3a5316225828cde1eb4e2be1cd0193a0fcc4d38c8faa"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/jobs.raw.json",
+              "sha256": "73ef606abf70636c783af21af3717ab5ea6075455aa3b67c9c9f8e76178913e3"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963277/log.txt.gz",
+              "sha256": "eabe1bac91bfd96ef2d4fe1f7b9dbac415974059701333ec421ab9dd3c8e9e26"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/run.raw.json",
+              "sha256": "79aaed375ab03444f86f49a0b08ff6257028ac84fbeeca90697b562c0ea50cc0"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/jobs.raw.json",
+              "sha256": "df5cd1e1bf4f6d88cb8c8003bd3c1d70845ef237703913feaadf78c4609e1894"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963281/log.txt.gz",
+              "sha256": "38026f51a00ac221c4087e571dbc1f63ed4a30595d64ff218aa9af2d5f70a5b3"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/run.raw.json",
+              "sha256": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/jobs.raw.json",
+              "sha256": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/artifacts.raw.json",
+              "sha256": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963359/log.txt.gz",
+              "sha256": "8930c96d4b87b281d30afda0479c7153fef4fa22453b8d0131e7d12fe13017d9"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/run.raw.json",
+              "sha256": "98807c209436f318494ae750327f7ccf07ec6219e9c5678d0cb6e4294cbb70a2"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/jobs.raw.json",
+              "sha256": "2bdf5b085b03a5e2b7dd4422d086f1901f072e3243e09b9b7893b7b7577f99a6"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41497963451/log.txt.gz",
+              "sha256": "4c0ab9c37abf06f737fb36f7124a4607517b8e917485780adbad7b912c9213e9"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/run.raw.json",
+              "sha256": "3af490c000f854788b98a8ea35ea37753223d8fa5e257897cf2085098caef64d"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/jobs.raw.json",
+              "sha256": "f4af391f87a89d8f2c06f130ea16d00a11e09c32430cc8bce1f2c43e4126bc7e"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501371720/log.txt.gz",
+              "sha256": "0b703710158b64c1a01892967fe6f8dfdfd2f0b16a5f0f25bd6278022674976d"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/run.raw.json",
+              "sha256": "f0073161b2f6a9a12fe5e81442fbba3c4c75ba88f4d45b37ab0d384c64f428d9"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/jobs.raw.json",
+              "sha256": "9ca64b9dfff32d69f1349d2a5c495fcf1ab32b6ef5d301551f7033343741b099"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/artifacts.raw.json",
+              "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501370811/log.txt.gz",
+              "sha256": "bd51f8db1d3aac32b95f55bb2a98fcfa7c17b9a029f85cf856331f7fc6577b49"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/run.raw.json",
+              "sha256": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/jobs.raw.json",
+              "sha256": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/artifacts.raw.json",
+              "sha256": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2"
+            },
+            {
+              "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/run-41501525366/log.txt.gz",
+              "sha256": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e"
+            }
+          ]
+        },
+        "owner_demo_snapshot_before": [],
+        "owner_demo_snapshot_after": [],
+        "buildx_prelaunch_identity": {
+          "name": "desktop-linux",
+          "endpoint": "desktop-linux",
+          "driver": "docker",
+          "status": "running",
+          "selected": true
+        },
+        "buildx_prelaunch_at": "2026-11-02T22:09:47.593Z",
+        "launcher_record_temp_path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.json",
+        "log_temp_path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.log",
+        "launch_started_at": "2026-11-02T22:09:47.595Z",
+        "launcher_finished_at": "2026-11-02T22:11:09.923Z",
+        "launcher_exit_code": 0,
+        "launcher_signal": null,
+        "launcher_record": {
+          "schema_version": "phase178-candidate.v1",
+          "source_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+          "worktree": "/tmp/mailglass-phase178.GgdmcFYt/candidate",
+          "run_parent": "/tmp/mailglass-phase178.GgdmcFYt",
+          "compose_project": "mailglass-phase178-review-5ad5329a-20261102220948-70209",
+          "base_url": "http://127.0.0.1:65275",
+          "ports": {
+            "http": 65275,
+            "database": 65276
+          },
+          "routes": [
+            {
+              "route": "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/ops/mail?tenant_id=northstar"
+            },
+            {
+              "route": "/dev/mail",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768"
+            },
+            {
+              "route": "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin"
+            },
+            {
+              "route": "/dev/storybook/preview_authoring",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/dev/storybook/preview_authoring"
+            },
+            {
+              "route": "/dev/storybook/preview_chrome",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/dev/storybook/preview_chrome"
+            },
+            {
+              "route": "/dev/storybook/primitives/stat_card",
+              "status": 200,
+              "final_url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card"
+            }
+          ],
+          "served_css_path": "/dev/mail/css-bb2156de84d3550bfa21a10048441e91",
+          "source_css_sha256": "634fc2d5bf32fb30f6063087eb68b5809bbc0ad1002d49bb32477d9dd962e777",
+          "built_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+          "served_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+          "ci_status": "pass",
+          "ci_contexts": {
+            "CI Green": "success",
+            "Guard Release Trigger": "success"
+          },
+          "final_status": "pass",
+          "failures": [],
+          "teardown_commands": [
+            "bash scripts/check_phase178_candidate.sh --teardown /private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.json"
+          ],
+          "retained_services": [
+            "mailglass-phase178-review-5ad5329a-20261102220948-70209 (demo + demo_db) at http://127.0.0.1:65275"
+          ],
+          "teardown": null,
+          "created_at": "2026-11-02T22:11:09.917Z"
+        },
+        "execution_record_path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.json",
+        "record_path": "/Users/jon/projects/mailglass/reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.json",
+        "copied_artifacts": [
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.json",
+            "source_path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.json",
+            "destination_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.json",
+            "source_sha256": "fa66c9fded231ab031e3abbf093e759b313cef578cc7c32b999d33b01030d3c3",
+            "destination_sha256": "fa66c9fded231ab031e3abbf093e759b313cef578cc7c32b999d33b01030d3c3",
+            "sha256": "fa66c9fded231ab031e3abbf093e759b313cef578cc7c32b999d33b01030d3c3",
+            "byte_identical": true
+          },
+          {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.log",
+            "source_path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.log",
+            "destination_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.log",
+            "source_sha256": "16361512e0ae2865a7eb2980a24fd19d16e2c692e937647d7fb187b912bcdc79",
+            "destination_sha256": "16361512e0ae2865a7eb2980a24fd19d16e2c692e937647d7fb187b912bcdc79",
+            "sha256": "16361512e0ae2865a7eb2980a24fd19d16e2c692e937647d7fb187b912bcdc79",
+            "byte_identical": true
+          }
+        ],
+        "compose_project": "mailglass-phase178-review-5ad5329a-20261102220948-70209",
+        "worktree": "/tmp/mailglass-phase178.GgdmcFYt/candidate",
+        "run_parent": "/tmp/mailglass-phase178.GgdmcFYt",
+        "base_url": "http://127.0.0.1:65275",
+        "ports": {
+          "http": 65275,
+          "database": 65276
+        },
+        "launcher_status": "pass",
+        "ci_status": "pass",
+        "source_css_sha256": "634fc2d5bf32fb30f6063087eb68b5809bbc0ad1002d49bb32477d9dd962e777",
+        "built_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+        "served_css_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+        "teardown_command": "bash scripts/check_phase178_candidate.sh --teardown /private/tmp/mailglass-phase178-cycle09-attempt3.QDldah/preview-attempt-3.json",
+        "owner_demo_count_before": 0,
+        "owner_demo_count_after": 0,
+        "urls": [
+          {
+            "category": "invite_admin_restore_defaults",
+            "url": "http://127.0.0.1:65275/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768",
+            "marker": "preview-assigns-form",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.773Z"
+          },
+          {
+            "category": "dev_mail_selector_identity",
+            "url": "http://127.0.0.1:65275/dev/mail",
+            "marker": "preview-mailables-picker",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.786Z"
+          },
+          {
+            "category": "preview_authoring_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/preview_authoring",
+            "marker": "preview-authoring-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.852Z"
+          },
+          {
+            "category": "preview_chrome_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/preview_chrome",
+            "marker": "preview-chrome-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.888Z"
+          },
+          {
+            "category": "stat_card_light",
+            "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_light",
+            "marker": "mailglass-light",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.912Z"
+          },
+          {
+            "category": "stat_card_dark",
+            "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_dark",
+            "marker": "mailglass-dark",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:55.934Z"
+          },
+          {
+            "category": "delivery_investigation_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/delivery_investigation",
+            "marker": "delivery-investigation-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.002Z"
+          },
+          {
+            "category": "inbound_evidence_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/inbound_evidence",
+            "marker": "inbound-evidence-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.051Z"
+          },
+          {
+            "category": "health_overview_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/health_overview",
+            "marker": "health-overview-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.085Z"
+          },
+          {
+            "category": "account_scope_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/account_scope",
+            "marker": "account-scope-story",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.123Z"
+          },
+          {
+            "category": "quick_view_story",
+            "url": "http://127.0.0.1:65275/dev/storybook/quick_views/delivery",
+            "marker": "quick-view-review-theme",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.144Z"
+          },
+          {
+            "category": "operator_health",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+            "marker": "operator-health-layout",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.162Z"
+          },
+          {
+            "category": "deliveries_quick_view",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24",
+            "marker": "operator-quick-view",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.178Z"
+          },
+          {
+            "category": "deliveries_filters",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fevent%3Dbounced%26tenant_id%3Dnorthstar%26view%3Ddeliveries%26window_hours%3D168",
+            "marker": "operator-filters",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.190Z"
+          },
+          {
+            "category": "deliveries_investigation",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24%26full%3D1",
+            "marker": "operator-detail-column",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.210Z"
+          },
+          {
+            "category": "deliveries_replay",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1bb-7d31-b5cf-c1ec3b9b5d91%26full%3D1",
+            "marker": "operator-replay-open",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.230Z"
+          },
+          {
+            "category": "inbound",
+            "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar",
+            "marker": "inbound-overview",
+            "http_status": 200,
+            "marker_found": true,
+            "verified_at": "2026-11-02T22:15:56.244Z"
+          }
+        ],
+        "verified_at": "2026-11-02T22:15:56.267Z",
+        "buildx_config_removed_at": "2026-11-02T22:15:56.267Z",
+        "image_cleanup": {
+          "status": "removed_after_owner_acceptance",
+          "project": "mailglass-phase178-review-5ad5329a-20261102220948-70209",
+          "removed_tags": [
+            {
+              "tag": "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo:latest",
+              "image_id": "sha256:11c3d26366f9e95338c70ecbb141959424b1840de481f5f05e5a6032048b3a6d",
+              "image_size_bytes": 2024236978,
+              "unique_size_reported": "1.837GB",
+              "unique_bytes_removed_approximate": 1837000000
+            }
+          ],
+          "shared_buildx_cache_preserved": true
+        },
+        "service_dispositions": {
+          "candidate_project": "removed_after_owner_acceptance",
+          "candidate_services": [
+            "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo-1",
+            "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo_db-1"
+          ],
+          "owner_demo": "unchanged",
+          "unrelated_services": "untouched"
+        },
+        "teardown": {
+          "completed_at": "2026-11-02T22:34:05.103Z",
+          "dispositions": [
+            {
+              "name": "demo_mix_lock",
+              "status": "restored",
+              "detail": "reference/demo_app/mix.lock equals the blob at 5ad5329a"
+            },
+            {
+              "name": "compose_down",
+              "status": "stopped",
+              "detail": "project mailglass-phase178-review-5ad5329a-20261102220948-70209 (containers, network, volumes)"
+            },
+            {
+              "name": "worktree",
+              "status": "removed",
+              "detail": "/tmp/mailglass-phase178.GgdmcFYt/candidate"
+            },
+            {
+              "name": "run_parent",
+              "status": "removed",
+              "detail": "/tmp/mailglass-phase178.GgdmcFYt"
+            }
+          ]
+        },
+        "execution_root_disposition": "removed_after_candidate_worktree",
+        "execution_root_removed_at": "2026-11-02T22:34:52.974Z"
+      }
+    ],
+    "record_path": "/Users/jon/projects/mailglass/reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/preview-attempt-3.json",
+    "urls": [
+      {
+        "category": "invite_admin_restore_defaults",
+        "url": "http://127.0.0.1:65275/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768",
+        "marker": "preview-assigns-form",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.773Z"
+      },
+      {
+        "category": "dev_mail_selector_identity",
+        "url": "http://127.0.0.1:65275/dev/mail",
+        "marker": "preview-mailables-picker",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.786Z"
+      },
+      {
+        "category": "preview_authoring_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/preview_authoring",
+        "marker": "preview-authoring-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.852Z"
+      },
+      {
+        "category": "preview_chrome_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/preview_chrome",
+        "marker": "preview-chrome-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.888Z"
+      },
+      {
+        "category": "stat_card_light",
+        "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_light",
+        "marker": "mailglass-light",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.912Z"
+      },
+      {
+        "category": "stat_card_dark",
+        "url": "http://127.0.0.1:65275/dev/storybook/primitives/stat_card?tab=playground&variation_id=neutral_dark",
+        "marker": "mailglass-dark",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:55.934Z"
+      },
+      {
+        "category": "delivery_investigation_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/delivery_investigation",
+        "marker": "delivery-investigation-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.002Z"
+      },
+      {
+        "category": "inbound_evidence_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/inbound_evidence",
+        "marker": "inbound-evidence-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.051Z"
+      },
+      {
+        "category": "health_overview_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/health_overview",
+        "marker": "health-overview-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.085Z"
+      },
+      {
+        "category": "account_scope_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/account_scope",
+        "marker": "account-scope-story",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.123Z"
+      },
+      {
+        "category": "quick_view_story",
+        "url": "http://127.0.0.1:65275/dev/storybook/quick_views/delivery",
+        "marker": "quick-view-review-theme",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.144Z"
+      },
+      {
+        "category": "operator_health",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+        "marker": "operator-health-layout",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.162Z"
+      },
+      {
+        "category": "deliveries_quick_view",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24",
+        "marker": "operator-quick-view",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.178Z"
+      },
+      {
+        "category": "deliveries_filters",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fevent%3Dbounced%26tenant_id%3Dnorthstar%26view%3Ddeliveries%26window_hours%3D168",
+        "marker": "operator-filters",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.190Z"
+      },
+      {
+        "category": "deliveries_investigation",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1be-7ada-9314-99355a8eac24%26full%3D1",
+        "marker": "operator-detail-column",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.210Z"
+      },
+      {
+        "category": "deliveries_replay",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%3Fview%3Ddeliveries%26tenant_id%3Dnorthstar%26delivery_id%3D01a19e50-e1bb-7d31-b5cf-c1ec3b9b5d91%26full%3D1",
+        "marker": "operator-replay-open",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.230Z"
+      },
+      {
+        "category": "inbound",
+        "url": "http://127.0.0.1:65275/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar",
+        "marker": "inbound-overview",
+        "http_status": 200,
+        "marker_found": true,
+        "verified_at": "2026-11-02T22:15:56.244Z"
+      }
+    ],
+    "verified_at": "2026-11-02T22:15:56.267Z",
+    "owner_demo_count_before": 0,
+    "owner_demo_count_after": 0,
+    "teardown_completed_at": "2026-11-02T22:34:05.103Z",
+    "candidate_image_cleanup": {
+      "status": "removed_after_owner_acceptance",
+      "project": "mailglass-phase178-review-5ad5329a-20261102220948-70209",
+      "removed_tags": [
+        {
+          "tag": "mailglass-phase178-review-5ad5329a-20261102220948-70209-demo:latest",
+          "image_id": "sha256:11c3d26366f9e95338c70ecbb141959424b1840de481f5f05e5a6032048b3a6d",
+          "image_size_bytes": 2024236978,
+          "unique_size_reported": "1.837GB",
+          "unique_bytes_removed_approximate": 1837000000
+        }
+      ],
+      "shared_buildx_cache_preserved": true
+    },
+    "disposable_clone": {
+      "path": "/private/tmp/mailglass-phase178-cycle09-attempt3.QDldah",
+      "status": "removed",
+      "removed_at": "2026-11-02T22:34:52.974Z"
+    }
+  },
+  "standing_owner_policy": {
+    "recorded_at": "2026-11-02T19:08:06Z",
+    "summary": "No per-SHA approval is needed for task-scoped, no-PII review PR work and its approved CI. One isolated loopback preview per candidate in an already approved phase plan is also authorized after that candidate's exact-SHA hosted and cost gates pass. This does not authorize retries outside the plan limit, merge, release, publication, or deployment.",
+    "source": "Hosted authorization recorded in approval_checkpoint.user_reply; preview authorization and ongoing preference recorded in authority.preview and AGENTS.md"
+  },
+  "pii_review": {
+    "status": "pass",
+    "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "outgoing_range": "0942d667c50247b7794bc52cbadcc2b65a850d61..5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "changed_paths": [
+      "mailglass_inbound/test/mailglass_inbound/architecture_port_test.exs"
+    ],
+    "changed_source_lines_checked": true,
+    "email_phone_credential_pattern_matches": 0,
+    "author_metadata": "szTheory <szTheory@users.noreply.github.com>",
+    "conclusion": "No PII or credential-like material in the one outgoing commit."
+  },
+  "performance_review": {
+    "source_cycle": 8,
+    "ci_run": {
+      "id": 41490274664,
+      "elapsed_seconds": 1031,
+      "conclusion": "failure"
+    },
+    "longest_jobs": [
+      {
+        "name": "Operator Browser Gate",
+        "seconds": 1014,
+        "main_step": "Run operator browser gate",
+        "main_step_seconds": 856
+      },
+      {
+        "name": "Demo Browser Evidence",
+        "seconds": 912,
+        "main_step": "Run demo browser evidence",
+        "main_step_seconds": 900
+      },
+      {
+        "name": "Core Deterministic Suite",
+        "seconds": 927,
+        "main_step": "Run deterministic core suite",
+        "main_step_seconds": 574
+      }
+    ],
+    "finding": "All code changes currently enable all code lanes. The open PR includes UI changes from earlier candidate commits, so the current candidate still needs exact-SHA browser evidence; skipping those lanes now would weaken the phase gate.",
+    "follow_up": "Assess fail-closed path classification for future backend-only PRs, with tests proving browser lanes still run for mixed/UI changes and required check aggregation remains correct.",
+    "current_candidate_optimization": "No safe browser-lane skip applies to this mixed-scope PR; do not change CI contracts in the current correction commit."
+  },
+  "owner_checkpoint_remote_verification": {
+    "status": "passed_read_only",
+    "verified_at": "2026-11-02T22:20:05.178Z",
+    "pr": {
+      "number": 317,
+      "url": "https://github.com/szTheory/mailglass/pull/317",
+      "state": "OPEN",
+      "is_draft": true,
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "base_branch": "main"
+    },
+    "runs": [
+      {
+        "id": 41497959738,
+        "name": "PR Title",
+        "event": "pull_request_target",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497959738",
+        "jobs_count": 1,
+        "non_success_jobs": [],
+        "key_jobs": []
+      },
+      {
+        "id": 41497963277,
+        "name": "Guard Release Trigger",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963277",
+        "jobs_count": 1,
+        "non_success_jobs": [],
+        "key_jobs": [
+          {
+            "id": 125457771594,
+            "name": "Guard Release Trigger",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41497963277/job/125457771594"
+          }
+        ]
+      },
+      {
+        "id": 41497963281,
+        "name": "Advisory Matrix",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963281",
+        "jobs_count": 6,
+        "non_success_jobs": [
+          {
+            "name": "Core Full Suite Next Toolchain Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})",
+            "conclusion": "skipped"
+          }
+        ],
+        "key_jobs": []
+      },
+      {
+        "id": 41497963359,
+        "name": "CI",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359",
+        "jobs_count": 26,
+        "non_success_jobs": [],
+        "key_jobs": [
+          {
+            "id": 125457857154,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857154"
+          },
+          {
+            "id": 125457857365,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857365"
+          },
+          {
+            "id": 125457857735,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857735"
+          },
+          {
+            "id": 125466296472,
+            "name": "CI Green",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125466296472"
+          }
+        ]
+      },
+      {
+        "id": 41497963451,
+        "name": "Actionlint",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963451",
+        "jobs_count": 1,
+        "non_success_jobs": [],
+        "key_jobs": []
+      },
+      {
+        "id": 41501371720,
+        "name": "PR Title",
+        "event": "pull_request_target",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501371720",
+        "jobs_count": 1,
+        "non_success_jobs": [],
+        "key_jobs": []
+      },
+      {
+        "id": 41501370811,
+        "name": "Guard Release Trigger",
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501370811",
+        "jobs_count": 1,
+        "non_success_jobs": [],
+        "key_jobs": [
+          {
+            "id": 125469408905,
+            "name": "Guard Release Trigger",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41501370811/job/125469408905"
+          }
+        ]
+      },
+      {
+        "id": 41501525366,
+        "name": "CI",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366",
+        "jobs_count": 26,
+        "non_success_jobs": [],
+        "key_jobs": [
+          {
+            "id": 125470064745,
+            "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470064745"
+          },
+          {
+            "id": 125470064778,
+            "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470064778"
+          },
+          {
+            "id": 125470065010,
+            "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470065010"
+          },
+          {
+            "id": 125478449475,
+            "name": "CI Green",
+            "conclusion": "success",
+            "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125478449475"
+          }
+        ]
+      }
+    ],
+    "jobs": [
+      {
+        "id": 125457771594,
+        "run_id": 41497963277,
+        "name": "Guard Release Trigger",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963277/job/125457771594"
+      },
+      {
+        "id": 125457857154,
+        "run_id": 41497963359,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857154"
+      },
+      {
+        "id": 125457857365,
+        "run_id": 41497963359,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857365"
+      },
+      {
+        "id": 125457857735,
+        "run_id": 41497963359,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125457857735"
+      },
+      {
+        "id": 125466296472,
+        "run_id": 41497963359,
+        "name": "CI Green",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41497963359/job/125466296472"
+      },
+      {
+        "id": 125469408905,
+        "run_id": 41501370811,
+        "name": "Guard Release Trigger",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501370811/job/125469408905"
+      },
+      {
+        "id": 125470064745,
+        "run_id": 41501525366,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470064745"
+      },
+      {
+        "id": 125470064778,
+        "run_id": 41501525366,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470064778"
+      },
+      {
+        "id": 125470065010,
+        "run_id": 41501525366,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125470065010"
+      },
+      {
+        "id": 125478449475,
+        "run_id": 41501525366,
+        "name": "CI Green",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41501525366/job/125478449475"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13168161001,
+        "run_id": 41497963359,
+        "name": "trust-runner-clean-baseline-41497963359",
+        "expired": false,
+        "created_at": "2026-11-02T18:12:48Z",
+        "expires_at": "2027-01-31T18:10:02Z",
+        "size_in_bytes": 896,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13168161001"
+      },
+      {
+        "id": 13168006641,
+        "run_id": 41497963359,
+        "name": "trust-runner-repo-head-41497963359",
+        "expired": false,
+        "created_at": "2026-11-02T18:14:48Z",
+        "expires_at": "2027-01-31T18:10:02Z",
+        "size_in_bytes": 896,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13168006641"
+      },
+      {
+        "id": 13167058323,
+        "run_id": 41497963359,
+        "name": "preview-capture-advisory-41497963359",
+        "expired": false,
+        "created_at": "2026-11-02T18:14:47Z",
+        "expires_at": "2026-11-16T18:14:45Z",
+        "size_in_bytes": 2773659,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13167058323"
+      },
+      {
+        "id": 13166934984,
+        "run_id": 41497963359,
+        "name": "demo-browser-evidence-41497963359-1",
+        "expired": false,
+        "created_at": "2026-11-02T18:25:46Z",
+        "expires_at": "2026-11-16T18:25:45Z",
+        "size_in_bytes": 7895318,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13166934984"
+      },
+      {
+        "id": 13170360340,
+        "run_id": 41501525366,
+        "name": "preview-capture-advisory-41501525366",
+        "expired": false,
+        "created_at": "2026-11-02T18:40:20Z",
+        "expires_at": "2026-11-16T18:40:19Z",
+        "size_in_bytes": 2772408,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13170360340"
+      },
+      {
+        "id": 13169750516,
+        "run_id": 41501525366,
+        "name": "trust-runner-clean-baseline-41501525366",
+        "expired": false,
+        "created_at": "2026-11-02T18:35:36Z",
+        "expires_at": "2027-01-31T18:32:23Z",
+        "size_in_bytes": 896,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13169750516"
+      },
+      {
+        "id": 13169726533,
+        "run_id": 41501525366,
+        "name": "demo-browser-evidence-41501525366-1",
+        "expired": false,
+        "created_at": "2026-11-02T18:44:14Z",
+        "expires_at": "2026-11-16T18:44:12Z",
+        "size_in_bytes": 7902564,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13169726533"
+      },
+      {
+        "id": 13169680828,
+        "run_id": 41501525366,
+        "name": "trust-runner-repo-head-41501525366",
+        "expired": false,
+        "created_at": "2026-11-02T18:37:08Z",
+        "expires_at": "2027-01-31T18:32:23Z",
+        "size_in_bytes": 896,
+        "api_url": "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/13169680828"
+      }
+    ],
+    "skipped_advisory_jobs": [
+      {
+        "run_id": 41497963281,
+        "name": "Core Full Suite Next Toolchain Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})",
+        "conclusion": "skipped"
+      }
+    ]
+  },
+  "owner_checkpoint": {
+    "path": "/Users/jon/projects/mailglass/reference/demo_app/tmp/phase178_candidate/recovery-ship-checkpoint.md",
+    "sha256": "fcab0b7c0b4b45f3567aca7d988ccf0c3784d1de69358a0d2f927dc285a48a68",
+    "verified_at": "2026-11-02T22:23:54.552Z",
+    "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "attempt": 3,
+    "remote_verified_at": "2026-11-02T22:20:05.178Z",
+    "owner_demo_snapshot": [],
+    "remote_artifact_count": 8,
+    "disposition_updated_at": "2026-11-02T22:39:26.305Z"
+  }
+}

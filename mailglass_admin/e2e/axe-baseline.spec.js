@@ -113,7 +113,10 @@ async function openDeliveries(page, theme) {
   return openOverlay(page, "deliveries", async () => {
     // Two-tier inspection: a row click opens the condensed Quick view; the
     // replay control lives behind "Open full detail" (&full=1).
-    await page.getByTestId("operator-delivery-row").first().click();
+    // The first visible row is not replayable; the fourth is the replayable
+    // Delivery that every replay case in flows.spec.js selects, so the overlay
+    // control exists and the fold measures the real dialog.
+    await page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3).click();
     await expect(page.getByTestId("operator-quick-view")).toBeVisible();
     await page.getByTestId("operator-quick-view-full").click();
     await expect(page.getByTestId("operator-detail-column")).toBeVisible();

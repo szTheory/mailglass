@@ -47,6 +47,9 @@ defmodule MailglassAdmin.Router do
         with an adopter `live_session` of the same name.
       * `:navigation` — Optional sibling admin surface paths rendered in the
         shared nav: `:overview_path`, `:deliveries_path`, and `:inbound_path`.
+        Point these directly at the operator surfaces (for example
+        `"/ops/mail"`), not at login or wrapper URLs, so Preview can return
+        operators to the Account they came from.
       * `:as` — Route helper prefix (default `:mailglass_admin`).
 
     * `mailglass_operator_routes/2`

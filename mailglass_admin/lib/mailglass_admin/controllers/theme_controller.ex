@@ -51,12 +51,33 @@ defmodule MailglassAdmin.Controllers.ThemeController do
 
   defp sanitized_return_to(return_to, mount_path) when is_binary(return_to) do
     parsed = URI.parse(return_to)
+    path = parsed.path || ""
 
     cond do
       parsed.scheme || parsed.host -> mount_path
       String.starts_with?(return_to, "//") -> mount_path
-      not String.starts_with?(parsed.path || "", mount_path) -> mount_path
+      String.contains?(path, "\\") -> mount_path
+      String.contains?(path, "//") -> mount_path
+      dot_segment?(path) -> mount_path
+      not within_mount?(path, mount_path) -> mount_path
       true -> Theme.strip_theme_query(return_to)
     end
+  end
+
+  # Segment-boundary containment (D-08): the mount path itself, or a path under
+  # it at a `/`. A bare prefix check would accept the sibling mount `/ops/mailx`.
+  defp within_mount?(path, mount_path) do
+    base = String.trim_trailing(mount_path, "/")
+    path == base or String.starts_with?(path, base <> "/")
+  end
+
+  # `.`, `..` and their `%2e` spellings are rejected so a same-origin return can
+  # never be rewritten out of the mount by the browser's dot-segment removal.
+  defp dot_segment?(path) do
+    path
+    |> String.split("/")
+    |> Enum.any?(fn segment ->
+      String.replace(String.downcase(segment), "%2e", ".") in [".", ".."]
+    end)
   end
 end

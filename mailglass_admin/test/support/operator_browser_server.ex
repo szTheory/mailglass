@@ -24,6 +24,10 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
     {:ok, _} = Application.ensure_all_started(:mailglass)
 
     log_stage(started_at_ms, "mailglass_started")
+    # The endpoint starts during setup_all, before the shared sandbox owner
+    # and browser fixtures are ready. Keep the Playwright readiness probe
+    # closed until the initial seed has completed.
+    Application.put_env(:mailglass_admin, :operator_browser_server_ready?, false)
     AdminBootstrap.setup_all(port: port, server: true, pool: :sandbox, ensure_repo: true)
 
     owner = AdminBootstrap.start_server_owner!(ownership_timeout: @server_ownership_timeout)
@@ -36,6 +40,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
 
     log_stage(started_at_ms, "admin_bootstrap_complete")
     OperatorFixtures.seed_browser_scenario!()
+    Application.put_env(:mailglass_admin, :operator_browser_server_ready?, true)
     log_stage(started_at_ms, "fixtures_seeded", "scenario=default")
 
     url =

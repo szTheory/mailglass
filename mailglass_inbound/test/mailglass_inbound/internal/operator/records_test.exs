@@ -100,6 +100,32 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
   end
 
   describe "Records.list_records_page/2" do
+    test "time window excludes old rows from both entries and total_count" do
+      now = ~U[2026-10-27 12:00:00Z]
+      Mailglass.Clock.Frozen.freeze(now)
+      on_exit(fn -> Mailglass.Clock.Frozen.unfreeze() end)
+
+      {:ok, recent} =
+        insert_record("tenant-window",
+          received_at: DateTime.add(now, -6, :hour)
+        )
+
+      {:ok, old} =
+        insert_record("tenant-window",
+          received_at: DateTime.add(now, -48, :hour)
+        )
+
+      page =
+        Records.list_records_page(
+          %{tenant_id: "tenant-window", window_hours: 24},
+          []
+        )
+
+      assert page.total_count == 1
+      assert Enum.map(page.entries, & &1.id) == [recent.id]
+      refute Enum.any?(page.entries, &(&1.id == old.id))
+    end
+
     test "returns honest total and first-page boundaries from tenant and filter scoped count" do
       now = DateTime.utc_now()
 

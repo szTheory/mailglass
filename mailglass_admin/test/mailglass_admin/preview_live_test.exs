@@ -52,6 +52,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
+  @readonly_note "Read-only values come from this scenario's defaults. Edit them in its Mailable."
+
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
@@ -115,7 +117,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "<h2"
       assert html =~ "Email previews"
       assert html =~ "Choose an email"
-      assert html =~ "5 emails"
+      assert html =~ "6 emails"
       refute html =~ "3 mailers"
 
       # HappyMailer module + scenarios rendered
@@ -197,10 +199,17 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert trigger != nil
       trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "HappyMailer"
-      assert trigger_text =~ "welcome_default"
-      refute trigger_text =~ "MailglassAdmin.Fixtures"
       refute trigger_text =~ "3 emails"
+
+      # Phase 178 D-04: humanized primary, Mailable secondary (both namespace-free),
+      # and the exact technical identity as visible text.
+      assert_trigger_identity(
+        trigger,
+        "Welcome default",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_default"
+      )
+
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
       assert Floki.find(affordance, "span") != []
@@ -354,8 +363,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-topbar")
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
-      assert html =~
-               "See how your emails look in HTML and plain text."
+      assert preview_subtitle(html) ==
+               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      assert [_] =
+               Floki.find(
+                 doc,
+                 ~s([data-testid="admin-shell-page-header"] p code.mono)
+               )
+
+      # D-12: no provenance claim. Whole-word, case-insensitive; "Deliveries"
+      # contains the substring "live" and must not trip the check.
+      refute preview_subtitle(html) =~ ~r/\b(sample|demo|fake)\b/i
+      refute preview_subtitle(html) =~ ~r/\blive\b/i
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -463,10 +485,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Floki.parse_document!()
         |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
 
-      trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "HappyMailer"
-      refute trigger_text =~ "MailglassAdmin.Fixtures"
-      assert trigger_text =~ "welcome_enterprise"
+      assert_trigger_identity(
+        trigger,
+        "Welcome enterprise",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_enterprise"
+      )
     end
 
     test "compact picker exposes long non-ASCII scenario identity without truncation" do
@@ -493,10 +517,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
       [identity_id] = Floki.attribute(identity, "id")
       assert Floki.attribute(trigger, "aria-labelledby") == ["#{label_id} #{identity_id}"]
 
-      text = Floki.text(trigger)
-      assert text =~ "HappyMailer"
-      refute text =~ "MailglassAdmin.Fixtures"
-      assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
+      assert_trigger_identity(
+        trigger,
+        "welcome_überraschung_東京__with_a_deliberately_long_name",
+        "HappyMailer",
+        "MailglassAdmin.Fixtures.HappyMailer.welcome_überraschung_東京__with_a_deliberately_long_name"
+      )
 
       [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
@@ -506,6 +532,204 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert identity_class =~ "whitespace-normal"
       assert identity_class =~ "[overflow-wrap:anywhere]"
       refute Floki.attribute(identity, "title") != []
+    end
+  end
+
+  describe "Phase 178 selector options" do
+    @long_double :welcome_überraschung_東京__with_a_deliberately_long_name
+    @long_single :welcome_überraschung_東京_with_a_deliberately_long_name
+
+    defp render_menu(overrides \\ []) do
+      attrs =
+        Keyword.merge(
+          [
+            mailables: discovered_fixture_mailables(),
+            current_mailable: HappyMailer,
+            current_scenario: :welcome_default,
+            device_width: 375,
+            admin_chrome_theme: nil,
+            mount_path: "/dev/mail"
+          ],
+          overrides
+        )
+
+      render_component(&Sidebar.menu/1, attrs)
+    end
+
+    defp collapsed_text(node), do: node |> Floki.text() |> String.split() |> Enum.join(" ")
+
+    defp happy_options(html) do
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(
+        ~s(a[data-testid="preview-email-menu-option"], a[data-testid="preview-email-menu-active-option"])
+      )
+      |> Enum.filter(fn link ->
+        link |> Floki.attribute("href") |> hd() |> String.contains?("HappyMailer/")
+      end)
+    end
+
+    test "each HappyMailer option reads humanized first with the raw atom as monospace text" do
+      options = html_options = happy_options(render_menu())
+      assert length(html_options) == 6
+
+      rows =
+        for option <- options do
+          [label] = Floki.find(option, ~s([data-testid="preview-email-menu-option-label"]))
+
+          [technical] =
+            Floki.find(option, ~s([data-testid="preview-email-menu-option-technical"]))
+
+          [technical_class] = Floki.attribute(technical, "class")
+          assert technical_class =~ "font-mono"
+          {collapsed_text(label), collapsed_text(technical)}
+        end
+
+      assert {"Welcome default", "welcome_default"} in rows
+      assert {"Welcome enterprise", "welcome_enterprise"} in rows
+      assert {"Typed values", "typed_values"} in rows
+      assert {"Recoverable", "recoverable"} in rows
+    end
+
+    test "the two long Unicode scenarios are distinguishable by visible primary text" do
+      options = happy_options(render_menu())
+
+      primaries =
+        for option <- options,
+            [label] = Floki.find(option, ~s([data-testid="preview-email-menu-option-label"])),
+            collapsed_text(label) =~ "überraschung",
+            do: collapsed_text(label)
+
+      assert Enum.sort(primaries) == [Atom.to_string(@long_double), Atom.to_string(@long_single)]
+      assert length(Enum.uniq(primaries)) == 2
+    end
+
+    test "no option span truncates and each wraps" do
+      for option <- happy_options(render_menu()) do
+        classes =
+          option
+          |> Floki.find("[class]")
+          |> Enum.flat_map(&Floki.attribute(&1, "class"))
+          |> Enum.join(" ")
+
+        refute classes =~ "truncate"
+        assert classes =~ "whitespace-normal"
+        assert classes =~ "[overflow-wrap:anywhere]"
+      end
+    end
+
+    test "option hrefs are the unchanged scenario_path/6 output, with and without return context" do
+      scenarios = Keyword.keys(HappyMailer.preview_props())
+
+      plain =
+        for option <- happy_options(render_menu()), into: %{} do
+          {option |> Floki.attribute("href") |> hd(), true}
+        end
+
+      assert plain ==
+               Map.new(scenarios, fn scenario ->
+                 {Sidebar.scenario_base_path("/dev/mail", HappyMailer, scenario) <> "?width=375",
+                  true}
+               end)
+
+      return_query = [{"return_surface", "deliveries"}, {"return_tenant_id", "tenant-1"}]
+
+      threaded =
+        for option <- happy_options(render_menu(return_query: return_query)) do
+          [href] = Floki.attribute(option, "href")
+          uri = URI.parse(href)
+          {uri.path, URI.decode_query(uri.query)}
+        end
+
+      for scenario <- scenarios do
+        path = Sidebar.scenario_base_path("/dev/mail", HappyMailer, scenario)
+
+        assert {path,
+                %{
+                  "width" => "375",
+                  "return_surface" => "deliveries",
+                  "return_tenant_id" => "tenant-1"
+                }} in threaded
+      end
+    end
+
+    test "open renders the details element open and the default does not" do
+      default_details =
+        render_menu() |> Floki.parse_document!() |> Floki.find("details") |> List.first()
+
+      open_details =
+        render_menu(open: true)
+        |> Floki.parse_document!()
+        |> Floki.find("details")
+        |> List.first()
+
+      assert Floki.attribute(default_details, "open") == []
+      assert Floki.attribute(open_details, "open") == ["open"]
+    end
+
+    test "Mailables sharing a leaf show a distinguishing group label; the title keeps the module" do
+      html =
+        render_menu(
+          mailables: [{Foo.Account.Mailer, [w: %{}]}, {Bar.Account.Mailer, [w: %{}]}],
+          current_mailable: Foo.Account.Mailer,
+          current_scenario: :w
+        )
+
+      document = Floki.parse_document!(html)
+
+      labels =
+        document
+        |> Floki.find(~s([data-testid="preview-email-menu-group-label"]))
+        |> Enum.map(&collapsed_text/1)
+
+      assert labels == ["Foo.Account.Mailer", "Bar.Account.Mailer"]
+
+      [mailable] = Floki.find(document, ~s([data-testid="preview-email-menu-active-mailable"]))
+      assert collapsed_text(mailable) == "Foo.Account.Mailer"
+    end
+
+    test "empty, single, and unselected states keep their existing rows" do
+      stub =
+        render_menu(
+          mailables: [{StubMailer, :no_previews}],
+          current_mailable: nil,
+          current_scenario: nil
+        )
+
+      assert stub =~ "No previews defined"
+      assert stub =~ "Choose an email"
+      refute stub =~ "preview-email-menu-active-technical"
+      refute stub =~ "preview-email-menu-active-scenario"
+
+      single =
+        render_menu(
+          mailables: [{HappyMailer, [only_one: %{}]}],
+          current_scenario: :only_one
+        )
+
+      assert length(happy_options(single)) == 1
+      assert single =~ "Only one"
+    end
+
+    test "render error shows the module-only technical identity" do
+      html =
+        render_menu(
+          mailables: Discovery.discover([BrokenMailer]),
+          current_mailable: BrokenMailer,
+          current_scenario: :__error__
+        )
+
+      trigger =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+
+      assert_trigger_identity(
+        trigger,
+        "render error",
+        "BrokenMailer",
+        "MailglassAdmin.Fixtures.BrokenMailer"
+      )
     end
   end
 
@@ -996,18 +1220,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert mixed_draft =~ ~s(value="Long draft 東京")
       assert mixed_draft =~ ~s(value="8items")
 
-      for {key, invalid} <- [
-            {"quantity", "8items"},
-            {"ratio", "2.75tail"},
-            {"due_on", "2026-02-30"}
+      for {key, invalid, message} <- [
+            {"quantity", "8items", "Enter a whole number."},
+            {"ratio", "2.75tail", "Enter a decimal number."},
+            {"due_on", "2026-02-30", "Enter a valid calendar date."}
           ] do
         html =
           render_change(view, "assigns_changed", %{"assigns" => %{key => invalid}})
 
         assert html =~ "value=\"#{invalid}\""
         assert html =~ ~s(id="assigns-#{key}-error")
-        assert html =~ ~s(aria-describedby="assigns-#{key}-help assigns-#{key}-error")
+        assert html =~ ~s(aria-describedby="assigns-#{key}-error")
         assert html =~ ~s(aria-invalid="true")
+        assert html =~ message
+        assert_ids_closed!(html)
+        refute_generic_helpers!(html)
       end
     end
 
@@ -1018,7 +1245,10 @@ defmodule MailglassAdmin.PreviewLiveTest do
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
 
       assert html =~ ~s(data-readonly-display="true")
-      assert html =~ "edit it in the Mailable scenario"
+      [note] = html |> Floki.parse_document!() |> Floki.find("#preview-assigns-readonly-note")
+      assert String.trim(Floki.text(note)) == @readonly_note
+      assert_ids_closed!(html)
+      refute_generic_helpers!(html)
       refute html =~ ~s(name="assigns[metadata]")
       refute html =~ ~s(type="datetime-local")
 
@@ -1046,17 +1276,126 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(id="preview-assigns-form")
       assert html =~ ~s(phx-debounce="150")
       refute html =~ "Render preview"
-      assert html =~ "Reset assigns"
+      assert html =~ "Restore defaults"
+      refute html =~ "Reset assigns"
     end
 
-    test "string assigns render stable labels, IDs, names, and help associations" do
+    test "restore defaults with no draft and no error re-renders the defaults (idempotent)", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      form = fn html ->
+        html |> Floki.parse_document!() |> Floki.find("#preview-assigns-form") |> Floki.raw_html()
+      end
+
+      first = view |> render_click("reset_assigns", %{}) |> form.()
+      second = view |> render_click("reset_assigns", %{}) |> form.()
+
+      assert first == second
+      assert first =~ ~s(value="Original")
+      refute first =~ "-error"
+    end
+
+    test "the assigns form ends with one Restore defaults action using the secondary classes" do
+      html =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{label: "Ada"})
+
+      [button] =
+        html |> Floki.parse_fragment!() |> Floki.find(~s(button[phx-click="reset_assigns"]))
+
+      assert String.trim(Floki.text(button)) == "Restore defaults"
+
+      assert Floki.attribute(button, "class") == [
+               "mg-focus-ring btn btn-ghost min-h-11 px-md border border-base-300 w-full sm:ml-auto sm:w-auto"
+             ]
+    end
+
+    test "editable fields carry no per-field helper and no -help ids" do
+      for {key, value} <- [
+            user_name: "Ada",
+            quantity: 3,
+            ratio: 1.5,
+            subscribed: true,
+            due_on: ~D[2026-10-09]
+          ] do
+        html = render_component(&AssignsForm.field/1, key: key, value: value)
+
+        refute html =~ "aria-describedby"
+        refute html =~ "-help"
+        refute_generic_helpers!(html)
+        assert_ids_closed!(html)
+      end
+    end
+
+    test "one form-level note describes read-only values and each display references it" do
+      html =
+        render_component(&AssignsForm.assigns_form/1,
+          scenario_assigns: %{user_name: "Ada", plan: :free}
+        )
+
+      document = Floki.parse_fragment!(html)
+
+      assert [note] = Floki.find(document, "#preview-assigns-readonly-note")
+      assert Floki.attribute(note, "data-testid") == ["preview-assigns-readonly-note"]
+      assert String.trim(Floki.text(note)) == @readonly_note
+
+      [plan] = Floki.find(document, "#assigns-plan")
+      assert Floki.attribute(plan, "aria-describedby") == ["preview-assigns-readonly-note"]
+      assert Floki.attribute(plan, "data-readonly-display") == ["true"]
+      assert Floki.attribute(plan, "aria-readonly") == ["true"]
+
+      [user_name] = Floki.find(document, "#assigns-user_name")
+      assert Floki.attribute(user_name, "aria-describedby") == []
+
+      assert_ids_closed!(html)
+      refute_generic_helpers!(html)
+    end
+
+    test "the read-only note is absent with only editable fields or no editable values" do
+      only_editable =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{user_name: "Ada"})
+
+      refute only_editable =~ "preview-assigns-readonly-note"
+      assert_ids_closed!(only_editable)
+
+      no_editable =
+        render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{plan: :free})
+
+      refute no_editable =~ "preview-assigns-readonly-note"
+      assert no_editable =~ "There are no editable values here."
+      assert_ids_closed!(no_editable)
+    end
+
+    test "every typed_values page state resolves its aria references", %{conn: conn} do
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      assert_ids_closed!(html)
+
+      invalid = render_change(view, "assigns_changed", %{"assigns" => %{"quantity" => "8items"}})
+      assert_ids_closed!(invalid)
+
+      assert_ids_closed!(render_click(view, "reset_assigns", %{}))
+    end
+
+    test "assert_ids_closed!/1 fails on a dangling aria-describedby" do
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_ids_closed!(~s(<div aria-describedby="missing"></div>))
+      end
+
+      assert_ids_closed!(~s(<p id="a"></p><div aria-describedby="a" aria-labelledby="a"></div>))
+    end
+
+    test "string assigns render stable labels, IDs and names without a helper" do
       html = render_component(&AssignsForm.field/1, key: :user_name, value: "Ada")
 
       assert html =~ ~s(<label for="assigns-user_name")
       assert html =~ ~s(id="assigns-user_name")
       assert html =~ ~s(name="assigns[user_name]")
-      assert html =~ ~s(aria-describedby="assigns-user_name-help")
-      assert html =~ ~s(id="assigns-user_name-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-user_name-help"
       assert html =~ "User name"
       refute html =~ "disabled"
     end
@@ -1068,8 +1407,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(id="assigns-subscribed")
       assert html =~ ~s(name="assigns[subscribed]")
       assert html =~ ~s(<label for="assigns-subscribed")
-      assert html =~ ~s(aria-describedby="assigns-subscribed-help")
-      assert html =~ ~s(id="assigns-subscribed-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-subscribed-help"
       assert html =~ "Subscribed"
     end
 
@@ -1079,7 +1418,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-readonly-display)
       assert html =~ ~s(id="assigns-mode")
       assert html =~ ~s(aria-readonly="true")
-      assert html =~ ~s(aria-describedby="assigns-mode-help")
+      refute html =~ "aria-describedby"
+      refute html =~ "assigns-mode-help"
+      assert html =~ "(atom)"
       assert html =~ ":preview"
       refute html =~ ~s(type="text" disabled)
       refute html =~ ~s(disabled)
@@ -1104,7 +1445,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
         html = render_component(&AssignsForm.field/1, key: key, value: value)
 
         assert html =~ ~s(data-readonly-display="true")
-        assert html =~ "edit it in the Mailable scenario"
+        refute html =~ "edit it in the Mailable scenario"
+        refute html =~ "aria-describedby"
         refute html =~ "JSON"
         refute html =~ "<textarea"
       end
@@ -1166,5 +1508,71 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert render(view) =~ "Reloaded: user_mailer.ex",
              "LiveReload broadcast must surface a 'Reloaded: <file>' flash"
     end
+  end
+
+  # Every token in every aria-describedby / aria-labelledby must name an id in the
+  # same fragment (PRVUX-06): a dangling token makes a screen reader announce nothing.
+  # Phase 178 D-04: the trigger reads primary scenario, secondary Mailable, then
+  # the exact technical identity as visible text. The primary and secondary
+  # lines carry no fixture namespace; only the technical line does.
+  defp assert_trigger_identity(trigger, primary, mailable, technical) do
+    text_of = fn testid ->
+      [node] = Floki.find(trigger, ~s([data-testid="#{testid}"]))
+      node |> Floki.text() |> String.split() |> Enum.join(" ")
+    end
+
+    assert text_of.("preview-email-menu-active-scenario") == primary
+    assert text_of.("preview-email-menu-active-mailable") == mailable
+    assert text_of.("preview-email-menu-active-technical") == technical
+    refute text_of.("preview-email-menu-active-scenario") =~ "MailglassAdmin.Fixtures"
+    refute text_of.("preview-email-menu-active-mailable") =~ "MailglassAdmin.Fixtures"
+    refute Floki.raw_html(trigger) =~ " · "
+  end
+
+  defp assert_ids_closed!(html) do
+    document = Floki.parse_fragment!(html)
+
+    ids =
+      document
+      |> Floki.find("[id]")
+      |> Enum.flat_map(&Floki.attribute(&1, "id"))
+      |> MapSet.new()
+
+    for attribute <- ["aria-describedby", "aria-labelledby"],
+        element <- Floki.find(document, "[#{attribute}]"),
+        value <- Floki.attribute(element, attribute),
+        token <- String.split(value),
+        do:
+          assert(
+            MapSet.member?(ids, token),
+            "#{attribute} token #{inspect(token)} has no matching id"
+          )
+
+    :ok
+  end
+
+  defp refute_generic_helpers!(html) do
+    for generic <- [
+          "Text value.",
+          "Whole number.",
+          "Decimal number.",
+          "Toggle on or off.",
+          ">Date.<"
+        ] do
+      refute html =~ generic, "generic per-field helper #{inspect(generic)} must not render"
+    end
+
+    refute html =~ ~r/id="assigns-[^"]*-help"/
+  end
+
+  defp preview_subtitle(html) do
+    {:ok, doc} = Floki.parse_fragment(html)
+
+    doc
+    |> Floki.find(~s([data-testid="admin-shell-page-header"] p))
+    |> hd()
+    |> Floki.text()
+    |> String.replace(~r/\s+/, " ")
+    |> String.trim()
   end
 end

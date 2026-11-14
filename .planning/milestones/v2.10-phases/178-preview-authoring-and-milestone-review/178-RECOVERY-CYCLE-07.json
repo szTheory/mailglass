@@ -1,0 +1,895 @@
+{
+  "schema_version": "1.0",
+  "cycle": 7,
+  "created_at": "2026-11-02T16:01:04.862Z",
+  "status": "stopped_after_required_failure",
+  "result_recorded_at": "2026-11-02T16:33:15Z",
+  "stopped_at": "2026-11-02T16:33:15Z",
+  "approval_checkpoint_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/approval.md",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-06.json",
+    "cycle": 6,
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "preview_status": "startup_failed_lock_drift",
+    "preview_attempts_consumed": 1,
+    "owner_demo_touched": false
+  },
+  "candidate": {
+    "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "parent": "f77e490614d9e9d98c4019ca8313eea64373c29c",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_before_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "commits_ahead": 21,
+    "files_changed": 31,
+    "insertions": 3653,
+    "deletions": 179,
+    "demo_lock_path": "reference/demo_app/mix.lock",
+    "demo_lock_sha256": "f4fe601bc03dbccf0bca72acc0307897a090ecdd9b96a5c039c687cd92a3f7cd"
+  },
+  "local_remediation": {
+    "plan": "178-31",
+    "summary": ".planning/phases/178-preview-authoring-and-milestone-review/178-31-SUMMARY.md",
+    "change": "Refresh only the demo nimble_options lock entry from 1.1.1 to 1.2.0.",
+    "locked_install": {
+      "command": "asdf exec mix deps.get --check-locked",
+      "exit_code": 0,
+      "log": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/locked-install.log",
+      "log_sha256": "1cb490cdc4af728530b49a05d05abf81d62f9c7386bc5c02ee82423a4b4d511f"
+    },
+    "compile": {
+      "command": "asdf exec mix compile --warnings-as-errors",
+      "exit_code": 0,
+      "log": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-06/compile.log",
+      "log_sha256": "9272db557eb38edadc368dfe168c3c8356a059537c11457df26e88b2caaea3bc"
+    }
+  },
+  "preapproval_snapshot": {
+    "observed_at": "2026-11-02T16:01:04.862Z",
+    "repository": "szTheory/mailglass",
+    "remote_main": {
+      "sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "is_ancestor_of_candidate": true
+    },
+    "target": {
+      "branch": "gsd/v2.10-ui-repairs-storybook",
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "candidate_is_fast_forward": true
+    },
+    "pr317": {
+      "number": 317,
+      "state": "open",
+      "draft": true,
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "updated_at": "2026-11-02T04:25:38Z"
+    },
+    "release_ledger": {
+      "path": ".planning/release-target.json",
+      "sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    }
+  },
+  "preflight": {
+    "status": "pass",
+    "remote_reads_only": true,
+    "candidate_sha_frozen_from_committed_head": true,
+    "candidate_is_fast_forward": true,
+    "remote_main_unchanged_from_base": true,
+    "remote_writes_performed": false,
+    "hosted_operations_performed": false,
+    "docker_or_preview_actions_performed": false
+  },
+  "authority": {
+    "hosted": {
+      "decision": "approve",
+      "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "recorded_at": "2026-11-02T16:09:10Z",
+      "user_reply": "Okay, yeah, let's follow your recommendations.",
+      "decision_basis": "The orchestrator classified the reply as approve-all for both separately presented scopes.",
+      "operations": [
+        "one_fast_forward_push",
+        "one_pr_body_update",
+        "one_ci_yml_dispatch",
+        "attempt_1_only",
+        "max_8_workflow_runs",
+        "no_retries"
+      ]
+    },
+    "preview": {
+      "decision": "approve",
+      "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "recorded_at": "2026-11-02T16:09:10Z",
+      "user_reply": "Okay, yeah, let's follow your recommendations.",
+      "conditional_on": "hosted_and_cost_gates_pass",
+      "attempts": 1
+    }
+  },
+  "approval_checkpoint": {
+    "sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "user_reply": "Okay, yeah, let's follow your recommendations.",
+    "recorded_at": "2026-11-02T16:09:10Z",
+    "decision": "approve",
+    "hosted_decision": "approve",
+    "conditional_preview_decision": "approve",
+    "decision_basis": "The orchestrator classified the reply as approve-all for both separately presented scopes.",
+    "operations": [
+      "one_fast_forward_push",
+      "one_pr_body_update",
+      "one_ci_yml_dispatch",
+      "attempt_1_only",
+      "max_8_workflow_runs",
+      "no_retries",
+      "one_conditional_isolated_preview_after_hosted_and_cost_gates_pass"
+    ]
+  },
+  "owner_checkpoint": null,
+  "owner_decision": null,
+  "allowed_operations_if_approved": {
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "fast_forward_pushes": 1,
+    "pr_body_updates": 1,
+    "ci_yml_dispatches": 1,
+    "dispatch_condition": "Only after the exact-SHA candidate PR run has no required-context or Demo Browser Evidence failure.",
+    "workflow_attempts": "attempt 1 only",
+    "max_total_workflow_runs": 8,
+    "retries_or_reruns": 0,
+    "conditional_preview_attempts": 1,
+    "preview_condition": "Separate explicit approval for this SHA and only after exact-SHA hosted and cost gates pass.",
+    "prohibited": [
+      "merge",
+      "release",
+      "publication",
+      "deployment",
+      "push to main",
+      "additional PR edits",
+      "additional dispatches",
+      "workflow retries or reruns",
+      "candidate substitution"
+    ]
+  },
+  "resource_scope": {
+    "historical_two_run_estimate_runner_minutes": 223,
+    "estimate_basis": "Prior PR run 106.1667 runner-minutes plus prior dispatch run 116.9667 runner-minutes.",
+    "actual_usage_varies": true,
+    "dollar_estimate": null,
+    "hosted_cost_status": "not_measured",
+    "local_preview_resources": "If separately approved and eligible, local CPU, disk, Docker image/build cache, network downloads on cache miss, and isolated containers; no dollar estimate."
+  },
+  "hosted": {
+    "status": "stopped",
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "push_result": {
+      "status": "succeeded",
+      "command": "git push origin 13451885d680b0f28d80792518dcd1733c8ec0e6:refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "ref": "refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "before_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "after_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "recorded_at": "2026-11-02T16:10:16Z"
+    },
+    "pr_update_result": {
+      "status": "succeeded",
+      "command": "gh pr edit 317 --body-file reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/pr-body.md",
+      "scope": "body only; title, draft status, and labels unchanged",
+      "body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+      "pr_url": "https://github.com/szTheory/mailglass/pull/317",
+      "recorded_at": "2026-11-02T16:10:48Z"
+    },
+    "dispatch_result": null,
+    "operations_used": {
+      "fast_forward_pushes": 1,
+      "pr_body_updates": 1,
+      "ci_yml_dispatches": 0,
+      "workflow_runs": 7,
+      "retries_or_reruns": 0
+    },
+    "runs": [
+      {
+        "id": 41478814538,
+        "name": "PR Title",
+        "workflow_path": ".github/workflows/pr-title.yml",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:18Z",
+        "updated_at": "2026-11-02T16:10:29Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478814538",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478814538.raw.json",
+            "sha256": "643dd13a145b9d133ea8e218a3108bd7338c22acf766718c6161400fb24ae813"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478814538.raw.json",
+            "sha256": "e78fc8958d32d9612b782a5d2811db3bfcbfb423aa19f4d8a09d4a0a6d34949f"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478814538.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391395511,
+              "name": "Conventional PR Title",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391395511.txt",
+              "log_sha256": "8f71b5b68e5e726446fe9d96a9cdf9522620108f8425682ad2fca59fbc30a7fa"
+            }
+          ],
+          "job_log_count": 1
+        },
+        "artifacts": []
+      },
+      {
+        "id": 41478819174,
+        "name": "CI",
+        "workflow_path": ".github/workflows/ci.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T16:10:19Z",
+        "updated_at": "2026-11-02T16:29:32Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478819174",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478819174.raw.json",
+            "sha256": "6f60aa406c1fa215f5448cf21a2dd92eed1f3c6c8bc39f256567c07302f0b39b"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478819174.raw.json",
+            "sha256": "e399003252523a61a513b90be3ff04df2791407241ba41a48f8b5a8b90f1be25"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478819174.raw.json",
+            "sha256": "36d8f68f28a79ad7bb1daf0efdba3d9c7383199501dc7c49257eead29b557a93"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391402917,
+              "name": "Branch Protection Advisory",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402917.txt",
+              "log_sha256": "58a905983c4c4b72adcc01aa9e37cead90e45ca52fb23a6645213f6fbcd13be7"
+            },
+            {
+              "job_id": 125391403566,
+              "name": "Detect Non-Doc Changes",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391403566.txt",
+              "log_sha256": "cae7ebd9d6b7cd1450bc52bb940c8f8d4d658a6297cd6feff051e199d73ff166"
+            },
+            {
+              "job_id": 125391550257,
+              "name": "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550257.txt",
+              "log_sha256": "ace759f758262f22896eb6b0d19671752c21c90c85c360e3d4174a75c35974f4"
+            },
+            {
+              "job_id": 125391550393,
+              "name": "Mix Task Tests (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550393.txt",
+              "log_sha256": "f2592a61cc38d5b48f8ca6cddb8fc9e546cd56a248893084b5bc411f5813e797"
+            },
+            {
+              "job_id": 125391550474,
+              "name": "Core Deterministic Suite (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550474.txt",
+              "log_sha256": "494b692adbc13bb04a3d6bc30cc1a98da0b5ddb3698d3664425caed24d1956d7"
+            },
+            {
+              "job_id": 125391550511,
+              "name": "Format Check (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550511.txt",
+              "log_sha256": "92ec6f2741d9474594e5991ef767cdeca8a9d6382461c9845b956328a763d59d"
+            },
+            {
+              "job_id": 125391550518,
+              "name": "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550518.txt",
+              "log_sha256": "e2f94b435a18ea9c693c184d93d7118af867e984f726f18690755b54e80b3e9e"
+            },
+            {
+              "job_id": 125391550536,
+              "name": "Support Contract Core (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550536.txt",
+              "log_sha256": "edacaa4d11313d73de840c2f10fa6d8f5dff3d532d3bd937e1d64506eb56a38b"
+            },
+            {
+              "job_id": 125391550557,
+              "name": "Installer Host Smoke",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550557.txt",
+              "log_sha256": "1330366f49cf1aad619e41c578319551cafd384ad1447968ad790747c17bab33"
+            },
+            {
+              "job_id": 125391550591,
+              "name": "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550591.txt",
+              "log_sha256": "de6331d1fa788fc3285c467a6c98a9a3404ca428f01fdb7bbe5728dbd9d12d18"
+            },
+            {
+              "job_id": 125391550655,
+              "name": "Deps Audit (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550655.txt",
+              "log_sha256": "877d391665d918aeca2adcb0b0c713d60957b25dc6569d66645f577b5c3291c0"
+            },
+            {
+              "job_id": 125391550679,
+              "name": "Design System Conformance (shell gates)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550679.txt",
+              "log_sha256": "aa5fe25a65ee9eb2313618d31b97a7f7dd7551ef62b9e0a96f398261fe28f8e1"
+            },
+            {
+              "job_id": 125391550700,
+              "name": "Inbound Test (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550700.txt",
+              "log_sha256": "35004039bc39e7c84984d8a06c6c127e1c27cf0e2a2e676d5e898dc005a69f93"
+            },
+            {
+              "job_id": 125391550705,
+              "name": "Hex Audit (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550705.txt",
+              "log_sha256": "4d63fde482c79b07180789514c09f10233f4ec627dc4a5bb764d9b66b696b04c"
+            },
+            {
+              "job_id": 125391550759,
+              "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550759.txt",
+              "log_sha256": "8d8ebaddb2cd384d0e233ef15b454c6d885e5e36155f1c0294413ab0b54a9193"
+            },
+            {
+              "job_id": 125391550764,
+              "name": "Installer Golden Gate (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550764.txt",
+              "log_sha256": "3bec55778679d391eb7f8288d8d0b799cb99d46165a3de08a26d6277948861ab"
+            },
+            {
+              "job_id": 125391550828,
+              "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550828.txt",
+              "log_sha256": "d5125837f74c2d09bd1b61657251fb03fa3ed487dafb4c4e165235f14a5f2115"
+            },
+            {
+              "job_id": 125391550859,
+              "name": "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550859.txt",
+              "log_sha256": "dde00b0b65797ea1f798548e013279ff41b9206520c944d75fa2b74c96b3f96d"
+            },
+            {
+              "job_id": 125391550885,
+              "name": "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550885.txt",
+              "log_sha256": "4bb17e61c0dacb4b789a992d08fc3889125ba0e2a802e0abbc33b273cd51a154"
+            },
+            {
+              "job_id": 125391550886,
+              "name": "Inbound Dialyzer (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550886.txt",
+              "log_sha256": "64c4176f571a8672dfe09c90b8d272884601113efa8c9e045da4e80e12f88db8"
+            },
+            {
+              "job_id": 125391550910,
+              "name": "Support Contract Admin (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "failure",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550910.txt",
+              "log_sha256": "cb8b7d08dbb8d6570a25b1d56eaf36c2fc8ba19ab9ccbdc9c1ee38e05ae4a5ae"
+            },
+            {
+              "job_id": 125391550933,
+              "name": "Dialyzer (Elixir 1.18 / OTP 27) (1.18, 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550933.txt",
+              "log_sha256": "9b205fcbd83519703dcd6ce0cb57de0692aa660ad25a33c90e004dbd5972aae8"
+            },
+            {
+              "job_id": 125391550939,
+              "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550939.txt",
+              "log_sha256": "2118aed7d7a2115d730add228dbcfbcb8ea818df4bf81c43872a282bd9cba12d"
+            },
+            {
+              "job_id": 125391551115,
+              "name": "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391551115.txt",
+              "log_sha256": "1d1fe6830bfb9f811ca1a14f29799600a7c15f26514c57c1a76dec6fde6c6eaf"
+            },
+            {
+              "job_id": 125391551184,
+              "name": "Credo Strict (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391551184.txt",
+              "log_sha256": "88879583af0f6846ae90dccc35ee25750bffefe34bb8f79b68a3c89983662859"
+            },
+            {
+              "job_id": 125400599599,
+              "name": "CI Green",
+              "status": "completed",
+              "conclusion": "failure",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125400599599.txt",
+              "log_sha256": "8015a731d28927bd88dfb622a892e276dfb734674a21312458afac611b53006a"
+            }
+          ],
+          "job_log_count": 26
+        },
+        "artifacts": [
+          {
+            "id": 13159975747,
+            "name": "trust-runner-repo-head-41478819174",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13159947386,
+            "name": "demo-browser-evidence-41478819174-1",
+            "size_in_bytes": 7892103,
+            "expired": false
+          },
+          {
+            "id": 13159890455,
+            "name": "trust-runner-clean-baseline-41478819174",
+            "size_in_bytes": 896,
+            "expired": false
+          },
+          {
+            "id": 13159660995,
+            "name": "preview-capture-advisory-41478819174",
+            "size_in_bytes": 2773917,
+            "expired": false
+          }
+        ]
+      },
+      {
+        "id": 41478819194,
+        "name": "Guard Release Trigger",
+        "workflow_path": ".github/workflows/guard-release-trigger.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:19Z",
+        "updated_at": "2026-11-02T16:10:43Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478819194",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478819194.raw.json",
+            "sha256": "85b39013b680184be510687c479c801b278beb2a8ca944af341b09a24792fe45"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478819194.raw.json",
+            "sha256": "544d4297d3d57f3dc66b342c786c1f8f7c25934e8fb2be0301e7ec654a79babd"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478819194.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391401213,
+              "name": "Guard Release Trigger",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391401213.txt",
+              "log_sha256": "5a906c9c3a21d4967a370f748119d808ae8bbd64f020e247b45137e969307b41"
+            }
+          ],
+          "job_log_count": 1
+        },
+        "artifacts": []
+      },
+      {
+        "id": 41478819198,
+        "name": "Advisory Matrix",
+        "workflow_path": ".github/workflows/advisory-matrix.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:19Z",
+        "updated_at": "2026-11-02T16:21:31Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478819198",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478819198.raw.json",
+            "sha256": "ba94ca3c1d8fcdb27ac566faad81be5677b43841ef7cf94ffd94bd2e40a3cd80"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478819198.raw.json",
+            "sha256": "a226a2ccb4d2dca05f52de9bbb40c589382c6da8a415cd73e02962b18f3a55e6"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478819198.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391402023,
+              "name": "Inbound Full Suite Advisory (schema public)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402023.txt",
+              "log_sha256": "bbb601a8fc74ac3309539d15c14d52b85f6f81af3f0a0f74b1f93dea62da05f0"
+            },
+            {
+              "job_id": 125391402363,
+              "name": "Inbound Full Suite Advisory (schema mailglass)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402363.txt",
+              "log_sha256": "28b81f16cb2b1ee7e45d926a33cee670cc5e0ace218eaf7cb1398ca386144f47"
+            },
+            {
+              "job_id": 125391402537,
+              "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402537.txt",
+              "log_sha256": "b79fd9f6c70e3df6dc6f9485100c456e60429b1bcce44bbccd2527709ed9ad3d"
+            },
+            {
+              "job_id": 125391402629,
+              "name": "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402629.txt",
+              "log_sha256": "8d978abcb06d18685f05ab9151483fb60e12c2e6031f851fb47168958bd3e1ed"
+            },
+            {
+              "job_id": 125391402642,
+              "name": "Provider Compatibility Advisory (Elixir 1.18 / OTP 27)",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391402642.txt",
+              "log_sha256": "c5f45e1ce2b3f80c9d70804c6a13d201f5e3b23242c69611d4b731af924ea4fd"
+            },
+            {
+              "job_id": 125391404890,
+              "name": "Core Full Suite Next Toolchain Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})",
+              "status": "completed",
+              "conclusion": "skipped",
+              "log_available": false
+            }
+          ],
+          "job_log_count": 5
+        },
+        "artifacts": []
+      },
+      {
+        "id": 41478819249,
+        "name": "Actionlint",
+        "workflow_path": ".github/workflows/actionlint.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:19Z",
+        "updated_at": "2026-11-02T16:11:10Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478819249",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478819249.raw.json",
+            "sha256": "03b0a84c580a4a14eb9dceb4c368aed19e0344ab96e0239e6f32f93642929ee4"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478819249.raw.json",
+            "sha256": "e4a6d3ce513837e8a655690abb78c48d9128c6b44afdfb73f730e719966a818c"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478819249.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391404565,
+              "name": "actionlint",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391404565.txt",
+              "log_sha256": "ae3971bf8326a21fecaeae72032fe92371abc291ab38291f5bb822034933f31e"
+            }
+          ],
+          "job_log_count": 1
+        },
+        "artifacts": []
+      },
+      {
+        "id": 41478910346,
+        "name": "Guard Release Trigger",
+        "workflow_path": ".github/workflows/guard-release-trigger.yml",
+        "event": "pull_request",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:51Z",
+        "updated_at": "2026-11-02T16:11:06Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478910346",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478910346.raw.json",
+            "sha256": "9bdabb1e39fddc7e672ee40072863fded63c80bc4e9e80d3ba3eebd84d6ec03a"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478910346.raw.json",
+            "sha256": "d48db6170bf8887c95a57be5041d10b978be7a23c4711715ad78f687aa1c54c3"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478910346.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391708756,
+              "name": "Guard Release Trigger",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391708756.txt",
+              "log_sha256": "e6b9bf469d3e7db3d5d2c17a3558361afa36fdc0964e0f2688b77f51d0502a0b"
+            }
+          ],
+          "job_log_count": 1
+        },
+        "artifacts": []
+      },
+      {
+        "id": 41478912737,
+        "name": "PR Title",
+        "workflow_path": ".github/workflows/pr-title.yml",
+        "event": "pull_request_target",
+        "attempt": 1,
+        "head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T16:10:52Z",
+        "updated_at": "2026-11-02T16:11:15Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41478912737",
+        "raw_evidence": {
+          "run": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/run-41478912737.raw.json",
+            "sha256": "8b34620a7ce265bfe14e2eac52e356d97d692b1d24665adcd1357c41994c0b26"
+          },
+          "jobs": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/jobs-41478912737.raw.json",
+            "sha256": "3d05d2e7a5c56cb2202d92d30d805f11bc145383361419239a878ac27c626fb9"
+          },
+          "artifacts": {
+            "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478912737.raw.json",
+            "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+          },
+          "job_logs": [
+            {
+              "job_id": 125391719052,
+              "name": "Conventional PR Title",
+              "status": "completed",
+              "conclusion": "success",
+              "log_available": true,
+              "log_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391719052.txt",
+              "log_sha256": "c2c7d1f4a2ccdf33db5aca5d1c7a08c3a7b1fc3931b7d950c086ab2a623c2002"
+            }
+          ],
+          "job_log_count": 1
+        },
+        "artifacts": []
+      }
+    ],
+    "stop": {
+      "reason": "required_job_failed",
+      "detected_at": "2026-11-02T16:20:47Z",
+      "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "workflow_run_id": 41478819174,
+      "workflow_name": "CI",
+      "event": "pull_request",
+      "attempt": 1,
+      "failed_job_id": 125391550910,
+      "failed_job_name": "Support Contract Admin (Elixir 1.18 / OTP 27)",
+      "failed_job_conclusion": "failure",
+      "failed_job_url": "https://github.com/szTheory/mailglass/actions/runs/41478819174/job/125391550910",
+      "dispatch_withheld": true,
+      "no_retry_or_rerun": true,
+      "other_attempt_1_runs_left_to_finish": false,
+      "failure_log": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/job-log-125391550910.txt",
+      "failure_log_status": "captured",
+      "failure_log_sha256": "cb8b7d08dbb8d6570a25b1d56eaf36c2fc8ba19ab9ccbdc9c1ee38e05ae4a5ae",
+      "failure_diagnosis": {
+        "test_file": "mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs",
+        "test_count": 1205,
+        "failure_count": 2,
+        "excluded_count": 1,
+        "exit_code": 2,
+        "failures": [
+          {
+            "test": "normal Inbound facts match the scoped production projection at position 3 of 6",
+            "line": 135,
+            "assertion": "page.total_count == 6",
+            "actual": 0,
+            "expected": 6
+          },
+          {
+            "test": "Unicode Inbound facts stay exact and foreign Account rows remain excluded",
+            "line": 217,
+            "assertion": "[persisted] = page.entries",
+            "actual": [],
+            "expected": "one persisted entry"
+          }
+        ],
+        "additional_log_note": "The log reports a missing inotify-tools warning for FileSystem; the retained assertions do not establish that warning as the cause of the two projection failures."
+      }
+    },
+    "gates": {
+      "automatic_pr_run_id": 41478819174,
+      "ci_green": "failure",
+      "guard_release_trigger": "success",
+      "demo_browser_evidence": "success",
+      "support_contract_admin": "failure",
+      "dispatch_gate": "blocked_by_required_failure"
+    },
+    "evidence_manifests": {
+      "hosted_evidence": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/hosted-evidence.sha256",
+        "sha256": "d9b4320d0e5f5f0ef64e6dabf813eab2d183a21f57b10648ded8b0a1d48b372a",
+        "entries": 255
+      },
+      "job_logs": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/hosted-job-logs.sha256",
+        "sha256": "2e091620beb04f321d8ed2e4ea492a034a6527880bbb773ad0cf3bd1746bf4a8",
+        "entries": 37
+      },
+      "ci_artifacts": {
+        "path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/artifacts-41478819174.sha256",
+        "sha256": "41bc4701ee28f93324bf8e3c653b6592bff2c1ed5815d961b63d7aab70451fe4",
+        "entries": 192
+      }
+    },
+    "final_snapshot": {
+      "observed_at": "2026-11-02T16:33:15Z",
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "target_branch_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+      "pr_body_sha256": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+      "workflow_runs_for_candidate": 7
+    }
+  },
+  "cost": {
+    "status": "not_measured",
+    "reproducible": false,
+    "identity_bound": false,
+    "gate": "not_evaluated",
+    "preview_eligible": false,
+    "artifact": null,
+    "input_copies": [
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/expected.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/expected.json",
+        "sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-run.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/baseline-run.raw.json",
+        "sha256": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+        "byte_identical": true
+      },
+      {
+        "source": "reference/demo_app/tmp/phase178_candidate/recovery-disposition-inputs/baseline-jobs.raw.json",
+        "copy": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-07/disposition-inputs/baseline-jobs.raw.json",
+        "sha256": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+        "byte_identical": true
+      }
+    ]
+  },
+  "preview": {
+    "status": "not_started",
+    "candidate_sha": "13451885d680b0f28d80792518dcd1733c8ec0e6",
+    "prior_cycle_attempt_is_consumed": true,
+    "attempt_count": 0,
+    "authorization_required": "Fresh explicit conditional approval after hosted and cost gates pass.",
+    "eligible": false
+  },
+  "packet_hashes": {
+    "approval": "a454e7108e69976d51c7c781d60546e50e59cc87bf4a3cdb5bf7782a5ea80aa0",
+    "pr_body": "a8b18d420a3ed8bffe68a6019bc59b452b8a0744f4691ceee809df496de7eeba"
+  },
+  "stop_rules": [
+    "A missing or ambiguous owner reply leaves all authority unset.",
+    "A changed candidate SHA, remote main, target ref, PR state/base/head/body, or release-ledger digest requires a new checkpoint and fresh approval.",
+    "Any failed required or Demo lane, unexpected workflow trigger, changed ref, missing receipt, ambiguous result, or unclassified setup failure stops Cycle 07 without retry.",
+    "At most eight total attempt-1 workflow runs, one push, one PR body update, one ci.yml dispatch, and one separately approved conditional local preview."
+  ],
+  "next_actor": "The owner/planner addresses the QuickViewProjection support-contract regression, then prepares a new candidate and obtains fresh bounded approval before any further hosted or preview operation.",
+  "next_action": "Cycle 07 is stopped. Do not dispatch, rerun, retry, or launch a preview for this candidate; keep UIQ-08 open."
+}

@@ -1,0 +1,176 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 5,
+  "created_at": "2026-11-02T05:20:27Z",
+  "status": "stopped",
+  "result_recorded_at": "2026-11-02T14:31:08Z",
+  "approval_checkpoint_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-29-APPROVAL.md",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-04.json",
+    "sha256": "38d260ee8e8de9cd65f560f1f7b1f6933e741241a1988b611102fdafe224f9ff"
+  },
+  "cause_and_fix": {
+    "previous_result": "Cycle 04's one preview attempt returned HTTP 302 from the demo login return route because curl did not persist the synthetic session between requests.",
+    "local_plan": ".planning/phases/178-preview-authoring-and-milestone-review/178-29-PLAN.md",
+    "local_summary": ".planning/phases/178-preview-authoring-and-milestone-review/178-29-SUMMARY.md",
+    "commits": [
+      "5b184f15",
+      "76b7b25d",
+      "06b5ebc0",
+      "bd3f90fc",
+      "7a028d6e"
+    ],
+    "launcher_sha256": "e0ce9e159b69f7ee6289c040a6612520c18a70e8cc24ae2d0553535fae324d93",
+    "offline_test_sha256": "f549821d13f0eb39d11f81fae45d86d3b6cc2a82041bc8e90d23975722563dd5",
+    "local_checks": {
+      "bash_syntax_launcher": "pass",
+      "bash_syntax_self_test": "pass",
+      "offline_self_test": "pass (12 checks)",
+      "independent_review": "no blocking findings"
+    },
+    "product_candidate_changed": false,
+    "dependencies_added": false
+  },
+  "candidate": {
+    "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "source_file": "mailglass_admin/e2e/flows.spec.js",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87"
+  },
+  "preapproval_snapshot": {
+    "observed_at": "2026-11-02T05:20:27Z",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "pr": {
+      "number": 317,
+      "state": "OPEN",
+      "draft": true,
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)"
+    },
+    "required_ci": {
+      "status": "completed_success",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "required_contexts": [
+        "CI Green",
+        "Guard Release Trigger"
+      ],
+      "hosted_cost_disposition": ".planning/phases/178-preview-authoring-and-milestone-review/178-COST-DISPOSITION.json",
+      "hosted_cost_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665"
+    },
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "cycle_04_sha256": "38d260ee8e8de9cd65f560f1f7b1f6933e741241a1988b611102fdafe224f9ff",
+    "plan_29_sha256": "2d9fe8eab6e9aaf81c842a44da0904704d96afb5dbaa3a812ccc29d42991fe61",
+    "summary_29_sha256": "224be8e92f0d75a1391b01233a2e91d1e7b3af72daa2eebc7b3c7424139b0786"
+  },
+  "authority": {
+    "preview": {
+      "decision": "approve",
+      "observed_at": "2026-11-02T14:27:57Z",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "preview_attempts": 1,
+      "allowed_follow_up": "Read-only loopback URL/marker checks and one candidate-scoped teardown only if a failed launch wrote its record.",
+      "user_reply": "Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve."
+    },
+    "user_decision": {
+      "status": "approved",
+      "observed_at": "2026-11-02T14:27:57Z",
+      "user_reply": "Yes, I approve. Also, I don't understand. Oh, yeah, yeah, I approve."
+    }
+  },
+  "preflight": {
+    "verified_at": "2026-11-02T14:27:53Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "launcher_sha256": "e0ce9e159b69f7ee6289c040a6612520c18a70e8cc24ae2d0553535fae324d93",
+    "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "pr_state": "OPEN",
+    "pr_draft": true,
+    "required_checks": "CI Green and Guard Release Trigger completed successfully for the exact candidate SHA.",
+    "cycle_04_sha256": "38d260ee8e8de9cd65f560f1f7b1f6933e741241a1988b611102fdafe224f9ff",
+    "cost_disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "docker_daemon": "available; server 29.5.2",
+    "owner_demo_container_count": 0,
+    "host_disk_available": "240 GiB"
+  },
+  "allowed_operations_if_approved": {
+    "preview_attempts": 1,
+    "exact_command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "read_only_url_marker_checks": "After a passing launcher run, verify the documented Plan 178-23 review URLs and page markers against this loopback preview; do not relaunch.",
+    "failure_cleanup_once": "If the launcher or post-launch URL/marker/CSS/CI check fails and the launcher wrote its candidate record, run exactly once: bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json. If preflight stops before writing a record, no candidate resources exist to clean up.",
+    "success_disposition": "Keep the passing preview available for owner review and report its actual base URL and the exact teardown command."
+  },
+  "resource_scope": {
+    "compose_project_prefix": "mailglass-phase178-review-",
+    "network_binding": "Loopback 127.0.0.1 only, using newly allocated ports",
+    "containers_and_volumes": "Candidate-scoped demo and demo_db project only",
+    "temporary_files": "Candidate worktree, run directory, route bodies, and cookie jar",
+    "owner_demo": "Preserve mailglass-storybook-review-demo and all unrelated Docker resources.",
+    "docker_image_and_global_cache": "The launch may download locked build inputs on a cache miss and may build a project-tagged image. The existing teardown removes candidate containers, network, volumes, worktree, and run directory; it does not prune Docker images or global build cache.",
+    "success": "Leave candidate services running for review.",
+    "failure": "For any failed launch or post-launch verification after a candidate record exists, use only the record-bound teardown command once; do not retry.",
+    "hosted_side_effects": "Zero new workflows; `--require-ci` performs read-only check-run lookup only."
+  },
+  "hosted": {
+    "status": "cycle_04_passed",
+    "new_workflows_authorized": 0,
+    "new_hosted_writes_authorized": 0
+  },
+  "cost": {
+    "status": "unchanged",
+    "disposition_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "new_hosted_runner_cost": 0,
+    "local_docker_cost": "Local CPU, disk, Docker image/build cache and isolated containers; no dollar estimate."
+  },
+  "preview": {
+    "status": "stopped_before_compose",
+    "prior_cycle_attempt_is_consumed": true,
+    "attempt_count": 1,
+    "launch_started_at": "2026-11-02T14:29:25Z",
+    "launch_completed_at": "2026-11-02T14:29:25Z",
+    "launcher_exit_code": 1,
+    "result": "fail",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "candidate_record_written": false,
+    "compose_started": false,
+    "base_url": null,
+    "routes": null,
+    "css": null,
+    "ci_status": "not_checked_by_launcher",
+    "failure_reason": "Launcher exited 1: could not create detached worktree at 8e501960bc975ed44b632ba5c74522e0c5d66f8c. The launcher redirects git worktree add stderr, so the underlying Git error was not captured.",
+    "cleanup": {
+      "status": "verified",
+      "launcher_exit_trap_removed_temporary_run_parent": true,
+      "git_worktree_list_contains_only_main_checkout": true,
+      "candidate_record_absent": true,
+      "compose_project_created": false,
+      "candidate_docker_resources_created": false,
+      "teardown_invocation": "not run; no candidate record or Compose resources existed",
+      "owner_demo_touched": false
+    },
+    "teardown_command": "bash scripts/check_phase178_candidate.sh --teardown reference/demo_app/tmp/phase178_candidate/recovery-cycle-05/candidate-8e501960.json",
+    "retries": 0,
+    "relaunches": 0
+  },
+  "stop_rules": [
+    "Before launch, stop if the candidate, launcher hash, remote refs, PR identity, exact-SHA required checks, release ledger, cost disposition, or prior-cycle record differs from this checkpoint.",
+    "The one approved launcher invocation failed before Compose while creating its detached worktree. Preserve this stop and do not retry or relaunch under Cycle 05.",
+    "Do not push, edit the PR, dispatch CI, merge, release, publish, deploy, prune global Docker state, or modify the owner demo."
+  ],
+  "stopped_at": "detached candidate worktree creation, before Compose and before candidate record creation",
+  "diagnosis": {
+    "status": "likely_executor_sandbox_git_write_denial",
+    "evidence": "The delegated executor later received Operation not permitted when trying to create .git/index.lock for the scoped documentation commit. The preview launcher also failed while creating Git worktree metadata.",
+    "confidence": "inference; the launcher redirected git worktree add stderr, so its exact error was not captured",
+    "remedy_for_a_future_cycle": "Preserve Git stderr and run any newly approved launcher attempt from the primary execution context with Git metadata write permission."
+  },
+  "next_actor": "phase_178_owner_or_planner",
+  "next_action": "Apply and review local worktree-failure diagnostics; any future preview requires a new plan and fresh one-attempt approval."
+}

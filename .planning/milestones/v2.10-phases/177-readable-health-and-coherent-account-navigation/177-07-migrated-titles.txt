@@ -1,0 +1,7 @@
+Phase 168 Delivery Mailable wrapping
+Phase 168 Account scope
+Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom
+multi-tenant selector preserves surface state and inbound pagination uses real boundaries
+responsive themes, touch, focus, reduced motion, and current evidence at each viewport
+Phase 175 Inbound layout U1/U2/U3/U5/U6: Unicode subject, Mailbox and replay at real zoom
+account menu closes when the operator clicks outside it

@@ -43,6 +43,29 @@ test("reset checks health identity then posts to the same explicit local origin"
   assert.equal(calls[1].options.headers["x-mailglass-demo-reset-token"], "secret-token");
 });
 
+test("hosted run/attempt identity uses the same guarded reset boundary", async () => {
+  const runId = "mailglass-evidence-40484284465-1";
+  const { calls, request } = requestFixture({ marker: runId });
+  await resetDisposableEvidence(request, {
+    DEMO_BASE_URL: "http://demo:4015",
+    DEMO_EVIDENCE_RUN_ID: runId,
+    DEMO_EVIDENCE_RESET_TOKEN: "secret-token"
+  });
+  assert.deepEqual(calls.map(({ method }) => method), ["GET", "POST"]);
+});
+
+for (const runId of ["mailglass-evidence-40484284465-0", "mailglass-evidence-0-1", "mailglass-evidence-run-1", "mailglass-evidence-123-1/../other"]) {
+  test(`rejects malformed hosted identity ${runId} before reset`, async () => {
+    const { calls, request } = requestFixture({ marker: runId });
+    await assert.rejects(resetDisposableEvidence(request, {
+      DEMO_BASE_URL: "http://demo:4015",
+      DEMO_EVIDENCE_RUN_ID: runId,
+      DEMO_EVIDENCE_RESET_TOKEN: "secret-token"
+    }));
+    assert.equal(calls.length, 0);
+  });
+}
+
 for (const [name, env, healthOptions] of [
   ["missing base URL", { DEMO_EVIDENCE_RUN_ID: RUN_ID, DEMO_EVIDENCE_RESET_TOKEN: "token" }, {}],
   ["remote base URL", { DEMO_BASE_URL: "https://example.com", DEMO_EVIDENCE_RUN_ID: RUN_ID, DEMO_EVIDENCE_RESET_TOKEN: "token" }, {}],

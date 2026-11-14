@@ -84,7 +84,8 @@ defmodule MailglassAdmin.Operator.RepairState do
     do: "Replay command completed with no newly normalized Events."
 
   def command_feedback(_result),
-    do: "Replay command completed. Its result does not establish provider receipt or mail delivery."
+    do:
+      "Replay command completed. Its result does not establish provider receipt or mail delivery."
 
   @spec flash_failure(term()) :: String.t()
   def flash_failure(:webhook_event_not_found),
@@ -114,6 +115,43 @@ defmodule MailglassAdmin.Operator.RepairState do
 
   def authorization_feedback("Replay is not authorized."), do: "Replay is not authorized."
   def authorization_feedback(_message), do: "This action is not authorized."
+
+  @spec dialog_feedback(atom() | tuple()) :: %{kind: :error, text: String.t()}
+  def dialog_feedback(:review_changed),
+    do: %{kind: :error, text: "Eligibility changed. Review the current request again."}
+
+  def dialog_feedback(:read_unavailable),
+    do: %{
+      kind: :error,
+      text: "Couldn’t refresh current Delivery eligibility. Review again before trying."
+    }
+
+  def dialog_feedback(:denied),
+    do: %{
+      kind: :error,
+      text:
+        "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+    }
+
+  def dialog_feedback({:authorization, :stale_auth, _message}),
+    do: %{kind: :error, text: authorization_feedback("Recent authentication is required.")}
+
+  def dialog_feedback({:authorization, :unauthorized, _message}),
+    do: dialog_feedback(:denied)
+
+  def dialog_feedback(:target_required),
+    do: %{kind: :error, text: "Choose one exact stored request before confirming replay."}
+
+  def dialog_feedback(:no_selected_delivery),
+    do: %{kind: :error, text: "The selected Delivery changed. Review the current request again."}
+
+  def dialog_feedback(:command_failure),
+    do: %{
+      kind: :error,
+      text: "Replay couldn’t be completed. Review current eligibility before trying again."
+    }
+
+  def dialog_feedback(_reason), do: dialog_feedback(:command_failure)
 
   @spec replay_evidence_unavailable_copy() :: String.t()
   def replay_evidence_unavailable_copy,
@@ -184,8 +222,7 @@ defmodule MailglassAdmin.Operator.RepairState do
     do: "Historical rows without exact webhook linkage cannot be replayed safely."
 
   def unavailable_reason_copy(:read_unavailable),
-    do:
-      "Current replay targets could not be refreshed. Close this review and open it again to retry."
+    do: "Current replay targets could not be refreshed. Review them again before confirming."
 
   def unavailable_reason_copy(:no_delivery_events),
     do: "This delivery does not yet have any linked webhook events to replay."

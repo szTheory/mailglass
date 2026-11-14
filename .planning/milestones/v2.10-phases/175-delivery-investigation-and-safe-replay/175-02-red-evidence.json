@@ -1,0 +1,10 @@
+{
+  "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 elixir -r /private/tmp/phase175_tap_formatter.exs -S mix test test/mailglass_admin/operator_live_test.exs --only phase175 --trace --formatter Phase175TAPFormatter (cwd: mailglass_admin)",
+  "exitCode": 2,
+  "output": "TAP version 13\nok 1 - test operator surface Phase 175 Delivery entry keeps same-looking ambiguous requests separate\nok 2 - test operator surface Phase 175 Delivery entry explains unavailable replay and rejects forged identities\nok 3 - test operator surface Phase 175 suppression refresh marks retained evidence stale and recovers on retry\nok 4 - test operator surface Phase 175 Delivery entry discards a review after the selected delivery changes\nok 5 - test operator surface Phase 175 Delivery entry exposes replay from the selected quick and full detail\nok 6 - test operator surface Phase 175 suppression refresh keeps initial failure unavailable and successful empty distinct without writes\nok 7 - test operator surface Phase 175 suppression policy refresh observes external changes, expiry, and Account/stream scope\nnot ok 8 - test operator surface Phase 175 suppression policy states removal support, unknown expiry, and safe missing values\n1..8",
+  "targetTest": "test operator surface Phase 175 suppression policy states removal support, unknown expiry, and safe missing values",
+  "targetFile": "mailglass_admin/test/mailglass_admin/operator_live_test.exs",
+  "expected": "The suppression card labels Removal policy, uses the approved supported/blocked copy, says Expiry date not recorded when expiry is unknown, and renders missing values safely.",
+  "actual": "The target test executed and failed at assert supported_html =~ \\\"Removal policy\\\" because the current card renders the old Public removal command label.",
+  "semanticAssessment": "The TAP run executed eight phase175 tests. The new external-change, expiry, Account, and stream isolation test passed; the policy component test failed on the intended copy assertion. No setup, load, or compile failure occurred."
+}

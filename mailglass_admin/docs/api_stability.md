@@ -31,7 +31,7 @@ These surfaces are part of the documented `v1.x` admin contract:
 - operator-mount semantics at the level of:
   - explicit session-key whitelist
   - adopter-owned auth module
-  - mount-time authorization for operator access
+  - operator-access authorization on arrival and when the Account parameter changes
   - action-time authorization for destructive actions such as replay
 - operator read-model and service seams exposed through the admin package docs:
   `Mailglass.Operator.Deliveries`, `Mailglass.Operator.Timeline`,
@@ -99,8 +99,13 @@ Stable promise:
 
 - `authorize(action(), context)` is the one authorization callback contract
 - four named stable actions are used by the package today: `:operator_access`
-  (mount), `:destructive_action` (outbound webhook replay), `:replay_inbound`
-  (inbound replay), and `:reveal_raw` (inbound raw-source reveal)
+  (operator arrival and Account parameter changes), `:destructive_action`
+  (outbound webhook replay), `:replay_inbound` (inbound replay), and
+  `:reveal_raw` (inbound raw-source reveal)
+- `:operator_access` runs on arrival and before the LiveView handles a changed
+  `tenant_id` parameter. Patches that leave that key unchanged do not call the
+  auth adapter again; an Account change does not rerun the full `on_mount`
+  lifecycle.
 - every action's context includes `:actor`
 - an adapter that does not grant an action denies it, and the operator surface
   shows the denial
@@ -110,9 +115,10 @@ Stable promise:
 
 Not promised:
 
-- context keys other than `:actor`: `:params`, `:session`, `:socket` (mount),
-  `:delivery`, `:replay_target` (outbound replay), and `:inbound_record`
-  (inbound replay) are passed today but are informational and may change
+- context keys other than `:actor`: `:params`, `:session`, and `:socket` for
+  `:operator_access` (arrival and Account parameter changes), `:delivery`,
+  `:replay_target` (outbound replay), and `:inbound_record` (inbound replay)
+  are passed today but are informational and may change
 - the adopter's auth policy itself
 - any hosted login/session product from `mailglass_admin`
 

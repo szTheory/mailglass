@@ -17,6 +17,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   attr(:outcome_values, :list, required: true)
   attr(:window_options, :list, required: true)
   attr(:errors, :map, default: %{})
+  attr(:committed_search, :string, default: "")
 
   def fields(assigns) do
     ~H"""
@@ -31,6 +32,11 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         help_display={:tooltip}
         error={field_error(@errors, "search")}
         placeholder="Subject or recipient"
+        autocomplete="off"
+        enterkeyhint="search"
+        data-committed={@committed_search}
+        phx-debounce="300"
+        phx-hook="FilterSearchSync"
       />
 
       <Components.filter_field
@@ -40,7 +46,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         help="Limit results to recently received messages."
         help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
-        options={@window_options}
+        options={window_options(@window_options, @form[:window_hours].value)}
       />
 
       <Components.filter_field
@@ -51,7 +57,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         help_display={:tooltip}
         error={field_error(@errors, "outcome")}
         prompt="Any outcome"
-        options={enum_options(@outcome_values)}
+        options={enum_options(@outcome_values, @form[:outcome].value)}
       />
 
       <Components.filter_field
@@ -66,6 +72,18 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
       />
     </Components.filter_section>
     """
+  end
+
+  # A rejected window stays selected as a custom option so the select never contradicts
+  # its error message (D-12).
+  defp window_options(options, value) do
+    value = to_string(value || "")
+
+    if Enum.any?(options, fn {_label, hours} -> to_string(hours) == value end) do
+      options
+    else
+      [{"Custom period (#{value} hours)", value} | options]
+    end
   end
 
   defp label(nil), do: "Unknown"
@@ -83,6 +101,21 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     |> Atom.to_string()
     |> String.replace("_", " ")
     |> String.capitalize()
+  end
+
+  # A rejected enum value stays selected as a "Not applied" option so the select never
+  # shows its prompt beside its "was not applied" error (D-12). The option is enabled on
+  # purpose: a disabled option is left out of form submission, so the next change event
+  # would post no value and silently clear the filter.
+  defp enum_options(values, current) do
+    listed = enum_options(values)
+    current = current |> to_string() |> String.trim()
+
+    if current != "" and not Enum.any?(listed, fn {_label, value} -> value == current end) do
+      [{"Not applied: " <> current, current} | listed]
+    else
+      listed
+    end
   end
 
   defp enum_options(values) do

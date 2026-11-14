@@ -16,7 +16,7 @@ test.describe("demo outbound replay", () => {
     expect(response.ok()).toBeTruthy();
   });
 
-  test("outbound replay from the demo completes and records a new event", async ({ page }) => {
+  test("outbound replay from the demo completes and records a durable no-change outcome", async ({ page }) => {
     // Locate the usage_alert bounce. The desktop table row carries the status text "Bounced";
     // the mobile card variant does not, so exactly one row matches.
     await page.goto(
@@ -67,9 +67,16 @@ test.describe("demo outbound replay", () => {
       `no success feedback; flash: ${await flashText()}`,
     ).toBeVisible();
     await expect(page.getByTestId("operator-replay-command-feedback")).toHaveText(
-      /Replay command (added|completed)/,
+      "Replay command completed with no newly normalized Events.",
     );
     await expect(page.getByTestId("operator-replay-modal")).toBeHidden();
+    const toast = page.getByTestId("copy-toast");
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveText(
+      "Replay command completed with no newly normalized Events.",
+    );
+    await expect(toast).toHaveAttribute("role", "status");
+    await expect(toast).toHaveAttribute("aria-live", "polite");
     await expect(succeeded).toHaveCount(before + 1);
   });
 });

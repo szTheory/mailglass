@@ -1,0 +1,13 @@
+{
+  "condition": "warm",
+  "source_revision": "3127437246161aba957ebeae0d72e6ee0e7dbbb2",
+  "source_digest": "fd66af7e2e43cf303e39135b7cdc1ec73d239eb012c0632b013a55cd27127e73",
+  "compose_project": "mailglass-evidence-20261027215211-71763-23440",
+  "admin_operator_ms": 22093,
+  "admin_operator_exit_code": 0,
+  "timings_ms": {
+    "demo_scan": 96716,
+    "admin_axe_scan": 42660,
+    "admin_operator": 22093
+  }
+}

@@ -1,0 +1,404 @@
+{
+  "schema_version": "demo_browser_evidence.v2",
+  "generated_at": "2026-10-27T22:20:03.100Z",
+  "status": "passed",
+  "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+  "candidate_dirty": true,
+  "route": "synthetic demo browser routes",
+  "fixture": "synthetic fixtures only",
+  "theme": "per-capture pinned theme",
+  "viewport": "per-capture pinned viewport",
+  "interaction_state": "per-capture pinned interaction state",
+  "browser": "per-capture identified browser",
+  "before_after": "six pinned baseline pairs",
+  "source_build_served_identity": "validated per capture",
+  "test_outcomes": {
+    "counts": {
+      "expected": 101,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "flaky_titles": [],
+    "passed_titles": [
+      "Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns",
+      "Phase 175 connected Delivery empty states use exact headings, guidance, and actions",
+      "Phase 175 fidelity: current Delivery story, connected focus, assets, themes and actual zoom",
+      "Phase 175 retained Delivery scenario inventory and production composition",
+      "Phase174 delivery first, last, single, empty, and nil-position states remain truthful",
+      "Phase174 delivery keyboard navigation preserves selection context and focus return",
+      "Phase174 delivery retained variants preserve exact scenario facts and bounded theme captures",
+      "Phase174 delivery scenario manifest accounts for rendered and real-route-only cases",
+      "Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries",
+      "Phase174 inbound manifest selects exactly five variants and preserves route-only emptiness",
+      "Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable",
+      "Phase174 tracer opens a real Delivery and its retained production story",
+      "Storybook owns its iframe hook and both pinned Demo surfaces complete real cycles",
+      "account picker lists the two deliveries-bearing personas; helios-void absent",
+      "built-in unsubscribe pages keep their copy within narrow viewports",
+      "dashboard links to preview and operator surfaces",
+      "delivery loads production CSS, all font bytes, and computed roles",
+      "delivery normal and boundary quick views fit bounded responsive widths",
+      "delivery story owns Light, Dark, and live System review themes",
+      "empty account stays isolated and explains the absence of deliveries",
+      "fjordline-aps edge values render: long-ID + long-mailable truncated, recipient verbatim, nil reject_reason no reason line",
+      "helios-void direct URL renders the empty state, not a crash",
+      "inbound loads production CSS, all font bytes, and computed roles",
+      "inbound normal and boundary quick views fit bounded responsive widths",
+      "inbound operator opens with seeded support mailbox evidence",
+      "inbound story owns Light, Dark, and live System review themes",
+      "northstar high-count lifecycle renders without horizontal overflow",
+      "outbound operator opens with seeded delivery evidence",
+      "outbound replay from the demo completes and records a durable no-change outcome",
+      "preview distinguishes the public component and AtlasDesk HTML authoring paths",
+      "recipient browser shows a truthful expired unsubscribe state",
+      "serves the expected routes and the committed Admin CSS at its mount path",
+      "shot deliveries-fjordline-aps-1440-dark",
+      "shot deliveries-fjordline-aps-1440-light",
+      "shot deliveries-fjordline-aps-1440-system",
+      "shot deliveries-fjordline-aps-320-system",
+      "shot deliveries-fjordline-aps-375-dark",
+      "shot deliveries-fjordline-aps-375-light",
+      "shot deliveries-fjordline-aps-768-system",
+      "shot deliveries-helios-void-1440-dark",
+      "shot deliveries-helios-void-1440-light",
+      "shot deliveries-helios-void-1440-system",
+      "shot deliveries-helios-void-320-system",
+      "shot deliveries-helios-void-375-dark",
+      "shot deliveries-helios-void-375-light",
+      "shot deliveries-helios-void-768-system",
+      "shot deliveries-northstar-1440-dark",
+      "shot deliveries-northstar-1440-light",
+      "shot deliveries-northstar-1440-system",
+      "shot deliveries-northstar-320-system",
+      "shot deliveries-northstar-375-dark",
+      "shot deliveries-northstar-375-light",
+      "shot deliveries-northstar-768-system",
+      "shot gallery-any-1440-dark",
+      "shot gallery-any-1440-light",
+      "shot gallery-any-375-dark",
+      "shot gallery-any-375-light",
+      "shot inbound-fjordline-aps-1440-dark",
+      "shot inbound-fjordline-aps-1440-light",
+      "shot inbound-fjordline-aps-375-dark",
+      "shot inbound-fjordline-aps-375-light",
+      "shot inbound-helios-void-1440-dark",
+      "shot inbound-helios-void-1440-light",
+      "shot inbound-helios-void-375-dark",
+      "shot inbound-helios-void-375-light",
+      "shot inbound-northstar-1440-dark",
+      "shot inbound-northstar-1440-light",
+      "shot inbound-northstar-375-dark",
+      "shot inbound-northstar-375-light",
+      "shot overview-fjordline-aps-1440-dark",
+      "shot overview-fjordline-aps-1440-light",
+      "shot overview-fjordline-aps-1440-system",
+      "shot overview-fjordline-aps-320-system",
+      "shot overview-fjordline-aps-375-dark",
+      "shot overview-fjordline-aps-375-light",
+      "shot overview-fjordline-aps-768-system",
+      "shot overview-helios-void-1440-dark",
+      "shot overview-helios-void-1440-light",
+      "shot overview-helios-void-1440-system",
+      "shot overview-helios-void-320-system",
+      "shot overview-helios-void-375-dark",
+      "shot overview-helios-void-375-light",
+      "shot overview-helios-void-768-system",
+      "shot overview-northstar-1440-dark",
+      "shot overview-northstar-1440-light",
+      "shot overview-northstar-1440-system",
+      "shot overview-northstar-320-system",
+      "shot overview-northstar-375-dark",
+      "shot overview-northstar-375-light",
+      "shot overview-northstar-768-system",
+      "shot preview-any-1440-dark",
+      "shot preview-any-1440-light",
+      "shot preview-any-375-dark",
+      "shot preview-any-375-light",
+      "shot storybook-any-1440-dark",
+      "shot storybook-any-1440-light",
+      "shot storybook-any-375-dark",
+      "shot storybook-any-375-light"
+    ]
+  },
+  "captures": [
+    {
+      "id": "dashboard",
+      "test_title": "dashboard links to preview and operator surfaces",
+      "route": "/",
+      "fixture": "synthetic AtlasDesk dashboard summary",
+      "theme": "light",
+      "viewport": "375x900",
+      "interaction_state": "primary navigation links visible before selection",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-dashboard-7e372023-375-light",
+        "baseline_path": "baseline-dashboard-7e372023-375-light.png",
+        "baseline_sha256": "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/",
+        "baseline_fixture": "synthetic seeded AtlasDesk dashboard summary",
+        "baseline_theme": "light",
+        "baseline_viewport": "375x900",
+        "baseline_capture_dimensions": "375x1613",
+        "baseline_interaction_state": "initial dashboard route before selecting a review surface",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same route and initial dashboard state"
+      },
+      "assets": {
+        "kind": "compiled-template",
+        "source": {
+          "path": "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+          "sha256": "120832712144ebea86a47c1423a78e7e7e1a635efd0cd3d72cda7f9933e0b607"
+        },
+        "built": {
+          "path": "/workspace/reference/demo_app/_build/dev/lib/mailglass_demo/ebin/Elixir.MailglassDemoWeb.PageController.beam",
+          "sha256": "6b4ef6f5ede3936c67234b3a55e7c04ded16ced493ee810fc276fbd367d0e927"
+        },
+        "served": {
+          "url": "/",
+          "html_sha256": "ae6f0eb1811c79a9b46fd41b5c9922ea558df4c3aa9960b7b447f95e5523f3d2",
+          "inline_css_sha256": "bef6cea05537f6a003820a2eefbb13abea7ad57ea9dc4fcca6fe1588932f399e"
+        },
+        "built_served_match": null
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-dashboard.png",
+      "sha256": "30232374fd51f605fe74efa6797f3170fdd1d928526ef74398c7f670d7803d21"
+    },
+    {
+      "id": "preview",
+      "test_title": "dashboard links to preview and operator surfaces",
+      "route": "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768",
+      "fixture": "synthetic AtlasDesk Mailable preview scenario",
+      "theme": "light",
+      "viewport": "375x900",
+      "interaction_state": "opened Preview from dashboard and selected the light theme",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-preview-7e372023-375-light",
+        "baseline_path": "baseline-preview-7e372023-375-light.png",
+        "baseline_sha256": "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/dev/mail?theme=light",
+        "baseline_fixture": "synthetic seeded AtlasDesk Mailable preview root",
+        "baseline_theme": "light",
+        "baseline_viewport": "375x900",
+        "baseline_capture_dimensions": "375x1847",
+        "baseline_interaction_state": "initial preview route before selecting a Mailable scenario",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same preview surface; current capture selects the default scenario"
+      },
+      "assets": {
+        "kind": "admin-css",
+        "source": {
+          "path": "mailglass_admin/assets/css/app.css",
+          "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+        },
+        "built": {
+          "path": "mailglass_admin/priv/static/app.css",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "served": {
+          "url": "/dev/mail/css-21549168ce191c96f1ac179e72be0631",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "built_served_match": true
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-preview.png",
+      "sha256": "b6e636df4cb71f2f903e423ffda3302868c7825e4120f2685a798c244678623a"
+    },
+    {
+      "id": "outbound-primary",
+      "test_title": "outbound operator opens with seeded delivery evidence",
+      "route": "/ops/mail?delivery_id=01a17f70-e6c3-7452-8473-52b9c13b7468&tenant_id=northstar&window_hours=168",
+      "fixture": "synthetic northstar delivery rows",
+      "theme": "light",
+      "viewport": "1440x900",
+      "interaction_state": "opened the first delivery quick view from the list",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-outbound-7e372023-1440-light",
+        "baseline_path": "baseline-outbound-7e372023-1440-light.png",
+        "baseline_sha256": "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/ops/mail?tenant_id=northstar&view=deliveries",
+        "baseline_fixture": "synthetic seeded northstar deliveries",
+        "baseline_theme": "light",
+        "baseline_viewport": "1440x900",
+        "baseline_capture_dimensions": "1440x2002",
+        "baseline_interaction_state": "delivery list before selecting a row",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same list surface; current capture follows opening the first delivery quick view"
+      },
+      "assets": {
+        "kind": "admin-css",
+        "source": {
+          "path": "mailglass_admin/assets/css/app.css",
+          "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+        },
+        "built": {
+          "path": "mailglass_admin/priv/static/app.css",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "served": {
+          "url": "/ops/mail/css-21549168ce191c96f1ac179e72be0631",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "built_served_match": true
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-outbound-primary.png",
+      "sha256": "5c23837b0faa06645306bcacd7a2354c415d3df3f07dfa56dd37b8a8c5d86b1e"
+    },
+    {
+      "id": "inbound-primary",
+      "test_title": "inbound operator opens with seeded support mailbox evidence",
+      "route": "/ops/mail/inbound?inbound_id=01a17f70-e9cf-77b4-9824-77ad6da17ff6&tenant_id=northstar&window_hours=168",
+      "fixture": "synthetic northstar support mailbox records",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "interaction_state": "opened the first inbound record from the mailbox list",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-inbound-7e372023-1440-dark",
+        "baseline_path": "baseline-inbound-7e372023-1440-dark.png",
+        "baseline_sha256": "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/ops/mail/inbound?tenant_id=northstar",
+        "baseline_fixture": "synthetic seeded northstar support mailbox records",
+        "baseline_theme": "dark",
+        "baseline_viewport": "1440x900",
+        "baseline_capture_dimensions": "1440x1431",
+        "baseline_interaction_state": "inbound record list before selection",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same mailbox surface; current capture follows opening the first record quick view"
+      },
+      "assets": {
+        "kind": "admin-css",
+        "source": {
+          "path": "mailglass_admin/assets/css/app.css",
+          "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+        },
+        "built": {
+          "path": "mailglass_admin/priv/static/app.css",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "served": {
+          "url": "/ops/mail/css-21549168ce191c96f1ac179e72be0631",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "built_served_match": true
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-inbound-primary.png",
+      "sha256": "7d4df621da5feb677ad64ccb675803f9eadd7eaca9ca86b095f60b8c167ef5ca"
+    },
+    {
+      "id": "empty-account-adverse",
+      "test_title": "empty account stays isolated and explains the absence of deliveries",
+      "route": "/ops/mail?tenant_id=helios-void&view=deliveries",
+      "fixture": "synthetic helios-void account with zero delivery rows",
+      "theme": "dark",
+      "viewport": "375x900",
+      "interaction_state": "direct route to an account with no delivery data",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-empty-account-7e372023-375-dark",
+        "baseline_path": "baseline-empty-account-7e372023-375-dark.png",
+        "baseline_sha256": "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/ops/mail?tenant_id=helios-void&view=deliveries",
+        "baseline_fixture": "synthetic helios-void account with zero delivery rows",
+        "baseline_theme": "dark",
+        "baseline_viewport": "375x900",
+        "baseline_capture_dimensions": "375x1013",
+        "baseline_interaction_state": "direct route to the empty account deliveries state",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same route, fixture, theme, viewport, and empty state"
+      },
+      "assets": {
+        "kind": "admin-css",
+        "source": {
+          "path": "mailglass_admin/assets/css/app.css",
+          "sha256": "0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5"
+        },
+        "built": {
+          "path": "mailglass_admin/priv/static/app.css",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "served": {
+          "url": "/ops/mail/css-21549168ce191c96f1ac179e72be0631",
+          "sha256": "25d98d52acc81cd0a797011b4160e5a3c4a7a8d8fa42929cb15a262bdd839a00"
+        },
+        "built_served_match": true
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-empty-account-adverse.png",
+      "sha256": "e615f8a99b2643d097a951187d6aeb301edf4724a1d8de190df41cec767027d4"
+    },
+    {
+      "id": "recipient-expired-adverse",
+      "test_title": "recipient browser shows a truthful expired unsubscribe state",
+      "route": "/dev/unsubscribe/expired",
+      "fixture": "fixed synthetic expired unsubscribe route state",
+      "theme": "light",
+      "viewport": "375x900",
+      "interaction_state": "opened a fixed expired recipient link without mutating subscription state",
+      "browser": "Chromium 148.0.7778.0",
+      "rendering_scope": "Browser rendering only; no delivered-email client behavior is certified.",
+      "candidate_revision": "0deab1a14e28a8fb32d06a7d9e864d8d0fe508a0",
+      "candidate_dirty": true,
+      "before_after": {
+        "baseline_id": "baseline-recipient-expired-7e372023-375-light",
+        "baseline_path": "baseline-recipient-expired-7e372023-375-light.png",
+        "baseline_sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560",
+        "baseline_source_revision": "7e3720237f51f2907b77c7dcb03042f2dd379d53",
+        "baseline_dirty": true,
+        "baseline_route": "/dev/unsubscribe/expired",
+        "baseline_fixture": "fixed synthetic expired unsubscribe route state",
+        "baseline_theme": "light",
+        "baseline_viewport": "375x900",
+        "baseline_capture_dimensions": "375x900",
+        "baseline_interaction_state": "initial expired recipient link state",
+        "baseline_browser": "Chromium 148.0.7778.0",
+        "relation": "same route, fixture, theme, viewport, and expired state"
+      },
+      "assets": {
+        "kind": "compiled-template",
+        "source": {
+          "path": "lib/mailglass/compliance/unsubscribe_html/state.html.heex",
+          "sha256": "be6df22b13ed2b0779c12541446358d0ec3f2a8535245e6e1064d4dd5809543d"
+        },
+        "built": {
+          "path": "/workspace/reference/demo_app/_build/dev/lib/mailglass/ebin/Elixir.Mailglass.Compliance.UnsubscribeHTML.beam",
+          "sha256": "8d54ed8c4442c6fffaa0363451e48c4879345400eb004c3f32c109450a5a45d4"
+        },
+        "served": {
+          "url": "/dev/unsubscribe/expired",
+          "html_sha256": "1604a08e73d78c0cc733a44a711636133a48d2bb9d8e7b18db6f27ab2fffe9c1",
+          "inline_css_sha256": "47fa9c1619a9e4b21ee12c81328c6c76ef27aaba50306fb906156a1af02fbe31"
+        },
+        "built_served_match": null
+      },
+      "path": "captures/mailglass-evidence-20261027221513-96275-31939-recipient-expired-adverse.png",
+      "sha256": "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560"
+    }
+  ]
+}

@@ -625,9 +625,133 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  @doc """
+  Phase 177 (G5): seeds every Health category for `tenant_id/0` inside the default
+  168-hour window with distinct counts, so the Health population golden can prove
+  both the rendered counts and the count-independent row order.
+
+  `counts: :ascending` (default) gives deliveries failed 1, bounced 2, rejected 3,
+  deferred 4, inbound failed 5, inbound no_match 6, failed webhooks 7 and unmatched
+  events 8. `counts: :reversed` gives the same categories 8 down to 1.
+  """
+  def seed_phase177_health_all!(opts \\ []) do
+    ascending = [
+      deliveries_failed: 1,
+      deliveries_bounced: 2,
+      deliveries_rejected: 3,
+      deliveries_deferred: 4,
+      inbound_failed: 5,
+      inbound_no_match: 6,
+      webhook_failures: 7,
+      orphans: 8
+    ]
+
+    counts =
+      case Keyword.get(opts, :counts, :ascending) do
+        :ascending ->
+          Map.new(ascending)
+
+        :reversed ->
+          keys = Keyword.keys(ascending)
+          keys |> Enum.zip(Enum.reverse(Keyword.values(ascending))) |> Map.new()
+      end
+
+    reset!()
+
+    for {event, key} <- [
+          {:failed, :deliveries_failed},
+          {:bounced, :deliveries_bounced},
+          {:rejected, :deliveries_rejected},
+          {:deferred, :deliveries_deferred}
+        ],
+        index <- 1..counts[key] do
+      insert_delivery!(%{
+        recipient: "phase177-#{event}-#{index}@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase177_#{event}_#{index}",
+        status: if(event == :failed, do: :failed, else: :sent),
+        last_event_type: event,
+        last_event_at: hours_ago(index),
+        inserted_at: hours_ago(index + 1)
+      })
+    end
+
+    for {outcome, key} <- [{:failed, :inbound_failed}, {:no_match, :inbound_no_match}],
+        index <- 1..counts[key] do
+      seed_inbound_run_record!(
+        %{
+          provider_message_id: "pm_phase177_inbound_#{outcome}_#{index}",
+          envelope_recipient: "support@phase177.example",
+          subject: "Phase 177 inbound #{outcome} #{index}",
+          from: [%{"address" => "sender@phase177.example"}],
+          to: [%{"address" => "support@phase177.example"}],
+          received_at: hours_ago(index)
+        },
+        outcome: outcome,
+        mailbox: nil
+      )
+    end
+
+    webhooks =
+      for index <- 1..counts.webhook_failures do
+        insert_webhook_event!(%{
+          provider_event_id: "phase177-webhook-failed-#{index}",
+          status: if(rem(index, 2) == 0, do: :failed, else: :dead),
+          received_at: hours_ago(index)
+        })
+      end
+
+    orphans =
+      for index <- 1..counts.orphans do
+        {:ok, event} =
+          Mailglass.Events.append(%{
+            tenant_id: @tenant_id,
+            type: :delivered,
+            delivery_id: nil,
+            occurred_at: hours_ago(index),
+            needs_reconciliation: true,
+            metadata: %{
+              "provider" => "postmark",
+              "provider_event_id" => "phase177-unmatched-#{index}"
+            }
+          })
+
+        event
+      end
+
+    # Health deep-links the newest failed webhook and the oldest unmatched event.
+    %{
+      tenant_id: @tenant_id,
+      counts: counts,
+      newest_webhook_event_id: hd(webhooks).id,
+      oldest_unmatched_event_id: List.last(orphans).id
+    }
+  end
+
+  @doc """
+  Phase 177 (G5): one tenant with recent, successfully delivered mail and no
+  recorded problem, so Health renders zero issue rows while the Recent activity
+  links still render.
+  """
+  def seed_phase177_health_quiet! do
+    reset!()
+
+    insert_delivery!(%{
+      recipient: "phase177-quiet@example.com",
+      provider: "postmark",
+      provider_message_id: "pm_phase177_quiet",
+      status: :sent,
+      last_event_type: :delivered,
+      last_event_at: hours_ago(1),
+      inserted_at: hours_ago(2)
+    })
+
+    %{tenant_id: @tenant_id}
+  end
+
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery selected_delivery_event delivery_suppression replay_history replay_targets) do
+    unless operation in ~w(deliveries failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery selected_delivery_event delivery_suppression replay_history replay_targets) do
       raise ArgumentError, "unsupported test reader operation"
     end
 
@@ -750,7 +874,11 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         last_event_type: payload.event_type,
         last_event_at: hours_ago(1),
         mailable: payload.long_mailable,
-        metadata: %{"persona" => name, "from" => payload.from}
+        metadata: %{
+          "persona" => name,
+          "subject" => "Welcome to Fjordline A/S",
+          "from" => payload.from
+        }
       })
 
     # One :delivered event with reject_reason: nil (the legitimate null branch).

@@ -1,0 +1,520 @@
+{
+  "schema_version": "phase178-recovery-cycle.v1",
+  "cycle": 4,
+  "created_at": "2026-11-02T04:04:43Z",
+  "status": "stopped",
+  "previous_record": {
+    "path": ".planning/phases/178-preview-authoring-and-milestone-review/178-RECOVERY-CYCLE-03.json",
+    "sha256": "69e13a6c4f3c159ed5e3ea0f2227d621e6240db2bcffbaf0f432065d3b7b4f23"
+  },
+  "previous_stop": {
+    "candidate_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "run_id": 41376300645,
+    "attempt": 2,
+    "job_id": 125076422948,
+    "result": "failed",
+    "reason": "The hosted Chromium End-to-bottom predicate failed after PageDown; an independent browser reproduction found the native scroll-completion timing edge."
+  },
+  "candidate": {
+    "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "branch": "gsd/v2.10-ui-repairs-storybook",
+    "checkout_branch": "main",
+    "source_file": "mailglass_admin/e2e/flows.spec.js",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+    "change": "Wait for the native scrollend event after PageDown before sending End."
+  },
+  "local_evidence": {
+    "scope": "Bounded local verification and independent review; this does not establish hosted success.",
+    "target_scroll_cases": "Inbound and delivery cases passed three times each; 6 passed in 15.8 seconds.",
+    "timing_harness": "12/12 passed with the fix; reverting the hunk caused 3/12 failures.",
+    "independent_review": "No blocking findings; existing accessibility, focus, native-key, and bottom assertions remain intact.",
+    "product_code_changed": false,
+    "dependencies_changed": false
+  },
+  "preapproval": {
+    "observed_at": "2026-11-02T04:06:57Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "candidate_parent": "de799da72b9ebbce45bd1f358f8527b0c894cbe1",
+    "target_branch": "gsd/v2.10-ui-repairs-storybook",
+    "target_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+    "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+    "pr": {
+      "number": 317,
+      "state": "OPEN",
+      "draft": true,
+      "title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "base_branch": "main",
+      "base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "remote_body_sha256": "db3a36974c9ca33c8790f7c3c33f42fae526620b3f4f19a7a225f3b0f5d0d498"
+    },
+    "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+    "source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+    "plan_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-28-PLAN.md",
+    "plan_sha256": "207c30d6df5e579d4496db861f85862a6a32dcff289aae255ec1e14e8282c5aa",
+    "approval_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-28-APPROVAL.md",
+    "approval_sha256": "804a465b336f781d86599f57342b525af4d92b7ed983ca29ccd2c7fbdb8dacd4",
+    "body_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md",
+    "body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+    "branch_delta": {
+      "commits": 5,
+      "files": 4,
+      "insertions": 556,
+      "deletions": 0
+    },
+    "main_delta": {
+      "commits": 428,
+      "files": 698,
+      "insertions": 219504,
+      "deletions": 2169
+    },
+    "fast_forward": true,
+    "workflow_budget": {
+      "push": 5,
+      "body_edit": 2,
+      "dispatch": 1,
+      "max_total": 8,
+      "max_attempt": 1,
+      "expected_names": [
+        "CI",
+        "Guard Release Trigger",
+        "PR Title",
+        "Actionlint",
+        "Advisory Matrix"
+      ],
+      "estimate_runner_minutes": 254.62,
+      "estimate_is_dollars": false,
+      "estimate_basis": "Observed prior CI, Advisory Matrix, Guard Release Trigger, PR Title and Actionlint durations; the GitHub timing API's earlier zero billable milliseconds did not establish monetary cost."
+    },
+    "commands": {
+      "push": "git push origin 8e501960bc975ed44b632ba5c74522e0c5d66f8c:refs/heads/gsd/v2.10-ui-repairs-storybook",
+      "body_edit": "gh pr edit 317 --body-file .planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md",
+      "dispatch": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook",
+      "preview": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json"
+    },
+    "stop_rules": [
+      "No retry, rerun, cancel, or additional workflow run.",
+      "Any failed, missing, unclassified, wrong-SHA/event/attempt, or ambiguous result stops remaining operations.",
+      "No preview unless exact-SHA hosted gates pass and cost is reproducible and identity-bound.",
+      "No merge, release, publication, deployment, or change to remote main."
+    ]
+  },
+  "authority": {
+    "hosted": {
+      "decision": "approve-all",
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "user_replies": [
+        "Yes, I approve. Approve all.",
+        "Well, I don't know if this was related to Docker. I just restarted it and cleaned up hard drive space and stuff. So maybe that was it. Unblock us. Sayonara, do you check us? What do you recommend? Let's follow your recommendations."
+      ],
+      "basis": "The user accepted the recommended fresh candidate cycle after the changed-SHA recovery plan was described. Docker restart does not change prior GitHub run results; the exact candidate is independently fixed and locally verified.",
+      "operations": [
+        {
+          "name": "push_candidate",
+          "count": 1,
+          "command": "git push origin 8e501960bc975ed44b632ba5c74522e0c5d66f8c:refs/heads/gsd/v2.10-ui-repairs-storybook"
+        },
+        {
+          "name": "update_pr_body",
+          "count": 1,
+          "command": "gh pr edit 317 --body-file .planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md"
+        },
+        {
+          "name": "dispatch_ci",
+          "count": 1,
+          "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook"
+        }
+      ],
+      "maximum_total_workflow_runs": 8,
+      "maximum_attempt": 1,
+      "maximum_retries": 0
+    },
+    "preview": {
+      "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "conditional_on": "exact_sha_hosted_success_and_reproducible_identity_bound_cost_success",
+      "command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json"
+    }
+  },
+  "preflight": {
+    "status": "passed",
+    "verified_at": "2026-11-02T04:08:32Z",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "hashes": {
+      "candidate_source_sha256": "8c70eb703b75e098c4a9d827c2853ad3807e13e10e6b39177e3c1033dfddae87",
+      "plan_sha256": "207c30d6df5e579d4496db861f85862a6a32dcff289aae255ec1e14e8282c5aa",
+      "approval_sha256": "804a465b336f781d86599f57342b525af4d92b7ed983ca29ccd2c7fbdb8dacd4",
+      "prepared_pr_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "cycle_03_sha256": "69e13a6c4f3c159ed5e3ea0f2227d621e6240db2bcffbaf0f432065d3b7b4f23",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "remote": {
+      "main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "target_branch": "gsd/v2.10-ui-repairs-storybook",
+      "target_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "pr_number": 317,
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "a0a7450cc68afe84e25e69276c654d9e63422499",
+      "pr_body_sha256": "db3a36974c9ca33c8790f7c3c33f42fae526620b3f4f19a7a225f3b0f5d0d498"
+    },
+    "candidate_fast_forward": true,
+    "existing_candidate_workflow_runs": [],
+    "workflow_budget": {
+      "push_runs": 5,
+      "body_edit_runs": 2,
+      "dispatch_runs": 1,
+      "maximum_total": 8,
+      "maximum_attempt": 1,
+      "maximum_retries": 0,
+      "expected_trigger_count_certain": true
+    },
+    "approval_bound": {
+      "decision": "approve-all",
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "one_time_operations": [
+        "push_candidate",
+        "update_pr_body",
+        "dispatch_ci"
+      ],
+      "conditional_preview": "exact_sha_hosted_success_and_reproducible_identity_bound_cost_success"
+    }
+  },
+  "hosted": {
+    "status": "passed",
+    "operations": {
+      "push_candidate": {
+        "status": "success",
+        "count": 1,
+        "command": "git push origin 8e501960bc975ed44b632ba5c74522e0c5d66f8c:refs/heads/gsd/v2.10-ui-repairs-storybook",
+        "result": "Fast-forwarded target from a0a7450cc68afe84e25e69276c654d9e63422499 to the approved candidate SHA.",
+        "observed_at": "2026-11-02T04:12:25Z"
+      },
+      "update_pr_body": {
+        "status": "success",
+        "count": 1,
+        "command": "gh pr edit 317 --body-file .planning/phases/178-preview-authoring-and-milestone-review/178-27-pr-body.md",
+        "result": "Remote PR body is byte-identical to the prepared body file.",
+        "observed_at": "2026-11-02T04:26:21Z"
+      },
+      "dispatch_ci": {
+        "status": "success",
+        "count": 1,
+        "command": "gh workflow run ci.yml --ref gsd/v2.10-ui-repairs-storybook",
+        "result": "Completed exact-SHA workflow_dispatch run 41388571351 successfully at the approved candidate SHA.",
+        "observed_at": "2026-11-02T04:27:32Z",
+        "run_id": 41388571351,
+        "run_url": "https://github.com/szTheory/mailglass/actions/runs/41388571351",
+        "completed_at": "2026-11-02T04:46:35Z"
+      }
+    },
+    "post_push_snapshot": {
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_body_sha256": "db3a36974c9ca33c8790f7c3c33f42fae526620b3f4f19a7a225f3b0f5d0d498",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "post_body_edit_snapshot": {
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "prepared_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "post_dispatch_snapshot": {
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4"
+    },
+    "final_hosted_snapshot": {
+      "verified_at": "2026-11-02T04:47:12Z",
+      "remote_main_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "remote_target_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_state": "open",
+      "pr_draft": true,
+      "pr_title": "chore(ui): v2.10 UI repairs review candidate (do not merge)",
+      "pr_base_branch": "main",
+      "pr_base_sha": "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+      "pr_head_branch": "gsd/v2.10-ui-repairs-storybook",
+      "pr_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pr_body_sha256": "100325412ab6bd182526ded71a29c81d4baff5edd12a1b62e664bed342df42d4",
+      "release_ledger_sha256": "0818ee5db8ebfe737a7af89daeb79f01833929f72f58e918313c155df31f47a4",
+      "candidate_workflow_runs": 8,
+      "attempts": 1,
+      "unexpected_runs": 0,
+      "unclassified_job_failures": 0
+    },
+    "phase_178_gate_receipts": [
+      {
+        "run_id": 41386942453,
+        "job_id": 125093537090,
+        "name": "CI Green",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125093537090"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806719,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806719"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806639,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806639"
+      },
+      {
+        "run_id": 41386942453,
+        "job_id": 125089806710,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453/job/125089806710"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125099329799,
+        "name": "CI Green",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125099329799"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094790987,
+        "name": "Demo Browser Evidence (Docker Compose / Chromium)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094790987"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094791136,
+        "name": "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791136"
+      },
+      {
+        "run_id": 41388571351,
+        "job_id": 125094791015,
+        "name": "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22) (22)",
+        "conclusion": "success",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351/job/125094791015"
+      }
+    ],
+    "expected_skipped_jobs": [
+      {
+        "run_id": 41386942424,
+        "name": "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public/mailglass)",
+        "reason": "The candidate workflow explicitly excludes this forward-compatibility lane on pull_request events; it is advisory-only for push, schedule and dispatch."
+      }
+    ],
+    "runs": [
+      {
+        "run_id": 41386942424,
+        "workflow": "Advisory Matrix",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:22:54Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942424"
+      },
+      {
+        "run_id": 41386942395,
+        "workflow": "Actionlint",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:10:46Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942395"
+      },
+      {
+        "run_id": 41386942472,
+        "workflow": "Guard Release Trigger",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:10:20Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942472"
+      },
+      {
+        "run_id": 41386942453,
+        "workflow": "CI",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:09Z",
+        "started_at": "2026-11-02T04:10:09Z",
+        "updated_at": "2026-11-02T04:24:29Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386942453"
+      },
+      {
+        "run_id": 41386939769,
+        "workflow": "PR Title",
+        "event": "pull_request_target",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:10:08Z",
+        "started_at": "2026-11-02T04:10:08Z",
+        "updated_at": "2026-11-02T04:10:16Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41386939769"
+      },
+      {
+        "run_id": 41388399949,
+        "workflow": "Guard Release Trigger",
+        "event": "pull_request",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:25:40Z",
+        "started_at": "2026-11-02T04:25:40Z",
+        "updated_at": "2026-11-02T04:25:50Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388399949"
+      },
+      {
+        "run_id": 41388400355,
+        "workflow": "PR Title",
+        "event": "pull_request_target",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:25:41Z",
+        "started_at": "2026-11-02T04:25:41Z",
+        "updated_at": "2026-11-02T04:25:47Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388400355"
+      },
+      {
+        "run_id": 41388571351,
+        "workflow": "CI",
+        "event": "workflow_dispatch",
+        "sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T04:27:32Z",
+        "started_at": "2026-11-02T04:27:32Z",
+        "updated_at": "2026-11-02T04:46:35Z",
+        "url": "https://github.com/szTheory/mailglass/actions/runs/41388571351"
+      }
+    ],
+    "stop": null
+  },
+  "cost": {
+    "status": "measured",
+    "reproducible": true,
+    "identity_bound": true,
+    "record_path": ".planning/phases/178-preview-authoring-and-milestone-review/178-COST-DISPOSITION.json",
+    "gate": "pass_with_supported_overage",
+    "record_sha256": "1e3aa72678b2008e3249d42eada934ec2bda301c6f9732ed2e3d00403fc35665",
+    "regeneration": {
+      "method": "bash reference/demo_app/tmp/phase178_candidate/recovery-cycle-04/derive-cycle04-cost.sh <output>",
+      "base_and_final_outputs_compared_byte_identical": true,
+      "input_hash_count": 45,
+      "counts_and_normalized_logs_regenerated_byte_identical": true,
+      "hosted_snapshot": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-04/cycle04-hosted-snapshot.json"
+    },
+    "identity": {
+      "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pilot_source_event": "workflow_dispatch",
+      "dispatch_run_id": "41388571351",
+      "dispatch_artifact_exact_candidate": true,
+      "pull_request_run_id": "41386942453",
+      "pull_request_demo_artifact_source_sha": "ad7f7487023d863497dc49f09fd311805357dcb5",
+      "pull_request_run_head_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "pull_request_demo_artifact_exact_candidate": false,
+      "dispatch_demo_artifact_source_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+      "dispatch_demo_artifact_exact_candidate": true
+    },
+    "budget_disposition": {
+      "status": "supported_overage",
+      "rule": "178-RESEARCH Q5 / D-12",
+      "dispatch_total_runner_within_budget": false,
+      "cold_pilot_wall_within_budget": false,
+      "warm_pilot_wall_within_budget": true,
+      "decision": "supported_for_this_preapproved_owner_review_cycle"
+    }
+  },
+  "preview": {
+    "status": "stopped",
+    "record_path": "reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json",
+    "record_sha256": "29850312cdc0adb772d1541f9c81a9ee345f88b66e469464a2e535eb3f7cecf9",
+    "candidate_sha": "8e501960bc975ed44b632ba5c74522e0c5d66f8c",
+    "launcher_command": "bash scripts/check_phase178_candidate.sh --sha 8e501960bc975ed44b632ba5c74522e0c5d66f8c --require-ci --record reference/demo_app/tmp/phase178_candidate/candidate-8e501960.json",
+    "launcher_exit_code": 1,
+    "attempts": 1,
+    "completed_at": "2026-11-02T05:00:55.931Z",
+    "result": "fail",
+    "routes": {
+      "http_200": 5,
+      "total": 6,
+      "failed_route": "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+      "failed_status": 302
+    },
+    "css": {
+      "built_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+      "served_sha256": "173fdd6fe2d7d06c322321796a6aba9a3e6508be4270fdc632dd7d4d364ff6b2",
+      "built_served_match": true
+    },
+    "page_marker_checks": "not_run_after_route_gate_failure",
+    "cleanup": {
+      "completed_at": "2026-11-02T05:01:30.224Z",
+      "compose_project": "mailglass-phase178-review-8e501960-20261102045729-58375",
+      "containers_network_volumes": "stopped",
+      "candidate_worktree": "removed",
+      "run_parent": "removed",
+      "demo_mix_lock": "restored_to_candidate_blob",
+      "owner_demo_touched": false
+    },
+    "retry_or_relaunch": false
+  },
+  "stop": {
+    "stage": "preview",
+    "reason": "The single approved launcher attempt exited 1 because the required /demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar route returned HTTP 302. The other five routes returned HTTP 200 and built/served CSS matched; page-marker checks did not run after the route gate failed. The launcher attempt is consumed; no retry or relaunch is authorized.",
+    "requirement_open": "UIQ-08",
+    "next_actor": "phase_178_owner_or_planner"
+  },
+  "owner_decision": null,
+  "next_actor": "phase_178_owner_or_planner"
+}

@@ -7,6 +7,21 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
   # @accepted_advisories in mailglass.publish.check.ex). The allowlist exists ONLY
   # for advisories with no upstream fix in any release; every fixable advisory must
   # still hard-block delivery, and retired packages must never be accepted.
+  #
+  # The real allowlist is empty (EEF-CVE-2026-43966 retired 2026-11-13), so
+  # tests needing an accepted entry inject a fixture via the optional trailing
+  # `entries` argument.
+
+  @fixture_entry %{
+    id: "EEF-CVE-2026-43966",
+    aliases: ["GHSA-w4f7-4cxr-rv3c"],
+    package: "cowlib",
+    severity: "MEDIUM",
+    reason: "Fixture: unfixable upstream advisory used to exercise the allowlist logic.",
+    accepted_on: ~D[2026-07-28],
+    recheck_by: ~D[2027-03-17]
+  }
+  @entries [@fixture_entry]
 
   describe "unaccepted_audit_findings/1" do
     test "returns [] when the only findings are accepted (unfixable cowlib) advisories" do
@@ -18,7 +33,16 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
           HTTP Response Splitting via Non-VCHAR Bytes
       """
 
-      assert Check.unaccepted_audit_findings(output) == []
+      assert Check.unaccepted_audit_findings(output, @entries) == []
+    end
+
+    test "with the real (empty) allowlist the retired cowlib id is NOT accepted" do
+      output = """
+      Advisories:
+        cowlib 2.17.1 - EEF-CVE-2026-43966 (MEDIUM)
+      """
+
+      assert Check.unaccepted_audit_findings(output) == ["cowlib EEF-CVE-2026-43966"]
     end
 
     test "still blocks on a FIXABLE advisory even alongside accepted ones" do
@@ -28,7 +52,7 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
         plug 1.19.2 - EEF-CVE-2026-54892 (HIGH)
       """
 
-      assert Check.unaccepted_audit_findings(output) == ["plug EEF-CVE-2026-54892"]
+      assert Check.unaccepted_audit_findings(output, @entries) == ["plug EEF-CVE-2026-54892"]
     end
 
     test "never accepts retired packages" do

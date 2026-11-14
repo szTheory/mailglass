@@ -1,5 +1,7 @@
 # JTBD Coverage, Gaps, and Diminishing Returns
 
+> **2026-10-26 UI planning supplement:** current jobs and Storybook gaps were reconciled from `PRODUCT.md`, `guides/jobs.md` and live source in [the inventory](ui-quality-engine/INVENTORY.md) and [persona/job review](ui-quality-engine/PERSONAS-DESIGN.md). The owner selected fractal Storybook; the [current upstream scope](ui-quality-engine/UPSTREAM-SCOPE.md) prioritizes named cross-surface repairs with retained stories, then whole-job coverage depth. This is a bounded UI supplement, not validation of historical feature/version tables below. Refresh the underlying map before expanding the tree.
+
 > ⚠️ **STALENESS BANNER (added 2026-06-16).** This file is **5 milestones stale** — it covers up to
 > `mailglass_inbound` 0.1.0 / v1.2-still-executing, but the project has since shipped v1.4 (inbound
 > stability lock), v1.5 (demo evidence), **v1.6 (inbound `1.0.0` live on Hex)**, v1.7 + v1.11 (admin

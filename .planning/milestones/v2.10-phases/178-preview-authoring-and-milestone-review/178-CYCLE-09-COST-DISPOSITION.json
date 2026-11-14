@@ -1,0 +1,457 @@
+{
+  "schema_version": "phase178-cost-disposition.v1",
+  "source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+  "baseline_run_id": "40414024714",
+  "runs": {
+    "workflow_dispatch": {
+      "run_id": "41501525366",
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "jobs": {
+        "Demo Browser Evidence (Docker Compose / Chromium)": {
+          "baseline_seconds": 221,
+          "candidate_seconds": 699,
+          "delta_seconds": 478,
+          "runner_minutes_delta": 7.966666666666667,
+          "wall_within_budget": false,
+          "runner_within_budget": true,
+          "wall_exceedance_ms": 178000
+        },
+        "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)": {
+          "baseline_seconds": 889,
+          "candidate_seconds": 1121,
+          "delta_seconds": 232,
+          "runner_minutes_delta": 3.8666666666666667,
+          "wall_within_budget": true,
+          "runner_within_budget": true,
+          "wall_exceedance_ms": 0
+        },
+        "Support Contract Admin (Elixir 1.18 / OTP 27)": {
+          "baseline_seconds": 240,
+          "candidate_seconds": 286,
+          "delta_seconds": 46,
+          "runner_minutes_delta": 0.7666666666666667,
+          "wall_within_budget": true,
+          "runner_within_budget": true,
+          "wall_exceedance_ms": 0
+        }
+      },
+      "wall_to_ci_green": {
+        "baseline_seconds": 1241,
+        "candidate_seconds": 968,
+        "delta_seconds": -273
+      },
+      "runner_minutes": {
+        "baseline": 100.68333333333334,
+        "candidate": 117.18333333333334,
+        "delta": 16.5
+      },
+      "budget": {
+        "added_wall_minutes": 5,
+        "added_runner_minutes": 10,
+        "wall_within_budget": true,
+        "runner_within_budget": false,
+        "wall_exceedance_ms": 0,
+        "runner_exceedance_minutes": 6.5
+      }
+    },
+    "pull_request": {
+      "run_id": "41497963359",
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "jobs": {
+        "Demo Browser Evidence (Docker Compose / Chromium)": {
+          "baseline_seconds": 221,
+          "candidate_seconds": 935,
+          "delta_seconds": 714,
+          "runner_minutes_delta": 11.9,
+          "wall_within_budget": false,
+          "runner_within_budget": false,
+          "wall_exceedance_ms": 414000
+        },
+        "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)": {
+          "baseline_seconds": 889,
+          "candidate_seconds": 1069,
+          "delta_seconds": 180,
+          "runner_minutes_delta": 3,
+          "wall_within_budget": true,
+          "runner_within_budget": true,
+          "wall_exceedance_ms": 0
+        },
+        "Support Contract Admin (Elixir 1.18 / OTP 27)": {
+          "baseline_seconds": 240,
+          "candidate_seconds": 241,
+          "delta_seconds": 1,
+          "runner_minutes_delta": 0.016666666666666666,
+          "wall_within_budget": true,
+          "runner_within_budget": true,
+          "wall_exceedance_ms": 0
+        }
+      },
+      "wall_to_ci_green": {
+        "baseline_seconds": 1241,
+        "candidate_seconds": 953,
+        "delta_seconds": -288
+      },
+      "runner_minutes": {
+        "baseline": 100.68333333333334,
+        "candidate": 119.11666666666666,
+        "delta": 18.433333333333323
+      },
+      "budget": {
+        "added_wall_minutes": 5,
+        "added_runner_minutes": 10,
+        "wall_within_budget": true,
+        "runner_within_budget": false,
+        "wall_exceedance_ms": 0,
+        "runner_exceedance_minutes": 8.433333333333323
+      }
+    }
+  },
+  "pilot_conditions": {
+    "source_event": "workflow_dispatch",
+    "identity_bound": true,
+    "cold": {
+      "setup_ms": 163901,
+      "execution_ms": 193619,
+      "wall_ms": 442073,
+      "runner_minutes": 7.367883333333333,
+      "wall_within_budget": false,
+      "runner_within_budget": true
+    },
+    "warm": {
+      "setup_ms": 2263,
+      "execution_ms": 194095,
+      "wall_ms": 222653,
+      "runner_minutes": 3.7108833333333333,
+      "wall_within_budget": true,
+      "runner_within_budget": true
+    }
+  },
+  "counts": {
+    "operator": {
+      "executed": {
+        "passed": 310,
+        "skipped": 1,
+        "failed": 0,
+        "flaky": 0
+      },
+      "summary_lines": 2,
+      "expected": {
+        "passed": 310,
+        "skipped": 1,
+        "failed": 0,
+        "flaky": 0
+      },
+      "mismatch": false,
+      "mismatches": []
+    },
+    "demo": {
+      "cold": {
+        "executed": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        },
+        "expected_in_receipt": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        }
+      },
+      "warm": {
+        "executed": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        },
+        "expected_in_receipt": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        }
+      },
+      "expected": {
+        "demo": 111,
+        "hooks": 6,
+        "fidelity": 26,
+        "axe": 26,
+        "total": 169
+      },
+      "mismatch": false,
+      "mismatches": []
+    }
+  },
+  "input_hashes": {
+    "advisory_reds": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline_jobs": "70c30ead8f33d7503b79230a16aaf6f11e7a3bbc4da05f782312b131c6b0afb0",
+    "baseline_run": "4bbf8e5e941cd9447634c1e3e8cac22a3fcb0dcde2fd7057331b138ce428b2ef",
+    "counts": "eeaeeced05c839929773b8b192eee91d19eb5e9533cabc2779350468d4476846",
+    "dispatch_jobs": "f3c4128a9bbe412ca58c607ac5e673cf93e845f6c61317b7e75fd409775ea6e1",
+    "dispatch_run": "8dffb92247a184304e559f97182187390d6bec762a715fe4d1ace0f5983277dc",
+    "input:counts-pr.json": "eeaeeced05c839929773b8b192eee91d19eb5e9533cabc2779350468d4476846",
+    "input:dispatch-artifact-manifest.json": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b",
+    "input:dispatch-artifacts.raw.json": "eeb31ad9d4ef0fc602bb0856032eabc86be481c6e8d39d6d169d82dfbc0174f2",
+    "input:dispatch-full-log.txt.gz": "dd9e6a3f99ca86e54a82f78a086f2afb04f2c27220c948bd943d6b87759c289e",
+    "input:dispatch-log-meta.json": "82523c9d8c3bb4477c6a0e5eb6f1fe5464029d6b142021d751ad1732330e889d",
+    "input:expected.json": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+    "input:initial-ci-log-manifest.json": "f2d8eb639622992a71c8a5e9784bf3007c822b6880703ac065f788c49ad303d6",
+    "input:operator-gate-dispatch.log": "57066c5b05b1617624e285e6d6bbc9e6db969d4cdc2609a4884c059e98a5f5f0",
+    "input:operator-gate-pr.log": "586ee22fb5bd6bc4ec3376d7b9d40f73fec42a263abbdf8c3e2c38cd72070a58",
+    "input:pr-artifacts.raw.json": "5dddb08dd7ec99ece614f08cd39473b2c67c8f0cca43ab28b6b24e2272d23faa",
+    "input:pr-merge-commit.raw.json": "7d61179f34f675071a577ae071bee6fc0aaa0eb2a10fcbec760b76fc825513aa",
+    "input:pr-pilot-cost.json": "1f66b379984ca2a6e1a81ef0b737a0346cbb9237d873b3932f2b5493e3910212",
+    "pilot_cost": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9",
+    "pr_jobs": "9601df6130a12141e09c2b87ac45f9c85dd5cceea103f00a0242f44d3ca3edf9",
+    "pr_run": "9b9eec03a8bc1576ac9002bf605b0ba9fdc6b378ede49171054818616a7c46bc"
+  },
+  "reproducible": true,
+  "reproducibility": {
+    "raw_outputs_byte_identical": true,
+    "raw_output_paths": [
+      "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/generated-disposition.raw.json",
+      "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/generated-disposition-repeat.raw.json"
+    ],
+    "raw_output_sha256": "4555af90263b83b22ad31bb5e93ec7b711043661f04fca2814dc52d005ee3488",
+    "finalizer_path": "reference/demo_app/tmp/phase178_candidate/recovery-cycle-09/disposition-inputs/cycle09-finalize-cost.js",
+    "finalizer_sha256": "c1254c0b97f84feedc46061708232435a39e779f4bc6d098859b7378a3fc2886",
+    "final_outputs_byte_identical": true
+  },
+  "source_identity": {
+    "pull_request": {
+      "run_id": "41497963359",
+      "event": "pull_request",
+      "attempt": 1,
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "artifact_id": 13166934984,
+      "artifact_name": "demo-browser-evidence-41497963359-1",
+      "artifact_source_revision": "214c3c58ae5e25cdf49c2b4206d416bbb8048761",
+      "merge_parents": [
+        "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+        "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+      ],
+      "expected_merge_parents": [
+        "8328093e4a07d28251ec7f02dd0f37cda2fd6a7b",
+        "5ad5329a6d0f17da0edce3af6b4a987bc3219023"
+      ],
+      "merge_parents_match": true,
+      "artifact_source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff"
+    },
+    "workflow_dispatch": {
+      "run_id": "41501525366",
+      "event": "workflow_dispatch",
+      "attempt": 1,
+      "head_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "artifact_id": 13169726533,
+      "artifact_name": "demo-browser-evidence-41501525366-1",
+      "artifact_source_revision": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+      "artifact_source_digest": "8756dcb35fdd2ac8096239faec4d776e1b470e3ee11fe1b2fd510a1c819c70ff",
+      "source_revision_matches_candidate": true,
+      "all_source_revision_fields_match_candidate": true,
+      "artifact_manifest_sha256": "3d8d887956261092cf454c679260a0785aa582a96456acdfa77c7f8a990e7f4b",
+      "cost_file_sha256": "e8cdd8de1ded0fc34bd2df3e9e9328d7cc14aec3a5588f87429180ad3e5addb9"
+    },
+    "expected_counts_sha256": "ec2bfcc87676d223f5c3cf6881ce753cdafcb1001ea0f9b501a630faaa221852",
+    "count_inputs_match_candidate": true
+  },
+  "counts_by_run": {
+    "pull_request": {
+      "operator": {
+        "executed": {
+          "passed": 310,
+          "skipped": 1,
+          "failed": 0,
+          "flaky": 0
+        },
+        "summary_lines": 2,
+        "expected": {
+          "passed": 310,
+          "skipped": 1,
+          "failed": 0,
+          "flaky": 0
+        },
+        "mismatch": false,
+        "mismatches": []
+      },
+      "demo": {
+        "cold": {
+          "executed": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "expected_in_receipt": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        },
+        "warm": {
+          "executed": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "expected_in_receipt": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        },
+        "expected": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        },
+        "mismatch": false,
+        "mismatches": []
+      }
+    },
+    "workflow_dispatch": {
+      "operator": {
+        "executed": {
+          "passed": 310,
+          "skipped": 1,
+          "failed": 0,
+          "flaky": 0
+        },
+        "summary_lines": 2,
+        "expected": {
+          "passed": 310,
+          "skipped": 1,
+          "failed": 0,
+          "flaky": 0
+        },
+        "mismatch": false,
+        "mismatches": []
+      },
+      "demo": {
+        "cold": {
+          "executed": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "expected_in_receipt": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        },
+        "warm": {
+          "executed": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          },
+          "expected_in_receipt": {
+            "demo": 111,
+            "hooks": 6,
+            "fidelity": 26,
+            "axe": 26,
+            "total": 169
+          }
+        },
+        "expected": {
+          "demo": 111,
+          "hooks": 6,
+          "fidelity": 26,
+          "axe": 26,
+          "total": 169
+        },
+        "mismatch": false,
+        "mismatches": []
+      }
+    }
+  },
+  "cycle_metrics": {
+    "workflow_count": 8,
+    "attempt_count": 8,
+    "runner_minutes_all_workflows": 267.60333333333335,
+    "ci_runs": {
+      "pull_request": {
+        "run_id": "41497963359",
+        "duration_seconds": 1081,
+        "runner_minutes": 119.11666666666666
+      },
+      "workflow_dispatch": {
+        "run_id": "41501525366",
+        "duration_seconds": 1138,
+        "runner_minutes": 117.18333333333337
+      }
+    }
+  },
+  "overage_disposition": {
+    "schema_version": "phase178-cycle09-placement.v1",
+    "candidate_sha": "5ad5329a6d0f17da0edce3af6b4a987bc3219023",
+    "decision": "supported_for_this_preapproved_owner_review_cycle",
+    "rule": "178-RESEARCH.md question 5 and 178-CONTEXT.md D-12: measured cost overages may be supported only with a candidate-specific explanation of advisory/required lane placement; do not weaken gates or hide omissions.",
+    "measurements": {
+      "pull_request_total_runner_minutes_delta": 18.433333333333323,
+      "pull_request_total_runner_minutes_limit": 10,
+      "pull_request_runner_minutes_excess": 8.433333333333323,
+      "workflow_dispatch_total_runner_minutes_delta": 16.5,
+      "workflow_dispatch_total_runner_minutes_limit": 10,
+      "workflow_dispatch_runner_minutes_excess": 6.5,
+      "pull_request_wall_to_ci_green_delta_seconds": -288,
+      "workflow_dispatch_wall_to_ci_green_delta_seconds": -273,
+      "wall_to_ci_green_limit_minutes": 5,
+      "pull_request_demo_job_delta_seconds": 714,
+      "pull_request_demo_job_delta_runner_minutes": 11.9,
+      "workflow_dispatch_demo_job_delta_seconds": 478,
+      "workflow_dispatch_demo_job_delta_runner_minutes": 7.966666666666667,
+      "pilot_cold_wall_ms": 442073,
+      "pilot_cold_wall_limit_ms": 300000,
+      "pilot_cold_runner_minutes": 7.367883333333333,
+      "pilot_warm_wall_ms": 222653,
+      "pilot_warm_runner_minutes": 3.7108833333333333,
+      "total_cycle_workflow_count": 8,
+      "total_cycle_runner_minutes": 267.60333333333335
+    },
+    "placement_justification": {
+      "demo_browser_evidence": "The draft PR branch contains the UI, Storybook, and review-evidence work being presented. Demo Browser Evidence emits exact-candidate cold/warm receipts and visual/accessibility evidence needed for this owner review. It stays outside CI Green and completes concurrently; the PR and dispatch runs both retained all 169 expected demo checks in both conditions. The PR artifact is the expected GitHub merge checkout, with base main and this exact candidate as its parents; the dispatch artifact is bound directly to the candidate SHA.",
+      "operator_browser_gate": "Keep the browser flow, keyboard, focus, and connected-state acceptance lane for the same review candidate. It completed 310 tests with one expected guarded skip and zero failed/flaky tests. It runs outside CI Green; no assertions or scenarios were removed.",
+      "ci_green": "Preserve every CI Green dependency and every required Phase 178 gate. CI Green completed 288 seconds sooner than baseline in the pull_request run and 273 seconds sooner in the exact-SHA dispatch run, even though summed runner time was over the per-run budget. The two browser jobs are evaluated separately and do not delay this aggregate's wall time.",
+      "cold_pilot": "Keep both cold and warm measurements: the cold condition proves the cache-miss setup and the warm condition proves reuse. Cold used 7.37 runner-minutes (within the 10-minute runner limit) but its 7m22 wall time exceeded the 5-minute wall threshold; dropping the cold condition would hide setup cost and weaken the measurement.",
+      "scope": "This supports measured overage only for this one preapproved, exact-candidate owner-review cycle. It does not redefine ordinary PR budgets, waive later cost review, or justify skipping the path-aware CI follow-up for genuinely inbound-only changes. No job, assertion, expected count, or gate was removed or weakened."
+    },
+    "preserved_gates": [
+      "CI Green",
+      "Guard Release Trigger",
+      "Demo Browser Evidence",
+      "Operator Browser Gate",
+      "Preview Capture Advisory",
+      "PR Title",
+      "Actionlint",
+      "Advisory Matrix"
+    ],
+    "limitations": [
+      "One pull_request and one workflow_dispatch attempt; observed runner/setup variance is not a causal incremental PR cost estimate.",
+      "Runner minutes are summed job elapsed time, not a dollar quote or provider billing ledger.",
+      "The pull_request browser artifact identifies merge checkout 214c3c58ae5e25cdf49c2b4206d416bbb8048761, whose parents are base main and the exact candidate. Exact-source identity is established by the workflow_dispatch artifact.",
+      "Total Cycle 09 runner time sums all eight attempt-1 workflows; the 10-runner-minute comparison is the existing per-CI-run same-profile budget against the saved baseline."
+    ]
+  }
+}

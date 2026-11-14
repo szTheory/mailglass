@@ -152,6 +152,14 @@ grep -F 'check-demo-browser-evidence.cjs' "$DEMO_FAKE_NODE_LOG" >/dev/null || {
   echo "success path did not run the evidence checkpoint" >&2
   exit 1
 }
+grep -F 'MIX_ENV=test mix deps.get --check-locked && \' "$WRAPPER" >/dev/null || {
+  echo "Phase 175 did not install the locked Admin test dependencies before building assets" >&2
+  exit 1
+}
+grep -F 'for evidence_dir in "$condition_dir" "${PHASE175_EVIDENCE_DIR:-}"; do' "$WRAPPER" >/dev/null || {
+  echo "Phase 175 evidence ownership is not returned to the host" >&2
+  exit 1
+}
 run_contract failure
 assert_project_and_ports
 grep -E 'logs .*demo demo_e2e' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
