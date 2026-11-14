@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.8.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.7.0...mailglass_admin-v2.8.0) (2026-11-14)
+
+
+### Features
+
+* **admin:** v2.10 UI repairs and faithful Storybook ([#317](https://github.com/szTheory/mailglass/issues/317)) ([c94fcdd](https://github.com/szTheory/mailglass/commit/c94fcdda32c73c93628b840f0b6b9feafe43cb17))
+
 ## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.6.0...mailglass_admin-v2.7.0) (2026-10-26)
 
 
