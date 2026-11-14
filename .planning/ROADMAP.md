@@ -142,6 +142,7 @@ Plans:
   3. Screen text says "Activity" for Deliveries, "Admin" for Operator, "Account" for Tenant, and "N provider reports match no email" for orphan events. Each mailer shows its plain name with an accessible tooltip. `deliveries_path`, module names and other public names are unchanged, and the existing route and API contract tests pass unedited.
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
+**Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
 **Plans**: TBD
 **Plan budget**: about 5
 **UI hint**: yes
