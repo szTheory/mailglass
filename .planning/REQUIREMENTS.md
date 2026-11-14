@@ -69,15 +69,45 @@
 
 ## Traceability
 
-Updated during roadmap creation.
+Updated during roadmap creation (2026-11-13).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| BRPOL-01 | Phase 179 | Pending |
+| BRPOL-02 | Phase 179 | Pending |
+| BRPOL-03 | Phase 179 | Pending |
+| BRPOL-04 | Phase 179 | Pending |
+| BRPOL-05 | Phase 179 | Pending |
+| BRPIPE-01 | Phase 180 | Pending |
+| BRPIPE-02 | Phase 180 | Pending |
+| BRPIPE-03 | Phase 180 | Pending |
+| BRTOK-01 | Phase 181 | Pending |
+| BRTOK-02 | Phase 181 | Pending |
+| BRTOK-03 | Phase 181 | Pending |
+| BRTOK-04 | Phase 181 | Pending |
+| BRTOK-05 | Phase 181 | Pending |
+| BRTOK-06 | Phase 181 | Pending |
+| BRADM-01 | Phase 182 | Pending |
+| BRADM-02 | Phase 182 | Pending |
+| BRADM-03 | Phase 182 | Pending |
+| BRADM-04 | Phase 182 | Pending |
+| BRADM-05 | Phase 182 | Pending |
+| BRADM-06 | Phase 182 | Pending |
+| BRADM-07 | Phase 182 | Pending |
+| BRDOC-01 | Phase 183 | Pending |
+| BRDOC-02 | Phase 183 | Pending |
+| BRDOC-03 | Phase 183 | Pending |
+| BRDOC-04 | Phase 183 | Pending |
+| BRDOC-05 | Phase 183 | Pending |
+| BRDOC-06 | Phase 183 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
-- Mapped to phases: 0
-- Unmapped: 27 ⚠️
+- Mapped to phases: 27
+- Unmapped: 0
+
+**Per phase:** Phase 179: 5 (BRPOL-01..05) · Phase 180: 3 (BRPIPE-01..03) · Phase 181: 6 (BRTOK-01..06) · Phase 182: 7 (BRADM-01..07) · Phase 183: 6 (BRDOC-01..06)
 
 ---
 *Requirements defined: 2026-11-13*
+*Traceability mapped: 2026-11-13 (roadmap v2.11, Phases 179-183)*

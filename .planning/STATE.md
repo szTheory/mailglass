@@ -2,11 +2,11 @@
 gsd_state_version: "1.0"
 milestone: v2.11
 milestone_name: Brand v2.0 Adoption
-status: planning
+status: ready_to_plan
 last_updated: "2026-11-14T00:50:59.817Z"
 last_activity: 2026-11-13
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,19 +20,31 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.10 is archived; no next milestone has been approved
+**Current focus:** v2.11 Brand v2.0 Adoption, Phase 179 (Compatibility Policy, Status Map and Brand Pin)
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-11-13 — Milestone v2.11 started
+Phase: 179 of 179-183 (Compatibility Policy, Status Map and Brand Pin)
+Plan: — (not planned yet)
+Status: Ready to plan
+Last activity: 2026-11-13 — v2.11 roadmap created (5 phases, 27/27 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0%
+
+## v2.11 Roadmap Shape
+
+- **Goal:** the repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0 (zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`), and every identity claim is true or tested.
+- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, ~3 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, ~4) → 181 Tokens, fonts, logo (BRTOK-01..06, ~4) → 182 Admin words and layout, one job first (BRADM-01..07, ~5) → 183 Docs, packaging, launch prep (BRDOC-01..06, ~3). Budget 19 of the 20-plan cap.
+- **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
+- **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
+- **Cap and WIP:** 5 phases, 20 plans or fewer, one open PR at a time.
+- **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
+- **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
 
 
-## Current handoff — 2026-11-02
+## Handoff — 2026-11-02 (historical; superseded 2026-11-13 when v2.11 opened)
 
 - v2.10 is archived with 31/31 requirements, five passing phase verifications, 15/15 integration paths, and 7/7 end-to-end flows. Nine open deferred records were acknowledged at close; 34 prior acknowledgements remain carried forward.
 - **Next actor: owner.** No next milestone is approved. When the Mailglass brand book is ready, use `$gsd-new-milestone` to define the next scope.
@@ -748,9 +760,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T22:40:00Z
-Stopped at: Owner browser verification required for Phases 176 and 177
-Resume file: .planning/.continue-here.md
+Last session: 2026-11-13
+Stopped at: v2.11 roadmap created; Phase 179 ready to plan
+Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
 
@@ -771,4 +783,4 @@ Resume file: .planning/.continue-here.md
 
 ## Operator Next Steps
 
-- Start the next milestone with $gsd-new-milestone
+- Plan Phase 179 with `/gsd-plan-phase 179` (or `/gsd-discuss-phase 179` first)
