@@ -328,6 +328,387 @@ defmodule Mailglass.Scripts.BrandPinTest do
     end
   end
 
+  # ---------------------------------------------------------------------------
+  # Advisory online check and reviewed update procedure, over synthetic in-memory zips.
+  # The getter is injected, so nothing here touches the network.
+
+  @zip_root "mailglass-brand/"
+  @old_commit String.duplicate("a", 40)
+  @new_commit String.duplicate("b", 40)
+
+  defp synthetic_files(seed) do
+    %{
+      "brand.json" =>
+        Jason.encode!(%{"version" => "2.0", "date" => "November 13, 2026", "seed" => seed}),
+      "assets/fonts/OFL-FunnelDisplay.txt" => "funnel license #{seed}\n",
+      "assets/fonts/OFL-AtkinsonHyperlegibleNext.txt" => "next license #{seed}\n",
+      "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt" => "mono license #{seed}\n"
+    }
+  end
+
+  defp build_zip(files) do
+    entries = for {name, data} <- Enum.sort(files), do: {String.to_charlist(name), data}
+    {:ok, {_name, zip}} = :zip.create(~c"book.zip", entries, [:memory])
+    zip
+  end
+
+  defp book_zip(files, extra \\ %{}) do
+    files
+    |> Map.new(fn {from, data} -> {@zip_root <> from, data} end)
+    |> Map.merge(extra)
+    |> build_zip()
+  end
+
+  defp sha(data), do: pin(:sha256_hex, [data])
+
+  # A pin whose shipped hashes come from `files` and whose zip hash and size come from `zip`.
+  defp synthetic_pin(files, zip, commit \\ @old_commit) do
+    real = real_pin()
+
+    shipped =
+      for entry <- real["shipped"] do
+        data = Map.fetch!(files, entry["from"])
+        %{entry | "sha256" => sha(data), "bytes" => byte_size(data)}
+      end
+
+    %{
+      real
+      | "commit" => commit,
+        "url" => pin(:zip_url, [real["repo"], commit]),
+        "sha256" => sha(zip),
+        "size" => byte_size(zip),
+        "shipped" => shipped
+    }
+  end
+
+  defp getter_returning(zip) do
+    test_pid = self()
+
+    fn url ->
+      send(test_pid, {:fetched, url})
+      {:ok, zip}
+    end
+  end
+
+  defp no_network, do: fn url -> flunk("unexpected download of #{url}") end
+
+  defp tree_files(dir) do
+    dir
+    |> Path.join("**/*")
+    |> Path.wildcard(match_dot: true)
+    |> Enum.filter(&File.regular?/1)
+    |> Enum.map(&Path.relative_to(&1, dir))
+    |> Enum.sort()
+  end
+
+  describe "advisory zip check (check_zip/2)" do
+    setup do
+      files = synthetic_files("a")
+      zip = book_zip(files)
+      %{files: files, zip: zip}
+    end
+
+    test "a zip whose hash, size and members match the pin gives :ok", %{files: files, zip: zip} do
+      assert pin(:check_zip, [synthetic_pin(files, zip), zip]) == :ok
+    end
+
+    test "a zip hash that differs from the pin gives :zip_hash_mismatch",
+         %{files: files, zip: zip} do
+      real = synthetic_pin(files, zip)
+      tampered = %{real | "sha256" => flip_hex(real["sha256"])}
+
+      issues = issues!(pin(:check_zip, [tampered, zip]))
+
+      assert {:zip_hash_mismatch, sha(zip)} in issues
+      assert issue_tags(issues) == [:zip_hash_mismatch]
+    end
+
+    test "a size that differs from the pin gives :zip_size_mismatch at the right hash",
+         %{files: files, zip: zip} do
+      real = synthetic_pin(files, zip)
+
+      issues = issues!(pin(:check_zip, [%{real | "size" => real["size"] + 1}, zip]))
+
+      assert {:zip_size_mismatch, byte_size(zip)} in issues
+      assert issue_tags(issues) == [:zip_size_mismatch]
+    end
+
+    test "a member whose bytes differ from the pin gives :zip_member_mismatch", %{files: files} do
+      altered = Map.put(files, "brand.json", Jason.encode!(%{"version" => "9.9", "date" => "x"}))
+      zip = book_zip(altered)
+
+      issues = issues!(pin(:check_zip, [synthetic_pin(files, zip), zip]))
+
+      assert {:zip_member_mismatch, "brand.json"} in issues
+      assert issue_tags(issues) == [:zip_member_mismatch]
+    end
+
+    test "a pin-listed member absent from the zip gives :zip_member_missing", %{files: files} do
+      from = "assets/fonts/OFL-FunnelDisplay.txt"
+      zip = files |> Map.delete(from) |> book_zip()
+
+      issues = issues!(pin(:check_zip, [synthetic_pin(files, zip), zip]))
+
+      assert {:zip_member_missing, from} in issues
+    end
+
+    test "a pin whose from contains .. is rejected by parse before any zip read" do
+      tampered = with_first_shipped(real_pin(), &%{&1 | "from" => "../x"})
+
+      issues = issues!(pin(:check_zip, [tampered, "these bytes are not a zip"]))
+
+      assert {:path_unsafe, "../x"} in issues
+      refute :zip_unreadable in issue_tags(issues)
+    end
+
+    test "bytes that are not a zip give :zip_unreadable", %{files: files, zip: zip} do
+      garbage = "these bytes are not a zip"
+
+      issues = issues!(pin(:check_zip, [synthetic_pin(files, zip), garbage]))
+
+      assert :zip_unreadable in issue_tags(issues)
+    end
+
+    test "members are read by pin-listed names only, never by names the archive supplies",
+         %{files: files} do
+      zip = book_zip(files, %{"mailglass-brand/../evil.txt" => "hostile"})
+
+      assert pin(:check_zip, [synthetic_pin(files, zip), zip]) == :ok
+    end
+  end
+
+  describe "update and init procedure over an injected getter" do
+    @describetag :tmp_dir
+
+    test "update refuses a zip whose hash differs from --expect-sha256 and writes nothing",
+         %{tmp_dir: tmp_dir} do
+      old_files = synthetic_files("old")
+      current = synthetic_pin(old_files, book_zip(old_files))
+      new_zip = book_zip(synthetic_files("new"))
+      wrong = String.duplicate("0", 64)
+
+      assert pin(:update, [
+               current,
+               [commit: @new_commit, expect_sha256: wrong, target_dir: tmp_dir],
+               getter_returning(new_zip)
+             ]) == {:error, :zip_hash_mismatch}
+
+      assert_received {:fetched, url}
+      assert url == pin(:zip_url, [current["repo"], @new_commit])
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "update refuses a malformed commit or expected hash before any download",
+         %{tmp_dir: tmp_dir} do
+      files = synthetic_files("old")
+      current = synthetic_pin(files, book_zip(files))
+
+      for opts <- [
+            [commit: "abc123", expect_sha256: String.duplicate("0", 64)],
+            [commit: @new_commit, expect_sha256: "nope"],
+            [commit: @new_commit]
+          ] do
+        assert {:error, {:bad_option, _}} =
+                 pin(:update, [current, [target_dir: tmp_dir] ++ opts, no_network()])
+      end
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "update refuses a current pin that does not parse", %{tmp_dir: tmp_dir} do
+      tampered = %{real_pin() | "shipped" => []}
+
+      assert {:error, {:pin_invalid, issues}} =
+               pin(:update, [
+                 tampered,
+                 [
+                   commit: @new_commit,
+                   expect_sha256: String.duplicate("0", 64),
+                   target_dir: tmp_dir
+                 ],
+                 no_network()
+               ])
+
+      assert :manifest_empty in issue_tags(issues)
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "update refuses a zip that lacks a pin-listed member and writes nothing",
+         %{tmp_dir: tmp_dir} do
+      old_files = synthetic_files("old")
+      current = synthetic_pin(old_files, book_zip(old_files))
+      from = "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt"
+      new_zip = "new" |> synthetic_files() |> Map.delete(from) |> book_zip()
+
+      assert pin(:update, [
+               current,
+               [commit: @new_commit, expect_sha256: sha(new_zip), target_dir: tmp_dir],
+               getter_returning(new_zip)
+             ]) == {:error, {:zip_member_missing, from}}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "update twice with the same zip writes a byte-identical pin and byte-identical assets",
+         %{tmp_dir: tmp_dir} do
+      old_files = synthetic_files("old")
+      current = synthetic_pin(old_files, book_zip(old_files))
+      new_files = synthetic_files("new")
+      new_zip = book_zip(new_files)
+      opts = [commit: @new_commit, expect_sha256: sha(new_zip), target_dir: tmp_dir]
+      pin_file = Path.join(tmp_dir, "brandbook/brand.pin.json")
+
+      assert {:ok, updated} = pin(:update, [current, opts, getter_returning(new_zip)])
+      first_pin = File.read!(pin_file)
+      first_assets = for to <- @required_assets, do: File.read!(tmp_path(tmp_dir, to))
+
+      assert {:ok, ^updated} = pin(:update, [current, opts, getter_returning(new_zip)])
+      assert File.read!(pin_file) == first_pin
+      assert for(to <- @required_assets, do: File.read!(tmp_path(tmp_dir, to))) == first_assets
+
+      assert {:ok, ^updated} = pin(:update, [updated, opts, getter_returning(new_zip)])
+      assert File.read!(pin_file) == first_pin
+
+      assert updated["commit"] == @new_commit
+      assert updated["url"] == pin(:zip_url, [updated["repo"], @new_commit])
+      assert updated["sha256"] == sha(new_zip)
+      assert updated["size"] == byte_size(new_zip)
+      assert updated["book"] == %{"version" => "2.0", "date" => "2026-11-13"}
+      assert first_pin |> Jason.decode!() == updated
+      assert String.ends_with?(first_pin, "}\n")
+
+      for entry <- updated["shipped"] do
+        assert File.read!(tmp_path(tmp_dir, entry["to"])) == new_files[entry["from"]]
+      end
+
+      closures = {pin(:tree_read_file, [tmp_dir]), pin(:tree_list_dir, [tmp_dir])}
+      assert verify(updated, closures) == :ok
+      assert pin(:check_zip, [updated, new_zip]) == :ok
+    end
+
+    test "update writes the pin with a stable key order", %{tmp_dir: tmp_dir} do
+      files = synthetic_files("old")
+      current = synthetic_pin(files, book_zip(files))
+      new_zip = book_zip(synthetic_files("new"))
+      opts = [commit: @new_commit, expect_sha256: sha(new_zip), target_dir: tmp_dir]
+
+      assert {:ok, _} = pin(:update, [current, opts, getter_returning(new_zip)])
+
+      keys =
+        tmp_dir
+        |> Path.join("brandbook/brand.pin.json")
+        |> File.read!()
+        |> then(&Regex.scan(~r/^  "([a-z_0-9]+)":/m, &1))
+        |> Enum.map(&List.last/1)
+
+      assert keys ==
+               ~w(repo commit url sha256 size book root owned_dirs shipped note)
+    end
+
+    test "init refuses when a pin already exists, writes nothing and never downloads",
+         %{tmp_dir: tmp_dir} do
+      pin_file = Path.join(tmp_dir, "brandbook/brand.pin.json")
+      File.mkdir_p!(Path.dirname(pin_file))
+      File.write!(pin_file, "existing pin bytes\n")
+
+      assert pin(:init, [
+               [commit: @new_commit, expect_sha256: String.duplicate("0", 64), target_dir: tmp_dir],
+               no_network()
+             ]) == {:error, :pin_exists}
+
+      assert File.read!(pin_file) == "existing pin bytes\n"
+      assert tree_files(tmp_dir) == ["brandbook/brand.pin.json"]
+    end
+
+    test "init refuses a zip whose hash differs from --expect-sha256 and writes nothing",
+         %{tmp_dir: tmp_dir} do
+      zip = book_zip(synthetic_files("new"))
+
+      assert pin(:init, [
+               [commit: @new_commit, expect_sha256: String.duplicate("0", 64), target_dir: tmp_dir],
+               getter_returning(zip)
+             ]) == {:error, :zip_hash_mismatch}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "init writes the pin and the four assets from an expected zip", %{tmp_dir: tmp_dir} do
+      files = synthetic_files("new")
+      zip = book_zip(files)
+
+      assert {:ok, created} =
+               pin(:init, [
+                 [commit: @new_commit, expect_sha256: sha(zip), target_dir: tmp_dir],
+                 getter_returning(zip)
+               ])
+
+      assert created["book"] == %{"version" => "2.0", "date" => "2026-11-13"}
+      assert tree_files(tmp_dir) == Enum.sort(["brandbook/brand.pin.json" | @required_assets])
+
+      closures = {pin(:tree_read_file, [tmp_dir]), pin(:tree_list_dir, [tmp_dir])}
+      assert verify(created, closures) == :ok
+      assert pin(:check_zip, [created, zip]) == :ok
+    end
+
+    test "fetch refuses a url that is not https and never calls the getter" do
+      assert pin(:fetch, ["http://example.com/book.zip", no_network()]) ==
+               {:error, :url_not_https}
+    end
+  end
+
+  describe "command line" do
+    test "verify reads the real pin and tree" do
+      assert pin(:cli, [["verify"]]) == {0, "brand pin ok"}
+    end
+
+    test "help says verify is the merge-blocking check and check is advisory" do
+      assert {0, text} = pin(:cli, [["help"]])
+
+      assert text =~ "merge-blocking"
+      assert text =~ "ADVISORY"
+      assert text =~ "update --commit <sha> --expect-sha256 <hex>"
+    end
+
+    test "an unknown command prints help and exits 2" do
+      assert {2, text} = pin(:cli, [["bogus"]])
+      assert text =~ "Usage:"
+    end
+
+    test "update and init without both flags exit 2" do
+      assert {2, _} = pin(:cli, [["update"], no_network()])
+      assert {2, _} = pin(:cli, [["init", "--commit", @new_commit], no_network()])
+    end
+
+    test "init against the real tree refuses because the pin exists, before any download" do
+      args = ["init", "--commit", @new_commit, "--expect-sha256", String.duplicate("0", 64)]
+
+      assert {1, output} = pin(:cli, [args, no_network()])
+      assert output =~ "pin_exists"
+    end
+
+    test "update against the real pin refuses a zip with the wrong hash before any write" do
+      zip = book_zip(synthetic_files("new"))
+      args = ["update", "--commit", @new_commit, "--expect-sha256", String.duplicate("0", 64)]
+
+      assert {1, output} = pin(:cli, [args, getter_returning(zip)])
+      assert output =~ "zip_hash_mismatch"
+    end
+
+    test "check reports a zip that does not match the real pin and exits 1" do
+      zip = book_zip(synthetic_files("new"))
+
+      assert {1, output} = pin(:cli, [["check"], getter_returning(zip)])
+      assert output =~ "zip_hash_mismatch"
+      assert_received {:fetched, url}
+      assert url == real_pin()["url"]
+    end
+
+    test "check reports a failed download and exits 1" do
+      assert {1, output} = pin(:cli, [["check"], fn _url -> {:error, :nxdomain} end])
+      assert output =~ "could not download"
+    end
+  end
+
   defp forbidden_paths(paths) do
     Enum.filter(paths, fn path ->
       String.starts_with?(path, "brand/") or String.starts_with?(path, "mailglass-brand/") or

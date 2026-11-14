@@ -73,9 +73,23 @@ defmodule Mailglass.BrandPin do
       confirms every shipped asset matches its recorded size and sha256 and that no
       unlisted file sits in an owned directory. This is what the test suite runs.
 
+    check
+      ADVISORY online check. Downloads the pinned zip over TLS with peer verification,
+      confirms its sha256 and size, confirms every shipped member inside it, then runs
+      verify. It never blocks a merge.
+
     init --commit <sha> --expect-sha256 <hex>
       Create the pin from a reviewed commit. Refuses when a pin already exists, and
       refuses a zip whose sha256 differs from --expect-sha256.
+
+    update --commit <sha> --expect-sha256 <hex>
+      Move the pin to a reviewed commit. Refuses a zip whose sha256 differs from
+      --expect-sha256, rewrites the pin and the copied assets, and writes nothing on a
+      refusal. Bump @expected_zip_sha256 in test/scripts/brand_pin_test.exs in the same
+      chore(brand) commit. Never hand-edit the pin.
+
+    help
+      Print this text.
   """
 
   # ---------------------------------------------------------------------------
@@ -347,6 +361,45 @@ defmodule Mailglass.BrandPin do
   # Zip handling (advisory check, init and update). Members are read in memory by names the
   # pin lists (`root <> from`), never by names the archive supplies.
 
+  def check_zip(pin_map, zip_bin) when is_binary(zip_bin) do
+    case parse(pin_map) do
+      {:error, issues} ->
+        {:error, issues}
+
+      {:ok, pin} ->
+        actual_sha = sha256_hex(zip_bin)
+
+        top =
+          if(actual_sha == pin["sha256"], do: [], else: [{:zip_hash_mismatch, actual_sha}]) ++
+            if byte_size(zip_bin) == pin["size"],
+              do: [],
+              else: [{:zip_size_mismatch, byte_size(zip_bin)}]
+
+        froms = Enum.map(pin["shipped"], & &1["from"])
+
+        member_issues =
+          case read_members(zip_bin, pin["root"], froms) do
+            {:ok, members} ->
+              for %{"from" => from, "sha256" => want, "bytes" => bytes} <- pin["shipped"] do
+                case Map.fetch!(members, from) do
+                  :missing -> {:zip_member_missing, from}
+                  data when byte_size(data) != bytes -> {:zip_member_mismatch, from}
+                  data -> if sha256_hex(data) == want, do: nil, else: {:zip_member_mismatch, from}
+                end
+              end
+              |> Enum.reject(&is_nil/1)
+
+            {:error, reason} ->
+              [{:zip_unreadable, inspect(reason)}]
+          end
+
+        case top ++ member_issues do
+          [] -> :ok
+          issues -> {:error, issues}
+        end
+    end
+  end
+
   # Returns {:ok, %{from => binary | :missing}}. Opens the exact bytes it was given and
   # always closes the handle.
   defp read_members(zip_bin, root, froms) do
@@ -425,6 +478,30 @@ defmodule Mailglass.BrandPin do
     end
   end
 
+  def update(pin_map, opts, getter \\ &http_get/1) do
+    target = Keyword.get(opts, :target_dir, @repo_root)
+    commit = Keyword.get(opts, :commit)
+    expect = Keyword.get(opts, :expect_sha256)
+
+    with {:ok, current} <- parse_current(pin_map),
+         :ok <- check_options(commit, expect),
+         {:ok, zip_bin} <- download(current["repo"], commit, expect, getter),
+         {:ok, members} <- read_pin_members(zip_bin, current),
+         {:ok, book} <- book_meta(members),
+         pin = rewrite_pin(current, commit, zip_bin, book, members),
+         :ok <- ensure_parses(pin),
+         :ok <- write_all(target, pin, members) do
+      {:ok, pin}
+    end
+  end
+
+  defp parse_current(pin_map) do
+    case parse(pin_map) do
+      {:ok, pin} -> {:ok, pin}
+      {:error, issues} -> {:error, {:pin_invalid, issues}}
+    end
+  end
+
   defp check_options(commit, expect) do
     cond do
       not (is_binary(commit) and Regex.match?(@sha1, commit)) ->
@@ -458,6 +535,11 @@ defmodule Mailglass.BrandPin do
     root = List.last(String.split(repo, "/")) <> "/"
     froms = Enum.map(@initial_manifest, fn {from, _to, _license} -> from end)
     collect_members(zip_bin, root, froms)
+  end
+
+  defp read_pin_members(zip_bin, current) do
+    froms = Enum.map(current["shipped"], & &1["from"])
+    collect_members(zip_bin, current["root"], Enum.uniq([@book_meta_member | froms]))
   end
 
   defp collect_members(zip_bin, root, froms) do
@@ -539,6 +621,24 @@ defmodule Mailglass.BrandPin do
       "owned_dirs" => ["brandbook/v2"],
       "shipped" => shipped,
       "note" => @note
+    }
+  end
+
+  defp rewrite_pin(current, commit, zip_bin, book, members) do
+    shipped =
+      for entry <- current["shipped"] do
+        data = Map.fetch!(members, entry["from"])
+        %{entry | "sha256" => sha256_hex(data), "bytes" => byte_size(data)}
+      end
+
+    %{
+      current
+      | "commit" => commit,
+        "url" => zip_url(current["repo"], commit),
+        "sha256" => sha256_hex(zip_bin),
+        "size" => byte_size(zip_bin),
+        "book" => book,
+        "shipped" => shipped
     }
   end
 
@@ -626,6 +726,31 @@ defmodule Mailglass.BrandPin do
     end
   end
 
+  def cli(["check"], getter) do
+    with {:ok, pin_map} <- read_pin(),
+         {:ok, pin} <- parse_for_cli(pin_map),
+         {:ok, zip_bin} <- fetch_for_cli(pin, getter) do
+      zip_issues =
+        case check_zip(pin, zip_bin) do
+          :ok -> []
+          {:error, issues} -> issues
+        end
+
+      tree_issues =
+        case verify(pin) do
+          :ok -> []
+          {:error, issues} -> issues
+        end
+
+      case zip_issues ++ tree_issues do
+        [] -> {0, "advisory check ok"}
+        issues -> {1, render_issues("advisory check found issues", issues)}
+      end
+    else
+      {:error, message} -> {1, message}
+    end
+  end
+
   def cli(["init" | rest], getter) do
     case parse_options(rest) do
       {:ok, opts} ->
@@ -639,6 +764,23 @@ defmodule Mailglass.BrandPin do
     end
   end
 
+  def cli(["update" | rest], getter) do
+    with {:ok, opts} <- parse_options(rest),
+         {:ok, pin_map} <- read_pin() do
+      case update(pin_map, opts, getter) do
+        {:ok, pin} ->
+          {0,
+           "pin updated: #{pin["repo"]}@#{pin["commit"]}\nbump @expected_zip_sha256 to #{pin["sha256"]}"}
+
+        {:error, reason} ->
+          {1, "update refused: #{format_reason(reason)}"}
+      end
+    else
+      {:error, message} -> {2, message}
+    end
+  end
+
+  def cli(["help"], _getter), do: {0, String.trim_trailing(@help)}
   def cli(_other, _getter), do: {2, String.trim_trailing(@help)}
 
   defp read_pin do
@@ -653,6 +795,23 @@ defmodule Mailglass.BrandPin do
 
       {:error, reason} ->
         {:error, "#{@pin_rel} unreadable: #{inspect(reason)}"}
+    end
+  end
+
+  defp parse_for_cli(pin_map) do
+    case parse(pin_map) do
+      {:ok, pin} -> {:ok, pin}
+      {:error, issues} -> {:error, render_issues("brand pin malformed", issues)}
+    end
+  end
+
+  defp fetch_for_cli(pin, getter) do
+    case fetch(pin["url"], getter) do
+      {:ok, body} ->
+        {:ok, body}
+
+      {:error, reason} ->
+        {:error, "advisory check could not download #{pin["url"]}: #{inspect(reason)}"}
     end
   end
 
