@@ -483,13 +483,18 @@ No `data-theme`, no token re-declaration, no new CSS rule (so the bundle is not 
 | A7 | Storybook stories keep their own template-level `data-theme` (out of scope: they are a dev-only iframe harness; D-11 lists three admin lib sites) | BRPIPE-02 | If the owner wants them in scope the plan roughly doubles for that surface |
 | A8 | Approximately 64 captures at the measured sizes fit 15 MB (mobile 375x900 dark overview = 49,934 B; 1440x1082 deliveries = 187,539 B; the existing 66-file ignored cache is 18 MB) | BRPIPE-03 | The script's own budget gate fails the run; trim fixtures first |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Storybook nested `data-theme`.** `reference/demo_app/dev/mailglass_demo_web/storybook.ex` and ~30 story-file lines use template-level `data-theme` and `data-theme-owner` by design (Phase 174 fidelity). Recommendation: out of scope; the criterion-3 browser matrix must not target `/dev/storybook`. Resolve by confirming in the plan.
+   RESOLVED: out of scope — 180-02-PLAN.md `flagged_assumptions` (A7 / Open Question 1), 180-03-PLAN.md `flagged_assumptions` (Storybook specs keep their wrappers), 180-04-PLAN.md `decisions_recorded` OQ1 (not captured).
 2. **Timestamp determinism (F6).** Recommend record-the-seed-minute and no masking. Alternative needs an additive anchor seam in a guarded module.
+   RESOLVED: record the seed minute (`determinism.seed_anchor_utc`, `fixed_time: null`), no DemoData seam — 180-04-PLAN.md `decisions_recorded` OQ2.
 3. **Ancestry check in the required lane (F8).** Recommend shape check always, ancestry only on a full clone; adding `fetch-depth: 0` is a one-line CI change if the planner wants it enforced.
+   RESOLVED (revised per checker B1): neither option. The required lane binds the manifest through content identities computed from working-tree bytes (source bundle sha256 equal to the served css sha256; bundle and root-layout git blob sha1 equal to the checkout while LIVE, otherwise an explicit `superseded.json` marker), so a depth-1 checkout runs every check and the binding survives squash-merge; ancestry is asserted once at PR open; no `fetch-depth` change — 180-04-PLAN.md `decisions_recorded` OQ3 (B1 decision) and Task 3.
 4. **Where `Tailwind.install/0` failure surfaces in `--check`.** Recommend letting it raise; document in the moduledoc.
+   RESOLVED: no rescue around the installer; the raise propagates and fails the lane, proven by the fail-closed case and mutation (a) — 180-01-PLAN.md Task 1 step 1, Task 2 behavior "Fail closed", prohibition 1.
 5. **`ariaSnapshot()` sidecars.** Not run here. Playwright 1.59/1.60 both expose `locator.ariaSnapshot()`; include them only if the capture loop stays under a day (Claude's discretion per CONTEXT).
+   RESOLVED: included (`aria/<id>.yml` per capture, `aria_file` + `aria_sha256` in the manifest) — 180-04-PLAN.md `decisions_recorded` OQ5.
 
 ## Environment Availability
 
