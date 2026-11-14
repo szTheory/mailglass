@@ -28,8 +28,8 @@ Add mailglass to your dependencies:
 ```elixir
 def deps do
   [
-    {:mailglass, "~> 2.7"},
-    {:mailglass_admin, "~> 2.7"}
+    {:mailglass, "~> 2.8"},
+    {:mailglass_admin, "~> 2.8"}
   ]
 end
 ```

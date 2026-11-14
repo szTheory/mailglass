@@ -5,6 +5,13 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.4.0...mailglass_inbound-v2.5.0) (2026-11-14)
+
+
+### Features
+
+* **admin:** v2.10 UI repairs and faithful Storybook ([#317](https://github.com/szTheory/mailglass/issues/317)) ([c94fcdd](https://github.com/szTheory/mailglass/commit/c94fcdda32c73c93628b840f0b6b9feafe43cb17))
+
 ## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.3.0...mailglass_inbound-v2.4.0) (2026-10-26)
 
 
