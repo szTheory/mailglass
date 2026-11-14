@@ -191,4 +191,277 @@ defmodule MailglassAdmin.StatusMapTest do
       end
     end
   end
+
+  # -- delivery_class/1 -----------------------------------------------------------
+
+  @t0 ~U[2026-11-13 10:00:00Z]
+  @t_before ~U[2026-11-13 09:00:00Z]
+
+  defp delivery_class!(row), do: apply(StatusMap, :delivery_class, [row])
+
+  defp row(status, last, confirmed),
+    do: %{status: status, last_event_type: last, delivery_confirmed: confirmed}
+
+  # status x last_event_type x delivery_confirmed: 5 x 21 x 2 = 210 three-field rows.
+  defp grid do
+    for status <- Ecto.Enum.values(Delivery, :status),
+        last <- [nil | Event.__types__()],
+        confirmed <- [true, false],
+        do: row(status, last, confirmed)
+  end
+
+  describe "delivery_class/1 precedence" do
+    @precedence_rows [
+      {"send-time failure with no events is Failed, never Not sent", :failed, nil, false,
+       :failed},
+      {"confirmed delivery then a late open stays Delivered", :sent, :opened, true, :delivered},
+      {"an open with no delivery report stays Sent", :sent, :opened, false, :sent},
+      {"a late click after confirmed delivery stays Delivered", :sent, :clicked, true,
+       :delivered},
+      {"a late complaint after confirmed delivery stays Delivered", :sent, :complained, true,
+       :delivered},
+      {"a late unsubscribe after confirmed delivery stays Delivered", :sent, :unsubscribed, true,
+       :delivered},
+      {"a late auto-reply after confirmed delivery stays Delivered", :sent, :autoresponded, true,
+       :delivered},
+      {"a deferral with no delivery report is Delayed", :sent, :deferred, false, :delayed},
+      {"a bounce after confirmed delivery is Failed", :sent, :bounced, true, :failed},
+      {"a queued delivery with no events reads Sent", :queued, nil, false, :sent},
+      {"a suppressed status is Not sent", :suppressed, nil, false, :not_sent},
+      {"a delivered event is Delivered even without the confirmed flag", :sent, :delivered, false,
+       :delivered}
+    ]
+
+    test "fixed precedence over the three-field row" do
+      for {name, status, last, confirmed, expected} <- @precedence_rows do
+        assert delivery_class!(row(status, last, confirmed)) == expected, name
+      end
+    end
+
+    test "engagement without a delivery report never reads Delivered" do
+      for last <- [:opened, :clicked, :complained, :unsubscribed, :autoresponded] do
+        assert delivery_class!(row(:sent, last, false)) == :sent,
+               "#{inspect(last)} with no delivery report must not read Delivered"
+      end
+    end
+
+    test "engagement after a confirmed delivery never erases it" do
+      for last <- [:opened, :clicked, :complained, :unsubscribed, :autoresponded] do
+        assert delivery_class!(row(:sent, last, true)) == :delivered,
+               "#{inspect(last)} after a confirmed delivery must stay Delivered"
+      end
+    end
+
+    test "a row without a :status key raises" do
+      assert_raise FunctionClauseError, fn -> delivery_class!(%{}) end
+    end
+
+    test "classification is pure: the same row gives the same class twice" do
+      for r <- grid() do
+        assert delivery_class!(r) == delivery_class!(r)
+      end
+    end
+  end
+
+  describe "delivery_class/1 with durable fields" do
+    test "bounced_at wins over a later open" do
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :opened,
+               bounced_at: @t0,
+               terminal: true
+             }) == :failed
+    end
+
+    test "a terminal latch with no delivery, complaint or suppression is a failure report" do
+      # A rejected or failed report overwritten by engagement leaves only this latch.
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :clicked,
+               terminal: true,
+               delivered_at: nil,
+               complained_at: nil,
+               suppressed_at: nil
+             }) == :failed
+    end
+
+    test "a complaint with no delivery report is engagement, not failure" do
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :opened,
+               terminal: true,
+               complained_at: @t0
+             }) == :sent
+    end
+
+    test "a terminal latch behind a confirmed delivery stays Delivered" do
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :opened,
+               terminal: true,
+               delivered_at: @t0
+             }) == :delivered
+    end
+
+    test "a bounce recorded after delivery reads Failed" do
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :opened,
+               bounced_at: @t0,
+               delivered_at: @t_before
+             }) == :failed
+    end
+
+    test "an in-memory Delivery struct with bounced_at reads Failed without a database" do
+      delivery = %Delivery{
+        status: :sent,
+        last_event_type: :opened,
+        bounced_at: @t0,
+        terminal: true
+      }
+
+      assert delivery_class!(delivery) == :failed
+    end
+
+    test "operator row limitation: a bounce overwritten by a later open reads sent" do
+      # This three-field row is what the operator projection returns. It carries neither
+      # bounced_at nor terminal, so the earlier bounce is invisible and the history reads
+      # Sent. That is the recorded limitation of this row shape, not a bug to fix here.
+      assert delivery_class!(%{
+               status: :sent,
+               last_event_type: :opened,
+               delivery_confirmed: false
+             }) == :sent
+    end
+  end
+
+  # -- display status: reachability and cross-check -------------------------------
+
+  describe "display status reachability" do
+    test "the grid is the full status x last_event_type x delivery_confirmed product" do
+      assert length(grid()) == 5 * 21 * 2
+    end
+
+    test "every display status a real row can reach is a Copy key, never the Unknown fallback" do
+      for r <- grid() do
+        display = Components.delivery_display_status(r)
+
+        assert Map.has_key?(Copy.statuses(), display),
+               "delivery_display_status/1 returned #{inspect(display)} for #{inspect(r)}, " <>
+                 "which has no Copy entry and would render as Unknown"
+      end
+    end
+
+    test "every normalized inbound outcome is a Copy key, never the Unknown fallback" do
+      for outcome <- inbound_outcomes() do
+        assert Map.has_key?(Copy.statuses(), outcome),
+               "inbound outcome #{inspect(outcome)} has no Copy entry and would render " <>
+                 "as Unknown"
+      end
+    end
+  end
+
+  describe "delivery_class/1 against delivery_display_status/1" do
+    # Every divergence is named here before the run. An undocumented divergence, a rule
+    # that matches a row that does not diverge, or a count mismatch fails the test; the
+    # fix is a reviewed change to this table, never an edit to match observed output.
+    @divergence_reasons %{
+      late_failed_event:
+        {"a :failed report reads Failed even though the display status ignores it", 6},
+      deferral_after_delivery:
+        {"a deferral reported after a confirmed delivery stays Delivered", 4},
+      confirmed_outranks_failed_status:
+        {"a confirmed delivery report outranks the send-time snapshot", 10},
+      failed_status_outranks_deferral: {"a send-time failure outranks a deferral report", 1},
+      suppression_event_outranks_failed_status:
+        {"a suppression event reads Not sent before the send-time status is consulted", 2},
+      dormant_suppressed_status:
+        {"status :suppressed has no library writer; the fixed precedence decides these fixture-only rows",
+         6}
+    }
+
+    @confirmed_over_failed_events [
+      nil,
+      :queued,
+      :sent,
+      :dispatched,
+      :subscribed,
+      :unknown,
+      :reconciled,
+      :webhook_replay_requested,
+      :webhook_replay_succeeded,
+      :webhook_replay_failed
+    ]
+
+    defp divergence_rule(%{status: status, last_event_type: last, delivery_confirmed: confirmed}) do
+      cond do
+        status in [:queued, :sent, :dispatched] and last == :failed ->
+          :late_failed_event
+
+        last == :deferred and confirmed == true and
+            status in [:queued, :sent, :dispatched, :failed] ->
+          :deferral_after_delivery
+
+        status == :failed and confirmed == true and last in @confirmed_over_failed_events ->
+          :confirmed_outranks_failed_status
+
+        status == :failed and last == :deferred and confirmed == false ->
+          :failed_status_outranks_deferral
+
+        status == :failed and last == :suppressed ->
+          :suppression_event_outranks_failed_status
+
+        status == :suppressed and last in [:failed, :deferred, :delivered] ->
+          :dormant_suppressed_status
+
+        true ->
+          nil
+      end
+    end
+
+    # Rows whose display status is engagement are skipped: engagement is not a delivery
+    # class, and delivery_class/1 deliberately reads past it.
+    defp comparable_rows do
+      for r <- grid(),
+          display = Components.delivery_display_status(r),
+          StatusMap.classify(display) != :not_a_delivery_status,
+          do: {r, display}
+    end
+
+    defp divergent_rows do
+      for {r, display} <- comparable_rows(),
+          delivery_class!(r) != StatusMap.classify(display),
+          do: {r, display}
+    end
+
+    test "every divergence has a named rule" do
+      for {r, display} <- divergent_rows() do
+        assert divergence_rule(r) != nil,
+               "undocumented divergence for #{inspect(r)}: delivery_class/1 returned " <>
+                 "#{inspect(delivery_class!(r))} but delivery_display_status/1 returned " <>
+                 "#{inspect(display)} (class #{inspect(StatusMap.classify(display))})"
+      end
+    end
+
+    test "no rule matches a row that does not diverge" do
+      divergent = divergent_rows() |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+
+      for r <- grid(), rule = divergence_rule(r), rule != nil do
+        assert MapSet.member?(divergent, r),
+               "rule #{inspect(rule)} matches #{inspect(r)}, which does not diverge"
+      end
+    end
+
+    test "each rule diverges on exactly the planned number of rows" do
+      observed =
+        divergent_rows()
+        |> Enum.map(fn {r, _display} -> divergence_rule(r) end)
+        |> Enum.frequencies()
+
+      expected = Map.new(@divergence_reasons, fn {rule, {_reason, count}} -> {rule, count} end)
+
+      assert observed == expected
+      assert Enum.sum(Map.values(observed)) == 29
+    end
+  end
 end

@@ -33,6 +33,20 @@ defmodule MailglassAdmin.StatusMap do
   # that is never inserted. No library code writes Delivery.status :suppressed, so the
   # :suppressed member is reserved and dormant, and a send-time :failed reads Failed.
   #
+  # delivery_class/1 classifies one delivery row instead of one atom, because
+  # last_event_type advances on every event and a late :opened or :clicked would
+  # otherwise hide a delivery or a bounce. Precedence, first match wins: a failure
+  # report or a durable failure field, then a suppression, then a confirmed delivery,
+  # then a send-time failure, then a deferral, and otherwise Sent. Engagement never
+  # implies delivered and never erases a confirmed delivery.
+  #
+  # The operator Deliveries projection carries only status, last_event_type and
+  # delivery_confirmed. Because last_event_type advances on every event, a bounce
+  # followed by a later open or click reads Sent on that row shape. Rows that carry
+  # bounced_at or the terminal latch (a full Delivery, or a later projection) classify
+  # such a history as Failed. terminal alone is not a failure signal: the projector
+  # also latches it on delivered, complained and suppressed.
+  #
   # classify/1 has no catch-all clause on purpose: an atom that is not in the table
   # must raise rather than be quietly labelled. classify_or_unknown/1 is the only
   # function that tolerates an unmapped value, and it exists for UI fallbacks.
@@ -106,4 +120,39 @@ defmodule MailglassAdmin.StatusMap do
       :error -> :unclassified
     end
   end
+
+  @failure_events [:bounced, :rejected, :failed]
+
+  # A row is any map with a :status key; a map without it raises FunctionClauseError.
+  # The remaining keys are read with Map.get, so an absent key reads as nil.
+  @spec delivery_class(map()) :: class()
+  def delivery_class(%{status: status} = row) do
+    last = Map.get(row, :last_event_type)
+    confirmed? = confirmed?(row, last)
+
+    cond do
+      last in @failure_events or durable_failure?(row, confirmed?) -> :failed
+      status == :suppressed or last == :suppressed or present?(row, :suppressed_at) -> :not_sent
+      confirmed? -> :delivered
+      status == :failed -> :failed
+      last == :deferred -> :delayed
+      true -> :sent
+    end
+  end
+
+  defp confirmed?(row, last) do
+    Map.get(row, :delivery_confirmed) == true or present?(row, :delivered_at) or
+      last == :delivered
+  end
+
+  # The projector sets bounced_at once and latches terminal one way. A terminal latch
+  # with no delivery, complaint or suppression behind it is what a rejected or failed
+  # report leaves after a later engagement event overwrites last_event_type.
+  defp durable_failure?(row, confirmed?) do
+    present?(row, :bounced_at) or
+      (Map.get(row, :terminal) == true and not confirmed? and
+         not present?(row, :complained_at) and not present?(row, :suppressed_at))
+  end
+
+  defp present?(row, key), do: Map.get(row, key) != nil
 end
