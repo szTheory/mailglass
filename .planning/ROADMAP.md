@@ -125,7 +125,7 @@ Plans:
 - [ ] 180-01-PLAN.md — `--check` drift gate: prose scan exclusion, compare module, alias step 1 in the required admin lane, contract test, corrected CI claims (BRPIPE-01)
 - [ ] 180-02-PLAN.md — `<html>` owns the theme: delete six nested `data-theme` sites, color-scheme frame backdrop, one-specimen gallery, root-only contract test (BRPIPE-02)
 - [ ] 180-03-PLAN.md — Theme-ownership browser matrix (advisory) and rework of every e2e spec that pinned a nested theme (BRPIPE-02)
-- [ ] 180-04-PLAN.md — Before-catalog: catalog seed, capture spec and driver, 74 captures at a unique path, required-lane manifest test in the same PR (BRPIPE-03)
+- [ ] 180-04-PLAN.md — Before-catalog: catalog seed, capture spec and driver, up to 80 captures (<= 15 MB, fixed matrix with documented cut order) at a unique path, required-lane manifest test in the same PR (BRPIPE-03)
 **UI hint**: yes
 
 ### Phase 181: Brand v2 Tokens, Fonts and Logo
