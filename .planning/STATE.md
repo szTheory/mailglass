@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 179
 current_phase_name: Compatibility Policy, Status Map and Brand Pin
 status: executing
-stopped_at: Completed 179-01-PLAN.md
-last_updated: "2026-11-14T04:22:26.442Z"
+stopped_at: Completed 179-03-PLAN.md
+last_updated: "2026-11-14T04:47:19.560Z"
 last_activity: 2026-11-13
-last_activity_desc: v2.11 roadmap created (5 phases, 27/27 requirements mapped)
-state_head: 0aac959b6182918d92adcb8e5e4048d3b5a0ea63
+last_activity_desc: Phase 179 execution started
+state_head: ed0d69822c2fc3fad6e22d2ae7045624fe64be5b
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.11 Brand v2.0 Adoption, Phase 179 (Compatibility Policy, Status Map and Brand Pin)
+**Current focus:** Phase 179 — Compatibility Policy, Status Map and Brand Pin
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 179 (Compatibility Policy, Status Map and Brand Pin) — READY TO EXECUTE
-Plan: — (not planned yet)
+Phase: 179 (Compatibility Policy, Status Map and Brand Pin) — EXECUTING
+Plan: 3 of 4
 Status: Ready to execute
-Last activity: 2026-11-13 — v2.11 roadmap created (5 phases, 27/27 requirements mapped)
+Last activity: 2026-11-13 — Phase 179 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -367,6 +367,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P32 | 40 min | 3 tasks | 8 files |
 | Phase 178 P37 | 9 | 3 tasks | 8 files |
 | Phase 179 P01 | 85min | 3 tasks | 9 files |
+| Phase 179 P03 | 24 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -709,6 +710,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 179]: delivery_class/1 ships in Phase 179 over a map with a :status key, honouring delivered_at, bounced_at and terminal when present; the three-field operator row limitation (bounce then open reads Sent) is pinned by a named test and handed to Phase 182
 - [Phase 179]: MailglassAdmin.Copy keeps one sanctioned status_badge fallback (Unknown) because gallery_live renders a nil specimen; strict Copy and StatusMap readers raise for nil and :subscribed
 - [Phase 179]: Status atom universe is 26 (25 badge atoms plus :subscribed); Not sent is a pre-send block only and no library code writes Delivery.status :suppressed
+- [Phase 179]: Brand pin verifier is scripts/brand_pin.exs tested from core test/scripts (never under lib/mix/tasks); offline verify is merge-blocking, the TLS-verified online check is advisory
+- [Phase 179]: The /brand/ and /mailglass-brand/ ignore rules live in brandbook/.gitignore; the root .gitignore stays untouched because phase 164 audits every line of six ignore files
+- [Phase 179]: brand pin owned-dir listing walks with File.ls and lstat so hidden files and symlinks count as unlisted; no .gitattributes is added
 
 ## Quick Tasks Completed
 
@@ -769,8 +773,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-14T04:22:26.404Z
-Stopped at: Completed 179-01-PLAN.md
+Last session: 2026-11-14T04:47:19.513Z
+Stopped at: Completed 179-03-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02

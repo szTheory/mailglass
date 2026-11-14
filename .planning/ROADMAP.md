@@ -96,12 +96,12 @@ Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-RO
   3. Changing a screen string owned by `MailglassAdmin.Copy` without updating `Copy` fails the copy contract test. A recorded mutation run proves this.
   4. The brand pin test passes against zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b` and fails when the recorded hash or a copied-in shipped asset is altered. The full book is not in the repository tree.
   5. The trademark, image and register search result for the name and mark is committed with its date, sources searched and outcome, in the place Phase 183 reads as its announcement gate.
-**Plans**: 1/4 plans executed
+**Plans**: 2/4 plans executed
 
 Plans:
 **Wave 1**
 - [x] 179-01-PLAN.md — StatusMap + Copy table, components delegation, status-map and copy contract tests with mutation proof, "Not sent" zero-row proof, 25-to-26 amendment (BRPOL-02, BRPOL-03)
-- [ ] 179-03-PLAN.md — Brand book pin by commit and zip sha256, brandbook/v2 shipped assets, hermetic tamper test, advisory check (BRPOL-04)
+- [x] 179-03-PLAN.md — Brand book pin by commit and zip sha256, brandbook/v2 shipped assets, hermetic tamper test, advisory check (BRPOL-04)
 - [ ] 179-04-PLAN.md — Trademark and name search record, fail-closed announcement gate, owner register-search runbook (BRPOL-05)
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -171,7 +171,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 179. Compatibility Policy, Status Map and Brand Pin | 1/4 | In Progress | - |
+| 179. Compatibility Policy, Status Map and Brand Pin | 2/4 | In Progress | - |
 | 180. Reproducible Admin Bundle and Before-Catalog | 0/TBD | Not started | - |
 | 181. Brand v2 Tokens, Fonts and Logo | 0/TBD | Not started | - |
 | 182. Admin Words and Layout, One Job First | 0/TBD | Not started | - |
