@@ -27,6 +27,7 @@ defmodule Mailglass.Scripts.BrandPinTest do
   @skipped_dirs [".git", "deps", "_build", "node_modules", "tmp"]
 
   setup_all do
+    Application.put_env(:mailglass, :script_library_mode, true)
     Code.require_file(@script)
     :ok
   end
@@ -747,5 +748,19 @@ defmodule Mailglass.Scripts.BrandPinTest do
         {:error, _reason} -> []
       end
     end)
+  end
+
+  describe "CLI entrypoint under MIX_ENV=test (CR-01)" do
+    @tag timeout: 300_000
+    test "verify is not vacuous: it prints its verdict" do
+      {output, status} =
+        System.cmd("mix", ["run", "--no-start", @script, "verify"],
+          env: [{"MIX_ENV", "test"}],
+          stderr_to_stdout: true
+        )
+
+      assert output =~ "brand pin ok"
+      assert status == 0
+    end
   end
 end

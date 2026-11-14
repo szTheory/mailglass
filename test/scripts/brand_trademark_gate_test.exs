@@ -45,6 +45,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
   @symbols ["™", "®"]
 
   setup_all do
+    Application.put_env(:mailglass, :script_library_mode, true)
     Code.require_file(@script)
     :ok
   end
@@ -559,6 +560,20 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
         {line, number} <- file |> File.read!() |> String.split("\n") |> Enum.with_index(1),
         String.contains?(line, @symbols) do
       "#{Path.relative_to(file, root)}:#{number}"
+    end
+  end
+
+  describe "CLI entrypoint under MIX_ENV=test (CR-01)" do
+    @tag timeout: 300_000
+    test "denies and exits 1 instead of printing nothing and exiting 0" do
+      {output, status} =
+        System.cmd("mix", ["run", "--no-start", @script, "check"],
+          env: [{"MIX_ENV", "test"}],
+          stderr_to_stdout: true
+        )
+
+      assert output =~ "deny"
+      assert status == 1
     end
   end
 end

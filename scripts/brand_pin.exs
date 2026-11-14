@@ -835,7 +835,10 @@ defmodule Mailglass.BrandPin do
   defp format_reason(reason), do: inspect(reason)
 end
 
-if Mix.env() != :test do
+# Fail-closed entrypoint: the CLI runs in EVERY Mix env unless a test explicitly opts into
+# library mode. Gating on Mix.env() made `MIX_ENV=test mix run <script>` print nothing and
+# exit 0, which reads as "allowed" (CR-01). Application env is not inherited by subprocesses.
+unless Application.get_env(:mailglass, :script_library_mode, false) do
   {status, output} = Mailglass.BrandPin.cli(System.argv())
   IO.puts(output)
   if status != 0, do: System.halt(status)
