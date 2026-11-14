@@ -10,7 +10,7 @@
 ### Policy and Pin (BRPOL)
 
 - [ ] **BRPOL-01**: A compatibility policy file lists every name that stays (`Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, `Delivery.status` enum) and states that on-screen and docs words are glossed, not renamed.
-- [ ] **BRPOL-02**: A pure, unit-tested status map classifies all 25 status/event atoms as Sent, Delivered, Delayed, Failed, Not sent, or "not a delivery status"; the open question of whether "Not sent" is ever a persisted `Delivery.status :suppressed` row is answered from code and recorded.
+- [ ] **BRPOL-02**: A pure, unit-tested status map classifies all 26 status/event atoms as Sent, Delivered, Delayed, Failed, Not sent, or "not a delivery status"; the open question of whether "Not sent" is ever a persisted `Delivery.status :suppressed` row is answered from code and recorded.
 - [ ] **BRPOL-03**: `MailglassAdmin.Copy` holds the status-label and renamed-word map, and a copy contract test fails when a screen string drifts from it.
 - [ ] **BRPOL-04**: The brand book is pinned by zip sha256 (`ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`) with a tamper test; the full book stays out of the repo and only shipped assets are copied in.
 - [ ] **BRPOL-05**: Trademark, image and register search results for the name and mark are recorded in the repo.
