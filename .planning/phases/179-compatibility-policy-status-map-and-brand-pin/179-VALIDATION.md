@@ -42,14 +42,18 @@ Toolchain: `export ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 179-01-xx | 01 | 1 | BRPOL-02 | — | Every status/event atom classified once; unmapped/nil raises | unit | `cd mailglass_admin && mix test test/mailglass_admin/status_map_test.exs` | ❌ W0 | ⬜ pending |
-| 179-01-xx | 01 | 1 | BRPOL-02 | — | "Not sent" is pre-send only: zero Delivery rows and events across send/deliver_later/deliver_many | integration (DB) | `mix test test/mailglass/outbound/suppressed_not_persisted_test.exs` | ❌ W0 | ⬜ pending |
-| 179-01-xx | 01 | 1 | BRPOL-03 | — | Screen strings come from `Copy`; drift fails; mutation recorded | unit + render | `cd mailglass_admin && mix test test/mailglass_admin/copy_contract_test.exs` | ❌ W0 | ⬜ pending |
-| 179-02-xx | 02 | 1 | BRPOL-01 | — | Every retained public name exists; reverse check over `Mailglass.Operator.*` | unit | `cd mailglass_admin && mix test test/mailglass_admin/brand_v2_compat_policy_test.exs` | ❌ W0 | ⬜ pending |
-| 179-03-xx | 03 | 1 | BRPOL-04 | T-179 pin tamper | Hash/asset tamper fails with named cause | unit (hermetic) | `mix test test/scripts/brand_pin_test.exs` | ❌ W0 | ⬜ pending |
-| 179-03-xx | 03 | 1 | BRPOL-05 | — | Trademark record parses; gate fails closed | unit | `mix test test/scripts/brand_trademark_gate_test.exs` | ❌ W0 | ⬜ pending |
+| 179-01-01 | 01 | 1 | BRPOL-02 | T-179-01 | 26 atoms classified once from a source-derived universe; unmapped/nil raise; delivery_class precedence incl. durable failure fields and the pinned operator-row limitation; no real row reaches the "Unknown" fallback; grid cross-check against a pre-declared 29-row oracle | unit | `cd mailglass_admin && mix test test/mailglass_admin/status_map_test.exs` | ❌ W0 | ⬜ pending |
+| 179-01-02 | 01 | 1 | BRPOL-03 | T-179-02 | Screen strings come from `Copy` (golden, render, closed-set scan with fixed baselines); five mutations recorded | unit + render | `cd mailglass_admin && mix test test/mailglass_admin/copy_contract_test.exs` | ❌ W0 | ⬜ pending |
+| 179-01-03 | 01 | 1 | BRPOL-02 | — | "Not sent" is pre-send only: zero Delivery rows and events across send/deliver_later/deliver_many, plus positive control; "25" amended to 26 in its own two-line docs commit | integration (DB) | `mix test test/mailglass/outbound/suppressed_not_persisted_test.exs` | ❌ W0 | ⬜ pending |
+| 179-02-01 | 02 | 1 | BRPOL-01 | T-179-04 | One policy table row parsed from the doc and verified against live code | unit | `cd mailglass_admin && mix test test/mailglass_admin/brand_v2_compat_policy_test.exs` | ❌ W0 | ⬜ pending |
+| 179-02-02 | 02 | 1 | BRPOL-01 | T-179-05 | Full inventory, every verifier kind, reverse check over `Mailglass.Operator.*`, api_stability pointer; docs lanes green | unit + docs | `cd mailglass_admin && mix test test/mailglass_admin/brand_v2_compat_policy_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs` | ❌ W0 | ⬜ pending |
+| 179-03-01 | 03 | 1 | BRPOL-04 | T-179-06, T-179-07 | Pin by commit and zip sha256; four byte-identical assets; offline verify green | unit (hermetic) | `mix test test/scripts/brand_pin_test.exs` | ❌ W0 | ⬜ pending |
+| 179-03-02 | 03 | 1 | BRPOL-04 | T-179-09, T-179-10 | Every tamper case (incl. CRLF, empty, idempotency edges) names its cause; full book absent from tree | unit (hermetic) | `mix test test/scripts/brand_pin_test.exs` | ❌ W0 | ⬜ pending |
+| 179-03-03 | 03 | 1 | BRPOL-04 | T-179-08 | Advisory online check and reviewed update procedure tested hermetically; mutation run recorded | unit (hermetic) | `mix test test/scripts/brand_pin_test.exs` | ❌ W0 | ⬜ pending |
+| 179-04-01 | 04 | 1 | BRPOL-05 | T-179-11, T-179-13 | Honest record committed; gate (announcement_allowed?/1 entry, pure /2) denies it; no clock in the test | unit | `mix test test/scripts/brand_trademark_gate_test.exs` | ❌ W0 | ⬜ pending |
+| 179-04-02 | 04 | 1 | BRPOL-05 | T-179-12 | Planted fail-closed states each name their reason; owner runbook with checked URLs | unit | `mix test test/scripts/brand_trademark_gate_test.exs` | ❌ W0 | ⬜ pending |
 
-*Task IDs are finalized by the planner. Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Task IDs map to the four plans (179-01..04). Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 ---
 

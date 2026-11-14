@@ -568,16 +568,23 @@ Owner runbook URLs (all returned HTTP 200 to a plain fetch; confirm they render 
 | A5 | `.gitattributes` `brandbook/v2/** -text` is worthwhile hardening (Windows autocrlf) | Pattern 7 | None if skipped; hash flake only on CRLF checkouts |
 | A6 | Inbound-context labels for `:rejected/:bounced/:failed` should not adopt the five plain delivery words | Pitfall 15 | Phase 182 relabels inbound badges as "Failed" |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Same atom, two contexts.**
+All five were resolved at plan time (2026-11-13). Each carries its resolution and the task that implements it.
+
+1. **Same atom, two contexts.** (RESOLVED)
    - Known: `normalize_inbound_outcome/1` yields `:rejected`, `:bounced`, `:failed`, identical to outbound atoms; `classify/1` is context-free.
    - Unclear: whether Phase 182 wants delivery words on inbound badges.
    - Recommendation: keep `classify/1` outbound-semantic, document the caveat in `StatusMap` and the policy, and let Phase 182 add `classify(atom, context)` only if needed. No change now.
-2. **D-22 invariant wording.** `open`/`owner_reviewed` are not defined fields. Recommendation: adopt A4 and write the invariants test against `announcement_allowed?`, with planted states (clear without register, blocked plus override, expired, populated override on caution, malformed JSON, missing file) each asserted.
-3. **`:subscribed` and `nil` "fail loudly".** Gallery renders `status: nil` on purpose, so the UI fallback must stay. Recommendation: strict functions raise, tests pin the single sanctioned fallback, and no atom in the 26 reaches the fallback except `:subscribed` (unreachable from real rows).
-4. **Extend the trademark record with RDAP facts?** CONTEXT D-21 lists WHOIS/RDAP as `not_checked`; RDAP for registries is reachable. Recommendation: record the two registrations as `caution` sources (registrant undisclosed; `mailglass.app` registered after the project started, serving an adjacent "Email Data" page) while keeping `register_checked: false` (domains are not trademark registers). The owner may own `mailglass.com`/`.app`; add that question to the runbook.
-5. **Duplicate OFL copies.** Phase 179 puts OFL texts in `brandbook/v2/`; Phase 181 must place them beside fonts in admin `priv/static/fonts/`. Recommendation: Phase 181 adds a second owned dir and its own `shipped[]` rows; nothing to do now.
+   - **RESOLVED:** recommendation adopted. Implemented by 179-01 Task 1: the `StatusMap` source comment records that inbound badges must not adopt delivery words, and `status_map_test.exs` asserts `:rejected`, `:bounced`, `:failed` classify as `:failed` for every normalized inbound outcome. Any `classify(atom, context)` is Phase 182's call.
+2. **D-22 invariant wording.** (RESOLVED) `open`/`owner_reviewed` are not defined fields. Recommendation: adopt A4 and write the invariants test against `announcement_allowed?`, with planted states (clear without register, blocked plus override, expired, populated override on caution, malformed JSON, missing file) each asserted.
+   - **RESOLVED:** A4 adopted. Implemented by 179-04 Task 1 (gate semantics in `decision/2`, the pure `announcement_allowed?/2` and the D-22 entry point `announcement_allowed?/1`, recorded in a CONTEXT D-22 amendment) and 179-04 Task 2 (each planted state asserts its specific deny reason).
+3. **`:subscribed` and `nil` "fail loudly".** (RESOLVED) Gallery renders `status: nil` on purpose, so the UI fallback must stay. Recommendation: strict functions raise, tests pin the single sanctioned fallback, and no atom in the 26 reaches the fallback except `:subscribed` (unreachable from real rows).
+   - **RESOLVED:** recorded as an amendment under D-08 in `179-CONTEXT.md`: "fail loudly" binds the strict `StatusMap`/`Copy` functions; `status_badge` keeps the single nil fallback for the gallery specimen. Implemented by 179-01 Task 1 (reachability test: every grid display status and every normalized inbound outcome is a `Copy.statuses()` key) and 179-01 Task 2 (layer 1 asserts `FunctionClauseError` for nil and `:subscribed`; layer 2 pins the nil fallback).
+4. **Extend the trademark record with RDAP facts?** (RESOLVED) CONTEXT D-21 lists WHOIS/RDAP as `not_checked`; RDAP for registries is reachable. Recommendation: record the two registrations as `caution` sources (registrant undisclosed; `mailglass.app` registered after the project started, serving an adjacent "Email Data" page) while keeping `register_checked: false` (domains are not trademark registers). The owner may own `mailglass.com`/`.app`; add that question to the runbook.
+   - **RESOLVED:** recommendation adopted. Implemented by 179-04 Task 1 (`rdap_com`, `rdap_app`, `rdap_other` sources re-run on the execution date; `register_checked` stays false) and 179-04 Task 2 (runbook step 4 asks whether the project owns either domain).
+5. **Duplicate OFL copies.** (RESOLVED) Phase 179 puts OFL texts in `brandbook/v2/`; Phase 181 must place them beside fonts in admin `priv/static/fonts/`. Recommendation: Phase 181 adds a second owned dir and its own `shipped[]` rows; nothing to do now.
+   - **RESOLVED:** recommendation adopted. Implemented by 179-03 Task 1 (`owned_dirs: ["brandbook/v2"]`, four `shipped[]` rows, verifier generic over any number of owned dirs). Follow-up for Phase 181: add `mailglass_admin/priv/static/fonts` as a second owned dir with its own `shipped[]` rows (woff2 hashes from the zip, per D-17).
 
 ## Environment Availability
 
