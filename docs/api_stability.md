@@ -5,6 +5,8 @@ This document is the canonical `v2.x` stability inventory for the core
 
 For compatibility, deprecation, support-matrix, and upgrade-horizon policy, use
 [`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
+Brand v2 words on screens and in docs are glosses; the public names they gloss
+are listed in the [brand v2 compatibility policy](https://github.com/szTheory/mailglass/blob/main/docs/brand-v2-compatibility.md).
 This file stays inventory-shaped on purpose.
 
 It answers two distinct questions:
