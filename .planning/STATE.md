@@ -4,17 +4,17 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 179
 current_phase_name: Compatibility Policy, Status Map and Brand Pin
-status: executing
-stopped_at: Completed 179-04-PLAN.md
-last_updated: "2026-11-14T05:07:05.672Z"
+status: verifying
+stopped_at: Completed 179-02-PLAN.md
+last_updated: "2026-11-14T05:19:06.749Z"
 last_activity: 2026-11-13
 last_activity_desc: Phase 179 execution started
-state_head: 9942eeff97cbcd53da8c254e8151c1682c015f2a
+state_head: bcf802a1519e864861e8741e0e23bc4f6d151fca
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 179 (Compatibility Policy, Status Map and Brand Pin) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-13 — Phase 179 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -369,6 +369,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 179 P01 | 85min | 3 tasks | 9 files |
 | Phase 179 P03 | 24 min | 3 tasks | 8 files |
 | Phase 179 P04 | 17 min | 2 tasks | 4 files |
+| Phase 179 P02 | 10min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -716,6 +717,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 179]: brand pin owned-dir listing walks with File.ls and lstat so hidden files and symlinks count as unlisted; no .gitattributes is added
 - [Phase 179]: [179-04] Trademark gate: allowed only when not blocked, before expires, and (clear with register_checked true, or a populated owner_override); the committed record stays caution with register_checked false — Research assumption A4 adopted; expiry applies to the override path too; a clear or register claim without register evidence is an invalid record, not a soft deny.
 - [Phase 179]: [179-04] owner_override must be mirrored by an identical acknowledged constant in the test, and agent-named by values are rejected even when acknowledged; owner-only authorship is a runbook review rule — A test cannot observe who authored a commit, so the control is the mirrored constant plus the agent-name rejection; the authorship rule is stated for reviewers in TRADEMARK-SEARCH.md.
+- [Phase 179]: 179-02: Brand v2 compat policy lives at repo-root docs/ (no tarball change); api_stability.md links it by absolute URL; policy test parses the table strictly, verifies by seven kinds, and adds a reverse check over Mailglass.Operator.*
 
 ## Quick Tasks Completed
 
@@ -776,8 +778,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-14T05:07:05.635Z
-Stopped at: Completed 179-04-PLAN.md
+Last session: 2026-11-14T05:19:06.715Z
+Stopped at: Completed 179-02-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
