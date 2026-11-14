@@ -99,10 +99,14 @@ Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-RO
 **Plans**: 4 plans
 
 Plans:
+**Wave 1**
 - [ ] 179-01-PLAN.md — StatusMap + Copy table, components delegation, status-map and copy contract tests with mutation proof, "Not sent" zero-row proof, 25-to-26 amendment (BRPOL-02, BRPOL-03)
-- [ ] 179-02-PLAN.md — Brand v2 compatibility policy with parsed, live-verified stays table and api_stability pointer (BRPOL-01)
 - [ ] 179-03-PLAN.md — Brand book pin by commit and zip sha256, brandbook/v2 shipped assets, hermetic tamper test, advisory check (BRPOL-04)
 - [ ] 179-04-PLAN.md — Trademark and name search record, fail-closed announcement gate, owner register-search runbook (BRPOL-05)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 179-02-PLAN.md — Brand v2 compatibility policy with parsed, live-verified stays table and api_stability pointer (BRPOL-01)
+
 **Plan budget**: about 3
 
 ### Phase 180: Reproducible Admin Bundle and Before-Catalog
