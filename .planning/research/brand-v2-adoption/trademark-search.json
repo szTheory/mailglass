@@ -1,0 +1,142 @@
+{
+  "schema": "mailglass.trademark-search/1",
+  "date": "2026-11-13",
+  "searcher": "automated agent (Claude Code)",
+  "mark": "mailglass",
+  "variants": ["mailglass", "mail glass", "MailGlass", "glassmail", "mailglas"],
+  "classes": [9, 38, 42],
+  "overall": "caution",
+  "register_checked": false,
+  "owner_override": null,
+  "expires": "2027-05-12",
+  "sources": [
+    {
+      "id": "hex",
+      "url": "https://hex.pm/api/packages?search=mailglass",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200. The search returned exactly mailglass, mailglass_admin and mailglass_inbound, the project's own three packages."
+    },
+    {
+      "id": "npm_exact",
+      "url": "https://registry.npmjs.org/mailglass",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 404: no npm package is named mailglass."
+    },
+    {
+      "id": "npm_search",
+      "url": "https://registry.npmjs.org/-/v1/search?text=mailglass&size=10",
+      "outcome": "caution",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200, one result: mailglass-email-mcp (0.0.1, published 2026-11-06, described as \"MailGlass: read-only email MCP server\", repository anantanandgupta/mcp-servers). The closest same-name adjacent product found; it is a different category (a read-only email MCP server) with a near-identical name."
+    },
+    {
+      "id": "pypi",
+      "url": "https://pypi.org/pypi/mailglass/json",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 404: no PyPI project is named mailglass."
+    },
+    {
+      "id": "rubygems",
+      "url": "https://rubygems.org/api/v1/gems/mailglass.json",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 404: no gem is named mailglass."
+    },
+    {
+      "id": "crates",
+      "url": "https://crates.io/api/v1/crates/mailglass",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 404: no crate is named mailglass (the API requires a user agent, a generic one was sent)."
+    },
+    {
+      "id": "github",
+      "url": "https://api.github.com/search/repositories?q=mailglass+in:name",
+      "outcome": "caution",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200, 3 repositories: the project's own szTheory/mailglass and szTheory/mailglass-brand, and Mr-Anderson-403/MailGlass-v3.1 (0 stars), an AI-powered email threat-analysis and phishing-detection app. A same-name product in an adjacent category (email security)."
+    },
+    {
+      "id": "glama",
+      "url": "https://glama.ai/mcp/servers?query=mailglass",
+      "outcome": "caution",
+      "tier": "secondary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200. The results page lists two same-name MCP connectors, email.dygc/mailglass and email.dygc.mail/mail-glass. Same name in an adjacent product space; a directory listing, not a registry."
+    },
+    {
+      "id": "rdap_com",
+      "url": "https://rdap.verisign.com/com/v1/domain/mailglass.com",
+      "outcome": "caution",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200 from the .com registry. mailglass.com was registered 2024-10-13 and expires 2027-10-13, registrar Cloudflare, Inc., Cloudflare nameservers; the registrant is not disclosed and ownership is unverified (the domain did not resolve in DNS on the retrieval date). A domain registration, not a trademark register."
+    },
+    {
+      "id": "rdap_app",
+      "url": "https://pubapi.registry.google/rdap/domain/mailglass.app",
+      "outcome": "caution",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200 from the .app registry. mailglass.app was registered 2026-08-14 and expires 2027-08-14, registrar Namecheap Inc.; the registrant is not disclosed and ownership is unverified. https://mailglass.app/ serves a sign-in page titled \"Email Data\". A domain registration, not a trademark register."
+    },
+    {
+      "id": "rdap_other",
+      "url": "https://rdap.identitydigital.services/rdap/domain/mailglass.io",
+      "outcome": "clear",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "Registry lookups for mailglass.dev (pubapi.registry.google), .io and .email (rdap.identitydigital.services), .org (rdap.publicinterestregistry.org), .net (rdap.verisign.com/net) and .co (rdap.registry.co) each returned HTTP 404, which means no domain object exists in that registry; it says nothing about trademarks."
+    },
+    {
+      "id": "trademarkia",
+      "url": "https://www.trademarkia.com/search/trademarks?query=mailglass",
+      "outcome": "caution",
+      "tier": "secondary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200. A search for mailglass shows No results. A search for the variant glasmail shows one dead mark: GLASMAIL, serial 74299521, class 038 (computer services, a network for the transmission of messages), owner Tides Foundation, filed 1992-07-29, Dead/Cancelled 2000-12-23. A dead conflicting mark is a caution under the decision rule. Secondary aggregator, not a register."
+    },
+    {
+      "id": "uspto",
+      "url": "https://tmsearch.uspto.gov/search/search-information",
+      "outcome": "not_checked",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200 but the page is a JavaScript application shell (title \"Trademark search\") with no searchable content; an agent cannot run the search. The owner or counsel must search MAILGLASS and the variants in classes 9, 38 and 42, plus a design-code search."
+    },
+    {
+      "id": "tmview",
+      "url": "https://www.tmdn.org/tmview/#/tmview",
+      "outcome": "not_checked",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200 but the page is an empty JavaScript application shell, and an earlier automated search request was rejected (\"Request Rejected\"), so no search was attempted or worked around. Covers EUIPO and the national EU offices. The owner or counsel must run it."
+    },
+    {
+      "id": "wipo",
+      "url": "https://branddb.wipo.int/en/",
+      "outcome": "not_checked",
+      "tier": "primary",
+      "retrieved": "2026-11-13",
+      "note": "HTTP 200 but the page is a bot challenge (an altcha proof-of-work widget), not the database. No attempt was made to defeat it. The owner or counsel must run the Global Brand Database search."
+    },
+    {
+      "id": "image_search",
+      "url": "https://tineye.com/",
+      "outcome": "not_checked",
+      "tier": "secondary",
+      "retrieved": "2026-11-13",
+      "note": "No reverse image search was run: it needs an uploaded image and a person to judge the matches. An envelope-plus-m mark is a crowded idea space (Gmail used one from 2004 to 2020), so distinctiveness rests on the sealed-flap treatment, which is a counsel or owner call."
+    }
+  ]
+}
