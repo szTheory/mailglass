@@ -1,38 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.10 — UI Repairs & Faithful Storybook",
+  "milestone": "v2.11 — Brand v2.0 Adoption",
   "phases": [
     {
-      "number": "174",
-      "name": "Faithful Storybook and Quiet Quick Views",
-      "status": "complete"
+      "number": "179",
+      "name": "Compatibility Policy, Status Map and Brand Pin",
+      "status": "pending"
     },
     {
-      "number": "175",
-      "name": "Delivery Investigation and Safe Replay",
-      "status": "complete"
+      "number": "180",
+      "name": "Reproducible Admin Bundle and Before-Catalog",
+      "status": "pending"
     },
     {
-      "number": "176",
-      "name": "Direct Filters and Useful Inbound Evidence",
-      "status": "in_progress"
+      "number": "181",
+      "name": "Brand v2 Tokens, Fonts and Logo",
+      "status": "pending"
     },
     {
-      "number": "177",
-      "name": "Readable Health and Coherent Account Navigation",
-      "status": "complete"
+      "number": "182",
+      "name": "Admin Words and Layout, One Job First",
+      "status": "pending"
     },
     {
-      "number": "178",
-      "name": "Preview Authoring and Milestone Review",
-      "status": "complete"
+      "number": "183",
+      "name": "Docs, Packaging and Launch Prep",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 1 of 5 · 0% · executing"
   },
-  "updated_at": "2026-11-03T04:54:13.526Z"
+  "updated_at": "2026-11-14T02:52:58.326Z"
 }
