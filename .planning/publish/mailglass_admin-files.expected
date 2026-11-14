@@ -18,6 +18,7 @@ lib/mailglass_admin/auth.ex
 lib/mailglass_admin/components.ex
 lib/mailglass_admin/controllers/assets.ex
 lib/mailglass_admin/controllers/theme_controller.ex
+lib/mailglass_admin/copy.ex
 lib/mailglass_admin/gallery_live.ex
 lib/mailglass_admin/inbound/address_list.ex
 lib/mailglass_admin/inbound/destructive_action.ex
@@ -69,6 +70,7 @@ lib/mailglass_admin/preview/tabs.ex
 lib/mailglass_admin/preview_live.ex
 lib/mailglass_admin/pub_sub/topics.ex
 lib/mailglass_admin/router.ex
+lib/mailglass_admin/status_map.ex
 lib/mailglass_admin/surface_nav.ex
 lib/mailglass_admin/theme.ex
 lib/mix/tasks/mailglass_admin.assets.build.ex
