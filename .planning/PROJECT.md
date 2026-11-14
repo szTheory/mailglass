@@ -14,6 +14,21 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 The core value remains **email you can see, audit, and trust before it ships**. This milestone improved operator and maintainer workflows without changing Mailglass's transactional-email focus. No next milestone has been approved; use $gsd-new-milestone to define its goals.
 
+## Current Milestone: v2.11 Brand v2.0 Adoption
+
+**Goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
+
+**Target features:**
+- Compatibility policy (gloss, don't rename), an explicit status map, a brand pin (book zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`), and a recorded trademark/register search.
+- A reproducible admin bundle with a drift gate CI actually runs, plus a before-catalog of current screens on realistic fixtures.
+- v2 tokens, a contrast-verified 36-slot role map, bundled fonts and logo/favicon in one coordinated change. Core email defaults stay unchanged.
+- Admin words and layout proven end to end on one job ("a customer says the password reset never arrived"), then rolled out, with a separate-agent design review gate.
+- README, ExDoc, Hex packaging and launch-prep docs aligned with the book; announcement and any trademark claim gated on the search result.
+
+**Stop line:** no new data capture or backend features. Needs the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) are filed for a later insight milestone. Cap: 5 phases, 20 plans or fewer, one open PR at a time.
+
+**Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (approved by owner 2026-11-13, recommended defaults accepted).
+
 ## Completed Milestone: v2.10 UI Repairs & Faithful Storybook
 
 **Shipped and archived 2026-11-02.** Five phases, 76 plans, and 117 tasks completed.
@@ -252,7 +267,7 @@ All 31 v2.10 requirements are validated in the archived [requirements record](mi
 
 ## Next Milestone Goals
 
-No next milestone has been approved. Start with $gsd-new-milestone to review adopter needs and define the next scope. Preserve the convergence posture: default to maintenance, release hygiene, and docs accuracy unless concrete adopter pull or a contract gap justifies new capability. The broader whole-job and conditional-consolidation envelopes remain proposals, not admitted work.
+v2.11 Brand v2.0 Adoption is the active milestone (see Current Milestone above). After it, the queue in `.planning/ROLLING-ROADMAP.md` applies: delivery-absence signal (SEED-008), then Fractal Storybook depth (SEED-009). Preserve the convergence posture: broader feature work needs concrete adopter pull or a contract gap.
 
 ## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
@@ -1220,7 +1235,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-11-02 after the v2.10 milestone closeout review.*
+*Last updated: 2026-11-13 after v2.11 Brand v2.0 Adoption milestone start.*
+<!-- prior footer: 2026-11-02 after the v2.10 milestone closeout review. -->
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

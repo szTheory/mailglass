@@ -1,21 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.10
-milestone_name: UI Repairs & Faithful Storybook
-status: Awaiting next milestone
-stopped_at: milestone v2.10 closeout complete; awaiting next milestone
-last_updated: "2026-11-03T04:56:31Z"
-last_activity: 2026-11-03
-last_activity_desc: Milestone v2.10 completed and archived
-state_head: 2700133fc25b94012e14f14de11cefc0c597f568
+milestone: v2.11
+milestone_name: Brand v2.0 Adoption
+status: planning
+last_updated: "2026-11-14T00:50:59.817Z"
+last_activity: 2026-11-13
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 76
-  completed_plans: 76
-  percent: 100
-current_phase: 178
-current_phase_name: Preview Authoring and Milestone Review
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -31,10 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 ## Current Position
 
-Phase: Milestone v2.10 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-02 — Milestone v2.10 completed and archived
+Status: Defining requirements
+Last activity: 2026-11-13 — Milestone v2.11 started
+
 
 ## Current handoff — 2026-11-02
 
