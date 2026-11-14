@@ -51,7 +51,7 @@
 
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183).
 
-- [ ] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical
+- [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (completed 2026-11-14)
 - [ ] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap
 - [ ] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched
 - [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen
@@ -96,7 +96,7 @@ Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-RO
   3. Changing a screen string owned by `MailglassAdmin.Copy` without updating `Copy` fails the copy contract test. A recorded mutation run proves this.
   4. The brand pin test passes against zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b` and fails when the recorded hash or a copied-in shipped asset is altered. The full book is not in the repository tree.
   5. The trademark, image and register search result for the name and mark is committed with its date, sources searched and outcome, in the place Phase 183 reads as its announcement gate.
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 
 Plans:
 **Wave 1**
@@ -171,7 +171,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | In Progress | - |
+| 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 0/TBD | Not started | - |
 | 181. Brand v2 Tokens, Fonts and Logo | 0/TBD | Not started | - |
 | 182. Admin Words and Layout, One Job First | 0/TBD | Not started | - |
