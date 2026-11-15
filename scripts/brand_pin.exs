@@ -42,6 +42,28 @@ defmodule Mailglass.BrandPin do
   ]
   @required_assets for {_from, to, _license} <- @initial_manifest, do: to
 
+  # Phase 181 (D-18): the assets the admin ships beyond the four `init` assets. `extend/3`
+  # copies them from the same pinned zip. `@required_assets` stays the four-asset `init`
+  # contract, so `init` still builds a pin `ensure_parses` accepts. The three OFL texts also
+  # ship to `brandbook/v2` above: a duplicate `from` is fine, a duplicate `to` is not.
+  @fonts_dir "mailglass_admin/priv/static/fonts"
+  @extension_manifest [
+    {"assets/fonts/web/a-display-600.woff2", @fonts_dir <> "/a-display-600.woff2", "OFL-1.1"},
+    {"assets/fonts/web/ui-400.woff2", @fonts_dir <> "/ui-400.woff2", "OFL-1.1"},
+    {"assets/fonts/web/ui-600.woff2", @fonts_dir <> "/ui-600.woff2", "OFL-1.1"},
+    {"assets/fonts/web/ui-400i.woff2", @fonts_dir <> "/ui-400i.woff2", "OFL-1.1"},
+    {"assets/fonts/web/a-mono-400.woff2", @fonts_dir <> "/a-mono-400.woff2", "OFL-1.1"},
+    {"assets/fonts/web/a-mono-600.woff2", @fonts_dir <> "/a-mono-600.woff2", "OFL-1.1"},
+    {"assets/fonts/OFL-FunnelDisplay.txt", @fonts_dir <> "/OFL-FunnelDisplay.txt", "OFL-1.1"},
+    {"assets/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+     @fonts_dir <> "/OFL-AtkinsonHyperlegibleNext.txt", "OFL-1.1"},
+    {"assets/fonts/OFL-AtkinsonHyperlegibleMono.txt",
+     @fonts_dir <> "/OFL-AtkinsonHyperlegibleMono.txt", "OFL-1.1"},
+    {"assets/logo/mailglass-lockup-light.svg", "brandbook/v2/mailglass-lockup-light.svg", "MIT"},
+    {"assets/logo/mailglass-lockup-dark.svg", "brandbook/v2/mailglass-lockup-dark.svg", "MIT"},
+    {"assets/icon/favicon.svg", "brandbook/v2/favicon.svg", "MIT"}
+  ]
+
   @months %{
     "january" => 1,
     "february" => 2,
@@ -87,6 +109,14 @@ defmodule Mailglass.BrandPin do
       --expect-sha256, rewrites the pin and the copied assets, and writes nothing on a
       refusal. Bump @expected_zip_sha256 in test/scripts/brand_pin_test.exs in the same
       chore(brand) commit. Never hand-edit the pin.
+
+    extend --expect-sha256 <hex> [--zip <path>]
+      Add the shipped assets listed in @extension_manifest (the admin fonts, their OFL
+      texts and the logo and favicon SVGs) to the pin, from the SAME pinned zip. Requires
+      --expect-sha256 to equal the pin's sha256, checks the zip's sha256 and size against
+      the pin before reading any member, and writes nothing on a refusal. --zip reads a
+      local copy instead of downloading the pinned commit URL; it is hashed identically.
+      Idempotent: a second run changes nothing. Never hand-edit the pin.
 
     help
       Print this text.
@@ -495,6 +525,119 @@ defmodule Mailglass.BrandPin do
     end
   end
 
+  # Adds `@extension_manifest` to the pin from the pinned zip (D-18). Every refusal happens
+  # before any write: option check, zip hash and size, every member present, every existing
+  # entry still matching its recorded hash, no conflicting `to`. Assets are written first, then
+  # the pin, atomically (`write_all/3`). A second run is a no-op byte for byte.
+  def extend(pin_map, opts, getter \\ &http_get/1) do
+    target = Keyword.get(opts, :target_dir, @repo_root)
+
+    with {:ok, current} <- parse_current(pin_map),
+         :ok <- check_extend_expect(current, Keyword.get(opts, :expect_sha256)),
+         {:ok, zip_bin} <- extend_zip(current, Keyword.get(opts, :zip), getter),
+         :ok <- check_pinned_zip(current, zip_bin),
+         {:ok, members} <- read_extension_members(zip_bin, current),
+         :ok <- check_existing_entries(current, members),
+         {:ok, shipped} <- extend_shipped(current, members),
+         pin = extended_pin(current, shipped),
+         :ok <- ensure_parses(pin),
+         :ok <- write_all(target, pin, members) do
+      {:ok, pin}
+    end
+  end
+
+  defp check_extend_expect(current, expect) do
+    cond do
+      not (is_binary(expect) and Regex.match?(@sha256, expect)) ->
+        {:error, {:bad_option, "--expect-sha256 must be 64 lowercase hex characters"}}
+
+      expect != current["sha256"] ->
+        {:error, {:expect_sha256_not_pinned, expect}}
+
+      true ->
+        :ok
+    end
+  end
+
+  # A local zip (`--zip`) or the pinned commit URL. Both are hashed against the pin next.
+  defp extend_zip(_current, zip_path, _getter) when is_binary(zip_path) do
+    case File.read(zip_path) do
+      {:ok, body} -> {:ok, body}
+      {:error, reason} -> {:error, {:zip_file_unreadable, reason}}
+    end
+  end
+
+  defp extend_zip(current, nil, getter) do
+    case fetch(current["url"], getter) do
+      {:ok, body} when is_binary(body) -> {:ok, body}
+      {:error, reason} -> {:error, {:fetch_failed, reason}}
+    end
+  end
+
+  # Hash and size of the exact bytes, before any member is read.
+  defp check_pinned_zip(current, zip_bin) do
+    cond do
+      sha256_hex(zip_bin) != current["sha256"] -> {:error, :zip_hash_mismatch}
+      byte_size(zip_bin) != current["size"] -> {:error, :zip_size_mismatch}
+      true -> :ok
+    end
+  end
+
+  defp read_extension_members(zip_bin, current) do
+    existing = Enum.map(current["shipped"], & &1["from"])
+    extra = Enum.map(@extension_manifest, fn {from, _to, _license} -> from end)
+    collect_members(zip_bin, current["root"], Enum.uniq(existing ++ extra))
+  end
+
+  # An entry already in the pin must still equal its zip member; a pin edited by hand (or a
+  # zip that is not the pinned one) is refused instead of being papered over.
+  defp check_existing_entries(current, members) do
+    case Enum.find(current["shipped"], &(not member_matches?(&1, members))) do
+      nil -> :ok
+      entry -> {:error, {:shipped_member_mismatch, entry["from"]}}
+    end
+  end
+
+  defp member_matches?(%{"from" => from, "sha256" => want, "bytes" => bytes}, members) do
+    data = Map.fetch!(members, from)
+    byte_size(data) == bytes and sha256_hex(data) == want
+  end
+
+  defp extend_shipped(current, members) do
+    Enum.reduce_while(@extension_manifest, {:ok, current["shipped"]}, fn {from, to, license},
+                                                                         {:ok, shipped} ->
+      case Enum.find(shipped, &(&1["to"] == to)) do
+        nil ->
+          data = Map.fetch!(members, from)
+
+          entry = %{
+            "from" => from,
+            "to" => to,
+            "sha256" => sha256_hex(data),
+            "bytes" => byte_size(data),
+            "license" => license
+          }
+
+          {:cont, {:ok, shipped ++ [entry]}}
+
+        %{"from" => ^from, "license" => ^license} ->
+          {:cont, {:ok, shipped}}
+
+        _conflicting ->
+          {:halt, {:error, {:extension_conflict, to}}}
+      end
+    end)
+  end
+
+  defp extended_pin(current, shipped) do
+    owned =
+      if @fonts_dir in current["owned_dirs"],
+        do: current["owned_dirs"],
+        else: current["owned_dirs"] ++ [@fonts_dir]
+
+    %{current | "owned_dirs" => owned, "shipped" => shipped}
+  end
+
   defp parse_current(pin_map) do
     case parse(pin_map) do
       {:ok, pin} -> {:ok, pin}
@@ -780,6 +923,22 @@ defmodule Mailglass.BrandPin do
     end
   end
 
+  def cli(["extend" | rest], getter) do
+    with {:ok, opts} <- parse_extend_options(rest),
+         {:ok, pin_map} <- read_pin() do
+      case extend(pin_map, opts, getter) do
+        {:ok, pin} ->
+          {0,
+           "pin extended: #{length(pin["shipped"])} shipped assets in #{length(pin["owned_dirs"])} owned directories"}
+
+        {:error, reason} ->
+          {1, "extend refused: #{format_reason(reason)}"}
+      end
+    else
+      {:error, message} -> {2, message}
+    end
+  end
+
   def cli(["help"], _getter), do: {0, String.trim_trailing(@help)}
   def cli(_other, _getter), do: {2, String.trim_trailing(@help)}
 
@@ -823,6 +982,17 @@ defmodule Mailglass.BrandPin do
       {:ok, opts}
     else
       {:error, "usage: <command> --commit <40-hex sha> --expect-sha256 <64-hex>"}
+    end
+  end
+
+  defp parse_extend_options(args) do
+    {opts, rest, invalid} =
+      OptionParser.parse(args, strict: [expect_sha256: :string, zip: :string])
+
+    if rest == [] and invalid == [] and opts[:expect_sha256] do
+      {:ok, opts}
+    else
+      {:error, "usage: extend --expect-sha256 <64-hex> [--zip <path>]"}
     end
   end
 

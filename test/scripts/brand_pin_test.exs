@@ -14,12 +14,36 @@ defmodule Mailglass.Scripts.BrandPinTest do
   # (scripts/brand_pin.exs update) edits this constant and the pin in one chore(brand) commit.
   @expected_zip_sha256 "ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b"
 
+  # The `init` contract: the four assets `init` writes (and `parse` requires). Not the whole
+  # pin; see @extension_assets.
   @required_assets [
     "brandbook/v2/OFL-AtkinsonHyperlegibleMono.txt",
     "brandbook/v2/OFL-AtkinsonHyperlegibleNext.txt",
     "brandbook/v2/OFL-FunnelDisplay.txt",
     "brandbook/v2/brand.json"
   ]
+
+  # What `extend` adds (Phase 181, D-18): six woff2 and three OFL texts in the admin fonts
+  # directory, and the two lockups and the favicon beside the book. Test-owned, so a pin-only
+  # edit of the shipped list fails here. A deliberate change edits this list and the pin
+  # together in one chore(brand) commit.
+  @fonts_dir "mailglass_admin/priv/static/fonts"
+  @extension_assets [
+    @fonts_dir <> "/OFL-AtkinsonHyperlegibleMono.txt",
+    @fonts_dir <> "/OFL-AtkinsonHyperlegibleNext.txt",
+    @fonts_dir <> "/OFL-FunnelDisplay.txt",
+    @fonts_dir <> "/a-display-600.woff2",
+    @fonts_dir <> "/a-mono-400.woff2",
+    @fonts_dir <> "/a-mono-600.woff2",
+    @fonts_dir <> "/ui-400.woff2",
+    @fonts_dir <> "/ui-400i.woff2",
+    @fonts_dir <> "/ui-600.woff2",
+    "brandbook/v2/favicon.svg",
+    "brandbook/v2/mailglass-lockup-dark.svg",
+    "brandbook/v2/mailglass-lockup-light.svg"
+  ]
+  @expected_shipped Enum.sort(@required_assets ++ @extension_assets)
+  @expected_owned_dirs ["brandbook/v2", @fonts_dir]
 
   # Members of the v2 book zip that must never enter the tree (the three distinctive names;
   # tracked v1 files such as brandbook/index.html are not covered by this check).
@@ -38,12 +62,16 @@ defmodule Mailglass.Scripts.BrandPinTest do
     @pin_path |> File.read!() |> Jason.decode!()
   end
 
-  # Copies brandbook/v2/ into tmp_dir and returns {read_file, list_dir} closures rooted there.
+  # Copies every owned directory of the real pin into tmp_dir and returns {read_file,
+  # list_dir} closures rooted there.
   defp tmp_tree(tmp_dir) do
-    source = Path.join(@repo_root, "brandbook/v2")
-    dest = Path.join(tmp_dir, "brandbook/v2")
-    File.mkdir_p!(dest)
-    for name <- File.ls!(source), do: File.cp!(Path.join(source, name), Path.join(dest, name))
+    for dir <- real_pin()["owned_dirs"] do
+      source = Path.join(@repo_root, dir)
+      dest = Path.join(tmp_dir, dir)
+      File.mkdir_p!(dest)
+      for name <- File.ls!(source), do: File.cp!(Path.join(source, name), Path.join(dest, name))
+    end
+
     {pin(:tree_read_file, [tmp_dir]), pin(:tree_list_dir, [tmp_dir])}
   end
 
@@ -100,14 +128,31 @@ defmodule Mailglass.Scripts.BrandPinTest do
                :ok
     end
 
-    test "ships exactly the four required assets" do
-      assert real_pin()["shipped"] |> Enum.map(& &1["to"]) |> Enum.sort() == @required_assets
+    test "ships exactly the four init assets plus the twelve extend assets" do
+      assert real_pin()["shipped"] |> Enum.map(& &1["to"]) |> Enum.sort() == @expected_shipped
+      assert length(@expected_shipped) == 16
+    end
+
+    test "owns exactly brandbook/v2 and the admin fonts directory, never priv/static itself" do
+      owned = real_pin()["owned_dirs"]
+
+      assert Enum.sort(owned) == Enum.sort(@expected_owned_dirs)
+      refute "mailglass_admin/priv/static" in owned
+    end
+
+    test "every shipped asset sits under an owned directory and licenses match their origin" do
+      for entry <- real_pin()["shipped"] do
+        assert Enum.any?(@expected_owned_dirs, &String.starts_with?(entry["to"], &1 <> "/"))
+
+        expected_license = if String.contains?(entry["from"], "fonts/"), do: "OFL-1.1", else: "MIT"
+        assert entry["license"] == expected_license
+      end
     end
 
     test "is not a vacuous pass: the manifest and the owned directories are non-empty" do
       real = real_pin()
 
-      assert length(real["shipped"]) >= 4
+      assert length(real["shipped"]) >= 16
       assert real["owned_dirs"] != []
     end
   end
@@ -205,7 +250,7 @@ defmodule Mailglass.Scripts.BrandPinTest do
       assert issue_tags(issues) == [:asset_missing]
     end
 
-    test "(e2) an owned directory emptied of every file gives :asset_missing for all four",
+    test "(e2) an owned directory emptied of every file gives :asset_missing for each listed file",
          %{tmp_dir: tmp_dir} do
       closures = tmp_tree(tmp_dir)
       dir = tmp_path(tmp_dir, "brandbook/v2")
@@ -215,6 +260,32 @@ defmodule Mailglass.Scripts.BrandPinTest do
 
       for to <- @required_assets, do: assert({:asset_missing, to} in issues)
       assert issue_tags(issues) == [:asset_missing]
+    end
+
+    test "(c3) a flipped byte in a shipped font gives :asset_hash_mismatch for that path only",
+         %{tmp_dir: tmp_dir} do
+      closures = tmp_tree(tmp_dir)
+      to = @fonts_dir <> "/ui-400.woff2"
+
+      mutate!(tmp_dir, to, fn <<byte, rest::binary>> -> <<Bitwise.bxor(byte, 1), rest::binary>> end)
+      issues = issues!(verify(real_pin(), closures))
+
+      assert {:asset_hash_mismatch, to} in issues
+      assert issue_tags(issues) == [:asset_hash_mismatch]
+      assert length(issues) == 1
+    end
+
+    test "(d2) a stray file in the fonts directory, a retired font name included, gives :asset_unlisted",
+         %{tmp_dir: tmp_dir} do
+      closures = tmp_tree(tmp_dir)
+      File.write!(tmp_path(tmp_dir, @fonts_dir <> "/retired-face-400.woff2"), "wOF2 smuggled")
+      File.write!(tmp_path(tmp_dir, @fonts_dir <> "/.DS_Store"), "finder")
+
+      issues = issues!(verify(real_pin(), closures))
+
+      assert {:asset_unlisted, @fonts_dir <> "/retired-face-400.woff2"} in issues
+      assert {:asset_unlisted, @fonts_dir <> "/.DS_Store"} in issues
+      assert issue_tags(issues) == [:asset_unlisted]
     end
 
     test "(f) an empty shipped list gives :manifest_empty" do
@@ -241,7 +312,10 @@ defmodule Mailglass.Scripts.BrandPinTest do
             "brandbook/v2/a\\b",
             "brandbook/v2/a\0b",
             "brandbook/v2//x",
-            "mailglass_admin/priv/static/x"
+            "mailglass_admin/priv/static/x",
+            "mailglass_admin/priv/static/app.css",
+            "mailglass_admin/priv/static/fonts/../app.css",
+            "mailglass_admin/priv/static/fonts"
           ] do
         issues = issues!(pin(:verify, [with_to(real_pin(), unsafe), reader, lister]))
 
@@ -345,6 +419,27 @@ defmodule Mailglass.Scripts.BrandPinTest do
       "assets/fonts/OFL-AtkinsonHyperlegibleNext.txt" => "next license #{seed}\n",
       "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt" => "mono license #{seed}\n"
     }
+    |> Map.merge(extension_files(seed))
+  end
+
+  # One distinct member per `extend` asset, so a wrong `from`/`to` pairing changes bytes.
+  defp extension_files(seed) do
+    woff2 =
+      for name <- ~w(a-display-600 ui-400 ui-600 ui-400i a-mono-400 a-mono-600), into: %{} do
+        {"assets/fonts/web/#{name}.woff2", "wOF2 #{name} #{seed}"}
+      end
+
+    svg =
+      for {member, label} <- [
+            {"assets/logo/mailglass-lockup-light.svg", "lockup light"},
+            {"assets/logo/mailglass-lockup-dark.svg", "lockup dark"},
+            {"assets/icon/favicon.svg", "favicon"}
+          ],
+          into: %{} do
+        {member, "<svg xmlns=\"http://www.w3.org/2000/svg\"><!-- #{label} #{seed} --></svg>\n"}
+      end
+
+    Map.merge(woff2, svg)
   end
 
   defp build_zip(files) do
@@ -379,6 +474,17 @@ defmodule Mailglass.Scripts.BrandPinTest do
         "sha256" => sha(zip),
         "size" => byte_size(zip),
         "shipped" => shipped
+    }
+  end
+
+  # The pin as it stood before `extend`: the four `init` assets in one owned directory.
+  defp base_pin(files, zip) do
+    full = synthetic_pin(files, zip)
+
+    %{
+      full
+      | "owned_dirs" => ["brandbook/v2"],
+        "shipped" => Enum.filter(full["shipped"], &(&1["to"] in @required_assets))
     }
   end
 
@@ -657,6 +763,244 @@ defmodule Mailglass.Scripts.BrandPinTest do
     end
   end
 
+  describe "extend procedure over an injected getter (D-18)" do
+    @describetag :tmp_dir
+
+    defp extend_opts(pin_map, tmp_dir, extra \\ []) do
+      [expect_sha256: pin_map["sha256"], target_dir: tmp_dir] ++ extra
+    end
+
+    defp extend_fixture do
+      files = synthetic_files("base")
+      zip = book_zip(files)
+      %{files: files, zip: zip, base: base_pin(files, zip)}
+    end
+
+    test "writes exactly the expected tree and a pin that verifies and matches the zip",
+         %{tmp_dir: tmp_dir} do
+      %{files: files, zip: zip, base: base} = extend_fixture()
+
+      assert length(base["shipped"]) == 4
+
+      assert {:ok, extended} =
+               pin(:extend, [base, extend_opts(base, tmp_dir), getter_returning(zip)])
+
+      assert_received {:fetched, url}
+      assert url == base["url"]
+
+      assert extended["shipped"] |> Enum.map(& &1["to"]) |> Enum.sort() == @expected_shipped
+      assert Enum.sort(extended["owned_dirs"]) == Enum.sort(@expected_owned_dirs)
+
+      assert tree_files(tmp_dir) ==
+               Enum.sort(["brandbook/brand.pin.json" | @expected_shipped])
+
+      for entry <- extended["shipped"] do
+        assert File.read!(tmp_path(tmp_dir, entry["to"])) == files[entry["from"]]
+        assert entry["sha256"] == sha(files[entry["from"]])
+        assert entry["bytes"] == byte_size(files[entry["from"]])
+      end
+
+      assert extended["commit"] == base["commit"]
+      assert extended["sha256"] == base["sha256"]
+      assert extended["note"] == base["note"]
+
+      closures = {pin(:tree_read_file, [tmp_dir]), pin(:tree_list_dir, [tmp_dir])}
+      assert verify(extended, closures) == :ok
+      assert pin(:check_zip, [extended, zip]) == :ok
+
+      assert tmp_dir |> Path.join("brandbook/brand.pin.json") |> File.read!() |> Jason.decode!() ==
+               extended
+    end
+
+    test "the three OFL texts ship to both directories from the same zip member",
+         %{tmp_dir: tmp_dir} do
+      %{zip: zip, base: base} = extend_fixture()
+
+      assert {:ok, extended} =
+               pin(:extend, [base, extend_opts(base, tmp_dir), getter_returning(zip)])
+
+      for name <- ~w(OFL-FunnelDisplay OFL-AtkinsonHyperlegibleNext OFL-AtkinsonHyperlegibleMono) do
+        from = "assets/fonts/#{name}.txt"
+        tos = for %{"from" => ^from, "to" => to} <- extended["shipped"], do: to
+
+        assert Enum.sort(tos) == ["brandbook/v2/#{name}.txt", "#{@fonts_dir}/#{name}.txt"]
+      end
+    end
+
+    test "twice is byte-identical, from the base pin and from the extended pin",
+         %{tmp_dir: tmp_dir} do
+      %{zip: zip, base: base} = extend_fixture()
+      opts = extend_opts(base, tmp_dir)
+      pin_file = Path.join(tmp_dir, "brandbook/brand.pin.json")
+
+      assert {:ok, extended} = pin(:extend, [base, opts, getter_returning(zip)])
+      first_pin = File.read!(pin_file)
+      first_tree = for to <- @expected_shipped, do: File.read!(tmp_path(tmp_dir, to))
+
+      assert {:ok, ^extended} = pin(:extend, [base, opts, getter_returning(zip)])
+      assert File.read!(pin_file) == first_pin
+
+      assert {:ok, ^extended} = pin(:extend, [extended, opts, getter_returning(zip)])
+      assert File.read!(pin_file) == first_pin
+      assert for(to <- @expected_shipped, do: File.read!(tmp_path(tmp_dir, to))) == first_tree
+      assert String.ends_with?(first_pin, "}\n")
+    end
+
+    test "reads a local zip with --zip and never calls the getter", %{tmp_dir: tmp_dir} do
+      %{zip: zip, base: base} = extend_fixture()
+      zip_path = Path.join(tmp_dir, "local.zip")
+      target = Path.join(tmp_dir, "repo")
+      File.write!(zip_path, zip)
+
+      assert {:ok, extended} =
+               pin(:extend, [
+                 base,
+                 extend_opts(base, target, zip: zip_path),
+                 no_network()
+               ])
+
+      assert length(extended["shipped"]) == 16
+    end
+
+    test "refuses a local zip that hashes differently from the pin and writes nothing",
+         %{tmp_dir: tmp_dir} do
+      %{base: base} = extend_fixture()
+      zip_path = Path.join(tmp_dir, "other.zip")
+      target = Path.join(tmp_dir, "repo")
+      File.write!(zip_path, book_zip(synthetic_files("other")))
+
+      assert pin(:extend, [base, extend_opts(base, target, zip: zip_path), no_network()]) ==
+               {:error, :zip_hash_mismatch}
+
+      refute File.exists?(target)
+    end
+
+    test "refuses an unreadable --zip path before any download", %{tmp_dir: tmp_dir} do
+      %{base: base} = extend_fixture()
+      missing = Path.join(tmp_dir, "absent.zip")
+      target = Path.join(tmp_dir, "repo")
+
+      assert {:error, {:zip_file_unreadable, :enoent}} =
+               pin(:extend, [base, extend_opts(base, target, zip: missing), no_network()])
+
+      refute File.exists?(target)
+    end
+
+    test "refuses a downloaded zip whose hash differs from the pin and writes nothing",
+         %{tmp_dir: tmp_dir} do
+      %{base: base} = extend_fixture()
+      other = book_zip(synthetic_files("other"))
+
+      assert pin(:extend, [base, extend_opts(base, tmp_dir), getter_returning(other)]) ==
+               {:error, :zip_hash_mismatch}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses a zip whose size differs from the pin, even at the pinned hash",
+         %{tmp_dir: tmp_dir} do
+      %{zip: zip, base: base} = extend_fixture()
+      resized = %{base | "size" => base["size"] + 1}
+
+      assert pin(:extend, [resized, extend_opts(resized, tmp_dir), getter_returning(zip)]) ==
+               {:error, :zip_size_mismatch}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses an --expect-sha256 that differs from the pin before any download",
+         %{tmp_dir: tmp_dir} do
+      %{base: base} = extend_fixture()
+      wrong = String.duplicate("0", 64)
+
+      assert pin(:extend, [
+               base,
+               [expect_sha256: wrong, target_dir: tmp_dir],
+               no_network()
+             ]) == {:error, {:expect_sha256_not_pinned, wrong}}
+
+      assert {:error, {:bad_option, _}} =
+               pin(:extend, [base, [expect_sha256: "nope", target_dir: tmp_dir], no_network()])
+
+      assert {:error, {:bad_option, _}} =
+               pin(:extend, [base, [target_dir: tmp_dir], no_network()])
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses a zip that lacks an extension member before any write", %{tmp_dir: tmp_dir} do
+      %{files: files} = extend_fixture()
+      from = "assets/logo/mailglass-lockup-dark.svg"
+      zip = files |> Map.delete(from) |> book_zip()
+      base = base_pin(files, zip)
+
+      assert pin(:extend, [base, extend_opts(base, tmp_dir), getter_returning(zip)]) ==
+               {:error, {:zip_member_missing, from}}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses a pinned entry that no longer matches its zip member", %{tmp_dir: tmp_dir} do
+      %{zip: zip, base: base} = extend_fixture()
+      tampered = with_first_shipped(base, &%{&1 | "sha256" => flip_hex(&1["sha256"])})
+      [first | _] = base["shipped"]
+
+      assert pin(:extend, [tampered, extend_opts(tampered, tmp_dir), getter_returning(zip)]) ==
+               {:error, {:shipped_member_mismatch, first["from"]}}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses an entry whose to is already pinned from a different member",
+         %{tmp_dir: tmp_dir} do
+      %{files: files, zip: zip, base: base} = extend_fixture()
+      to = @fonts_dir <> "/ui-400.woff2"
+      data = files["brand.json"]
+
+      conflicting = %{
+        "from" => "brand.json",
+        "to" => to,
+        "sha256" => sha(data),
+        "bytes" => byte_size(data),
+        "license" => "OFL-1.1"
+      }
+
+      crowded = %{
+        base
+        | "owned_dirs" => @expected_owned_dirs,
+          "shipped" => base["shipped"] ++ [conflicting]
+      }
+
+      assert pin(:extend, [crowded, extend_opts(crowded, tmp_dir), getter_returning(zip)]) ==
+               {:error, {:extension_conflict, to}}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "refuses a current pin that does not parse", %{tmp_dir: tmp_dir} do
+      tampered = %{real_pin() | "shipped" => []}
+
+      assert {:error, {:pin_invalid, issues}} =
+               pin(:extend, [tampered, extend_opts(tampered, tmp_dir), no_network()])
+
+      assert :manifest_empty in issue_tags(issues)
+      assert File.ls!(tmp_dir) == []
+    end
+
+    test "never takes a name from the archive: a hostile extra member is ignored",
+         %{tmp_dir: tmp_dir} do
+      %{files: files} = extend_fixture()
+      zip = book_zip(files, %{"mailglass-brand/../evil.txt" => "hostile"})
+      base = base_pin(files, zip)
+
+      assert {:ok, _extended} =
+               pin(:extend, [base, extend_opts(base, tmp_dir), getter_returning(zip)])
+
+      assert tree_files(tmp_dir) ==
+               Enum.sort(["brandbook/brand.pin.json" | @expected_shipped])
+    end
+  end
+
   describe "command line" do
     test "verify reads the real pin and tree" do
       assert pin(:cli, [["verify"]]) == {0, "brand pin ok"}
@@ -675,9 +1019,47 @@ defmodule Mailglass.Scripts.BrandPinTest do
       assert text =~ "Usage:"
     end
 
+    test "help names the extend verb and the --zip fallback" do
+      assert {0, text} = pin(:cli, [["help"]])
+
+      assert text =~ "extend --expect-sha256 <hex> [--zip <path>]"
+      assert text =~ "Idempotent"
+    end
+
     test "update and init without both flags exit 2" do
       assert {2, _} = pin(:cli, [["update"], no_network()])
       assert {2, _} = pin(:cli, [["init", "--commit", @new_commit], no_network()])
+    end
+
+    test "extend without --expect-sha256 or with a stray argument exits 2" do
+      assert {2, text} = pin(:cli, [["extend"], no_network()])
+      assert text =~ "usage: extend --expect-sha256"
+      assert {2, _} = pin(:cli, [["extend", "--expect-sha256"], no_network()])
+
+      assert {2, _} =
+               pin(:cli, [
+                 ["extend", "--expect-sha256", real_pin()["sha256"], "stray"],
+                 no_network()
+               ])
+    end
+
+    test "extend against the real pin refuses an --expect-sha256 that is not the pin, before any download" do
+      args = ["extend", "--expect-sha256", String.duplicate("0", 64)]
+
+      assert {1, output} = pin(:cli, [args, no_network()])
+      assert output =~ "extend refused"
+      assert output =~ "expect_sha256_not_pinned"
+    end
+
+    test "extend against the real pin refuses a different zip and writes nothing" do
+      zip = book_zip(synthetic_files("new"))
+      args = ["extend", "--expect-sha256", real_pin()["sha256"]]
+
+      before_pin = File.read!(@pin_path)
+
+      assert {1, output} = pin(:cli, [args, getter_returning(zip)])
+      assert output =~ "zip_hash_mismatch"
+      assert File.read!(@pin_path) == before_pin
     end
 
     test "init against the real tree refuses because the pin exists, before any download" do

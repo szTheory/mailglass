@@ -10,7 +10,8 @@
   },
   "root": "mailglass-brand/",
   "owned_dirs": [
-    "brandbook/v2"
+    "brandbook/v2",
+    "mailglass_admin/priv/static/fonts"
   ],
   "shipped": [
     {
@@ -40,6 +41,90 @@
       "sha256": "1ebb31cf7393164f20d10c1d48406cddb5314feff8465531cf1e4ba37e9dd740",
       "bytes": 4436,
       "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/a-display-600.woff2",
+      "to": "mailglass_admin/priv/static/fonts/a-display-600.woff2",
+      "sha256": "3e756227e0281898d718b6e2f5724eda53dbda34ce4f814a117742fb98b28956",
+      "bytes": 8164,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/ui-400.woff2",
+      "to": "mailglass_admin/priv/static/fonts/ui-400.woff2",
+      "sha256": "c9ea743af769d03c62058e7d9047ec3c271b6c26b45ba908bab378f050b99cae",
+      "bytes": 9164,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/ui-600.woff2",
+      "to": "mailglass_admin/priv/static/fonts/ui-600.woff2",
+      "sha256": "f3fc5d883120a0582211d948d1bb832bf01cc299101f165478dffc8a54a2bd84",
+      "bytes": 9620,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/ui-400i.woff2",
+      "to": "mailglass_admin/priv/static/fonts/ui-400i.woff2",
+      "sha256": "e24ed9e06273f44bbee177022c25b3bc50f52841b6cffa35ea66b3a492e44b4b",
+      "bytes": 10584,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/a-mono-400.woff2",
+      "to": "mailglass_admin/priv/static/fonts/a-mono-400.woff2",
+      "sha256": "6c2b7d2dd9547f1438299d2e22ec21570df63abecc300e72b4908cd977126b47",
+      "bytes": 7492,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/web/a-mono-600.woff2",
+      "to": "mailglass_admin/priv/static/fonts/a-mono-600.woff2",
+      "sha256": "27abbe6bde2ef17cda90ef700cecac73b6cd78c6f025cea5c4e1195027d7b666",
+      "bytes": 7484,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/OFL-FunnelDisplay.txt",
+      "to": "mailglass_admin/priv/static/fonts/OFL-FunnelDisplay.txt",
+      "sha256": "a32303f6ea3542927121212a9e4f3fe3548741e6d448d9dc6f29e97cf50102e6",
+      "bytes": 4382,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+      "to": "mailglass_admin/priv/static/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+      "sha256": "aca6a428580965d2297d1b718042dd427c2a9443ece3b0d02d758e161e0c4030",
+      "bytes": 4431,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt",
+      "to": "mailglass_admin/priv/static/fonts/OFL-AtkinsonHyperlegibleMono.txt",
+      "sha256": "1ebb31cf7393164f20d10c1d48406cddb5314feff8465531cf1e4ba37e9dd740",
+      "bytes": 4436,
+      "license": "OFL-1.1"
+    },
+    {
+      "from": "assets/logo/mailglass-lockup-light.svg",
+      "to": "brandbook/v2/mailglass-lockup-light.svg",
+      "sha256": "26af767b48d195898bfc54b558d00bb699d35003b856af652e72d574eb7f96b6",
+      "bytes": 4084,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/logo/mailglass-lockup-dark.svg",
+      "to": "brandbook/v2/mailglass-lockup-dark.svg",
+      "sha256": "790ef5d990e80a4752d4c6ba20eece554a64e278638d4946e98b5e91b9e7ddbf",
+      "bytes": 4084,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon.svg",
+      "to": "brandbook/v2/favicon.svg",
+      "sha256": "f0c204dd564955724d5bd443687794657cad1ba0e4d200c8e20be9b658dc133d",
+      "bytes": 790,
+      "license": "MIT"
     }
   ],
   "note": "Offline verification (test/scripts/brand_pin_test.exs) is merge-blocking. The online check (mix run --no-start scripts/brand_pin.exs check) is advisory. Update with: mix run --no-start scripts/brand_pin.exs update --commit <sha> --expect-sha256 <hex>, and bump @expected_zip_sha256 in the same chore(brand) commit; never hand-edit."
