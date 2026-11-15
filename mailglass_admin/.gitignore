@@ -18,8 +18,10 @@ erl_crash.dump
 
 # DO NOT ignore priv/static/ — CONTEXT D-04 requires it committed.
 # The compiled CSS bundle + fonts + logo ship inside the Hex tarball's
-# package[:files] whitelist. CI (`git diff --exit-code priv/static/`) is the
-# drift gate; gitignoring this directory would silently break PREV-06.
+# package[:files] whitelist. The drift gate is `mix mailglass_admin.assets.build
+# --check`, run by `mix verify.support_contract.admin` in the required
+# support_contract_admin CI job; gitignoring this directory would silently
+# break PREV-06.
 
 # DO NOT ignore assets/vendor/ — CONTEXT D-18 requires vendored daisyUI committed.
 # `assets/vendor/daisyui.mjs` + `daisyui-theme.mjs` are curled from upstream at

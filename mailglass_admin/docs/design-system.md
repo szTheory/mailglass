@@ -17,10 +17,13 @@ source CSS and committed bundle.
 - **Tailwind v4 + daisyUI**, compiled by the standalone `tailwind` Hex binary —
   **zero Node toolchain**. Source: `assets/css/app.css`. Build:
   `mix mailglass_admin.assets.build`.
-- The minified bundle `priv/static/app.css` is **committed**. CI runs the build
-  then `git diff --exit-code priv/static/` — any edit to `app.css` or to HEEx
-  class usage must be followed by a rebuild + commit of the bundle in the same
-  change, or the gate fails.
+- The minified bundle `priv/static/app.css` is **committed**. The required CI
+  job runs `mix mailglass_admin.assets.build --check`, which rebuilds with the
+  pinned Tailwind to a temporary file and compares the bytes to the committed
+  bundle. Any edit to `app.css`, to class usage, to any text under `lib/`
+  (Tailwind scans it as plain text), or to `brandbook/tokens.css` must be
+  followed by a rebuild + commit of the bundle in the same change, or the gate
+  fails.
 - **No second CSS file, no `@apply`, no CSS-in-JS, no BEM.** Utilities + daisyUI
   semantic classes inline in HEEx. Stay on this path — do not introduce a
   competing styling system.
