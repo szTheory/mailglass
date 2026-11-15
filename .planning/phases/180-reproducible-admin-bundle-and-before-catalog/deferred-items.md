@@ -21,3 +21,15 @@ Out-of-scope discoveries logged during execution. None of these were caused by p
 - **Found during:** every admin `mix compile` / `mix test` in `MIX_ENV=test` (`reference/persona_spec/quick_view_scenarios.ex:0`).
 - **Effect:** `mix compile --warnings-as-errors` exits 1 at HEAD, so the admin `ci.fast` alias and `verify.preview` fail on a cold compile. `mix test --warnings-as-errors` is unaffected because it governs test-file warnings only. The new `--check` gate deliberately does not depend on a warnings-free compile.
 - **Already recorded:** 180-RESEARCH.md "Anti-Patterns to Avoid". Listed here so it stays owner-visible.
+
+## From plan 180-02
+
+### 3. The gallery still renders 39 duplicated id values after the one-specimen collapse
+
+- **Found during:** 180-02 Task 3 (the gallery document-level cases).
+- **Plan assumption that did not hold:** RESEARCH F10 and the plan truth said collapsing the light, dark and system columns to one specimen would leave the gallery document with no duplicate ids. It removes the threefold copies (182 duplicated id values at HEAD) but 39 remain.
+- **Cause:** shared components emit literal or fixture-derived ids that the gallery renders in several states of the same component: `flash-error` (2 cells), `inbound-routing-trace-content` (3), `inbound-evidence-caption` and `inbound-evidence-reveal-btn` (3), `delivery-detail-*` and `delivery-suppression-scope*` (detail_header, suppression_card, composed cells), `delivery-outcome-*` and `operator-delivery-*` rows (3 deliveries_list cells), `delivery-event-*` (2 timeline cells), `operator-suppression-refresh-action`.
+- **Effect:** none on `live/2` (it mounts without a duplicate-id raise; the contract test mounts it). `aria-describedby` tooltip ids resolve to the first match on this dev-only audit page.
+- **Why it is out of scope:** removing them means changing id derivation in about seven shared components (or per-state fixture ids), which edits files outside this plan and moves selectors the e2e specs read. It is not a theme-ownership defect.
+- **Guard in place:** `root_theme_ownership_contract_test.exs` keeps a floor (`@duplicate_id_floor 39`) so the count cannot grow back.
+- **Suggested follow-up:** thread a `specimen_id` prefix through those components, then lower the floor to 0 and turn the floor test into a plain no-duplicates assertion.
