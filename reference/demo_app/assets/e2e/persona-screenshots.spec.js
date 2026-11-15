@@ -198,10 +198,12 @@ test.describe("review surfaces", () => {
 
     const galleryNav = page.getByTestId("gallery-nav_link-active");
     await expect(galleryNav.getByRole("link", { name: "Deliveries" }).first()).toBeVisible();
-    const galleryDarkTheme = page
-      .getByTestId("gallery-theme_picker-dark-selected")
-      .locator('[data-theme="mailglass-dark"]');
-    await expect(galleryDarkTheme.getByRole("radio", { name: "Dark" })).toBeChecked();
+    // The gallery renders one specimen per state in the page's own theme (Phase 180:
+    // the root <html> is the only theme owner), so the selected-state specimen is
+    // read directly in its cell, with no nested theme wrapper.
+    await expect(
+      page.getByTestId("gallery-theme_picker-dark-selected").getByRole("radio", { name: "Dark" })
+    ).toBeChecked();
 
     const galleryCss = await adminCssPath(page);
     expect((await page.request.get(galleryCss)).status()).toBe(200);

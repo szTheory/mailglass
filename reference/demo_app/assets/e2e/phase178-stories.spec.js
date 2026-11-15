@@ -78,7 +78,9 @@ test("Phase 178 retained Preview authoring stories render through production com
 const STATCARD = {
   path: "/dev/storybook/primitives/stat_card",
   gallery: "/dev/mail/gallery",
-  galleryCell: "gallery-stat_card-neutral",
+  // One specimen per state, rendered in the page's own theme (Phase 180: <html> is the only
+  // theme owner), so the theme is a per-theme page load rather than a nested wrapper.
+  galleryCell: "gallery-stat_card-neutral-system",
   cases: [
     { variation: "neutral_light", theme: "light" },
     { variation: "neutral_dark", theme: "dark" }
@@ -125,17 +127,44 @@ async function readStatCardRoles(scope) {
   });
 }
 
-test("Phase 178 StatCard story uses the production font roles", async ({ page }) => {
+test("Phase 178 StatCard story uses the production font roles", async ({ page, baseURL }) => {
   const production = {};
-  const galleryResponse = await page.goto(STATCARD.gallery);
-  expect(galleryResponse?.status(), `${STATCARD.gallery} loads`).toBe(200);
-  const cell = page.getByTestId(STATCARD.galleryCell);
-  await expect(cell, "production gallery renders the neutral StatCard cell").toBeVisible();
   for (const { theme } of STATCARD.cases) {
-    const wrapper = cell.locator(`[data-theme="mailglass-${theme}"]`).first();
-    await expect(wrapper, `production ${theme} StatCard wrapper`).toBeVisible();
-    production[theme] = await readStatCardRoles(await wrapper.elementHandle());
+    // Theme is the admin cookie plus the emulated OS scheme, set before navigation. The
+    // demo spec cannot import the admin package's e2e/support/theme.cjs, so the three
+    // setup calls are inlined.
+    await page.context().addCookies([{ name: "mailglass_admin_theme_v2", value: theme, url: baseURL }]);
+    await page.emulateMedia({ colorScheme: theme });
+    const galleryResponse = await page.goto(STATCARD.gallery);
+    expect(galleryResponse?.status(), `${STATCARD.gallery} loads (${theme})`).toBe(200);
+
+    await expect(page.locator("html"), `production gallery <html> owns the ${theme} theme`).toHaveAttribute(
+      "data-theme",
+      `mailglass-${theme}`
+    );
+    const cell = page.getByTestId(STATCARD.galleryCell);
+    await expect(cell, `production ${theme} gallery renders the neutral StatCard specimen`).toBeVisible();
+    await expect(
+      cell.locator("[data-theme]"),
+      `production ${theme} StatCard specimen has no nested theme scope`
+    ).toHaveCount(0);
+
+    // Computed-token equality replaces the nested wrapper: the specimen resolves the same
+    // tokens <html> does.
+    const tokens = await cell.evaluate(node => {
+      const read = element => getComputedStyle(element).getPropertyValue("--color-base-100").trim();
+      return { specimen: read(node), root: read(node.ownerDocument.documentElement) };
+    });
+    expect(tokens.root, `${theme} <html> resolves --color-base-100`).not.toBe("");
+    expect(tokens.specimen, `${theme} specimen --color-base-100 equals <html>`).toBe(tokens.root);
+
+    production[theme] = await readStatCardRoles(await cell.elementHandle());
   }
+
+  // The Storybook half keeps its own per-variation theme wrappers: drop the admin cookie and
+  // the OS emulation so nothing from the production-gallery loop leaks into it.
+  await page.context().clearCookies({ name: "mailglass_admin_theme_v2" });
+  await page.emulateMedia({ colorScheme: null });
 
   const response = await page.goto(STATCARD.path);
   expect(response?.status(), `${STATCARD.path} loads`).toBe(200);
