@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 180
 current_phase_name: Reproducible Admin Bundle and Before-Catalog
 status: executing
-stopped_at: Phase 180 context gathered (assumptions mode)
-last_updated: "2026-11-14T17:33:58.008Z"
+stopped_at: Completed 180-01-PLAN.md
+last_updated: "2026-11-15T00:30:13.562Z"
 last_activity: 2026-11-14
-last_activity_desc: Phase 179 complete, transitioned to Phase 180
-state_head: b1770bac0d8b8fd5a7d13d47af3a8fd44b1e83df
+last_activity_desc: Phase 180 execution started
+state_head: 049a117dec031ef155e8d26c415ee8b7244abfa5
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 4
+  completed_plans: 5
   percent: 20
 ---
 
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 179 — Compatibility Policy, Status Map and Brand Pin
+**Current focus:** Phase 180 — Reproducible Admin Bundle and Before-Catalog
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 180 (Reproducible Admin Bundle and Before-Catalog) — READY TO EXECUTE
-Plan: Not started
+Phase: 180 (Reproducible Admin Bundle and Before-Catalog) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-11-14 — Phase 179 complete, transitioned to Phase 180
+Last activity: 2026-11-14 — Phase 180 execution started
 
 Progress: [██░░░░░░░░] 20%
 
@@ -371,6 +371,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 179 P03 | 24 min | 3 tasks | 8 files |
 | Phase 179 P04 | 17 min | 2 tasks | 4 files |
 | Phase 179 P02 | 10min | 2 tasks | 3 files |
+| Phase 180 P01 | 9 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -719,6 +720,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 179]: [179-04] Trademark gate: allowed only when not blocked, before expires, and (clear with register_checked true, or a populated owner_override); the committed record stays caution with register_checked false — Research assumption A4 adopted; expiry applies to the override path too; a clear or register claim without register evidence is an invalid record, not a soft deny.
 - [Phase 179]: [179-04] owner_override must be mirrored by an identical acknowledged constant in the test, and agent-named by values are rejected even when acknowledged; owner-only authorship is a runbook review rule — A test cannot observe who authored a commit, so the control is the mirrored constant plus the agent-name rejection; the authorship rule is stated for reviewers in TRADEMARK-SEARCH.md.
 - [Phase 179]: 179-02: Brand v2 compat policy lives at repo-root docs/ (no tarball change); api_stability.md links it by absolute URL; policy test parses the table strictly, verifies by seven kinds, and adds a reverse check over Mailglass.Operator.*
+- [Phase 180]: 180-01: scan exclusion is @source not inline("prose") (inline form, not a path exclusion) — A path exclusion of copy.ex would drop four real classes (badge-primary, hero-bell-slash, hero-envelope-open, hero-hand-thumb-up); the inline form also covers any future file and leaves priv/static byte-identical.
+- [Phase 180]: 180-01: bundle drift compare lives in non-shipped dev/ MailglassAdmin.AssetsCheck; the shipped assets.build task delegates via Code.ensure_loaded? and apply/3 — Tailwind is an only: [:dev, :test] dep, so the shipped task must not reference it at compile time; the Hex publish allowlist stayed unchanged (mailglass.publish.check --allowlist-only exit 0).
+- [Phase 180]: 180-01: contract test asserts drift shape for the removed-prose case, not the literal 139137/136877/74051 sizes — Literal sizes would turn every legitimate token or copy change (Phase 181) into required-lane churn; the measured numbers are recorded in 180-01-SUMMARY.md instead.
+- [Phase 180]: 180-01: D-07 ordering deviation held - emulated linux/amd64 cmp identical now; real ubuntu-latest proof is the first support_contract_admin run on the phase PR (run ID still to be appended) — Same sha256-verified Tailwind 4.1.12 binary and CPU architecture as ubuntu-latest; the repo keeps one open PR at a time. Fallback if CI bytes differ: pin the check to the CI platform, never loosen the compare.
 
 ## Quick Tasks Completed
 
@@ -779,9 +784,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-14T15:32:13.141Z
-Stopped at: Phase 180 context gathered (assumptions mode)
-Resume file: .planning/phases/180-reproducible-admin-bundle-and-before-catalog/180-CONTEXT.md
+Last session: 2026-11-15T00:30:13.519Z
+Stopped at: Completed 180-01-PLAN.md
+Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
 

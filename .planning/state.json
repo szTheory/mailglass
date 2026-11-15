@@ -11,7 +11,7 @@
     {
       "number": "180",
       "name": "Reproducible Admin Bundle and Before-Catalog",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "181",
@@ -34,5 +34,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 2 of 5 · 20% · executing"
   },
-  "updated_at": "2026-11-14T17:33:58.056Z"
+  "updated_at": "2026-11-15T00:30:04.288Z"
 }

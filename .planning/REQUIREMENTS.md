@@ -17,7 +17,7 @@
 
 ### Pipeline and Catalog (BRPIPE)
 
-- [ ] **BRPIPE-01**: The admin bundle is reproducible from a committed generator, with a `--check` drift gate that a required CI lane actually runs.
+- [x] **BRPIPE-01**: The admin bundle is reproducible from a committed generator, with a `--check` drift gate that a required CI lane actually runs.
 - [ ] **BRPIPE-02**: The theme attribute is owned by `<html>` only, and the nested `data-theme` shadowing defect is fixed.
 - [ ] **BRPIPE-03**: A catalog of current admin screens on realistic fixtures (Northstar, Fjordline, Helios plus the delivery cases from the UX lens) is captured as before-screenshots at unique paths, before any token swap.
 
@@ -78,7 +78,7 @@ Updated during roadmap creation (2026-11-13).
 | BRPOL-03 | Phase 179 | Complete |
 | BRPOL-04 | Phase 179 | Complete |
 | BRPOL-05 | Phase 179 | Complete |
-| BRPIPE-01 | Phase 180 | Pending |
+| BRPIPE-01 | Phase 180 | Complete |
 | BRPIPE-02 | Phase 180 | Pending |
 | BRPIPE-03 | Phase 180 | Pending |
 | BRTOK-01 | Phase 181 | Pending |
