@@ -1948,10 +1948,13 @@ defmodule MailglassAdmin.Components do
   # never "2:05 PMUTC". A browser collapses it at the line end below `sm`, where the
   # zone is a block under the time, and keeps it from `sm` up, where the zone is inline.
   def timestamp(assigns) do
+    {when_text, zone} = display_parts(assigns.at)
+
     assigns =
       assigns
       |> assign(:exact, exact_utc(assigns.at))
-      |> assign(:when_text, display_when(assigns.at))
+      |> assign(:when_text, when_text)
+      |> assign(:zone, zone)
       |> assign(:display, display_time(assigns.at))
 
     ~H"""
@@ -1969,7 +1972,7 @@ defmodule MailglassAdmin.Components do
           data-utc={@exact}
           class="tabular-nums"
         ><span data-time-text>{@when_text <> " "}</span>
-        <span data-time-zone class="block sm:inline">UTC</span></time>
+        <span data-time-zone class="block sm:inline">{@zone}</span></time>
       </button>
       <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
         {@exact} • Click to copy
@@ -1982,7 +1985,7 @@ defmodule MailglassAdmin.Components do
       data-utc={@exact}
       class={["tabular-nums", @class]}
     ><span data-time-text>{@when_text <> " "}</span>
-    <span data-time-zone class="block sm:inline">UTC</span></time>
+    <span data-time-zone class="block sm:inline">{@zone}</span></time>
     """
   end
 
@@ -2034,9 +2037,16 @@ defmodule MailglassAdmin.Components do
   # The compact visible form with its zone, e.g. "Nov 15, 2026, 2:05 PM UTC". The one
   # place a display time is formatted; every screen reaches it through `timestamp/1`.
   # The exact value, to the microsecond, comes from `exact_utc/1`.
-  def display_time(%DateTime{} = at), do: display_when(at) <> " UTC"
+  def display_time(%DateTime{} = at) do
+    {when_text, zone} = display_parts(at)
+    when_text <> " " <> zone
+  end
 
-  defp display_when(%DateTime{} = at), do: Calendar.strftime(at, "%b %-d, %Y, %-I:%M %p")
+  # The date-time text and its zone, the two parts `timestamp/1` draws. The zone is part of
+  # the formatter, never a literal in the template, so a formatter that loses it shows in
+  # every time on every screen.
+  defp display_parts(%DateTime{} = at),
+    do: {Calendar.strftime(at, "%b %-d, %Y, %-I:%M %p"), "UTC"}
 
   defp exact_utc(%DateTime{} = at) do
     base = Calendar.strftime(at, "%Y-%m-%d %H:%M:%S")
