@@ -19,6 +19,7 @@ defmodule MailglassAdmin.Operator.QuickView do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
   alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.ReplayAction
   alias Phoenix.LiveView.JS
@@ -121,21 +122,21 @@ defmodule MailglassAdmin.Operator.QuickView do
                 subject={Map.get(@delivery, :subject)}
                 recipient={@delivery.recipient}
                 status={Components.delivery_display_status(@delivery)}
+                delivery_row={@delivery}
                 context={:delivery}
                 id="delivery-quick-outcome"
+              />
+              <Components.delivery_verdict
+                form={:line}
+                id="delivery-quick-verdict"
+                verdict={
+                  Copy.delivery_verdict(@delivery, %{events: :not_loaded, suppression: :not_loaded})
+                }
               />
               <p class="text-label text-secondary">
                 Updated <Components.timestamp at={@delivery.last_event_at} />
               </p>
-              <p
-                :if={
-                  @delivery.last_event_type not in [
-                    nil,
-                    Components.delivery_display_status(@delivery)
-                  ]
-                }
-                class="text-label text-secondary"
-              >
+              <p :if={Components.latest_event_differs?(@delivery)} class="text-label text-secondary">
                 Latest event: {event_label(@delivery.last_event_type)}
               </p>
 

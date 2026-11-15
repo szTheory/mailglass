@@ -20,6 +20,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
     ~H"""
     <Components.card
+      id="delivery-suppression"
       padding={:lg}
       data-testid="operator-suppression-card"
       data-group-card="operator-suppression-card"

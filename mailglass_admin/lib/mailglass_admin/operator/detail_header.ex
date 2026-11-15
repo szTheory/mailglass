@@ -6,10 +6,18 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
   alias MailglassAdmin.Operator.Accounts
 
   attr(:delivery, :map, required: true)
   attr(:account_labels, :map, default: %{})
+  # The evidence the verdict may read: the loaded timeline and the suppression match.
+  # A read that did not succeed is passed on as such, so the verdict never shows a
+  # cause or the no-reason fallback for history it could not read.
+  attr(:timeline_events, :list, default: [])
+  attr(:timeline_state, :atom, default: :ready)
+  attr(:suppression_state, :map, default: nil)
+  attr(:suppression_read_state, :atom, default: :ready)
 
   def detail_header(assigns) do
     ~H"""
@@ -23,8 +31,19 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           subject={Map.get(@delivery, :subject)}
           recipient={@delivery.recipient}
           status={Components.delivery_display_status(@delivery)}
+          delivery_row={@delivery}
           context={:delivery}
           id="delivery-detail-outcome"
+        />
+        <Components.delivery_verdict
+          form={:full}
+          id="delivery-detail-verdict"
+          verdict={
+            Copy.delivery_verdict(@delivery, %{
+              events: events_evidence(@timeline_state, @timeline_events),
+              suppression: suppression_evidence(@suppression_read_state, @suppression_state)
+            })
+          }
         />
         <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 lg:grid-cols-4 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
           <div>
@@ -50,15 +69,13 @@ defmodule MailglassAdmin.Operator.DetailHeader do
               {Accounts.label(@delivery.tenant_id, @account_labels)}
             </dd>
           </div>
-          <div :if={
-            @delivery.last_event_type not in [nil, Components.delivery_display_status(@delivery)]
-          }>
+          <div :if={Components.latest_event_differs?(@delivery)}>
             <dt class="text-label font-bold">Latest event</dt>
             <dd class="mt-xs text-base-content">{label(@delivery.last_event_type)}</dd>
           </div>
         </dl>
         <Components.technical_details
-          collapsible={false}
+          collapsible={true}
           id="delivery-detail-technical"
         >
           <div>
@@ -89,6 +106,16 @@ defmodule MailglassAdmin.Operator.DetailHeader do
     </Components.card>
     """
   end
+
+  defp events_evidence(:ready, events) when is_list(events), do: events
+  defp events_evidence(_state, _events), do: :read_failed
+
+  defp suppression_evidence(read_state, %{} = state)
+       when read_state in [:ready, :stale] and map_size(state) > 0,
+       do: %{reason: Map.get(state, :reason)}
+
+  defp suppression_evidence(:ready, _state), do: %{reason: nil}
+  defp suppression_evidence(_read_state, _state), do: :read_failed
 
   defp label(nil), do: "Unknown"
 

@@ -5369,7 +5369,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
         provider_message_id: "pm-headers-002",
         status: :sent,
         last_event_type: :delivered,
-        last_event_at: ~U[2026-06-01 12:00:00Z]
+        last_event_at: ~U[2026-06-01 12:00:00Z],
+        delivery_confirmed: true,
+        delivered_at: ~U[2026-06-01 12:00:00Z],
+        bounced_at: nil,
+        terminal: true,
+        complained_at: nil,
+        suppressed_at: nil
       }
 
       html =
@@ -5389,6 +5395,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "<table"
       assert html =~ ~s(scope="col")
       assert html =~ "Outcome"
+      # The class word is the latest event's word, so no separate latest-event line.
       refute html =~ "Latest event"
       assert html =~ "Delivered"
     end

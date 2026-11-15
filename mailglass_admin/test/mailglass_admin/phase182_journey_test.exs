@@ -185,7 +185,198 @@ defmodule MailglassAdmin.Phase182JourneyTest do
     end
   end
 
+  describe "row, Quick view and Full detail (BRADM-01)" do
+    test "a bounce then open row reads Failed with one aria-hidden mark", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      html = render(view)
+
+      for layout <- [:mobile, :desktop] do
+        [badge] = row_badges(html, layout, ids.bounce_then_open)
+
+        assert Floki.attribute(badge, "data-mg-status") == ["failed"]
+        assert badge |> Floki.text() |> String.trim() == "Failed"
+        assert [svg] = Floki.find(badge, "svg")
+        assert Floki.attribute(svg, "aria-hidden") == ["true"]
+      end
+    end
+
+    test "every seeded row shows the word of its class", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+      html = render(view)
+
+      expected = %{
+        sent_no_report: "Sent",
+        bounce: "Failed",
+        bounce_then_open: "Failed",
+        nil_reason_bounce: "Failed",
+        deferred: "Delayed",
+        suppressed: "Not sent",
+        complained: "Sent",
+        delivered: "Delivered",
+        queued: "Queued"
+      }
+
+      assert map_size(expected) == map_size(ids)
+
+      for {case_id, word} <- expected do
+        assert [badge] = row_badges(html, :mobile, Map.fetch!(ids, case_id))
+        assert badge |> Floki.text() |> String.trim() == word, "#{case_id} should read #{word}"
+      end
+    end
+
+    test "Quick view shows the one-line verdict and no next step", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      view
+      |> element("#operator-delivery-mobile-#{ids.bounce_then_open}")
+      |> render_click()
+
+      html = render(view)
+      [quick] = html |> Floki.parse_document!() |> Floki.find("[data-testid=operator-quick-view]")
+      [line] = Floki.find(quick, "[data-testid=delivery-verdict-line]")
+
+      assert Floki.attribute(line, "data-verdict-class") == ["failed"]
+      assert line |> Floki.text() |> String.contains?("Failed")
+      assert [_] = Floki.find(line, "svg[aria-hidden=true]")
+      refute Floki.text(quick) =~ "Next step"
+    end
+
+    test "Full detail leads with the verdict, then the timeline, with a next step", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), detail_path(ids.bounce_then_open))
+
+      {verdict_at, _} = :binary.match(html, ~s(id="delivery-detail-verdict"))
+      {timeline_at, _} = :binary.match(html, ~s(data-testid="operator-timeline"))
+      assert verdict_at < timeline_at
+
+      [verdict] =
+        html |> Floki.parse_document!() |> Floki.find("#delivery-detail-verdict")
+
+      assert Floki.attribute(verdict, "data-verdict-class") == ["failed"]
+      assert [_] = Floki.find(verdict, "h4")
+      assert verdict |> Floki.find("h4") |> Floki.text() == "Next step"
+      assert Floki.text(verdict) =~ "Check the address for a typo."
+    end
+
+    test "Technical details is a collapsed native details element", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), detail_path(ids.sent_no_report))
+
+      [details] =
+        html |> Floki.parse_document!() |> Floki.find("details#delivery-detail-technical")
+
+      assert Floki.attribute(details, "open") == []
+      assert details |> Floki.find("summary") |> Floki.text() =~ "Technical details"
+    end
+
+    test "a Sent row says sent is not delivered, with the provider and a next step", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), detail_path(ids.sent_no_report))
+      text = verdict_text(html)
+
+      assert text =~ "Sent is not delivered"
+      assert text =~ "Sent with Postmark. Mailglass has recorded no delivery report"
+      assert text =~ "Next step"
+    end
+
+    test "a queued row says it was not handed to the provider and never claims a handoff", %{
+      conn: conn
+    } do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), detail_path(ids.queued))
+      text = verdict_text(html)
+
+      assert text =~ "Not handed to the provider yet."
+      refute text =~ "Sent with"
+      assert String.downcase(text) =~ "sent is not delivered"
+    end
+
+    test "a delivered row names its time with a zone", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), detail_path(ids.delivered))
+      text = verdict_text(html)
+
+      assert text =~ "Delivered at"
+      # The timestamp renders its zoned value, then the sentence resumes after it.
+      assert text =~ ~r/Delivered at \d.* UTC.*: the receiving server accepted this email\./
+      assert text =~ "Delivered is not the same as read."
+    end
+
+    test "a verdict component given a three-field row shows the D-06 sentence and no next step" do
+      row = %{
+        id: "d1",
+        status: :sent,
+        last_event_type: :opened,
+        delivery_confirmed: false,
+        provider: "postmark"
+      }
+
+      verdict = MailglassAdmin.Copy.delivery_verdict(row, %{})
+
+      for form <- [:full, :line] do
+        html =
+          render_component(&MailglassAdmin.Components.delivery_verdict/1,
+            verdict: verdict,
+            form: form,
+            id: "three-field-#{form}"
+          )
+
+        assert html =~ @undetermined
+        refute html =~ "Next step"
+        refute html =~ "data-mg-status"
+        refute html =~ "<svg"
+      end
+
+      badge =
+        render_component(&MailglassAdmin.Components.delivery_badge/1, row: row)
+
+      assert badge =~ "Unknown"
+      refute badge =~ "data-mg-status"
+    end
+  end
+
   # -- helpers (only what this file calls: the admin lane is --warnings-as-errors) --
+
+  # The badges inside one row of the list, in the mobile card or the desktop table.
+  defp row_badges(html, layout, id) do
+    document = Floki.parse_document!(html)
+    open_control = "#operator-delivery-#{layout}-#{id}"
+
+    row_selector = if layout == :mobile, do: "li", else: "tr"
+
+    document
+    |> Floki.find(row_selector)
+    |> Enum.filter(&(Floki.find(&1, open_control) != []))
+    |> Enum.flat_map(&Floki.find(&1, "[data-mg-status]"))
+  end
+
+  defp detail_path(id) do
+    @base_path <>
+      "?" <>
+      URI.encode_query(%{
+        "tenant_id" => @tenant_id,
+        "view" => "deliveries",
+        "delivery_id" => id,
+        "full" => "1"
+      })
+  end
+
+  # Visible text of the verdict block, whitespace collapsed.
+  defp verdict_text(html) do
+    [verdict] = html |> Floki.parse_document!() |> Floki.find("#delivery-detail-verdict")
+    verdict |> Floki.text(sep: " ") |> String.replace(~r/\s+/, " ")
+  end
 
   # Rows are declared at compile time, so a timestamp is a marker resolved at runtime.
   defp resolve_times(attrs) do

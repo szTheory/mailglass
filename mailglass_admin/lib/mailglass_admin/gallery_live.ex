@@ -21,7 +21,9 @@ defmodule MailglassAdmin.GalleryLive do
   - logo
   - flash (error, info, success, warning kinds)
   - badge (warning, stub)
-  - status_badge (22 atoms + phantom nil)
+  - status_badge (22 atoms + phantom nil + inbound failed)
+  - delivery_badge (sent, queued, delivered, delayed, failed, not-sent, three-field)
+  - delivery_verdict (each class full, sent and failed line, undetermined)
   - nav_link (active, inactive, hover-ready, focus-visible,
     disabled); nav labels are short by convention, so there is
     no long-label specimen
@@ -75,6 +77,7 @@ defmodule MailglassAdmin.GalleryLive do
   use Phoenix.LiveView
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
   alias MailglassAdmin.Operator.Shell
   alias MailglassAdmin.Operator.DeliveriesList
   alias MailglassAdmin.Operator.DetailHeader
@@ -194,7 +197,34 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :status_badge} = assigns) do
     ~H"""
-    <Components.status_badge status={@assigns_map[:status]} size={@assigns_map[:size] || :sm} />
+    <Components.status_badge
+      status={@assigns_map[:status]}
+      size={@assigns_map[:size] || :sm}
+      context={@assigns_map[:context]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :delivery_badge} = assigns) do
+    ~H"""
+    <Components.delivery_badge row={@assigns_map[:row]} size={@assigns_map[:size] || :row} />
+    """
+  end
+
+  defp render_specimen(%{component: :delivery_verdict} = assigns) do
+    assigns =
+      assign(
+        assigns,
+        :verdict,
+        Copy.delivery_verdict(assigns.assigns_map[:row], assigns.assigns_map[:evidence] || %{})
+      )
+
+    ~H"""
+    <Components.delivery_verdict
+      verdict={@verdict}
+      form={@assigns_map[:form] || :full}
+      id={"gallery-verdict-#{@assigns_map[:id]}"}
+    />
     """
   end
 
@@ -522,6 +552,12 @@ defmodule MailglassAdmin.GalleryLive do
         stream: :transactional,
         last_event_type: :delivered,
         last_event_at: ~U[2026-06-14 12:00:00Z],
+        delivery_confirmed: true,
+        delivered_at: ~U[2026-06-14 12:00:00Z],
+        bounced_at: nil,
+        terminal: true,
+        complained_at: nil,
+        suppressed_at: nil,
         provider_message_id: "msg_abc123"
       })
 
@@ -607,6 +643,26 @@ defmodule MailglassAdmin.GalleryLive do
   # Specimen list — one entry per STATE-LD row × state atom
   # ---------------------------------------------------------------------------
 
+  # A fully keyed operator delivery row, the shape get_delivery/2 returns on a current
+  # core. Specimens override only the keys that make a class.
+  @gallery_row %{
+    id: "del_01JXABCDEF",
+    recipient: "j*@e******.com",
+    subject: "Reset your password",
+    status: :sent,
+    tenant_id: "acme-corp",
+    provider: "postmark",
+    stream: :transactional,
+    last_event_type: :sent,
+    last_event_at: ~U[2026-06-14 11:00:00Z],
+    delivery_confirmed: false,
+    bounced_at: nil,
+    terminal: nil,
+    delivered_at: nil,
+    complained_at: nil,
+    suppressed_at: nil
+  }
+
   @specimens [
     # STATE-LD-01: icon — rest (aria-hidden always)
     {:icon, "rest", %{name: "hero-envelope", class: "w-5 h-5"}},
@@ -641,12 +697,12 @@ defmodule MailglassAdmin.GalleryLive do
 
     # STATE-LD-05: status_badge — 22 atoms + phantom nil
     {:status_badge, "dispatched", %{status: :dispatched, size: :sm}},
-    {:status_badge, "queued", %{status: :queued, size: :sm}},
-    {:status_badge, "sent", %{status: :sent, size: :sm}},
-    {:status_badge, "delivered", %{status: :delivered, size: :sm}},
+    {:status_badge, "queued", %{status: :queued, size: :sm, context: :delivery}},
+    {:status_badge, "sent", %{status: :sent, size: :sm, context: :delivery}},
+    {:status_badge, "delivered", %{status: :delivered, size: :sm, context: :delivery}},
     {:status_badge, "deferred", %{status: :deferred, size: :sm}},
     {:status_badge, "bounced", %{status: :bounced, size: :sm}},
-    {:status_badge, "failed", %{status: :failed, size: :sm}},
+    {:status_badge, "failed", %{status: :failed, size: :sm, context: :delivery}},
     {:status_badge, "rejected", %{status: :rejected, size: :sm}},
     {:status_badge, "complained", %{status: :complained, size: :sm}},
     {:status_badge, "unsubscribed", %{status: :unsubscribed, size: :sm}},
@@ -664,6 +720,127 @@ defmodule MailglassAdmin.GalleryLive do
     {:status_badge, "reconciled", %{status: :reconciled, size: :sm}},
     # phantom nil fallback — badge-outline
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
+    # Inbound outcomes keep the Heroicon even when the atom's label is a class word.
+    {:status_badge, "inbound-failed", %{status: :failed, size: :sm, context: :inbound}},
+
+    # Phase 182 (D-01/D-10): the row-level class badge and the verdict it shares with the
+    # Quick view and Full detail. Rows carry every lifecycle key; the last badge and the
+    # last verdict show a row from a core that predates them.
+    {:delivery_badge, "sent", %{row: @gallery_row}},
+    {:delivery_badge, "queued",
+     %{row: Map.merge(@gallery_row, %{status: :queued, last_event_type: :queued})}},
+    {:delivery_badge, "delivered",
+     %{
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :delivered,
+           delivery_confirmed: true,
+           delivered_at: ~U[2026-06-14 12:00:00Z],
+           terminal: true
+         })
+     }},
+    {:delivery_badge, "delayed", %{row: Map.merge(@gallery_row, %{last_event_type: :deferred})}},
+    {:delivery_badge, "failed",
+     %{
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :bounced,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true
+         })
+     }},
+    {:delivery_badge, "not-sent",
+     %{
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :suppressed,
+           suppressed_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true
+         })
+     }},
+    {:delivery_badge, "three-field",
+     %{
+       row:
+         Map.drop(@gallery_row, [
+           :bounced_at,
+           :terminal,
+           :delivered_at,
+           :complained_at,
+           :suppressed_at
+         ])
+     }},
+    {:delivery_verdict, "sent-full", %{id: "sent-full", row: @gallery_row, form: :full}},
+    {:delivery_verdict, "queued-full",
+     %{
+       id: "queued-full",
+       row: Map.merge(@gallery_row, %{status: :queued, last_event_type: :queued}),
+       form: :full
+     }},
+    {:delivery_verdict, "delivered-full",
+     %{
+       id: "delivered-full",
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :delivered,
+           delivery_confirmed: true,
+           delivered_at: ~U[2026-06-14 12:00:00Z],
+           terminal: true
+         }),
+       form: :full
+     }},
+    {:delivery_verdict, "delayed-full",
+     %{
+       id: "delayed-full",
+       row: Map.merge(@gallery_row, %{last_event_type: :deferred}),
+       form: :full
+     }},
+    {:delivery_verdict, "failed-full",
+     %{
+       id: "failed-full",
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :bounced,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true
+         }),
+       form: :full
+     }},
+    {:delivery_verdict, "not-sent-full",
+     %{
+       id: "not-sent-full",
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :suppressed,
+           suppressed_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true
+         }),
+       form: :full
+     }},
+    {:delivery_verdict, "sent-line", %{id: "sent-line", row: @gallery_row, form: :line}},
+    {:delivery_verdict, "failed-line",
+     %{
+       id: "failed-line",
+       row:
+         Map.merge(@gallery_row, %{
+           last_event_type: :bounced,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true
+         }),
+       form: :line
+     }},
+    {:delivery_verdict, "undetermined",
+     %{
+       id: "undetermined",
+       row:
+         Map.drop(@gallery_row, [
+           :bounced_at,
+           :terminal,
+           :delivered_at,
+           :complained_at,
+           :suppressed_at
+         ]),
+       form: :full
+     }},
 
     # Phase 182 (D-10): the five delivery-class pane marks at row size, plus one detail size.
     {:status_mark, "sent", %{class: :sent, size: :row}},
@@ -766,7 +943,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "postmark",
            last_event_type: :delivered,
-           last_event_at: ~U[2026-06-14 12:00:00Z]
+           last_event_at: ~U[2026-06-14 12:00:00Z],
+           delivery_confirmed: true,
+           delivered_at: ~U[2026-06-14 12:00:00Z],
+           bounced_at: nil,
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          },
          %{
            id: "del_01JXGHIJKL",
@@ -775,7 +958,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "sendgrid",
            last_event_type: :bounced,
-           last_event_at: ~U[2026-06-14 11:45:00Z]
+           last_event_at: ~U[2026-06-14 11:45:00Z],
+           delivery_confirmed: false,
+           delivered_at: nil,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          }
        ],
        selected_delivery: nil
@@ -790,7 +979,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "postmark",
            last_event_type: :delivered,
-           last_event_at: ~U[2026-06-14 12:00:00Z]
+           last_event_at: ~U[2026-06-14 12:00:00Z],
+           delivery_confirmed: true,
+           delivered_at: ~U[2026-06-14 12:00:00Z],
+           bounced_at: nil,
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          },
          %{
            id: "del_01JXGHIJKL",
@@ -799,7 +994,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "sendgrid",
            last_event_type: :bounced,
-           last_event_at: ~U[2026-06-14 11:45:00Z]
+           last_event_at: ~U[2026-06-14 11:45:00Z],
+           delivery_confirmed: false,
+           delivered_at: nil,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          }
        ],
        selected_delivery: %{id: "del_01JXABCDEF"}
@@ -819,6 +1020,12 @@ defmodule MailglassAdmin.GalleryLive do
          stream: :transactional,
          last_event_type: :delivered,
          last_event_at: ~U[2026-06-14 12:00:00Z],
+         delivery_confirmed: true,
+         delivered_at: ~U[2026-06-14 12:00:00Z],
+         bounced_at: nil,
+         terminal: true,
+         complained_at: nil,
+         suppressed_at: nil,
          provider_message_id: "msg_abc123"
        },
        replay_targets: %{status: :unavailable, reason: :no_webhook},
@@ -1228,7 +1435,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "postmark",
            last_event_type: :delivered,
-           last_event_at: ~U[2026-06-14 12:00:00Z]
+           last_event_at: ~U[2026-06-14 12:00:00Z],
+           delivery_confirmed: true,
+           delivered_at: ~U[2026-06-14 12:00:00Z],
+           bounced_at: nil,
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          },
          %{
            id: "del_01JXGHIJKL",
@@ -1237,7 +1450,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "sendgrid",
            last_event_type: :bounced,
-           last_event_at: ~U[2026-06-14 11:45:00Z]
+           last_event_at: ~U[2026-06-14 11:45:00Z],
+           delivery_confirmed: false,
+           delivered_at: nil,
+           bounced_at: ~U[2026-06-14 11:45:00Z],
+           terminal: true,
+           complained_at: nil,
+           suppressed_at: nil
          }
        ],
        selected_delivery: nil,
@@ -1259,7 +1478,13 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "tenant_01JXWIDEVALUE000000000000000000000000",
            provider: "postmark-enterprise-relay",
            last_event_type: :deferred,
-           last_event_at: ~U[2026-06-14 23:59:59Z]
+           last_event_at: ~U[2026-06-14 23:59:59Z],
+           delivery_confirmed: false,
+           delivered_at: nil,
+           bounced_at: nil,
+           terminal: nil,
+           complained_at: nil,
+           suppressed_at: nil
          }
        ],
        selected_delivery: nil,
@@ -1397,6 +1622,8 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:badge), do: "badge"
   defp component_label(:status_badge), do: "status_badge"
   defp component_label(:status_mark), do: "status_mark"
+  defp component_label(:delivery_badge), do: "delivery_badge"
+  defp component_label(:delivery_verdict), do: "delivery_verdict"
   defp component_label(:nav_link), do: "nav_link"
   defp component_label(:nav_pill), do: "nav_pill"
   defp component_label(:tenant_chip), do: "tenant_chip"

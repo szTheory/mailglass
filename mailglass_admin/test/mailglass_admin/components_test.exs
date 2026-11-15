@@ -59,25 +59,63 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Dispatched"
     end
 
-    test "queued renders badge-primary + arrow-path icon" do
+    # Phase 182 (D-10): in a delivery context the four atoms whose label is a class word
+    # draw the pane mark instead of the Heroicon. Without the context the badge is
+    # unchanged, which is what keeps an inbound :failed on hero-x-circle.
+    test "queued in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :queued,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "sent", "Queued")
+      refute html =~ "hero-arrow-path"
+    end
+
+    test "queued without a delivery context keeps badge-primary + arrow-path icon" do
       html = render_component(&Components.status_badge/1, status: :queued, size: :sm)
       assert html =~ "badge-primary"
       assert html =~ "hero-arrow-path"
       assert html =~ "Queued"
+      refute html =~ "data-mg-status"
     end
 
-    test "sent renders badge-primary + paper-airplane icon" do
+    test "sent in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1, status: :sent, size: :sm, context: :delivery)
+
+      assert_class_badge(html, "sent", "Sent")
+      refute html =~ "hero-paper-airplane"
+    end
+
+    test "sent without a delivery context keeps badge-primary + paper-airplane icon" do
       html = render_component(&Components.status_badge/1, status: :sent, size: :sm)
       assert html =~ "badge-primary"
       assert html =~ "hero-paper-airplane"
       assert html =~ "Sent"
+      refute html =~ "data-mg-status"
     end
 
-    test "delivered renders badge-success + check-circle icon" do
+    test "delivered in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :delivered,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "delivered", "Delivered")
+      refute html =~ "hero-check-circle"
+    end
+
+    test "delivered without a delivery context keeps badge-success + check-circle icon" do
       html = render_component(&Components.status_badge/1, status: :delivered, size: :sm)
       assert html =~ "badge-success"
       assert html =~ "hero-check-circle"
       assert html =~ "Delivered"
+      refute html =~ "data-mg-status"
     end
 
     test "deferred renders badge-warning + exclamation-triangle icon" do
@@ -94,11 +132,60 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Bounced"
     end
 
-    test "failed renders badge-error + x-circle icon" do
+    test "failed in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :failed,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "failed", "Failed")
+      refute html =~ "hero-x-circle"
+    end
+
+    test "failed without a delivery context keeps badge-error + x-circle icon" do
       html = render_component(&Components.status_badge/1, status: :failed, size: :sm)
       assert html =~ "badge-error"
       assert html =~ "hero-x-circle"
       assert html =~ "Failed"
+      refute html =~ "data-mg-status"
+    end
+
+    test "an inbound failed outcome keeps its Heroicon and is marked inbound" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :failed,
+          size: :sm,
+          context: :inbound
+        )
+
+      assert html =~ "hero-x-circle"
+      assert html =~ ~s(data-mg-context="inbound")
+      refute html =~ "data-mg-status"
+      refute html =~ "<svg"
+    end
+
+    test "outcome_badge forwards its context to the status badge" do
+      inbound =
+        render_component(&Components.outcome_badge/1,
+          id: "ob-inbound",
+          status: :failed,
+          context: :inbound
+        )
+
+      assert inbound =~ "hero-x-circle"
+      assert inbound =~ ~s(data-mg-context="inbound")
+      refute inbound =~ "data-mg-status"
+
+      delivery =
+        render_component(&Components.outcome_badge/1,
+          id: "ob-delivery",
+          status: :delivered,
+          context: :delivery
+        )
+
+      assert_class_badge(delivery, "delivered", "Delivered")
     end
 
     test "rejected renders badge-error + x-circle icon" do
@@ -326,20 +413,35 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  # One class badge: a single `[data-mg-status]` element whose only visible text is the
+  # word, holding exactly one aria-hidden mark, with no label or title on the mark.
+  defp assert_class_badge(html, class, word) do
+    assert [badge] = html |> Floki.parse_fragment!() |> Floki.find("[data-mg-status]")
+    assert Floki.attribute(badge, "data-mg-status") == [class]
+    assert badge |> Floki.text() |> String.trim() == word
+    assert [svg] = Floki.find(badge, "svg")
+    assert Floki.attribute(svg, "aria-hidden") == ["true"]
+    assert Floki.attribute(svg, "aria-label") == []
+    assert Floki.attribute(svg, "title") == []
+  end
+
   describe "G-168-6 rendered downstream Delivery status" do
     @tag :g_168_6
     test "a :delivered event is shown in both list layouts, detail, and Quick view" do
       assert_rendered_delivery_status(:delivered, "Delivered")
     end
 
+    # The badge shows the delivery class (Phase 182, D-01). A bounce reads Failed; an
+    # open with no failure behind it leaves the class at Sent, and the open itself is the
+    # latest event beside it.
     @tag :g_168_6
-    test "a :bounced event is shown in both list layouts, detail, and Quick view" do
-      assert_rendered_delivery_status(:bounced, "Bounced")
+    test "a :bounced event reads Failed in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:bounced, "Failed")
     end
 
     @tag :g_168_6
-    test "an :opened event is shown in both list layouts, detail, and Quick view" do
-      assert_rendered_delivery_status(:opened, "Opened")
+    test "an :opened event reads Sent in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:opened, "Sent")
     end
   end
 

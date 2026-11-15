@@ -676,6 +676,11 @@ defmodule MailglassAdmin.Components do
   attr(:context, :atom, required: true)
   attr(:id, :string, required: true)
 
+  attr(:delivery_row, :map,
+    default: nil,
+    doc: "an operator delivery row; with `context: :delivery` it draws the class badge"
+  )
+
   attr(:heading_tag, :string, values: ["h2", "h3"], default: "h2")
 
   def message_identity(assigns) do
@@ -689,7 +694,16 @@ defmodule MailglassAdmin.Components do
         >
           {if @subject == "", do: "(No subject)", else: @subject || @recipient || "Message"}
         </.dynamic_tag>
-        <.outcome_badge id={@id} status={@status} context={@context} />
+        <.delivery_badge
+          :if={@context == :delivery and not is_nil(@delivery_row)}
+          row={@delivery_row}
+        />
+        <.outcome_badge
+          :if={@context != :delivery or is_nil(@delivery_row)}
+          id={@id}
+          status={@status}
+          context={@context}
+        />
       </div>
       <p :if={not is_nil(@subject)} class="text-body text-secondary [overflow-wrap:anywhere]">
         {recipient_label(@context)}
@@ -1509,6 +1523,22 @@ defmodule MailglassAdmin.Components do
 
   attr(:size, :atom, values: [:sm, :md], default: :sm)
 
+  attr(:context, :atom,
+    values: [:delivery, :inbound, nil],
+    default: nil,
+    doc:
+      "`:delivery` shows the pane mark for the four atoms whose label is a class word; " <>
+        "`:inbound` and nil never do"
+  )
+
+  attr(:delivery_class, :atom,
+    values: [nil, :sent, :delivered, :delayed, :failed, :not_sent],
+    default: nil,
+    doc: "a delivery class computed by the caller; renders the pane mark and `word`"
+  )
+
+  attr(:word, :string, default: nil, doc: "the class word shown beside the mark")
+
   @doc """
   Unified delivery, inbound, and timeline status badge. Renders an outline Heroicon
   (decorative, aria-hidden) and a text label inside a daisyUI badge container.
@@ -1516,13 +1546,229 @@ defmodule MailglassAdmin.Components do
   The base badge class is always emitted by this component — call sites must NOT
   prepend 'badge' or 'badge badge-sm'. Use size: :sm (default) for list rows;
   size: :md for detail headers.
+
+  This is the only place a delivery-status pane mark is drawn beside a word. With
+  `delivery_class` set, or with `context: :delivery` and one of `:sent`, `:queued`,
+  `:delivered`, `:failed` (the atoms whose label is a class word), the badge shows the
+  pane mark and the word, wrapped in `data-mg-status`. Every other atom, and every
+  inbound or context-free badge, keeps its Heroicon and word. The mark is decoration:
+  the word is the accessible name.
   """
   @doc since: "1.5.0"
   def status_badge(assigns) do
+    assigns = assign(assigns, :mark, mark_branch(assigns))
+
     ~H"""
-    <span class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}>
+    <span
+      :if={@mark}
+      data-mg-status={@mark.class}
+      class="badge badge-outline badge-md text-label whitespace-nowrap"
+      style={"color: var(--mg-color-#{@mark.role})"}
+    >
+      <.status_mark class={@mark.class} size={:row} />{@mark.word}
+    </span>
+    <span
+      :if={!@mark}
+      data-mg-context={@context == :inbound && "inbound"}
+      class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}
+    >
       <span class={[status_icon(@status), "w-3 h-3"]} aria-hidden="true"></span>{status_label(@status)}
     </span>
+    """
+  end
+
+  # The atoms whose Copy label is a class word. Only with an explicit :delivery context:
+  # an inbound :failed is a mailbox outcome and keeps its Heroicon.
+  @mark_atoms [:sent, :queued, :delivered, :failed]
+
+  # Word colour per class, from the brand roles. The mark paints with the same roles, so
+  # a word keeps the book 4.5:1 pair on the surface.
+  @status_word_roles %{
+    sent: "text",
+    delivered: "success-text",
+    delayed: "warning-text",
+    failed: "error-text",
+    not_sent: "text-muted"
+  }
+
+  defp mark_branch(%{delivery_class: class, word: word}) when not is_nil(class) do
+    %{class: class, word: word, role: Map.fetch!(@status_word_roles, class)}
+  end
+
+  defp mark_branch(%{context: :delivery, status: status}) when status in @mark_atoms do
+    class = MailglassAdmin.StatusMap.classify(status)
+    %{class: class, word: status_label(status), role: Map.fetch!(@status_word_roles, class)}
+  end
+
+  defp mark_branch(_assigns), do: nil
+
+  attr(:row, :map, required: true, doc: "one operator delivery row from the list or get_delivery")
+  attr(:size, :atom, values: [:row, :detail], default: :row)
+
+  @doc """
+  The status badge for one operator delivery row: the pane mark and the class word.
+
+  A thin wrapper: it picks the class and the word from `MailglassAdmin.Copy` and calls
+  `status_badge/1`, which draws the mark. A row without the `:bounced_at` key comes from
+  a core that predates the lifecycle fields, so it gets the Unknown badge and never a
+  confident class word.
+  """
+  @doc since: "2.8.0"
+  def delivery_badge(assigns) do
+    ~H"""
+    <%= if Map.has_key?(@row, :bounced_at) do %>
+      <.status_badge
+        status={class_status(MailglassAdmin.StatusMap.delivery_class(@row))}
+        delivery_class={MailglassAdmin.StatusMap.delivery_class(@row)}
+        word={MailglassAdmin.Copy.delivery_class_word(@row)}
+        context={:delivery}
+        size={badge_size(@size)}
+      />
+    <% else %>
+      <.status_badge status={:unknown} size={badge_size(@size)} />
+    <% end %>
+    """
+  end
+
+  # The status atom a class stands for. status_badge reads it only for its required
+  # attribute: with a delivery class set, the class and word decide the render.
+  defp class_status(:sent), do: :sent
+  defp class_status(:delivered), do: :delivered
+  defp class_status(:delayed), do: :deferred
+  defp class_status(:failed), do: :failed
+  defp class_status(:not_sent), do: :suppressed
+
+  defp badge_size(:row), do: :sm
+  defp badge_size(:detail), do: :md
+
+  @doc """
+  True when the row's latest recorded event has a word of its own, one that is not the
+  class word already shown by the badge. A row that predates the lifecycle fields has
+  no class word, so its latest event is always worth showing.
+  """
+  @doc since: "2.8.0"
+  def latest_event_differs?(row) do
+    case Map.get(row, :last_event_type) do
+      nil ->
+        false
+
+      event ->
+        not Map.has_key?(row, :bounced_at) or
+          status_label(event) != MailglassAdmin.Copy.delivery_class_word(row)
+    end
+  end
+
+  attr(:verdict, :map,
+    required: true,
+    doc: "the map from `MailglassAdmin.Copy.delivery_verdict/2`"
+  )
+
+  attr(:form, :atom, values: [:full, :line], default: :full)
+  attr(:id, :string, required: true)
+
+  @doc """
+  Renders one delivery verdict. The verdict is computed once, in `MailglassAdmin.Copy`;
+  this component only draws it, so a row, the Quick view and Full detail cannot disagree.
+
+  The full form leads with the pane mark and the class word, then the sentence, the
+  recorded cause when there is one, the rule line, the notes and the next step. The
+  line form (Quick view) is the mark, the word, the sentence and the rule line: it has
+  no event history, so it never shows a cause or a next step. A verdict with no class
+  shows only its sentence.
+  """
+  @doc since: "2.8.0"
+  def delivery_verdict(%{verdict: %{class: :undetermined}} = assigns) do
+    ~H"""
+    <section id={@id} data-testid="delivery-verdict" data-verdict-class="undetermined">
+      <p class="text-body text-secondary">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+    </section>
+    """
+  end
+
+  def delivery_verdict(%{form: :line} = assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-testid="delivery-verdict-line"
+      data-verdict-class={@verdict.class}
+      class="min-w-0 space-y-xs"
+    >
+      <p class="flex min-w-0 items-center gap-sm text-body font-bold text-base-content">
+        <.status_mark class={@verdict.class} size={:row} /><span>{@verdict.word}</span>
+      </p>
+      <p class="text-body text-base-content [overflow-wrap:anywhere]">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+      <p :if={@verdict.rule} class="text-label text-secondary [overflow-wrap:anywhere]">
+        {@verdict.rule}
+      </p>
+    </section>
+    """
+  end
+
+  def delivery_verdict(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-testid="delivery-verdict"
+      data-verdict-class={@verdict.class}
+      aria-labelledby={@id <> "-word"}
+      class="min-w-0 space-y-sm"
+    >
+      <div class="flex min-w-0 items-center gap-sm">
+        <.status_mark class={@verdict.class} size={:detail} />
+        <h3 id={@id <> "-word"} class="text-heading font-bold text-base-content">
+          {@verdict.word}
+        </h3>
+      </div>
+      <p class="text-body text-base-content [overflow-wrap:anywhere]">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+      <p
+        :if={@verdict.cause}
+        data-testid="delivery-verdict-cause"
+        class="text-body text-base-content [overflow-wrap:anywhere]"
+      >
+        {@verdict.cause}
+      </p>
+      <p :if={@verdict.rule} class="text-body font-bold text-base-content [overflow-wrap:anywhere]">
+        {@verdict.rule}
+      </p>
+      <p :for={note <- @verdict.notes} class="text-body text-secondary [overflow-wrap:anywhere]">
+        {note}
+      </p>
+      <div :if={@verdict.next_step} class="min-w-0 space-y-xs">
+        <h4 class="text-label font-bold text-secondary">Next step</h4>
+        <p class="text-body text-base-content [overflow-wrap:anywhere]">{@verdict.next_step}</p>
+        <a
+          :if={@verdict.next_link}
+          href={@verdict.next_link.href}
+          class="mg-focus-ring inline-flex min-h-11 items-center text-body font-bold text-primary underline"
+        >
+          {@verdict.next_link.label}
+        </a>
+      </div>
+    </section>
+    """
+  end
+
+  # A sentence is plain text and zoned timestamps, so every time on a verdict goes
+  # through the same timestamp component as the rest of the screen.
+  attr(:segment, :any, required: true)
+
+  defp verdict_segment(%{segment: {:time, at}} = assigns) do
+    assigns = assign(assigns, :at, at)
+
+    ~H"""
+    <.timestamp at={@at} />
+    """
+  end
+
+  defp verdict_segment(assigns) do
+    ~H"""
+    {@segment}
     """
   end
 
@@ -1538,7 +1784,9 @@ defmodule MailglassAdmin.Components do
       trigger_text={status_label(@status)}
       text={outcome_help(@context, @status)}
     >
-      <:trigger_content><.status_badge status={@status} size={:sm} /></:trigger_content>
+      <:trigger_content>
+        <.status_badge status={@status} size={:sm} context={@context} />
+      </:trigger_content>
     </.field_help>
     """
   end

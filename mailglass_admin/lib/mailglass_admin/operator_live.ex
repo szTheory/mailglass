@@ -869,6 +869,10 @@ defmodule MailglassAdmin.OperatorLive do
                         <DetailHeader.detail_header
                           delivery={@selected_delivery}
                           account_labels={@account_labels}
+                          timeline_events={@timeline_events}
+                          timeline_state={@timeline_state}
+                          suppression_state={@suppression_state}
+                          suppression_read_state={@suppression_read_state}
                         />
                         <%!-- Event timeline leads: it is the record-specific "what happened"
                             evidence the operator came to read. Suppression state (also
@@ -2746,7 +2750,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(nil), do: nil
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
-  @undetermined_summary "Status cannot be fully determined with this mailglass version."
+  @undetermined_summary MailglassAdmin.Copy.undetermined_sentence()
 
   # The three summary buckets, counted by delivery class. When a group lacks the
   # lifecycle keys (an older core that returns the three-field shape), the class

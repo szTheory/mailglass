@@ -210,11 +210,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                       </button>
                     </td>
                     <td class="text-body text-base-content">
-                      <Components.outcome_badge
-                        id={"delivery-outcome-table-#{delivery.id}"}
-                        status={Components.delivery_display_status(delivery)}
-                        context={:delivery}
-                      />
+                      <Components.delivery_badge row={delivery} size={:row} />
                       <p :if={different_event?(delivery)} class="text-label text-secondary">
                         Latest: {event_label(delivery.last_event_type)}
                       </p>
@@ -279,11 +275,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     </p>
                   </button>
                   <div>
-                    <Components.outcome_badge
-                      id={"delivery-outcome-card-#{delivery.id}"}
-                      status={Components.delivery_display_status(delivery)}
-                      context={:delivery}
-                    />
+                    <Components.delivery_badge row={delivery} size={:row} />
                   </div>
 
                   <%!-- Keep the exact stable ID visible and copyable without hover. --%>
@@ -449,8 +441,5 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     end
   end
 
-  defp different_event?(delivery) do
-    event = Map.get(delivery, :last_event_type)
-    not is_nil(event) and event != Components.delivery_display_status(delivery)
-  end
+  defp different_event?(delivery), do: Components.latest_event_differs?(delivery)
 end

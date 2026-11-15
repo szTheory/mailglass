@@ -11,9 +11,14 @@ defmodule MailglassAdmin.Copy do
   # FunctionClauseError. The *_or_unknown/1 variants carry the one sanctioned UI
   # fallback, used by the badge component for a missing status.
   #
-  # vocabulary/0 and class_labels/0 record words that are agreed but not yet on
-  # screen. They carry wired: false until the screens switch over, and a contract
-  # test binds each entry once it is marked wired: true.
+  # vocabulary/0 and class_labels/0 record words that are agreed. An entry carries
+  # wired: true once a screen shows it, and a contract test binds each wired entry.
+  # The five class labels are wired: the row-level class badge and the verdict read
+  # them through delivery_class_word/1 and delivery_verdict/2.
+  #
+  # delivery_verdict/2 is the one place a delivery verdict is computed. The list row
+  # badge, the Quick view line and the Full detail verdict all read it, so the three
+  # cannot disagree for the same row. It is pure: no process state, no clock, no I/O.
 
   alias MailglassAdmin.StatusMap
 
@@ -75,8 +80,7 @@ defmodule MailglassAdmin.Copy do
 
   @unknown %{label: "Unknown", icon: "hero-question-mark-circle", class: "badge-outline"}
 
-  # Words the screens will move to. Data only: nothing renders these yet, and a
-  # wired: false entry is not bound by any screen test.
+  # Words the screens move to. A wired: false entry is not bound by any screen test.
   @vocabulary [
     %{
       key: :admin,
@@ -110,11 +114,11 @@ defmodule MailglassAdmin.Copy do
 
   # The five plain status words, one per delivery class that has a word.
   @class_labels [
-    %{class: :sent, label: "Sent", wired: false},
-    %{class: :delivered, label: "Delivered", wired: false},
-    %{class: :delayed, label: "Delayed", wired: false},
-    %{class: :failed, label: "Failed", wired: false},
-    %{class: :not_sent, label: "Not sent", wired: false}
+    %{class: :sent, label: "Sent", wired: true},
+    %{class: :delivered, label: "Delivered", wired: true},
+    %{class: :delayed, label: "Delayed", wired: true},
+    %{class: :failed, label: "Failed", wired: true},
+    %{class: :not_sent, label: "Not sent", wired: true}
   ]
 
   expected_keys = StatusMap.atoms() -- [:subscribed]
@@ -165,6 +169,246 @@ defmodule MailglassAdmin.Copy do
 
   @spec class_labels() :: [map()]
   def class_labels, do: @class_labels
+
+  # -- delivery verdict ----------------------------------------------------------
+
+  @undetermined_sentence "Status cannot be fully determined with this mailglass version."
+  @fallback_reason "No reason was recorded for this email."
+
+  @providers %{
+    "postmark" => "Postmark",
+    "sendgrid" => "SendGrid",
+    "mailgun" => "Mailgun",
+    "resend" => "Resend",
+    "ses" => "Amazon SES"
+  }
+
+  @type verdict :: %{
+          class: :sent | :delivered | :delayed | :failed | :not_sent | :undetermined,
+          word: String.t() | nil,
+          sentence: [String.t() | {:time, DateTime.t()}],
+          rule: String.t() | nil,
+          next_step: String.t() | nil,
+          next_link: %{label: String.t(), href: String.t()} | nil,
+          cause: String.t() | nil,
+          notes: [String.t()]
+        }
+
+  # Evidence the verdict may read beyond the list row. :not_loaded means the caller
+  # has no events or suppression state (the Quick view), :read_failed means the read
+  # failed. Neither may produce a cause or the no-reason fallback.
+  @default_evidence %{events: :not_loaded, suppression: :not_loaded}
+
+  @doc """
+  The sentence a screen shows when the row cannot be classified, for an operator row
+  from a core that predates the lifecycle fields.
+  """
+  @spec undetermined_sentence() :: String.t()
+  def undetermined_sentence, do: @undetermined_sentence
+
+  @doc "The fixed sentence for a failure or suppression that recorded no reason."
+  @spec fallback_reason() :: String.t()
+  def fallback_reason, do: @fallback_reason
+
+  @doc """
+  The display name of a provider recorded on a delivery. Known adapters get their
+  proper name, anything else is shown as recorded, and a missing provider is nil.
+  """
+  @spec provider_name(String.t() | nil) :: String.t() | nil
+  def provider_name(nil), do: nil
+
+  def provider_name(provider) when is_binary(provider) do
+    case String.trim(provider) do
+      "" -> nil
+      trimmed -> Map.get(@providers, String.downcase(trimmed), trimmed)
+    end
+  end
+
+  for %{class: class, label: label} <- @class_labels do
+    defp class_label(unquote(class)), do: unquote(label)
+  end
+
+  @doc """
+  The class word for one operator delivery row: Sent, Delivered, Delayed, Failed or
+  Not sent. A row that was accepted into the pipeline and not handed to the provider
+  yet reads Queued, so the word never implies a handoff that did not happen.
+  """
+  @spec delivery_class_word(map()) :: String.t()
+  def delivery_class_word(row) when is_map(row) do
+    class = StatusMap.delivery_class(row)
+
+    if class == :sent and queued?(row),
+      do: status_label(:queued),
+      else: class_label(class)
+  end
+
+  @doc """
+  The verdict for one operator delivery row, as data. Pure: equal input gives an equal
+  map. A row without the `:bounced_at` key comes from a core that predates the
+  lifecycle fields, so it gets no verdict and the sentence says why.
+  """
+  @spec delivery_verdict(map(), map()) :: verdict()
+  def delivery_verdict(row, evidence \\ %{}) when is_map(row) and is_map(evidence) do
+    if Map.has_key?(row, :bounced_at) do
+      evidence = Map.merge(@default_evidence, evidence)
+      verdict(StatusMap.delivery_class(row), row, evidence)
+    else
+      %{
+        class: :undetermined,
+        word: nil,
+        sentence: [@undetermined_sentence],
+        rule: nil,
+        next_step: nil,
+        next_link: nil,
+        cause: nil,
+        notes: []
+      }
+    end
+  end
+
+  defp verdict(:sent, row, evidence) do
+    provider = provider_name(Map.get(row, :provider))
+    complained? = present?(row, :complained_at)
+
+    base(:sent, row, evidence, %{
+      sentence: sent_sentence(row, provider),
+      rule: sent_rule(row, complained?),
+      next_step: sent_next_step(row, provider)
+    })
+    |> add_note(complained?, "A complaint was recorded for this email.")
+    |> engagement_note(row, evidence)
+  end
+
+  defp verdict(:delivered, row, evidence) do
+    sentence =
+      case Map.get(row, :delivered_at) do
+        %DateTime{} = at ->
+          ["Delivered at ", {:time, at}, ": the receiving server accepted this email."]
+
+        _ ->
+          ["Delivered: the receiving server accepted this email."]
+      end
+
+    base(:delivered, row, evidence, %{
+      sentence: sentence,
+      rule: "Delivered is not the same as read. It may not be in the inbox.",
+      next_step:
+        "Ask the customer to check spam and promotions, and to search for the sender address."
+    })
+    |> engagement_note(row, evidence)
+  end
+
+  defp verdict(:delayed, row, evidence) do
+    provider = provider_name(Map.get(row, :provider))
+
+    base(:delayed, row, evidence, %{
+      sentence: [
+        "Delayed: the receiving server asked to try again later. No final result is recorded yet."
+      ],
+      rule: nil,
+      next_step:
+        "Nothing to do yet. Check this page again later, or see the retry schedule in " <>
+          provider_logs(provider) <> "."
+    })
+    |> engagement_note(row, evidence)
+  end
+
+  defp verdict(:failed, row, evidence) do
+    base(:failed, row, evidence, %{
+      sentence: ["Failed: the email did not get through."],
+      rule: nil,
+      next_step:
+        "Check the address for a typo. See whether it is on the suppression list. " <>
+          "Correct it in your app, then trigger the email again."
+    })
+    |> engagement_note(row, evidence)
+  end
+
+  defp verdict(:not_sent, row, evidence) do
+    base(:not_sent, row, evidence, %{
+      sentence: ["Not sent: nothing was sent. This address is on your suppression list."],
+      rule: nil,
+      next_step:
+        "Remove this address from the suppression list if it should receive email, " <>
+          "then trigger the email from your app again.",
+      next_link: %{label: "Go to the suppression card", href: "#delivery-suppression"}
+    })
+    |> engagement_note(row, evidence)
+  end
+
+  defp base(class, row, _evidence, fields) do
+    Map.merge(
+      %{
+        class: class,
+        word: delivery_class_word(row),
+        sentence: [],
+        rule: nil,
+        next_step: nil,
+        next_link: nil,
+        cause: nil,
+        notes: []
+      },
+      fields
+    )
+  end
+
+  defp sent_sentence(row, provider) do
+    if queued?(row) do
+      ["Not handed to the provider yet."]
+    else
+      lead = if provider, do: "Sent with #{provider}.", else: "Sent to the provider."
+      [lead <> " Mailglass has recorded no delivery report for this email."]
+    end
+  end
+
+  defp sent_rule(row, complained?) do
+    cond do
+      queued?(row) -> "Queued is not sent, and sent is not delivered."
+      complained? -> "Sent is not delivered: your app handed the email to the provider."
+      true -> sent_rule_default()
+    end
+  end
+
+  defp sent_rule_default do
+    "Sent is not delivered: your app handed the email to the provider, " <>
+      "and the receiving server has not reported accepting it."
+  end
+
+  defp sent_next_step(row, provider) do
+    if queued?(row) do
+      "Nothing to do yet. Check this page again later."
+    else
+      "Check this address on the suppression list below. Then look up the email in " <>
+        provider_logs(provider) <>
+        ", and ask the customer to check spam. " <>
+        "Delivery reports reach mailglass only if the provider’s webhook is set up."
+    end
+  end
+
+  defp provider_logs(nil), do: "the provider’s logs"
+  defp provider_logs(provider), do: provider <> "’s logs"
+
+  defp add_note(verdict, true, note), do: %{verdict | notes: verdict.notes ++ [note]}
+  defp add_note(verdict, false, _note), do: verdict
+
+  defp engagement_note(verdict, row, evidence) do
+    add_note(
+      verdict,
+      engagement?(row, evidence),
+      "Open and click reports are not delivery reports."
+    )
+  end
+
+  defp engagement?(row, %{events: events}) do
+    Map.get(row, :last_event_type) in [:opened, :clicked] or
+      (is_list(events) and Enum.any?(events, &(Map.get(&1, :type) in [:opened, :clicked])))
+  end
+
+  defp queued?(row) do
+    Map.get(row, :status) == :queued and Map.get(row, :last_event_type) in [nil, :queued]
+  end
+
+  defp present?(row, key), do: Map.get(row, key) != nil
 
   defp field_or_unknown(status, field) do
     case Map.fetch(@statuses, status) do

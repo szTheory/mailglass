@@ -52,12 +52,14 @@ defmodule MailglassAdmin.CopyContractTest do
   unmoved in this phase, and enforcing the prose rule belongs to the later phases
   that change screen words.
 
-  The retired-word rule has two parts. Part A binds now: no retired word leaks onto
-  another atom's badge. Part B ("absent where mapped") binds per delivery class once
-  that class label is marked `wired: true` in `Copy.class_labels/0`; every class label
-  is `wired: false` today, so Part B iterates zero entries and starts binding without
-  a test edit when a class label is switched on. Its teeth are proven below with a
-  synthetic wired entry.
+  The retired-word rule has two parts. Part A binds: no retired word leaks onto
+  another atom's badge. Part B ("absent where mapped") binds the row-level class badge:
+  for every class label marked `wired: true` in `Copy.class_labels/0`, the badge that
+  `Components.delivery_badge/1` renders for an exemplar row of that class reads the plain
+  class word and none of the retired words. All five class labels are wired (Phase 182),
+  so Part B binds all five. The atom-level badges keep their event words, so Part B no
+  longer walks them: a bounced event is still "Bounced" on the timeline and Failed on the
+  row. Its teeth are proven below with a synthetic wired entry.
 
   Each rule was proven red by a temporary source mutation, recorded in the plan
   SUMMARY and reverted. The teeth block proves each detector goes red on a planted
@@ -442,15 +444,58 @@ defmodule MailglassAdmin.CopyContractTest do
         do: {atom, word}
   end
 
-  # Per-class rule for class labels that are wired: the badge reads the plain class
-  # word and none of the retired words. Returns violation descriptions.
+  # An exemplar operator row per delivery class, fully keyed the way get_delivery/2
+  # returns it on a current core. Part B renders the row-level class badge for each.
+  @exemplar_base %{
+    status: :sent,
+    last_event_type: :sent,
+    provider: "postmark",
+    delivery_confirmed: false,
+    bounced_at: nil,
+    terminal: nil,
+    delivered_at: nil,
+    complained_at: nil,
+    suppressed_at: nil
+  }
+
+  @exemplar_rows %{
+    sent: @exemplar_base,
+    delivered:
+      Map.merge(@exemplar_base, %{
+        last_event_type: :delivered,
+        delivery_confirmed: true,
+        delivered_at: ~U[2026-11-15 12:00:00Z],
+        terminal: true
+      }),
+    delayed: Map.merge(@exemplar_base, %{last_event_type: :deferred}),
+    failed:
+      Map.merge(@exemplar_base, %{
+        last_event_type: :bounced,
+        bounced_at: ~U[2026-11-15 12:00:00Z],
+        terminal: true
+      }),
+    not_sent:
+      Map.merge(@exemplar_base, %{
+        last_event_type: :suppressed,
+        suppressed_at: ~U[2026-11-15 12:00:00Z],
+        terminal: true
+      })
+  }
+
+  defp class_badge_text(class) do
+    (&Components.delivery_badge/1)
+    |> render_component(row: Map.fetch!(@exemplar_rows, class))
+    |> visible_text()
+    |> String.trim()
+  end
+
+  # Per-class rule for class labels that are wired: the row-level class badge reads the
+  # plain class word and none of the retired words. Returns {class, text} violations.
   defp wired_class_violations(class_labels) do
     for %{wired: true, class: class, label: label} <- class_labels,
-        atom <- Map.keys(Copy.statuses()),
-        StatusMap.classify(atom) == class,
-        text = badge_text(atom),
+        text = class_badge_text(class),
         text != label or Enum.any?(@retired_words, &String.contains?(text, &1)),
-        do: {class, atom, text}
+        do: {class, text}
   end
 
   # -- teeth --------------------------------------------------------------------
@@ -504,12 +549,23 @@ defmodule MailglassAdmin.CopyContractTest do
     end
 
     test "retired-word guard Part B flags a wired class label the badge does not read" do
-      # The :deferred badge reads "Deferred", not the plain class word "Delayed".
-      violations = wired_class_violations([%{class: :delayed, label: "Delayed", wired: true}])
+      # The delayed exemplar badge reads "Delayed". A planted entry that names another
+      # word for that class is flagged, so the rule is not vacuous.
+      violations = wired_class_violations([%{class: :delayed, label: "Deferred", wired: true}])
 
-      assert violations == [{:delayed, :deferred, "Deferred"}]
+      assert violations == [{:delayed, "Delayed"}]
 
-      assert wired_class_violations([%{class: :delayed, label: "Delayed", wired: false}]) == []
+      assert wired_class_violations([%{class: :delayed, label: "Delayed", wired: true}]) == []
+      assert wired_class_violations([%{class: :delayed, label: "Deferred", wired: false}]) == []
+    end
+
+    test "every class exemplar renders its own word, so Part B has one case per class" do
+      assert Map.keys(@exemplar_rows) |> Enum.sort() ==
+               Enum.sort(StatusMap.classes() -- [:not_a_delivery_status])
+
+      for %{class: class, label: label} <- Copy.class_labels() do
+        assert class_badge_text(class) == label
+      end
     end
 
     test "visible_text strips a planted script element" do
@@ -562,6 +618,55 @@ defmodule MailglassAdmin.CopyContractTest do
         assert badge_text(atom) == Copy.status_label(atom)
         assert html =~ Copy.status_icon(atom)
         assert html =~ Copy.status_class(atom)
+        refute html =~ "data-mg-status"
+      end
+    end
+
+    # Phase 182 (D-10): in a delivery context the four atoms whose label is a class word
+    # draw the pane mark and the Copy label. In an inbound or context-free badge they keep
+    # the Heroicon, so an inbound :failed never reads as a delivery failure.
+    test "the four class-word atoms draw the mark in a delivery context and the icon elsewhere" do
+      for atom <- [:sent, :queued, :delivered, :failed] do
+        label = Copy.status_label(atom)
+
+        delivery =
+          render_component(&Components.status_badge/1,
+            status: atom,
+            size: :sm,
+            context: :delivery
+          )
+
+        assert visible_text(delivery) |> String.trim() == label
+        assert delivery =~ "data-mg-status"
+        assert [_] = delivery |> Floki.parse_fragment!() |> Floki.find("svg[aria-hidden=true]")
+        refute delivery =~ Copy.status_icon(atom)
+
+        for context <- [:inbound, nil] do
+          html =
+            render_component(&Components.status_badge/1,
+              status: atom,
+              size: :sm,
+              context: context
+            )
+
+          assert html =~ Copy.status_icon(atom)
+          refute html =~ "data-mg-status"
+          assert visible_text(html) |> String.trim() == label
+        end
+      end
+    end
+
+    test "every other atom keeps its Heroicon in a delivery context" do
+      for atom <- Map.keys(Copy.statuses()) -- [:sent, :queued, :delivered, :failed] do
+        html =
+          render_component(&Components.status_badge/1,
+            status: atom,
+            size: :sm,
+            context: :delivery
+          )
+
+        assert html =~ Copy.status_icon(atom)
+        refute html =~ "data-mg-status"
       end
     end
 
@@ -608,7 +713,8 @@ defmodule MailglassAdmin.CopyContractTest do
       assert retired_leaks(texts) == []
     end
 
-    test "every wired class label is the plain word on its badges (Part B, zero entries today)" do
+    test "every wired class label is the plain word on its row-level class badge (Part B)" do
+      assert Enum.all?(Copy.class_labels(), & &1.wired)
       assert wired_class_violations(Copy.class_labels()) == []
     end
   end
@@ -682,7 +788,7 @@ defmodule MailglassAdmin.CopyContractTest do
       end
     end
 
-    test "entries that are not wired yet are present as data" do
+    test "vocabulary and class label entries are present as data, and the class labels are wired" do
       for entry <- Copy.vocabulary() ++ Copy.class_labels() do
         assert is_boolean(entry.wired)
       end
@@ -693,7 +799,7 @@ defmodule MailglassAdmin.CopyContractTest do
 
       for %{label: label} <- Copy.class_labels(), do: assert(label != "")
       assert Enum.any?(Copy.vocabulary(), &(&1.wired == true))
-      assert Enum.all?(Copy.class_labels(), &(&1.wired == false))
+      assert Enum.all?(Copy.class_labels(), &(&1.wired == true))
     end
   end
 end
