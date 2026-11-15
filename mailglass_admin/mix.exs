@@ -185,10 +185,14 @@ defmodule MailglassAdmin.MixProject do
   # deprecated one-cycle pass-through that delegates to the semantic alias.
   # Remove it in the next release cycle.
   #
-  # Phase 5 verification gate. Intentionally RED at Plan 02 completion:
-  #   - step 2 (test --warnings-as-errors) fails because Plans 03-06 tests are RED
-  #   - step 3 (mailglass_admin.assets.build) fails because Plan 05 ships that task
-  # Step 4 is the PREV-06 / CONTEXT D-04 merge gate — bundle drift CI check.
+  # Bundle drift gate (Phase 180 BRPIPE-01, D-04): the `--check` mode of
+  # `mailglass_admin.assets.build` rebuilds the bundle with the pinned Tailwind
+  # into a temp file and compares bytes to the committed priv/static/app.css.
+  # It is the first step of `verify.support_contract.admin`, which the required
+  # `support_contract_admin` CI job runs, and the last step of `verify.preview`.
+  # The ExUnit contract test `bundle_reproducibility_contract_test.exs` runs the
+  # same compare in that lane, so neither the alias step nor the test can be
+  # removed without the other catching it.
   defp aliases do
     [
       # Sibling-local ci verb (uniform "is this green?" across packages). The
@@ -207,10 +211,10 @@ defmodule MailglassAdmin.MixProject do
       "verify.preview": [
         "compile --no-optional-deps --warnings-as-errors",
         "test --warnings-as-errors --exclude flaky",
-        "mailglass_admin.assets.build",
-        "cmd git diff --exit-code priv/static/"
+        "mailglass_admin.assets.build --check"
       ],
       "verify.support_contract.admin": [
+        "mailglass_admin.assets.build --check",
         "test --warnings-as-errors"
       ],
       # Deprecated pass-through (REL-03, one cycle) — use verify.preview instead
