@@ -1,0 +1,10 @@
+{
+  "schema": "mailglass.before_catalog.superseded.v1",
+  "catalog_id": "before-9eb9dee-20261115T022124Z",
+  "superseded_by": {
+    "bundle_sha256": "5d49bcc51e0195dec2f916a985ec92f82017beda4ab7a5ce8ae29279289f4b63",
+    "root_layout_git_blob_sha": "132731a760c0b40eb91673050c459f86b76d8f6d"
+  },
+  "superseded_in": "Phase 181 plan 181-01: brand v2 colour tokens",
+  "reason": "Brand v2 tokens, fonts and logo replace the captured v1 look; PNGs, cases.json and manifest.json stay immutable."
+}
