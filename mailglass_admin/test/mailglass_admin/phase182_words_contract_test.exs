@@ -425,6 +425,22 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       end
     end
 
+    test "a hostile stored mailable is escaped in the name, the tooltip and the visible identity (T-182-10)" do
+      hostile = "<img src=x onerror=alert(1)>.Mailer<script>alert(2)</script>"
+
+      html = render_component(&DetailHeader.detail_header/1, delivery: row(%{mailable: hostile}))
+      doc = Floki.parse_fragment!(html)
+
+      # Text, not markup: no element the stored value could have opened exists.
+      assert Floki.find(doc, "img") == []
+      assert Floki.find(doc, "script") == []
+      refute html =~ "<img"
+      refute html =~ "<script"
+
+      [row] = Floki.find(doc, "[data-testid=operator-detail-mailer]")
+      assert Floki.text(row) =~ "<img src=x onerror=alert(1)>"
+    end
+
     test "list rows show the plain name in both layouts, and nothing for a nil mailable",
          %{conn: conn} do
       journey = OperatorFixtures.seed_phase182_journey!()
