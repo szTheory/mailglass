@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 181
 current_phase_name: Brand v2 Tokens, Fonts and Logo
 status: executing
-stopped_at: Completed 181-01-PLAN.md
-last_updated: "2026-11-15T16:11:29.697Z"
+stopped_at: Completed 181-02-PLAN.md
+last_updated: "2026-11-15T16:26:41.565Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 181 execution started
-state_head: 27e71f5f16381fc7c6f3f2efe26b281c19b74b84
+state_head: 54a6e23fbac2fa846f0960b32ff0aeba699d3a88
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 10
   percent: 40
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 181 (Brand v2 Tokens, Fonts and Logo) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 181 execution started
 
@@ -377,6 +377,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 180 P03 | 74min | 3 tasks | 8 files |
 | Phase 180 P04 | 30min | 3 tasks | 6 files |
 | Phase 181 P01 | 16 min | 3 tasks | 14 files |
+| Phase 181 P02 | 14 min | 3 tasks | 39 files |
 
 ## Accumulated Context
 
@@ -740,6 +741,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 180]: 180-04: a discarded warm-up screenshot precedes every catalog capture so the double capture is byte-identical; seed runs on the in-harness fallback because exec mix run hits eaddrinuse
 - [Phase 181]: [Phase 181-01] Designed token values use one rounding rule, Contrast.composite/3 with Elixir round/1; tokens.json stores that output and token_parity_test recomputes it — A value that does not reproduce is a red test rather than a judgment call; the eleven designed values (link-hover, overlay, selected, eight *-bg tints) are two-book-hex composites
 - [Phase 181]: [Phase 181-01] Roles with no admin CSS consumer stay contrast-checked through role-level admin pairs, and a test proves app.css and lib never read them — The $description tag "unreferenced by admin CSS; contrast-checked as <pair id>" cannot rot: a later consumer turns the test red until the tag and pair are updated
+- [Phase 181]: 181-02: brand_pin extend verb is the only entry for new assets; it also refuses a pinned entry that no longer equals its zip member — BRTOK-03 no-hand-edit-of-the-pin prohibition then rests on extend, not on verify alone
+- [Phase 181]: 181-02: fonts embedded at compile time behind a closed allow-list (allowed_fonts/0); font-bold maps to the 600 face via --font-weight-bold; no font-synthesis-weight guard — All three families ship a 600 face, so font-bold at 600 never synthesizes; a retired name, an OFL text and a traversal are empty-body 404s
+- [Phase 181]: 181-02: tabular numerals via a time,td base rule plus the Tailwind tabular-nums utility on the two mobile email list containers — Covers every desktop row and mobile card row without redefining Tailwind's utility
 
 ## Quick Tasks Completed
 
@@ -800,8 +804,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T16:11:29.569Z
-Stopped at: Completed 181-01-PLAN.md
+Last session: 2026-11-15T16:26:41.311Z
+Stopped at: Completed 181-02-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
