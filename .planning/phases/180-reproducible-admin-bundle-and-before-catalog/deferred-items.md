@@ -49,3 +49,24 @@ Out-of-scope discoveries logged during execution. None of these were caused by p
 
 - `reference/demo_app/assets/e2e/persona-screenshots.spec.js` and `phase178-stories.spec.js` were checked with `node --check` and the plan greps. `make demo` (isolated project `mailglass-demo-180`, ports 4045/5445) failed to start: the container exited 1 with `Error while loading project :mailglass_admin at /workspace/mailglass_admin ... could not load /workspace/mailglass_admin/mix.exs. Reason: enoent` (Mix could not read the bind-mounted path dependency inside the container). The project was removed with `docker compose -p mailglass-demo-180 down -v`; no repository file changed.
 - The production-gallery half of the StatCard test (per-theme cookie plus `emulateMedia` plus goto, `<html>` owns the theme, no nested `[data-theme]` in the specimen, `--color-base-100` equal to `<html>`, then `readStatCardRoles` on the specimen) was run verbatim as a throwaway spec against the admin `OperatorBrowserServer`: 1 passed, roles Inter 400 / Inter 700 / IBM Plex Mono 700 in both themes. The Storybook halves and the persona spec need the demo and are exercised by the advisory `demo_browser_evidence` lane.
+
+## From plan 180-04
+
+### 6. The seeded `pm-demo-receipt-001` delivery answers HTTP 400 on its quick view and full detail
+
+- **Found during:** 180-04 Task 2 full staged dry run (3 of 80 captures timed out waiting for `[data-phx-main].phx-connected`: `delivery-detail` for the `delivered-no-open` case, which the plan mapped to this row).
+- **Evidence (measured):** `GET /ops/mail?tenant_id=northstar&view=deliveries&delivery_id=<id of pm-demo-receipt-001>&full=1` and the same URL without `&full=1` return `400 Ecto.Query.CastError`: `lib/mailglass/operator/replay_targets.ex:101` casts `metadata["webhook_event_id"]` with `type(^id, Ecto.UUID)`, and `reference/demo_app/lib/mailglass_demo/demo_data.ex:457` and `:463` seed two `:webhook_replay_succeeded` events on that delivery with `"webhook_event_id" => "demo-replay-wh-001"` and `"demo-replay-wh-002"`, which are not UUIDs. The invite row (`pm-demo-invite-001`), the other eight Northstar cases and every Fjordline screen render (HTTP 200).
+- **Two defects in one:** (a) a fixture bug (DemoData seeds a non-UUID webhook event id on a replay event) and (b) a robustness gap (an operator screen turns a malformed `webhook_event_id` in event metadata into a 400 instead of ignoring the replay link). Existing demo e2e specs never open this delivery, so nothing caught it.
+- **Why it is out of scope:** D-22 forbids editing `DemoData` to shape the catalog, and a fix in `lib/mailglass/operator/replay_targets.ex` is a release-visible core change that would alter the "before" the catalog records. Not fixed.
+- **What 180-04 did instead:** mapped the `delivered-no-open` case to the invite row (delivered, no open event, no replay events) so the catalog keeps ten distinct, rendering cases. The defect is recorded here, not captured as a screenshot.
+- **Suggested follow-up (owner decision, separate PR):** seed real UUIDs for the replay events' `webhook_event_id` (or insert matching `mailglass_webhook_events` rows), and make `ReplayTargets.load_candidate/3` treat a non-UUID id as "no linked webhook event". Add a demo e2e case that opens `pm-demo-receipt-001`. Input for Phase 182's reviewer if the detail screen's replay panel is in scope.
+
+### 7. `docker compose exec demo mix run` cannot start beside the live demo server
+
+- **Measured:** `docker compose -f compose.demo.yml exec -T demo mix run -e '...'` exits 1 with `** (Mix) Could not start application mailglass_demo ... failed to start child: MailglassDemoWeb.Endpoint ... :eaddrinuse`, because `mix run` starts the application, whose endpoint binds the port the running server already holds. This happened on every driver run (4 of 4), so the catalog driver's pre-decided fallback (`docker compose run --rm --no-deps -T demo mix run -e ...`, a separate container with its own network namespace) is the branch that actually seeds.
+- **Not measured:** `make demo-reset` (`docker compose exec demo mix demo.reset`, which runs `priv/repo/seeds.exs` after `Mix.Task.run("app.start")`) very likely fails the same way. It was not run here.
+- **Suggested follow-up:** `exec -e PORT=<unused>` or `mix run --no-start` with an explicit repo start; or point `make demo-reset` at the reset endpoint the evidence harness already uses.
+
+### 8. `/dev/mail` (the Preview "index") redirects to the first scenario
+
+- `GET /dev/mail` lands on `/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=768`, so the catalog's `preview-index` capture shows the Preview pane for the first mailable, not a list. There is no separate empty-selection Preview screen to capture. Recorded in each capture's `route`.
