@@ -57,20 +57,127 @@ const md5 = (bytes) => crypto.createHash("md5").update(bytes).digest("hex");
 
 const SELF_TEST_ID = "preview-index__any__default__1440__light";
 
+const FJORDLINE = "fjordline-aps";
+const WIDTHS = [375, 1440];
+const THEMES = ["light", "dark"];
+const PREVIEW_SHOW_PATH = "/dev/mail/MailglassDemoWeb.Mailers.BillingMailer/payment_failed";
+
+// The ten delivery cases on the full-detail screen (Tier C): four seeded by CatalogSeed and
+// six DemoData rows. Slugs match cases.json.
+const DELIVERY_CASES = [
+  "typo-bounce",
+  "send-failed",
+  "sent-no-report",
+  "unicode-recipient",
+  "nil-reason-bounce",
+  "deferred-no-retry",
+  "delivered-no-open",
+  "long-recipient",
+  "complained",
+  "manual-suppressed"
+];
+const CASE_WIDTH_THEMES = [
+  [375, "light"],
+  [375, "dark"],
+  [1440, "light"]
+];
+
+// `<screen>__<fixture-or-case>__<state>__<width>__<theme>`; the slug is the file name.
+function make({ tier, screen, fixture = "any", caseSlug = null, state = "default", viewport, theme, prepare, fullPage = true }) {
+  const second = caseSlug || fixture;
+  return {
+    id: `${screen}__${second}__${state}__${viewport}__${theme}`,
+    tier,
+    screen,
+    fixture,
+    case: caseSlug,
+    state,
+    viewport,
+    theme,
+    fullPage,
+    prepare
+  };
+}
+
+const operatorAt = (target) => (page) => openOperator(page, target);
+const previewAt = (target) => async (page) => {
+  await openPage(page, target);
+  await emailFrameReady(page);
+};
+
 function buildMatrix() {
-  return [
-    {
-      id: SELF_TEST_ID,
-      tier: "D",
-      screen: "preview-index",
-      fixture: "any",
-      case: null,
-      state: "default",
-      viewport: 1440,
-      theme: "light",
-      prepare: (page) => openPage(page, "/dev/mail")
+  const defs = [];
+
+  // Tier A: Fjordline (the stress fixture), every operator screen at both widths and both themes.
+  const fjordline = (screen, state, prepare, widths, themes) => {
+    for (const viewport of widths)
+      for (const theme of themes) defs.push(make({ tier: "A", screen, fixture: FJORDLINE, state, viewport, theme, prepare }));
+  };
+  fjordline("overview", "default", operatorAt(`/ops/mail?tenant_id=${FJORDLINE}`), WIDTHS, THEMES);
+  fjordline("deliveries", "default", operatorAt(`/ops/mail?tenant_id=${FJORDLINE}&view=deliveries`), WIDTHS, THEMES);
+  fjordline("delivery-quick-view", "open", openFjordlineQuickView, WIDTHS, THEMES);
+  fjordline("delivery-detail", "default", openFjordlineDetail, WIDTHS, THEMES);
+  fjordline("inbound", "default", operatorAt(`/ops/mail/inbound?tenant_id=${FJORDLINE}`), WIDTHS, THEMES);
+  // 768 light only for the two list screens whose layout changes at that breakpoint.
+  fjordline("overview", "default", operatorAt(`/ops/mail?tenant_id=${FJORDLINE}`), [768], ["light"]);
+  fjordline("deliveries", "default", operatorAt(`/ops/mail?tenant_id=${FJORDLINE}&view=deliveries`), [768], ["light"]);
+
+  // Tier E: Northstar inbound overlays (Northstar has inbound rows; Fjordline and Helios do not).
+  defs.push(
+    make({ tier: "E", screen: "inbound-quick-view", fixture: "northstar", state: "first-message", viewport: 1440, theme: "light", prepare: openNorthstarInboundQuickView }),
+    make({ tier: "E", screen: "inbound-detail", fixture: "northstar", state: "first-message", viewport: 375, theme: "dark", prepare: openNorthstarInboundDetail })
+  );
+
+  // Tier D: persona-independent surfaces. The gallery is clipped to the viewport (its full page
+  // is tens of thousands of pixels tall).
+  for (const viewport of WIDTHS)
+    for (const theme of THEMES) {
+      defs.push(
+        make({ tier: "D", screen: "preview-index", viewport, theme, prepare: previewAt("/dev/mail") }),
+        make({ tier: "D", screen: "preview-show", state: "html", viewport, theme, prepare: previewAt(PREVIEW_SHOW_PATH) }),
+        make({ tier: "D", screen: "gallery", viewport, theme, fullPage: false, prepare: (page) => openPage(page, "/dev/mail/gallery") })
+      );
     }
-  ];
+
+  // Tier B: Northstar and Helios, list and empty-state screens only.
+  for (const fixture of ["northstar", "helios-void"])
+    for (const [viewport, theme] of [
+      [1440, "light"],
+      [375, "dark"]
+    ]) {
+      defs.push(
+        make({ tier: "B", screen: "overview", fixture, viewport, theme, prepare: operatorAt(`/ops/mail?tenant_id=${fixture}`) }),
+        make({ tier: "B", screen: "deliveries", fixture, viewport, theme, prepare: operatorAt(`/ops/mail?tenant_id=${fixture}&view=deliveries`) }),
+        make({ tier: "B", screen: "inbound", fixture, viewport, theme, prepare: operatorAt(`/ops/mail/inbound?tenant_id=${fixture}`) })
+      );
+    }
+
+  // Tier C: ten delivery cases on the full-detail screen, plus the two-subjects list.
+  for (const slug of DELIVERY_CASES)
+    for (const [viewport, theme] of CASE_WIDTH_THEMES)
+      defs.push(
+        make({
+          tier: "C",
+          screen: "delivery-detail",
+          fixture: "northstar",
+          caseSlug: slug,
+          viewport,
+          theme,
+          prepare: (page, { cases }) =>
+            openOperator(page, `/ops/mail?tenant_id=northstar&view=deliveries&delivery_id=${caseDeliveryId(cases, slug)}&full=1`)
+        })
+      );
+  for (const [viewport, theme] of [
+    [1440, "light"],
+    [375, "dark"]
+  ])
+    defs.push(
+      make({ tier: "C", screen: "deliveries", fixture: "northstar", caseSlug: "two-subjects-billing", viewport, theme, prepare: openTwoSubjectsList })
+    );
+
+  const ids = new Set(defs.map((candidate) => candidate.id));
+  if (ids.size !== defs.length) throw new Error("the capture matrix repeats a capture id");
+  return defs;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -93,6 +200,81 @@ async function openOperator(page, target) {
   await page.goto(`/demo/login?return_to=${encodeURIComponent(target)}`);
   await page.goto(target);
   await connected(page);
+}
+
+// The Preview pane renders the email in an `<iframe srcdoc>`; wait until its document exists.
+async function emailFrameReady(page) {
+  const frame = page.locator('iframe[title^="Email HTML preview"]');
+  expect(await frame.count(), "the Preview pane must render the email iframe").toBeGreaterThan(0);
+  await expect(page.frameLocator('iframe[title^="Email HTML preview"]').locator("body")).toBeVisible();
+}
+
+function caseDeliveryId(cases, slug) {
+  const entry = cases[slug];
+  if (!entry || typeof entry.delivery_id !== "string") {
+    throw new Error(`cases.json has no delivery_id for case "${slug}"; was the catalog seed run after the reset?`);
+  }
+  return entry.delivery_id;
+}
+
+// Rows render twice (desktop table and mobile list); only the visible one is the real row.
+async function openFirstDeliveryRow(page) {
+  const rows = page.getByTestId("operator-delivery-row").filter({ visible: true });
+  await expect(rows.first()).toBeVisible();
+  const button = rows.first().getByRole("button", { name: /Open delivery/ });
+  if ((await button.count()) > 0) await button.first().click();
+  else await rows.first().click();
+  await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+  await expect(page).toHaveURL(/delivery_id=/);
+}
+
+// Fjordline holds exactly one delivery: the long-module-name message.
+async function openFjordlineQuickView(page) {
+  await openOperator(page, `/ops/mail?tenant_id=${FJORDLINE}&view=deliveries`);
+  const rows = page.getByTestId("operator-delivery-row").filter({ visible: true });
+  await expect(rows, "Fjordline must show exactly its one long-module delivery row").toHaveCount(1);
+  await openFirstDeliveryRow(page);
+}
+
+// The full-detail screen of the same delivery, reached through the quick view's own link.
+async function openFjordlineDetail(page) {
+  await openFjordlineQuickView(page);
+  await page.getByTestId("operator-quick-view-full").click();
+  await expect(page).toHaveURL(/full=1/);
+  await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+}
+
+async function openFirstInboundRow(page) {
+  await openOperator(page, "/ops/mail/inbound?tenant_id=northstar");
+  const open = page.locator('button[phx-click="select_inbound"]').filter({ visible: true });
+  if ((await open.count()) === 0) {
+    throw new Error("The Northstar inbound list has no message row, so the inbound overlays cannot be captured.");
+  }
+  await open.first().click();
+  await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+  await expect(page).toHaveURL(/inbound_id=/);
+}
+
+async function openNorthstarInboundQuickView(page) {
+  await openFirstInboundRow(page);
+}
+
+async function openNorthstarInboundDetail(page) {
+  await openFirstInboundRow(page);
+  await page.getByTestId("inbound-quick-view-full").click();
+  await expect(page).toHaveURL(/full=1/);
+  await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
+}
+
+// Two messages to one customer with different subjects: the Northstar list filtered, through
+// the operator's own `search` param, to the billing address that holds exactly two deliveries.
+async function openTwoSubjectsList(page) {
+  await openOperator(
+    page,
+    `/ops/mail?tenant_id=northstar&view=deliveries&search=${encodeURIComponent("billing@northstar.example")}`
+  );
+  const rows = page.getByTestId("operator-delivery-row").filter({ visible: true });
+  await expect(rows, "billing@northstar.example must show exactly two deliveries").toHaveCount(2);
 }
 
 // ---------------------------------------------------------------------------------------

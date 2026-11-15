@@ -22,7 +22,14 @@ const { execFileSync, spawnSync } = require("node:child_process");
 
 // One id per tier A-E plus a CatalogSeed case. `--only smoke` and the spec's
 // `CATALOG_ONLY=smoke` both resolve through this export.
-const CATALOG_SMOKE_IDS = ["preview-index__any__default__1440__light"];
+const CATALOG_SMOKE_IDS = [
+  "overview__fjordline-aps__default__375__dark", // tier A
+  "delivery-quick-view__fjordline-aps__open__1440__light", // tier A overlay
+  "deliveries__northstar__default__1440__light", // tier B
+  "delivery-detail__send-failed__default__375__dark", // tier C, a CatalogSeed case
+  "gallery__any__default__1440__light", // tier D
+  "inbound-quick-view__northstar__first-message__1440__light" // tier E
+];
 
 const CAP_IMAGES = 80;
 const CAP_BYTES = 15_000_000;
@@ -318,8 +325,13 @@ function printBudget(captures) {
   return total;
 }
 
-function validate({ staging, captures, source, casesText, resetToken }) {
+function validate({ staging, captures, source, casesText, resetToken, full }) {
   const total = printBudget(captures);
+  if (full) {
+    const tiers = new Set(captures.map((capture) => capture.tier));
+    const missing = ["A", "B", "C", "D", "E"].filter((tier) => !tiers.has(tier));
+    if (missing.length > 0) refuse(`The full capture run produced no shots for tier ${missing.join(", ")}.`);
+  }
   if (captures.length > CAP_IMAGES) {
     refuse(`Budget exceeded: ${captures.length} images against the cap of ${CAP_IMAGES}. Apply the cut order and run again.`);
   }
@@ -503,7 +515,7 @@ async function main() {
 
   // (g) validate
   const captures = collectCaptures(staging);
-  const checked = validate({ staging, captures, source, casesText, resetToken });
+  const checked = validate({ staging, captures, source, casesText, resetToken, full: !options.only });
 
   // (h) the tree and HEAD must not have moved; then the manifest
   try {
