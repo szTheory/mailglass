@@ -53,7 +53,7 @@ async function openOperator(page) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
   // operator-deliveries-list-card is the <aside> wrapper — always visible regardless of breakpoint.
   // (operator-deliveries-list is the <ul> inside md:hidden and is hidden on desktop — Phase 113 DATA-01)
@@ -879,7 +879,7 @@ async function openOperatorReplayModalThemed(page, theme) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/mail?${query}`);
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
@@ -979,7 +979,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("ARIA roles/states", () => {
 
-    test("Operator: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
+    test("Admin: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
       await openOperator(page);
 
       // The desktop table row is not an ARIA selectable widget (a plain table, not a
@@ -1017,7 +1017,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("touch targets >= 44px", () => {
 
-    test("Operator: primary CTA button (btn-primary) height >= 44px at 390px viewport", async ({ page }) => {
+    test("Admin: primary CTA button (btn-primary) height >= 44px at 390px viewport", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openOperator(page);
 
@@ -1044,7 +1044,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
     });
 
-    test("Operator: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
+    test("Admin: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openOperator(page);
 
@@ -1064,7 +1064,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await assertTouchTarget(navLink, "inbound first nav link");
     });
 
-    test("Operator replay modal, nav, preview theme controls, and preview summary controls meet target-size floor", async ({
+    test("Admin replay modal, nav, preview theme controls, and preview summary controls meet target-size floor", async ({
       page
     }) => {
       await page.setViewportSize({ width: 390, height: 844 });
@@ -1143,7 +1143,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("font-weight in {400, 600}", () => {
 
-    test("Operator: body text is 400, first h1 heading is 600", async ({ page }) => {
+    test("Admin: body text is 400, first h1 heading is 600", async ({ page }) => {
       await openOperator(page);
 
       const bodyWeight = await page.locator("body").evaluate(
@@ -1188,12 +1188,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("operator state coverage and responsive grid", () => {
 
-    test("Operator: deliveries page exposes exactly one h1", async ({ page }) => {
+    test("Admin: Activity page exposes exactly one h1", async ({ page }) => {
       await openOperator(page);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     });
 
-    test("Operator: per-state delivery cells are reachable by URL", async ({ page }) => {
+    test("Admin: per-state delivery cells are reachable by URL", async ({ page }) => {
       await openOperator(page);
 
       // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
@@ -1218,11 +1218,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=suppressed`);
       const suppressedRow = page.getByTestId("operator-delivery-row").first();
+      // Since 182-02 the row badge reads the class word, with the recorded event beside it:
+      // a suppressed send is "Not sent" (the not_sent class mark), "Latest: Suppressed".
       await expect(suppressedRow).toContainText("Suppressed");
-      await expect(suppressedRow.locator(".badge-warning")).toContainText("Suppressed");
+      await expect(suppressedRow.locator('[data-mg-status="not_sent"]').first()).toContainText("Not sent");
+      await expect(suppressedRow).toContainText("Latest: Suppressed");
     });
 
-    test("Operator: list is full-width single-column at 320/768/1440; selecting opens the Quick view overlay", async ({ page }) => {
+    test("Admin: list is full-width single-column at 320/768/1440; selecting opens the Quick view overlay", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
 
@@ -1525,7 +1528,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   test.describe("replay modal overlay stacking", () => {
 
-    test("Operator and Inbound replay modal panels are top hit-test targets above their scrims", async ({
+    test("Admin and Inbound replay modal panels are top hit-test targets above their scrims", async ({
       page
     }) => {
       const operatorModal = await openOperatorReplayModal(page);
@@ -2247,7 +2250,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("reduced-motion suppresses animation", () => {
 
-    test("Operator: primary content area visible and stable under reduced-motion", async ({ page }) => {
+    test("Admin: primary content area visible and stable under reduced-motion", async ({ page }) => {
       // emulateMedia MUST precede page navigation
       await page.emulateMedia({ reducedMotion: "reduce" });
       await openOperator(page);
@@ -2274,7 +2277,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     // zero. app.css:292-300 uses 0.01ms !important (not 0ms), so assert ≤ 0.05
     // (50ms) — never === 0. emulateMedia MUST precede navigation (done above
     // per the FACT 4 pattern — each test fixture runs emulateMedia first).
-    test("Operator: motion-reveal computed duration effectively zero under reduced-motion", async ({ page }) => {
+    test("Admin: motion-reveal computed duration effectively zero under reduced-motion", async ({ page }) => {
       // emulateMedia MUST precede page navigation
       await page.emulateMedia({ reducedMotion: "reduce" });
       await openOperator(page);
@@ -2309,7 +2312,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("visible focus rings", () => {
 
-    test("Operator: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
+    test("Admin: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
       await openOperator(page);
 
       const link = page.getByRole("link").first();
@@ -2359,7 +2362,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("accent color only on allowlisted elements", () => {
 
-    test("Operator: non-allowlisted elements do not carry the accent color", async ({ page }) => {
+    test("Admin: non-allowlisted elements do not carry the accent color", async ({ page }) => {
       await openOperator(page);
 
       // Check a curated set of non-allowlisted structural elements
@@ -2445,7 +2448,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("enter/exit asymmetry", () => {
 
-    test("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
+    test("Admin: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
       await openOperator(page);
 
       // Select the first delivery by clicking the first row (resolves across table and card presentations).
@@ -2626,7 +2629,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       const operatorFilters = page.getByTestId("operator-filters");
       const operatorProvider = operatorFilters.getByLabel("Provider", { exact: true }).first();
-      // Provider is now a <select> populated from Deliveries.list_providers/2 — pick the
+      // Provider is now a <select> populated from the provider list read — pick the
       // first real option (index 1, past the "All providers" placeholder) instead of fill().
       await operatorProvider.selectOption({ index: 1 });
       // The select auto-applies; measure focus across a settled patch.
@@ -2873,7 +2876,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("app shell structural proof — Phase 112", () => {
 
-    test("Preview Operator and Inbound use the shared admin topbar", async ({ page }) => {
+    test("Preview, Admin and Inbound use the shared admin topbar", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
 
       await openPreviewScenario(page, "theme=dark");
@@ -2882,16 +2885,26 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByRole("heading", { name: "Preview", exact: true })).toBeVisible();
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
 
+      // The document title follows the screen (182-04): the Activity screen reads
+      // "mailglass — Activity" and the Health overview, the Admin landing, reads
+      // "mailglass — Admin". Both are positive assertions, so a title that regresses to
+      // the retired shell word fails here instead of passing a count-0 check.
       await openOperator(page);
       await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
-      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
-      await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Activity", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Activity/);
+      await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+      await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Admin/);
+      await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
 
       await openInbound(page, `tenant_id=${tenantId}`);
       await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
-      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
       await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Inbound/);
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
     });
 
@@ -2926,7 +2939,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       const activeDesktop = page
         .locator('a[aria-current="page"]')
-        .filter({ hasText: "Deliveries" })
+        .filter({ hasText: "Activity" })
         .first();
       await expect(activeDesktop).toBeVisible();
       await expect(activeDesktop).toHaveClass(/mg-nav-current/);
@@ -2998,7 +3011,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
-      // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
+      // With per_page 20 (parity with Activity) the 9-record demo dataset fits on one
       // page, so no pagination chrome renders — the honest single-page state. The
       // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).
       await expect(page.getByTestId("inbound-pagination")).toHaveCount(0);
@@ -3221,7 +3234,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             primitiveWrapper(page, "nav_link", "active").locator('[class*="hero-"]')
           ).toBeVisible();
           await expect(
-            primitiveWrapper(page, "nav_link", "active").getByText("Deliveries", { exact: true })
+            primitiveWrapper(page, "nav_link", "active").getByText("Activity", { exact: true })
           ).toBeVisible();
 
           await expect(
@@ -3437,7 +3450,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("gallery certifies deliveries_list and records_list table+cards and long-value stress specimens (DATA-01/05)", async ({ page }) => {
       await openGallery(page);
 
-      // Deliveries list specimens
+      // Activity list specimens
       await expect(page.getByTestId("gallery-deliveries_list-table-populated")).toBeVisible();
       await expect(page.getByTestId("gallery-deliveries_list-data-state-error")).toBeVisible();
       await expect(page.getByTestId("gallery-deliveries_list-long-value-stress")).toBeVisible();
@@ -3810,7 +3823,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         const modal = await openOperatorReplayModalThemed(page, theme);
 
         const before = await page.evaluate(() => window.scrollY);
-        // Operator scrim carries mg-overscroll-contain + overflow-y-auto; the
+        // Admin scrim carries mg-overscroll-contain + overflow-y-auto; the
         // panel sits inside it. Scroll the contain container to its very end.
         await modal.evaluate(el => {
           const scroller = el.closest(".mg-overscroll-contain") || el;

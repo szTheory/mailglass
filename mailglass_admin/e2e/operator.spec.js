@@ -44,24 +44,24 @@ async function openOperator(page) {
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
   await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
-  // Navigate to Deliveries view before delivery-centric assertions.
+  // Navigate to Activity view before delivery-centric assertions.
   // Target the page h1 (level 1) explicitly. The orientation strip is now
-  // empty-pane-only (Phase 120 / D-08): on a POPULATED Deliveries view the strip
-  // — and its second <h2>Deliveries</h2> section heading (the D-LABEL-TRIPLING
+  // empty-pane-only (Phase 120 / D-08): on a POPULATED Activity view the strip
+  // — and its second <h2>Activity</h2> section heading (the D-LABEL-TRIPLING
   // third heading) — is no longer rendered, so the historical heading ambiguity is
   // gone here. The `level: 1` qualifier is retained anyway: it is harmless, still
   // correct, and keeps the query unambiguous on the genuine-no-data view where the
   // strip (and its <h2>) does render.
   await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
-  // Phase 113 (DATA-01) split the deliveries list into a responsive table
+  // Phase 113 (DATA-01) split the Activity list into a responsive table
   // (>=768px) + card list (<768px). The legacy `operator-deliveries-list` <ul>
   // is now the mobile-only (md:hidden) presentation, so it is hidden on the
   // desktop viewports most operator-gate tests use. Assert the viewport-agnostic
   // `operator-deliveries-list-card` aside instead — it is visible at all widths
-  // on a fresh (pre-selection) deliveries view.
+  // on a fresh (pre-selection) Activity view.
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 }
 
@@ -139,7 +139,7 @@ test.describe("operator browser gate", () => {
     await openOperator(page);
 
     // Phase 120 / D-08: the orientation strip is empty-pane-only. On a POPULATED
-    // Deliveries view it is NOT rendered.
+    // Activity view it is NOT rendered.
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
     await expect(deliveriesCard).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
@@ -527,15 +527,15 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("inbound-quick-view")).toHaveCount(0);
   });
 
-  // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
+  // VERIF-02: structural coverage for Admin Overview landing (D-05 / GAP-register sev-4 closeout)
   // Asserts recorded problems and their investigation links are visible
   // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
   // Note: operator-overview-nav (Navigate block) was removed in Phase 119 (SHELL-02).
-  test("operator overview shows recorded problems and recent activity", async ({ page }) => {
+  test("admin overview shows recorded problems and recent activity", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // Navigate back to the Overview landing (openOperator navigates to Deliveries view)
+    // Navigate back to the Overview landing (openOperator navigates to Activity view)
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
     await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
@@ -545,7 +545,7 @@ test.describe("operator browser gate", () => {
     // Health contains nonzero problems and recent activity; zero-count rows are absent.
     await expect(page.getByTestId("operator-overview-health")).toBeVisible();
 
-    // SHELL-02: failures stat card is wrapped in a drill-through link to failed Deliveries
+    // SHELL-02: failures stat card is wrapped in a drill-through link to the failed emails in Activity
     const failuresLink = page.getByTestId("operator-health-deliveries-failed-link");
     await expect(failuresLink).toBeVisible();
     await expect(failuresLink).toHaveAttribute("href", /event=failed/);
@@ -561,13 +561,13 @@ test.describe("operator browser gate", () => {
   // Uses the browser-tenant persona which has existing seed data (non-zero failures = attention state).
   // The all-clear branch is checked by navigating to a tenant with no seed failures/suppressions;
   // use the browser-tenant directly for the attention check (seed data includes failures).
-  test("operator overview orientation strip is empty-pane-only (all-clear vs attention)", async ({
+  test("admin overview orientation strip is empty-pane-only (all-clear vs attention)", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // Navigate to Overview (openOperator lands on Deliveries)
+    // Navigate to Overview (openOperator lands on Activity)
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
     await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
@@ -577,9 +577,9 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-overview-orientation")).toHaveCount(0);
   });
 
-  // D-10 (Phase 120): Deliveries empty-pane-only judgment gate.
+  // D-10 (Phase 120): Activity empty-pane-only judgment gate.
   // Modeled on the Overview empty-pane-only gate above, this locks the single-calm-pane
-  // contract for the Deliveries surface into the operator browser ratchet:
+  // contract for the Activity surface into the operator browser ratchet:
   //   - POPULATED  → orientation strip ABSENT (count 0) + filters toolbar PRESENT.
   //   - NO-DATA    → orientation strip PRESENT (count 1) + filters toolbar WITHHELD
   //                  (count 0, locks D-02/D-04: the toolbar is the only scope-widening
@@ -592,13 +592,13 @@ test.describe("operator browser gate", () => {
   // T-120-04 security boundary: the no-data `operator-filters` count 0 assertion arms
   // the regression gate — any future change re-introducing the toolbar (scope-widening
   // vector) in genuine no-data fails this browser gate.
-  test("deliveries orientation strip is empty-pane-only; filters toolbar withheld on no-data, kept on no-match", async ({
+  test("activity orientation strip is empty-pane-only; filters toolbar withheld on no-data, kept on no-match", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // --- POPULATED Deliveries view (browser-tenant has seed rows) ---
+    // --- POPULATED Activity view (browser-tenant has seed rows) ---
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     // Strip absent on populated; toolbar present.
@@ -608,7 +608,7 @@ test.describe("operator browser gate", () => {
     // the provider's "Delivered" observation.
     await expect(page.getByTestId("operator-deliveries-list-card")).toContainText("Delivered");
 
-    // --- GENUINE NO-DATA Deliveries view ---
+    // --- GENUINE NO-DATA Activity view ---
     // Log in to a tenant with zero seeded deliveries (only browser-tenant is seeded by
     // browser-reset). A fresh tenant id yields @deliveries == [] with no active filters
     // and no filter errors → the genuine-no-data single-calm-pane branch.
@@ -627,7 +627,7 @@ test.describe("operator browser gate", () => {
     // Master-detail grid WITHHELD (D-03 single-calm-pane; no "Select a delivery…" helper).
     await expect(page.getByTestId("operator-master-detail")).toHaveCount(0);
 
-    // --- NO-MATCH Deliveries view ---
+    // --- NO-MATCH Activity view ---
     // Active filter that matches zero browser-tenant rows: event=queued is a valid
     // lifecycle status with no seeded delivery whose latest event is :queued →
     // @deliveries == [] AND filters_active?/1 true → no-match (toolbar kept, strip absent).
@@ -637,7 +637,7 @@ test.describe("operator browser gate", () => {
   });
 
   // D-16 (Phase 121): Inbound empty-pane-only judgment gate.
-  // Modeled VERBATIM on the Deliveries empty-pane-only gate above, this locks the
+  // Modeled VERBATIM on the Activity empty-pane-only gate above, this locks the
   // single-calm-pane contract for the Inbound surface into the operator browser
   // ratchet (armed into the permanent floor in Phase 123):
   //   - POPULATED  → orientation strip ABSENT (count 0) + filters toolbar PRESENT.
