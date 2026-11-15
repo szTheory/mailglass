@@ -175,6 +175,21 @@ function writeStaged(relative, contents) {
   fs.writeFileSync(target, contents);
 }
 
+// The first screenshot of a freshly loaded page can differ from the next by one colour level
+// in a few anti-aliased edge pixels (measured: 3 pixels, max channel delta 1, on /dev/mail);
+// every later screenshot of the same state is byte-identical. A discarded warm-up shot puts
+// every real capture, and both halves of the determinism self-test, on the stable path.
+async function shoot(page, file, { fullPage }) {
+  const options = { fullPage, animations: "disabled", caret: "hide" };
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-catalog-warmup-"));
+  try {
+    await page.screenshot({ path: path.join(scratch, "warm-up.png"), ...options });
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
+  await page.screenshot({ path: file, ...options });
+}
+
 // ---------------------------------------------------------------------------------------
 // Source identity (the demo server runs on the host-visible repository via a bind mount)
 // ---------------------------------------------------------------------------------------
@@ -235,7 +250,7 @@ test("determinism self-test: the same screen captured twice is byte-identical", 
       await def.prepare(page, { cases: CASES });
       await settle(page);
       const file = path.join(scratch, `attempt-${attempt}.png`);
-      await page.screenshot({ path: file, fullPage: true, animations: "disabled", caret: "hide" });
+      await shoot(page, file, { fullPage: true });
       hashes.push(sha256(fs.readFileSync(file)));
     }
   } finally {
@@ -278,7 +293,11 @@ test("served identity: the running demo serves the committed admin assets", asyn
   );
   expect(inlineJs, "the root layout must inline the admin hooks bundle").not.toBeNull();
   const jsPath = `/dev/mail/js-${md5(Buffer.from(inlineJs.trim()))}`;
-  const jsResponse = await page.request.get(jsPath);
+  // Plug.CSRFProtection answers a plain GET for a JavaScript body with 403 (cross-origin
+  // script inclusion guard); the XHR marker is the documented way to read it as data.
+  const jsResponse = await page.request.get(jsPath, {
+    headers: { "x-requested-with": "XMLHttpRequest" }
+  });
   expect(jsResponse.status()).toBe(200);
   const servedJs = await jsResponse.body();
   const diskHooks = fs.readFileSync(path.join(REPO_ROOT, HOOKS_PATH));
@@ -325,12 +344,7 @@ for (const def of selectedMatrix()) {
     );
 
     const file = `${def.id}.png`;
-    await page.screenshot({
-      path: stagePath(file),
-      fullPage: def.fullPage !== false,
-      animations: "disabled",
-      caret: "hide"
-    });
+    await shoot(page, stagePath(file), { fullPage: def.fullPage !== false });
     writeStaged(`aria/${def.id}.yml`, `${await page.locator("body").ariaSnapshot()}\n`);
 
     const url = new URL(page.url());
