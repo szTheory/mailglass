@@ -251,6 +251,23 @@ async function openPreviewScenario(page, query = "theme=light") {
   await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
 }
 
+// Phase 180 (BRPIPE-02): <html> is the only element that carries the theme attribute.
+// `theme` is "light" | "dark" for an explicit choice, or null for System (no attribute).
+// Counting every [data-theme] element proves no shell, pane or wrapper re-declares the
+// token set.
+async function expectRootTheme(page, theme, label = "page") {
+  const html = page.locator("html");
+  if (theme === null) {
+    await expect(html, `${label}: System leaves <html> without a theme attribute`).not.toHaveAttribute("data-theme");
+  } else {
+    await expect(html, `${label}: <html> owns the ${theme} theme`).toHaveAttribute("data-theme", `mailglass-${theme}`);
+  }
+  await expect(
+    page.locator("[data-theme]"),
+    `${label}: only <html> carries a theme attribute`
+  ).toHaveCount(theme === null ? 0 : 1);
+}
+
 async function openPreviewError(page, query = "theme=light") {
   await page.context().clearCookies();
   await page.goto(`/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__${query ? "?" + query : ""}`);
@@ -822,13 +839,15 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     expect(scenarioRowGap, "Preview scenario list row gap").toBe("4px");
   });
 
-  test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
+  test("Preview advanced: frame theme differs from admin theme without overflow at 320", { tag: "@smoke180" }, async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+    await expectRootTheme(page, "light", "preview advanced before the frame toggle");
     await page.getByTestId("preview-frame-theme-toggle").click();
     await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
-    // Frame theme diverges from admin theme — admin chrome stays light.
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+    // Frame theme diverges from admin theme: <html> (the only theme owner) stays light and
+    // only the backdrop wrapper's color-scheme flips.
+    await expectRootTheme(page, "light", "preview advanced after the frame toggle");
+    await expect(page.getByTestId("preview-frame-backdrop")).toHaveCSS("color-scheme", "dark");
     await assertSingleH1(page, "preview advanced");
     await assertNoRootOverflow(page, "preview advanced");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview advanced shell");
@@ -849,25 +868,28 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(page.getByTestId("preview-admin-theme-toggle")).toHaveCount(0);
   });
 
-  test("Preview a11y: backdrop toggle reflects aria-pressed + announces via aria-live", async ({ page }) => {
+  test("Preview a11y: backdrop toggle reflects aria-pressed + announces via aria-live", { tag: "@smoke180" }, async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
     const backdrop = page.getByTestId("preview-frame-theme-toggle");
     const status = page.getByTestId("preview-backdrop-status");
     const pane = page.getByTestId("preview-pane");
-    const beforeBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
+    // The toggle repaints the email stage (the backdrop wrapper), not the whole pane:
+    // read the before/after background there.
+    const stage = page.getByTestId("preview-frame-backdrop");
+    const beforeBg = await stage.evaluate(el => getComputedStyle(el).backgroundColor);
     // Pre-click: backdrop off (light), aria-pressed=false, announce says light.
     await expect(backdrop).toHaveAttribute("aria-pressed", "false");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
     await expect(status).toHaveText("Preview backdrop: light");
-    await expect(pane).toHaveAttribute("data-theme", "mailglass-light");
+    await expect(pane, "the pane carries no theme attribute").not.toHaveAttribute("data-theme");
     // Toggle: aria-pressed flips true and the aria-live region announces dark.
     await backdrop.click();
     await expect(backdrop).toHaveAttribute("aria-pressed", "true");
     await expect(status).toHaveText("Preview backdrop: dark");
     await expect(pane).toHaveAttribute("data-preview-frame-theme", "dark");
-    await expect(pane).toHaveAttribute("data-theme", "mailglass-dark");
-    const afterBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
+    await expect(pane, "the pane still carries no theme attribute").not.toHaveAttribute("data-theme");
+    const afterBg = await stage.evaluate(el => getComputedStyle(el).backgroundColor);
     expect(afterBg).not.toBe(beforeBg);
   });
 
@@ -1296,9 +1318,9 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
 // actually re-theme the admin shell. Guards two regressions at once: (1) the
 // sr-only radio that swallowed clicks (overlay must keep the input the click
 // target), and (2) the shell deriving theme from URL params only, so the
-// cookie-persisting redirect left .mg-admin-root unthemed. The shell always
-// stamps an explicit data-theme, so assert on .mg-admin-root (the admin theme
-// root), not the host <html>.
+// cookie-persisting redirect left the page unthemed. Phase 180: <html> is the
+// only theme owner (the shell no longer stamps its own data-theme), so assert on
+// <html> and that nothing else carries the attribute.
 // =============================================================================
 
 test.describe("flows: operator theme picker applies the theme on click (FLOW-03)", () => {
@@ -1307,24 +1329,24 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await page.setViewportSize(FLOW_VIEWPORT);
   });
 
-  test("clicking Dark / Light / System re-themes the admin shell and updates selection", async ({ page }) => {
+  test("clicking Dark / Light / System re-themes the admin shell and updates selection", { tag: "@smoke180" }, async ({ page }) => {
     await openOperator(page);
-    const root = page.locator(".mg-admin-root").first();
 
-    // Default (system): shell inherits prefers-color-scheme; system radio is selected.
-    await expect(root).not.toHaveAttribute("data-theme", /mailglass-/);
+    // Default (system): <html> carries no theme and the page follows prefers-color-scheme;
+    // the system radio is selected.
+    await expectRootTheme(page, null, "default System");
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expect(root, "Dark click themes the shell").toHaveAttribute("data-theme", "mailglass-dark");
+    await expectRootTheme(page, "dark", "Dark click themes <html>");
     await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "Light", exact: true }).click();
-    await expect(root, "Light click themes the shell").toHaveAttribute("data-theme", "mailglass-light");
+    await expectRootTheme(page, "light", "Light click themes <html>");
     await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
-    await expect(root, "System click returns to inherited theme").not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System click returns to inherited theme");
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
   });
 
@@ -1333,19 +1355,22 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries`);
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expectRootTheme(page, "dark", "Deliveries after the Dark click");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("preview-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Preview");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Health", exact: true }).click();
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Health");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Inbound", exact: true }).click();
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Inbound");
     await expect(page).not.toHaveURL(/[?&]theme=/);
   });
 
@@ -1369,15 +1394,17 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     ]);
 
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "stale legacy dark cookie on Deliveries");
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
-    await expect(page.getByTestId("operator-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System on Deliveries");
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
+    await expect(page.getByTestId("preview-shell")).toBeVisible();
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
-    await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System on Preview");
     await expect(page).not.toHaveURL(/[?&]theme=/);
   });
 
@@ -2340,7 +2367,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       expect(darkModalBackground).not.toBe(lightModalBackground);
       await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
       await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(lightModalBackground);
-      await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+      await expect(operatorShell).not.toHaveAttribute("data-theme");
+      await expectRootTheme(page, null, "replay modal under System");
       const motion = await modal.evaluate(element => ({
         animation: getComputedStyle(element).animationDuration,
         transition: getComputedStyle(element).transitionDuration
