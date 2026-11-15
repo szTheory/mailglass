@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 180
 current_phase_name: Reproducible Admin Bundle and Before-Catalog
 status: executing
-stopped_at: Completed 180-02-PLAN.md
-last_updated: "2026-11-15T00:41:50.392Z"
+stopped_at: Completed 180-03-PLAN.md
+last_updated: "2026-11-15T01:58:23.154Z"
 last_activity: 2026-11-14
 last_activity_desc: Phase 180 execution started
-state_head: e65389e2d1f5542d6b94d33e1a391197812d1da2
+state_head: fe0412a4985948494a348248ca561ac4b47b2a22
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 20
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 180 (Reproducible Admin Bundle and Before-Catalog) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-11-14 — Phase 180 execution started
 
@@ -373,6 +373,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 179 P02 | 10min | 2 tasks | 3 files |
 | Phase 180 P01 | 9 min | 3 tasks | 9 files |
 | Phase 180 P02 | 9 min | 3 tasks | 8 files |
+| Phase 180 P03 | 74min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -728,6 +729,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 180]: 180-02: delete every nested data-theme (D-11); html in layouts/root.html.heex is the sole theme owner, enforced by a required-lane static scan plus document counts (1 for light/dark, 0 for system)
 - [Phase 180]: 180-02: Preview frame toggle is a wrapper with color-scheme + background: Canvas around a light-pinned iframe, never a token set; visible change moves from whole panel to email stage
 - [Phase 180]: 180-02: gallery duplicate ids floored at 39 (182 before collapse), not asserted zero; remaining ids are component-owned and deferred (deferred-items.md item 3)
+- [Phase 180]: Browser theme matrices load the gallery once per theme (cookie + emulated OS + goto); System is no cookie with the OS emulated dark
+- [Phase 180]: Pinned e2e test titles and test.setTimeout bounds stay (timeout_evidence_ci_contract_test, bucket_a_coverage_test); theme loops moved inside existing tests
+- [Phase 180]: Preview axe cell test (structural.spec.js:2655) times out when axe scans a settled Preview page (script-disabled email iframe stall ~30s); recorded in deferred-items.md item 4, test not edited
 
 ## Quick Tasks Completed
 
@@ -788,8 +792,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T00:41:50.352Z
-Stopped at: Completed 180-02-PLAN.md
+Last session: 2026-11-15T01:58:23.096Z
+Stopped at: Completed 180-03-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
