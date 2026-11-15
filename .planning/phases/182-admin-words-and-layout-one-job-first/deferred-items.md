@@ -19,3 +19,17 @@ Out-of-scope discoveries logged by plan executors. Nothing here was fixed by the
 - **Where:** `mailglass_admin/lib/mailglass_admin/operator/support_cards.ex:149`, `:if={@support_summary && @support_summary.failed_ingest.count > 0}`.
 - **Cause:** in Elixir `nil > 0` is `true` (an atom sorts above any number). `failed_ingest: %{count: nil, ...}` is the real "read failed" value (`operator_live.ex` builds it when the read fails), so the Tier-1 card draws with an empty number instead of falling through to the "unavailable" row. The sibling orphan card had the same gate and was fixed in 182-04 because the new sentence would have raised on nil.
 - **Not fixed here:** it is a pre-existing defect in a card this plan's words work does not change. A one-line fix (`(summary_count(@support_summary, :failed_ingest) || 0) > 0`) plus a nil-count render test would close it.
+
+## 182-05
+
+### The demo Storybook nav specimens still carry the sample label "Deliveries"
+
+- **Where:** `reference/demo_app/storybook/primitives/nav_link.story.exs` (lines 33, 38) and `nav_pill.story.exs` (lines 31, 35).
+- **Why it stayed:** 182-05 edits spec and test files only, and a story's `label:` is a sample attribute of the primitive, not an Admin screen. `persona-screenshots.spec.js` now reads the label from the story source, so it pins no screen word and stays green whichever label the story carries.
+- **Fix when wanted:** change the four labels to `Activity` (a demo Storybook edit, no lib change). Nothing in a required lane reads them.
+
+### Three e2e specs write screenshots into tracked, archived `.planning/milestones` paths
+
+- **Where:** `mailglass_admin/e2e/structural.spec.js` (`.../168-.../artifacts/review-fix/*.png`), `mailglass_admin/e2e/phase169-journey.spec.js` (`.../169-.../artifacts/after/*.png`), and a demo spec in the evidence run (`.../172-.../artifacts/browser-evidence/invoice-preview-{320,375}.png`).
+- **Effect:** every full run of those lanes dirties 4, 20 and 2 tracked PNGs of archived milestones. 182-05 restored them with `git checkout -- <paths>` after each run and never staged them (T-182-16). A careless `git add -A` after a lane run would rewrite archived evidence.
+- **Not fixed here:** moving the output paths changes what the archived phases' evidence checks read, so it needs its own decision.
