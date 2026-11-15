@@ -834,7 +834,8 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-detail-back"
                     class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                   >
-                    <span aria-hidden="true" class="mr-xs">←</span> Back to deliveries
+                    <Components.icon name="hero-arrow-left" class="mr-xs h-4 w-4" />
+                    Back to deliveries
                   </.link>
 
                   <%= cond do %>

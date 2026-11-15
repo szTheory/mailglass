@@ -179,7 +179,7 @@ defmodule MailglassAdmin.Operator.QuickView do
             data-testid="operator-quick-view-full"
             class="mg-focus-ring btn btn-primary min-h-11 px-md"
           >
-            Open full detail <span aria-hidden="true" class="ml-xs">→</span>
+            Open full detail <Components.icon name="hero-arrow-right" class="ml-xs h-4 w-4" />
           </.link>
         </div>
 

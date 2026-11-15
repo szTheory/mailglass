@@ -1339,7 +1339,7 @@ defmodule MailglassAdmin.GalleryLive do
     # reject-reason badge (nil = legitimate absence, not an error).
     {:fjordline_stress, "fjordline-nil-reject",
      %{
-       caption: "fjordline-aps :delivered event (reject_reason: nil → no badge)",
+       caption: "fjordline-aps :delivered event (reject_reason: nil, no badge)",
        lines: [],
        # Short event ID matches the existing gallery-timeline-* specimens so the
        # mono (non-truncating) ID stays overflow-clean at the 768 three-column
