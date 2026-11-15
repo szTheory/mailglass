@@ -27,7 +27,7 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
 
     test "Phase 176 stale announces the title with the load time" do
       assert text(:deliveries, :stale, 24, true, ~U[2026-10-28 14:05:09Z]) ==
-               "Showing results from 14:05 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 2:05 PM UTC; refresh failed"
 
       assert text(:deliveries, :stale, 24, true) ==
                "Showing earlier results; refresh failed"
@@ -43,7 +43,7 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
       assert text(:inbound, :error, nil, false) == "Couldn't load inbound messages"
 
       assert text(:inbound, :stale, 3, true, ~U[2026-10-28 09:01:00Z]) ==
-               "Showing results from 09:01 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 9:01 AM UTC; refresh failed"
     end
   end
 
@@ -52,7 +52,7 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
       assert ResultsStatus.stale_title(nil) == "Showing earlier results; refresh failed"
 
       assert ResultsStatus.stale_title(~U[2026-10-28 14:05:09Z]) ==
-               "Showing results from 14:05 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 2:05 PM UTC; refresh failed"
     end
   end
 end

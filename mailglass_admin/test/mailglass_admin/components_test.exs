@@ -719,31 +719,63 @@ defmodule MailglassAdmin.ComponentsTest do
 
     {"button", attrs, _children} = button
     names = attrs |> Enum.map(&elem(&1, 0)) |> Enum.sort()
-    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "title", "type"]
+    # No `title`: the accessible name is the aria-label, which contains the visible text
+    # (WCAG 2.5.3), and no hover string carries meaning (D-09).
+    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "type"]
   end
 
   describe "timestamp/1" do
-    test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
+    # The text a reader sees: tooltip removed, whitespace collapsed.
+    defp time_text(html) do
+      html
+      |> Floki.parse_fragment!()
+      |> Floki.find("time")
+      |> Floki.text()
+      |> String.replace(~r/\s+/, " ")
+      |> String.trim()
+    end
+
+    test "a UTC datetime shows a compact zoned time and keeps the exact value for copying" do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
-      # No-JavaScript fallback remains visible and the exact machine value is copied.
-      assert html =~ "2026-06-14 14:32:05.000000 UTC"
+      # The visible form is compact and ends in its zone; seconds and microseconds are not shown.
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
+      refute time_text(html) =~ "14:32:05"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
       assert html =~ "data-local-time"
+      # The exact value stays in the data attributes, the copy value and the tooltip.
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
       assert html =~ "2026-06-14 14:32:05.000000 UTC • Click to copy"
       assert html =~ "mg-field-help-tooltip"
-      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC • Click to copy")
+      # The control's name contains its visible text (WCAG 2.5.3) and names the exact copy.
+      assert html =~
+               ~s|aria-label="Copy Jun 14, 2026, 2:32 PM UTC (copies the exact UTC value)"|
+
+      # No title attribute carries the time (D-09).
+      refute html =~ "title="
       assert html =~ "<time"
       assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"
       refute html =~ "data-local-time-supplement"
       assert html =~ "tabular-nums"
       refute html =~ "mono"
+    end
+
+    test "the zone is its own span: a line of its own below sm, inline from sm (D-08)" do
+      html =
+        render_component(&Components.timestamp/1, at: ~U[2026-06-14 14:32:05Z], copyable: false)
+
+      [time] = Floki.find(Floki.parse_fragment!(html), "time")
+
+      assert [text] = Floki.find(time, "[data-time-text]")
+      # The trailing space is real text, so a whitespace-dropping reader never sees "PMUTC".
+      assert Floki.text(text) == "Jun 14, 2026, 2:32 PM "
+      assert [zone] = Floki.find(time, "[data-time-zone]")
+      assert Floki.text(zone) == "UTC"
+      assert Floki.attribute(zone, "class") == ["block sm:inline"]
     end
 
     test "a non-copyable timestamp stays a semantic time value without a nested control" do
@@ -754,13 +786,28 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "block"
       refute html =~ "data-timestamp-copy"
       refute html =~ "<button"
+      # Its visible text is its name: no title and no aria-label replace it (D-09).
+      refute html =~ "title="
+      refute html =~ "aria-label"
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
     end
 
-    test "a precise UTC datetime preserves fractional seconds for visible and copied values" do
+    test "display_time/1 is compact, 12-hour, unpadded and ends in UTC" do
+      assert Components.display_time(~U[2026-11-15 14:05:09.123456Z]) ==
+               "Nov 15, 2026, 2:05 PM UTC"
+
+      assert Components.display_time(~U[2026-01-02 00:05:00Z]) == "Jan 2, 2026, 12:05 AM UTC"
+      assert Components.display_time(~U[2026-01-02 12:00:00Z]) == "Jan 2, 2026, 12:00 PM UTC"
+      assert Components.display_time(~U[2026-12-31 23:59:59Z]) == "Dec 31, 2026, 11:59 PM UTC"
+    end
+
+    test "a precise UTC datetime shows a compact time but copies its fractional seconds" do
       at = ~U[2026-06-14 14:32:05.123400Z]
       html = render_component(&Components.timestamp/1, at: at)
 
-      assert html =~ "2026-06-14 14:32:05.123400 UTC"
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
+      assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.123400 UTC")
+      assert html =~ ~s(data-utc="2026-06-14 14:32:05.123400 UTC")
       assert Components.timestamp_value(at) == "2026-06-14 14:32:05.123400 UTC"
     end
 

@@ -35,7 +35,8 @@ defmodule MailglassAdmin.Operator.ResultsStatus do
 
   @spec stale_title(DateTime.t() | nil) :: String.t()
   def stale_title(%DateTime{} = loaded_at),
-    do: "Showing results from #{Calendar.strftime(loaded_at, "%H:%M")} UTC; refresh failed"
+    do:
+      "Showing results from #{MailglassAdmin.Components.display_time(loaded_at)}; refresh failed"
 
   def stale_title(_loaded_at), do: "Showing earlier results; refresh failed"
 

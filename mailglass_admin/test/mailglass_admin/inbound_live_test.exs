@@ -3454,7 +3454,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       refute has_element?(view, "[data-testid='inbound-result-count']")
       refute has_element?(view, "[data-testid='inbound-read-unavailable']")
-      assert status_text(view) =~ ~r/^Showing results from \d\d:\d\d UTC; refresh failed$/
+
+      assert status_text(view) =~
+               ~r/^Showing results from [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M UTC; refresh failed$/
 
       # The stale panel sits above the retained rows, not instead of them.
       assert_in_order(html, [
@@ -3492,7 +3494,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="inbound-stale-results")
-      assert html =~ "Showing results from 14:32 UTC; refresh failed"
+      assert html =~ "Showing results from Oct 28, 2026, 2:32 PM UTC; refresh failed"
       assert html =~ ~s(data-testid="inbound-stale-loaded-at")
       assert html =~ ~s(phx-click="retry_inbound")
       assert html =~ "kept@example.com"

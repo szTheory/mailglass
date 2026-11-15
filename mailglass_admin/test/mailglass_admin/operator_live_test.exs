@@ -3755,13 +3755,18 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "kept@example.com"
       assert has_element?(view, "[data-testid='operator-delivery-row']")
       assert has_element?(view, "[data-testid='data-state-stale']")
-      assert html =~ ~r/Showing results from \d{2}:\d{2} UTC; refresh failed/
+
+      assert html =~
+               ~r/Showing results from [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M UTC; refresh failed/
+
       assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert has_element?(view, "[data-testid='operator-stale-loaded-at']", "Results loaded")
       assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
       refute has_element?(view, "[data-testid='operator-result-count']")
       refute html =~ "synthetic"
-      assert status_text(view) =~ ~r/^Showing results from \d{2}:\d{2} UTC; refresh failed$/
+
+      assert status_text(view) =~
+               ~r/^Showing results from [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M UTC; refresh failed$/
 
       # The next successful read settles back to the count and drops the stale panel.
       view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
@@ -5633,7 +5638,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      assert html =~ "Showing results from 14:05 UTC; refresh failed"
+      assert html =~ "Showing results from Oct 28, 2026, 2:05 PM UTC; refresh failed"
       assert html =~ ~s(data-testid="operator-stale-loaded-at")
       assert html =~ ~s(datetime="2026-10-28T14:05:09Z")
     end

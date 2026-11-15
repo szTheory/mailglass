@@ -1923,9 +1923,17 @@ defmodule MailglassAdmin.Components do
   )
 
   @doc """
-  Renders a machine-readable <time> in the browser's local timezone. When copyable,
-  the timestamp itself is a keyboard-accessible control that copies the exact UTC
-  value and announces the result. `nil` renders an unavailable sentinel.
+  Renders a machine-readable <time> that always shows its zone. The server renders
+  the absolute time in a compact form with its zone (`Nov 15, 2026, 2:05 PM UTC`),
+  and the browser rewrites it to the viewer's local time while keeping a zone token
+  (`... 9:05 AM EST`). The exact UTC value, to the microsecond, stays in `data-utc`,
+  the tooltip and the copy value. When copyable, the timestamp itself is a
+  keyboard-accessible control that copies the exact UTC value and announces the
+  result. Below the `sm` breakpoint the zone sits on its own line under the time.
+  `nil` renders the word `Unavailable` and no `<time>` element.
+
+  The visible text is the accessible name: no `title` and no `aria-label` replaces
+  it (WCAG 2.5.3 Label in Name), and the copy control's name contains that text.
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
@@ -1934,40 +1942,47 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  # The date-time text span ends in a space, and the zone is the span after it. The space
+  # is real text, not formatter whitespace between tags, so a reader that drops
+  # whitespace-only nodes (Floki, a plain-text extractor) still sees "2:05 PM UTC" and
+  # never "2:05 PMUTC". A browser collapses it at the line end below `sm`, where the
+  # zone is a block under the time, and keeps it from `sm` up, where the zone is inline.
   def timestamp(assigns) do
+    assigns =
+      assigns
+      |> assign(:exact, exact_utc(assigns.at))
+      |> assign(:when_text, display_when(assigns.at))
+      |> assign(:display, display_time(assigns.at))
+
     ~H"""
     <span :if={@copyable} class="mg-field-help inline-flex max-w-full">
       <button
         type="button"
         data-timestamp-copy="true"
-        data-copy-value={utc_string(@at)}
-        aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
+        data-copy-value={@exact}
+        aria-label={"Copy #{@display} (copies the exact UTC value)"}
         class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
       >
         <time
           datetime={DateTime.to_iso8601(@at)}
           data-local-time="true"
-          data-utc={utc_string(@at)}
+          data-utc={@exact}
           class="tabular-nums"
-        >
-          {utc_string(@at)}
-        </time>
+        ><span data-time-text>{@when_text <> " "}</span>
+        <span data-time-zone class="block sm:inline">UTC</span></time>
       </button>
       <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
-        {utc_string(@at)} • Click to copy
+        {@exact} • Click to copy
       </span>
     </span>
     <time
       :if={!@copyable}
       datetime={DateTime.to_iso8601(@at)}
       data-local-time="true"
-      data-utc={utc_string(@at)}
-      title={utc_string(@at)}
-      aria-label={"Recorded at #{utc_string(@at)}"}
+      data-utc={@exact}
       class={["tabular-nums", @class]}
-    >
-      {utc_string(@at)}
-    </time>
+    ><span data-time-text>{@when_text <> " "}</span>
+    <span data-time-zone class="block sm:inline">UTC</span></time>
     """
   end
 
@@ -1986,7 +2001,6 @@ defmodule MailglassAdmin.Components do
       data-copy-value={@value}
       data-copy-toast={@label <> " copied."}
       aria-label={"Copy #{@label}: #{@value}"}
-      title="Click to copy"
       class="mg-timestamp-copy-trigger mg-focus-ring mono max-w-full break-all text-left text-label text-secondary"
     >
       {@value}
@@ -2014,9 +2028,17 @@ defmodule MailglassAdmin.Components do
   end
 
   @doc false
-  def timestamp_value(%DateTime{} = at), do: utc_string(at)
+  def timestamp_value(%DateTime{} = at), do: exact_utc(at)
 
-  defp utc_string(%DateTime{} = at) do
+  @doc false
+  # The compact visible form with its zone, e.g. "Nov 15, 2026, 2:05 PM UTC". The one
+  # place a display time is formatted; every screen reaches it through `timestamp/1`.
+  # The exact value, to the microsecond, comes from `exact_utc/1`.
+  def display_time(%DateTime{} = at), do: display_when(at) <> " UTC"
+
+  defp display_when(%DateTime{} = at), do: Calendar.strftime(at, "%b %-d, %Y, %-I:%M %p")
+
+  defp exact_utc(%DateTime{} = at) do
     base = Calendar.strftime(at, "%Y-%m-%d %H:%M:%S")
     {microseconds, precision} = at.microsecond
 

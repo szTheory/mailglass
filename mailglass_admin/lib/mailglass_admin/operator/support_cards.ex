@@ -11,6 +11,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   import MailglassAdmin.Components, only: [card: 1]
 
+  alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.RepairState
 
   attr(:support_summary, :map, required: true)
@@ -97,7 +98,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div>
             <dt class="text-label uppercase font-bold">Recorded time</dt>
             <dd class="mt-xs break-all text-base-content">
-              {exact_recorded_at(@exact_support_evidence)}
+              <Components.timestamp at={exact_recorded_at(@exact_support_evidence)} />
             </dd>
           </div>
           <div :if={exact_status(@exact_support_evidence)}>
@@ -381,13 +382,11 @@ defmodule MailglassAdmin.Operator.SupportCards do
   defp exact_provider_event_id(%{record: record}), do: record[:provider_event_id]
   defp exact_provider_event_id(_evidence), do: nil
 
-  defp exact_recorded_at(%{record: %{received_at: %DateTime{} = at}}),
-    do: DateTime.to_iso8601(at) <> " UTC"
-
-  defp exact_recorded_at(%{record: %{occurred_at: %DateTime{} = at}}),
-    do: DateTime.to_iso8601(at) <> " UTC"
-
-  defp exact_recorded_at(_evidence), do: "Unavailable"
+  # The recorded time of the exact record, or nil. `Components.timestamp/1` renders nil
+  # as "Unavailable", so a record with no time never shows a bare or invented time.
+  defp exact_recorded_at(%{record: %{received_at: %DateTime{} = at}}), do: at
+  defp exact_recorded_at(%{record: %{occurred_at: %DateTime{} = at}}), do: at
+  defp exact_recorded_at(_evidence), do: nil
 
   defp exact_event_relationship(%{
          reconciled_event_id: reconciliation_id,

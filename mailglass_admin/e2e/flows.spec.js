@@ -1063,7 +1063,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     await assertZoomReadableValue(recordedTimestamp, "Recorded timestamp", expectedRecordedTimestamp, 720);
     const providerEventId = timelineEvent.locator("p.mono").filter({ hasText: /^Provider Event ID:/ });
     await expect(providerEventId, "the selected fixture event has no provider event ID").toHaveCount(0);
-    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider occurrence time:/ });
+    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider time/ });
     await expect(providerTimestamp, "the selected fixture event has no provider occurrence timestamp")
       .toHaveCount(0);
 

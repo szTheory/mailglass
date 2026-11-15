@@ -330,7 +330,9 @@ defmodule MailglassAdmin.Phase182JourneyTest do
 
       assert text =~ "Delivered at"
       # The timestamp renders its zoned value, then the sentence resumes after it.
-      assert text =~ ~r/Delivered at \d.* UTC.*: the receiving server accepted this email\./
+      assert text =~
+               ~r/Delivered at [A-Z][a-z]{2} \d.* UTC.*: the receiving server accepted this email\./
+
       assert text =~ "Delivered is not the same as read."
     end
 

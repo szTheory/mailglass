@@ -123,7 +123,20 @@ defmodule MailglassAdmin.Controllers.Assets do
         return
       }
       if (!localValue) return
-      el.textContent = localValue
+      // Write the same two parts the server renders (the date-time text with its trailing
+      // space, then the zone in its own span) so the zone keeps its own line below the sm
+      // breakpoint. The zone is the last whitespace-separated token ("EST", "GMT+13"); a
+      // value that does not split is written whole. (Backslashes are doubled: this heredoc
+      // is an Elixir string.)
+      const text = el.querySelector("[data-time-text]")
+      const zone = el.querySelector("[data-time-zone]")
+      const split = localValue.match(/^(.*)\\s(\\S+)$/)
+      if (text && zone && split) {
+        text.textContent = split[1] + " "
+        zone.textContent = split[2]
+      } else {
+        el.textContent = localValue
+      }
       // The visible text, which now ends in a zone, is the accessible name: no aria-label
       // is written that omits it. A copy control names the same text (WCAG 2.5.3).
       el.removeAttribute("aria-label")

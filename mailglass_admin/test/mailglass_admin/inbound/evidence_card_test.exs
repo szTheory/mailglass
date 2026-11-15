@@ -134,7 +134,10 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
 
       pairs = fact_pairs(doc)
       assert {"Received", received} = Enum.at(pairs, 1)
-      assert received =~ "2026-10-01 12:30:00 UTC"
+      received = String.replace(received, ~r/\s+/, " ")
+      # The visible form is compact and zoned; the exact value stays in the tooltip.
+      assert received =~ "Oct 1, 2026, 12:30 PM UTC"
+      assert received =~ "2026-10-01 12:30:00 UTC • Click to copy"
     end
 
     @tag :phase176
