@@ -33,7 +33,7 @@
 ### Admin Words and Layout (BRADM)
 
 - [ ] **BRADM-01**: An operator can search by email, find the delivery under Needs attention, and read a timeline with a verdict, "sent is not delivered", and a next step, through the real LiveView in light, dark and 375px.
-- [ ] **BRADM-02**: Every time shown in the admin states its zone, and every status is a pane mark plus a word.
+- [x] **BRADM-02**: Every time shown in the admin states its zone, and every status is a pane mark plus a word.
 - [ ] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
 - [ ] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
 - [ ] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
@@ -88,7 +88,7 @@ Updated during roadmap creation (2026-11-13).
 | BRTOK-05 | Phase 181 | Complete |
 | BRTOK-06 | Phase 181 | Complete |
 | BRADM-01 | Phase 182 | Pending |
-| BRADM-02 | Phase 182 | Pending |
+| BRADM-02 | Phase 182 | Complete |
 | BRADM-03 | Phase 182 | Pending |
 | BRADM-04 | Phase 182 | Pending |
 | BRADM-05 | Phase 182 | Pending |

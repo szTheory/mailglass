@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
 status: executing
-stopped_at: Completed 182-02-PLAN.md
-last_updated: "2026-11-15T22:34:12.214Z"
+stopped_at: Completed 182-03-PLAN.md
+last_updated: "2026-11-15T23:02:27.115Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 182 execution started
-state_head: 181909110f09a775b2c6070186a89eee8387dc99
+state_head: 455dcbe5929b78a317aeccd6292e0c1233393169
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 14
+  completed_plans: 15
   percent: 60
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 182 execution started
 
@@ -383,6 +383,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 181 P04 | 26min | 3 tasks | 17 files |
 | Phase 182 P01 | 20 min | 3 tasks | 16 files |
 | Phase 182 P02 | 25 min | 3 tasks | 19 files |
+| Phase 182 P03 | 26 min | 2 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -760,6 +761,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 182]: 182-02: suppression-reason parity with the core enum is held by phase182_cause_contract_test, not a compile-time check, because Mailglass.Suppression.Entry is not exported by the core boundary; reject-reason parity stays a compile-time raise — A newer core reason renders an unrecognised-reason sentence instead of crashing; the contract goes red in the required lane when the enums drift.
 - [Phase 182]: 182-02: delivery_badge is a thin wrapper over the status_badge mark branch, keyed on an explicit context: :delivery; inbound failed keeps hero-x-circle — An atom-only gate would turn an inbound mailbox failure into a delivery failure mark.
 - [Phase 182]: 182-02: a send-time failure reads 'Sending failed before a successful handoff to the provider.'; a provider bounce or rejection with a nil reason reads the fixed fallback; an unloaded or unreadable history shows neither — The fallback would be false when the history was simply not read (Quick view) and not literally true for a send-time failure (R1).
+- [Phase 182]: 182-03: a timestamp's copy control is named 'Copy <visible time> (copies the exact UTC value <exact>)' so it contains the visible text (WCAG 2.5.3) and the copied value (Phase 176 P10) — Server and localizer write the same two parts, and the plan's name without the exact value broke P10.
+- [Phase 182]: 182-03: the status grid persists 160 rows (last_event_type is NOT NULL); the 10 nil-last-event cells render in memory, 170 in all, computed from the live enums — A nil last_event_type cannot be stored, so the contract renders those rows through the components.
+- [Phase 182]: 182-03: the zone comes from display_parts/1 and the date-time span ends in a real space; <time> elements are pinned to Components.timestamp/1 by a source rule — A formatter that loses the zone must show on every screen, Floki drops whitespace-only nodes, and a render scan cannot see an unrendered component.
+- [Phase 182]: 182-03: a false lifecycle flag is guarded at the producer, not by the screen scan — The screen renders a false flag consistently as Failed, so only a read-model test sees it; proven by a core mutation (restored).
 
 ## Quick Tasks Completed
 
@@ -820,8 +825,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T22:34:11.875Z
-Stopped at: Completed 182-02-PLAN.md
+Last session: 2026-11-15T23:02:26.809Z
+Stopped at: Completed 182-03-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02

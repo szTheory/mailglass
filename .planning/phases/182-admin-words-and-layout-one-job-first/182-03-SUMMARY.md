@@ -334,7 +334,7 @@ None - no external service configuration required.
 - 182-04 (words) can scan the same screens with `ScreenRegistry.states/1` and `ScreenRegistry.visible_text/1`; the known-component list already names the state that renders each module.
 - 182-05 inherits the e2e copy-name and provider-line pins updated here.
 - 182-06 owns the advisory browser run under `America/New_York` and `Pacific/Auckland` and the 375px layout of the split zone. Any later change to `app.css` or the root layout needs another `superseded.json` rebind (current bundle sha256 `fc2df1a788e0089beb3c9778582917e0b5cbe10d231795ea05f23e757fadc1f0`).
-- BRADM-02 is declared by sibling plans too; the shared-ID gate leaves REQUIREMENTS.md to the phase-complete step.
+- BRADM-02 is ready under the shared-ID gate (`requirements.ready-ids`: no later plan declares it) and was marked complete in REQUIREMENTS.md.
 
 ## Self-Check: PASSED
 
