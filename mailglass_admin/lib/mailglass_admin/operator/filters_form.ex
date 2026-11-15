@@ -50,7 +50,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
         field={@form[:window_hours]}
         type={:select}
         label="Time window"
-        help="Show deliveries with activity during this period."
+        help="Show emails with activity during this period."
         help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
         options={window_options(@window_options, @form[:window_hours].value)}

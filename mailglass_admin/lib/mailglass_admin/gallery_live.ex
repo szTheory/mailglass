@@ -35,7 +35,7 @@ defmodule MailglassAdmin.GalleryLive do
     hover-ready, focus-visible, disabled)
   - stat_card (neutral, info, success, warning, error, empty,
     loading, unavailable, long-label, long-value)
-  - orientation_strip (deliveries, inbound, preview)
+  - orientation_strip (activity, inbound, preview)
   - shell is the full page layout — not a gallery specimen
   - deliveries_list (populated-unselected, populated-selected, empty)
   - detail_header (shown, absent) — operator variant only
@@ -855,9 +855,9 @@ defmodule MailglassAdmin.GalleryLive do
     # No long-label specimen: a nav label long enough to truncate should be shortened.
     # loading not applicable: nav_link is immediate navigation; disabled covers unavailable navigation.
     {:nav_link, "active",
-     %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
+     %{label: "Activity", icon: "hero-paper-airplane", href: "#", active: true}},
     {:nav_link, "inactive",
-     %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: false}},
+     %{label: "Activity", icon: "hero-paper-airplane", href: "#", active: false}},
     {:nav_link, "hover-ready",
      %{label: "Inbound", icon: "hero-inbox-arrow-down", href: "#", active: false}},
     {:nav_link, "focus-visible", %{label: "Preview", icon: "hero-eye", href: "#", active: false}},
@@ -927,8 +927,8 @@ defmodule MailglassAdmin.GalleryLive do
        severity: :warning
      }},
 
-    # STATE-LD-09: orientation_strip — deliveries, inbound, preview
-    {:orientation_strip, "deliveries", %{surface: :deliveries}},
+    # STATE-LD-09: orientation_strip — activity, inbound, preview
+    {:orientation_strip, "activity", %{surface: :deliveries}},
     {:orientation_strip, "inbound", %{surface: :inbound}},
     {:orientation_strip, "preview", %{surface: :preview}},
 
@@ -1402,7 +1402,7 @@ defmodule MailglassAdmin.GalleryLive do
 
     # Phase 113: data_state — four distinct kinds (DATA-03)
     {:data_state, "empty",
-     %{kind: :empty, title: "No deliveries", body: "No deliveries have been recorded yet."}},
+     %{kind: :empty, title: "No activity", body: "No emails have been recorded yet."}},
     {:data_state, "error",
      %{
        kind: :error,

@@ -132,7 +132,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
             <Components.data_state
               kind={:empty}
               title="Choose an Account"
-              body="Select an Account to see scoped operator data."
+              body="Select an Account to see its inbound messages."
             />
             <div data-testid="inbound-empty-no-tenant" style="display:none" />
           <% else %>
@@ -471,7 +471,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   defp selected?(_selected_record, _record), do: false
 
   defp empty_body(:no_tenant),
-    do: "Select an Account to see scoped operator data."
+    do: "Select an Account to see its inbound messages."
 
   defp empty_body(:truly_empty),
     do: "No messages have been received yet."

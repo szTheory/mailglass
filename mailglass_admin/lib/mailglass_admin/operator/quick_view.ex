@@ -236,15 +236,14 @@ defmodule MailglassAdmin.Operator.QuickView do
   defp provider_label(value), do: String.upcase(value)
 
   defp detail_error_copy(:invalid_id),
-    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+    do: "This delivery link is invalid. Return to Activity and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to Activity to continue."
 
   defp detail_error_copy(:unavailable),
-    do: "Delivery details are temporarily unavailable. Try again or return to deliveries."
+    do: "Delivery details are temporarily unavailable. Try again or return to Activity."
 
   defp detail_error_copy(_),
-    do: "Delivery details are unavailable. Return to deliveries to continue."
+    do: "Delivery details are unavailable. Return to Activity to continue."
 end

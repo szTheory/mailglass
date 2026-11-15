@@ -17,7 +17,7 @@ defmodule MailglassAdmin.Operator.ResultsStatus do
         }) :: String.t()
   def text(%{state: :stale} = status), do: stale_title(Map.get(status, :loaded_at))
 
-  def text(%{collection: :deliveries, state: :error}), do: "Couldn't load deliveries"
+  def text(%{collection: :deliveries, state: :error}), do: "Couldn't load activity"
   def text(%{collection: :inbound, state: :error}), do: "Couldn't load inbound messages"
 
   def text(%{collection: collection, state: :ready, count: count})
@@ -30,7 +30,7 @@ defmodule MailglassAdmin.Operator.ResultsStatus do
   def text(%{collection: collection, state: :ready, filters_active?: true}),
     do: "No #{elem(nouns(collection), 1)} match the current filters"
 
-  def text(%{collection: :deliveries, state: :ready}), do: "No deliveries in this time window"
+  def text(%{collection: :deliveries, state: :ready}), do: "No activity in this time window"
   def text(%{collection: :inbound, state: :ready}), do: "No messages have been received yet"
 
   @spec stale_title(DateTime.t() | nil) :: String.t()
@@ -40,6 +40,6 @@ defmodule MailglassAdmin.Operator.ResultsStatus do
 
   def stale_title(_loaded_at), do: "Showing earlier results; refresh failed"
 
-  defp nouns(:deliveries), do: {"delivery", "deliveries"}
+  defp nouns(:deliveries), do: {"email", "emails"}
   defp nouns(:inbound), do: {"message", "messages"}
 end

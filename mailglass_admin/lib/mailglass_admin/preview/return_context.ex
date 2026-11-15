@@ -27,7 +27,7 @@ defmodule MailglassAdmin.Preview.ReturnContext do
 
   @labels %{
     "overview" => "Back to Health",
-    "deliveries" => "Back to Deliveries",
+    "deliveries" => "Back to Activity",
     "inbound" => "Back to Inbound"
   }
 

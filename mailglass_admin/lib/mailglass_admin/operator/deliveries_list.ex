@@ -25,7 +25,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.ResultsStatus
 
-  attr(:heading, :string, default: "Deliveries")
+  attr(:heading, :string, default: "Activity")
   attr(:deliveries, :list, required: true)
   attr(:account_labels, :map, default: %{})
 
@@ -76,14 +76,14 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           data-testid="operator-retry-deliveries"
           class="btn btn-ghost min-h-11 mt-sm mx-auto block"
         >
-          Retry deliveries
+          Retry loading activity
         </button>
       </div>
       <%= cond do %>
         <% @data_state == :error -> %>
           <Components.data_state
             kind={:error}
-            title="Couldn't load deliveries for these filters"
+            title="Couldn't load activity for these filters"
             body="The read failed. Your filters are unchanged. Retry, or change a filter."
           />
           <button
@@ -92,7 +92,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             data-testid="operator-retry-deliveries"
             class="btn btn-ghost min-h-11 mt-sm mx-auto block"
           >
-            Retry deliveries
+            Retry loading activity
           </button>
         <% @data_state == :permission_denied -> %>
           <Components.data_state
@@ -103,7 +103,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% @deliveries == [] and @page_meta.total_count > 0 -> %>
           <Components.data_state
             kind={:empty}
-            title="No deliveries on this page"
+            title="No activity on this page"
             body="Move to an available page to inspect the current results."
           />
         <% @data_state == :empty or
@@ -111,8 +111,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           <%= if @filters_active? do %>
             <Components.data_state
               kind={:empty}
-              title="No deliveries"
-              body="No deliveries match the current filters."
+              title="No activity matches the current filters"
+              body="Change or clear a filter to see more."
               data-testid-override="operator-empty-filtered"
             />
             <div
@@ -130,8 +130,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           <% else %>
             <Components.data_state
               kind={:empty}
-              title="No deliveries in this time window"
-              body="No deliveries have been recorded for this Account during the selected time window."
+              title="No activity in this time window"
+              body="No emails have been recorded for this Account during the selected time window."
               data-testid-override="operator-empty-truly"
             />
             <div
@@ -343,7 +343,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     <nav
       :if={Map.get(@page_meta, :total_pages, 0) > 1 or Map.get(@page_meta, :page, 1) > 1}
       data-testid="operator-pagination"
-      aria-label="Deliveries pagination"
+      aria-label="Activity pagination"
       class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
     >
       <.pagination_link
@@ -408,12 +408,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     """
   end
 
-  defp result_count_label(%{total_count: 1}), do: "1 delivery"
+  defp result_count_label(%{total_count: 1}), do: "1 email"
 
   defp result_count_label(%{total_count: count}) when is_integer(count),
-    do: "#{count} deliveries"
+    do: "#{count} emails"
 
-  defp result_count_label(_page_meta), do: "0 deliveries"
+  defp result_count_label(_page_meta), do: "0 emails"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false

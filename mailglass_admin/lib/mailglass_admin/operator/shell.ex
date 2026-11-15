@@ -508,7 +508,7 @@ defmodule MailglassAdmin.Operator.Shell do
             <p class="text-label font-bold uppercase text-secondary">Account</p>
             <h2 class="mt-xs text-heading font-bold text-base-content">Choose an Account</h2>
             <p class="mt-sm text-body text-secondary">
-              Select an Account to see scoped operator data.
+              Select an Account to see its activity.
             </p>
             <p class="mt-sm flex items-start gap-xs text-label text-secondary">
               <Components.icon

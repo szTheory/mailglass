@@ -32,7 +32,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
       >
         <:title>Review webhook replay</:title>
         <:description>
-          Reprocesses this stored webhook through current normalization. It may add Events or update Deliveries and suppressions across this Account. It does not resend mail or prove provider receipt.
+          Reprocesses this stored webhook through current normalization. It may add Events or update delivery records and suppressions across this Account. It does not resend mail or prove provider receipt.
         </:description>
         <:body>
           <%= case @replay_targets do %>

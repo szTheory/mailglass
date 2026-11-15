@@ -160,7 +160,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
             <Components.field_help
               id="operator-health-outbound-activity-help"
               label="outbound activity"
-              text="Deliveries with a recorded event in this period, including pending and failed deliveries. Activity alone does not confirm successful delivery."
+              text="Emails with a recorded event in this period, including pending and failed emails. Activity alone does not confirm successful delivery."
             />
           </div>
           <.link
@@ -175,8 +175,8 @@ defmodule MailglassAdmin.Operator.HealthOverview do
               {if @activity.deliveries,
                 do:
                   if(@activity.deliveries.total == 1,
-                    do: "delivery updated",
-                    else: "deliveries updated"
+                    do: "email updated",
+                    else: "emails updated"
                   ),
                 else: "Outbound activity unavailable"}
             </span>

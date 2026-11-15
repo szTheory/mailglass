@@ -781,13 +781,13 @@ defmodule MailglassAdmin.OperatorLive do
               >
                 <div class="text-body font-bold text-base-content">Choose an Account</div>
                 <div class="text-body text-secondary">
-                  Select an Account to see scoped operator data. Mailglass keeps that account boundary
+                  Select an Account to see its activity. Mailglass keeps that account boundary
                   in the URL as <code class="mono">tenant_id</code> so refreshes and shared links stay
                   scoped.
                 </div>
                 <div>
                   <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
-                    Go to Deliveries
+                    Go to Activity
                   </.link>
                 </div>
               </div>
@@ -844,8 +844,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-detail-back"
                     class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                   >
-                    <Components.icon name="hero-arrow-left" class="mr-xs h-4 w-4" />
-                    Back to deliveries
+                    <Components.icon name="hero-arrow-left" class="mr-xs h-4 w-4" /> Back to Activity
                   </.link>
 
                   <%= cond do %>
@@ -1632,18 +1631,17 @@ defmodule MailglassAdmin.OperatorLive do
   defp detail_error_for(_delivery_id, _selected_delivery), do: nil
 
   defp detail_error_copy(:invalid_id),
-    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+    do: "This delivery link is invalid. Return to Activity and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to Activity to continue."
 
   defp detail_error_copy(:unavailable),
     do:
-      "Delivery details are temporarily unavailable. Retry the scoped read or return to deliveries."
+      "Delivery details are temporarily unavailable. Retry the scoped read or return to Activity."
 
   defp detail_error_copy(_),
-    do: "Delivery details are unavailable. Return to deliveries to continue."
+    do: "Delivery details are unavailable. Return to Activity to continue."
 
   defp load_replay_targets(_filter_params, nil, _read_fault), do: nil
 
@@ -2867,7 +2865,7 @@ defmodule MailglassAdmin.OperatorLive do
     webhook_issues =
       [
         {:failed_ingest, "Failed webhook attempts",
-         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed emails.",
          "operator-overview-health-failures"},
         {:orphan_backlog, "Unmatched events",
          "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
@@ -2889,12 +2887,11 @@ defmodule MailglassAdmin.OperatorLive do
 
     delivery_issues =
       [
-        {:failed, "Failed deliveries",
-         "Sending failed before a successful handoff to the provider."},
-        {:bounced, "Bounced deliveries",
+        {:failed, "Failed emails", "Sending failed before a successful handoff to the provider."},
+        {:bounced, "Bounced emails",
          "The provider reported that these messages could not be delivered."},
-        {:rejected, "Rejected deliveries", "The provider rejected these messages."},
-        {:deferred, "Delayed deliveries",
+        {:rejected, "Rejected emails", "The provider rejected these messages."},
+        {:deferred, "Delayed emails",
          "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
       ]
       |> Enum.map(fn {event, label, help} ->
