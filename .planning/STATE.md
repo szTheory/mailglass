@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
 status: executing
-stopped_at: Completed 182-03-PLAN.md
-last_updated: "2026-11-15T23:02:27.115Z"
+stopped_at: Completed 182-04-PLAN.md
+last_updated: "2026-11-15T23:34:24.472Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 182 execution started
-state_head: 455dcbe5929b78a317aeccd6292e0c1233393169
+state_head: c621cf83ddff8748ad5ae7ab7443e9bdb98e6707
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 60
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 182 execution started
 
@@ -384,6 +384,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 182 P01 | 20 min | 3 tasks | 16 files |
 | Phase 182 P02 | 25 min | 3 tasks | 19 files |
 | Phase 182 P03 | 26 min | 2 tasks | 21 files |
+| Phase 182 P04 | 29 min | 3 tasks | 41 files |
 
 ## Accumulated Context
 
@@ -765,6 +766,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 182]: 182-03: the status grid persists 160 rows (last_event_type is NOT NULL); the 10 nil-last-event cells render in memory, 170 in all, computed from the live enums — A nil last_event_type cannot be stored, so the contract renders those rows through the components.
 - [Phase 182]: 182-03: the zone comes from display_parts/1 and the date-time span ends in a real space; <time> elements are pinned to Components.timestamp/1 by a source rule — A formatter that loses the zone must show on every screen, Floki drops whitespace-only nodes, and a render scan cannot see an unrendered component.
 - [Phase 182]: 182-03: a false lifecycle flag is guarded at the producer, not by the screen scan — The screen renders a false flag consistently as Failed, so only a read-model test sees it; proven by a core mutation (restored).
+- [Phase 182]: 182-04: the Activity gloss replaces the old subtitle, and the document title follows the screen (Activity on the list, Admin on the overview) — One line under the h1 keeps the verdict above the fold at 375px; a tab named Admin for every Operator view says nothing.
+- [Phase 182]: 182-04: words detectors refuse a match touching a word character or a hyphen; hover and screen-reader text count as words — An Account id such as browser-tenant is adopter data (418 false hits); help sentences are still sentences. A hyphenated word like tenant-scoped would escape, accepted.
+- [Phase 182]: 182-04: the Mailer trigger label is the plain name (WCAG 2.5.3), the identity is shown in full beside the tooltip, and the plain name never comes from a nil, blank or nameless value — Production stores the module only (C-9); a name is derived from the stored text on binaries, never an atom.
+- [Phase 182]: 182-04: a nil orphan count no longer draws the Tier-1 card (nil > 0 is true in Elixir); the Failed webhook attempts card has the same gate, deferred — A real defect found by planting a nil count; the sibling is out of scope and logged in deferred-items.md.
 
 ## Quick Tasks Completed
 
@@ -825,8 +830,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T23:02:26.809Z
-Stopped at: Completed 182-03-PLAN.md
+Last session: 2026-11-15T23:34:24.167Z
+Stopped at: Completed 182-04-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
