@@ -128,7 +128,7 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     const recordedCopy = recordedCell.locator("button[data-timestamp-copy]");
     await expect(recordedCopy).toHaveAttribute("data-copy-value", "2026-10-07 20:06:18 UTC");
     // Once the localizer runs, the control's name contains the visible local text.
-    await expect(recordedCopy).toHaveAttribute("aria-label", /^Copy .+ \(copies the exact UTC value\)$/);
+    await expect(recordedCopy).toHaveAttribute("aria-label", /^Copy .+ \(copies the exact UTC value 2026-10-07 20:06:18 UTC\)$/);
 
     const loadingCell = page.getByTestId("gallery-stat_card-loading-system");
     await expect(loadingCell).toContainText("Loading");

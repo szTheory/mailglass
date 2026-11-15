@@ -752,7 +752,7 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "mg-field-help-tooltip"
       # The control's name contains its visible text (WCAG 2.5.3) and names the exact copy.
       assert html =~
-               ~s|aria-label="Copy Jun 14, 2026, 2:32 PM UTC (copies the exact UTC value)"|
+               ~s|aria-label="Copy Jun 14, 2026, 2:32 PM UTC (copies the exact UTC value 2026-06-14 14:32:05.000000 UTC)"|
 
       # No title attribute carries the time (D-09).
       refute html =~ "title="

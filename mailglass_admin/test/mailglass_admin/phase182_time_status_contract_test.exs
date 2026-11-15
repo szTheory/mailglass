@@ -408,16 +408,20 @@ defmodule MailglassAdmin.Phase182TimeStatusContractTest do
       end
     end
 
-    test "a title on a timestamp, an aria-label on a time, or a copy name that omits the time is flagged" do
+    test "a title on a timestamp, an aria-label on a time, or a copy name that omits the time or the value is flagged" do
       titled =
         ~s|<time datetime="2026-11-15T14:05:00Z" title="exact">Nov 15, 2026, 2:05 PM UTC</time>|
 
       labelled =
         ~s|<time datetime="2026-11-15T14:05:00Z" aria-label="Recorded at x">Nov 15, 2026, 2:05 PM UTC</time>|
 
+      exact = "2026-11-15 14:05:00 UTC"
+
       button = fn attrs ->
-        ~s|<button data-timestamp-copy="true" #{attrs}><time datetime="2026-11-15T14:05:00Z">Nov 15, 2026, 2:05 PM UTC</time></button>|
+        ~s|<button data-timestamp-copy="true" data-copy-value="#{exact}" #{attrs}><time datetime="2026-11-15T14:05:00Z">Nov 15, 2026, 2:05 PM UTC</time></button>|
       end
+
+      name = "Copy Nov 15, 2026, 2:05 PM UTC (copies the exact UTC value #{exact})"
 
       copy_titled =
         ~s|<button data-copy-value="x" title="Click to copy" aria-label="Copy ID: x">x</button>|
@@ -425,21 +429,18 @@ defmodule MailglassAdmin.Phase182TimeStatusContractTest do
       for {html, rule} <- [
             {titled, :time_labelled},
             {labelled, :time_labelled},
-            {button.(~s|aria-label="Copy timestamp as UTC: 2026-11-15 14:05:00 UTC"|),
-             :copy_label_omits_time},
+            {button.(~s|aria-label="Copy timestamp as UTC: #{exact}"|), :copy_label_omits_time},
             {button.(
-               ~s|aria-label="Copy Nov 15, 2026, 2:05 PM UTC (copies the exact UTC value)" title="x"|
-             ), :time_titled},
+               ~s|aria-label="Copy Nov 15, 2026, 2:05 PM UTC (copies the exact UTC value)"|
+             ), :copy_label_omits_value},
+            {button.(~s|aria-label="#{name}" title="x"|), :time_titled},
             {copy_titled, :time_titled}
           ] do
         assert rule in rules(scan_html("planted", html).violations),
                "planted violation not flagged as #{rule}: #{html}"
       end
 
-      clean =
-        button.(~s|aria-label="Copy Nov 15, 2026, 2:05 PM UTC (copies the exact UTC value)"|)
-
-      assert scan_html("control", clean).violations == []
+      assert scan_html("control", button.(~s|aria-label="#{name}"|)).violations == []
     end
 
     test "zone tokens in every spelling are accepted" do
@@ -804,12 +805,20 @@ defmodule MailglassAdmin.Phase182TimeStatusContractTest do
     [time | _] = Floki.find(button, "time")
     visible = node_text(time)
     name = button |> Floki.attribute("aria-label") |> List.first("")
+    copied = button |> Floki.attribute("data-copy-value") |> List.first("")
 
     List.flatten([
       if(String.contains?(name, visible),
         do: [],
         else: [
           violation(:copy_label_omits_time, label, "#{inspect(name)} omits #{inspect(visible)}")
+        ]
+      ),
+      # Phase 176 P10: a copy control's name contains the value it copies.
+      if(copied != "" and String.contains?(name, copied),
+        do: [],
+        else: [
+          violation(:copy_label_omits_value, label, "#{inspect(name)} omits #{inspect(copied)}")
         ]
       ),
       if(Floki.attribute(button, "title") == [],
@@ -1062,6 +1071,9 @@ defmodule MailglassAdmin.Phase182TimeStatusContractTest do
 
   defp fix(:time_titled),
     do: "a timestamp or copy control carries no title attribute: the accessible text is the label"
+
+  defp fix(:copy_label_omits_value),
+    do: "the copy control's aria-label must contain the exact value it copies (Phase 176 P10)"
 
   defp fix(:copy_label_omits_time),
     do: "the copy control's aria-label must contain the visible time text (WCAG 2.5.3)"

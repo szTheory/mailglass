@@ -141,7 +141,7 @@ defmodule MailglassAdmin.Controllers.Assets do
       // is written that omits it. A copy control names the same text (WCAG 2.5.3).
       el.removeAttribute("aria-label")
       const copy = el.closest("[data-timestamp-copy]")
-      if (copy) copy.setAttribute("aria-label", `Copy ${localValue} (copies the exact UTC value)`)
+      if (copy) copy.setAttribute("aria-label", `Copy ${localValue} (copies the exact UTC value ${copy.dataset.copyValue})`)
       el.dataset.localized = "1"
     }
 

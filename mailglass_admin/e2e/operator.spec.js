@@ -728,7 +728,7 @@ test.describe("operator browser gate", () => {
     await expect(ts).toHaveText(expectedLocal);
     // The visible text keeps a zone token, and the copy control's name contains it.
     await expect(ts).toHaveText(/\b(?:UTC|[A-Z]{2,5}|GMT[+-]\d{1,2})$/);
-    await expect(copyTrigger).toHaveAttribute("aria-label", `Copy ${expectedLocal} (copies the exact UTC value)`);
+    await expect(copyTrigger).toHaveAttribute("aria-label", `Copy ${expectedLocal} (copies the exact UTC value ${await copyTrigger.getAttribute("data-copy-value")})`);
     await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

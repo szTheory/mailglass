@@ -18,7 +18,7 @@ test("timestamp itself copies exact UTC on click and keyboard activation", async
   const copyControl = page.locator("button[data-timestamp-copy]").first();
   const expectedUtc = await copyControl.getAttribute("data-copy-value");
   // The control's name contains its visible text (WCAG 2.5.3) and says what it copies.
-  await expect(copyControl).toHaveAttribute("aria-label", /^Copy .+ \(copies the exact UTC value\)$/);
+  await expect(copyControl).toHaveAttribute("aria-label", /^Copy .+ \(copies the exact UTC value \d{4}-\d{2}-\d{2} .+ UTC\)$/);
   await copyControl.click();
   const toast = page.getByTestId("copy-toast");
   await expect(toast).toBeVisible();

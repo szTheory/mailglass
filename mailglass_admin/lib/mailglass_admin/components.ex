@@ -1963,7 +1963,7 @@ defmodule MailglassAdmin.Components do
         type="button"
         data-timestamp-copy="true"
         data-copy-value={@exact}
-        aria-label={"Copy #{@display} (copies the exact UTC value)"}
+        aria-label={"Copy #{@display} (copies the exact UTC value #{@exact})"}
         class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
       >
         <time
