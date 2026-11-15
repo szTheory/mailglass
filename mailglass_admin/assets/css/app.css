@@ -305,6 +305,17 @@
   fill: var(--mg-logo-overlap);
 }
 
+/* daisyUI draws .label at 60% of the text colour. Over the light page that is 4.1:1,
+   below the 4.5:1 text floor (axe color-contrast on the Preview assigns form), so a
+   label takes the secondary text role, which the brand book pairs with the page and
+   with cards. The rule sits in the utilities layer with zero specificity: it beats
+   the daisyUI sublayer but never an explicit text-* utility on the same element. */
+@layer utilities {
+  :where(.label) {
+    color: var(--color-secondary);
+  }
+}
+
 .mg-nav-current .mg-nav-label {
   text-decoration: underline;
   text-decoration-color: var(--color-primary);

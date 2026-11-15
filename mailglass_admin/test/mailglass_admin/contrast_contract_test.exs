@@ -67,6 +67,7 @@ defmodule MailglassAdmin.ContrastContractTest do
   @tokens_path Path.join(@repo_root, "brandbook/tokens.json")
   @brand_path Path.join(@repo_root, "brandbook/v2/brand.json")
   @css_source_path Path.join(@admin_root, "assets/css/app.css")
+  @bundle_path Path.join(@admin_root, "priv/static/app.css")
 
   @tiers ["light", "dark"]
 
@@ -280,6 +281,25 @@ defmodule MailglassAdmin.ContrastContractTest do
         {:admin_pair, "text-primary-on-base-100"},
         {:admin_pair, "text-primary-on-base-200"}
       ]
+    }
+  }
+
+  # daisyUI component rules that draw text as a mix of the text colour with transparent
+  # (`.label` at 60%, `::placeholder` at 50%). They are not utilities in admin lib, so the
+  # opacity guard above cannot see them, yet they render. The axe producer found `.label`
+  # at 4.1:1 on the light page during plan 181-04 (D-08). Every such rule the compiled
+  # bundle carries is either overridden by a rule the bundle also carries (with the carrying
+  # admin pairs that prove the override's colour) or exempt with a reason.
+  @component_alpha_text %{
+    ".label" => %{
+      override: ":where(.label){color:var(--color-secondary)}",
+      carrying: ["text-secondary-on-base-100", "text-secondary-on-base-200"]
+    },
+    "::placeholder" => %{
+      exempt:
+        "placeholder hint in inbound/filters_form.ex; about 3.1:1 under the v2 palette and " <>
+          "3.3:1 under the retired v1 palette, so this phase did not make it new, and axe does not " <>
+          "evaluate placeholder pseudo-text; recorded in the phase deferred items for Phase 182"
     }
   }
 
@@ -564,6 +584,104 @@ defmodule MailglassAdmin.ContrastContractTest do
 
       assert Enum.any?(failures, &(&1 =~ "bg-primary/5 secondary over base-100 (light)"))
       refute Enum.any?(failures, &(&1 =~ "base-content over"))
+    end
+  end
+
+  describe "daisyUI component text colours that mix with transparent (D-08)" do
+    test "every one in the compiled bundle is overridden or exempt with a reason", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      css = File.read!(@bundle_path)
+
+      assert component_alpha_text_failures(css, @component_alpha_text, resolved, slots) == []
+
+      # Anti-vacuity: the scan really finds the two daisyUI rules in the real bundle.
+      found = css |> alpha_text_rules() |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+      assert found == Enum.sort(Map.keys(@component_alpha_text))
+    end
+
+    test "the defect the axe producer found is real: 60% text over the light page is below 4.5",
+         %{resolved: resolved, slots: slots} do
+      css = ".label{color:color-mix(in oklab,currentcolor 60%,transparent)}"
+
+      assert [failure] =
+               component_alpha_text_failures(css, %{}, resolved, slots) |> Enum.take(1)
+
+      assert failure =~ ".label draws text as base-content at 60% (light, over base-100)"
+      assert failure =~ "4.1"
+    end
+  end
+
+  describe "component alpha-text detector has teeth (fail-first proof)" do
+    test "an unlisted rule that mixes text below 4.5:1 is named with theme, ground and ratio", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      css =
+        File.read!(@bundle_path) <>
+          ".tooltip{color:color-mix(in oklab,var(--color-base-content) 40%,transparent)}"
+
+      failures = component_alpha_text_failures(css, @component_alpha_text, resolved, slots)
+
+      assert Enum.any?(failures, &(&1 =~ ".tooltip draws text as base-content at 40%"))
+      assert Enum.any?(failures, &(&1 =~ "(dark, over base-200)"))
+    end
+
+    test "an unlisted rule that stays at or above 4.5:1 is not a failure", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      css =
+        File.read!(@bundle_path) <>
+          ".tooltip{color:color-mix(in oklab,currentcolor 90%,transparent)}"
+
+      assert component_alpha_text_failures(css, @component_alpha_text, resolved, slots) == []
+    end
+
+    test "removing the .label override from the bundle is named", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      css =
+        String.replace(
+          File.read!(@bundle_path),
+          ":where(.label){color:var(--color-secondary)}",
+          ""
+        )
+
+      failures = component_alpha_text_failures(css, @component_alpha_text, resolved, slots)
+
+      assert Enum.any?(failures, &(&1 =~ ".label" and &1 =~ "override"))
+    end
+
+    test "a stale entry, a reasonless exemption and a dangling carrying pair are named", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      css = File.read!(@bundle_path)
+
+      stale = Map.put(@component_alpha_text, ".gone", %{exempt: "no longer in the bundle"})
+
+      assert Enum.any?(
+               component_alpha_text_failures(css, stale, resolved, slots),
+               &(&1 =~ ".gone entry is stale")
+             )
+
+      reasonless = Map.put(@component_alpha_text, "::placeholder", %{exempt: " "})
+
+      assert Enum.any?(
+               component_alpha_text_failures(css, reasonless, resolved, slots),
+               &(&1 =~ "::placeholder exemption has no reason")
+             )
+
+      dangling =
+        Map.update!(@component_alpha_text, ".label", &Map.put(&1, :carrying, ["no-such-pair"]))
+
+      assert Enum.any?(
+               component_alpha_text_failures(css, dangling, resolved, slots),
+               &(&1 =~ "carrying pair no-such-pair")
+             )
     end
   end
 
@@ -1141,6 +1259,74 @@ defmodule MailglassAdmin.ContrastContractTest do
       {tier_for_theme(name), slots}
     end)
   end
+
+  # `[{selector, slot, percent}]` for every rule of the compiled bundle whose `color` is a
+  # mix of the text colour (`currentcolor`, read as base-content) or a daisyUI slot with
+  # transparent.
+  defp alpha_text_rules(css) do
+    mix =
+      ~r/(?:^|;)color:color-mix\(in oklab,(currentcolor|var\(--color-[a-z0-9-]+\))\s+(\d+)%,\s*transparent\)/
+
+    for [_rule, selector, body] <- Regex.scan(~r/([^{}]+)\{([^{}]*)\}/, css),
+        [_match, source, percent] <- Regex.scan(mix, body) do
+      slot =
+        case source do
+          "currentcolor" -> "base-content"
+          "var(--color-" <> rest -> String.trim_trailing(rest, ")")
+        end
+
+      {String.trim(selector), slot, String.to_integer(percent)}
+    end
+  end
+
+  defp component_alpha_text_failures(css, table, resolved, slots) do
+    rules = alpha_text_rules(css)
+    selectors = rules |> Enum.map(&elem(&1, 0)) |> Enum.uniq()
+
+    unlisted =
+      for {selector, slot, percent} <- rules,
+          not Map.has_key?(table, selector),
+          tier <- @tiers,
+          ground <- @surfaces,
+          {:ok, fg} <- [operand_hex({:slot, slot}, tier, resolved, slots)],
+          {:ok, bg} <- [operand_hex({:slot, ground}, tier, resolved, slots)],
+          ratio = Contrast.ratio(Contrast.composite(fg, bg, percent / 100), bg),
+          ratio < 4.5 do
+        "#{selector} draws text as #{slot} at #{percent}% (#{tier}, over #{ground}): " <>
+          "#{fmt(ratio)}:1, below 4.5:1; add an override or a reasoned exemption"
+      end
+
+    entries =
+      for {selector, entry} <- table do
+        cond do
+          selector not in selectors ->
+            "#{selector} entry is stale: the bundle no longer mixes that rule's text colour with transparent"
+
+          Map.has_key?(entry, :exempt) and String.trim(entry.exempt) == "" ->
+            "#{selector} exemption has no reason"
+
+          Map.has_key?(entry, :override) and not String.contains?(css, entry.override) ->
+            "#{selector} mixes its text colour with transparent and its override " <>
+              "#{entry.override} is not in the bundle"
+
+          true ->
+            missing_carrying(selector, entry)
+        end
+      end
+
+    unlisted ++ Enum.reject(entries, &is_nil/1)
+  end
+
+  defp missing_carrying(selector, %{carrying: ids}) do
+    known = @admin_pairs |> Enum.map(& &1.id) |> MapSet.new()
+
+    case Enum.reject(ids, &MapSet.member?(known, &1)) do
+      [] -> nil
+      missing -> "#{selector} carrying pair #{Enum.join(missing, ", ")} is not an admin pair"
+    end
+  end
+
+  defp missing_carrying(_selector, _entry), do: nil
 
   defp tier_for_theme("mailglass-light"), do: "light"
   defp tier_for_theme("mailglass-dark"), do: "dark"
