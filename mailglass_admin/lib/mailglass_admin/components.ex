@@ -1059,7 +1059,12 @@ defmodule MailglassAdmin.Components do
   attr(:id, :string, default: nil)
   attr(:name, :string, default: nil)
   attr(:value, :any, default: nil)
-  attr(:type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text)
+
+  attr(:type, :atom,
+    values: [:text, :search, :number, :select, :textarea, :checkbox],
+    default: :text
+  )
+
   attr(:label, :string, required: true)
   attr(:help, :string, default: nil)
   attr(:help_display, :atom, values: [:inline, :tooltip], default: :inline)
@@ -1104,7 +1109,7 @@ defmodule MailglassAdmin.Components do
       </div>
 
       <input
-        :if={@type in [:text, :number] and !@display_readonly?}
+        :if={@type in [:text, :search, :number] and !@display_readonly?}
         id={@control_id}
         name={@control_name}
         type={Atom.to_string(@type)}
@@ -1417,7 +1422,7 @@ defmodule MailglassAdmin.Components do
     end
   end
 
-  defp native_readonly?(type, true) when type in [:text, :number, :textarea], do: true
+  defp native_readonly?(type, true) when type in [:text, :search, :number, :textarea], do: true
   defp native_readonly?(_type, _readonly), do: false
 
   defp display_readonly?(type, true) when type in [:select, :checkbox], do: true

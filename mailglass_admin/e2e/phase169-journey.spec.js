@@ -118,7 +118,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(selectedTime).toHaveCount(1);
     await expect(selectedTime).toBeVisible();
     await expect(selectedTime).toHaveAttribute("data-utc", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/);
-    await expect(selectedTime).toHaveAttribute("aria-label", /^Recorded at .+ local time$/);
+    await expect(selectedTime).not.toHaveAttribute("aria-label", /.*/);
 
     const ordinaryWebhook = page.locator(`[data-event-id="${fixture.ordinary_linked_event_id}"]`);
     await expect(ordinaryWebhook).toContainText("Delivered");

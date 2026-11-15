@@ -1583,14 +1583,32 @@ defmodule MailglassAdmin.ComponentsTest do
           "window_hours" => "168"
         })
 
-      html =
-        render_component(&OperatorFiltersForm.fields/1,
+      # The email search leads the form and lives outside the collapsible panel, so it is
+      # its own wrapper; the other filters follow in the panel.
+      search_html = render_component(&OperatorFiltersForm.search_field/1, form: form)
+
+      other_html =
+        render_component(&OperatorFiltersForm.other_fields/1,
           form: form,
           event_values: [:dispatched, :delivered],
           provider_options: [{"Postmark", "postmark"}, {"SendGrid", "sendgrid"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"event" => "Status was not applied. Choose a listed status."}
         )
+
+      html = search_html <> other_html
+
+      assert_all(search_html, [
+        ~s(<label for="filters_search"),
+        "Email address",
+        ~s(id="filters_search"),
+        ~s(name="filters[search]"),
+        ~s(type="search"),
+        ~s(phx-hook="FilterSearchSync"),
+        "Also matches subjects."
+      ])
+
+      refute search_html =~ "<fieldset"
 
       assert_all(html, [
         "<fieldset",
@@ -1623,7 +1641,14 @@ defmodule MailglassAdmin.ComponentsTest do
         "Last 7 days"
       ])
 
-      assert field_order(html, ["Search", "Time window", "Latest recorded event", "Provider"])
+      assert field_order(html, [
+               "Email address",
+               "Time window",
+               "Latest recorded event",
+               "Provider"
+             ])
+
+      refute other_html =~ ~s(name="filters[search]")
       refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end

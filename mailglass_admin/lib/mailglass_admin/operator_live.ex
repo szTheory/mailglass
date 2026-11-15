@@ -926,55 +926,63 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-filters"
                   class="border-b border-base-300 pb-md"
                 >
-                  <%!-- The class (shared with Inbound, already in the committed bundle) keeps the
-                      desktop breakpoint working after a mobile close; no inline display is written. --%>
-                  <button
-                    type="button"
-                    phx-click={
-                      JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
-                      |> JS.toggle_attribute({"aria-expanded", "true", "false"})
-                    }
-                    data-testid="operator-filters-toggle"
-                    aria-controls="operator-filter-panel"
-                    aria-expanded="false"
-                    class="btn btn-ghost !h-11 min-h-11 md:hidden"
+                  <%!-- One form: the email search leads at every width, then the toggle and the
+                      collapsible panel. The toggle class (shared with Inbound, already in the
+                      committed bundle) keeps the desktop breakpoint working after a mobile close;
+                      no inline display is written. --%>
+                  <.form
+                    for={@filter_form}
+                    id="operator-filters"
+                    phx-change="validate_filters"
+                    phx-submit="apply_filters"
+                    phx-auto-recover="recover_filters"
+                    class="grid gap-md"
                   >
-                    Filters
-                    <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
-                      ({applied_filter_count(@filter_params)} applied)
-                    </span>
-                    <Components.icon name="hero-chevron-down" class="h-4 w-4" />
-                  </button>
+                    <FiltersForm.search_field
+                      form={@filter_form}
+                      committed_search={@filter_params["search"] || ""}
+                    />
 
-                  <div id="operator-filter-panel" class="hidden md:block">
-                    <.form
-                      for={@filter_form}
-                      id="operator-filters"
-                      phx-change="validate_filters"
-                      phx-submit="apply_filters"
-                      phx-auto-recover="recover_filters"
-                      class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
+                    <button
+                      type="button"
+                      phx-click={
+                        JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
+                        |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                      }
+                      data-testid="operator-filters-toggle"
+                      aria-controls="operator-filter-panel"
+                      aria-expanded="false"
+                      class="btn btn-ghost !h-11 min-h-11 md:hidden"
                     >
-                      <FiltersForm.fields
-                        form={@filter_form}
-                        provider_options={@provider_options}
-                        event_values={@event_values}
-                        window_options={@window_options}
-                        errors={@filter_errors}
-                        committed_search={@filter_params["search"] || ""}
-                      />
+                      Filters
+                      <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
+                        ({applied_filter_count(@filter_params)} applied)
+                      </span>
+                      <Components.icon name="hero-chevron-down" class="h-4 w-4" />
+                    </button>
 
-                      <div class="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          phx-click="clear_filters"
-                          class="btn btn-ghost min-h-11 px-md"
-                        >
-                          Clear filters
-                        </button>
+                    <div id="operator-filter-panel" class="hidden md:block">
+                      <div class="grid gap-md xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+                        <FiltersForm.other_fields
+                          form={@filter_form}
+                          provider_options={@provider_options}
+                          event_values={@event_values}
+                          window_options={@window_options}
+                          errors={@filter_errors}
+                        />
+
+                        <div class="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            phx-click="clear_filters"
+                            class="btn btn-ghost min-h-11 px-md"
+                          >
+                            Clear filters
+                          </button>
+                        </div>
                       </div>
-                    </.form>
-                  </div>
+                    </div>
+                  </.form>
 
                   <%!-- Outside the collapsible panel so the label stays visible when the mobile
                       panel is closed. Not live-announced: the invalid field already is (D-12/D-13).

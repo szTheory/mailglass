@@ -361,7 +361,8 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :filters_form} = assigns) do
     ~H"""
-    <FiltersForm.fields
+    <FiltersForm.search_field form={@assigns_map[:form]} />
+    <FiltersForm.other_fields
       form={@assigns_map[:form]}
       event_values={@assigns_map[:event_values]}
       window_options={@assigns_map[:window_options]}

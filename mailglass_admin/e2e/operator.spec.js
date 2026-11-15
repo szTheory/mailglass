@@ -719,12 +719,16 @@ test.describe("operator browser gate", () => {
     await expect(copyTrigger.locator("xpath=..").locator(".mg-field-help-tooltip")).toContainText("UTC • Click to copy");
     await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(ts).not.toContainText("Local:");
-    await expect(ts).toHaveAttribute("aria-label", /local time$/);
-    const expectedLocal = await ts.evaluate(el => new Date(el.dateTime).toLocaleString(undefined, {
+    // The visible text is the accessible name, so no aria-label is written on the <time>.
+    await expect(ts).not.toHaveAttribute("aria-label", /.*/);
+    const expectedLocal = await ts.evaluate(el => new Date(el.dateTime).toLocaleString("en-US", {
       year: "numeric", month: "short", day: "numeric",
-      hour: "numeric", minute: "2-digit"
+      hour: "numeric", minute: "2-digit", timeZoneName: "short"
     }));
     await expect(ts).toHaveText(expectedLocal);
+    // The visible text keeps a zone token, and the copy control's name contains it.
+    await expect(ts).toHaveText(/\b(?:UTC|[A-Z]{2,5}|GMT[+-]\d{1,2})$/);
+    await expect(copyTrigger).toHaveAttribute("aria-label", `Copy ${expectedLocal} (copies the exact UTC value)`);
     await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

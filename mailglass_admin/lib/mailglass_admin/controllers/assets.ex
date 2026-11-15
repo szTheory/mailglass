@@ -101,13 +101,14 @@ defmodule MailglassAdmin.Controllers.Assets do
     }
   })();
 
-  // Show one concise timestamp in the browser's local timezone. The server-rendered
-  // UTC value remains the no-JS fallback and the exact value stays in the title/data.
+  // Show one concise timestamp in the browser's local timezone, with its zone token, in a
+  // fixed en-US format so every operator reads the same shape. The server-rendered UTC
+  // value remains the no-JS fallback and the exact value stays in the data attributes.
   // No phx-hook: a MutationObserver enhances timestamps inserted by LiveView patches.
   ;(() => {
     const FMT = {
       year: "numeric", month: "short", day: "numeric",
-      hour: "numeric", minute: "2-digit"
+      hour: "numeric", minute: "2-digit", timeZoneName: "short"
     }
 
     function localize(el) {
@@ -117,13 +118,17 @@ defmodule MailglassAdmin.Controllers.Assets do
       if (isNaN(d.getTime())) return
       let localValue
       try {
-        localValue = d.toLocaleString(undefined, FMT)
+        localValue = d.toLocaleString("en-US", FMT)
       } catch (_e) {
         return
       }
       if (!localValue) return
       el.textContent = localValue
-      el.setAttribute("aria-label", `Recorded at ${localValue} local time`)
+      // The visible text, which now ends in a zone, is the accessible name: no aria-label
+      // is written that omits it. A copy control names the same text (WCAG 2.5.3).
+      el.removeAttribute("aria-label")
+      const copy = el.closest("[data-timestamp-copy]")
+      if (copy) copy.setAttribute("aria-label", `Copy ${localValue} (copies the exact UTC value)`)
       el.dataset.localized = "1"
     }
 

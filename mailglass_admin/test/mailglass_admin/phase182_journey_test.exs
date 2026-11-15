@@ -22,6 +22,7 @@ defmodule MailglassAdmin.Phase182JourneyTest do
   @base_path "/ops/mail"
   @attention_classes [:failed, :delayed, :not_sent]
   @undetermined "Status cannot be fully determined with this mailglass version."
+  @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   # {label, delivery attrs, bucket the single row must land in}. One row per class,
   # plus the rows D-07 says leave Needs attention (a complaint or an unsubscribe with
@@ -346,7 +347,260 @@ defmodule MailglassAdmin.Phase182JourneyTest do
     end
   end
 
+  describe "search to verdict (BRADM-01)" do
+    test "the labelled email search leads the page and sits outside the filter panel", %{
+      conn: conn
+    } do
+      OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, html} = live(operator_conn(conn), deliveries_path())
+      doc = Floki.parse_document!(html)
+
+      assert [input] = Floki.find(doc, "form#operator-filters input#filters_search")
+      assert Floki.attribute(input, "type") == ["search"]
+      assert Floki.attribute(input, "name") == ["filters[search]"]
+
+      assert [label] = Floki.find(doc, "label[for=filters_search]")
+      assert label |> Floki.text() |> String.trim() == "Email address"
+      assert doc |> Floki.find("#filters_search-help") |> Floki.text() =~ "Also matches subjects."
+
+      # DOM order: the search comes before the collapsible panel, and not inside it.
+      {search_at, _} = :binary.match(html, ~s(id="filters_search"))
+      {panel_at, _} = :binary.match(html, ~s(id="operator-filter-panel"))
+      assert search_at < panel_at
+      assert Floki.find(doc, "#operator-filter-panel #filters_search") == []
+
+      # The panel stays collapsed below md through a class, never an inline display.
+      assert [panel] = Floki.find(doc, "#operator-filter-panel")
+      assert class_tokens(panel) == ["hidden", "md:block"]
+      assert Floki.attribute(panel, "style") == []
+    end
+
+    test "typing the customer's address patches ?search= and narrows to one delivery", %{
+      conn: conn
+    } do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+      address = "pw-bounce-then-open@example.com"
+
+      {:ok, view, html} = live(operator_conn(conn), deliveries_path())
+      assert row_count(html, :cards) == map_size(ids)
+      assert row_count(html, :table) == map_size(ids)
+
+      view
+      |> form("#operator-filters", filters: %{"search" => address})
+      |> render_change()
+
+      path = assert_patch(view)
+
+      assert %{"search" => ^address} =
+               path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+
+      html = render(view)
+      assert row_count(html, :cards) == 1
+      assert row_count(html, :table) == 1
+      assert [badge] = row_badges(html, :mobile, ids.bounce_then_open)
+      assert badge |> Floki.text() |> String.trim() == "Failed"
+
+      # The attention count reads 1: a bounce then an open is Needs attention.
+      assert summary_count(html, :attention) == 1
+      assert summary_count(html, :delivered) == 0
+      assert summary_count(html, :awaiting) == 0
+    end
+
+    test "search, row, Quick view and Full detail reach the verdict with a zone on every time", %{
+      conn: conn
+    } do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+      id = ids.bounce_then_open
+
+      {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
+
+      view
+      |> form("#operator-filters", filters: %{"search" => "pw-bounce-then-open@example.com"})
+      |> render_change()
+
+      assert_patch(view)
+
+      view |> element("#operator-delivery-mobile-#{id}") |> render_click()
+      html = render(view)
+      [quick] = html |> Floki.parse_document!() |> Floki.find("[data-testid=operator-quick-view]")
+      assert [line] = Floki.find(quick, "[data-testid=delivery-verdict-line]")
+      assert Floki.attribute(line, "data-verdict-class") == ["failed"]
+      refute Floki.text(quick) =~ "Next step"
+
+      view |> element("[data-testid=operator-quick-view-full]") |> render_click()
+      html = render(view)
+
+      {verdict_at, _} = :binary.match(html, ~s(id="delivery-detail-verdict"))
+      {timeline_at, _} = :binary.match(html, ~s(data-testid="operator-timeline"))
+      assert verdict_at < timeline_at
+      assert verdict_text(html) =~ "Next step"
+
+      times = html |> Floki.parse_document!() |> Floki.find("time")
+      assert length(times) >= 3
+
+      for time <- times do
+        visible = time |> Floki.text() |> String.trim()
+        assert String.ends_with?(visible, " UTC"), "time #{inspect(visible)} lost its zone"
+      end
+    end
+
+    test "the search and the verdict are never behind a hidden or closed ancestor", %{conn: conn} do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, list_html} = live(operator_conn(conn), deliveries_path())
+      list = Floki.parse_document!(list_html)
+
+      assert [] = hidden_ancestors(list, "filters_search")
+      assert {:ok, _trail} = ancestor_trail(list, "filters_search")
+
+      {:ok, _view, detail_html} = live(operator_conn(conn), detail_path(ids.bounce_then_open))
+      detail = Floki.parse_document!(detail_html)
+
+      assert {:ok, _trail} = ancestor_trail(detail, "delivery-detail-verdict")
+      assert [] = hidden_ancestors(detail, "delivery-detail-verdict")
+
+      # 44px touch targets: the search field and every row's open control.
+      assert [search] = Floki.find(list, "#filters_search")
+      assert "min-h-11" in class_tokens(search)
+
+      for layout <- [:mobile, :desktop], {_case, id} <- ids do
+        assert [control] = Floki.find(list, "#operator-delivery-#{layout}-#{id}")
+        assert "min-h-11" in class_tokens(control), "#{layout} open control for #{id}"
+      end
+    end
+
+    test "the detector flags a hidden ancestor and a closed details element", %{} do
+      hidden = Floki.parse_document!(~s(<div class="hidden md:block"><p id="x">a</p></div>))
+      attr = Floki.parse_document!(~s(<div hidden><p id="x">a</p></div>))
+      closed = Floki.parse_document!(~s(<details><summary>s</summary><p id="x">a</p></details>))
+
+      open =
+        Floki.parse_document!(~s(<details open><summary>s</summary><p id="x">a</p></details>))
+
+      clean = Floki.parse_document!(~s(<div class="md:hidden"><p id="x">a</p></div>))
+
+      assert [_] = hidden_ancestors(hidden, "x")
+      assert [_] = hidden_ancestors(attr, "x")
+      assert [_] = hidden_ancestors(closed, "x")
+      assert [] = hidden_ancestors(open, "x")
+      assert [] = hidden_ancestors(clean, "x")
+    end
+  end
+
+  describe "theme dead render (D-20)" do
+    # The LiveViewTest HTML omits the root layout, so the document is read with get/2.
+    for {cookie, count, value} <- [
+          {"dark", 1, "mailglass-dark"},
+          {"light", 1, "mailglass-light"},
+          {nil, 0, nil}
+        ] do
+      mode = cookie || "system"
+
+      test "the detail document carries #{count} theme owner on <html> for #{mode}", %{conn: conn} do
+        %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+        response =
+          conn
+          |> operator_conn()
+          |> with_theme(unquote(cookie))
+          |> get(detail_path(ids.bounce_then_open))
+          |> html_response(200)
+
+        assert_root_only(response, unquote(count), unquote(value))
+        # The document is the operator shell, not an error page: the surface is live.
+        assert response =~ ~s(data-phx-main)
+      end
+    end
+  end
+
   # -- helpers (only what this file calls: the admin lane is --warnings-as-errors) --
+
+  defp class_tokens(node) do
+    node |> Floki.attribute("class") |> Enum.flat_map(&String.split/1)
+  end
+
+  defp row_count(html, :cards) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid=operator-deliveries-cards] [data-testid=operator-delivery-row]")
+    |> length()
+  end
+
+  defp row_count(html, :table) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid=operator-deliveries-table] tr[data-testid=operator-delivery-row]")
+    |> length()
+  end
+
+  # The {tag, attrs} of every element from the document root down to, not including, the
+  # element with `id`. {:ok, trail} when found, :error otherwise, so a vanished element
+  # cannot pass as "nothing hidden above it".
+  defp ancestor_trail(nodes, id) when is_list(nodes) do
+    Enum.find_value(nodes, :error, fn node ->
+      case ancestor_trail(node, id, []) do
+        {:ok, _trail} = found -> found
+        :error -> nil
+      end
+    end)
+  end
+
+  defp ancestor_trail({tag, attrs, children}, id, trail) do
+    if {"id", id} in attrs do
+      {:ok, Enum.reverse(trail)}
+    else
+      Enum.find_value(children, :error, fn child ->
+        case ancestor_trail(child, id, [{tag, attrs} | trail]) do
+          {:ok, _trail} = found -> found
+          :error -> nil
+        end
+      end)
+    end
+  end
+
+  defp ancestor_trail(_text_or_comment, _id, _trail), do: :error
+
+  # Ancestors of `id` that hide it: a `hidden` class token, the `hidden` attribute, or a
+  # `<details>` without `open`. `md:hidden` is not hidden at 375px, so it is not flagged.
+  defp hidden_ancestors(nodes, id) do
+    case ancestor_trail(nodes, id) do
+      {:ok, trail} -> for {tag, attrs} <- trail, hidden?(tag, attrs), do: {tag, attrs}
+      :error -> [:missing_element]
+    end
+  end
+
+  defp hidden?(tag, attrs) do
+    tokens = attrs |> List.keyfind("class", 0, {"class", ""}) |> elem(1) |> String.split()
+
+    "hidden" in tokens or List.keymember?(attrs, "hidden", 0) or
+      (tag == "details" and not List.keymember?(attrs, "open", 0))
+  end
+
+  defp with_theme(conn, nil), do: conn
+
+  defp with_theme(conn, cookie),
+    do: Plug.Conn.put_req_header(conn, "cookie", "#{@theme_cookie}=#{cookie}")
+
+  # Only the root <html> may own the theme: one attribute for an explicit cookie, none
+  # for system.
+  defp assert_root_only(html, count, value) do
+    owners = html |> Floki.parse_document!() |> Floki.find("[data-theme]")
+    occurrences = length(Regex.scan(~r/\sdata-theme=/, html))
+
+    assert length(owners) == count and occurrences == count,
+           "expected #{count} data-theme owner(s), found #{length(owners)} element(s) and " <>
+             "#{occurrences} attribute occurrence(s)"
+
+    case owners do
+      [] ->
+        :ok
+
+      [{tag, attrs, _children}] ->
+        assert tag == "html", "the single theme owner is <#{tag}>, expected <html>"
+        assert List.keyfind(attrs, "data-theme", 0) == {"data-theme", value}
+    end
+  end
 
   # The badges inside one row of the list, in the mobile card or the desktop table.
   defp row_badges(html, layout, id) do
