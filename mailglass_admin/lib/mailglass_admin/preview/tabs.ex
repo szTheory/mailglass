@@ -63,7 +63,6 @@ defmodule MailglassAdmin.Preview.Tabs do
         id={"tab-panel-" <> Atom.to_string(tab)}
         hidden={@active_tab != tab}
         data-preview-frame-theme={preview_frame_theme_attr(tab, @preview_frame_dark_chrome)}
-        data-theme={preview_frame_data_theme_attr(tab, @preview_frame_dark_chrome)}
         data-testid={if(@active_tab == tab, do: "preview-pane")}
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(tab)}
@@ -80,6 +79,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           headers={@headers}
           device_width={@device_width}
           render_nonce={@render_nonce}
+          preview_frame_dark_chrome={@preview_frame_dark_chrome}
         />
       </div>
     </div>
@@ -93,6 +93,7 @@ defmodule MailglassAdmin.Preview.Tabs do
   attr(:headers, :list, default: [])
   attr(:device_width, :integer, required: true)
   attr(:render_nonce, :integer, required: true)
+  attr(:preview_frame_dark_chrome, :boolean, default: false)
 
   def tab_content(%{active_tab: :html} = assigns) do
     ~H"""
@@ -103,14 +104,20 @@ defmodule MailglassAdmin.Preview.Tabs do
             This email has no HTML content.
           </p>
         <% else %>
-          <iframe
-            srcdoc={@html_body}
-            sandbox="allow-same-origin"
-            style={"width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100);"}
-            phx-update="ignore"
-            id={"preview-iframe-" <> Integer.to_string(@render_nonce)}
-            title="Email HTML preview — browser rendering only"
-          />
+          <div
+            data-testid="preview-frame-backdrop"
+            class="rounded-box p-sm"
+            style={"color-scheme: #{preview_frame_color_scheme(@preview_frame_dark_chrome)}; background: Canvas; width: max-content; min-width: 100%;"}
+          >
+            <iframe
+              srcdoc={@html_body}
+              sandbox="allow-same-origin"
+              style={"color-scheme: light; width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box);"}
+              phx-update="ignore"
+              id={"preview-iframe-" <> Integer.to_string(@render_nonce)}
+              title="Email HTML preview — browser rendering only"
+            />
+          </div>
         <% end %>
       </div>
     </div>
@@ -180,8 +187,9 @@ defmodule MailglassAdmin.Preview.Tabs do
 
   defp preview_frame_theme_attr(_tab, _dark_chrome), do: nil
 
-  defp preview_frame_data_theme_attr(tab, dark_chrome) when tab in [:html, :text],
-    do: if(dark_chrome, do: "mailglass-dark", else: "mailglass-light")
-
-  defp preview_frame_data_theme_attr(_tab, _dark_chrome), do: nil
+  # The email stage follows the frame toggle through the CSS color-scheme
+  # property on a wrapper, never through a token set. The value comes only from
+  # the boolean, so no caller-supplied string reaches the style attribute.
+  defp preview_frame_color_scheme(true), do: "dark"
+  defp preview_frame_color_scheme(_dark_chrome), do: "light"
 end
