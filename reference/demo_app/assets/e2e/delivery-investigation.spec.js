@@ -130,10 +130,10 @@ test("Phase 175 connected Delivery empty states use exact headings, guidance, an
 
   const helios = "/ops/mail?tenant_id=helios-void&view=deliveries&window_hours=168";
   await loginTo(page, helios);
-  await expect(page.getByRole("heading", { name: "No deliveries in this time window", exact: true }))
+  await expect(page.getByRole("heading", { name: "No activity in this time window", exact: true }))
     .toBeVisible();
   await expect(page.getByText(
-    "No deliveries have been recorded for this Account during the selected time window.",
+    "No emails have been recorded for this Account during the selected time window.",
     { exact: true }
   )).toBeVisible();
   await expect(page.getByTestId("operator-delivery-row")).toHaveCount(0);
@@ -142,15 +142,15 @@ test("Phase 175 connected Delivery empty states use exact headings, guidance, an
   const filtered = "/ops/mail?tenant_id=northstar&view=deliveries&search=phase175-no-match&window_hours=168";
   await page.goto(`/demo/login?return_to=${encodeURIComponent(filtered)}`);
   await page.locator("[data-phx-main].phx-connected").waitFor();
-  await expect(page.getByRole("heading", { name: "No deliveries", exact: true })).toBeVisible();
-  await expect(page.getByText("No deliveries match the current filters.", { exact: true }))
+  await expect(page.getByRole("heading", { name: "No activity matches the current filters", exact: true })).toBeVisible();
+  await expect(page.getByText("Change or clear a filter to see more.", { exact: true }))
     .toBeVisible();
   await expect(page.getByTestId("operator-empty-reset")).toBeVisible();
 
   const requestedPage = "/ops/mail?tenant_id=fjordline-aps&view=deliveries&page=2&window_hours=168";
   await page.goto(`/demo/login?return_to=${encodeURIComponent(requestedPage)}`);
   await page.locator("[data-phx-main].phx-connected").waitFor();
-  await expect(page.getByRole("heading", { name: "No deliveries on this page", exact: true }))
+  await expect(page.getByRole("heading", { name: "No activity on this page", exact: true }))
     .toBeVisible();
   await expect(page.getByText("Move to an available page to inspect the current results.", { exact: true }))
     .toBeVisible();

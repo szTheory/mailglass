@@ -296,7 +296,7 @@ test.describe("mailglass demo evidence", () => {
     await page.getByRole("link", { name: /trace a sent email/i }).click();
     await expect(page).toHaveURL(/\/ops\/mail\?tenant_id=northstar/);
     await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
-    // Navigate to Deliveries view to assert the list
+    // Navigate to the Activity view to assert the list
     await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     // Phase 113 (DATA-01) made operator-deliveries-list the mobile-only (md:hidden)
     // <ul>; assert the viewport-agnostic operator-deliveries-list-card <aside> wrapper.

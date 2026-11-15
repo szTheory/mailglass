@@ -214,7 +214,7 @@ test("Phase174 delivery first, last, single, empty, and nil-position states rema
   const heliosPath = "/ops/mail?tenant_id=helios-void&view=deliveries&window_hours=168";
   await page.goto(`/demo/login?return_to=${encodeURIComponent(heliosPath)}`);
   await page.locator("[data-phx-main].phx-connected").waitFor();
-  await expect(page.getByRole("heading", { name: "No deliveries in this time window", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No activity in this time window", exact: true })).toBeVisible();
   await expect(page.getByTestId("operator-delivery-row")).toHaveCount(0);
   await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
   expect(new URL(page.url()).searchParams.has("delivery_id")).toBe(false);

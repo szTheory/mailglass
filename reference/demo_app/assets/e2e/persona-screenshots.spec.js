@@ -44,7 +44,7 @@
 // (helios-void => empty/zero; northstar => error/high-count; fjordline-aps =>
 // long-ID/non-ASCII/null) are inherent in the persona routing. Spot-checks: the
 // system theme + 320 + 768 are added on the #1/#2 surfaces only (App-shell+Health,
-// Deliveries). The register cites the exact cell per finding, so coverage is auditable.
+// Activity). The register cites the exact cell per finding, so coverage is auditable.
 
 const { test, expect } = require("@playwright/test");
 const path = require("path");
@@ -62,8 +62,15 @@ const OUT = path.resolve(
 
 const PERSONAS = ["northstar", "fjordline-aps", "helios-void"];
 
+// The nav_link Storybook specimen carries its own sample label (a demo story attribute, not
+// an Admin screen word). The Storybook assertions read it from the story source, so they
+// check that the story renders inside the Admin CSS, whatever label the specimen shows.
+const STORY_NAV_LABEL = fs
+  .readFileSync(path.resolve(__dirname, "../../storybook/primitives/nav_link.story.exs"), "utf8")
+  .match(/label: "([^"]+)"/)[1];
+
 // The biggest-impact-first surfaces. `kind` drives routing + whether a session is
-// required. Operator surfaces are session-gated (login via /demo/login); the
+// required. Admin surfaces are session-gated (login via /demo/login); the
 // dev-only review surfaces are open. `priority` tags the #1/#2 surfaces that get
 // the system-theme + 320 + 768 spot-check.
 const SURFACES = [
@@ -197,7 +204,7 @@ test.describe("review surfaces", () => {
     await expect(page.getByRole("heading", { name: "Component Gallery" })).toBeVisible();
 
     const galleryNav = page.getByTestId("gallery-nav_link-active");
-    await expect(galleryNav.getByRole("link", { name: "Deliveries" }).first()).toBeVisible();
+    await expect(galleryNav.getByRole("link", { name: "Activity" }).first()).toBeVisible();
     // The gallery renders one specimen per state in the page's own theme (Phase 180:
     // the root <html> is the only theme owner), so the selected-state specimen is
     // read directly in its cell, with no nested theme wrapper.
@@ -208,14 +215,14 @@ test.describe("review surfaces", () => {
     const galleryCss = await adminCssPath(page);
     expect((await page.request.get(galleryCss)).status()).toBe(200);
     await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_light");
-    await expect(await textInAnyFrame(page, "Deliveries")).toBeVisible();
+    await expect(await textInAnyFrame(page, STORY_NAV_LABEL)).toBeVisible();
     const storybookCss = await adminCssPath(page);
     expect(storybookCss).toBe(galleryCss);
     expect((await page.request.get(storybookCss)).status()).toBe(200);
 
     await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_dark");
     const darkNav = page.locator('[data-theme="mailglass-dark"] a[aria-current="page"]');
-    await expect(darkNav).toHaveText("Deliveries");
+    await expect(darkNav).toHaveText(STORY_NAV_LABEL);
 
     await page.goto("/dev/storybook/primitives/theme_picker?variation_id=dark_selected");
     const themeGroupNames = await page
@@ -271,9 +278,9 @@ test.describe("working preview readiness", () => {
     const galleryCssPath = await adminCssPath(page);
     expect(galleryCssPath).toBe(previewCssPath);
 
-    const deliveriesLink = page.getByRole("link", { name: "Deliveries" }).first();
-    await expect(deliveriesLink).toBeVisible();
-    expect(await deliveriesLink.evaluate((element) => element.tabIndex)).toBeGreaterThanOrEqual(0);
+    const activityLink = page.getByRole("link", { name: "Activity" }).first();
+    await expect(activityLink).toBeVisible();
+    expect(await activityLink.evaluate((element) => element.tabIndex)).toBeGreaterThanOrEqual(0);
 
     const storybookResponse = await page.goto(
       "/dev/storybook/primitives/nav_link?variation_id=active_light"
@@ -281,7 +288,7 @@ test.describe("working preview readiness", () => {
     expect(storybookResponse?.ok(), "Storybook review route must return a successful page").toBe(
       true
     );
-    const storyText = await textInAnyFrame(page, "Deliveries");
+    const storyText = await textInAnyFrame(page, STORY_NAV_LABEL);
     await expect(storyText).toBeVisible();
     const storybookCssPath = await adminCssPath(page);
     expect(storybookCssPath).toBe(previewCssPath);

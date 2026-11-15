@@ -114,12 +114,16 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     // The recipient renders verbatim (unmasked) in the detail header.
     await expect(detail.getByText(FJORDLINE_RECIPIENT)).toBeVisible();
 
-    // Full detail keeps technical identifiers visible in their dedicated
-    // non-collapsible section. They remain verbatim and must not cause overflow.
+    // Full detail keeps technical identifiers in the Technical details disclosure,
+    // collapsed since 182-02 so the verdict leads. Open it (the socket is connected, so
+    // the join patch cannot drop the open state) and read them verbatim: they must not
+    // cause overflow.
     const technical = detail.locator("#delivery-detail-technical");
     await expect(technical).toHaveCount(1);
     await expect(technical).toBeVisible();
-    await expect(technical.locator("summary")).toHaveCount(0);
+    await expect(technical.locator("summary")).toHaveCount(1);
+    await technical.locator("summary").click();
+    await expect(technical).toHaveJSProperty("open", true);
     await expectNoPageHorizontalOverflow(page);
 
     // The long delivery id (provider_message_id) renders verbatim as its own
@@ -128,17 +132,20 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     await expect(providerId).toBeVisible();
     await expect(providerId).toHaveText(LONG_DELIVERY_ID);
 
-    // The 64-char mailable shows its short module name; the exact module is the
-    // trigger's accessible description and appears in its help on activation.
-    const mailable = technical.getByRole("button", {
-      name: "Mailables.TransactionalEmailWithVeryLongModuleName",
+    // The 64-char mailer shows its plain name in the Mailer row (outside the disclosure);
+    // the exact stored module is printed in full below it, is the trigger's accessible
+    // description, and appears in its help on activation (182-04, D-13).
+    const mailerRow = detail.getByTestId("operator-detail-mailer");
+    const mailer = mailerRow.getByRole("button", {
+      name: "Transactional email with very long module name",
       exact: true,
     });
-    await expect(mailable).toBeVisible();
-    await expect(mailable).toHaveAccessibleDescription(LONG_MAILABLE);
-    await mailable.click();
-    await expect(technical.locator("#delivery-detail-mailable-tooltip")).toBeVisible();
-    await expect(technical.locator("#delivery-detail-mailable-tooltip")).toHaveText(LONG_MAILABLE);
+    await expect(mailer).toBeVisible();
+    await expect(mailer).toHaveAccessibleDescription(LONG_MAILABLE);
+    await expect(mailerRow.getByTestId("operator-detail-mailer-identity")).toHaveText(LONG_MAILABLE);
+    await mailer.click();
+    await expect(mailerRow.locator("#delivery-detail-mailer-tooltip")).toBeVisible();
+    await expect(mailerRow.locator("#delivery-detail-mailer-tooltip")).toHaveText(LONG_MAILABLE);
     await expectNoPageHorizontalOverflow(page);
 
     // The single event is :delivered with reject_reason: nil -> the timeline
@@ -170,17 +177,17 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     await page.goto("/ops/mail?tenant_id=helios-void&view=deliveries");
 
     // A crash would surface a Phoenix/Plug error page, not the operator shell.
-    await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Deliveries");
+    await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Activity");
 
-    // The deliveries surface for a zero-delivery account shows the truly-empty
+    // The Activity surface for a zero-delivery account shows the truly-empty
     // state (its collection heading counts zero), never another tenant's rows.
     await expect(
-      page.getByRole("heading", { name: "No deliveries in this time window", exact: true })
+      page.getByRole("heading", { name: "No activity in this time window", exact: true })
     ).toBeVisible();
     await expect(
-      page.getByText("No deliveries have been recorded for this Account during the selected time window.")
+      page.getByText("No emails have been recorded for this Account during the selected time window.")
     ).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2, name: /^Deliveries\b/ }).first()).toContainText("(0)");
+    await expect(page.getByRole("heading", { level: 2, name: /^Activity\b/ }).first()).toContainText("(0)");
     await expect(page.getByTestId("operator-delivery-row")).toHaveCount(0);
 
     // No server-error page.

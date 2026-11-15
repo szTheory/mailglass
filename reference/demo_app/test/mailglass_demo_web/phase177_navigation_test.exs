@@ -28,7 +28,7 @@ defmodule MailglassDemoWeb.Phase177NavigationTest do
       assert redirected_to(conn) == "/demo/login?return_to=%2Fops%2Fmail"
     end
 
-    test "Phase 177 logged-out Fjordline Deliveries return lands on Fjordline after login", %{
+    test "Phase 177 logged-out Fjordline Activity return lands on Fjordline after login", %{
       conn: conn
     } do
       conn = get(conn, @fjordline_deliveries)
@@ -129,7 +129,7 @@ defmodule MailglassDemoWeb.Phase177NavigationTest do
       assert links != []
 
       for link <- links do
-        assert Floki.text(link) =~ "Back to Deliveries"
+        assert Floki.text(link) =~ "Back to Activity"
       end
 
       assert [href] = links |> Floki.attribute("href") |> Enum.uniq()
