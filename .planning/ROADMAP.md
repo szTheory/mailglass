@@ -53,7 +53,7 @@
 
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (completed 2026-11-14)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
-- [ ] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched
+- [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
 - [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen
 - [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry brand v2; announcement and any trademark claim wait on the search result
 
@@ -145,7 +145,7 @@ Plans:
   3. The admin renders Funnel Display at weight 600 and the other faces from the six bundled woff2 files in `priv/static/fonts`, with the OFL texts beside them. A static contract test in the required admin lane (`font_assets_contract_test`) proves the compiled bundle references no remote font or stylesheet URL and that the served fonts equal `@allowed_fonts`; a font outside `@allowed_fonts` returns 404 (`assets_test`). A local browser network check is recorded as advisory evidence, never as the proof.
   4. The new logo and favicon appear in the admin, and the `←` glyph is gone from every screen. The updated `brand_test` and `accessibility_test` pass, and the axe baseline is regenerated exactly once, as the phase's last change.
   5. `config.ex`, `theme.ex`, the email button colors and the VML goldens show no diff, and their existing tests pass without edits.
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 **Plan budget**: about 4
 
 Plans:
@@ -199,6 +199,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
-| 181. Brand v2 Tokens, Fonts and Logo | 4/4 | In Progress | - |
+| 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
 | 182. Admin Words and Layout, One Job First | 0/TBD | Not started | - |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
