@@ -13,7 +13,6 @@ defmodule MailglassAdmin.AdminShell do
   alias MailglassAdmin.Components
 
   attr(:testid, :string, default: "admin-shell")
-  attr(:theme_attr, :string, default: nil)
   attr(:sidebar_width_class, :string, default: "md:grid-cols-[15rem_1fr]")
   attr(:main_max_width_class, :string, default: "max-w-7xl")
 
@@ -30,7 +29,6 @@ defmodule MailglassAdmin.AdminShell do
     ~H"""
     <div
       data-testid={@testid}
-      data-theme={@theme_attr}
       class="mg-admin-root min-h-screen bg-base-100 text-base-content"
     >
       <header

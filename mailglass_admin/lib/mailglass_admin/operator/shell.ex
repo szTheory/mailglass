@@ -195,7 +195,6 @@ defmodule MailglassAdmin.Operator.Shell do
     ~H"""
     <AdminShell.shell
       testid="operator-shell"
-      theme_attr={Theme.data_theme(@theme_choice)}
       sidebar_width_class="md:grid-cols-[15rem_1fr]"
       main_max_width_class="max-w-7xl"
     >
