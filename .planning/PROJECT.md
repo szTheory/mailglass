@@ -21,7 +21,7 @@ The core value remains **email you can see, audit, and trust before it ships**. 
 **Target features:**
 - Compatibility policy (gloss, don't rename), an explicit status map, a brand pin (book zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`), and a recorded trademark/register search.
 - A reproducible admin bundle with a drift gate CI actually runs, plus a before-catalog of current screens on realistic fixtures.
-- v2 tokens, a contrast-verified 36-slot role map, bundled fonts and logo/favicon in one coordinated change. Core email defaults stay unchanged.
+- v2 tokens, a contrast-verified role map (39 colour roles and 2 logo roles per theme), bundled fonts and logo/favicon in one coordinated change. Core email defaults stay unchanged.
 - Admin words and layout proven end to end on one job ("a customer says the password reset never arrived"), then rolled out, with a separate-agent design review gate.
 - README, ExDoc, Hex packaging and launch-prep docs aligned with the book; announcement and any trademark claim gated on the search result.
 

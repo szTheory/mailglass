@@ -23,9 +23,9 @@
 
 ### Tokens, Fonts, Logo (BRTOK)
 
-- [ ] **BRTOK-01**: Brand v2 tokens and an explicit role map for all 36 admin theme slots (solid, on-solid, sunken, input border and the rest) are adopted for light and dark.
+- [ ] **BRTOK-01**: Brand v2 tokens and an explicit role map for every admin colour role are adopted for light and dark: 39 `--mg-color-*` roles plus 2 logo roles (`--mg-logo-glass`, `--mg-logo-overlap`) per theme, feeding the 20 daisyUI slots (solid, on-solid, sunken, input border and the rest).
 - [ ] **BRTOK-02**: A static contrast test checks every declared foreground/background pair per theme against the book's ratios, with no new dependency.
-- [ ] **BRTOK-03**: The seven woff2 font files (about 52 KB, no CDN) ship with OFL texts in `priv/static/fonts`, with `@external_resource`, `@allowed_fonts` and the weight-600 mapping for Funnel Display.
+- [ ] **BRTOK-03**: The six woff2 font files (about 52 KB, no CDN) ship with OFL texts in `priv/static/fonts`, with `@external_resource`, `@allowed_fonts` and the weight-600 mapping for Funnel Display.
 - [ ] **BRTOK-04**: The logo and favicon files replace the current ones, and the `←` glyph is replaced.
 - [ ] **BRTOK-05**: `brand_test`, `token_parity_test` and `accessibility_test` are updated, and the axe baseline is regenerated once, last.
 - [ ] **BRTOK-06**: Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) are unchanged, proven by existing tests passing without edits.

@@ -140,9 +140,9 @@ Plans:
 **Depends on**: Phase 180 (reproducible bundle and drift gate; before-catalog captured)
 **Requirements**: BRTOK-01, BRTOK-02, BRTOK-03, BRTOK-04, BRTOK-05, BRTOK-06
 **Success Criteria** (what must be TRUE):
-  1. All 36 admin theme slots resolve to brand v2 values through the explicit role map in both light and dark, including the slots with no direct v2 source (solid, on-solid, sunken, input border and the rest). The regenerated bundle passes the Phase 180 drift gate and the updated `token_parity_test`.
+  1. All 39 `--mg-color-*` roles and the 2 logo roles (`--mg-logo-glass`, `--mg-logo-overlap`) resolve to brand v2 values through the explicit role map in the light, dark and system (`prefers-color-scheme`) blocks, and feed the 20 daisyUI slots, including the roles with no direct v2 source (solid, on-solid, sunken, input border and the rest). The regenerated bundle passes the Phase 180 drift gate and the updated `token_parity_test`.
   2. A static contrast test checks every declared foreground/background pair per theme against the book's ratios, and lowering any pair below its ratio fails it. `mix.lock` gains no new dependency.
-  3. The admin renders Funnel Display at weight 600 and the other faces from the seven bundled woff2 files in `priv/static/fonts`, with the OFL texts beside them. A browser network check shows no font request leaves the host, and a font outside `@allowed_fonts` is rejected.
+  3. The admin renders Funnel Display at weight 600 and the other faces from the six bundled woff2 files in `priv/static/fonts`, with the OFL texts beside them. A static contract test in the required admin lane (`font_assets_contract_test`) proves the compiled bundle references no remote font or stylesheet URL and that the served fonts equal `@allowed_fonts`; a font outside `@allowed_fonts` returns 404 (`assets_test`). A local browser network check is recorded as advisory evidence, never as the proof.
   4. The new logo and favicon appear in the admin, and the `←` glyph is gone from every screen. The updated `brand_test` and `accessibility_test` pass, and the axe baseline is regenerated exactly once, as the phase's last change.
   5. `config.ex`, `theme.ex`, the email button colors and the VML goldens show no diff, and their existing tests pass without edits.
 **Plans**: 4 plans
