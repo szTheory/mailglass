@@ -229,6 +229,136 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  @doc """
+  Seeds the Phase 182 "password reset never arrived" journey on `"browser-tenant"`.
+
+  Nine password-reset deliveries, one per history an operator has to read, each with
+  its own reserved `pw-<case>@example.com` recipient so a search isolates it. Rows
+  are written the way production writes them: module-only `mailable`, lifecycle
+  columns set the way the projector sets them. One row carries `Module.function`
+  (the seeded plain-name case). Returns `%{tenant_id:, ids: %{case => delivery_id}}`.
+  """
+  def seed_phase182_journey! do
+    reset!()
+
+    account = "MailglassAdmin.Fixtures.AccountMailer"
+
+    sent_no_report =
+      journey_delivery!(:sent_no_report, 5, %{
+        mailable: account <> ".password_reset",
+        status: :sent,
+        last_event_type: :sent
+      })
+
+    insert_event!(sent_no_report, %{type: :sent, occurred_at: hours_ago(5)})
+
+    bounce =
+      journey_delivery!(:bounce, 6, %{
+        last_event_type: :bounced,
+        bounced_at: hours_ago(6),
+        terminal: true
+      })
+
+    insert_event!(bounce, %{type: :sent, occurred_at: hours_ago(7)})
+    insert_event!(bounce, %{type: :bounced, occurred_at: hours_ago(6), reject_reason: :invalid})
+
+    bounce_then_open =
+      journey_delivery!(:bounce_then_open, 3, %{
+        last_event_type: :opened,
+        bounced_at: hours_ago(5),
+        terminal: true
+      })
+
+    insert_event!(bounce_then_open, %{type: :sent, occurred_at: hours_ago(6)})
+
+    insert_event!(bounce_then_open, %{
+      type: :bounced,
+      occurred_at: hours_ago(5),
+      reject_reason: :invalid
+    })
+
+    insert_event!(bounce_then_open, %{type: :opened, occurred_at: hours_ago(3)})
+
+    nil_reason_bounce =
+      journey_delivery!(:nil_reason_bounce, 8, %{
+        last_event_type: :bounced,
+        bounced_at: hours_ago(8),
+        terminal: true
+      })
+
+    insert_event!(nil_reason_bounce, %{type: :sent, occurred_at: hours_ago(9)})
+
+    insert_event!(nil_reason_bounce, %{
+      type: :bounced,
+      occurred_at: hours_ago(8),
+      reject_reason: nil
+    })
+
+    deferred = journey_delivery!(:deferred, 4, %{last_event_type: :deferred})
+    insert_event!(deferred, %{type: :sent, occurred_at: hours_ago(5)})
+    insert_event!(deferred, %{type: :deferred, occurred_at: hours_ago(4)})
+
+    suppressed =
+      journey_delivery!(:suppressed, 9, %{
+        last_event_type: :suppressed,
+        suppressed_at: hours_ago(9),
+        terminal: true
+      })
+
+    insert_event!(suppressed, %{type: :suppressed, occurred_at: hours_ago(9)})
+
+    insert_suppression!(%{
+      tenant_id: @tenant_id,
+      address: suppressed.recipient,
+      scope: :address,
+      reason: :hard_bounce,
+      source: "webhook:postmark"
+    })
+
+    complained =
+      journey_delivery!(:complained, 10, %{
+        last_event_type: :complained,
+        complained_at: hours_ago(10),
+        terminal: true
+      })
+
+    insert_event!(complained, %{type: :sent, occurred_at: hours_ago(11)})
+    insert_event!(complained, %{type: :complained, occurred_at: hours_ago(10)})
+
+    delivered =
+      journey_delivery!(:delivered, 2, %{
+        last_event_type: :delivered,
+        delivered_at: hours_ago(2),
+        terminal: true
+      })
+
+    insert_event!(delivered, %{type: :sent, occurred_at: hours_ago(3)})
+    insert_event!(delivered, %{type: :delivered, occurred_at: hours_ago(2)})
+
+    queued =
+      journey_delivery!(:queued, 1, %{
+        status: :queued,
+        last_event_type: :queued
+      })
+
+    ids =
+      for {case_id, delivery} <- [
+            sent_no_report: sent_no_report,
+            bounce: bounce,
+            bounce_then_open: bounce_then_open,
+            nil_reason_bounce: nil_reason_bounce,
+            deferred: deferred,
+            suppressed: suppressed,
+            complained: complained,
+            delivered: delivered,
+            queued: queued
+          ],
+          into: %{},
+          do: {case_id, delivery.id}
+
+    %{tenant_id: @tenant_id, ids: ids}
+  end
+
   def seed_phase169_replay!(variant) when variant in ["zero", "one", "many"] do
     reset!()
 
@@ -895,6 +1025,28 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   def exact_recipient, do: "browser-exact@example.com"
   def ambiguous_recipient, do: "browser-ambiguous@example.com"
   def noop_recipient, do: "browser-noop@example.com"
+
+  # A password-reset delivery for the Phase 182 journey. Distinct recipient and
+  # provider message id per case; `age_hours` is the last event's age.
+  defp journey_delivery!(case_id, age_hours, attrs) do
+    slug = case_id |> Atom.to_string() |> String.replace("_", "-")
+
+    insert_delivery!(
+      Map.merge(
+        %{
+          recipient: "pw-#{slug}@example.com",
+          provider: "postmark",
+          provider_message_id: "pm_pw_#{slug}",
+          mailable: "MailglassAdmin.Fixtures.AccountMailer",
+          status: :sent,
+          last_event_type: :sent,
+          last_event_at: hours_ago(age_hours),
+          metadata: %{"subject" => "Reset your password"}
+        },
+        attrs
+      )
+    )
+  end
 
   defp insert_delivery!(attrs) do
     defaults = %{

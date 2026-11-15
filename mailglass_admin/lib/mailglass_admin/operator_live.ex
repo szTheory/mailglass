@@ -41,6 +41,7 @@ defmodule MailglassAdmin.OperatorLive do
   }
 
   alias MailglassAdmin.Operator.Tenants, as: TenantSelector
+  alias MailglassAdmin.StatusMap
   alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
   alias Phoenix.LiveView.JS
 
@@ -2738,25 +2739,13 @@ defmodule MailglassAdmin.OperatorLive do
   defp delivery_summary(page_meta) do
     counts =
       Enum.reduce(Map.get(page_meta, :outcome_groups, []), %{}, fn group, counts ->
+        # One rule for the summary and the row marks: bucket by the delivery
+        # class, which reads the lifecycle fields the outcome groups carry.
         bucket =
-          case Components.delivery_display_status(group) do
-            status when status in [:delivered, :opened, :clicked] ->
-              :delivered
-
-            status
-            when status in [
-                   :failed,
-                   :bounced,
-                   :rejected,
-                   :complained,
-                   :suppressed,
-                   :unsubscribed,
-                   :deferred
-                 ] ->
-              :attention
-
-            _ ->
-              :awaiting
+          case StatusMap.delivery_class(group) do
+            :delivered -> :delivered
+            class when class in [:failed, :delayed, :not_sent] -> :attention
+            :sent -> :awaiting
           end
 
         Map.update(counts, bucket, group.count, &(&1 + group.count))
