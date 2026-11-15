@@ -34,9 +34,9 @@
 
 - [ ] **BRADM-01**: An operator can search by email, find the delivery under Needs attention, and read a timeline with a verdict, "sent is not delivered", and a next step, through the real LiveView in light, dark and 375px.
 - [x] **BRADM-02**: Every time shown in the admin states its zone, and every status is a pane mark plus a word.
-- [ ] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
-- [ ] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
-- [ ] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
+- [x] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
+- [x] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
+- [x] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
 - [x] **BRADM-06**: Cause sentences appear only where `reject_reason` or the suppression reason exists, with a fixed honest fallback otherwise; "next try at…", "will retry", and cause text with a nil reason are never rendered, enforced by a contract test.
 - [ ] **BRADM-07**: A separate agent reviews each scenario against the book with a rejection gate, and evidence is stored at unique paths with the served SHA recorded after a server restart.
 
@@ -89,9 +89,9 @@ Updated during roadmap creation (2026-11-13).
 | BRTOK-06 | Phase 181 | Complete |
 | BRADM-01 | Phase 182 | Pending |
 | BRADM-02 | Phase 182 | Complete |
-| BRADM-03 | Phase 182 | Pending |
-| BRADM-04 | Phase 182 | Pending |
-| BRADM-05 | Phase 182 | Pending |
+| BRADM-03 | Phase 182 | Complete |
+| BRADM-04 | Phase 182 | Complete |
+| BRADM-05 | Phase 182 | Complete |
 | BRADM-06 | Phase 182 | Complete |
 | BRADM-07 | Phase 182 | Pending |
 | BRDOC-01 | Phase 183 | Pending |

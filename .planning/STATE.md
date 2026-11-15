@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
 status: executing
-stopped_at: Completed 182-04-PLAN.md
-last_updated: "2026-11-15T23:34:24.472Z"
+stopped_at: Completed 182-05-PLAN.md
+last_updated: "2026-11-15T23:56:32.498Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 182 execution started
-state_head: c621cf83ddff8748ad5ae7ab7443e9bdb98e6707
+state_head: f4fbf0ea577f24f1fa5b9c28c5d3a1bcd4bc1f89
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
   percent: 60
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 182 execution started
 
@@ -385,6 +385,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 182 P02 | 25 min | 3 tasks | 19 files |
 | Phase 182 P03 | 26 min | 2 tasks | 21 files |
 | Phase 182 P04 | 29 min | 3 tasks | 41 files |
+| Phase 182 P05 | 20 min | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -770,6 +771,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 182]: 182-04: words detectors refuse a match touching a word character or a hyphen; hover and screen-reader text count as words — An Account id such as browser-tenant is adopter data (418 false hits); help sentences are still sentences. A hyphenated word like tenant-scoped would escape, accepted.
 - [Phase 182]: 182-04: the Mailer trigger label is the plain name (WCAG 2.5.3), the identity is shown in full beside the tooltip, and the plain name never comes from a nil, blank or nameless value — Production stores the module only (C-9); a name is derived from the stored text on binaries, never an atom.
 - [Phase 182]: 182-04: a nil orphan count no longer draws the Tier-1 card (nil > 0 is true in Elixir); the Failed webhook attempts card has the same gate, deferred — A real defect found by planting a nil count; the sibling is out of scope and logged in deferred-items.md.
+- [Phase 182]: 182-05: the structural title assertion follows the screen: Activity on the Activity screen, Admin on the Health overview, Inbound on the Inbound list — 182-04 made the document title follow the screen, so one /Admin/ on the Activity screen would fail a correct product; the Admin assertion is mutation-proven (title reverted to Operator turns it red)
+- [Phase 182]: 182-05: advisory e2e drift that kept a spec from its word pins was fixed in the spec, not excused as pre-existing — collapsed Technical details (182-02), the second timestamp (182-03) and the Activity gloss were deliberate; every advisory lane the plan ran ended green (operator 135 and 137, demo 111, navigation test 9)
+- [Phase 182]: 182-05: lane runs rewrite tracked archived PNGs under .planning/milestones; restore with git checkout -- <paths> and never stage them — structural, phase169-journey and the demo evidence run overwrite v2.9 phase 168, 169 and 172 artifacts; logged in deferred-items.md
 
 ## Quick Tasks Completed
 
@@ -830,8 +834,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T23:34:24.167Z
-Stopped at: Completed 182-04-PLAN.md
+Last session: 2026-11-15T23:56:32.207Z
+Stopped at: Completed 182-05-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
