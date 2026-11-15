@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 181
 current_phase_name: Brand v2 Tokens, Fonts and Logo
 status: executing
-stopped_at: Completed 181-02-PLAN.md
-last_updated: "2026-11-15T16:26:41.565Z"
+stopped_at: Completed 181-03-PLAN.md
+last_updated: "2026-11-15T16:45:36.411Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 181 execution started
-state_head: 54a6e23fbac2fa846f0960b32ff0aeba699d3a88
+state_head: 97eabfe890c0d195c31b8a4a3045251099454659
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 40
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 181 (Brand v2 Tokens, Fonts and Logo) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 181 execution started
 
@@ -378,6 +378,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 180 P04 | 30min | 3 tasks | 6 files |
 | Phase 181 P01 | 16 min | 3 tasks | 14 files |
 | Phase 181 P02 | 14 min | 3 tasks | 39 files |
+| Phase 181 P03 | 17min | 3 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -744,6 +745,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 181]: 181-02: brand_pin extend verb is the only entry for new assets; it also refuses a pinned entry that no longer equals its zip member — BRTOK-03 no-hand-edit-of-the-pin prohibition then rests on extend, not on verify alone
 - [Phase 181]: 181-02: fonts embedded at compile time behind a closed allow-list (allowed_fonts/0); font-bold maps to the 600 face via --font-weight-bold; no font-synthesis-weight guard — All three families ship a 600 face, so font-bold at 600 never synthesizes; a retired name, an OFL text and a traversal are empty-body 404s
 - [Phase 181]: 181-02: tabular numerals via a time,td base rule plus the Tailwind tabular-nums utility on the two mobile email list containers — Covers every desktop row and mobile card row without redefining Tailwind's utility
+- [Phase 181]: GlyphScan returns one {line, text} pair per non-empty line for both :ex and :heex so every glyph finding names its exact line
+- [Phase 181]: U+000D in the gallery raw-MIME specimen is an exact reasoned allow-list entry, not a widening of the 170-code-point subset literal; the subset stays equal to the six woff2 cmaps and is bound to their sha256 values in brand.pin.json
+- [Phase 181]: Opacity-modified colour utilities in admin lib are keyed by utility string: seven composite rows (base-content and secondary over base-100 and base-200, both themes, >= 4.5) and three reasoned sub-3:1 edge exemptions whose carrying pair must exist; only a stale exemption is red
 
 ## Quick Tasks Completed
 
@@ -804,8 +808,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T16:26:41.311Z
-Stopped at: Completed 181-02-PLAN.md
+Last session: 2026-11-15T16:45:36.232Z
+Stopped at: Completed 181-03-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
