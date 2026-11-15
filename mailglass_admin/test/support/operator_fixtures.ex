@@ -359,6 +359,68 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{tenant_id: @tenant_id, ids: ids}
   end
 
+  @doc """
+  Seeds the Phase 182 status grid on `"browser-tenant"`: one delivery for every persistable
+  `Delivery.status` x `Delivery.last_event_type` x confirmed cell, so a screen scan sees
+  every combination an operator list can show.
+
+  The cell universe is read from the schema, never written out: statuses from
+  `Ecto.Enum.values(Delivery, :status)`, last event types from
+  `Delivery.__event_types__/0`, confirmed from `[true, false]`. A `nil` last event type is
+  not a persistable cell (`last_event_type` is `NOT NULL`), so it is not seeded here; the
+  contract renders those rows in memory.
+
+  Each row carries a unique reserved `grid-<status>-<last>-<confirmed>@example.com`
+  recipient and a `last_event_at` one minute older than the row before it. Lifecycle
+  timestamps follow the cell the way the projector would set them (`delivered_at` when
+  confirmed, `bounced_at` after a bounce, `suppressed_at` when suppressed, `complained_at`
+  after a complaint), and `terminal` latches with them. A combination that production
+  could not reach still renders, which is the point of a grid.
+
+  Returns `%{tenant_id:, count:, rows: [%{id:, status:, last_event_type:, confirmed:}]}`.
+  """
+  def seed_phase182_status_grid! do
+    reset!()
+
+    cells =
+      for status <- Ecto.Enum.values(Delivery, :status),
+          last <- Delivery.__event_types__(),
+          confirmed <- [true, false],
+          do: {status, last, confirmed}
+
+    rows =
+      for {{status, last, confirmed}, index} <- Enum.with_index(cells) do
+        last_event_at = DateTime.add(DateTime.utc_now(), -(index + 1) * 60, :second)
+        slug = "#{status}-#{last}-#{confirmed}"
+
+        lifecycle =
+          %{}
+          |> put_if(confirmed, :delivered_at, last_event_at)
+          |> put_if(last == :bounced, :bounced_at, last_event_at)
+          |> put_if(last == :complained, :complained_at, last_event_at)
+          |> put_if(status == :suppressed or last == :suppressed, :suppressed_at, last_event_at)
+
+        delivery =
+          insert_delivery!(
+            Map.merge(lifecycle, %{
+              recipient: "grid-#{slug}@example.com",
+              provider_message_id: "pm_grid_#{index}",
+              status: status,
+              last_event_type: last,
+              last_event_at: last_event_at,
+              terminal: map_size(lifecycle) > 0 or last in [:rejected, :failed]
+            })
+          )
+
+        %{id: delivery.id, status: status, last_event_type: last, confirmed: confirmed}
+      end
+
+    %{tenant_id: @tenant_id, count: length(rows), rows: rows}
+  end
+
+  defp put_if(map, true, key, value), do: Map.put(map, key, value)
+  defp put_if(map, false, _key, _value), do: map
+
   def seed_phase169_replay!(variant) when variant in ["zero", "one", "many"] do
     reset!()
 
