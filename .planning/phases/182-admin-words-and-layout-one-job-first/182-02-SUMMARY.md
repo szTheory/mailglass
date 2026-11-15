@@ -120,11 +120,14 @@ coverage:
     description: "The browser localizer formats with en-US and timeZoneName short and writes no aria-label that omits the visible text"
     requirement: BRADM-02
     verification:
+      - kind: unit
+        ref: "mailglass_admin/test/mailglass_admin/phase182_time_status_contract_test.exs#static JS (D-18) the localizer keeps a zone token and a fixed locale"
+        status: pass
       - kind: other
-        ref: "mailglass_admin/e2e/operator.spec.js (advisory lane, node --check only here); the static FMT assertion lands in 182-03"
+        ref: "mailglass_admin/e2e/operator.spec.js (advisory lane, node --check only; the browser run under America/New_York and Pacific/Auckland is advisory, 182-06)"
         status: not-run
-    human_judgment: true
-    rationale: "No required-lane test reads the embedded FMT block yet; the mutation that removes timeZoneName turns nothing red here (recorded below). 182-03 adds the static check and the advisory run proves the browser upgrade."
+    human_judgment: false
+    rationale: "Closed by 182-03: the static FMT check reads the served Assets.js_body/0 and turns red when timeZoneName is removed (182-03 mutation M5, the same edit as M6 above). The browser run stays advisory and is not cited as required proof."
   - id: D7
     description: "Cause text is structural: no nil clause, every reject reason and suppression reason has its own sentence, reject-reason parity is a compile-time raise"
     requirement: BRADM-06
