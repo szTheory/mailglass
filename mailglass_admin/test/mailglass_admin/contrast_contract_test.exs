@@ -33,15 +33,26 @@ defmodule MailglassAdmin.ContrastContractTest do
     * **Book `never` rules.** Logo Glass is never a text, link, accent or control
       role or an `X-content` slot; Sand Line is never `border-input`; Deep Glass is
       never a dark-theme text role.
+    * **Opacity-modified colour utilities (D-06, D-07, plan 181-03).** Every
+      `bg-<slot>/<n>`, `border-<slot>/<n>`, `ring-<slot>/<n>` (and the other colour
+      prefixes) in an admin `lib` source is either a composite pair row or an
+      exemption with a reason. The seven text-on-tint grounds are checked at 4.5:1
+      for `base-content` and `secondary`, composited over `base-100` and `base-200`
+      in both themes. The three sub-3:1 decorative edges are exempt only with a
+      reason and the pair that carries the meaning, and the test asserts each
+      named pair exists and that each edge really is below 3:1. An exemption whose
+      utility no source uses any more is stale and red. Both tables are keyed by the
+      utility string, never by a line number.
 
   ## Teeth
 
   Every rule is a pure function returning failure strings, and the "detectors have
   teeth" block plants a violation for each one (a darker dark `text-muted`, a
   slot dropped from the pair table, the `info-text-on-info-bg` pair dropped, a
-  mutated published ratio, an unknown book pair, and each `never` rule), so a pass
-  is not vacuous. The mutation proof (lower one role, observe red, restore) is
-  recorded in the plan summary.
+  mutated published ratio, an unknown book pair, and each `never` rule, plus an
+  unpaired `bg-info/10`, a removed and a stale exemption, a dangling carrying pair
+  and a text colour that fails on a tint), so a pass is not vacuous. The mutation
+  proof (lower one role, observe red, restore) is recorded in the plan summary.
 
   The admin pair table is a plain list of maps so later plans append composite
   rows without restructuring it.
@@ -217,6 +228,61 @@ defmodule MailglassAdmin.ContrastContractTest do
     "text-disabled" => "inactive controls are exempt from WCAG 1.4.3; never the only signal"
   }
 
+  # Opacity-modified colour utilities (the plan 181-03 guard). The scan regex is the
+  # one the plan's acceptance grep uses, so the two cannot disagree.
+  @opacity_regex ~r{(bg|border|ring|text|outline|divide|fill|stroke|from|via|to|shadow|decoration|placeholder|caret|accent)-(primary|secondary|accent|neutral|base-100|base-200|base-300|base-content|info|success|warning|error)(-content)?/[0-9]+}
+  @opacity_parts ~r{^[a-z]+-(primary|secondary|accent|neutral|base-100|base-200|base-300|base-content|info|success|warning|error)(-content)?/([0-9]+)$}
+
+  # Text-on-tint grounds: utility => the text colours that sit on it. Each is checked
+  # at 4.5:1 composited over base-100 and over base-200, in both themes.
+  @text_on_tint [{:slot, "base-content"}, {:slot, "secondary"}]
+  @opacity_composites %{
+    # support_cards.ex drill-down banner; preview/sidebar.ex selected scenario row.
+    "bg-primary/5" => @text_on_tint,
+    # operator/replay_modal.ex selected replay target card.
+    "bg-error/5" => @text_on_tint,
+    # Feedback and eligibility panels: inbound/replay_modal.ex, inbound_live.ex,
+    # operator/replay_modal.ex, operator/shell.ex. The status icons on these tints
+    # are covered by the text-X-on-own-10%-tint pairs above.
+    "bg-error/10" => @text_on_tint,
+    "bg-success/10" => @text_on_tint,
+    "bg-warning/10" => @text_on_tint,
+    # Hover grounds: components.ex nav_link_class/1 and theme_option_class/2.
+    "bg-base-100/60" => @text_on_tint,
+    "bg-base-100/70" => @text_on_tint
+  }
+
+  # Non-text decorative edges below 3:1 that WCAG 1.4.11 does not require, because an
+  # edge that does not by itself identify a control or state carries no meaning.
+  # utility => %{reason, carrying: the pair(s) that carry the meaning}.
+  @opacity_exemptions %{
+    "border-primary/30" => %{
+      reason:
+        "decorative tint edge of the drill-down banner in operator/support_cards.ex " <>
+          "(1.57-1.96:1 across both themes and surfaces); the banner's meaning is its text, " <>
+          "carried by the bg-primary/5 composite row (base-content >= 12.5)",
+      carrying: [{:composite, "bg-primary/5"}]
+    },
+    "border-error/40" => %{
+      reason:
+        "decorative edge of the replay feedback panel in operator/replay_modal.ex " <>
+          "(1.97-2.36:1); the error meaning is the aria-live feedback text, carried by the " <>
+          "bg-error/10 composite row (base-content >= 11.0)",
+      carrying: [{:composite, "bg-error/10"}]
+    },
+    "ring-primary/40" => %{
+      reason:
+        "decorative halo beside a solid border-primary on the same element in " <>
+          "operator/timeline.ex (1.86-2.51:1); the highlight is carried by that solid border, " <>
+          "whose colour is the text-primary pair on base-100 and base-200 " <>
+          "(>= 5.85 light, >= 8.24 dark, above the 3.0 non-text floor)",
+      carrying: [
+        {:admin_pair, "text-primary-on-base-100"},
+        {:admin_pair, "text-primary-on-base-200"}
+      ]
+    }
+  }
+
   setup_all do
     tokens = Jason.decode!(File.read!(@tokens_path))
 
@@ -224,7 +290,8 @@ defmodule MailglassAdmin.ContrastContractTest do
      tokens: tokens,
      resolved: Contrast.resolve_tokens(tokens),
      brand: Jason.decode!(File.read!(@brand_path)),
-     slots: parse_slots(File.read!(@css_source_path))}
+     slots: parse_slots(File.read!(@css_source_path)),
+     lib_sources: lib_sources()}
   end
 
   describe "the Contrast helper" do
@@ -329,6 +396,174 @@ defmodule MailglassAdmin.ContrastContractTest do
 
     test "Deep Glass is never a dark-theme text role", %{resolved: resolved, brand: brand} do
       assert never_deep_glass_failures(resolved, brand) == []
+    end
+  end
+
+  describe "opacity-modified colour utilities (D-06, D-07)" do
+    test "every one in admin lib is a composite pair row or a reasoned exemption", %{
+      lib_sources: sources
+    } do
+      paths = Enum.map(sources, &elem(&1, 0))
+      assert length(paths) > 50
+      assert "lib/mailglass_admin/operator/support_cards.ex" in paths
+      assert "lib/mailglass_admin/components.ex" in paths
+
+      assert opacity_utility_failures(sources, @opacity_composites, @opacity_exemptions) == []
+    end
+
+    test "every composite row passes 4.5:1 over base-100 and base-200 in both themes", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      pairs = composite_pairs(@opacity_composites)
+
+      # 7 utilities x 2 text colours x 2 grounds
+      assert length(pairs) == 28
+      assert admin_pair_failures(resolved, slots, pairs) == []
+    end
+
+    test "every exemption has a reason and names carrying pairs that exist" do
+      assert map_size(@opacity_exemptions) == 3
+
+      assert exemption_failures(@opacity_exemptions, @opacity_composites, @admin_pairs) == []
+    end
+
+    test "every exempt edge really is below 3:1, so the exemption is not hiding a requirement",
+         %{resolved: resolved, slots: slots} do
+      assert exempt_edge_failures(@opacity_exemptions, resolved, slots) == []
+    end
+  end
+
+  describe "opacity detectors have teeth (fail-first proof)" do
+    test "a planted unpaired utility is reported with its file and line", %{lib_sources: sources} do
+      planted = [{"lib/planted.ex", "defmodule P do\n  def c, do: \"bg-info/10 p-md\"\nend\n"}]
+
+      assert opacity_utility_failures(
+               sources ++ planted,
+               @opacity_composites,
+               @opacity_exemptions
+             ) == [
+               "lib/planted.ex:2 bg-info/10 is an opacity-modified colour utility in neither " <>
+                 "the composite pair table nor the exemption table"
+             ]
+    end
+
+    test "other colour prefixes are caught too", %{lib_sources: sources} do
+      for utility <- ["border-info/20", "ring-warning/30", "text-error/70", "from-primary/5"] do
+        planted = [{"lib/planted.heex", ~s(<div class="p-md #{utility}">x</div>\n)}]
+
+        failures =
+          opacity_utility_failures(sources ++ planted, @opacity_composites, @opacity_exemptions)
+
+        assert [failure] = failures
+        assert failure =~ "lib/planted.heex:1 #{utility} is an opacity-modified colour utility"
+      end
+    end
+
+    test "removing an exemption reports the utility it covered", %{lib_sources: sources} do
+      failures =
+        opacity_utility_failures(
+          sources,
+          @opacity_composites,
+          Map.delete(@opacity_exemptions, "border-error/40")
+        )
+
+      assert [failure] = failures
+      assert failure =~ "operator/replay_modal.ex" and failure =~ "border-error/40"
+    end
+
+    test "removing a composite row reports the utility it covered", %{lib_sources: sources} do
+      failures =
+        opacity_utility_failures(
+          sources,
+          Map.delete(@opacity_composites, "bg-warning/10"),
+          @opacity_exemptions
+        )
+
+      assert [failure] = failures
+      assert failure =~ "bg-warning/10"
+    end
+
+    test "an exemption no source uses any more is stale", %{lib_sources: sources} do
+      stale =
+        Map.put(@opacity_exemptions, "border-info/25", %{
+          reason: "pretend",
+          carrying: [{:composite, "bg-error/10"}]
+        })
+
+      assert opacity_utility_failures(sources, @opacity_composites, stale) == [
+               "exemption for border-info/25 is stale: no admin lib source uses it any more"
+             ]
+    end
+
+    test "a reasonless exemption and a dangling carrying pair are reported" do
+      broken = %{
+        "border-primary/30" => %{reason: "  ", carrying: [{:composite, "bg-primary/5"}]},
+        "border-error/40" => %{reason: "decorative", carrying: [{:composite, "bg-nope/10"}]},
+        "ring-primary/40" => %{reason: "decorative", carrying: [{:admin_pair, "no-such-pair"}]},
+        "ring-error/40" => %{reason: "decorative", carrying: []}
+      }
+
+      failures = exemption_failures(broken, @opacity_composites, @admin_pairs)
+
+      assert "exemption for border-primary/30 has no reason" in failures
+
+      assert "exemption for border-error/40 names carrying composite row bg-nope/10, which is not in the composite table" in failures
+
+      assert "exemption for ring-primary/40 names carrying admin pair no-such-pair, which is not in the admin pair table" in failures
+
+      assert "exemption for ring-error/40 names no carrying pair" in failures
+    end
+
+    test "an exempt edge at 3:1 or better is reported as a needless exemption", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      # base-content at 90% over a surface, against that surface, is far above 3:1: it
+      # would not need an exemption.
+      strong = %{
+        "border-base-content/90" => %{
+          reason: "pretend",
+          carrying: [{:composite, "bg-error/10"}]
+        }
+      }
+
+      failures = exempt_edge_failures(strong, resolved, slots)
+
+      assert failures != []
+      assert Enum.all?(failures, &(&1 =~ "border-base-content/90" and &1 =~ "needs no exemption"))
+      assert Enum.any?(failures, &(&1 =~ "(light) over base-100"))
+      assert Enum.any?(failures, &(&1 =~ "(dark) over base-200"))
+    end
+
+    test "a text colour that fails on a tint is red", %{resolved: resolved, slots: slots} do
+      # The light text-disabled role on bg-error/10 over base-100 is about 3.36:1.
+      weak = %{"bg-error/10" => [{:role, "text-disabled"}]}
+      failures = admin_pair_failures(resolved, slots, composite_pairs(weak))
+
+      assert Enum.any?(
+               failures,
+               &(&1 =~ "bg-error/10 text-disabled over base-100 (light)" and
+                   &1 =~ "is 3.36:1, below the 4.5:1 minimum")
+             )
+    end
+
+    test "a composite tint below its own ratio is red when the ground token drops", %{
+      resolved: resolved,
+      slots: slots
+    } do
+      # Lighten the light secondary text role to the page colour: secondary-on-tint goes red.
+      mutated =
+        Map.put(
+          resolved,
+          {"light", "--mg-color-text-muted"},
+          resolved[{"light", "--mg-color-background"}]
+        )
+
+      failures = admin_pair_failures(mutated, slots, composite_pairs(@opacity_composites))
+
+      assert Enum.any?(failures, &(&1 =~ "bg-primary/5 secondary over base-100 (light)"))
+      refute Enum.any?(failures, &(&1 =~ "base-content over"))
     end
   end
 
@@ -704,6 +939,124 @@ defmodule MailglassAdmin.ContrastContractTest do
         hex == deep_glass do
       "never rule: Deep Glass #{hex} is the dark #{var} role; dark text is Bright Glass"
     end
+  end
+
+  # One failure per distinct opacity-modified colour utility that is in neither table
+  # (first file and line it appears on), and one per exemption no source uses any more.
+  # `sources` is a list of {relative path, text}; both tables are keyed by the utility.
+  defp opacity_utility_failures(sources, composites, exemptions) do
+    first_seen =
+      for(
+        {path, text} <- sources,
+        {line, number} <- numbered_lines(text),
+        utility <- opacity_utilities(line),
+        do: {utility, path, number}
+      )
+      |> Enum.reverse()
+      |> Map.new(fn {utility, path, number} -> {utility, {path, number}} end)
+
+    unpaired =
+      for {utility, {path, number}} <- Enum.sort(first_seen),
+          not Map.has_key?(composites, utility),
+          not Map.has_key?(exemptions, utility) do
+        "#{path}:#{number} #{utility} is an opacity-modified colour utility in neither " <>
+          "the composite pair table nor the exemption table"
+      end
+
+    stale =
+      for {utility, _exemption} <- Enum.sort(exemptions), not Map.has_key?(first_seen, utility) do
+        "exemption for #{utility} is stale: no admin lib source uses it any more"
+      end
+
+    unpaired ++ stale
+  end
+
+  defp numbered_lines(text), do: text |> String.split("\n") |> Enum.with_index(1)
+
+  defp opacity_utilities(line) do
+    @opacity_regex |> Regex.scan(line) |> Enum.map(&hd/1)
+  end
+
+  # Composite rows as admin pairs: the text colour on `<slot>` at `<n>%` over each surface.
+  defp composite_pairs(composites) do
+    for {utility, text_colours} <- Enum.sort(composites),
+        text <- text_colours,
+        ground <- @surfaces do
+      {slot, alpha} = parse_opacity_utility(utility)
+
+      %{
+        id: "#{utility} #{operand_name(text)} over #{ground}",
+        fg: text,
+        bg: {:tint, {:slot, slot}, {:slot, ground}, alpha},
+        min: 4.5
+      }
+    end
+  end
+
+  defp parse_opacity_utility(utility) do
+    [_, slot, content, percent] = Regex.run(@opacity_parts, utility)
+    {slot <> content, String.to_integer(percent) / 100}
+  end
+
+  defp operand_name({:slot, slot}), do: slot
+  defp operand_name({:role, role}), do: role
+
+  defp exemption_failures(exemptions, composites, admin_pairs) do
+    pair_ids = MapSet.new(admin_pairs, & &1.id)
+
+    for {utility, %{reason: reason, carrying: carrying}} <- Enum.sort(exemptions),
+        failure <-
+          [if(String.trim(reason) == "", do: "exemption for #{utility} has no reason")] ++
+            carrying_failures(utility, carrying, composites, pair_ids),
+        failure != nil do
+      failure
+    end
+  end
+
+  defp carrying_failures(utility, [], _composites, _pair_ids),
+    do: ["exemption for #{utility} names no carrying pair"]
+
+  defp carrying_failures(utility, carrying, composites, pair_ids) do
+    for reference <- carrying do
+      case reference do
+        {:composite, row} ->
+          if Map.has_key?(composites, row),
+            do: nil,
+            else:
+              "exemption for #{utility} names carrying composite row #{row}, which is not in the composite table"
+
+        {:admin_pair, id} ->
+          if MapSet.member?(pair_ids, id),
+            do: nil,
+            else:
+              "exemption for #{utility} names carrying admin pair #{id}, which is not in the admin pair table"
+      end
+    end
+  end
+
+  # An exempt edge is the colour at `<n>%` over a surface, against that surface. It must
+  # stay below 3:1 on both surfaces in both themes; at 3:1 or better it needs no exemption.
+  defp exempt_edge_failures(exemptions, resolved, slots) do
+    for {utility, _exemption} <- Enum.sort(exemptions),
+        tier <- @tiers,
+        ground <- @surfaces,
+        {slot, alpha} = parse_opacity_utility(utility),
+        {:ok, color_hex} <- [operand_hex({:slot, slot}, tier, resolved, slots)],
+        {:ok, ground_hex} <- [operand_hex({:slot, ground}, tier, resolved, slots)],
+        ratio = Contrast.ratio(Contrast.composite(color_hex, ground_hex, alpha), ground_hex),
+        ratio >= 3.0 do
+      "#{utility} (#{tier}) over #{ground} is #{fmt(ratio)}:1, at or above 3:1, so it needs no exemption"
+    end
+  end
+
+  # Every `.ex` and `.heex` source under mailglass_admin/lib as {path relative to the
+  # package, text}. Plain text, so class strings built in helper functions count.
+  defp lib_sources do
+    @admin_root
+    |> Path.join("lib/**/*.{ex,heex}")
+    |> Path.wildcard()
+    |> Enum.sort()
+    |> Enum.map(&{Path.relative_to(&1, @admin_root), File.read!(&1)})
   end
 
   # ---------------------------------------------------------------------------------------
