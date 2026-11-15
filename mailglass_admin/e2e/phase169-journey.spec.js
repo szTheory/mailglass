@@ -58,7 +58,7 @@ test.describe("Phase 169 connected journey", () => {
     await page.screenshot({ path: "test-results/phase169-health-partial.png", fullPage: true });
   });
 
-  test("Account support keeps exact IDs with no matching Deliveries and opens only proven linkage", async ({ page }) => {
+  test("Account support keeps exact IDs with no matching emails and opens only proven linkage", async ({ page }) => {
     const reset = await page.request.get("/ops/browser-reset?scenario=phase169-support-empty");
     expect(reset.ok()).toBeTruthy();
     const fixture = await reset.json();
@@ -113,9 +113,12 @@ test.describe("Phase 169 connected journey", () => {
       "This exact Event is outside the displayed timeline.",
     );
     // The recorded time renders as the shared timestamp (local display, exact UTC
-    // retained) without a separate "Recorded time" caption.
-    const selectedTime = page.getByTestId("operator-timeline-selected-event").locator("time[data-local-time]");
-    await expect(selectedTime).toHaveCount(1);
+    // retained) without a separate "Recorded time" caption. Since 182-03 the provider's own
+    // time is a timestamp too, so the card holds two `time` elements and the recorded time is
+    // the first.
+    const selectedTimes = page.getByTestId("operator-timeline-selected-event").locator("time[data-local-time]");
+    await expect(selectedTimes).toHaveCount(2);
+    const selectedTime = selectedTimes.first();
     await expect(selectedTime).toBeVisible();
     await expect(selectedTime).toHaveAttribute("data-utc", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/);
     await expect(selectedTime).not.toHaveAttribute("aria-label", /.*/);
@@ -224,7 +227,7 @@ test.describe("Phase 169 connected journey", () => {
     // Health no longer carries a suppression metric: intentional suppression policy
     // is neither fetched nor displayed there (docs/design-system.md, Health). The
     // historical suppressed Delivery Events stay a separate population, reached
-    // through the Deliveries event filter rather than conflated with current policy.
+    // through the Activity event filter rather than conflated with current policy.
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
     const health = page.getByTestId("operator-overview-health");
     await expect(health).toBeVisible();
@@ -400,12 +403,12 @@ test.describe("Phase 169 connected journey", () => {
           .filter(el => el.getClientRects().length > 0)
           .map(el => el.getBoundingClientRect().height)
       }));
-      expect(listGeometry.overflow, `Deliveries page overflow at ${width}px`).toBeLessThanOrEqual(1);
+      expect(listGeometry.overflow, `Activity page overflow at ${width}px`).toBeLessThanOrEqual(1);
       expect(listGeometry.mainWidth).toBe(contentWidth);
       expect(listGeometry.focusTargets.length).toBeGreaterThan(0);
       expect(Math.min(...listGeometry.focusTargets), `Open action target at ${width}px`).toBeGreaterThanOrEqual(44);
       await page.screenshot({ path: path.join(afterDir, `deliveries-${width}.png`), fullPage: true });
-      routes.push({ width, contentWidth, state: "Deliveries", url: new URL(page.url()).pathname + new URL(page.url()).search });
+      routes.push({ width, contentWidth, state: "Activity", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
       await rowOpeners.nth(3).click();
       const quickView = page.getByTestId("operator-quick-view");

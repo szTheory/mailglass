@@ -9,7 +9,7 @@ const { test, expect } = require("@playwright/test");
 // nav item is highlighted on the right route. Only a rendered-DOM assertion can.
 //
 // Both gates are live `test(...)` and ARMED: they flipped green in Phase 119
-// (when the shell stopped hardcoding the Deliveries-active sidebar on the Overview
+// (when the shell stopped hardcoding the Activity-active sidebar on the Overview
 // route and the redundant in-page Navigate card block was removed), and were armed
 // into the documented ratchet floor in Phase 123. They run in the REQUIRED
 // operator_browser_gate CI lane — playwright.config.cjs testDir "./e2e" globs this
@@ -33,7 +33,7 @@ const baseURL =
 // Reaches the Overview view: the default operator route with NO `&view=deliveries`.
 // (Mirrors the openOperator login dance from operator.spec.js — browser-reset +
 // browser-login — but lands on Overview, where openOperator navigates onward to
-// the Deliveries view.)
+// the Activity view.)
 async function openOverview(page) {
   const resetResponse = await page.request.get("/ops/browser-reset");
   expect(resetResponse.ok()).toBeTruthy();
@@ -46,7 +46,7 @@ async function openOverview(page) {
     ).toString()
   );
   // The Overview landing renders this h1; reaching it confirms we are authenticated
-  // and on the Overview route, not the Deliveries view.
+  // and on the Overview route, not the Activity view.
   await expect(
     page.getByRole("heading", { name: "Email health", exact: true })
   ).toBeVisible();
@@ -63,7 +63,7 @@ async function openOverview(page) {
 test.describe("judgment gates (armed in Phase 119)", () => {
   // GATE: nav-active-correctness
   //
-  // Correct end-state: on the Overview route the Deliveries sidebar nav link does
+  // Correct end-state: on the Overview route the Activity sidebar nav link does
   // NOT carry aria-current="page", AND an Overview nav item exists that DOES carry
   // aria-current="page". Phase 119 (SHELL-01) gave Overview its own nav identity and
   // fixed the false-active bug (operator_live.ex active={@view} replaces literal
@@ -72,7 +72,7 @@ test.describe("judgment gates (armed in Phase 119)", () => {
   // also what keeps the Glass accent legitimate on this route.
   // NOTE: This gate is armed and runs in the required operator_browser_gate lane
   // (playwright.config.cjs testDir "./e2e" glob).
-  test("nav-active-correctness: Overview route highlights Overview, not Deliveries", async ({
+  test("nav-active-correctness: Overview route highlights Overview, not Activity", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -80,10 +80,10 @@ test.describe("judgment gates (armed in Phase 119)", () => {
 
     const sidebar = page.getByRole("navigation", { name: "Mailglass sections" }).first();
 
-    // Deliveries must NOT be the active (aria-current=page) item on the Overview route.
+    // Activity must NOT be the active (aria-current=page) item on the Overview route.
     // nav_link emits aria-current={@active && "page"}: when inactive, Phoenix OMITS the
     // attribute entirely (boolean false → no attribute). Assert absence of the attribute.
-    const deliveriesLink = sidebar.getByRole("link", { name: "Deliveries", exact: true });
+    const deliveriesLink = sidebar.getByRole("link", { name: "Activity", exact: true });
     await expect(deliveriesLink).not.toHaveAttribute("aria-current", "page");
 
     // The Overview surface's own nav item (labeled "Health") must exist and BE the

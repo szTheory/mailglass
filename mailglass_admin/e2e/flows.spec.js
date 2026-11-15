@@ -17,7 +17,7 @@ const {
 // Proves the 5-path taxonomy (happy / error / boundary / edge / advanced) per
 // surface at the 320px floor with the {system} theme axis, plus the overlay
 // interaction subset and the light/dark/system contrast spot-check. Drives the
-// three live surfaces (Operator /ops/mail, Inbound /ops/mail/inbound, Preview
+// three live surfaces (Admin /ops/mail, Inbound /ops/mail/inbound, Preview
 // /dev/mail) by SEEDED URL — ZERO new fixtures (D-02). Assertions only:
 // getComputedStyle / boundingBox / scrollWidth-clientWidth / elementFromPoint /
 // data-theme / getAnimations — NEVER any pixel-diff / screenshot assertion (D-03).
@@ -292,6 +292,20 @@ async function selectDeliveryFull(page, row) {
   await expect(page.getByTestId("operator-quick-view")).toBeVisible();
   await page.getByTestId("operator-quick-view-full").click();
   await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+}
+
+// Technical details is a collapsed native disclosure since 182-02: the verdict leads and the
+// identifiers sit one tap below it. Open it (after the socket connects, which would drop a
+// client-set `open`) before reading a Delivery ID or a provider message ID.
+async function openTechnicalDetails(page) {
+  const technical = page.locator("#delivery-detail-technical");
+  await expect(technical).toBeVisible();
+  await page.locator("[data-phx-main].phx-connected").waitFor();
+  if (!(await technical.evaluate(element => element.open))) {
+    await technical.locator("summary").click();
+  }
+  await expect(technical).toHaveJSProperty("open", true);
+  return technical;
 }
 
 async function selectInboundFull(page, row) {
@@ -596,7 +610,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   // -------------------------------- OPERATOR --------------------------------
 
-  test("Operator happy: select row -> detail timeline; single dominant CTA survives 320/system", async ({ page }) => {
+  test("Admin happy: select row -> detail timeline; single dominant CTA survives 320/system", async ({ page }) => {
     await openOperator(page);
     await assertSingleH1(page, "operator happy");
     await assertNoRootOverflow(page, "operator happy");
@@ -614,7 +628,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
         .first()
     );
 
-    // The single obvious top action for Operator: the replay CTA (the one
+    // The single obvious top action for Admin: the replay CTA (the one
     // dominant action in the detail). It must be visible and be the dominant
     // action button at 320px. Live copy is "Review webhook replay" (btn-primary).
     const replayCta = page.getByTestId("operator-replay-open");
@@ -626,7 +640,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoRootOverflow(page, "operator happy detail");
   });
 
-  test("Operator error: delivery_id=does-not-exist -> detail error", async ({ page }) => {
+  test("Admin error: delivery_id=does-not-exist -> detail error", async ({ page }) => {
     // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
     // the error inside it (operator-quick-view-error), the list still behind it.
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
@@ -639,7 +653,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator error master-detail");
   });
 
-  test("Operator boundary: filtered-empty -> empty + reset", async ({ page }) => {
+  test("Admin boundary: filtered-empty -> empty + reset", async ({ page }) => {
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&event=queued`);
     const filteredEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
     await expect(filteredEmpty).toBeVisible();
@@ -649,7 +663,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator boundary master-detail");
   });
 
-  test("Operator edge: long/non-ASCII tenant truncates without overflow at 320", async ({ page }) => {
+  test("Admin edge: long/non-ASCII tenant truncates without overflow at 320", async ({ page }) => {
     // Edge path: a long/non-ASCII tenant id stresses the mono ID cells. The
     // suppressed-status seeded view exposes the truncating ID cells; assert no
     // overflow at the 320 floor on root and master-detail.
@@ -663,7 +677,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     );
   });
 
-  test("Operator advanced: replay modal -> panel above scrim, Escape closes", async ({ page }) => {
+  test("Admin advanced: replay modal -> panel above scrim, Escape closes", async ({ page }) => {
     const modal = await openOperatorReplayModal(page);
     await assertPanelAboveScrim(modal, "operator advanced replay-modal");
     await assertSingleH1(page, "operator advanced");
@@ -895,7 +909,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
 });
 
-test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
+test("Phase 168 Delivery Mailer wrapping", async ({ page }) => {
   const mailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
   fs.mkdirSync(gapClosureArtifacts, { recursive: true });
   await page.setViewportSize({ width: 720, height: 900 });
@@ -916,11 +930,14 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
   const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
   await selectDeliveryFull(page, row);
-  // Technical details are always expanded since Phase 175 (no disclosure summary).
-  await expect(page.locator("#delivery-detail-technical")).toBeVisible();
-  const mailableElement = page.locator("#delivery-detail-mailable-trigger");
-  await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
-  await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
+  // Technical details is a collapsed disclosure since 182-02; open it to read the identifiers.
+  await openTechnicalDetails(page);
+  // The Mailer row (182-04): the plain name is the help trigger, the stored identity is
+  // printed in full below it (mono, wrapping) and also held by the hidden description.
+  await expect(page.locator("#delivery-detail-mailer-trigger")).toHaveText("Transactional email with very long module name");
+  const mailableElement = page.getByTestId("operator-detail-mailer-identity");
+  await expect(mailableElement).toHaveText(mailable);
+  await expect(page.locator("#delivery-detail-mailer")).toHaveText(mailable);
 
   for (const width of [320, 390, 720, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -944,12 +961,12 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
           )
       };
     });
-    expect(geometry.overflowWrap, `Mailable wrapping at ${width}px`).toBe("anywhere");
-    expect(geometry.left, `Mailable left edge at ${width}px`).toBeGreaterThanOrEqual(0);
-    expect(geometry.right, `Mailable right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(geometry.overflowWrap, `Mailer identity wrapping at ${width}px`).toMatch(/^(anywhere|break-word)$/);
+    expect(geometry.left, `Mailer identity left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(geometry.right, `Mailer identity right edge at ${width}px`).toBeLessThanOrEqual(width);
     expect(
       geometry.scrollWidth - geometry.clientWidth,
-      `Mailable element overflow at ${width}px`
+      `Mailer identity element overflow at ${width}px`
     ).toBeLessThanOrEqual(1);
     expect(
       geometry.documentScrollWidth,
@@ -997,10 +1014,11 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
     const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-    // Technical details are always expanded since Phase 175 (no disclosure summary).
-    await expect(zoomPage.locator("#delivery-detail-technical")).toBeVisible();
-    const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
-    await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
+    // Technical details is a collapsed disclosure since 182-02; open it to read the identifiers.
+    await openTechnicalDetails(zoomPage);
+    const zoomedMailable = zoomPage.getByTestId("operator-detail-mailer-identity");
+    await expect(zoomPage.locator("#delivery-detail-mailer")).toHaveText(expectedMailable);
+    await expect(zoomPage.locator("#delivery-detail-mailer-trigger")).toHaveText("Transactional email with very long module name");
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
 
     const serviceWorker =
@@ -1037,7 +1055,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
     const detail = zoomPage.getByTestId("operator-detail-header");
     await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID", expectedDeliveryId, 720);
-    await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailer identity", expectedMailable, 720);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -1086,17 +1104,17 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       zoomGeometry.devicePixelRatio / initialDevicePixelRatio,
       "200% browser zoom doubles devicePixelRatio"
     ).toBe(2);
-    expect(zoomGeometry.overflowWrap, "Mailable wraps under actual 200% browser zoom").toBe("anywhere");
-    expect(zoomGeometry.left, "zoomed Mailable left edge").toBeGreaterThanOrEqual(0);
-    expect(zoomGeometry.right, "zoomed Mailable right edge")
+    expect(zoomGeometry.overflowWrap, "Mailer identity wraps under actual 200% browser zoom").toMatch(/^(anywhere|break-word)$/);
+    expect(zoomGeometry.left, "zoomed Mailer identity left edge").toBeGreaterThanOrEqual(0);
+    expect(zoomGeometry.right, "zoomed Mailer identity right edge")
       .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
-    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailable element overflow")
+    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailer identity element overflow")
       .toBeLessThanOrEqual(1);
     expect(zoomGeometry.documentScrollWidth, "zoomed document overflow")
       .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
 
     const description = zoomPage.getByText(
-      "Trace each delivery through its event history.",
+      "Every email your app sent, one row per delivery.",
       { exact: true }
     );
 
@@ -1116,7 +1134,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
     }
     await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
-    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
+    await assertZoomReadableValue(zoomedMailable, "Mailer identity at 320 CSS px", expectedMailable, 320);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -1138,8 +1156,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     );
     await assertZoomReadableValue(
       description,
-      "Delivery explanation at 320 CSS px",
-      "Trace each delivery through its event history.",
+      "Activity gloss at 320 CSS px",
+      "Every email your app sent, one row per delivery.",
       320
     );
     const narrowDocumentWidth = await zoomPage.evaluate(() => document.documentElement.scrollWidth);
@@ -1213,7 +1231,7 @@ test.describe("flows: overlay interaction subset at 320 (FLOW-02/03)", () => {
     await page.setViewportSize(FLOW_VIEWPORT);
   });
 
-  test("Operator replay modal: panel above scrim, Escape closes, background scrollY unchanged", async ({ page }) => {
+  test("Admin replay modal: panel above scrim, Escape closes, background scrollY unchanged", async ({ page }) => {
     const modal = await openOperatorReplayModal(page);
     await assertPanelAboveScrim(modal, "operator overlay-subset");
 
@@ -1270,7 +1288,7 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
   });
 
   for (const theme of THEMES) {
-    test(`Operator happy path passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
+    test(`Admin happy path passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
       const query = `tenant_id=${tenantId}&view=deliveries${theme.query ? `&${theme.query}` : ""}`;
       await openOperator(page, query);
 
@@ -1284,7 +1302,7 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
       await assertTextContrastAA(page.getByTestId("operator-deliveries-list-card"), `operator ${theme.name} list-card`);
     });
 
-    test(`Operator overlay (replay modal) passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
+    test(`Admin overlay (replay modal) passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
       // Open the operator surface in the target theme, then the replay modal.
       const query = `tenant_id=${tenantId}&view=deliveries${theme.query ? `&${theme.query}` : ""}`;
       await openOperator(page, query);
@@ -1355,7 +1373,7 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries`);
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expectRootTheme(page, "dark", "Deliveries after the Dark click");
+    await expectRootTheme(page, "dark", "Activity after the Dark click");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
@@ -1395,11 +1413,11 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
 
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("operator-shell")).toBeVisible();
-    await expectRootTheme(page, "dark", "stale legacy dark cookie on Deliveries");
+    await expectRootTheme(page, "dark", "stale legacy dark cookie on Activity");
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
-    await expectRootTheme(page, null, "System on Deliveries");
+    await expectRootTheme(page, null, "System on Activity");
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
     await expect(page.getByTestId("preview-shell")).toBeVisible();
@@ -1493,7 +1511,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   });
 
-  test("Operator replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
+  test("Admin replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -1705,9 +1723,9 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(selectedDeliveryId).toBeTruthy();
     await expect(page.getByTestId("operator-detail-column")).toBeVisible();
 
-    const technical = page.locator("#delivery-detail-technical");
-    await expect(technical).toBeVisible();
-    expect(await technical.evaluate(element => element.tagName)).toBe("DIV");
+    // A native disclosure since 182-02 (collapsed until opened); the identifiers live inside it.
+    const technical = await openTechnicalDetails(page);
+    expect(await technical.evaluate(element => element.tagName)).toBe("DETAILS");
     await expect(technical).toContainText(selectedDeliveryId);
 
     const suppression = page.getByTestId("operator-suppression-card");
@@ -1999,7 +2017,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
   test("Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom", async ({ page }) => {
     const expectedWidths = [320, 375, 768, 1280, 1440];
-    const expectedMailable = "Mailables.TransactionalEmailWithVeryLongModuleName";
+    const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
     const artifactDir = path.resolve(__dirname, "../test-results/phase175-layout");
     fs.mkdirSync(artifactDir, { recursive: true });
 
@@ -2019,11 +2037,12 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       const deliveryId = await row.getAttribute("phx-value-id");
       expect(deliveryId, "selected Delivery exposes its complete exact ID").toBeTruthy();
       await selectDeliveryFull(targetPage, row);
+      await openTechnicalDetails(targetPage);
       return { deliveryId, detail: targetPage.getByTestId("operator-detail-header") };
     };
 
     const { deliveryId, detail } = await openFjordlineDetail(page);
-    const mailable = page.locator("#delivery-detail-mailable-trigger");
+    const mailable = page.getByTestId("operator-detail-mailer-identity");
     const copyId = detail.getByRole("button", { name: `Copy Delivery ID: ${deliveryId}`, exact: true });
     const widthReceipts = [];
     for (const width of expectedWidths) {
@@ -2031,7 +2050,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect(detail).toBeVisible();
       await expect(detail).toContainText("fjordline-aps");
       await assertZoomReadableValue(copyId, `Delivery ID at ${width}px`, deliveryId, width);
-      await assertZoomReadableValue(mailable, `Mailable at ${width}px`, expectedMailable, width);
+      await assertZoomReadableValue(mailable, `Mailer identity at ${width}px`, expectedMailable, width);
       const geometry = await page.evaluate(() => ({
         viewportWidth: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -2115,8 +2134,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       });
       await assertZoomReadableValue(zoomId, "Delivery ID at real 200% zoom", selected.deliveryId, 320);
       await assertZoomReadableValue(
-        zoomPage.locator("#delivery-detail-mailable-trigger"),
-        "Mailable at real 200% zoom",
+        zoomPage.getByTestId("operator-detail-mailer-identity"),
+        "Mailer identity at real 200% zoom",
         expectedMailable,
         320
       );

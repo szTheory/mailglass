@@ -104,10 +104,10 @@ const routeCases = [
     mountRoot: "/ops/mail",
     access: "operator",
     colorTheme: "light",
-    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
+    anchor: page => page.getByRole("heading", { name: "Activity", exact: true, level: 1 }),
     ready: async page => {
       await expect(
-        page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+        page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
       ).toBeVisible();
     }
   },
@@ -152,10 +152,10 @@ const routeCases = [
     mountRoot: "/secure/console",
     access: "operator",
     colorTheme: "light",
-    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
+    anchor: page => page.getByRole("heading", { name: "Activity", exact: true, level: 1 }),
     ready: async page => {
       await expect(
-        page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+        page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
       ).toBeVisible();
     }
   },

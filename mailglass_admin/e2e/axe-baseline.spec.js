@@ -58,7 +58,7 @@ const WCAG_22_AA_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 // system cell degenerates into a duplicate of light.
 // ---------------------------------------------------------------------------
 function themeQuery(theme) {
-  // Operator/Inbound read ?theme=; absence means :system. Preview honours the
+  // Admin/Inbound read ?theme=; absence means :system. Preview honours the
   // same ?theme= convention; absence/`system` => follow prefers-color-scheme.
   if (theme === "light") return "theme=light";
   if (theme === "dark") return "theme=dark";
@@ -99,13 +99,13 @@ function withTheme(pathWithQuery, theme) {
     : `${pathWithQuery}?${tq}`;
 }
 
-// Opens the Deliveries (operator) surface for the given theme, then opens its
+// Opens the Activity (admin) surface for the given theme, then opens its
 // [role=dialog] replay modal so the overlay violations fold into this surface.
 async function openDeliveries(page, theme) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
   await page.goto(withTheme(`/ops/mail?tenant_id=${tenantId}&view=deliveries`, theme));
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
   // Open the replay [role=dialog] overlay (D-03 fold). REQUIRED for deliveries:
   // any failure throws and fails the producer rather than silently scanning the

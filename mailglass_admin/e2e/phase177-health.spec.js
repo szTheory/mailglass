@@ -47,7 +47,7 @@ async function openStaleHealth(page) {
 }
 
 // An unavailable panel: the first Health read of a LiveView fails. Health reads
-// are dropped on Deliveries, so the one-shot fault is consumed when Health is
+// are dropped on Activity, so the one-shot fault is consumed when Health is
 // reopened from the Account scope nav.
 async function openUnavailableHealth(page) {
   await openHealth(page, { scenario: "default" });
@@ -225,7 +225,7 @@ test.describe("Phase 177 Health", () => {
       expect(gates.smallTargets, `small targets at ${width}px`).toEqual([]);
     }
 
-    // One deep link, end to end: Failed deliveries lands on the failed filter
+    // One deep link, end to end: Failed emails lands on the failed filter
     // with exactly the one failed Delivery the scenario seeded.
     await page.getByTestId("operator-health-deliveries-failed-link").click();
     await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");

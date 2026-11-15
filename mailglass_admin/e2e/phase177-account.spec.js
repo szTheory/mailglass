@@ -42,9 +42,9 @@ test.describe("Phase 177 Account scope", () => {
     await expect(group.getByTestId("operator-account-switcher")).toBeVisible();
     await expect(accountLabel(page)).toBeVisible();
 
-    // The group's links are exactly Health, Deliveries and Inbound, in order.
+    // The group's links are exactly Health, Activity and Inbound, in order.
     const scoped = group.getByTestId("surface-nav-scope-items").getByRole("link");
-    await expect(scoped).toHaveText(["Health", "Deliveries", "Inbound"]);
+    await expect(scoped).toHaveText(["Health", "Activity", "Inbound"]);
 
     // Preview is outside the group, below it, with its caption.
     const preview = visibleByTestId(page, "surface-nav-preview-block");
@@ -249,7 +249,7 @@ test.describe("Phase 177 Account scope", () => {
     expect(healthNav.map((stop) => stop.testid || stop.label)).toEqual([
       "operator-account-switcher",
       "Health",
-      "Deliveries",
+      "Activity",
       "Inbound",
       "Preview"
     ]);
@@ -269,7 +269,7 @@ test.describe("Phase 177 Account scope", () => {
     expect(previewNav.map((stop) => stop.testid || stop.label)).toEqual([
       "preview-return-link",
       "Health",
-      "Deliveries",
+      "Activity",
       "Inbound",
       "Preview"
     ]);
