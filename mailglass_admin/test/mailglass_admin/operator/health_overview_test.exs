@@ -403,7 +403,7 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     assert [_] = find(tree, testid("operator-health-outbound-activity"))
 
     linked = tree |> Floki.text() |> String.replace(~r/\s+/, " ")
-    assert linked =~ "0 deliveries updated"
+    assert linked =~ "0 emails updated"
     assert linked =~ "0 messages received"
   end
 

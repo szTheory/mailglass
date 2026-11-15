@@ -36,7 +36,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
       end
     end
 
-    test "Phase 177 Deliveries mints return_surface=deliveries", %{conn: conn} do
+    test "Phase 177 Activity mints return_surface=deliveries", %{conn: conn} do
       {:ok, _view, html} =
         live(operator_conn(conn), "/ops/mail?tenant_id=tenant-b&view=deliveries")
 
@@ -114,13 +114,13 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
       refute stripped =~ "tenant-b"
     end
 
-    test "Phase 177 Back to Deliveries and Back to Inbound use the configured entries", %{
+    test "Phase 177 Back to Activity and Back to Inbound use the configured entries", %{
       conn: conn
     } do
       conn = preview_conn(conn)
 
       for {surface, label, href} <- [
-            {"deliveries", "Back to Deliveries", "/ops/mail?tenant_id=tenant-b&view=deliveries"},
+            {"deliveries", "Back to Activity", "/ops/mail?tenant_id=tenant-b&view=deliveries"},
             {"inbound", "Back to Inbound", "/ops/mail/inbound?tenant_id=tenant-b"}
           ] do
         {:error, {:redirect, %{to: to}}} =
@@ -276,7 +276,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
       for layout <- ["sidebar", "mobile"] do
         assert nav_href(html, layout, "Health") == "/ops/mail?tenant_id=tenant-b"
 
-        assert nav_href(html, layout, "Deliveries") ==
+        assert nav_href(html, layout, "Activity") ==
                  "/ops/mail?tenant_id=tenant-b&view=deliveries"
 
         assert nav_href(html, layout, "Inbound") == "/ops/mail/inbound?tenant_id=tenant-b"
@@ -296,7 +296,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
 
       assert nav_href(html, "sidebar", "Health") == "/ops/mail?tenant_id=browser-tenant"
 
-      assert nav_href(html, "sidebar", "Deliveries") ==
+      assert nav_href(html, "sidebar", "Activity") ==
                "/ops/mail?tenant_id=browser-tenant&view=deliveries"
 
       assert nav_href(html, "sidebar", "Inbound") == "/ops/mail/inbound?tenant_id=browser-tenant"
@@ -327,7 +327,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
 
       {:ok, doc} = Floki.parse_fragment(html)
       [first | _] = Floki.find(doc, ~s([data-testid="surface-nav-sidebar"] a))
-      assert first |> Floki.text() |> String.trim() == "Back to Deliveries"
+      assert first |> Floki.text() |> String.trim() == "Back to Activity"
     end
   end
 
@@ -374,7 +374,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
 
       assert Floki.attribute(back, "href") == ["/secure/console?tenant_id=tenant-b"]
 
-      {deliveries_path, deliveries_pairs} = decode(nav_href(html, "sidebar", "Deliveries"))
+      {deliveries_path, deliveries_pairs} = decode(nav_href(html, "sidebar", "Activity"))
       assert deliveries_path == "/secure/console"
       assert Enum.sort(deliveries_pairs) == [{"tenant_id", "tenant-b"}, {"view", "deliveries"}]
 
@@ -432,7 +432,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
         refute html =~ "tenant-evil"
         refute html =~ "return_surface"
 
-        for label <- ["Health", "Deliveries", "Inbound", "Preview"] do
+        for label <- ["Health", "Activity", "Inbound", "Preview"] do
           assert nav_href(html, "sidebar", label) == nav_href(direct, "sidebar", label)
           assert nav_href(html, "mobile", label) == nav_href(direct, "mobile", label)
         end

@@ -104,7 +104,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, @base_path)
 
       assert html =~ "Choose an Account"
-      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Select an Account to see its activity."
       assert html =~ "Choose Account"
       assert html =~ "alpha-inbound"
       assert html =~ "beta-inbound"
@@ -148,7 +148,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
       assert html =~ "Choose an Account"
-      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Select an Account to see its activity."
 
       assert html =~ "other-tenant"
       assert clear_filters_count(html) == 0
@@ -1652,7 +1652,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      assert html =~ "Replay blocked: this action is not authorized for this admin account."
       # No run appended to the foreign record — the tenant gate fired BEFORE replay/2.
       assert run_count(foreign.id) == before_count
     end
@@ -1674,7 +1674,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       render_click(view, "open_replay", %{})
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      assert html =~ "Replay blocked: this action is not authorized for this admin account."
       assert html =~ ~s(data-testid="inbound-replay-feedback")
       assert html =~ ~s(data-testid="inbound-replay-modal")
       assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
@@ -2249,7 +2249,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       denied_html = render_click(view3, "confirm_replay", %{})
 
       assert denied_html =~
-               "Replay blocked: this action is not authorized for the current operator."
+               "Replay blocked: this action is not authorized for this admin account."
 
       refute_banned(denied_html)
     end

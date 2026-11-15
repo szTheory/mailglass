@@ -685,7 +685,10 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Account 東京"
       assert html =~ "webhook-event-東京"
       assert html =~ "POSTMARK"
-      assert html =~ "may add Events or update Deliveries and suppressions across this Account"
+
+      assert html =~
+               "may add Events or update delivery records and suppressions across this Account"
+
       refute html =~ "Recorded Mailbox"
       refute html =~ "redeliver through the provider"
       [confirm] = Floki.find(Floki.parse_document!(html), "#operator-replay-confirm")

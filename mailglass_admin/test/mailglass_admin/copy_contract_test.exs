@@ -40,12 +40,12 @@ defmodule MailglassAdmin.CopyContractTest do
       `copy.ex` is excluded because it is the owner.
 
   Layer 3a does not see phrase surfaces. A status word inside a phrase, for example
-  the `OperatorLive` overview tiles "Failed deliveries", "Bounced deliveries",
-  "Rejected deliveries" and "Delayed deliveries", is outside `Copy` in this phase and
+  the `OperatorLive` overview tiles "Failed emails", "Bounced emails",
+  "Rejected emails" and "Delayed emails", is outside `Copy` in this phase and
   is bound only by the layer 3b closed set. Routing those phrases through `Copy` is
   deferred to the phase that changes the words on screen. The same deferral covers
   a known divergence: `:deferred` reads "Deferred" on the badge and "Delayed
-  deliveries" on the overview tile (`operator_live.ex` line 2859 at commit 062a4cfa).
+  emails" on the overview tile (`operator_live.ex` line 2859 at commit 062a4cfa).
 
   Lowercase status words inside prose (for example `outcome_help/2` and the tile help
   sentences) are out of scope: `outcome_help/2` is status-keyed prose and stays
@@ -152,7 +152,7 @@ defmodule MailglassAdmin.CopyContractTest do
   @status_phrases [
     %{
       path: "mailglass_admin/operator_live.ex",
-      phrase: "Failed deliveries",
+      phrase: "Failed emails",
       word: "Failed",
       atom: :failed,
       line_at: 2854,
@@ -160,7 +160,7 @@ defmodule MailglassAdmin.CopyContractTest do
     },
     %{
       path: "mailglass_admin/operator_live.ex",
-      phrase: "Bounced deliveries",
+      phrase: "Bounced emails",
       word: "Bounced",
       atom: :bounced,
       line_at: 2856,
@@ -168,7 +168,7 @@ defmodule MailglassAdmin.CopyContractTest do
     },
     %{
       path: "mailglass_admin/operator_live.ex",
-      phrase: "Rejected deliveries",
+      phrase: "Rejected emails",
       word: "Rejected",
       atom: :rejected,
       line_at: 2858,
@@ -176,7 +176,7 @@ defmodule MailglassAdmin.CopyContractTest do
     },
     %{
       path: "mailglass_admin/operator_live.ex",
-      phrase: "Delayed deliveries",
+      phrase: "Delayed emails",
       word: "Delayed",
       atom: :deferred,
       line_at: 2859,

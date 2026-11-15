@@ -41,7 +41,7 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
   @sentinel "secret-raw-payload-176"
 
   @apply_wording [~r/\bapply\b/i, ~r/\bsubmit\b/i, ~r/\bsearch now\b/i]
-  @empty_copy [~r/No deliveries/, ~r/No messages/]
+  @empty_copy [~r/No activity/, ~r/No emails/, ~r/No messages/]
 
   describe "detectors have teeth (fail-first proof)" do
     test "the P1 detector rejects a form with an apply button, a submit type and disable-with" do
@@ -122,14 +122,14 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
 
     test "the P7 detector reports a count or empty copy on a failed read" do
       violating =
-        ~s(<span data-testid="operator-result-count">0</span><p>No deliveries match.</p>)
+        ~s(<span data-testid="operator-result-count">0</span><p>No activity matches.</p>)
 
       found = failed_read_violations(violating, "operator-result-count")
       assert Enum.any?(found, &(&1 =~ "count"))
       assert Enum.any?(found, &(&1 =~ "empty copy"))
 
       assert failed_read_violations(
-               "<p>Couldn't load deliveries for these filters</p>",
+               "<p>Couldn't load activity for these filters</p>",
                "operator-result-count"
              ) == []
     end
@@ -458,7 +458,7 @@ defmodule MailglassAdmin.Phase176ProhibitionContractTest do
       assert_patch_kind(view, :push)
       html = render(view)
 
-      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "Couldn&#39;t load activity for these filters"
       assert failed_read_violations(html, "operator-result-count") == []
     end
 

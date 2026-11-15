@@ -15,14 +15,14 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
     })
   end
 
-  describe "Phase 176 ResultsStatus.text/1 for Deliveries" do
+  describe "Phase 176 ResultsStatus.text/1 for Activity" do
     test "Phase 176 settled states announce one specific sentence each" do
-      assert text(:deliveries, :ready, 24, true) == "24 deliveries match"
-      assert text(:deliveries, :ready, 24, false) == "24 deliveries match"
-      assert text(:deliveries, :ready, 1, false) == "1 delivery matches"
-      assert text(:deliveries, :ready, 0, true) == "No deliveries match the current filters"
-      assert text(:deliveries, :ready, 0, false) == "No deliveries in this time window"
-      assert text(:deliveries, :error, nil, true) == "Couldn't load deliveries"
+      assert text(:deliveries, :ready, 24, true) == "24 emails match"
+      assert text(:deliveries, :ready, 24, false) == "24 emails match"
+      assert text(:deliveries, :ready, 1, false) == "1 email matches"
+      assert text(:deliveries, :ready, 0, true) == "No emails match the current filters"
+      assert text(:deliveries, :ready, 0, false) == "No activity in this time window"
+      assert text(:deliveries, :error, nil, true) == "Couldn't load activity"
     end
 
     test "Phase 176 stale announces the title with the load time" do

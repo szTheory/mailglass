@@ -36,12 +36,12 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
   @package_root Path.expand("../..", __DIR__)
 
   # D-12 / UI-SPEC: the exact Preview subtitle.
-  @d12_subtitle "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+  @d12_subtitle "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Activity or Inbound messages from any Account."
 
   # P3 (revision W-1): the only static strings in the Preview chrome allowed to
   # say "Account". Adding one is a deliberate edit of this list.
   @provenance_allow_list [
-    "It doesn't read Deliveries or Inbound messages from any Account.",
+    "It doesn't read Activity or Inbound messages from any Account.",
     "Scoped to an Account",
     "Not tied to an Account"
   ]
@@ -138,7 +138,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
             "Renders live data",
             "Demo scenarios",
             "Fake messages",
-            "Shows Deliveries for this Account",
+            "Shows Activity for this Account",
             "Account: Acme",
             "Rendering for tenant_id",
             "Rendering for tenant id",
@@ -151,11 +151,11 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
 
     test "the P3 detector accepts the exact D-12 sentence and the two static Account strings" do
       clean =
-        "Preview #{@d12_subtitle} Scoped to an Account Health Deliveries Not tied to an Account"
+        "Preview #{@d12_subtitle} Scoped to an Account Health Activity Not tied to an Account"
 
       assert preview_provenance_violations(clean, @configured_accounts) == []
 
-      assert preview_provenance_violations("Deliveries Inbound Preview", @configured_accounts) ==
+      assert preview_provenance_violations("Activity Inbound Preview", @configured_accounts) ==
                []
     end
 
@@ -196,7 +196,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       inside = """
       <nav data-testid="surface-nav-sidebar">
         <div data-account-scope role="group">
-          <a href="/h">Health</a><a href="/d">Deliveries</a><a href="/p">Preview</a>
+          <a href="/h">Health</a><a href="/d">Activity</a><a href="/p">Preview</a>
         </div>
       </nav>
       """
@@ -208,22 +208,22 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       """
 
       assert Enum.any?(
-               scope_group_violations(inside, ["Health", "Deliveries"]),
+               scope_group_violations(inside, ["Health", "Activity"]),
                &(&1 =~ "Preview")
              )
 
-      assert scope_group_violations(extra, ["Health", "Deliveries"]) != []
+      assert scope_group_violations(extra, ["Health", "Activity"]) != []
     end
 
     test "the P5 detector accepts a group of exactly the rendered scoped items" do
       clean = """
       <nav data-testid="surface-nav-sidebar">
-        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Deliveries</a></div>
+        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Activity</a></div>
         <div data-testid="surface-nav-preview-block"><a href="/p">Preview</a></div>
       </nav>
       """
 
-      assert scope_group_violations(clean, ["Health", "Deliveries"]) == []
+      assert scope_group_violations(clean, ["Health", "Activity"]) == []
     end
 
     test "the P6 detector rejects a reworded, missing or extended subtitle" do
@@ -297,8 +297,8 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     test "the P9 detector rejects an Inbound mention when Inbound is not rendered" do
       violating = """
       <nav data-testid="surface-nav-sidebar">
-        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Deliveries</a></div>
-        <span data-testid="surface-nav-scope-description">Applies to Health, Deliveries and Inbound.</span>
+        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Activity</a></div>
+        <span data-testid="surface-nav-scope-description">Applies to Health, Activity and Inbound.</span>
       </nav>
       """
 
@@ -308,8 +308,8 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     test "the P9 detector accepts a description derived from the rendered items" do
       clean = """
       <nav data-testid="surface-nav-sidebar">
-        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Deliveries</a></div>
-        <span data-testid="surface-nav-scope-description">Applies to Health and Deliveries.</span>
+        <div data-account-scope role="group"><a href="/h">Health</a><a href="/d">Activity</a></div>
+        <span data-testid="surface-nav-scope-description">Applies to Health and Activity.</span>
       </nav>
       <nav data-testid="surface-nav-mobile">
         <div data-account-scope role="group"><a href="/h">Health</a><a href="/i">Inbound</a></div>
@@ -353,9 +353,9 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       end
     end
 
-    test "the Health severity detector accepts a neutral row and the word Deliveries" do
+    test "the Health severity detector accepts a neutral row and the word Activity" do
       neutral =
-        health_rows_fragment([{"operator-health-deliveries-failed", 9}], nil, "Deliveries")
+        health_rows_fragment([{"operator-health-deliveries-failed", 9}], nil, "Activity")
 
       assert health_severity_violations(neutral) == []
     end
@@ -428,7 +428,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     end
 
     test "the Back-link detector accepts the closed set of labels" do
-      for label <- ["Back to Health", "Back to Deliveries", "Back to Inbound"] do
+      for label <- ["Back to Health", "Back to Activity", "Back to Inbound"] do
         fragment = ~s(<a data-testid="preview-return-link" href="/x?id=tenant-b">#{label}</a>)
         assert back_link_violations(fragment, @configured_accounts) == []
       end
@@ -504,7 +504,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
 
       for {surface, label} <- [
             {"overview", "Back to Health"},
-            {"deliveries", "Back to Deliveries"},
+            {"deliveries", "Back to Activity"},
             {"inbound", "Back to Inbound"}
           ] do
         {:error, {:redirect, %{to: to}}} =
@@ -592,18 +592,18 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
       {:ok, _view, preview} = live(preview_conn(conn), @scenario_base <> "?width=768")
 
       for html <- [operator, preview] do
-        assert scope_group_violations(html, ["Health", "Deliveries", "Inbound"]) == []
+        assert scope_group_violations(html, ["Health", "Activity", "Inbound"]) == []
       end
     end
 
-    test "the shared nav without Inbound groups only Health and Deliveries" do
+    test "the shared nav without Inbound groups only Health and Activity" do
       for scope <- [:account, :preview], layout <- [:sidebar, :mobile] do
         html = render_nav(scope, layout, inbound_available?: false)
 
         doc = Floki.parse_fragment!(html)
         [_] = Floki.find(doc, ~s([data-account-scope]))
 
-        assert scope_group_violations(html, ["Health", "Deliveries"]) == []
+        assert scope_group_violations(html, ["Health", "Activity"]) == []
       end
     end
   end
@@ -721,7 +721,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
 
     test "Inbound available mentions it, so the detector is not vacuous" do
       html = render_shell(%{}) |> Floki.raw_html()
-      assert html =~ "Applies to Health, Deliveries and Inbound."
+      assert html =~ "Applies to Health, Activity and Inbound."
       assert description_inbound_violations(html) == []
     end
   end
@@ -917,7 +917,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
   end
 
   # P3 (revision W-1): `text` is the Preview chrome visible text. Step 1 flags
-  # whole-word provenance claims ("Deliveries" never trips `live`). Step 2
+  # whole-word provenance claims ("Activity" never trips `live`). Step 2
   # deletes exactly the allow-listed static strings (each only as a complete
   # phrase, never as the prefix of a longer one) and flags any remaining
   # Account word, `tenant_id` or configured Account label or id.
@@ -1168,7 +1168,7 @@ defmodule MailglassAdmin.Phase177ProhibitionContractTest do
     text = link |> Floki.text() |> String.replace(~r/\s+/, " ") |> String.trim()
 
     label =
-      if text in ["Back to Health", "Back to Deliveries", "Back to Inbound"],
+      if text in ["Back to Health", "Back to Activity", "Back to Inbound"],
         do: [],
         else: ["Back link label #{inspect(text)} is outside the closed set"]
 

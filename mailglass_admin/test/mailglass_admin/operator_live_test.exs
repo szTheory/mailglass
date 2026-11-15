@@ -137,10 +137,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "No deliveries in this time window"
+      assert html =~ "No activity in this time window"
 
       assert html =~
-               "No deliveries have been recorded for this Account during the selected time window."
+               "No emails have been recorded for this Account during the selected time window."
 
       # Single calm pane: the empty-truly state + the orientation strip (its only location).
       assert html =~ ~s(data-testid="operator-empty-truly")
@@ -2237,7 +2237,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="operator-result-count")
-      assert html =~ "7 deliveries"
+      assert html =~ "7 emails"
       assert html =~ ~s(data-testid="operator-pagination")
       assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
       assert html =~ ~s(aria-disabled="true")
@@ -2261,7 +2261,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      assert html =~ "1 delivery"
+      assert html =~ "1 email"
       refute html =~ ~s(data-testid="operator-pagination")
     end
 
@@ -2273,8 +2273,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           filters_active?: true
         )
 
-      assert html =~ "No deliveries"
-      assert html =~ "No deliveries match the current filters."
+      assert html =~ "No activity matches the current filters"
+      assert html =~ "Change or clear a filter to see more."
       assert html =~ ~s(phx-click="clear_filters")
       assert html =~ ~s(data-testid="operator-empty-filtered")
     end
@@ -2287,10 +2287,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
           filters_active?: false
         )
 
-      assert html =~ "No deliveries in this time window"
+      assert html =~ "No activity in this time window"
 
       assert html =~
-               "No deliveries have been recorded for this Account during the selected time window."
+               "No emails have been recorded for this Account during the selected time window."
 
       assert html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(phx-click="clear_filters")
@@ -2313,7 +2313,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           previous_page_path: "/ops/mail?tenant_id=test-tenant&view=deliveries&page=2"
         )
 
-      assert html =~ "No deliveries on this page"
+      assert html =~ "No activity on this page"
       assert html =~ "Move to an available page"
       assert html =~ ~s(data-testid="operator-pagination-prev")
     end
@@ -2335,7 +2335,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       assert html =~ ~s(data-testid="operator-result-count")
-      assert html =~ "21 deliveries"
+      assert html =~ "21 emails"
       assert html =~ "Open delivery"
       assert html =~ ~s(data-testid="operator-pagination")
       assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
@@ -2390,10 +2390,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Couldn&#39;t load deliveries for these filters"
-      assert html =~ "Retry deliveries"
+      assert html =~ "Couldn&#39;t load activity for these filters"
+      assert html =~ "Retry loading activity"
       refute html =~ ~s(data-testid="operator-result-count")
-      refute html =~ "No deliveries in this time window"
+      refute html =~ "No activity in this time window"
       refute html =~ "synthetic transient operator read failure"
     end
 
@@ -2415,7 +2415,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Delivery details are temporarily unavailable."
       assert html =~ "Retry details"
-      assert html =~ "Back to deliveries"
+      assert html =~ "Back to Activity"
       # The sr-only status region may state the settled list read; no visible empty pane renders.
       refute html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(data-testid="data-state-empty")
@@ -2564,7 +2564,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, @base_path)
 
       assert html =~ "Choose an Account"
-      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Select an Account to see its activity."
       assert html =~ "Choose Account"
       assert html =~ "alpha-tenant"
       assert html =~ "beta-tenant"
@@ -3682,14 +3682,20 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert path =~ "event=sent"
 
       html = render(view)
-      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "Couldn&#39;t load activity for these filters"
       assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
-      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+
+      assert has_element?(
+               view,
+               "[data-testid='operator-retry-deliveries']",
+               "Retry loading activity"
+             )
+
       refute has_element?(view, "[data-testid='operator-result-count']")
       refute has_element?(view, "[data-testid='operator-delivery-row']")
       refute has_element?(view, "[data-testid='operator-empty-filtered']")
       refute has_element?(view, "[data-testid='operator-empty-truly']")
-      refute html =~ "No deliveries match the current filters."
+      refute html =~ "No activity matches the current filters"
       refute html =~ "readable@example.com"
       refute html =~ "synthetic"
       assert selected_filter_value(html, "#filters_event") == "sent"
@@ -3719,11 +3725,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert Floki.attribute(region, "aria-live") == ["polite"]
       assert Floki.attribute(region, "aria-atomic") == ["true"]
       assert Floki.attribute(region, "class") |> List.first() =~ "sr-only"
-      assert status_text(view) == "2 deliveries match"
+      assert status_text(view) == "2 emails match"
 
       render_hook(view, "validate_filters", filter_change("event", %{"event" => "failed"}))
       assert_patch_kind(view, :push)
-      assert status_text(view) == "No deliveries match the current filters"
+      assert status_text(view) == "No emails match the current filters"
     end
 
     test "Phase 176 results status text ignores invalid drafts and identical re-reads", %{
@@ -3732,7 +3738,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       insert_delivery!(recipient: "steady@example.com", last_event_type: :sent)
       {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
       settled = status_text(view)
-      assert settled == "1 delivery matches"
+      assert settled == "1 email matches"
 
       render_hook(view, "validate_filters", filter_change("event", %{"event" => "not-real"}))
       refute_patch(view)
@@ -3761,7 +3767,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert has_element?(view, "[data-testid='operator-stale-loaded-at']", "Results loaded")
-      assert has_element?(view, "[data-testid='operator-retry-deliveries']", "Retry deliveries")
+
+      assert has_element?(
+               view,
+               "[data-testid='operator-retry-deliveries']",
+               "Retry loading activity"
+             )
+
       refute has_element?(view, "[data-testid='operator-result-count']")
       refute html =~ "synthetic"
 
@@ -3772,7 +3784,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       view |> element("[data-testid='operator-retry-deliveries']") |> render_click()
       refute has_element?(view, "[data-testid='data-state-stale']")
       assert has_element?(view, "[data-testid='operator-result-count']")
-      assert status_text(view) == "1 delivery matches"
+      assert status_text(view) == "1 email matches"
     end
 
     test "Phase 176 Deliveries Retry adds no history and re-reads the committed filters", %{
@@ -3792,7 +3804,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
       assert html =~ "retried@example.com"
       assert has_element?(view, "[data-testid='operator-result-count']")
-      refute html =~ "Couldn&#39;t load deliveries for these filters"
+      refute html =~ "Couldn&#39;t load activity for these filters"
     end
 
     test "Phase 176 gap: an empty narrower window keeps the toolbar and a way back", %{conn: conn} do
@@ -3814,11 +3826,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(view, "#operator-filters")
       assert selected_filter_value(html, "#filters_window_hours") == "24"
       assert has_element?(view, "[data-testid='operator-empty-filtered']")
-      assert html =~ "No deliveries match the current filters."
+      assert html =~ "No activity matches the current filters"
       assert has_element?(view, "[data-testid='operator-empty-reset']")
       refute has_element?(view, "[data-testid='operator-empty-truly']")
-      refute html =~ "No deliveries in this time window"
-      assert status_text(view) =~ "No deliveries match the current filters"
+      refute html =~ "No activity in this time window"
+      assert status_text(view) =~ "No emails match the current filters"
     end
 
     test "Phase 176 gap: a direct URL with an empty narrower window keeps the toolbar", %{
@@ -3909,7 +3921,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "Phase 176 gap: a PubSub refresh does not rewrite the status region", %{conn: conn} do
       insert_delivery!(recipient: "first@example.com", provider_message_id: "pm_first")
       {:ok, view, _html} = live(operator_conn(conn), deliveries_path())
-      assert status_text(view) == "1 delivery matches"
+      assert status_text(view) == "1 email matches"
 
       second =
         insert_delivery!(recipient: "second@example.com", provider_message_id: "pm_second")
@@ -3927,7 +3939,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = broadcast.()
       assert html =~ "first@example.com"
       assert html =~ "second@example.com"
-      assert status_text(view) == "1 delivery matches"
+      assert status_text(view) == "1 email matches"
 
       third =
         insert_delivery!(recipient: "third@example.com", provider_message_id: "pm_third")
@@ -3939,11 +3951,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       assert render(view) =~ "third@example.com"
-      assert status_text(view) == "1 delivery matches"
+      assert status_text(view) == "1 email matches"
 
       render_hook(view, "validate_filters", filter_change("event", %{"event" => "sent"}))
       assert_patch_kind(view, :push)
-      assert status_text(view) == "3 deliveries match"
+      assert status_text(view) == "3 emails match"
     end
 
     test "Phase 176 gap: a blank window normalizes quietly without a Custom period option", %{
@@ -4697,7 +4709,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(view, "#operator-overview-health-failures-help-tooltip[role='tooltip']")
 
       assert html =~
-               "These failures affect delivery tracking; they are not failed email deliveries."
+               "These failures affect delivery tracking; they are not failed emails."
 
       refute html =~ "mg-stat-card-tooltip"
       refute html =~ "No issues found"
@@ -5498,7 +5510,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "mono"
     end
 
-    test "result count reads from page_meta.total_count — 1 delivery for total_count 1 regardless of list length" do
+    test "result count reads from page_meta.total_count — 1 email for total_count 1 regardless of list length" do
       delivery = %{
         id: "count-delivery-id-006",
         tenant_id: "t1",
@@ -5524,13 +5536,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      assert html =~ "1 delivery"
-      refute html =~ "2 deliveries"
+      assert html =~ "1 email"
+      refute html =~ "2 emails"
     end
   end
 
   describe "four distinct data-state branches (DATA-03, Plan 02 Task 2)" do
-    test "no-data deliveries path emits data-state-empty with 'No deliveries' heading" do
+    test "no-data deliveries path emits data-state-empty with the 'No activity' heading" do
       html =
         render_component(&DeliveriesList.deliveries_list/1,
           deliveries: [],
@@ -5547,7 +5559,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-empty")
-      assert html =~ "No deliveries"
+      assert html =~ "No activity in this time window"
     end
 
     test "error signal emits actionable update recovery distinct from empty" do
@@ -5567,7 +5579,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-error")
-      assert html =~ "Couldn&#39;t load deliveries for these filters"
+      assert html =~ "Couldn&#39;t load activity for these filters"
       assert html =~ "The read failed. Your filters are unchanged. Retry, or change a filter."
       refute html =~ ~s(data-testid="operator-result-count")
 
@@ -5614,7 +5626,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="data-state-stale")
       assert html =~ "Showing earlier results; refresh failed"
       assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
-      assert html =~ "Retry deliveries"
+      assert html =~ "Retry loading activity"
       refute html =~ ~s(data-testid="operator-stale-loaded-at")
       refute html =~ "14:32"
       refute html =~ ~s(data-testid="operator-result-count")

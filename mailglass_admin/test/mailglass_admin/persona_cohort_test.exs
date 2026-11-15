@@ -115,7 +115,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
 
       assert html =~ "helios-void"
       assert html =~ "No mail activity in this period"
-      assert html =~ "deliveries updated"
+      assert html =~ "emails updated"
       assert html =~ "messages received"
       refute html =~ "All clear"
       refute html =~ ~s(data-testid="operator-overview-health-failures")
@@ -136,7 +136,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
 
       # 116-UI-SPEC: helios-void direct-URL empty state copy.
       assert html =~
-               "No deliveries have been recorded for this Account during the selected time window."
+               "No emails have been recorded for this Account during the selected time window."
     end
   end
 

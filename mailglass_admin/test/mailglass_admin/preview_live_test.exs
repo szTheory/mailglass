@@ -389,7 +389,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
       assert preview_subtitle(html) ==
-               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Activity or Inbound messages from any Account."
 
       {:ok, doc} = Floki.parse_fragment(html)
 

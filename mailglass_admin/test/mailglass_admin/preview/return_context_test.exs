@@ -259,7 +259,7 @@ defmodule MailglassAdmin.Preview.ReturnContextTest do
   describe "back_label/1" do
     test "names only the closed-set surface" do
       assert ReturnContext.back_label("overview") == "Back to Health"
-      assert ReturnContext.back_label("deliveries") == "Back to Deliveries"
+      assert ReturnContext.back_label("deliveries") == "Back to Activity"
       assert ReturnContext.back_label("inbound") == "Back to Inbound"
     end
 

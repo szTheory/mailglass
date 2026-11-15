@@ -442,7 +442,7 @@ defmodule MailglassAdmin.TestOperatorAuth do
     record_inbound_replay_call(record.id)
 
     {:error, :unauthorized,
-     %{message: "Replay blocked: this action is not authorized for the current operator."}}
+     %{message: "Replay blocked: this action is not authorized for this admin account."}}
   end
 
   def authorize(:replay_inbound, %{actor: actor, inbound_record: record}) do

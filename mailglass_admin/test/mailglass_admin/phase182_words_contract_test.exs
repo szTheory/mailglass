@@ -24,7 +24,10 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   use MailglassAdmin.LiveViewCase, async: false
 
-  alias MailglassAdmin.{GalleryLive, PreviewLive}
+  alias MailglassAdmin.{GalleryLive, OperatorLive, PreviewLive}
+  alias MailglassAdmin.Inbound.DestructiveAction
+  alias MailglassAdmin.Operator.Shell
+  alias MailglassAdmin.Preview.ReturnContext
   alias MailglassAdmin.TestSupport.{InboundFixtures, OperatorFixtures, ScreenRegistry}
   alias MailglassInbound.InboundRecords.ExecutionRun
 
@@ -44,6 +47,16 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   # Attributes a reader or a screen reader meets as words.
   @word_attributes ~w(aria-label aria-description title alt placeholder)
+
+  defmodule DenyAdapter do
+    @moduledoc false
+    # An adopter auth module that denies with no message, so the denial the Inbound replay
+    # shows is mailglass's own default sentence.
+    @behaviour MailglassAdmin.Auth
+
+    @impl true
+    def authorize(:replay_inbound, _context), do: {:error, :unauthorized, %{}}
+  end
 
   # -- Activity identity (Task 1) --------------------------------------------------
 
@@ -112,13 +125,201 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
   # -- the words scan ---------------------------------------------------------------
 
   describe "words scan over every registered state (D-11, D-18)" do
-    # Task 1 reports the inventory and Task 2 asserts it empty. `PHASE182_REPORT=1` prints
-    # it, so the plan summary can record what the scan found before the rollout.
-    test "the registry's states are read and the inventory is reported", %{conn: conn} do
-      hits = scan_all_worlds(conn)
+    test "no registered state shows Deliveries, operator or tenant as a word", %{conn: conn} do
+      scan = scan_all_worlds(conn)
 
-      assert hits.read >= 85, "the scan read #{hits.read} states, floor is 85"
-      report_inventory(hits)
+      # Non-vacuity: Preview (3), the Activity pages and Quick views and details over the
+      # status grid (51), the nine journey histories (18), the replay modal, the 101-event
+      # timeline and the Inbound list and records (15) are 89 states today.
+      assert scan.read >= 85, "the scan read #{scan.read} states, floor is 85"
+      assert scan.read_text >= 100_000, "the scan read #{scan.read_text} bytes of page text"
+
+      report_inventory(scan)
+      assert_none(scan.hits)
+    end
+  end
+
+  describe "states the registry does not carry (BRADM-03, BRADM-04, D-11)" do
+    test "the Activity list with no rows and with filters matching nothing says Activity",
+         %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      truly =
+        scan_extra(
+          conn,
+          "Activity with no rows",
+          activity_path(),
+          "[data-testid=operator-empty-truly]"
+        )
+
+      assert_none(truly.hits)
+      assert truly.text =~ "No activity in this time window"
+      assert truly.text =~ "No emails have been recorded for this Account"
+
+      OperatorFixtures.seed_phase182_journey!()
+
+      filtered =
+        scan_extra(
+          conn,
+          "Activity with filters matching nothing",
+          activity_path(%{"search" => "zz-no-such-address@example.com"}),
+          "[data-testid=operator-empty-filtered]"
+        )
+
+      assert_none(filtered.hits)
+      assert filtered.text =~ "No activity matches the current filters"
+
+      beyond =
+        scan_extra(
+          conn,
+          "Activity beyond the last page",
+          activity_path(%{"page" => "99"}),
+          "[data-testid=data-state-empty]"
+        )
+
+      assert_none(beyond.hits)
+      assert beyond.text =~ "No activity on this page"
+
+      # The old word is not what a reader sees in any of the three.
+      for page <- [truly, filtered, beyond], do: refute(page.text =~ ~r/deliveries/i)
+    end
+
+    test "a delivery link that does not resolve says Return to Activity", %{conn: conn} do
+      OperatorFixtures.seed_phase182_journey!()
+      unknown = Ecto.UUID.generate()
+
+      for {label, delivery_id} <- [{"invalid", "not-a-uuid"}, {"unknown", unknown}],
+          {mode, extra} <- [{"quick view", %{}}, {"full detail", %{"full" => "1"}}] do
+        page =
+          scan_extra(
+            conn,
+            "#{label} delivery link, #{mode}",
+            activity_path(Map.merge(%{"delivery_id" => delivery_id}, extra)),
+            nil
+          )
+
+        assert_none(page.hits)
+        assert page.text =~ "Return to Activity"
+      end
+    end
+
+    test "no Account selected reads with Account and no operator word", %{conn: conn} do
+      # Two Accounts, none chosen: the selector every surface shows.
+      selector =
+        render_component(&Shell.tenant_selector/1,
+          state: :select_required,
+          tenant_options: [
+            %{id: "acct-a", label: "Acme Support"},
+            %{id: "acct-b", label: "Beacon"}
+          ],
+          current_uri: "/ops/mail"
+        )
+
+      assert_none(scan_html("tenant selector, two Accounts", selector, nil))
+      text = ScreenRegistry.visible_text(selector)
+      assert text =~ "Choose an Account"
+      assert text =~ "Select an Account to see its activity."
+
+      # No Account has activity: the empty selector.
+      none =
+        render_component(&Shell.tenant_selector/1,
+          state: :none,
+          tenant_options: [],
+          current_uri: "/ops/mail"
+        )
+
+      assert_none(scan_html("tenant selector, no Accounts", none, nil))
+      assert ScreenRegistry.visible_text(none) =~ "No Accounts with mail activity"
+
+      # One Account, the bare overview URL: the card that points at Activity.
+      OperatorFixtures.seed_phase182_journey!()
+      html = conn |> operator_conn() |> dead_get("/ops/mail") |> html_response(200)
+      assert_none(scan_html("bare overview, one Account", html, title_of(html)))
+      text = ScreenRegistry.visible_text(html)
+      assert text =~ "Select an Account to see its activity."
+      assert text =~ "Go to Activity"
+    end
+
+    test "the Inbound list and its denial sentence say admin account, not operator" do
+      # The Inbound list's own no-Account copy (inbound/records_list.ex) is a component
+      # sentence; render it the way the screen does.
+      html =
+        render_component(&MailglassAdmin.Inbound.RecordsList.records_list/1,
+          records: [],
+          empty_state: :no_tenant,
+          data_state: :empty,
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert_none(scan_html("inbound no Account", html, nil))
+      assert ScreenRegistry.visible_text(html) =~ "Select an Account to see its inbound messages."
+
+      # The default denial an Inbound replay shows when the adopter's auth names no message.
+      socket = %Phoenix.LiveView.Socket{assigns: %{__changed__: %{}, operator_actor: nil}}
+      assert {:error, {:auth, message}} = DestructiveAction.authorize(socket, DenyAdapter, %{})
+      assert_none(scan_text("default denial", message))
+      assert message =~ "admin account"
+    end
+  end
+
+  describe "Preview return link (BRADM-03, D-11)" do
+    test "a return from Activity reads Back to Activity and the page carries no plural word",
+         %{conn: conn} do
+      path =
+        "/dev/mail?" <>
+          URI.encode_query(%{"return_surface" => "deliveries", "return_tenant_id" => @tenant_id})
+
+      view = mount(conn, path)
+
+      assert has_element?(view, ~s([data-testid="preview-return-link"]), "Back to Activity")
+      html = render(view)
+      assert_none(scan_html("Preview with a return from Activity", html, nil))
+      refute ScreenRegistry.visible_text(html) =~ ~r/deliveries/i
+
+      # The three labels come from the closed set, one per surface.
+      for {surface, label} <- [
+            {"overview", "Back to Health"},
+            {"deliveries", "Back to Activity"},
+            {"inbound", "Back to Inbound"}
+          ] do
+        assert ReturnContext.back_label(surface) == label
+      end
+    end
+  end
+
+  describe "retired words stay out of the source (BRADM-03, BRADM-04)" do
+    test "no lib string says the old screen word, the operator sentences or the old tiles" do
+      sources = lib_sources()
+
+      # Floor: the scan read every lib file, not a handful.
+      assert map_size(sources) >= 60, "read #{map_size(sources)} lib files"
+
+      assert_none(retired_violations(sources))
+    end
+
+    test "the retired-phrase detector flags each retired phrase and spares the new words" do
+      for phrase <- retired_phrases() do
+        found = retired_in("planted.ex", ~s|def copy, do: "#{phrase}"|)
+        assert found != [], "the detector missed #{inspect(phrase)}"
+      end
+
+      for clean <- [
+            "Back to Activity",
+            "Return to Activity",
+            "this admin account",
+            "Failed emails"
+          ] do
+        assert retired_in("clean.ex", ~s|def copy, do: "#{clean}"|) == [], clean
+      end
+
+      # A comment or a doc names the old word freely.
+      assert retired_in("doc.ex", "# Back to Deliveries was the old label") == []
     end
   end
 
@@ -242,7 +443,7 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
   # -- mounting -----------------------------------------------------------------------------
 
   # Seeds each world the registry knows, one at a time (every seed resets the tables), reads
-  # every state of it and returns `%{read: n, hits: [...]}`.
+  # every state of it and returns `%{read: states, read_text: bytes, hits: [...]}`.
   defp scan_all_worlds(conn) do
     worlds = [
       fn -> %{static: true} end,
@@ -253,16 +454,47 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       fn -> %{inbound: seed_inbound_world!()} end
     ]
 
-    Enum.reduce(worlds, %{read: 0, hits: []}, fn seed, acc ->
-      results = for state <- ScreenRegistry.states(seed.()), do: scan_state(conn, state)
-      %{read: acc.read + length(results), hits: acc.hits ++ List.flatten(results)}
+    Enum.reduce(worlds, %{read: 0, read_text: 0, hits: []}, fn seed, acc ->
+      pages = for state <- ScreenRegistry.states(seed.()), do: scan_state(conn, state)
+
+      %{
+        read: acc.read + length(pages),
+        read_text: acc.read_text + (pages |> Enum.map(& &1.text_bytes) |> Enum.sum()),
+        hits: acc.hits ++ Enum.flat_map(pages, & &1.hits)
+      }
     end)
   end
 
   defp scan_state(conn, state) do
     html = mount_html(conn, state)
     title = document_title(conn, state, html)
-    scan_html(state.label, html, title)
+
+    %{
+      hits: scan_html(state.label, html, title),
+      text_bytes: byte_size(words_text(Floki.parse_document!(html)))
+    }
+  end
+
+  # A state the registry does not carry: mount `path` (an Operator path), optionally wait
+  # for `expect`, and read it like any registered state.
+  defp scan_extra(conn, label, path, expect) do
+    state = %{
+      label: label,
+      kind: :extra,
+      route: {OperatorLive, :index},
+      path: path,
+      mount: :live,
+      hooks: [],
+      expect: expect
+    }
+
+    html = mount_html(conn, state)
+    title = document_title(conn, state, html)
+
+    %{
+      hits: scan_html(label, html, title),
+      text: ScreenRegistry.visible_text(html)
+    }
   end
 
   defp mount_html(conn, state) do
@@ -374,8 +606,10 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
     record.id
   end
 
-  defp activity_path,
-    do: "/ops/mail?" <> URI.encode_query(%{"view" => "deliveries", "tenant_id" => @tenant_id})
+  defp activity_path(extra \\ %{}) do
+    query = Map.merge(%{"view" => "deliveries", "tenant_id" => @tenant_id}, extra)
+    "/ops/mail?" <> URI.encode_query(query)
+  end
 
   defp overview_path, do: "/ops/mail?" <> URI.encode_query(%{"tenant_id" => @tenant_id})
 
@@ -390,7 +624,77 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
     })
   end
 
-  # -- reporting ---------------------------------------------------------------------------
+  # -- retired words in the source ------------------------------------------------------------
+
+  # Sentences and labels this plan retired. A lib string that says one of them again is a
+  # regression the render scan might not reach (a denial sentence only shows when auth
+  # denies). Comments and docs may name the old word, so they are blanked first.
+  defp retired_phrases do
+    [
+      "Back to Deliveries",
+      "Back to deliveries",
+      "Go to Deliveries",
+      "Return to deliveries",
+      "return to deliveries",
+      "Deliveries pagination",
+      "scoped operator data",
+      "current operator",
+      "Failed deliveries",
+      "Bounced deliveries",
+      "Rejected deliveries",
+      "Delayed deliveries",
+      "No deliveries"
+    ]
+  end
+
+  defp retired_violations(sources) do
+    Enum.flat_map(sources, fn {rel, source} -> retired_in(rel, source) end)
+  end
+
+  defp retired_in(rel, source) do
+    code =
+      source
+      |> String.split("\n")
+      |> Enum.reject(&(&1 |> String.trim_leading() |> String.starts_with?("#")))
+      |> Enum.join("\n")
+
+    for phrase <- retired_phrases(), String.contains?(code, phrase) do
+      %{rule: :retired_phrase, state: rel, text: phrase}
+    end
+  end
+
+  defp lib_sources do
+    root = Path.expand("../../lib", __DIR__)
+
+    for path <- Path.wildcard(Path.join(root, "**/*.{ex,heex}")), into: %{} do
+      {Path.relative_to(path, root), File.read!(path)}
+    end
+  end
+
+  # -- reporting and failures ---------------------------------------------------------------
+
+  defp assert_none([]), do: :ok
+
+  defp assert_none(hits) do
+    lines =
+      hits
+      |> Enum.uniq_by(&{&1.rule, &1.text})
+      |> Enum.take(25)
+      |> Enum.map_join("\n", fn hit ->
+        "  #{hit.rule} in #{inspect(hit.state)}: #{inspect(hit.text)}\n    fix: #{fix(hit.rule)}"
+      end)
+
+    flunk("#{length(hits)} word violation(s):\n#{lines}")
+  end
+
+  defp fix(:deliveries_word),
+    do: "the screen is called Activity; a row is still a delivery (singular), a list is emails"
+
+  defp fix(:operator_word), do: "say Admin on screen; Operator stays in code and docs"
+  defp fix(:tenant_word), do: "say Account on screen; tenant_id stays in code and URLs"
+
+  defp fix(:retired_phrase),
+    do: "this sentence was reworded; use the Activity, Admin and Account words"
 
   # Printed only when asked, so a plan summary can record the inventory.
   defp report_inventory(%{read: read, hits: hits}) do
