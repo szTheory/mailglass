@@ -1,0 +1,125 @@
+{
+  "heights_px": {
+    "detail": 44,
+    "minimum": 14,
+    "row": 20
+  },
+  "marks": {
+    "delayed": {
+      "shapes": [
+        {
+          "fill": "none",
+          "height": 108,
+          "stroke": "warn",
+          "stroke_width": 12,
+          "tag": "rect",
+          "width": 88,
+          "x": 6,
+          "y": 6
+        },
+        {
+          "d": "M50 24V62L72 78",
+          "fill": "none",
+          "stroke": "warn",
+          "stroke_width": 12,
+          "tag": "path"
+        }
+      ],
+      "word": "Delayed"
+    },
+    "delivered": {
+      "shapes": [
+        {
+          "fill": "ok",
+          "height": 120,
+          "tag": "rect",
+          "width": 100
+        },
+        {
+          "d": "M24 62L43 82L77 38",
+          "fill": "none",
+          "stroke": "surf",
+          "stroke_width": 13,
+          "tag": "path"
+        }
+      ],
+      "word": "Delivered"
+    },
+    "failed": {
+      "shapes": [
+        {
+          "fill": "bad",
+          "height": 120,
+          "tag": "rect",
+          "width": 100
+        },
+        {
+          "d": "M60 0L40 48L62 68L44 120",
+          "fill": "none",
+          "stroke": "surf",
+          "stroke_width": 12,
+          "tag": "path"
+        }
+      ],
+      "word": "Failed"
+    },
+    "not_sent": {
+      "shapes": [
+        {
+          "fill": "none",
+          "height": 108,
+          "stroke": "mute",
+          "stroke_width": 12,
+          "tag": "rect",
+          "width": 88,
+          "x": 6,
+          "y": 6
+        },
+        {
+          "d": "M0 120L100 0",
+          "stroke": "mute",
+          "stroke_width": 12,
+          "tag": "path"
+        }
+      ],
+      "word": "Not sent"
+    },
+    "sent": {
+      "shapes": [
+        {
+          "fill": "none",
+          "height": 108,
+          "stroke": "ink",
+          "stroke_width": 12,
+          "tag": "rect",
+          "width": 88,
+          "x": 6,
+          "y": 6
+        },
+        {
+          "d": "M6 60H94V114H6Z",
+          "fill": "ink",
+          "tag": "path"
+        }
+      ],
+      "word": "Sent"
+    }
+  },
+  "roles": {
+    "bad": "error-text",
+    "ink": "text",
+    "mute": "text-muted",
+    "ok": "success-text",
+    "surf": "surface",
+    "warn": "warning-text"
+  },
+  "schema": "mailglass.status_marks.v1",
+  "source": {
+    "extracted_by": "scripts/brand_status_marks.exs",
+    "member_sha256": "1699d693c4ebd9d2548b58ce702468e37e7c8345687f956f8c5bcb3459104db8",
+    "pin": "brandbook/brand.pin.json",
+    "zip_member": "mailglass-brand/mailglass-brand-book.html",
+    "zip_sha256": "ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b"
+  },
+  "view_box": "0 0 100 120"
+}
