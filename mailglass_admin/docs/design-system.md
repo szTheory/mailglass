@@ -44,13 +44,13 @@ semantic tokens. Use the semantic names, never raw Tailwind palette
 
 | Semantic | Light | Dark | Use |
 |---|---|---|---|
-| base-100 | Paper #F8FBFD | Ink #0D1B2A | app/detail surface |
-| base-200 | White #FFFFFF | Ink-raised #152538 | raised surfaces |
-| base-300 | Mist-edge #C7DCE5 | Ink-edge #315069 | borders |
-| base-content | Ink #0D1B2A | Mist #EAF6FB | primary text |
-| primary / accent | Glass #277B96 | Ice #A6EAF2 | accent and focus emphasis |
-| secondary / neutral | Slate #5C6B7A | Mist-soft #B8CAD4 | secondary text |
-| success / warning / error | Pine / Amber / Crimson | Pine-bright / Amber-bright / Crimson-bright | status only |
+| base-100 | Sand #F6F1E8 | Roast #1D1713 | app/detail surface |
+| base-200 | White #FFFFFF | Roast Surface #2A211B | raised surfaces |
+| base-300 | Sand Line #DDD3C4 | Roast Line #43372E | borders |
+| base-content | Espresso #2A1D17 | Bone #F3EEEA | primary text |
+| primary / accent | Deep Glass #0A6488 | Bright Glass #6CC6F0 | accent and focus emphasis |
+| secondary / neutral | Muted Espresso #665850 | Muted Bone #B9ADA3 | secondary text |
+| success / warning / error | Delivered #1D6B3C / Delayed #855300 / Failed #B3261E | Delivered #7FCB9A / Delayed #E3B25C / Failed #F09A93 | status only |
 
 **Accent discipline (the 10% rule):** `primary`/Glass appears only on the
 selected-row border, the primary CTA, the active nav/timeline node, and focus
@@ -77,7 +77,7 @@ or default; faux-bold is a conformance failure.
 
 **Elevation is borders-first.** Default surfaces are `border border-base-300`
 with no shadow (brand `--depth:0`, flat — no glassmorphism/bevels). Only
-modals/popovers use `shadow-overlay` (a faint Ink-tinted shadow). Never
+modals/popovers use `shadow-overlay` (a faint Espresso-tinted shadow). Never
 `shadow-2xl`/`-xl`/`-lg`.
 
 ## Motion vocabulary

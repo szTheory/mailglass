@@ -1,5 +1,6 @@
 /* mailglass_admin v0.1 - dev preview dashboard styles.
-   Brand: brandbook/brand-book.md (Ink/Glass/Ice/Mist/Paper/Slate).
+   Brand: v2.0 (Sand/Espresso/Deep Glass on light; Roast/Bone/Bright Glass on dark).
+   Values live in brandbook/tokens.css; this file only maps them to roles.
    Built by: mix mailglass_admin.assets.build  (zero Node toolchain). */
 
 /* Resolves to: <monorepo-root>/brandbook/tokens.css (build cwd = mailglass_admin/) */
@@ -26,29 +27,31 @@
   prefersdark: false;
   color-scheme: "light";
 
-  /* Brand book §7.3 — canonical palette mapped to daisyUI semantic tokens.
+  /* Brand v2.0 role map — each daisyUI slot reads one --mg-* role.
      All --color-* values reference brandbook/tokens.css --mg-* custom properties;
-     no raw hex literals in theme selectors (TOKEN-01). */
-  --color-base-100: var(--mg-color-background);          /* Paper #F8FBFD — no value change */
-  --color-base-200: var(--mg-color-surface-raised);      /* White #FFFFFF — CORRECTED from Mist */
-  --color-base-300: var(--mg-color-border);              /* Mist-edge #C7DCE5 — CORRECTED from Ice */
-  --color-base-content: var(--mg-color-text);            /* Ink #0D1B2A — no value change */
-  --color-primary: var(--mg-color-accent);               /* Glass #277B96 — no value change */
-  --color-primary-content: var(--mg-color-background);   /* Paper #F8FBFD — no value change */
-  --color-secondary: var(--mg-color-text-muted);         /* Slate #5C6B7A — no value change */
-  --color-secondary-content: var(--mg-color-background); /* Paper #F8FBFD — no value change */
-  --color-accent: var(--mg-color-accent);                /* Glass #277B96 — CORRECTED from Ink */
-  --color-accent-content: var(--mg-color-text-inverse);  /* White #FFFFFF — reclassified */
-  --color-neutral: var(--mg-color-text-muted);           /* Slate #5C6B7A — no value change */
-  --color-neutral-content: var(--mg-color-background);   /* Paper #F8FBFD — no value change */
-  --color-info: var(--mg-color-info-solid);              /* Glass-deep #1D637A — CORRECTED from Glass */
-  --color-info-content: var(--mg-color-text-inverse);    /* White #FFFFFF — added */
-  --color-success: var(--mg-color-success-solid);        /* Pine #166534 — no value change */
-  --color-success-content: var(--mg-color-success-on-solid); /* White #FFFFFF — added */
-  --color-warning: var(--mg-color-warning-solid);        /* Amber #A95F10 — no value change */
-  --color-warning-content: var(--mg-color-warning-on-solid); /* White #FFFFFF — added */
-  --color-error: var(--mg-color-error-solid);            /* Crimson #B42318 — no value change */
-  --color-error-content: var(--mg-color-error-on-solid); /* White #FFFFFF — added */
+     no raw hex literals in theme selectors (TOKEN-01). The 20 slots consume 15
+     of the 39 roles; the rest are read directly or are contrast-checked only
+     (see mailglass_admin/test/mailglass_admin/token_parity_test.exs). */
+  --color-base-100: var(--mg-color-background);          /* Sand #F6F1E8 — page */
+  --color-base-200: var(--mg-color-surface-raised);      /* White #FFFFFF — cards */
+  --color-base-300: var(--mg-color-border);              /* Sand Line #DDD3C4 — dividers */
+  --color-base-content: var(--mg-color-text);            /* Espresso #2A1D17 — text */
+  --color-primary: var(--mg-color-accent);               /* Deep Glass #0A6488 — the one main button */
+  --color-primary-content: var(--mg-color-background);   /* Sand #F6F1E8 — on Deep Glass */
+  --color-secondary: var(--mg-color-text-muted);         /* Muted Espresso #665850 — secondary text */
+  --color-secondary-content: var(--mg-color-background); /* Sand #F6F1E8 — on Muted Espresso */
+  --color-accent: var(--mg-color-accent);                /* Deep Glass #0A6488 */
+  --color-accent-content: var(--mg-color-text-inverse);  /* White #FFFFFF — on Deep Glass */
+  --color-neutral: var(--mg-color-text-muted);           /* Muted Espresso #665850 */
+  --color-neutral-content: var(--mg-color-background);   /* Sand #F6F1E8 — on Muted Espresso */
+  --color-info: var(--mg-color-info-solid);              /* Deep Glass #0A6488 — the book has no info hue */
+  --color-info-content: var(--mg-color-text-inverse);    /* White #FFFFFF */
+  --color-success: var(--mg-color-success-solid);        /* Delivered green #1D6B3C */
+  --color-success-content: var(--mg-color-success-on-solid); /* White #FFFFFF */
+  --color-warning: var(--mg-color-warning-solid);        /* Delayed amber #855300 */
+  --color-warning-content: var(--mg-color-warning-on-solid); /* White #FFFFFF */
+  --color-error: var(--mg-color-error-solid);            /* Failed red #B3261E — red means only Failed */
+  --color-error-content: var(--mg-color-error-on-solid); /* White #FFFFFF */
 
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
@@ -66,26 +69,26 @@
 
   /* All --color-* values reference brandbook/tokens.css --mg-* custom properties;
      no raw hex literals in theme selectors (TOKEN-01). */
-  --color-base-100: var(--mg-color-background);          /* Ink #0D1B2A — no value change */
-  --color-base-200: var(--mg-color-surface-raised);      /* Ink-raised #152538 — no value change */
-  --color-base-300: var(--mg-color-border);              /* Ink-edge #315069 — CORRECTED from Ink-overlay */
-  --color-base-content: var(--mg-color-text);            /* Mist #EAF6FB — no value change */
-  --color-primary: var(--mg-color-accent);               /* Ice #A6EAF2 — no value change */
-  --color-primary-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — already passes AA 12.98:1 */
-  --color-secondary: var(--mg-color-text-muted);         /* Mist-soft #B8CAD4 — CORRECTED from Slate */
-  --color-secondary-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — CORRECTED on dark fills */
-  --color-accent: var(--mg-color-accent);                /* Ice #A6EAF2 — CORRECTED from Glass */
-  --color-accent-content: var(--mg-color-text-inverse);  /* Ink #0D1B2A — CORRECTED */
-  --color-neutral: var(--mg-color-text-muted);           /* Mist-soft #B8CAD4 — CORRECTED from Slate */
-  --color-neutral-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — CORRECTED */
-  --color-info: var(--mg-color-info-solid);              /* Ice #A6EAF2 — no value change for dark */
-  --color-info-content: var(--mg-color-info-on-solid);   /* Ink #0D1B2A — added */
-  --color-success: var(--mg-color-success-solid);        /* Pine-bright #8BB77F — no value change */
-  --color-success-content: var(--mg-color-success-on-solid); /* Ink #0D1B2A — added */
-  --color-warning: var(--mg-color-warning-solid);        /* Amber-bright #E0A955 — no value change */
-  --color-warning-content: var(--mg-color-warning-on-solid); /* Ink #0D1B2A — added */
-  --color-error: var(--mg-color-error-solid);            /* Crimson-bright #E29089 — CORRECTED from off-palette */
-  --color-error-content: var(--mg-color-error-on-solid); /* Ink #0D1B2A — added */
+  --color-base-100: var(--mg-color-background);          /* Roast #1D1713 — page */
+  --color-base-200: var(--mg-color-surface-raised);      /* Roast Surface #2A211B — cards */
+  --color-base-300: var(--mg-color-border);              /* Roast Line #43372E — dividers */
+  --color-base-content: var(--mg-color-text);            /* Bone #F3EEEA — text */
+  --color-primary: var(--mg-color-accent);               /* Bright Glass #6CC6F0 — the one main button */
+  --color-primary-content: var(--mg-color-text-inverse); /* Roast #1D1713 — on Bright Glass */
+  --color-secondary: var(--mg-color-text-muted);         /* Muted Bone #B9ADA3 — secondary text */
+  --color-secondary-content: var(--mg-color-text-inverse); /* Roast #1D1713 — on Muted Bone */
+  --color-accent: var(--mg-color-accent);                /* Bright Glass #6CC6F0 */
+  --color-accent-content: var(--mg-color-text-inverse);  /* Roast #1D1713 — on Bright Glass */
+  --color-neutral: var(--mg-color-text-muted);           /* Muted Bone #B9ADA3 */
+  --color-neutral-content: var(--mg-color-text-inverse); /* Roast #1D1713 — on Muted Bone */
+  --color-info: var(--mg-color-info-solid);              /* Bright Glass #6CC6F0 — the book has no info hue */
+  --color-info-content: var(--mg-color-info-on-solid);   /* Roast #1D1713 */
+  --color-success: var(--mg-color-success-solid);        /* Delivered green #7FCB9A */
+  --color-success-content: var(--mg-color-success-on-solid); /* Roast #1D1713 */
+  --color-warning: var(--mg-color-warning-solid);        /* Delayed amber #E3B25C */
+  --color-warning-content: var(--mg-color-warning-on-solid); /* Roast #1D1713 */
+  --color-error: var(--mg-color-error-solid);            /* Failed red #F09A93 — red means only Failed */
+  --color-error-content: var(--mg-color-error-on-solid); /* Roast #1D1713 */
 
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
@@ -103,7 +106,7 @@
 
    Rules: no brand hex here (color lives once, in the theme blocks); spacing
    stays on the 4px grid; type weights are 400/700 only (500/600 not loaded);
-   elevation is borders-first + faint Ink-tinted shadows (brand --depth:0 = flat,
+   elevation is borders-first + faint Espresso-tinted shadows (brand --depth:0 = flat,
    no glassmorphism/bevels). */
 @theme {
   /* Spacing — semantic names aliasing the 22-UI-SPEC scale (spec == CSS).
@@ -126,12 +129,12 @@
   --text-display: 1.75rem;
   --text-display--line-height: 1.2;
 
-  /* Elevation — borders-first. Ink (#0D1B2A) tinted so shadow reads as
-     "ink through glass", not generic gray. `overlay` is for modals/popovers
+  /* Elevation — borders-first. Espresso (#2A1D17) tinted so the shadow reads
+     warm like the book, not generic gray. `overlay` is for modals/popovers
      ONLY; default surfaces use a border + `shadow-flat`. */
   --shadow-flat: none;
-  --shadow-raised: 0 1px 2px 0 rgb(13 27 42 / 0.06);
-  --shadow-overlay: 0 8px 24px -8px rgb(13 27 42 / 0.18);
+  --shadow-raised: 0 1px 2px 0 rgb(42 29 23 / 0.06);
+  --shadow-overlay: 0 8px 24px -8px rgb(42 29 23 / 0.18);
 
   /* Easing — ease-OUT only for enter/exit (never ease-in); in-out for on-screen
      movement. Overrides Tailwind's default ease-out / ease-in-out curves.
