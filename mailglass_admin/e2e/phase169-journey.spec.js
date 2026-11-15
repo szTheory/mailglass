@@ -215,7 +215,7 @@ test.describe("Phase 169 connected journey", () => {
     const current = page.getByTestId("operator-suppression-card");
     await expect(current).toContainText("Current Mailglass match");
     await expect(current).toContainText(fixture.recipient);
-    await expect(current).toContainText("Address · Account-local");
+    await expect(current).toContainText("Address • Account-local");
     await expect(current).toContainText("Policy");
     await expect(current).toContainText("operator review · Ångström");
     await expect(current).toContainText("Expiry date");
@@ -271,7 +271,7 @@ test.describe("Phase 169 connected journey", () => {
         await expect(card).toContainText("No current Mailglass suppression matches this delivery.");
         await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
       } else {
-        await expect(card).toContainText("Address + stream · Account-local");
+        await expect(card).toContainText("Address + stream • Account-local");
         await expect(card).toContainText("Complaint");
         await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
         await expect(card).toContainText(nextFixture.recipient);

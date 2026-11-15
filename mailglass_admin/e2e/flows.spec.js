@@ -1992,7 +1992,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       "Replay command completed with no newly normalized Events."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last replay: completed · 0 newly normalized Events"
+      "Last replay: completed • 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
   });
@@ -2303,7 +2303,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
     await expect(card).toContainText("Expiry date not recorded");
     await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
-    await expect(card).toContainText("Address + stream · Account-local");
+    await expect(card).toContainText("Address + stream • Account-local");
     await expect(card).toContainText("phase169-address-stream");
     await expect(card.locator("time[data-local-time='true']")).toHaveCount(0);
     await expect(refresh).toBeVisible();

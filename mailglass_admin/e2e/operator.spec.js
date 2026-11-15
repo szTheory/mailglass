@@ -218,7 +218,7 @@ test.describe("operator browser gate", () => {
       "Replay command added 1 newly normalized Event."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last replay: completed · 1 newly normalized Event"
+      "Last replay: completed • 1 newly normalized Event"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
     await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
@@ -332,7 +332,7 @@ test.describe("operator browser gate", () => {
       "Replay command added 1 newly normalized Event."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last replay: completed · 1 newly normalized Event"
+      "Last replay: completed • 1 newly normalized Event"
     );
   });
 
@@ -389,7 +389,7 @@ test.describe("operator browser gate", () => {
       "Replay command completed with no newly normalized Events."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last replay: completed · 0 newly normalized Events"
+      "Last replay: completed • 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
@@ -716,7 +716,7 @@ test.describe("operator browser gate", () => {
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
     const copyTrigger = ts.locator("xpath=ancestor::button[@data-timestamp-copy]");
     await copyTrigger.hover();
-    await expect(copyTrigger.locator("xpath=..").locator(".mg-field-help-tooltip")).toContainText("UTC · Click to copy");
+    await expect(copyTrigger.locator("xpath=..").locator(".mg-field-help-tooltip")).toContainText("UTC • Click to copy");
     await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(ts).not.toContainText("Local:");
     await expect(ts).toHaveAttribute("aria-label", /local time$/);
