@@ -69,11 +69,12 @@
   --mg-logo-glass: #1895C2;
   --mg-logo-overlap: #0A6488;
 
-  /* Theme-invariant tokens. Inter and IBM Plex Mono are the brand faces
-     when installed; the chains below are the honest everyday rendering. */
-  --mg-font-display: "Inter Tight", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --mg-font-ui: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --mg-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Theme-invariant tokens. Funnel Display, Atkinson Hyperlegible Next and
+     Atkinson Hyperlegible Mono are the brand faces; the stacks below are the
+     book's own (brandbook/v2/brand.json type.*.css), with their fallbacks. */
+  --mg-font-display: 'Funnel Display', 'Arial Narrow', system-ui, sans-serif;
+  --mg-font-ui: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mg-font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, 'SF Mono', Consolas, monospace;
 
   --mg-text-display: 44px;
   --mg-text-h1: 36px;

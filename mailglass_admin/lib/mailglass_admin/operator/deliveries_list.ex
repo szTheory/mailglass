@@ -244,7 +244,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             <div data-testid="operator-deliveries-cards" class="operator-deliveries-cards">
               <ul
                 data-testid="operator-deliveries-list"
-                class="divide-y divide-base-300"
+                class="divide-y divide-base-300 tabular-nums"
               >
                 <li :for={delivery <- @deliveries} class="px-4 py-4">
                   <button

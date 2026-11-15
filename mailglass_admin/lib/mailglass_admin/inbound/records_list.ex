@@ -285,7 +285,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           <div data-testid="inbound-records-cards" class="md:hidden">
             <ul
               data-testid="inbound-records-list"
-              class="divide-y divide-base-300"
+              class="divide-y divide-base-300 tabular-nums"
             >
               <li :for={record <- @records}>
                 <div class={[

@@ -49,15 +49,61 @@ defmodule MailglassAdmin.AssetsTest do
   end
 
   describe "GET /dev/mail/fonts/<name>" do
-    test "serves allowlisted inter-400.woff2 with font/woff2 content-type", %{conn: conn} do
-      conn = get(conn, "/dev/mail/fonts/inter-400.woff2")
+    # A v1 face name that must stay unservable: the allowlist is the compile-time map of the
+    # six v2 faces, so a retired name is a 404 even though it once shipped here.
+    @retired_font_probe "inter-400.woff2"
 
-      assert conn.status == 200
+    test "serves each of the six allowlisted faces as font/woff2 with a wOF2 body",
+         %{conn: conn} do
+      allowed = MailglassAdmin.Controllers.Assets.allowed_fonts()
 
-      content_type = get_resp_header(conn, "content-type") |> List.first()
+      assert allowed == [
+               "a-display-600.woff2",
+               "a-mono-400.woff2",
+               "a-mono-600.woff2",
+               "ui-400.woff2",
+               "ui-400i.woff2",
+               "ui-600.woff2"
+             ]
 
-      assert content_type =~ "font/woff2",
-             "font content-type must be font/woff2, got #{inspect(content_type)}"
+      for name <- allowed do
+        response = get(conn, "/dev/mail/fonts/#{name}")
+
+        assert response.status == 200, "#{name} must be served"
+        assert get_resp_header(response, "content-type") == ["font/woff2"]
+
+        assert get_resp_header(response, "cache-control") == [
+                 "public, max-age=31536000, immutable"
+               ]
+
+        assert match?(<<"wOF2", _::binary>>, response.resp_body),
+               "#{name} body must start with the wOF2 signature"
+      end
+    end
+
+    test "serves bytes identical to the pinned files on disk", %{conn: conn} do
+      fonts_dir = Application.app_dir(:mailglass_admin, "priv/static/fonts")
+
+      for name <- MailglassAdmin.Controllers.Assets.allowed_fonts() do
+        assert get(conn, "/dev/mail/fonts/#{name}").resp_body ==
+                 File.read!(Path.join(fonts_dir, name))
+      end
+    end
+
+    test "rejects a retired v1 face with 404 and an empty body", %{conn: conn} do
+      response = get(conn, "/dev/mail/fonts/#{@retired_font_probe}")
+
+      assert response.status == 404
+      assert response.resp_body == ""
+    end
+
+    test "rejects the OFL license texts that sit beside the fonts", %{conn: conn} do
+      for name <- ~w(OFL-FunnelDisplay.txt OFL-AtkinsonHyperlegibleNext.txt) do
+        response = get(conn, "/dev/mail/fonts/#{name}")
+
+        assert response.status == 404, "#{name} is a license text, not an allowlisted font"
+        assert response.resp_body == ""
+      end
     end
 
     test "rejects path traversal attempts with 404", %{conn: conn} do
@@ -65,6 +111,8 @@ defmodule MailglassAdmin.AssetsTest do
 
       assert conn.status == 404,
              "font path traversal must return 404 (allowlist rejects non-whitelisted names)"
+
+      assert conn.resp_body == ""
     end
   end
 

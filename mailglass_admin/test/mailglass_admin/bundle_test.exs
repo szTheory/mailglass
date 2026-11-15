@@ -1,11 +1,11 @@
 defmodule MailglassAdmin.BundleTest do
   @moduledoc """
   RED-by-default coverage for PREV-06 bundle size budget: `priv/static/app.css`
-  exists under 150KB, `priv/static/fonts/` contains exactly the six locked
-  woff2 files (Inter 400/700 + Inter Tight 400/700 + IBM Plex Mono 400/700
-  per 05-UI-SPEC lines 71-79 — 2 weights per family, not 3), the logo is
-  committed, and the total `priv/static/` tree is under 800KB (CONTEXT D-23
-  budget).
+  exists under 150KB, `priv/static/fonts/` contains exactly the six brand v2
+  woff2 files (Funnel Display 600, Atkinson Hyperlegible Next 400/600/400
+  italic, Atkinson Hyperlegible Mono 400/600) plus the three OFL license
+  texts that must ship beside them, the logo is committed, and the total
+  `priv/static/` tree is under 800KB (CONTEXT D-23 budget).
 
   Plan 05 commits the compiled bundle and turns these RED tests green.
   """
@@ -35,23 +35,45 @@ defmodule MailglassAdmin.BundleTest do
   end
 
   describe "priv/static/fonts/" do
-    test "contains exactly six woff2 files — 2 weights per family" do
+    test "contains exactly the six brand v2 woff2 files" do
       actual =
         @fonts_dir
         |> File.ls!()
+        |> Enum.filter(&String.ends_with?(&1, ".woff2"))
         |> Enum.sort()
 
       expected = [
-        "ibm-plex-mono-400.woff2",
-        "ibm-plex-mono-700.woff2",
-        "inter-400.woff2",
-        "inter-700.woff2",
-        "inter-tight-400.woff2",
-        "inter-tight-700.woff2"
+        "a-display-600.woff2",
+        "a-mono-400.woff2",
+        "a-mono-600.woff2",
+        "ui-400.woff2",
+        "ui-400i.woff2",
+        "ui-600.woff2"
       ]
 
       assert actual == expected,
-             "fonts directory must contain exactly the six locked weights (Inter, Inter Tight, IBM Plex Mono × {400, 700}); got #{inspect(actual)}"
+             "fonts directory must contain exactly the six brand v2 faces (Funnel Display 600, Atkinson Hyperlegible Next 400/600/400 italic, Atkinson Hyperlegible Mono 400/600); got #{inspect(actual)}"
+    end
+
+    test "ships the three OFL license texts beside the fonts" do
+      actual =
+        @fonts_dir
+        |> File.ls!()
+        |> Enum.filter(&String.starts_with?(&1, "OFL-"))
+        |> Enum.sort()
+
+      expected = [
+        "OFL-AtkinsonHyperlegibleMono.txt",
+        "OFL-AtkinsonHyperlegibleNext.txt",
+        "OFL-FunnelDisplay.txt"
+      ]
+
+      assert actual == expected,
+             "the SIL OFL 1.1 license texts must ship with the fonts; got #{inspect(actual)}"
+    end
+
+    test "holds nothing but those nine files" do
+      assert @fonts_dir |> File.ls!() |> length() == 9
     end
   end
 

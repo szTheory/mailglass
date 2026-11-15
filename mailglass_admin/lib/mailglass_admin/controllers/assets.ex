@@ -29,13 +29,20 @@ defmodule MailglassAdmin.Controllers.Assets do
 
   ## Font allowlist
 
-  `call(conn, :font)` hits the six-member `@allowed_fonts` guard before
-  constructing a filesystem path. A path traversal attempt like
-  `GET /fonts/..%2F..%2Fetc%2Fpasswd` fails the guard, falls through to
-  `_ -> :error`, and returns 404 with an empty body. The 2-weights-per-
-  family lock from 05-UI-SPEC lines 71-79 means the allowlist is small
-  and stable; adding a seventh weight requires updating BOTH the
-  `@allowed_fonts` list AND the brand test fixture.
+  Six faces across three families are embedded at compile time, like the
+  CSS and the logo: Funnel Display at 600 for headings, Atkinson
+  Hyperlegible Next at 400, 600 and the slanted 400 face for text, and
+  Atkinson Hyperlegible Mono at 400 and 600 for code. The allowlist is
+  the key set of that name-to-bytes map (`allowed_fonts/0`), so
+  `call(conn, :font)` never builds a filesystem path from a request.
+  Any other name returns 404 with an empty body: a traversal attempt
+  like `GET /fonts/..%2F..%2Fetc%2Fpasswd`, the OFL license texts that
+  sit beside the fonts, and the retired v1 faces alike.
+
+  A new face enters through `scripts/brand_pin.exs extend` (which pins
+  its sha256) plus a name in `@font_files` below. Responses are
+  `immutable`, so a replaced font needs a new file name rather than new
+  bytes under an old one.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary declared in `lib/mailglass_admin.ex`;
@@ -327,6 +334,24 @@ defmodule MailglassAdmin.Controllers.Assets do
   @favicon File.read!(@favicon_path)
   @favicon_hash Base.encode16(:crypto.hash(:md5, @favicon), case: :lower)
 
+  # ---- Fonts: the brand v2 faces, embedded like the CSS and logo ----
+  # Explicit names, never a directory listing, so a stray file under
+  # priv/static/fonts can not become servable. font_assets_contract_test proves
+  # the woff2 files on disk, `allowed_fonts/0` and the @font-face URLs in the
+  # compiled bundle are the same set, and `brand_pin.exs verify` pins the bytes.
+  @fonts_dir Path.expand("../../../priv/static/fonts", __DIR__)
+  @font_files ~w(
+    a-display-600.woff2
+    a-mono-400.woff2 a-mono-600.woff2
+    ui-400.woff2 ui-400i.woff2 ui-600.woff2
+  )
+  for name <- @font_files do
+    @external_resource Path.join(@fonts_dir, name)
+  end
+
+  @fonts Map.new(@font_files, &{&1, File.read!(Path.join(@fonts_dir, &1))})
+  @allowed_fonts @fonts |> Map.keys() |> Enum.sort()
+
   @doc """
   MD5 hash (lowercase hex) of the embedded `priv/static/app.css` bytes.
 
@@ -363,6 +388,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   @spec js_body() :: binary()
   def js_body, do: @js
 
+  @doc false
+  @spec allowed_fonts() :: [String.t()]
+  def allowed_fonts, do: @allowed_fonts
+
   # Plug-controller dispatch per Phoenix Router macro expansion. The
   # Router emits `get "/css-:md5", MailglassAdmin.Controllers.Assets, :css`
   # which calls `init(:css)` once at compile time + `call(conn, :css)`
@@ -379,13 +408,11 @@ defmodule MailglassAdmin.Controllers.Assets do
   def call(conn, :favicon), do: serve(conn, @favicon, "image/svg+xml")
 
   def call(conn, :font) do
-    name = conn.params["name"]
+    case Map.fetch(@fonts, conn.params["name"]) do
+      {:ok, bytes} ->
+        serve(conn, bytes, "font/woff2")
 
-    with {:ok, path} <- resolve_font(name),
-         {:ok, bytes} <- File.read(path) do
-      serve(conn, bytes, "font/woff2")
-    else
-      _ ->
+      :error ->
         conn
         |> send_resp(404, "")
         |> halt()
@@ -399,19 +426,4 @@ defmodule MailglassAdmin.Controllers.Assets do
     |> send_resp(200, body)
     |> halt()
   end
-
-  # Font allowlist — updated per 05-UI-SPEC lines 71-79 (2 weights per
-  # family only). Earlier 05-RESEARCH.md drafts at lines 518-526 included
-  # 500 and 600 weights; UI-SPEC revision collapsed to 400/700 exclusively.
-  @allowed_fonts ~w(
-    inter-400.woff2 inter-700.woff2
-    inter-tight-400.woff2 inter-tight-700.woff2
-    ibm-plex-mono-400.woff2 ibm-plex-mono-700.woff2
-  )
-
-  defp resolve_font(name) when name in @allowed_fonts do
-    {:ok, Path.join([:code.priv_dir(:mailglass_admin), "static", "fonts", name])}
-  end
-
-  defp resolve_font(_), do: :error
 end
