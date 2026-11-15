@@ -1,0 +1,98 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Northstar Logistics
+      - text: northstar
+      - link "Health":
+        - /url: /ops/mail?tenant_id=northstar
+      - link "Deliveries":
+        - /url: /ops/mail?tenant_id=northstar&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=northstar
+      - text: Applies to Health, Deliveries and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=overview&return_tenant_id=northstar
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Email health" [level=1]
+  - paragraph: Find email issues and inspect the records behind them.
+  - group "Health check period and freshness":
+    - paragraph: Last 7 days
+    - button "Help for observation period"
+    - text: Activity and recorded issues for this account during this period.
+    - paragraph:
+      - text: Last checked
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:21:55.005559 UTC"':
+        - time: Nov 15, 2026, 2:21 AM
+    - button "Refresh health"
+  - heading "Needs attention" [level=2]
+  - list:
+    - listitem:
+      - paragraph: "1"
+      - link "Failed deliveries":
+        - /url: /ops/mail?event=failed&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Failed deliveries"
+      - text: Sending failed before a successful handoff to the provider.
+    - listitem:
+      - paragraph: "3"
+      - link "Bounced deliveries":
+        - /url: /ops/mail?event=bounced&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Bounced deliveries"
+      - text: The provider reported that these messages could not be delivered.
+    - listitem:
+      - paragraph: "1"
+      - link "Rejected deliveries":
+        - /url: /ops/mail?event=rejected&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Rejected deliveries"
+      - text: The provider rejected these messages.
+    - listitem:
+      - paragraph: "1"
+      - link "Delayed deliveries":
+        - /url: /ops/mail?event=deferred&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Delayed deliveries"
+      - text: The provider reported a temporary delivery delay. Delivery has not been confirmed.
+    - listitem:
+      - paragraph: "1"
+      - link "Failed inbound processing":
+        - /url: /ops/mail/inbound?outcome=failed&tenant_id=northstar&window_hours=168
+      - button "Help for Failed inbound processing"
+      - text: Mailbox processing ended in failure when these messages were received. Open a message to inspect its error and any later recovery attempts.
+    - listitem:
+      - paragraph: "1"
+      - link "Unrouted inbound messages":
+        - /url: /ops/mail/inbound?outcome=no_match&tenant_id=northstar&window_hours=168
+      - button "Help for Unrouted inbound messages"
+      - text: No mailbox routing rule matched these messages when they were received.
+    - listitem:
+      - paragraph: "1"
+      - link "Failed webhook attempts":
+        - /url: /ops/mail?support_focus=failed_ingest&support_webhook_event_id=01a1dd02-8a6b-76d5-ac2d-6dd40b298c55&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Failed webhook attempts"
+      - text: Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.
+    - listitem:
+      - paragraph: "1"
+      - link "Unmatched events":
+        - /url: /ops/mail?support_event_id=01a1dd02-8a6b-7fbd-acea-e358e0e16ad2&support_focus=orphan_backlog&tenant_id=northstar&view=deliveries&window_hours=168
+      - button "Help for Unmatched events"
+      - text: Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.
+  - region "Recent activity":
+    - heading "Recent activity" [level=2]
+    - text: Outbound
+    - button "Help for outbound activity"
+    - text: Deliveries with a recorded event in this period, including pending and failed deliveries. Activity alone does not confirm successful delivery.
+    - link "20 deliveries updated":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+    - text: Inbound
+    - button "Help for inbound activity"
+    - text: Messages received in this period, across all mailbox outcomes.
+    - link "6 messages received":
+      - /url: /ops/mail/inbound?tenant_id=northstar&window_hours=168

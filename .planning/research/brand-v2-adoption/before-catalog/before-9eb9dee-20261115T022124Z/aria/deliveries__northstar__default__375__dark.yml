@@ -1,0 +1,295 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - button "Filters"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "8"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results.
+    - paragraph: "9"
+    - paragraph: Needs attention
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "3"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Deliveries 20 deliveries" [level=2]: Deliveries (20)
+    - list:
+      - listitem:
+        - button "ops@northstar.example INC-4421 is monitoring":
+          - paragraph: ops@northstar.example
+          - paragraph: INC-4421 is monitoring
+        - button "Suppressed"
+        - text: Sending to this recipient was blocked by a suppression rule. ID
+        - paragraph: 01a1dd02-8a57-734c-93a9-0e614a6eab57
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:16 AM
+      - listitem:
+        - button "ops@northstar.example Northstar Logistics email usage reached 85%":
+          - paragraph: ops@northstar.example
+          - paragraph: Northstar Logistics email usage reached 85%
+        - button "Bounced"
+        - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+        - paragraph: 01a1dd02-8a56-71e4-9df4-f5d088637089
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:13:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:13 AM
+      - listitem:
+        - button "finance@northstar.example Northstar Logistics onboarding checklist":
+          - paragraph: finance@northstar.example
+          - paragraph: Northstar Logistics onboarding checklist
+        - button "Dispatched"
+        - text: This message was handed to the provider. Delivery to the recipient has not been confirmed. ID
+        - paragraph: 01a1dd02-90f6-7dc2-a9a6-d9ca69327822
+        - text: Latest event
+        - paragraph: Sent
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:12:35.000000 UTC"':
+          - time: Nov 15, 2026, 2:12 AM
+      - listitem:
+        - button "dispatch@northstar.example Northstar Logistics weekly shipment digest":
+          - paragraph: dispatch@northstar.example
+          - paragraph: Northstar Logistics weekly shipment digest
+        - button "Failed"
+        - text: Sending failed before a successful handoff to the provider. Open the delivery to inspect the error. ID
+        - paragraph: 01a1dd02-9096-78b0-b0cc-bf7994b304f1
+        - text: Provider
+        - paragraph: UNKNOWN
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:07:35.000000 UTC"':
+          - time: Nov 15, 2026, 2:07 AM
+      - listitem:
+        - button "alex.rivera@northstar.example Your Northstar Logistics sign-in link":
+          - paragraph: alex.rivera@northstar.example
+          - paragraph: Your Northstar Logistics sign-in link
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a4f-7f80-a8e7-b87f23674072
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:05:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:05 AM
+      - listitem:
+        - button "maya.okafor@northstr.example Welcome to Northstar Logistics, Maya":
+          - paragraph: maya.okafor@northstr.example
+          - paragraph: Welcome to Northstar Logistics, Maya
+        - button "Bounced"
+        - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+        - paragraph: 01a1dd02-8fd2-76b6-afbf-7ae87e447855
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:04:35.000000 UTC"':
+          - time: Nov 15, 2026, 2:04 AM
+      - listitem:
+        - button "mira.chen@northstar.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: mira.chen@northstar.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a35-732a-8b6e-2d74795dd811
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:03:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:03 AM
+      - listitem:
+        - button "billing@northstar.example Payment action needed for Northstar Logistics":
+          - paragraph: billing@northstar.example
+          - paragraph: Payment action needed for Northstar Logistics
+        - button "Bounced"
+        - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+        - paragraph: 01a1dd02-8a54-7afe-a80e-617ad5cb23db
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:01:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:01 AM
+      - listitem:
+        - button "zoë.müller@northstar.example Your Northstar Logistics workspace is ready":
+          - paragraph: zoë.müller@northstar.example
+          - paragraph: Your Northstar Logistics workspace is ready
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-90f9-72fb-9e94-cf163ce46490
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 01:51:35.000000 UTC"':
+          - time: Nov 15, 2026, 1:51 AM
+      - listitem:
+        - button "billing@northstar.example Receipt INV-2026-0601 for Northstar Logistics":
+          - paragraph: billing@northstar.example
+          - paragraph: Receipt INV-2026-0601 for Northstar Logistics
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a51-75da-9518-b3ee16f25cc1
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 01:37:33.000000 UTC"':
+          - time: Nov 15, 2026, 1:37 AM
+      - listitem:
+        - button "queued@northstar.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: queued@northstar.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Queued"
+        - text: This message is waiting to be sent to the provider. ID
+        - paragraph: 01a1dd02-8a59-7e6c-af32-c0ce8322ceb3
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 00:08:33.000000 UTC"':
+          - time: Nov 15, 2026, 12:08 AM
+      - listitem:
+        - button "rejected@northstar.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: rejected@northstar.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Rejected"
+        - text: The provider rejected this message. Open the delivery to inspect the recorded reason. ID
+        - paragraph: 01a1dd02-8a5a-7513-91dd-f61d919ca596
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 00:07:33.000000 UTC"':
+          - time: Nov 15, 2026, 12:07 AM
+      - listitem:
+        - button "deferred@northstar.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: deferred@northstar.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Deferred"
+        - text: The provider reported a temporary delivery delay. Delivery has not been confirmed. ID
+        - paragraph: 01a1dd02-8a5c-700d-97ca-cc74bba7c25c
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+          - time: Nov 15, 2026, 12:05 AM
+      - listitem:
+        - button "opened@northstar.example Receipt INV-2026-0601 for Northstar Logistics":
+          - paragraph: opened@northstar.example
+          - paragraph: Receipt INV-2026-0601 for Northstar Logistics
+        - button "Opened"
+        - text: The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal. ID
+        - paragraph: 01a1dd02-8a5e-743e-9e1d-0e341604d31b
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 00:03:33.000000 UTC"':
+          - time: Nov 15, 2026, 12:03 AM
+      - listitem:
+        - button "clicked@northstar.example Receipt INV-2026-0601 for Northstar Logistics":
+          - paragraph: clicked@northstar.example
+          - paragraph: Receipt INV-2026-0601 for Northstar Logistics
+        - button "Clicked"
+        - text: The provider recorded a link click. Security scanners or other automated activity can trigger this signal. ID
+        - paragraph: 01a1dd02-8a5f-784c-aab3-07e561d584d7
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 00:01:33.000000 UTC"':
+          - time: Nov 15, 2026, 12:01 AM
+      - listitem:
+        - button "complained@northstar.example Northstar Logistics email usage reached 85%":
+          - paragraph: complained@northstar.example
+          - paragraph: Northstar Logistics email usage reached 85%
+        - button "Complained"
+        - text: The provider reported a spam complaint for this message. ID
+        - paragraph: 01a1dd02-8a60-7d68-9aff-a6ca83d36bc4
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+          - time: Nov 14, 2026, 11:59 PM
+      - listitem:
+        - button "unsubscribed@northstar.example Northstar Logistics email usage reached 85%":
+          - paragraph: unsubscribed@northstar.example
+          - paragraph: Northstar Logistics email usage reached 85%
+        - button "Unsubscribed"
+        - text: The provider recorded an unsubscribe for this recipient. ID
+        - paragraph: 01a1dd02-8a63-79de-b2af-b43278864ec9
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-14 23:57:33.000000 UTC"':
+          - time: Nov 14, 2026, 11:57 PM
+      - listitem:
+        - button "subscribed@northstar.example Northstar Logistics email usage reached 85%":
+          - paragraph: subscribed@northstar.example
+          - paragraph: Northstar Logistics email usage reached 85%
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a65-76b1-b4c2-b12d9ce7efba
+        - text: Latest event
+        - paragraph: Subscribed
+        - text: Provider
+        - paragraph: SENDGRID
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-14 23:55:33.000000 UTC"':
+          - time: Nov 14, 2026, 11:55 PM
+      - listitem:
+        - button "unknown@northstar.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: unknown@northstar.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Dispatched"
+        - text: This message was handed to the provider. Delivery to the recipient has not been confirmed. ID
+        - paragraph: 01a1dd02-8a67-7e6f-8163-572783c20899
+        - text: Latest event
+        - paragraph: Unknown
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-14 23:53:33.000000 UTC"':
+          - time: Nov 14, 2026, 11:53 PM
+      - listitem:
+        - button "operations.billing.notifications.enterprise.accounts@northstar-stress.example Sam Rivera invited you to Northstar Logistics":
+          - paragraph: operations.billing.notifications.enterprise.accounts@northstar-stress.example
+          - paragraph: Sam Rivera invited you to Northstar Logistics
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a68-7e4d-b023-7ecfdc1be9d8
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+          - time: Nov 14, 2026, 11:51 PM

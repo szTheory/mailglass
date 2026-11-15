@@ -1,0 +1,80 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - link "Back to deliveries":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Sam Rivera invited you to Northstar Logistics" [level=2]
+  - button "Deferred"
+  - text: The provider reported a temporary delivery delay. Delivery has not been confirmed.
+  - paragraph: To deferred@northstar.example
+  - term: Provider
+  - definition: SENDGRID
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+      - time: Nov 15, 2026, 12:05 AM
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Delivery ID
+  - definition:
+    - 'button "Copy Delivery ID: 01a1dd02-8a5c-700d-97ca-cc74bba7c25c"': 01a1dd02-8a5c-700d-97ca-cc74bba7c25c
+  - term: Mailable
+  - definition:
+    - button "AccountMailer.invite_admin"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.invite_admin
+  - term: Provider message ID
+  - definition:
+    - 'button "Copy Provider message ID: sg-demo-badge-deferred-001"': sg-demo-badge-deferred-001
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This message was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: sendgrid · api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a5d-7707-b408-b7299a6b69ec"': 01a1dd02-8a5d-7707-b408-b7299a6b69ec
+      - 'button "Copy timestamp as UTC: 2026-11-15 00:04:33.000000 UTC"':
+        - time: Nov 15, 2026, 12:04 AM
+    - listitem:
+      - button "Deferred"
+      - text: The provider reported a temporary delivery delay. Delivery has not been confirmed.
+      - paragraph: sendgrid
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a5d-7c5b-95d7-4218bc04e244"': 01a1dd02-8a5d-7c5b-95d7-4218bc04e244
+      - 'button "Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+        - time: Nov 15, 2026, 12:05 AM
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows still lack one exact webhook identity.
+  - group: Account diagnostics

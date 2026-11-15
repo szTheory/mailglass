@@ -1,0 +1,99 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=inbound&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Inbound records" [level=1]
+  - paragraph: Follow each received message through routing and mailbox processing.
+  - status: 6 messages match
+  - link "Back to quick view":
+    - /url: /ops/mail/inbound?inbound_id=01a1dd02-8a78-7820-b86f-8bbc7937c73b&tenant_id=northstar&window_hours=168
+  - paragraph: Subject
+  - heading "Unrouted vendor notice" [level=2]
+  - button "Unrouted"
+  - text: No routing rule matched, so this message was not sent to a mailbox.
+  - paragraph: Delivered to unknown@demo.mailglass.local
+  - term: From
+  - definition:
+    - list:
+      - listitem:
+        - 'button "Copy From address: vendor@partners.example"': vendor@partners.example
+  - term: To
+  - definition:
+    - list:
+      - listitem:
+        - 'button "Copy To address: unknown@demo.mailglass.local"': unknown@demo.mailglass.local
+  - term: Delivered to
+  - definition:
+    - 'button "Copy Delivered to address: unknown@demo.mailglass.local"': unknown@demo.mailglass.local
+    - paragraph: SMTP envelope recipient (RCPT TO), used for routing.
+  - term: Provider
+  - definition: POSTMARK
+  - term: Received
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+      - time: Nov 15, 2026, 2:16 AM
+  - term: Mailbox
+  - definition:
+    - button "Unrouted"
+    - text: None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Record ID
+  - definition:
+    - 'button "Copy Record ID: 01a1dd02-8a78-7820-b86f-8bbc7937c73b"': 01a1dd02-8a78-7820-b86f-8bbc7937c73b
+  - term: Provider message ID
+  - definition:
+    - 'button "Copy Provider message ID: pm-inbound-demo-nomatch-001"': pm-inbound-demo-nomatch-001
+  - heading "Replay" [level=3]
+  - paragraph: "Replay is unavailable: this message did not match any mailbox."
+  - button "Review inbound replay" [disabled]
+  - heading "Execution timeline" [level=3]
+  - paragraph:
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-11-15 02:21:49.929675 UTC"':
+      - time: Nov 15, 2026, 2:21 AM
+  - button "Refresh history"
+  - list:
+    - listitem:
+      - button "Unrouted"
+      - text: No routing rule matched, so this message was not sent to a mailbox. Initial processing
+      - term: Run ID
+      - definition:
+        - 'button "Copy Run ID: 01a1dd02-8a78-7bf5-9156-54497d1e5e7c"': 01a1dd02-8a78-7bf5-9156-54497d1e5e7c
+      - paragraph:
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:17:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:17 AM
+  - group: Current router simulation How current route rules compare
+  - heading "Raw provider source" [level=3]
+  - paragraph: May contain personal information.
+  - button "Reveal raw source"
+  - term: Provider
+  - definition: POSTMARK
+  - term: Received
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+      - time: Nov 15, 2026, 2:16 AM
+  - term: Payload size
+  - definition: 53 bytes
+  - term: Header count
+  - definition: "1"
+  - term: Provider authentication
+  - definition: Unavailable
+  - status: Raw source hidden.

@@ -1,0 +1,71 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Fjordline A/S
+    - text: fjordline-aps
+    - link "Health":
+      - /url: /ops/mail?tenant_id=fjordline-aps
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=fjordline-aps
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=fjordline-aps
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 1 delivery matches
+  - link "Back to deliveries":
+    - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Welcome to Fjordline A/S" [level=2]
+  - button "Delivered"
+  - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+  - paragraph: To bjorn.hansen@fjordline-aps.example
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-15 02:21:33.000000 UTC"':
+      - time: Nov 15, 2026, 2:21 AM
+  - term: Account
+  - definition: Fjordline A/S
+  - term: Delivery ID
+  - definition:
+    - 'button "Copy Delivery ID: 01a1dd02-8a7a-7c43-9426-4f47059f9312"': 01a1dd02-8a7a-7c43-9426-4f47059f9312
+  - term: Mailable
+  - definition:
+    - button "Mailables.TransactionalEmailWithVeryLongModuleName"
+    - text: Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName
+  - term: Provider message ID
+  - definition:
+    - 'button "Copy Provider message ID: del_01JXW9ZQKB3V1N4P2RMT7FHCG"': del_01JXW9ZQKB3V1N4P2RMT7FHCG
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Delivered"
+      - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+      - paragraph: postmark · webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a7b-79c8-91dc-acb96418c4d6"': 01a1dd02-8a7b-79c8-91dc-acb96418c4d6
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:21:33.000000 UTC"':
+        - time: Nov 15, 2026, 2:21 AM
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics
