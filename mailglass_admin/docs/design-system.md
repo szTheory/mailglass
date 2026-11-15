@@ -64,16 +64,17 @@ Each `@theme` token is simultaneously a CSS variable and a Tailwind utility.
 | Scale | Tokens | Utilities |
 |---|---|---|
 | Spacing (4px grid) | `--spacing-xs…3xl` (4/8/16/24/32/48/64) | `p-md`, `gap-sm`, `px-lg`, … |
-| Type (400/700 only) | --text-label/body/heading/display (14/16/20/28px) | text-label, text-body, … |
+| Type (400/600 only) | --text-label/body/heading/display (14/16/20/28px) | text-label, text-body, … |
 | Elevation | `--shadow-flat/raised/overlay` | `shadow-overlay` (modals only) |
 | Easing | `--ease-out`, `--ease-in-out` | `ease-out` |
 | Motion (≤300ms) | `--duration-instant/fast/reveal/flash` | `duration-(--duration-fast)` |
 | Control size | `--size-control-sm/md/lg` (36/44/52) | maps to `min-h-9/11/13` |
 | Z-index | `--z-sticky/dropdown/overlay/modal/toast` (10/20/30/40/50) | `z-10`…`z-50` |
 
-**Type weights are exactly 400 and 700.** `font-medium` / `font-semibold`
-(500/600) are NOT loaded — the browser synthesizes a fake bold. Use `font-bold`
-or default; faux-bold is a conformance failure.
+**Type weights are exactly 400 and 600.** `font-bold` maps to the 600 face
+through `--font-weight-bold`; `font-medium` / `font-semibold` stay banned so
+bold has one spelling. Use `font-bold` or default; faux-bold is a conformance
+failure.
 
 **Elevation is borders-first.** Default surfaces are `border border-base-300`
 with no shadow (brand `--depth:0`, flat — no glassmorphism/bevels). Only
