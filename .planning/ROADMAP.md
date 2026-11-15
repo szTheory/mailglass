@@ -52,7 +52,7 @@
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183).
 
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (completed 2026-11-14)
-- [ ] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap
+- [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [ ] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched
 - [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen
 - [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry brand v2; announcement and any trademark claim wait on the search result
@@ -118,7 +118,7 @@ Plans:
   2. A required CI lane runs the `--check` gate. A deliberately drifted bundle fails that lane, so "CI diffs the committed admin bundle" is enforced rather than claimed.
   3. Only the `<html>` element carries `data-theme`. Switching light, dark and system re-themes every admin surface, including the region the nested attribute used to shadow, and a browser test checks this.
   4. Before-screenshots of each current admin screen exist on the Northstar, Fjordline and Helios fixtures plus the UX lens's delivery cases. They are stored at unique paths and record the source commit SHA from before any token change.
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 **Plan budget**: about 4 (bundle reproducibility is time-boxed; fallback is committing the assembly script as-is behind the same `--check` gate)
 
 Plans:
@@ -185,7 +185,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
-| 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | In Progress | - |
+| 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 0/TBD | Not started | - |
 | 182. Admin Words and Layout, One Job First | 0/TBD | Not started | - |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
