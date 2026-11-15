@@ -375,17 +375,24 @@ d.toLocaleString("en-US", FMT)   // UTC: "Nov 15, 2026, 2:05 PM UTC"; New_York: 
 | A4 | Placing the journey spec under `assets/catalog/` is acceptable instead of `assets/e2e/` (C-18) | C-18 | If the owner wants it in the advisory e2e lane, it must use existing DemoData rows only |
 | A5 | Keeping `badge badge-outline` with inline `style` word colour passes axe `color-contrast` in both themes (contrast pairs are the book's, but a rendered axe run was not performed) | Pattern 2 | Pitfall 9 regeneration discipline applies |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+Resolved at planning (2026-11-15); each recommendation was adopted and recorded in the named plan's `<decisions_recorded>`.
 
 1. **R1 honest fallback for send-time failures**
    - Known: `status: :failed` rows carry `last_error` (adapter error) and nil `reject_reason`; `last_error` must never render; the fallback says "No reason was recorded for this email."
    - Unclear: whether that is true when an adapter error *was* recorded.
    - Recommendation: for the `status == :failed` send-time case use the existing, already-true `outcome_help` claim ("Sending failed before a successful handoff to the provider.", `components.ex` `outcome_help(:delivery, :failed)`) as the cause line, and reserve the fixed fallback for provider-reported bounces/rejections with nil `reject_reason`. This narrows, never widens, the claim.
+   - **RESOLVED:** adopted in 182-02 (`<decisions_recorded>` R1; Task 3 cause wiring and the cause-contract matrix).
 2. **R2 complaint rows read Sent**
    - Recommendation: when `complained_at` is present add "A complaint was recorded for this email." and omit the "has not reported accepting it" half of the rule line; classes stay as 179 D-03 locks them.
+   - **RESOLVED:** adopted in 182-02 (`<decisions_recorded>` R2; Task 1 Sent-class rule variant).
 3. **R3 suppressed address finds no row** — Recommendation: leave the empty state truthful ("No activity matches this email address in this time window"), add no suppression lookup (stop line).
+   - **RESOLVED:** adopted in 182-02 (`<decisions_recorded>` R3, no lookup) and 182-04 (`<decisions_recorded>` empty-state wording).
 4. **Where does the journey spec live (C-18)?** Recommendation: `assets/catalog/`.
+   - **RESOLVED:** adopted in 182-06 (`<decisions_recorded>` C-18/A4; Task 1 `catalog/phase182-journey.spec.js`).
 5. **Mark colour on solid pills** — Recommendation: outline badge + token-coloured word (Pattern 2); confirm with the axe producer.
+   - **RESOLVED:** adopted in 182-02 (`<decisions_recorded>` R5; status_badge mark branch); axe confirmation in 182-06 Task 3 step 2 (advisory).
 
 ## Environment Availability
 

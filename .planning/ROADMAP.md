@@ -173,7 +173,7 @@ Plans:
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
 **Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
-**Plans**: 5 plans
+**Plans**: 6 plans (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
 
 Plans:
 **Wave 1**
@@ -186,10 +186,13 @@ Plans:
 - [ ] 182-03-PLAN.md — Compact zoned times everywhere, D-09 offenders, and the screen-registry time/status contract (BRADM-02)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 182-04-PLAN.md — Activity, Admin and Account words, orphan sentence, mailer plain name with accessible tooltip, every pin moved (BRADM-03, BRADM-04, BRADM-05)
+- [ ] 182-04-PLAN.md — Activity, Admin and Account words, orphan sentence, mailer plain name with accessible tooltip, every required-lane ExUnit pin moved (BRADM-03, BRADM-04, BRADM-05)
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 182-05-PLAN.md — JourneySeed and after-mode capture, advisory browser journey, two-judge calibrated review gate, committed after-catalog bound in the admin lane (BRADM-07; BRADM-01 advisory)
+- [ ] 182-05-PLAN.md — Advisory admin and demo e2e pins and the demo navigation test moved to the brand words and run in their lanes; no lib change (BRADM-03, BRADM-04, BRADM-05)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 182-06-PLAN.md — JourneySeed and after-mode capture, advisory browser journey, two-judge calibrated review gate, committed after-catalog bound in the admin lane (BRADM-07; BRADM-01 advisory)
 **Plan budget**: about 5
 **UI hint**: yes
 
@@ -216,5 +219,5 @@ Plans:
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
-| 182. Admin Words and Layout, One Job First | 0/5 | Planned | - |
+| 182. Admin Words and Layout, One Job First | 0/6 | Planned | - |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
