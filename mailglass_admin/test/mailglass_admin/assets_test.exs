@@ -125,6 +125,13 @@ defmodule MailglassAdmin.AssetsTest do
       content_type = get_resp_header(conn, "content-type") |> List.first()
       assert content_type =~ "image/svg+xml"
     end
+
+    test "serves the pinned light lockup byte for byte", %{conn: conn} do
+      pinned =
+        File.read!(Path.expand("../../../brandbook/v2/mailglass-lockup-light.svg", __DIR__))
+
+      assert get(conn, "/dev/mail/logo.svg").resp_body == pinned
+    end
   end
 
   describe "GET favicon.svg" do

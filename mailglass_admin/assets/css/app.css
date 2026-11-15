@@ -294,6 +294,17 @@
   transition: outline-color var(--duration-instant) var(--ease-out);
 }
 
+/* Typemark panes and overlap (brand v2). The logo roles live in the theme blocks
+   on the page root, so the inline logo follows the chosen theme and never keys
+   off the OS scheme. These rules read the roles; they never assign them. */
+.mg-logo-glass {
+  fill: var(--mg-logo-glass);
+}
+
+.mg-logo-overlap {
+  fill: var(--mg-logo-overlap);
+}
+
 .mg-nav-current .mg-nav-label {
   text-decoration: underline;
   text-decoration-color: var(--color-primary);
