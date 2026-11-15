@@ -12,6 +12,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   import MailglassAdmin.Components, only: [card: 1]
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.OrphanCount
   alias MailglassAdmin.Operator.RepairState
 
   attr(:support_summary, :map, required: true)
@@ -193,18 +194,21 @@ defmodule MailglassAdmin.Operator.SupportCards do
         </article>
 
         <article
-          :if={@support_summary && @support_summary.orphan_backlog.count > 0}
+          :if={(summary_count(@support_summary, :orphan_backlog) || 0) > 0}
           class="rounded-box bg-base-100 p-lg border-l-4 border-warning"
           data-testid="support-card-orphan-backlog-tier1"
         >
-          <div class="text-display font-bold text-warning">
-            {@support_summary.orphan_backlog.count}
-          </div>
-          <p class="text-body text-secondary">Unmatched Events in the selected Account window.</p>
+          <p
+            class="text-heading font-bold text-warning"
+            data-testid="support-card-orphan-backlog-count"
+          >
+            {OrphanCount.label(@support_summary.orphan_backlog.count)}
+          </p>
+          <p class="text-body text-secondary">In the selected Account window.</p>
 
           <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Oldest unmatched Event example: {@support_summary.orphan_backlog.oldest.provider_event_id}
+              Oldest provider report: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
             <button
               type="button"
@@ -255,7 +259,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               </dd>
             </div>
             <div>
-              <dt class="text-label uppercase font-bold">Still unmatched</dt>
+              <dt class="text-label uppercase font-bold">Provider reports still matching no email</dt>
               <dd class="mt-xs text-base-content">
                 {count_or_unavailable(@support_summary.reconcile_facts.still_unmatched_count)}
               </dd>
@@ -327,13 +331,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
           •
         </span>
         <span :if={summary_count(@support_summary, :orphan_backlog) == 0}>
-          No unmatched Events in this window
+          {OrphanCount.label(0)} in this window
         </span>
         <span :if={summary_count(@support_summary, :failed_ingest) == nil}>
           Failed webhook attempts unavailable
         </span>
         <span :if={summary_count(@support_summary, :orphan_backlog) == nil}>
-          Unmatched Events unavailable
+          Provider reports that match no email are unavailable
         </span>
         <span aria-hidden="true">•</span>
         <span data-testid="support-card-suppression-count">

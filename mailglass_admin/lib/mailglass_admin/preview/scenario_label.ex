@@ -21,16 +21,18 @@ defmodule MailglassAdmin.Preview.ScenarioLabel do
         }
 
   @doc """
-  Humanizes a snake_case scenario atom into sentence case.
+  Humanizes a snake_case scenario atom, or a snake_case binary, into sentence case.
 
   Splits on underscores, drops empty segments (so `__` collapses), and
-  capitalizes only the first segment. An atom with no non-empty segment (`:_`)
-  keeps its raw string.
+  capitalizes only the first segment. A value with no non-empty segment (`:_`)
+  keeps its raw string. The binary clause serves the mailer plain name
+  (`Operator.MailerName`); it reads a string it is given and creates no atom.
   """
-  @spec humanize(atom()) :: String.t()
-  def humanize(atom) when is_atom(atom) do
-    raw = Atom.to_string(atom)
+  @spec humanize(atom() | String.t()) :: String.t()
+  def humanize(atom) when is_atom(atom), do: atom |> Atom.to_string() |> sentence_case()
+  def humanize(binary) when is_binary(binary), do: sentence_case(binary)
 
+  defp sentence_case(raw) do
     case raw |> String.split("_") |> Enum.reject(&(&1 == "")) do
       [] -> raw
       [first | rest] -> Enum.join([String.capitalize(first) | rest], " ")

@@ -8,6 +8,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   alias MailglassAdmin.Components
   alias MailglassAdmin.Copy
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.MailerName
 
   attr(:delivery, :map, required: true)
   attr(:account_labels, :map, default: %{})
@@ -20,6 +21,13 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   attr(:suppression_read_state, :atom, default: :ready)
 
   def detail_header(assigns) do
+    mailable = Map.get(assigns.delivery, :mailable)
+
+    assigns =
+      assigns
+      |> assign(:mailer_name, MailerName.plain_name(mailable))
+      |> assign(:mailer_identity, MailerName.identity(mailable))
+
     ~H"""
     <Components.card
       padding={:lg}
@@ -46,6 +54,27 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           }
         />
         <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 lg:grid-cols-4 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
+          <%!-- The mailer is a fact a reader needs without opening anything: the plain name
+              is the help trigger, the stored identity is its tooltip and is also printed
+              below it, so a touch reader never depends on hover (D-13). No `title`. --%>
+          <div :if={@mailer_name} data-testid="operator-detail-mailer">
+            <dt class="text-label font-bold">Mailer</dt>
+            <dd class="mt-xs text-base-content">
+              <Components.field_help
+                id="delivery-detail-mailer"
+                label={@mailer_name}
+                text={@mailer_identity}
+                trigger_text={@mailer_name}
+                trigger_class="text-base-content"
+              />
+              <span
+                data-testid="operator-detail-mailer-identity"
+                class="mono block break-words text-label text-secondary"
+              >
+                {@mailer_identity}
+              </span>
+            </dd>
+          </div>
           <div>
             <dt class="text-label font-bold">Provider</dt>
             <dd class="mt-xs text-base-content">{String.upcase(@delivery.provider || "unknown")}</dd>
@@ -81,16 +110,6 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           <div>
             <dt class="text-label font-bold text-secondary">Delivery ID</dt>
             <dd class="mt-xs"><Components.copy_value value={@delivery.id} label="Delivery ID" /></dd>
-          </div>
-          <div :if={present?(@delivery.mailable)}>
-            <dt class="text-label font-bold text-secondary">Mailable</dt>
-            <dd class="mt-xs">
-              <Components.module_identity
-                value={@delivery.mailable}
-                segments={2}
-                id="delivery-detail-mailable"
-              />
-            </dd>
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
             <dt class="text-label font-bold text-secondary">Provider message ID</dt>

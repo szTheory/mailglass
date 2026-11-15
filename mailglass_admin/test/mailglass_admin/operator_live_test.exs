@@ -930,7 +930,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="operator-support-cards")
       assert html =~ "Failed webhook attempts"
-      assert html =~ "Unmatched Events"
+      assert html =~ ~r/\d+ provider reports? matche?s? no email/
       assert html =~ "Replay outcomes"
       assert html =~ "Reconciliation audit facts"
       assert html =~ "Reconciled Events"
@@ -4703,7 +4703,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert has_element?(
                view,
                "[data-testid='operator-overview-health-orphans']",
-               "Unmatched events"
+               "Provider reports that match no email"
              )
 
       assert has_element?(view, "#operator-overview-health-failures-help-tooltip[role='tooltip']")
@@ -4979,7 +4979,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="operator-support-focus-detail")
       assert html =~ "Exact Account Event"
-      assert html =~ "Oldest unmatched Event example: orphan-open"
+      assert html =~ "Oldest provider report: orphan-open"
       assert html =~ "Showing exact Account Event"
       refute html =~ "Select a delivery to inspect its event timeline and suppression state."
     end

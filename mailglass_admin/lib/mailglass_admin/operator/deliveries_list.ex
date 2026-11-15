@@ -23,6 +23,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.MailerName
   alias MailglassAdmin.Operator.ResultsStatus
 
   attr(:heading, :string, default: "Activity")
@@ -207,6 +208,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                           class="min-w-0 w-full truncate text-label text-secondary"
                           title={subject(delivery)}
                         >{subject(delivery)}</span>
+                        <span
+                          :if={MailerName.plain_name(Map.get(delivery, :mailable))}
+                          data-testid="operator-delivery-mailer"
+                          class="min-w-0 w-full truncate text-label text-secondary"
+                        >{MailerName.plain_name(Map.get(delivery, :mailable))}</span>
                       </button>
                     </td>
                     <td class="text-body text-base-content">
@@ -272,6 +278,13 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     </p>
                     <p class="min-w-0 break-words text-label text-secondary" title={subject(delivery)}>
                       {subject(delivery)}
+                    </p>
+                    <p
+                      :if={MailerName.plain_name(Map.get(delivery, :mailable))}
+                      data-testid="operator-delivery-mailer"
+                      class="min-w-0 break-words text-label text-secondary"
+                    >
+                      {MailerName.plain_name(Map.get(delivery, :mailable))}
                     </p>
                   </button>
                   <div>

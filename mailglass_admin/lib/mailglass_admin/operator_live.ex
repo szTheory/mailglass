@@ -2867,7 +2867,7 @@ defmodule MailglassAdmin.OperatorLive do
         {:failed_ingest, "Failed webhook attempts",
          "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed emails.",
          "operator-overview-health-failures"},
-        {:orphan_backlog, "Unmatched events",
+        {:orphan_backlog, "Provider reports that match no email",
          "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
          "operator-overview-health-orphans"}
       ]
@@ -2982,7 +2982,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_title(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do: "Exact Account webhook"
 
-  defp support_focus_title(%{focus: :orphan_backlog}), do: "Unmatched webhook evidence"
+  defp support_focus_title(%{focus: :orphan_backlog}), do: "Provider reports that match no email"
   defp support_focus_title(%{focus: :failed_ingest}), do: "Failure evidence"
   defp support_focus_title(%{focus: :replay_outcomes}), do: "Replay evidence"
   defp support_focus_title(%{focus: :reconcile_facts}), do: "Reconcile evidence"
@@ -2990,7 +2990,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
     do:
-      "The requested Account Event is retained below. Its current Delivery relationship may mean it is no longer part of the unmatched population."
+      "The requested Account Event is retained below. Its current Delivery relationship may mean it is no longer one of the provider reports that match no email."
 
   defp support_focus_body(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do:
@@ -3007,7 +3007,8 @@ defmodule MailglassAdmin.OperatorLive do
     do: "Review the latest replay outcome and its recorded audit trail."
 
   defp support_focus_body(%{focus: :reconcile_facts}),
-    do: "Review reconciliation facts that explain how unmatched provider events were linked."
+    do:
+      "Review reconciliation facts that explain how provider reports that matched no email were linked."
 
   defp support_focus_body(_support_state),
     do: "Review account-scoped support facts from the current support window."

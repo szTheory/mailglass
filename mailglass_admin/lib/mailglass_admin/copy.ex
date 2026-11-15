@@ -108,7 +108,7 @@ defmodule MailglassAdmin.Copy do
       public_name: "orphan / unmatched",
       on_screen: "provider reports match no email",
       gloss: "screen text and docs prose only; the public name stays",
-      wired: false
+      wired: true
     }
   ]
 

@@ -347,7 +347,7 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     failed_ingest:
       "Webhook processing wasn't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     orphan_backlog:
-      "Unmatched events weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
+      "Provider reports that match no email weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     delivery_activity:
       "Outbound activity and delivery results weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     inbound_activity:
@@ -356,7 +356,7 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
 
   @unavailable_notices %{
     failed_ingest: "Webhook processing couldn't be loaded.",
-    orphan_backlog: "Unmatched events couldn't be loaded.",
+    orphan_backlog: "Provider reports that match no email couldn't be loaded.",
     delivery_activity: "Outbound activity and delivery results couldn't be loaded.",
     inbound_activity: "Inbound activity and processing results couldn't be loaded."
   }

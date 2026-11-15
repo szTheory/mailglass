@@ -1113,7 +1113,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   defp insert_delivery!(attrs) do
     defaults = %{
       tenant_id: @tenant_id,
-      mailable: "Mailglass.Example.OperatorMailer",
+      mailable: "Mailglass.Example.BrowserMailer",
       stream: :transactional,
       recipient: "operator@example.com",
       provider: "postmark",

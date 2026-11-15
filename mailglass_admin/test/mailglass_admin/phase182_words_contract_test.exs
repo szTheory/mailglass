@@ -16,6 +16,14 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
     * `operator` and `operators`,
     * `tenant` and `tenants` (`tenant_id` is a code identifier, not a word: it stays).
 
+  BRADM-05 adds two more rules the same way. The orphan sentence reads "N provider reports
+  match no email" (singular "1 provider report matches no email") at every site that shows a
+  count, from `Operator.OrphanCount.label/1`. The mailer shows its plain name as an accessible
+  help trigger whose tooltip holds the stored identity, and the identity is also printed in
+  full beside it, so a touch reader never depends on hover. Fixture data must not use the
+  retired words (a mailer called `OperatorMailer` would read "Operator mailer"): a fixture
+  that did would be indistinguishable from a regression.
+
   Every detector is a pure function proven on planted violations and clean controls, so the
   scan cannot go vacuous ("detectors have teeth"), and the scan asserts a floor on what it
   read. The advisory e2e pins for these words move in plan 182-05; this file is the required
@@ -26,12 +34,13 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   alias MailglassAdmin.{GalleryLive, OperatorLive, PreviewLive}
   alias MailglassAdmin.Inbound.DestructiveAction
-  alias MailglassAdmin.Operator.Shell
+  alias MailglassAdmin.Operator.{DeliveriesList, DetailHeader, OrphanCount, Shell, SupportCards}
   alias MailglassAdmin.Preview.ReturnContext
   alias MailglassAdmin.TestSupport.{InboundFixtures, OperatorFixtures, ScreenRegistry}
   alias MailglassInbound.InboundRecords.ExecutionRun
 
   @tenant_id "browser-tenant"
+  @at ~U[2026-11-15 14:05:09.123456Z]
   @gloss "Every email your app sent, one row per delivery."
 
   # The three words that leave screen text. Each rule is a case-insensitive regex that needs a
@@ -325,6 +334,146 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   # -- detectors have teeth ------------------------------------------------------------
 
+  # -- the orphan sentence (Task 3, D-12) -----------------------------------------------------
+
+  describe "the provider-report sentence (BRADM-05, D-12)" do
+    test "label/1 is exact for 0, 1, 2, 11 and 1000, with no grouping or abbreviation" do
+      assert OrphanCount.label(0) == "0 provider reports match no email"
+      assert OrphanCount.label(1) == "1 provider report matches no email"
+      assert OrphanCount.label(2) == "2 provider reports match no email"
+      assert OrphanCount.label(11) == "11 provider reports match no email"
+      assert OrphanCount.label(1000) == "1000 provider reports match no email"
+    end
+
+    test "a negative, fractional or missing count raises instead of inventing a sentence" do
+      for bad <- [-1, 1.5, 1.0, nil, "3", :three] do
+        assert_raise FunctionClauseError, fn -> OrphanCount.label(bad) end
+      end
+    end
+
+    test "the Support cards read the sentence for one, many, none and unknown counts" do
+      one = support_cards_html(1, 2)
+      assert ScreenRegistry.visible_text(one) =~ "1 provider report matches no email"
+      refute ScreenRegistry.visible_text(one) =~ "1 provider reports"
+
+      many = support_cards_html(5, 2)
+      assert ScreenRegistry.visible_text(many) =~ "5 provider reports match no email"
+
+      none = support_cards_html(0, 0)
+
+      assert ScreenRegistry.visible_text(none) =~
+               "0 provider reports match no email in this window"
+
+      refute has_card?(none, "support-card-orphan-backlog-tier1")
+
+      unknown = support_cards_html(nil, 0)
+
+      assert ScreenRegistry.visible_text(unknown) =~
+               "Provider reports that match no email are unavailable"
+
+      for html <- [one, many, none, unknown] do
+        assert_none(scan_html("support cards", html, nil))
+        refute ScreenRegistry.visible_text(html) =~ ~r/unmatched|orphan/i
+      end
+
+      # The reconciliation count has its own label, not the sentence.
+      assert ScreenRegistry.visible_text(many) =~ "Provider reports still matching no email"
+    end
+  end
+
+  # -- the mailer (Task 3, D-13) -----------------------------------------------------------------
+
+  describe "the mailer on Full detail and in the list (BRADM-05, D-13)" do
+    test "a seeded Module.function reads as its function and a module alone as its leaf",
+         %{conn: conn} do
+      journey = OperatorFixtures.seed_phase182_journey!()
+
+      cases = [
+        {:sent_no_report, "Password reset",
+         "MailglassAdmin.Fixtures.AccountMailer.password_reset"},
+        {:bounce, "Account mailer", "MailglassAdmin.Fixtures.AccountMailer"}
+      ]
+
+      for {case_id, name, identity} <- cases do
+        view = mount(operator_conn(conn), detail_path(journey.ids[case_id]))
+        html = render(view)
+
+        assert mailer_row_violations(html, name, identity) == [], "#{case_id}"
+        assert_none(scan_html("detail #{case_id}", html, nil))
+
+        # The Mailer row sits in the field grid, not in the collapsed Technical details,
+        # and the old Mailable row is gone from them.
+        assert has_element?(view, "[data-testid=operator-detail-mailer]")
+
+        refute has_element?(
+                 view,
+                 "#delivery-detail-technical [data-testid=operator-detail-mailer]"
+               )
+
+        refute has_element?(view, "#delivery-detail-mailable")
+      end
+    end
+
+    test "a nil or blank mailable renders no mailer row and no invented name" do
+      for mailable <- [nil, "", "   ", "\n", "..."] do
+        html =
+          render_component(&DetailHeader.detail_header/1, delivery: row(%{mailable: mailable}))
+
+        refute html =~ "operator-detail-mailer", "mailable #{inspect(mailable)} drew a row"
+        refute ScreenRegistry.visible_text(html) =~ "Mailer"
+        refute html =~ "delivery-detail-mailer"
+      end
+    end
+
+    test "list rows show the plain name in both layouts, and nothing for a nil mailable",
+         %{conn: conn} do
+      journey = OperatorFixtures.seed_phase182_journey!()
+      view = mount(operator_conn(conn), activity_path())
+
+      names =
+        view
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid=operator-delivery-mailer]")
+        |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
+
+      # Nine rows in the table and nine cards, each with its mailer.
+      assert length(names) == 2 * map_size(journey.ids)
+      assert Enum.sort(Enum.uniq(names)) == ["Account mailer", "Password reset"]
+
+      rows = [row(%{mailable: nil}), row(%{id: "row-2", mailable: "   "})]
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: rows,
+          page_meta: %{
+            total_count: 2,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      refute html =~ "operator-delivery-mailer"
+    end
+
+    test "no element in the Mailer row carries a title, and the identity wraps", %{conn: conn} do
+      journey = OperatorFixtures.seed_phase182_journey!()
+      html = conn |> operator_conn() |> mount(detail_path(journey.ids.bounce)) |> render()
+
+      [row] =
+        html |> Floki.parse_document!() |> Floki.find("[data-testid=operator-detail-mailer]")
+
+      assert Floki.find(row, "[title]") == []
+      assert Floki.attribute(row, "[title]", "title") == []
+
+      [identity] = Floki.find(row, "[data-testid=operator-detail-mailer-identity]")
+      assert "break-words" in class_tokens(identity)
+      assert "mono" in class_tokens(identity)
+    end
+  end
+
   describe "detectors have teeth (fail-first proof)" do
     test "each detector flags its planted word, in any case and with an apostrophe" do
       for planted <- ["Deliveries", "deliveries pagination", "All DELIVERIES", "no deliveries"] do
@@ -381,6 +530,50 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
              )
 
       assert scan_html("title", "<main>ok</main>", "mailglass — Activity") == []
+    end
+
+    test "the mailer row detector flags each way the row can fail the reader" do
+      name = "Password reset"
+      identity = "MyApp.AccountMailer.password_reset"
+      good = mailer_html(name, identity)
+      assert mailer_row_violations(good, name, identity) == []
+
+      mutants = [
+        {:identity_not_visible,
+         String.replace(
+           good,
+           ~r{<span data-testid="operator-detail-mailer-identity".*?</span>}s,
+           ""
+         )},
+        {:trigger_titled, String.replace(good, "<button ", ~s(<button title="#{identity}" ))},
+        {:row_titled, String.replace(good, "<dd ", ~s(<dd title="x" ))},
+        {:identity_not_wrapped, String.replace(good, "break-words", "truncate")},
+        {:identity_not_mono, String.replace(good, "mono block", "block")},
+        {:identity_hidden,
+         String.replace(
+           good,
+           ~s(data-testid="operator-detail-mailer-identity"),
+           ~s(data-testid="operator-detail-mailer-identity" hidden)
+         )},
+        {:identity_hidden, String.replace(good, "mono block", "mono sr-only")},
+        {:tooltip_differs, Regex.replace(~r/(role="tooltip"[^>]*>)[^<]*/, good, "\\1other")},
+        {:description_missing,
+         String.replace(
+           good,
+           ~s(<span id="delivery-detail-mailer" class="sr-only">#{identity}</span>),
+           ""
+         )},
+        {:trigger_text_differs,
+         Regex.replace(~r/>\s*#{Regex.escape(name)}\s*</, good, ">Mailer<", global: false)},
+        {:row_in_technical_details, ~s(<div id="delivery-detail-technical">#{good}</div>)}
+      ]
+
+      for {rule, html} <- mutants do
+        assert rule in mailer_row_violations(html, name, identity),
+               "the detector missed #{rule}: #{inspect(mailer_row_violations(html, name, identity))}"
+      end
+
+      assert mailer_row_violations("<div></div>", name, identity) == [:row_missing]
     end
 
     test "hover and screen-reader text count as words a reader meets" do
@@ -624,6 +817,131 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
     })
   end
 
+  # -- Task 3 helpers ------------------------------------------------------------------------------
+
+  defp detail_path(id), do: activity_path(%{"delivery_id" => id, "full" => "1"})
+
+  defp row(attrs) do
+    Map.merge(
+      %{
+        id: "row-1",
+        tenant_id: @tenant_id,
+        recipient: "reader@example.com",
+        subject: "Reset your password",
+        status: :sent,
+        provider: "postmark",
+        stream: :transactional,
+        mailable: "MyApp.AccountMailer",
+        provider_message_id: nil,
+        last_event_type: :sent,
+        last_event_at: @at,
+        inserted_at: @at,
+        delivery_confirmed: false,
+        bounced_at: nil,
+        terminal: nil,
+        delivered_at: nil,
+        complained_at: nil,
+        suppressed_at: nil
+      },
+      attrs
+    )
+  end
+
+  defp support_cards_html(orphan_count, still_unmatched) do
+    render_component(&SupportCards.support_cards/1,
+      support_summary: %{
+        failed_ingest: %{count: 0, latest: nil},
+        orphan_backlog: %{count: orphan_count, oldest: nil},
+        replay_outcomes: %{counts: %{failed: 0, noop: 0, replayed: 0}, latest: nil},
+        reconcile_facts: %{
+          reconciled_count: 1,
+          still_unmatched_count: still_unmatched,
+          latest_reconciled: nil
+        }
+      },
+      support_state: %{focused_card: nil, drilldown_banner: nil},
+      suppression_count: 0
+    )
+  end
+
+  defp has_card?(html, testid),
+    do: html |> Floki.parse_fragment!() |> Floki.find(~s([data-testid="#{testid}"])) != []
+
+  defp class_tokens(node),
+    do: node |> Floki.attribute("class") |> Enum.flat_map(&String.split/1)
+
+  # The pure detector for the Mailer row of Full detail: `[]` when the row is right, else the
+  # rules it breaks. Right means: a trigger whose visible text is the plain name, a hidden
+  # description (the target of `aria-describedby`) and a tooltip that both hold the stored
+  # identity, the identity also printed in full in a `mono` element that wraps, no `title`
+  # anywhere in the row, and the row outside the collapsed Technical details.
+  defp mailer_row_violations(html, name, identity) do
+    doc = Floki.parse_fragment!(html)
+
+    case Floki.find(doc, "[data-testid=operator-detail-mailer]") do
+      [] ->
+        [:row_missing]
+
+      [row] ->
+        triggers = Floki.find(row, "button[aria-describedby]")
+        described_by = triggers |> Floki.attribute("aria-describedby") |> List.first()
+        tooltip = row |> Floki.find("[role=tooltip]") |> text_of()
+
+        description =
+          if described_by, do: doc |> Floki.find("[id=\"#{described_by}\"]") |> text_of()
+
+        visible = Floki.find(row, "[data-testid=operator-detail-mailer-identity]")
+
+        checks = [
+          {:row_in_technical_details,
+           Floki.find(doc, "#delivery-detail-technical [data-testid=operator-detail-mailer]") !=
+             []},
+          {:trigger_missing, length(triggers) != 1},
+          {:trigger_text_differs, triggers != [] and text_of(triggers) != name},
+          {:trigger_titled,
+           Floki.find(triggers, "[title]") != [] or Floki.attribute(triggers, "title") != []},
+          {:row_titled, Floki.find(row, "[title]") != []},
+          {:description_missing, is_nil(described_by) or description != identity},
+          {:tooltip_differs, tooltip != identity},
+          {:identity_not_visible, visible == [] or text_of(visible) != identity},
+          {:identity_not_wrapped,
+           visible != [] and "break-words" not in class_tokens(hd(visible))},
+          {:identity_not_mono, visible != [] and "mono" not in class_tokens(hd(visible))},
+          {:identity_hidden, visible != [] and hidden?(hd(visible))}
+        ]
+
+        for {rule, true} <- checks, do: rule
+
+      _several ->
+        [:row_duplicated]
+    end
+  end
+
+  # Hidden from a reader or a screen reader: the `hidden` attribute, `aria-hidden`, an inline
+  # `display:none`, or the `hidden` and `sr-only` utility classes.
+  defp hidden?(node) do
+    tokens = class_tokens(node)
+
+    Floki.attribute(node, "hidden") != [] or
+      Floki.attribute(node, "aria-hidden") == ["true"] or
+      Enum.any?(Floki.attribute(node, "style"), &(&1 =~ ~r/display\s*:\s*none/)) or
+      "hidden" in tokens or "sr-only" in tokens
+  end
+
+  defp text_of(nodes), do: nodes |> Floki.text() |> String.replace(~r/\s+/, " ") |> String.trim()
+
+  # A real Mailer row, the way DetailHeader draws it, for the detector's planted mutants.
+  defp mailer_html(name, identity) do
+    render_component(&DetailHeader.detail_header/1, delivery: row(%{mailable: identity}))
+    |> Floki.parse_fragment!()
+    |> Floki.find("[data-testid=operator-detail-mailer]")
+    |> Floki.raw_html()
+    |> then(fn html ->
+      assert text_of(Floki.parse_fragment!(html) |> Floki.find("button")) == name
+      html
+    end)
+  end
+
   # -- retired words in the source ------------------------------------------------------------
 
   # Sentences and labels this plan retired. A lib string that says one of them again is a
@@ -643,7 +961,12 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       "Bounced deliveries",
       "Rejected deliveries",
       "Delayed deliveries",
-      "No deliveries"
+      "No deliveries",
+      "Unmatched events",
+      "Unmatched Events",
+      "Unmatched webhook evidence",
+      "Still unmatched",
+      "Oldest unmatched"
     ]
   end
 
