@@ -9,6 +9,15 @@ defmodule MailglassAdmin.TestSupport.Contrast do
     * `normalize_hex/1` lower-cases a hex colour and expands the three-digit
       form (`"#FFF"` and `"#FFFFFF"` both become `"#ffffff"`). The compiled
       bundle is minified by Lightning CSS, which shortens `#ffffff` to `#fff`.
+    * `luminance/1` is the WCAG 2.2 relative luminance of an sRGB hex colour.
+      The sRGB expansion threshold is **0.04045**. The older WCAG 2.0 constant
+      is retired: the WCAG 2.1 errata and the current W3C techniques correct it
+      as an editorial slip. The two give the same answer for every 8-bit
+      colour, but the helper uses the current constant so nobody has to
+      re-derive that.
+    * `ratio/2` is the contrast ratio `(L1 + 0.05) / (L2 + 0.05)` of two hex
+      colours, with the lighter luminance as `L1`, so it does not depend on
+      argument order.
     * `composite/3` is the single rounding rule for every designed token value
       (alpha over a ground): per channel `round(alpha * fg + (1 - alpha) * bg)`
       with Elixir `round/1` (half away from zero). `brandbook/tokens.json`
@@ -40,6 +49,25 @@ defmodule MailglassAdmin.TestSupport.Contrast do
 
   def normalize_hex(other) do
     raise ArgumentError, "not a hex colour: #{inspect(other)}"
+  end
+
+  @doc """
+  WCAG 2.2 relative luminance of a hex colour, `0.0` (black) to `1.0` (white).
+  """
+  @spec luminance(String.t()) :: float()
+  def luminance(hex) do
+    {r, g, b} = channels(hex)
+    0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
+  end
+
+  @doc """
+  Contrast ratio of two hex colours, `1.0` to `21.0`, independent of argument order.
+  """
+  @spec ratio(String.t(), String.t()) :: float()
+  def ratio(fg_hex, bg_hex) do
+    l1 = luminance(fg_hex)
+    l2 = luminance(bg_hex)
+    (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
   end
 
   @doc """
@@ -89,6 +117,13 @@ defmodule MailglassAdmin.TestSupport.Contrast do
   end
 
   defp resolve_value(_tokens, "#" <> _ = hex), do: normalize_hex(hex)
+
+  # sRGB channel (0..255) to linear light, using the WCAG 2.2 threshold 0.04045.
+  defp linearize(channel) do
+    c = channel / 255
+
+    if c <= 0.04045, do: c / 12.92, else: :math.pow((c + 0.055) / 1.055, 2.4)
+  end
 
   defp channels(hex) do
     "#" <> <<r::binary-2, g::binary-2, b::binary-2>> = normalize_hex(hex)
