@@ -12,6 +12,7 @@
 
 @source "../css";
 @source "../../lib";
+@source not inline("prose");  /* Phase 180 D-03: copy.ex gloss text contains the bare English word. */
 
 @plugin "../vendor/heroicons-inline";
 
