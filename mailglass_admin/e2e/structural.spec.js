@@ -3193,7 +3193,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // Long labels and values stay in the document flow; title hover is not
           // the only way to recover complete content.
           const longLabel = primitiveWrapper(page, "stat_card", "long-label").locator("article p").first().locator("span").first();
-          await expect(longLabel).toContainText("Deliveries requiring operator review");
+          await expect(longLabel).toContainText("Activity that needs attention");
           await expect(longLabel).not.toHaveAttribute("title");
 
           const longValue = primitiveWrapper(page, "stat_card", "long-value").locator("article p").nth(1);

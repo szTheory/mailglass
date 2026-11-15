@@ -871,8 +871,7 @@ defmodule MailglassAdmin.GalleryLive do
     {:nav_pill, "hover-ready", %{label: "Bounced", href: "#", active: false}},
     {:nav_pill, "focus-visible", %{label: "Deferred", href: "#", active: false}},
     {:nav_pill, "disabled", %{label: "Archived", href: "#", disabled: true}},
-    {:nav_pill, "long-label",
-     %{label: "Needs attention before retry window closes", href: "#", active: false}},
+    {:nav_pill, "long-label", %{label: "Needs attention", href: "#", active: false}},
 
     # STATE-LD-07: tenant_chip — read-only with-tenant, no-tenant, long-tenant, non-ascii-tenant
     # hover/focus/disabled/loading not applicable: tenant_chip is non-interactive in Phase 110.
@@ -917,7 +916,7 @@ defmodule MailglassAdmin.GalleryLive do
      }},
     {:stat_card, "long-label",
      %{
-       label: "Deliveries requiring operator review before the retry window closes",
+       label: "Activity that needs attention",
        value: "42",
        severity: :success
      }},

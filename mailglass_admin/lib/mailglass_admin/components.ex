@@ -1841,16 +1841,18 @@ defmodule MailglassAdmin.Components do
     do:
       "The provider recorded a link click. Security scanners or other automated activity can trigger this signal."
 
+  # No text below promises a reason or an error: the reason is shown on Full detail only
+  # when the provider sent one, and a send-time failure records no provider reason.
   defp outcome_help(:delivery, :failed),
-    do:
-      "Sending failed before a successful handoff to the provider. Open the delivery to inspect the error."
+    do: "Sending failed before a successful handoff to the provider."
 
   defp outcome_help(:delivery, :bounced),
     do:
-      "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason."
+      "The provider reported that this message could not be delivered. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :rejected),
-    do: "The provider rejected this message. Open the delivery to inspect the recorded reason."
+    do:
+      "The provider rejected this message. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :deferred),
     do: "The provider reported a temporary delivery delay. Delivery has not been confirmed."

@@ -224,6 +224,72 @@ defmodule MailglassAdmin.Copy do
     end
   end
 
+  # Cause text is structural: one sentence per recorded reason, generated from the core
+  # enums, and no clause for nil. Rendering a cause for a missing reason raises, so a
+  # screen cannot invent one; a caller that may have no reason asks cause_or_fallback/1.
+  # A sentence names what the provider or the suppression list recorded, never when or
+  # whether a send is tried again: the product does not know retry timing.
+  @reject_reason_sentences %{
+    invalid: "The provider reported: invalid address.",
+    bounced: "The provider reported: bounced.",
+    timed_out: "The provider reported: timed out.",
+    blocked: "The provider reported: blocked by the receiving server.",
+    spam: "The provider reported: marked as spam.",
+    unsubscribed: "The provider reported: the recipient unsubscribed.",
+    other: "The provider reported a reason outside the standard categories."
+  }
+
+  @suppression_reason_sentences %{
+    hard_bounce: "Reason: hard bounce.",
+    complaint: "Reason: spam complaint.",
+    unsubscribe: "Reason: unsubscribed.",
+    manual: "Reason: added by hand.",
+    policy: "Reason: policy.",
+    invalid_recipient: "Reason: invalid recipient."
+  }
+
+  # A reject reason added to the core enum breaks the build here, not a screen. The
+  # suppression reasons live in Mailglass.Suppression.Entry, which the core boundary does
+  # not export to this package, so their parity with the core enum is held by
+  # phase182_cause_contract_test in the required admin lane instead.
+  reject_reasons = Mailglass.Events.Event.__reject_reasons__()
+
+  if Enum.sort(Map.keys(@reject_reason_sentences)) != Enum.sort(reject_reasons) do
+    raise ArgumentError,
+          "MailglassAdmin.Copy reject reason sentences must cover exactly the core enum " <>
+            "#{inspect(Enum.sort(reject_reasons))}, got " <>
+            "#{inspect(Enum.sort(Map.keys(@reject_reason_sentences)))}. " <>
+            "A new reason needs its own sentence before the screens can show it."
+  end
+
+  @send_failure_cause "Sending failed before a successful handoff to the provider."
+  @unrecognized_reason "The recorded reason is not one this version recognises."
+  @events_unreadable "The event history could not be read, so no reason is shown."
+  @suppression_unreadable "The suppression record could not be read, so no reason is shown."
+
+  @doc """
+  The sentence for one recorded reason: `{:reject_reason, r}` for a provider reason or
+  `{:suppression_reason, r}` for a suppression reason. There is no clause for nil or an
+  unlisted value, so asking for a cause that was not recorded raises FunctionClauseError.
+  """
+  @spec cause_sentence({:reject_reason, atom()} | {:suppression_reason, atom()}) :: String.t()
+  for {reason, sentence} <- @reject_reason_sentences do
+    def cause_sentence({:reject_reason, unquote(reason)}), do: unquote(sentence)
+  end
+
+  for {reason, sentence} <- @suppression_reason_sentences do
+    def cause_sentence({:suppression_reason, unquote(reason)}), do: unquote(sentence)
+  end
+
+  @doc """
+  The cause for a reason that may be missing: the reason's own sentence when there is
+  one, and the fixed no-reason sentence when the reason is nil.
+  """
+  @spec cause_or_fallback(nil | {atom(), atom() | nil}) :: String.t()
+  def cause_or_fallback(nil), do: @fallback_reason
+  def cause_or_fallback({_kind, nil}), do: @fallback_reason
+  def cause_or_fallback({kind, reason}), do: cause_sentence({kind, reason})
+
   for %{class: class, label: label} <- @class_labels do
     defp class_label(unquote(class)), do: unquote(label)
   end
@@ -314,26 +380,84 @@ defmodule MailglassAdmin.Copy do
   end
 
   defp verdict(:failed, row, evidence) do
+    {cause, notes} = failure_cause(row, evidence.events)
+
     base(:failed, row, evidence, %{
       sentence: ["Failed: the email did not get through."],
       rule: nil,
       next_step:
         "Check the address for a typo. See whether it is on the suppression list. " <>
-          "Correct it in your app, then trigger the email again."
+          "Correct it in your app, then trigger the email again.",
+      cause: cause,
+      notes: notes
     })
     |> engagement_note(row, evidence)
   end
 
   defp verdict(:not_sent, row, evidence) do
+    {cause, notes} = suppression_cause(evidence.suppression)
+
     base(:not_sent, row, evidence, %{
       sentence: ["Not sent: nothing was sent. This address is on your suppression list."],
       rule: nil,
       next_step:
         "Remove this address from the suppression list if it should receive email, " <>
           "then trigger the email from your app again.",
-      next_link: %{label: "Go to the suppression card", href: "#delivery-suppression"}
+      next_link: %{label: "Go to the suppression card", href: "#delivery-suppression"},
+      cause: cause,
+      notes: notes
     })
     |> engagement_note(row, evidence)
+  end
+
+  # The cause of a Failed row. Only a loaded timeline can answer: the latest failure
+  # event in evidence order carries the provider's reason (or none). No loaded timeline
+  # (the Quick view) and an unreadable one both give no cause and no fallback, because
+  # "no reason was recorded" would be false when the history was simply not read.
+  @failure_event_types [:bounced, :rejected, :failed]
+
+  defp failure_cause(_row, :not_loaded), do: {nil, []}
+  defp failure_cause(_row, :read_failed), do: {nil, [@events_unreadable]}
+
+  defp failure_cause(row, events) when is_list(events) do
+    case events |> Enum.filter(&(Map.get(&1, :type) in @failure_event_types)) |> List.last() do
+      nil -> {send_failure_or_fallback(row), []}
+      event -> {event_cause(event), []}
+    end
+  end
+
+  defp event_cause(event) do
+    case {Map.get(event, :type), Map.get(event, :reject_reason)} do
+      {:failed, nil} -> @send_failure_cause
+      {_type, reason} -> reason_cause(:reject_reason, @reject_reason_sentences, reason)
+    end
+  end
+
+  # A send-time failure (status :failed) never reached the provider, so the handoff
+  # sentence is true; any other failure with no event to read has no recorded reason.
+  defp send_failure_or_fallback(row) do
+    if Map.get(row, :status) == :failed, do: @send_failure_cause, else: @fallback_reason
+  end
+
+  defp suppression_cause(:not_loaded), do: {nil, []}
+  defp suppression_cause(:read_failed), do: {nil, [@suppression_unreadable]}
+
+  defp suppression_cause(%{} = suppression) do
+    {reason_cause(
+       :suppression_reason,
+       @suppression_reason_sentences,
+       Map.get(suppression, :reason)
+     ), []}
+  end
+
+  # nil is the fixed fallback, a listed reason is its own sentence, and a value this
+  # version does not list (a newer core) says so rather than guessing.
+  defp reason_cause(_kind, _sentences, nil), do: @fallback_reason
+
+  defp reason_cause(kind, sentences, reason) do
+    if Map.has_key?(sentences, reason),
+      do: cause_sentence({kind, reason}),
+      else: @unrecognized_reason
   end
 
   defp base(class, row, _evidence, fields) do

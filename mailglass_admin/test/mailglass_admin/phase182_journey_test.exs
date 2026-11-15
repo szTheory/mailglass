@@ -266,6 +266,26 @@ defmodule MailglassAdmin.Phase182JourneyTest do
       assert Floki.text(verdict) =~ "Check the address for a typo."
     end
 
+    test "a bounce shows the recorded cause and a nil-reason bounce shows exactly the fallback",
+         %{
+           conn: conn
+         } do
+      %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
+
+      {:ok, _view, with_reason} = live(operator_conn(conn), detail_path(ids.bounce))
+      {:ok, _view, after_open} = live(operator_conn(conn), detail_path(ids.bounce_then_open))
+      {:ok, _view, without_reason} = live(operator_conn(conn), detail_path(ids.nil_reason_bounce))
+
+      # A recorded reason shows its own sentence, also after a later open.
+      for html <- [with_reason, after_open] do
+        assert verdict_cause(html) == "The provider reported: invalid address."
+      end
+
+      # No reason was recorded, so the verdict says exactly that and invents no cause.
+      assert verdict_cause(without_reason) == "No reason was recorded for this email."
+      refute verdict_text(without_reason) =~ "The provider reported"
+    end
+
     test "Technical details is a collapsed native details element", %{conn: conn} do
       %{ids: ids} = OperatorFixtures.seed_phase182_journey!()
 
@@ -624,6 +644,14 @@ defmodule MailglassAdmin.Phase182JourneyTest do
         "delivery_id" => id,
         "full" => "1"
       })
+  end
+
+  # The cause line of the verdict block, trimmed.
+  defp verdict_cause(html) do
+    [cause] =
+      html |> Floki.parse_document!() |> Floki.find("[data-testid=delivery-verdict-cause]")
+
+    cause |> Floki.text() |> String.trim()
   end
 
   # Visible text of the verdict block, whitespace collapsed.

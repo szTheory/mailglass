@@ -6,6 +6,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
 
   attr(:suppression_state, :map, default: nil)
   attr(:read_state, :atom, default: :ready)
@@ -69,7 +70,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
           </div>
           <div>
             <dt class="text-label font-bold text-secondary">Reason</dt>
-            <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :reason)}</dd>
+            <dd class="mt-xs text-body text-base-content">{reason_value(@suppression_state)}</dd>
           </div>
           <div>
             <dt class="text-label font-bold text-secondary">Source</dt>
@@ -130,6 +131,14 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
     do: "Current Mailglass match"
 
   defp headline(_, _read_state), do: "No current Mailglass match"
+
+  # A suppression with no recorded reason reads the fixed sentence, never "Unavailable":
+  # the entry exists, it just carries no reason.
+  defp reason_value(state) do
+    if Map.get(state, :reason) == nil,
+      do: Copy.fallback_reason(),
+      else: value(state, :reason)
+  end
 
   defp value(state, key) do
     case Map.get(state, key) do
