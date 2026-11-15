@@ -85,7 +85,7 @@ const STATCARD = {
     { variation: "neutral_light", theme: "light" },
     { variation: "neutral_dark", theme: "dark" }
   ],
-  productionFamilies: ["Inter", "Inter Tight", "IBM Plex Mono"],
+  productionFamilies: ["Atkinson Hyperlegible Next", "Funnel Display", "Atkinson Hyperlegible Mono"],
   serifGenerics: ["serif", "georgia", "times", "times new roman", "cambria", "palatino"]
 };
 

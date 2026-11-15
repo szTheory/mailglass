@@ -38,15 +38,15 @@ defmodule Storybook.Foundations do
 
       <h2>Brand palette</h2>
       <ul>
-        <li><strong>Ink</strong> #0D1B2A &middot; <strong>Glass</strong> #277B96 &middot;
-          <strong>Ice</strong> #A6EAF2</li>
-        <li><strong>Mist</strong> #EAF6FB &middot; <strong>Paper</strong> #F8FBFD &middot;
-          <strong>Slate</strong> #5C6B7A</li>
+        <li><strong>Espresso</strong> #2A1D17 &bull; <strong>Deep Glass</strong> #0A6488 &bull;
+          <strong>Bright Glass</strong> #6CC6F0</li>
+        <li><strong>Sand</strong> #F6F1E8 &bull; <strong>Sunken Sand</strong> #ECE5D8 &bull;
+          <strong>Roast</strong> #1D1713</li>
       </ul>
       <p>
-        Type: Inter (UI/body), Inter Tight (display), IBM Plex Mono (code).
-        Glass (#277B96) is the single accent and is allowlisted to active/selected/primary/focus
-        surfaces only.
+        Type: Atkinson Hyperlegible Next (UI/body), Funnel Display (display), Atkinson Hyperlegible
+        Mono (code). Deep Glass (#0A6488) is the single accent and is allowlisted to
+        active/selected/primary/focus surfaces only.
       </p>
     </div>
     """
