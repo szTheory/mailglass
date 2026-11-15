@@ -10,8 +10,8 @@ const tenantId = "browser-tenant";
 const denyRevealTenantId = "deny-reveal";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
-// Glass #277B96 in RGB form — the accent color that must only appear on allowlisted elements
-const ACCENT_LIGHT_RGB = "rgb(39, 123, 150)";
+// Deep Glass #0A6488 in RGB form — the accent color that must only appear on allowlisted elements
+const ACCENT_LIGHT_RGB = "rgb(10, 100, 136)";
 
 // Selectors whose elements are permitted to carry the accent color (design-system.md:112-121)
 const ACCENT_ALLOWLIST = [
@@ -1136,14 +1136,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   });
 
   // =========================================================================
-  // FACT 3 — font-weight in {400, 700} (Type pillar)
-  // Gate: fail-on-any-violation (400 body, 700 bold — no intermediate weights)
+  // FACT 3 — font-weight in {400, 600} (Type pillar)
+  // Gate: fail-on-any-violation (400 body, 600 bold — font-bold resolves to the 600 face)
   // Pitfall: do NOT assert on text-xl elements (known advisory TYPE violations per Phase 94)
-  // Pitfall: do NOT assert 500/600 absent — font fallbacks may normalize intermediate weights
+  // Pitfall: do NOT assert 500 absent — font fallbacks may normalize intermediate weights
   // =========================================================================
-  test.describe("font-weight in {400, 700}", () => {
+  test.describe("font-weight in {400, 600}", () => {
 
-    test("Operator: body text is 400, first h1 heading is 700", async ({ page }) => {
+    test("Operator: body text is 400, first h1 heading is 600", async ({ page }) => {
       await openOperator(page);
 
       const bodyWeight = await page.locator("body").evaluate(
@@ -1154,10 +1154,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const h1Weight = await page.getByRole("heading", { level: 1 }).first().evaluate(
         el => getComputedStyle(el).fontWeight
       );
-      expect(h1Weight).toBe("700");
+      expect(h1Weight).toBe("600");
     });
 
-    test("Inbound: body text is 400, first heading is 700", async ({ page }) => {
+    test("Inbound: body text is 400, first heading is 600", async ({ page }) => {
       await openInbound(page);
 
       const bodyWeight = await page.locator("body").evaluate(
@@ -1168,7 +1168,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const headingWeight = await page.getByRole("heading").first().evaluate(
         el => getComputedStyle(el).fontWeight
       );
-      expect(headingWeight).toBe("700");
+      expect(headingWeight).toBe("600");
     });
 
     test("Preview: body text is 400", async ({ page }) => {
