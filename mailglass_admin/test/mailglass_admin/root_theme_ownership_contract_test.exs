@@ -12,6 +12,7 @@ defmodule MailglassAdmin.RootThemeOwnershipContractTest do
 
   @theme_cookie MailglassAdmin.Theme.cookie_name()
   @tenant_id "test-tenant"
+  @preview_path "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
   @operator_path "/ops/mail?tenant_id=" <> @tenant_id
   @inbound_path "/ops/mail/inbound?tenant_id=" <> @tenant_id
 
@@ -25,6 +26,11 @@ defmodule MailglassAdmin.RootThemeOwnershipContractTest do
   describe "document-level theme ownership" do
     for {cookie, count, value} <- @modes do
       mode = cookie || "system"
+
+      test "preview show document carries #{count} theme owner for #{mode}", %{conn: conn} do
+        {:ok, _view, html} = live(with_theme(conn, unquote(cookie)), @preview_path)
+        assert_root_only(html, unquote(count), unquote(value), "preview show")
+      end
 
       test "operator document carries #{count} theme owner for #{mode}", %{conn: conn} do
         conn = conn |> operator_conn() |> with_theme(unquote(cookie))

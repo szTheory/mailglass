@@ -97,6 +97,31 @@ defmodule MailglassAdmin.PreviewLiveTest do
     }
   end
 
+  defp frame_backdrop_style(html) do
+    [backdrop] =
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(~s([data-testid="preview-frame-backdrop"]))
+
+    backdrop |> Floki.attribute("style") |> List.first()
+  end
+
+  defp preview_iframe(html) do
+    [iframe] =
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(~s([data-testid="preview-frame-backdrop"] iframe))
+
+    iframe
+  end
+
+  defp selected_admin_theme(html) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(~s(input[name="preview_admin_theme"][checked]))
+    |> Floki.attribute("value")
+  end
+
   describe "mailables picker" do
     @tag :sidebar
     test "directory variant renders discovered mailables with scenarios, no-previews, and error states" do
@@ -971,7 +996,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> live(path)
 
       assert html =~ "width: 375px"
-      assert html =~ ~s|data-theme="mailglass-dark"|
+      assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
     end
 
     @tag :url_state
@@ -987,8 +1012,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       refute html =~ ~r/data-testid="preview-shell"[^>]+data-theme="mailglass-light"/
       refute html =~ ~r/data-testid="preview-shell"[^>]+data-theme="mailglass-dark"/
 
-      assert html =~
-               ~r/data-preview-frame-theme="light"[^>]+data-theme="mailglass-light"[^>]+data-testid="preview-pane"/
+      assert preview_pane_attrs(html) == %{frame_theme: ["light"], data_theme: []}
     end
 
     @tag :url_state
@@ -1025,22 +1049,50 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   describe "dark toggle" do
     @tag :dark_toggle
-    test "preview frame theme toggle does not mutate admin shell data-theme",
+    test "preview frame toggle drives the backdrop wrapper without changing the root theme",
          %{conn: conn} do
       {:ok, view, html} =
         conn
         |> Plug.Conn.put_req_header("cookie", "#{@theme_cookie}=dark")
         |> live("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
-      assert html =~ ~s|data-theme="mailglass-dark"|
-      assert html =~ ~s|data-preview-frame-theme="light"|
-      assert html =~ ~r/data-preview-frame-theme="light"[^>]+data-theme="mailglass-light"/
+      assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+      assert preview_pane_attrs(html) == %{frame_theme: ["light"], data_theme: []}
+      assert selected_admin_theme(html) == ["dark"]
+
+      light_style = frame_backdrop_style(html)
+      assert light_style =~ "color-scheme: light"
+      assert light_style =~ "background: Canvas"
 
       after_toggle = render_click(view, "toggle_preview_frame_theme", %{})
 
-      assert after_toggle =~ ~s|data-theme="mailglass-dark"|
-      assert after_toggle =~ ~s|data-preview-frame-theme="dark"|
-      assert after_toggle =~ ~r/data-preview-frame-theme="dark"[^>]+data-theme="mailglass-dark"/
+      # The toggle is an in-place assign change: no theme attribute appears
+      # anywhere in the re-render, and the admin picker still reads dark.
+      refute after_toggle =~ "data-theme"
+      assert selected_admin_theme(after_toggle) == ["dark"]
+      assert preview_pane_attrs(after_toggle) == %{frame_theme: ["dark"], data_theme: []}
+
+      dark_style = frame_backdrop_style(after_toggle)
+      assert dark_style =~ "color-scheme: dark"
+      assert dark_style =~ "background: Canvas"
+      refute dark_style =~ "color-scheme: light"
+    end
+
+    @tag :dark_toggle
+    test "preview iframe stays pinned to a light, transparent, script-disabled document",
+         %{conn: conn} do
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
+      for rendered <- [html, render_click(view, "toggle_preview_frame_theme", %{})] do
+        iframe = preview_iframe(rendered)
+        style = iframe |> Floki.attribute("style") |> List.first()
+
+        assert Floki.attribute(iframe, "sandbox") == ["allow-same-origin"]
+        assert style =~ "color-scheme: light"
+        refute style =~ "var(--color-base-100)"
+        refute style =~ "background"
+      end
     end
 
     @tag :dark_toggle
@@ -1051,19 +1103,13 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Plug.Conn.put_req_header("cookie", "#{@theme_cookie}=dark")
         |> live("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
-      assert preview_pane_attrs(html) == %{
-               frame_theme: ["light"],
-               data_theme: ["mailglass-light"]
-             }
+      assert preview_pane_attrs(html) == %{frame_theme: ["light"], data_theme: []}
 
       render_click(view, "toggle_preview_frame_theme", %{})
 
       text_html = render_click(view, "set_tab", %{"tab" => "text"})
 
-      assert preview_pane_attrs(text_html) == %{
-               frame_theme: ["dark"],
-               data_theme: ["mailglass-dark"]
-             }
+      assert preview_pane_attrs(text_html) == %{frame_theme: ["dark"], data_theme: []}
 
       raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
       assert preview_pane_attrs(raw_html) == %{frame_theme: [], data_theme: []}
