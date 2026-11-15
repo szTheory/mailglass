@@ -101,6 +101,164 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  # Delivery-status pane marks (Phase 182, D-10): five portrait panes, one per delivery
+  # class, drawn from the brand book's `svg.stm` fragments. The geometry below is copied
+  # literally from the pinned status-marks data in the repository's brand directory, the
+  # same way the logo paths above are copied byte for byte: the Hex package ships `lib`,
+  # `priv/static` and `docs` only, so lib code must not read repo files outside the
+  # package. The pinned data stays the truth, and phase182_status_marks_test.exs fails
+  # when this data and the pinned data differ.
+  #
+  # Colours are the book's `--mk-<role>` roles, bound to admin tokens by
+  # `@status_mark_roles`, and are painted with attributes, so the marks add no CSS class
+  # and the compiled bundle does not change.
+  @status_mark_shapes %{
+    sent: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "ink",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{"d" => "M6 60H94V114H6Z", "fill" => "ink", "tag" => "path"}
+    ],
+    delivered: [
+      %{"fill" => "ok", "height" => 120, "tag" => "rect", "width" => 100},
+      %{
+        "d" => "M24 62L43 82L77 38",
+        "fill" => "none",
+        "stroke" => "surf",
+        "stroke_width" => 13,
+        "tag" => "path"
+      }
+    ],
+    delayed: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "warn",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{
+        "d" => "M50 24V62L72 78",
+        "fill" => "none",
+        "stroke" => "warn",
+        "stroke_width" => 12,
+        "tag" => "path"
+      }
+    ],
+    failed: [
+      %{"fill" => "bad", "height" => 120, "tag" => "rect", "width" => 100},
+      %{
+        "d" => "M60 0L40 48L62 68L44 120",
+        "fill" => "none",
+        "stroke" => "surf",
+        "stroke_width" => 12,
+        "tag" => "path"
+      }
+    ],
+    not_sent: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "mute",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{"d" => "M0 120L100 0", "stroke" => "mute", "stroke_width" => 12, "tag" => "path"}
+    ]
+  }
+
+  @status_mark_roles %{
+    "bad" => "error-text",
+    "ink" => "text",
+    "mute" => "text-muted",
+    "ok" => "success-text",
+    "surf" => "surface",
+    "warn" => "warning-text"
+  }
+
+  # Row marks are 20 px tall and detail marks 44 px; the panes are 100:120, so the widths
+  # are 17 and 37. The book never draws a mark under 14 px.
+  @status_mark_sizes %{row: {17, 20}, detail: {37, 44}}
+
+  @doc false
+  def status_mark_shapes, do: @status_mark_shapes
+
+  @doc false
+  def status_mark_roles, do: @status_mark_roles
+
+  attr(:class, :atom, values: [:sent, :delivered, :delayed, :failed, :not_sent], required: true)
+  attr(:size, :atom, values: [:row, :detail], default: :row)
+
+  @doc """
+  Renders one delivery-status pane mark as an inline SVG.
+
+  The mark is decoration. The status word beside it is the accessible name, so the
+  SVG is `aria-hidden` and carries no `aria-label` and no `title`: status meaning
+  never lives in a mark's colour or in an attribute alone. The five marks differ in
+  shape (half-filled frame, filled with a check, frame with a clock hand, filled with
+  a crack, struck-through frame), so they stay distinct in greyscale. Use it through
+  the status badge, beside its word.
+  """
+  @doc since: "2.8.0"
+  def status_mark(assigns) do
+    {width, height} = Map.fetch!(@status_mark_sizes, assigns.size)
+
+    assigns =
+      assigns
+      |> assign(:width, width)
+      |> assign(:height, height)
+      |> assign(:shapes, Map.fetch!(@status_mark_shapes, assigns.class))
+
+    ~H"""
+    <svg
+      width={@width}
+      height={@height}
+      viewBox="0 0 100 120"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <%= for shape <- @shapes do %>
+        <rect
+          :if={shape["tag"] == "rect"}
+          x={shape["x"]}
+          y={shape["y"]}
+          width={shape["width"]}
+          height={shape["height"]}
+          fill={status_mark_paint(shape["fill"])}
+          stroke={status_mark_paint(shape["stroke"])}
+          stroke-width={shape["stroke_width"]}
+        />
+        <path
+          :if={shape["tag"] == "path"}
+          d={shape["d"]}
+          fill={status_mark_paint(shape["fill"])}
+          stroke={status_mark_paint(shape["stroke"])}
+          stroke-width={shape["stroke_width"]}
+        />
+      <% end %>
+    </svg>
+    """
+  end
+
+  defp status_mark_paint(nil), do: nil
+  defp status_mark_paint("none"), do: "none"
+
+  defp status_mark_paint(role),
+    do: "var(--mg-color-#{Map.fetch!(@status_mark_roles, role)})"
+
   attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
   attr(:flash_key, :atom, default: nil)
   attr(:message, :string, required: true)

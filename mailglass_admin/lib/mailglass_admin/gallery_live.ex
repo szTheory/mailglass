@@ -198,6 +198,12 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
+  defp render_specimen(%{component: :status_mark} = assigns) do
+    ~H"""
+    <Components.status_mark class={@assigns_map[:class]} size={@assigns_map[:size] || :row} />
+    """
+  end
+
   defp render_specimen(%{component: :nav_link} = assigns) do
     ~H"""
     <Components.nav_link
@@ -658,6 +664,14 @@ defmodule MailglassAdmin.GalleryLive do
     {:status_badge, "reconciled", %{status: :reconciled, size: :sm}},
     # phantom nil fallback — badge-outline
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
+
+    # Phase 182 (D-10): the five delivery-class pane marks at row size, plus one detail size.
+    {:status_mark, "sent", %{class: :sent, size: :row}},
+    {:status_mark, "delivered", %{class: :delivered, size: :row}},
+    {:status_mark, "delayed", %{class: :delayed, size: :row}},
+    {:status_mark, "failed", %{class: :failed, size: :row}},
+    {:status_mark, "not_sent", %{class: :not_sent, size: :row}},
+    {:status_mark, "failed-detail", %{class: :failed, size: :detail}},
 
     # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled
     # No long-label specimen: a nav label long enough to truncate should be shortened.
@@ -1382,6 +1396,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:timestamp), do: "timestamp"
   defp component_label(:badge), do: "badge"
   defp component_label(:status_badge), do: "status_badge"
+  defp component_label(:status_mark), do: "status_mark"
   defp component_label(:nav_link), do: "nav_link"
   defp component_label(:nav_pill), do: "nav_pill"
   defp component_label(:tenant_chip), do: "tenant_chip"
