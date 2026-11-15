@@ -323,7 +323,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           }
           aria-hidden="true"
         >
-          ·
+          •
         </span>
         <span :if={summary_count(@support_summary, :orphan_backlog) == 0}>
           No unmatched Events in this window
@@ -334,7 +334,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
         <span :if={summary_count(@support_summary, :orphan_backlog) == nil}>
           Unmatched Events unavailable
         </span>
-        <span aria-hidden="true">·</span>
+        <span aria-hidden="true">•</span>
         <span data-testid="support-card-suppression-count">
           Active suppressions: {if @suppression_count, do: @suppression_count, else: "—"}
         </span>
@@ -416,7 +416,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   end
 
   defp replay_count_summary(counts) do
-    "failed #{counts.failed} · no change #{counts.noop} · new work #{counts.replayed}"
+    "failed #{counts.failed} • no change #{counts.noop} • new work #{counts.replayed}"
   end
 
   defp drilldown_banner(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),

@@ -483,7 +483,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Mailglass.Example.WelcomeMailer"
       assert html =~ "pm_123"
       assert html =~ "Current suppression"
-      assert html =~ "Address · Account-local"
+      assert html =~ "Address • Account-local"
       assert html =~ "Mailglass allows removal of Manual suppressions."
       assert html =~ "Other configured stores and provider restrictions are not checked."
 
@@ -1835,7 +1835,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "POSTMARK"
       assert html =~ "requested"
       assert html =~ "completed"
-      assert html =~ "Last replay: completed · 1 newly normalized Event"
+      assert html =~ "Last replay: completed • 1 newly normalized Event"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -1872,7 +1872,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Replay command completed with no newly normalized Events."
       assert html =~ "Webhook replay completed"
-      assert html =~ "Last replay: completed · 0 newly normalized Events"
+      assert html =~ "Last replay: completed • 0 newly normalized Events"
     end
 
     @tag :phase175
@@ -2139,7 +2139,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      assert html =~ "Last replay: requested · completion not recorded"
+      assert html =~ "Last replay: requested • completion not recorded"
       assert html =~ "POSTMARK"
       refute html =~ "private-operator-identifier"
       refute html =~ "raw provider response secret"

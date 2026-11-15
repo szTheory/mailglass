@@ -138,9 +138,9 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
     end
   end
 
-  defp scope_label(:address), do: "Address · Account-local"
-  defp scope_label(:domain), do: "Domain · Account-local"
-  defp scope_label(:address_stream), do: "Address + stream · Account-local"
+  defp scope_label(:address), do: "Address • Account-local"
+  defp scope_label(:domain), do: "Domain • Account-local"
+  defp scope_label(:address_stream), do: "Address + stream • Account-local"
   defp scope_label(_), do: "Unavailable"
 
   defp removal_copy(%{removal_policy: :blocked, reason: reason})

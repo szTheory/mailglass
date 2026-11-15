@@ -1581,7 +1581,7 @@ defmodule MailglassAdmin.Components do
         </time>
       </button>
       <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
-        {utc_string(@at)} · Click to copy
+        {utc_string(@at)} • Click to copy
       </span>
     </span>
     <time

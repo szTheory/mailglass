@@ -5,14 +5,14 @@ defmodule MailglassAdmin.Operator.RepairStateTest do
 
   test "replay evidence distinguishes a request, new work and a completed no-op" do
     assert RepairState.latest_replay_summary(%{type: :webhook_replay_requested, provider: "ses"}) ==
-             "requested · completion not recorded · SES"
+             "requested • completion not recorded • SES"
 
     assert RepairState.latest_replay_summary(%{
              type: :webhook_replay_succeeded,
              outcome: :replayed,
              metadata: %{new_event_count: 1},
              provider: "postmark"
-           }) == "completed · 1 newly normalized Event · POSTMARK"
+           }) == "completed • 1 newly normalized Event • POSTMARK"
 
     assert RepairState.effect_label(%{"outcome" => "noop", "new_event_count" => 0}) ==
              "0 newly normalized Events"
@@ -46,7 +46,7 @@ defmodule MailglassAdmin.Operator.RepairStateTest do
                type: :webhook_replay_failed,
                failure_reason: reason,
                provider: "secret@example.test"
-             }) == "failed · #{copy}"
+             }) == "failed • #{copy}"
     end
 
     assert RepairState.replay_metadata_summary(%{provider: "secret@example.test"}) ==
@@ -57,7 +57,7 @@ defmodule MailglassAdmin.Operator.RepairStateTest do
              outcome_label: "failed",
              outcome: "noop"
            }) ==
-             "SENDGRID · failed · no change"
+             "SENDGRID • failed • no change"
 
     assert RepairState.reconcile_metadata_summary(%{}) == "Reconcile fact"
 
@@ -66,7 +66,7 @@ defmodule MailglassAdmin.Operator.RepairStateTest do
              reconciled_provider_event_id: "safe-id",
              reconciled_from_event_id: "event-id"
            }) ==
-             "SES · safe-id · event-id"
+             "SES • safe-id • event-id"
   end
 
   test "unknown availability and authorization feedback stay bounded" do

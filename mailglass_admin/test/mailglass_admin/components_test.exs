@@ -633,9 +633,9 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
-      assert html =~ "2026-06-14 14:32:05.000000 UTC · Click to copy"
+      assert html =~ "2026-06-14 14:32:05.000000 UTC • Click to copy"
       assert html =~ "mg-field-help-tooltip"
-      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
+      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC • Click to copy")
       assert html =~ "<time"
       assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"

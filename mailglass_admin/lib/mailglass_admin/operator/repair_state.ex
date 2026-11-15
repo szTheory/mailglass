@@ -71,7 +71,7 @@ defmodule MailglassAdmin.Operator.RepairState do
   def latest_replay_summary(replay) do
     replay
     |> replay_summary_parts()
-    |> Enum.join(" · ")
+    |> Enum.join(" • ")
   end
 
   @spec command_feedback(map()) :: String.t()
@@ -190,7 +190,7 @@ defmodule MailglassAdmin.Operator.RepairState do
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Replay audit"
-      values -> Enum.join(values, " · ")
+      values -> Enum.join(values, " • ")
     end
   end
 
@@ -210,7 +210,7 @@ defmodule MailglassAdmin.Operator.RepairState do
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Reconcile fact"
-      values -> Enum.join(values, " · ")
+      values -> Enum.join(values, " • ")
     end
   end
 

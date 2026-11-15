@@ -1572,7 +1572,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
     assert text_of.("preview-email-menu-active-technical") == technical
     refute text_of.("preview-email-menu-active-scenario") =~ "MailglassAdmin.Fixtures"
     refute text_of.("preview-email-menu-active-mailable") =~ "MailglassAdmin.Fixtures"
-    refute Floki.raw_html(trigger) =~ " · "
+    refute Floki.raw_html(trigger) =~ " • "
   end
 
   defp assert_ids_closed!(html) do

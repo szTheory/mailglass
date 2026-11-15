@@ -293,7 +293,7 @@ defmodule MailglassAdmin.Operator.Timeline do
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Source unavailable"
-      values -> Enum.join(values, " · ")
+      values -> Enum.join(values, " • ")
     end
   end
 
@@ -308,15 +308,15 @@ defmodule MailglassAdmin.Operator.Timeline do
   end
 
   defp replay_metadata_summary(:webhook_replay_requested, _metadata),
-    do: "Replay audit · requested"
+    do: "Replay audit • requested"
 
-  defp replay_metadata_summary(:webhook_replay_failed, _metadata), do: "Replay audit · failed"
+  defp replay_metadata_summary(:webhook_replay_failed, _metadata), do: "Replay audit • failed"
 
   defp replay_metadata_summary(:webhook_replay_succeeded, metadata) do
     case Map.get(metadata, "outcome") || Map.get(metadata, :outcome) do
-      "replayed" -> "Replay audit · completed · new work"
-      "noop" -> "Replay audit · completed · no change"
-      _ -> "Replay audit · completed"
+      "replayed" -> "Replay audit • completed • new work"
+      "noop" -> "Replay audit • completed • no change"
+      _ -> "Replay audit • completed"
     end
   end
 
