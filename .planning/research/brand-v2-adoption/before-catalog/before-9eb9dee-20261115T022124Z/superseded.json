@@ -2,9 +2,9 @@
   "schema": "mailglass.before_catalog.superseded.v1",
   "catalog_id": "before-9eb9dee-20261115T022124Z",
   "superseded_by": {
-    "bundle_sha256": "bf564d1ef48fda2fd9d3e03600f4c5c344964b33c94486b12addc8d9bc46ac70",
+    "bundle_sha256": "139e6847619d3d83db8454929a8c3dcfb5b863c751a7a22ec9b7422db718294b",
     "root_layout_git_blob_sha": "c89fca348193f24ea614f0d48e8ff29187d7b519"
   },
-  "superseded_in": "Phase 181 plan 181-03: font-forced bullet separators",
+  "superseded_in": "Phase 181 plan 181-04: brand v2 typemark",
   "reason": "Brand v2 tokens, fonts and logo replace the captured v1 look; PNGs, cases.json and manifest.json stay immutable."
 }
