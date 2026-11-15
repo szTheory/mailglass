@@ -4,17 +4,17 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 180
 current_phase_name: Reproducible Admin Bundle and Before-Catalog
-status: executing
-stopped_at: Completed 180-03-PLAN.md
-last_updated: "2026-11-15T01:58:23.154Z"
+status: verifying
+stopped_at: Completed 180-04-PLAN.md
+last_updated: "2026-11-15T02:27:31.581Z"
 last_activity: 2026-11-14
 last_activity_desc: Phase 180 execution started
-state_head: fe0412a4985948494a348248ca561ac4b47b2a22
+state_head: a04f0d900a1100e913c1b3911316acdc3678566d
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 20
 ---
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 180 (Reproducible Admin Bundle and Before-Catalog) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-14 — Phase 180 execution started
 
 Progress: [██░░░░░░░░] 20%
@@ -374,6 +374,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 180 P01 | 9 min | 3 tasks | 9 files |
 | Phase 180 P02 | 9 min | 3 tasks | 8 files |
 | Phase 180 P03 | 74min | 3 tasks | 8 files |
+| Phase 180 P04 | 30min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -732,6 +733,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 180]: Browser theme matrices load the gallery once per theme (cookie + emulated OS + goto); System is no cookie with the OS emulated dark
 - [Phase 180]: Pinned e2e test titles and test.setTimeout bounds stay (timeout_evidence_ci_contract_test, bucket_a_coverage_test); theme loops moved inside existing tests
 - [Phase 180]: Preview axe cell test (structural.spec.js:2655) times out when axe scans a settled Preview page (script-disabled email iframe stall ~30s); recorded in deferred-items.md item 4, test not edited
+- [Phase 180]: 180-04: before-catalog bound to the repository by working-tree bytes (app.css sha256 + root layout blob), LIVE or a superseded.json naming the current bytes; no git objects, no ci.yml change (D-24 refined)
+- [Phase 180]: 180-04: delivered-no-open case mapped to pm-demo-invite-001 because the receipt row answers HTTP 400 on its non-UUID replay webhook_event_id (deferred-items.md item 6); DemoData untouched
+- [Phase 180]: 180-04: a discarded warm-up screenshot precedes every catalog capture so the double capture is byte-identical; seed runs on the in-harness fallback because exec mix run hits eaddrinuse
 
 ## Quick Tasks Completed
 
@@ -792,8 +796,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T01:58:23.096Z
-Stopped at: Completed 180-03-PLAN.md
+Last session: 2026-11-15T02:27:31.515Z
+Stopped at: Completed 180-04-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
