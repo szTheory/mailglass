@@ -72,12 +72,22 @@ defmodule Mailglass.Operator.Deliveries do
       |> group_by([delivery], [
         delivery.status,
         delivery.last_event_type,
-        not is_nil(delivery.delivered_at)
+        not is_nil(delivery.delivered_at),
+        fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.bounced_at),
+        fragment("CASE WHEN ? THEN true END", delivery.terminal),
+        fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.complained_at),
+        fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.suppressed_at)
       ])
       |> select([delivery], %{
         status: delivery.status,
         last_event_type: delivery.last_event_type,
         delivery_confirmed: not is_nil(delivery.delivered_at),
+        # `true | nil`, never `false`: consumers read any non-nil value as a
+        # recorded fact, so these lifecycle flags must stay absent when unset.
+        bounced_at: fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.bounced_at),
+        terminal: fragment("CASE WHEN ? THEN true END", delivery.terminal),
+        complained_at: fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.complained_at),
+        suppressed_at: fragment("CASE WHEN ? IS NOT NULL THEN true END", delivery.suppressed_at),
         count: count(delivery.id)
       })
       |> Repo.all()
@@ -129,6 +139,11 @@ defmodule Mailglass.Operator.Deliveries do
       status: delivery.status,
       last_event_type: delivery.last_event_type,
       delivery_confirmed: not is_nil(delivery.delivered_at),
+      bounced_at: delivery.bounced_at,
+      terminal: delivery.terminal,
+      delivered_at: delivery.delivered_at,
+      complained_at: delivery.complained_at,
+      suppressed_at: delivery.suppressed_at,
       last_event_at: delivery.last_event_at,
       inserted_at: delivery.inserted_at
     })
