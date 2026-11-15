@@ -137,6 +137,7 @@ defmodule MailglassAdmin.AssetsTest do
   describe "GET favicon.svg" do
     test "serves the small-size brand mark from both admin mounts", %{conn: conn} do
       favicon = File.read!(Application.app_dir(:mailglass_admin, "priv/static/favicon.svg"))
+      pinned_favicon = File.read!(Path.expand("../../../brandbook/v2/favicon.svg", __DIR__))
       hash = MailglassAdmin.Controllers.Assets.favicon_hash()
 
       assert hash == Base.encode16(:crypto.hash(:md5, favicon), case: :lower)
@@ -152,8 +153,9 @@ defmodule MailglassAdmin.AssetsTest do
                ]
 
         assert response.resp_body == favicon
-        assert response.resp_body =~ ~s(viewBox="0 0 16 16")
-        assert response.resp_body =~ "prefers-color-scheme: dark"
+        assert response.resp_body == pinned_favicon
+        assert response.resp_body =~ ~s(viewBox="0 0 32 32")
+        assert response.resp_body =~ ~r/prefers-color-scheme:\s*dark/
       end
     end
   end

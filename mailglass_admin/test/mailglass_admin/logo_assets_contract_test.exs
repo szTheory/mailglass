@@ -45,9 +45,11 @@ defmodule MailglassAdmin.LogoAssetsContractTest do
 
   @book_light Path.join(@repo_root, "brandbook/v2/mailglass-lockup-light.svg")
   @book_dark Path.join(@repo_root, "brandbook/v2/mailglass-lockup-dark.svg")
+  @book_favicon Path.join(@repo_root, "brandbook/v2/favicon.svg")
   @tokens_path Path.join(@repo_root, "brandbook/tokens.json")
 
   @static_logo Path.join(@admin_root, "priv/static/mailglass-logo.svg")
+  @static_favicon Path.join(@admin_root, "priv/static/favicon.svg")
   @bundle Path.join(@admin_root, "priv/static/app.css")
   @admin_shell Path.join(@lib_dir, "admin_shell.ex")
   @gallery Path.join(@lib_dir, "gallery_live.ex")
@@ -67,13 +69,28 @@ defmodule MailglassAdmin.LogoAssetsContractTest do
     }
   end
 
-  describe "the shipped logo is the pinned file byte for byte (D-18, T-181-12)" do
+  describe "the shipped logo and favicon are the pinned files byte for byte (D-16, D-18, T-181-12)" do
     test "priv/static/mailglass-logo.svg is the pinned light lockup" do
       assert byte_identity_failures(
                "priv/static/mailglass-logo.svg",
                File.read!(@static_logo),
                File.read!(@book_light)
              ) == []
+    end
+
+    test "priv/static/favicon.svg is the pinned favicon" do
+      assert byte_identity_failures(
+               "priv/static/favicon.svg",
+               File.read!(@static_favicon),
+               File.read!(@book_favicon)
+             ) == []
+    end
+
+    test "the favicon is the one file that follows the OS scheme (tab chrome, D-16)" do
+      favicon = File.read!(@static_favicon)
+
+      assert favicon =~ ~s(viewBox="0 0 32 32")
+      assert favicon =~ ~r/prefers-color-scheme:\s*dark/
     end
   end
 
@@ -156,7 +173,9 @@ defmodule MailglassAdmin.LogoAssetsContractTest do
       for {label, markup} <- [
             {"brandbook/v2/mailglass-lockup-light.svg", File.read!(@book_light)},
             {"brandbook/v2/mailglass-lockup-dark.svg", File.read!(@book_dark)},
+            {"brandbook/v2/favicon.svg", File.read!(@book_favicon)},
             {"priv/static/mailglass-logo.svg", File.read!(@static_logo)},
+            {"priv/static/favicon.svg", File.read!(@static_favicon)},
             {"Components.logo/1", rendered}
           ] do
         assert safety_failures(label, markup) == []
@@ -181,6 +200,28 @@ defmodule MailglassAdmin.LogoAssetsContractTest do
 
       assert failure =~ "logo copy"
       assert failure =~ "differ"
+    end
+
+    test "an appended byte on the favicon copy breaks byte identity" do
+      assert [failure] =
+               byte_identity_failures(
+                 "favicon copy",
+                 File.read!(@static_favicon) <> <<0>>,
+                 File.read!(@book_favicon)
+               )
+
+      assert failure =~ "favicon copy"
+      assert failure =~ "differ"
+    end
+
+    test "a favicon with a different viewBox or a redrawn path is not the pinned file" do
+      pinned = File.read!(@book_favicon)
+
+      redrawn = String.replace(pinned, ~s(viewBox="0 0 32 32"), ~s(viewBox="0 0 16 16"))
+      assert [_] = byte_identity_failures("favicon copy", redrawn, pinned)
+
+      moved = String.replace(pinned, "M9.98 11.88", "M9.98 11.89", global: false)
+      assert [_] = byte_identity_failures("favicon copy", moved, pinned)
     end
 
     test "one altered path coordinate is named", %{rendered: rendered, light: light, dark: dark} do
