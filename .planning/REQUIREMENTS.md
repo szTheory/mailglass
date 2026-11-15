@@ -37,7 +37,7 @@
 - [ ] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
 - [ ] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
 - [ ] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
-- [ ] **BRADM-06**: Cause sentences appear only where `reject_reason` or the suppression reason exists, with a fixed honest fallback otherwise; "next try at…", "will retry", and cause text with a nil reason are never rendered, enforced by a contract test.
+- [x] **BRADM-06**: Cause sentences appear only where `reject_reason` or the suppression reason exists, with a fixed honest fallback otherwise; "next try at…", "will retry", and cause text with a nil reason are never rendered, enforced by a contract test.
 - [ ] **BRADM-07**: A separate agent reviews each scenario against the book with a rejection gate, and evidence is stored at unique paths with the served SHA recorded after a server restart.
 
 ### Docs, Packaging, Launch Prep (BRDOC)
@@ -92,7 +92,7 @@ Updated during roadmap creation (2026-11-13).
 | BRADM-03 | Phase 182 | Pending |
 | BRADM-04 | Phase 182 | Pending |
 | BRADM-05 | Phase 182 | Pending |
-| BRADM-06 | Phase 182 | Pending |
+| BRADM-06 | Phase 182 | Complete |
 | BRADM-07 | Phase 182 | Pending |
 | BRDOC-01 | Phase 183 | Pending |
 | BRDOC-02 | Phase 183 | Pending |

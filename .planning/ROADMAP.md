@@ -173,14 +173,14 @@ Plans:
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
 **Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
-**Plans**: 1/6 plans executed (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
+**Plans**: 2/6 plans executed (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
 
 Plans:
 **Wave 1**
 - [x] 182-01-PLAN.md — Additive core projection (isolated `feat(core):`), summary re-bucketed by delivery class with the missing-key fallback, password-reset fixtures, pinned pane marks and `Components.status_mark/1` (BRADM-01, BRADM-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 182-02-PLAN.md — The one job: class badge, verdict with "sent is not delivered" and a next step on rows, Quick view and Full detail, email search first, zone-keeping localizer, structural cause text and the cause contract (BRADM-01, BRADM-02, BRADM-06)
+- [x] 182-02-PLAN.md — The one job: class badge, verdict with "sent is not delivered" and a next step on rows, Quick view and Full detail, email search first, zone-keeping localizer, structural cause text and the cause contract (BRADM-01, BRADM-02, BRADM-06)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 182-03-PLAN.md — Compact zoned times everywhere, D-09 offenders, and the screen-registry time/status contract (BRADM-02)
@@ -219,5 +219,5 @@ Plans:
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
-| 182. Admin Words and Layout, One Job First | 1/6 | In Progress | - |
+| 182. Admin Words and Layout, One Job First | 2/6 | In Progress | - |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |

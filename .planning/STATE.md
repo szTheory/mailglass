@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
 status: executing
-stopped_at: Completed 182-01-PLAN.md
-last_updated: "2026-11-15T22:11:27.202Z"
+stopped_at: Completed 182-02-PLAN.md
+last_updated: "2026-11-15T22:34:12.214Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 182 execution started
-state_head: dc84507f547912bff199eff3a9345350046a43ac
+state_head: 181909110f09a775b2c6070186a89eee8387dc99
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 13
+  completed_plans: 14
   percent: 60
 ---
 
@@ -32,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
-Plan: 2 of 6
-Status: Executing Phase 182
+Plan: 3 of 6
+Status: Ready to execute
 Last activity: 2026-11-15 — Phase 182 execution started
 
 Progress: [██████░░░░] 60%
@@ -382,6 +382,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 181 P03 | 17min | 3 tasks | 24 files |
 | Phase 181 P04 | 26min | 3 tasks | 17 files |
 | Phase 182 P01 | 20 min | 3 tasks | 16 files |
+| Phase 182 P02 | 25 min | 3 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -756,6 +757,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 182]: 182-01: operator outcome_groups lifecycle flags are true-or-nil (CASE WHEN ... THEN true END in group_by and select), never false, because StatusMap reads any non-nil value as a recorded fact — A false bounced_at would classify every group Failed; the DB-backed core test proves the producer never emits false
 - [Phase 182]: 182-01: pinned pane-mark geometry lives in brandbook/status-marks.json (outside pin-owned brandbook/v2); Components.status_mark/1 carries a literal copy and a required-lane test compares the two — brand_pin_test treats brandbook/v2 as owned and the Hex package ships lib, priv/static and docs only, so lib cannot read the repo file
 - [Phase 182]: 182-01: BRADM-01 and BRADM-02 stay open in REQUIREMENTS.md after plan 01 (shared-ID gate); summary counts a complained-only row under Awaiting confirmation, not Needs attention — Sibling plans 182-02..05 declare the same requirement IDs; delivery_class returns sent for a complaint with no delivery problem (D-07)
+- [Phase 182]: 182-02: suppression-reason parity with the core enum is held by phase182_cause_contract_test, not a compile-time check, because Mailglass.Suppression.Entry is not exported by the core boundary; reject-reason parity stays a compile-time raise — A newer core reason renders an unrecognised-reason sentence instead of crashing; the contract goes red in the required lane when the enums drift.
+- [Phase 182]: 182-02: delivery_badge is a thin wrapper over the status_badge mark branch, keyed on an explicit context: :delivery; inbound failed keeps hero-x-circle — An atom-only gate would turn an inbound mailbox failure into a delivery failure mark.
+- [Phase 182]: 182-02: a send-time failure reads 'Sending failed before a successful handoff to the provider.'; a provider bounce or rejection with a nil reason reads the fixed fallback; an unloaded or unreadable history shows neither — The fallback would be false when the history was simply not read (Quick view) and not literally true for a send-time failure (R1).
 
 ## Quick Tasks Completed
 
@@ -816,8 +820,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T22:11:26.907Z
-Stopped at: Completed 182-01-PLAN.md
+Last session: 2026-11-15T22:34:11.875Z
+Stopped at: Completed 182-02-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
