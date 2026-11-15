@@ -2,13 +2,15 @@ defmodule MailglassAdmin.GalleryLive do
   @moduledoc """
   Dev-only component gallery at /dev/mail/gallery.
 
-  Renders every shared component × every state × light, dark, and inherited-theme side-by-side
-  from an in-code specimen list. No DB access. No mailable scan. No
-  __preview_session__ assigns.
+  Renders every shared component × every state from an in-code specimen list,
+  one specimen per cell, in the current admin theme. No DB access. No mailable
+  scan. No __preview_session__ assigns.
 
   Each specimen cell is anchored with a stable `data-testid="gallery-{component}-{state}"`
-  and contains `data-theme="mailglass-light"`, `data-theme="mailglass-dark"`, and
-  no-explicit-theme system wrappers so a single structural assertion covers all theme modes.
+  and holds one specimen wrapper, `data-testid="gallery-{component}-{state}-system"`.
+  The page never sets a theme of its own: the root layout's html element owns it,
+  so the cookie and the OS scheme decide every specimen. The light and dark matrix
+  is covered by the browser suite, which loads this route once per theme.
 
   Route: /dev/mail/gallery (mounted inside the preview live_session — dev-only by
   the adopter's `if dev_routes` wrapping).
@@ -130,30 +132,7 @@ defmodule MailglassAdmin.GalleryLive do
                   <p class="text-label font-bold text-secondary">
                     {component_label(component)} — {state}
                   </p>
-                  <!-- Keep the theme specimens full-width until xl: the audit
-                       shell's cell padding leaves too little room for card and
-                       timeline specimens in three columns at tablet widths. -->
                   <div class="flex flex-col gap-md xl:flex-row xl:flex-wrap">
-                    <div
-                      data-theme="mailglass-light"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
-                    >
-                      <.render_specimen
-                        component={component}
-                        assigns_map={assigns_map}
-                        specimen_id={"#{component}-#{state}-light"}
-                      />
-                    </div>
-                    <div
-                      data-theme="mailglass-dark"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
-                    >
-                      <.render_specimen
-                        component={component}
-                        assigns_map={assigns_map}
-                        specimen_id={"#{component}-#{state}-dark"}
-                      />
-                    </div>
                     <div
                       data-testid={"gallery-#{component}-#{state}-system"}
                       class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
