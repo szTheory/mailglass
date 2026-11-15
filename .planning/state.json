@@ -16,7 +16,7 @@
     {
       "number": "181",
       "name": "Brand v2 Tokens, Fonts and Logo",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "182",
@@ -31,8 +31,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 3 of 5 · 40% · ready to verify"
+    "label": "Advance to the next step (plan phase 182)",
+    "reason": "Phase 4 of 5 — needs a plan"
   },
-  "updated_at": "2026-11-15T19:02:43.536Z"
+  "updated_at": "2026-11-15T19:37:12.987Z"
 }
