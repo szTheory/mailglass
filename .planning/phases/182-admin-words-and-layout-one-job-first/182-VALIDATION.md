@@ -36,36 +36,42 @@ created: "2026-11-15"
 
 ## Per-Task Verification Map
 
-Task IDs are assigned by the planner; the requirement-to-test map is fixed here.
+Task IDs are `182-<plan>-T<task>` (assigned at planning, 2026-11-15). Regrouping versus D-22 is recorded in each plan's `<decisions_recorded>`: pane-mark provenance moved to 182-01, JourneySeed and the advisory browser journey moved to 182-05, the SSR time format stays in 182-03.
 
-| Requirement | Plan (D-22) | Test Type | Required-lane file | Automated Command | File Exists | Status |
-|-------------|-------------|-----------|--------------------|-------------------|-------------|--------|
-| BRADM-01 | 1, 2 | core DB-backed + LiveViewTest | `test/mailglass/operator/deliveries_projection_test.exs` (core, new); `mailglass_admin/test/mailglass_admin/phase182_journey_test.exs` | `mix test test/mailglass/operator/deliveries_projection_test.exs` (root); `mix test test/mailglass_admin/phase182_journey_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| BRADM-02 | 2, 3 | render + source + static scan | `phase182_time_status_contract_test.exs` | `mix test test/mailglass_admin/phase182_time_status_contract_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| BRADM-03 | 4 | render scan + vocabulary binding | `phase182_words_contract_test.exs`, `copy_contract_test.exs` | `mix test test/mailglass_admin/phase182_words_contract_test.exs test/mailglass_admin/copy_contract_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| BRADM-04 | 4 | render scan | `phase182_words_contract_test.exs` | same as BRADM-03 | ❌ W0 | ⬜ pending |
-| BRADM-05 | 4 | unit + a11y render | `phase182_words_contract_test.exs`, `phase178_prohibition_contract_test.exs` | `mix test test/mailglass_admin/phase182_words_contract_test.exs test/mailglass_admin/phase178_prohibition_contract_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| BRADM-06 | 2 | structural + forbidden-phrase matrix | `phase182_cause_contract_test.exs` | `mix test test/mailglass_admin/phase182_cause_contract_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| BRADM-07 | 5 | manifest + verdict schema + `gate/1` | `after_catalog_manifest_test.exs` | `mix test test/mailglass_admin/after_catalog_manifest_test.exs test/mailglass_admin/before_catalog_manifest_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| Requirement | Task IDs | Test Type | Required-lane file | Automated Command | File Exists | Status |
+|-------------|----------|-----------|--------------------|-------------------|-------------|--------|
+| BRADM-01 | 182-01-T1, 182-01-T2 | core DB-backed + LiveViewTest summary | `test/mailglass/operator/deliveries_projection_test.exs` (core, new); `mailglass_admin/test/mailglass_admin/phase182_journey_test.exs` (created 182-01-T1) | `mix test test/mailglass/operator/deliveries_projection_test.exs --warnings-as-errors --seed 0` (root); `mix test test/mailglass_admin/phase182_journey_test.exs --warnings-as-errors --seed 0` | ❌ W0 (created 182-01-T1) | ⬜ pending |
+| BRADM-01 | 182-02-T1, 182-02-T2 | LiveViewTest journey (row, Quick view, detail order, search patch, theme dead render) | `phase182_journey_test.exs` | `mix test test/mailglass_admin/phase182_journey_test.exs --warnings-as-errors --seed 0` | ❌ W0 (created 182-01-T1) | ⬜ pending |
+| BRADM-01 (advisory only) | 182-05-T1 | Playwright catalog journey 375/1440 x light/dark x UTC/New_York/Auckland | `reference/demo_app/assets/catalog/phase182-journey.spec.js` (never cited as required proof) | `node reference/demo_app/assets/catalog/capture-before-catalog.cjs --mode after --catalog-root "$SCRATCH/after-smoke"` | ❌ (created 182-05-T1) | ⬜ pending |
+| BRADM-02 | 182-01-T3 | component equals pinned JSON + 3:1 contrast | `phase182_status_marks_test.exs`; `test/scripts/brand_status_marks_test.exs` (core, hermetic) | `mix test test/mailglass_admin/phase182_status_marks_test.exs --warnings-as-errors --seed 0`; root `mix test test/scripts/brand_status_marks_test.exs test/scripts/brand_pin_test.exs --seed 0` | ❌ (created 182-01-T3) | ⬜ pending |
+| BRADM-02 | 182-02-T1 | row class badge mark + word | `phase182_journey_test.exs`, `copy_contract_test.exs` (Part B rewrite) | `mix test test/mailglass_admin/phase182_journey_test.exs test/mailglass_admin/copy_contract_test.exs --warnings-as-errors --seed 0` | ✅ / ❌ W0 | ⬜ pending |
+| BRADM-02 | 182-03-T1, 182-03-T2 | render + source + static scan over the screen registry | `phase182_time_status_contract_test.exs`; `test/support/screen_registry.ex` | `mix test test/mailglass_admin/phase182_time_status_contract_test.exs --warnings-as-errors --seed 0` | ❌ (created 182-03-T2) | ⬜ pending |
+| BRADM-03 | 182-04-T1, 182-04-T2 | render scan + vocabulary binding | `phase182_words_contract_test.exs`, `copy_contract_test.exs` | `mix test test/mailglass_admin/phase182_words_contract_test.exs test/mailglass_admin/copy_contract_test.exs --warnings-as-errors --seed 0` | ❌ (created 182-04-T1) | ⬜ pending |
+| BRADM-04 | 182-04-T1, 182-04-T2 | render scan | `phase182_words_contract_test.exs` | same as BRADM-03 | ❌ (created 182-04-T1) | ⬜ pending |
+| BRADM-05 | 182-04-T3 | unit + a11y render | `phase182_words_contract_test.exs`, `operator/mailer_name_test.exs`, `phase178_prohibition_contract_test.exs` | `mix test test/mailglass_admin/operator/mailer_name_test.exs test/mailglass_admin/phase182_words_contract_test.exs test/mailglass_admin/phase178_prohibition_contract_test.exs --warnings-as-errors --seed 0` | ❌ (created 182-04-T3) | ⬜ pending |
+| BRADM-06 | 182-02-T3 | structural + forbidden-phrase matrix | `phase182_cause_contract_test.exs` | `mix test test/mailglass_admin/phase182_cause_contract_test.exs --warnings-as-errors --seed 0` | ❌ (created 182-02-T3) | ⬜ pending |
+| BRADM-07 | 182-05-T2, 182-05-T3 | manifest + verdict schema + `gate/1` | `after_catalog_manifest_test.exs`; `test/support/{catalog_validators,review_gate}.ex` | `mix test test/mailglass_admin/after_catalog_manifest_test.exs test/mailglass_admin/before_catalog_manifest_test.exs --warnings-as-errors --seed 0` | ❌ (created 182-05-T2) | ⬜ pending |
+
+All admin commands run from `/Users/jon/projects/mailglass/mailglass_admin` with `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27`.
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 ### Mutation proofs (each recorded in the owning plan summary, per METHODOLOGY)
 
-- **BRADM-01:** delete the Sent rule line; drop `bounced_at`, then `terminal`, from the projection select (each fails the core contract); put the timeline above the verdict (DOM-order assert); omit the search patch; emit `bounced_at: false` from `outcome_groups`.
-- **BRADM-02:** drop " UTC" from `utc_string`; bare `<time>` in a new component; icon-only badge; hand-coded `<span class="badge">` in a LiveView; remove `timeZoneName` from `FMT`; LiveView module absent from the registry; mark with `aria-label`; `false` flag value.
-- **BRADM-03/04:** reintroduce "Deliveries" in nav, `<title>` or `aria-label`; revert `operator_live.ex` "Operator"; revert one C-12 site.
-- **BRADM-05:** revert to "Unmatched events"; use `title=` for the mailer identity; hide the full module on detail.
-- **BRADM-06:** interpolate a nil reason; add "will retry" to Delayed copy; delete an enum clause; skip a reason in the matrix; render the fallback on Quick view.
-- **BRADM-07:** flip a verdict to pass; add an unlisted file; plant a hallucinated quote; drop the calibration set; make a known-bad calibration pass.
+- **BRADM-01 (182-01-T2, 182-02-T1/T2):** delete the Sent rule line; drop `bounced_at`, then `terminal`, from the projection select (each fails the core contract); put the timeline above the verdict (DOM-order assert); omit the search patch; emit `bounced_at: false` from `outcome_groups`.
+- **BRADM-02 (182-01-T3, 182-03-T2):** marks teeth (aria-label, changed `d`, swapped role, identical shapes); drop " UTC" from `utc_string`; bare `<time>` in a new component; icon-only badge; hand-coded `<span class="badge">` in a LiveView; remove `timeZoneName` from `FMT`; LiveView module absent from the registry; mark with `aria-label`; `false` flag value.
+- **BRADM-03/04 (182-04-T1/T2):** reintroduce "Deliveries" in nav, `<title>` or `aria-label`; revert `operator_live.ex` "Operator"; revert one C-12 site.
+- **BRADM-05 (182-04-T3):** revert to "Unmatched events"; use `title=` for the mailer identity; hide the full module on detail.
+- **BRADM-06 (182-02-T3):** interpolate a nil reason; add "will retry" to Delayed copy; delete an enum clause; skip a reason in the matrix; render the fallback on Quick view.
+- **BRADM-07 (182-05-T2/T3):** flip a verdict to pass; add an unlisted file; plant a hallucinated quote; drop the calibration set; make a known-bad calibration pass.
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `mailglass_admin/test/support/catalog_validators.ex` — extracted pure validators (before-catalog validators are `defp`, C-11)
-- [ ] `mailglass_admin/test/support/operator_fixtures.ex` rows — password-reset Sent-no-report, bounce, bounce-then-open, nil-reason bounce, deferred, suppressed, complained (module-only `mailable`, reserved `.example` recipients)
-- [ ] `JourneySeed` (new seed module outside `DemoData`/`personas.ex`), `brandbook/v2/status-marks.json`, `scripts/brand_status_marks.exs`
+- [ ] `mailglass_admin/test/support/catalog_validators.ex` — extracted pure validators (before-catalog validators are `defp`, C-11) — 182-05-T2
+- [ ] `mailglass_admin/test/support/operator_fixtures.ex` rows — password-reset Sent-no-report, bounce, bounce-then-open, nil-reason bounce, deferred, suppressed, complained (module-only `mailable`, reserved `.example` recipients) — `seed_phase182_journey!/0` in 182-01-T1; `seed_phase182_status_grid!/0` in 182-03-T2
+- [ ] `JourneySeed` (182-05-T1, new seed module outside `DemoData`/`personas.ex`), `brandbook/status-marks.json` (moved out of `brandbook/v2`, PATTERNS Finding 1) and `scripts/brand_status_marks.exs` (182-01-T3)
 - [ ] New test files listed in the map above (new files only; never edit `config/test_exceptions.exs` entries)
 
 Framework install: none (existing infrastructure).
