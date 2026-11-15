@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 181
 current_phase_name: Brand v2 Tokens, Fonts and Logo
 status: executing
-stopped_at: Phase 181 context gathered (assumptions mode)
-last_updated: "2026-11-15T15:45:28.989Z"
-last_activity: 2026-11-14
-last_activity_desc: Phase 180 complete, transitioned to Phase 181
-state_head: fcbba165b366e80c0c13ef3c2ca2e4c0985ea49d
+stopped_at: Completed 181-01-PLAN.md
+last_updated: "2026-11-15T16:11:29.697Z"
+last_activity: 2026-11-15
+last_activity_desc: Phase 181 execution started
+state_head: 27e71f5f16381fc7c6f3f2efe26b281c19b74b84
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 8
+  completed_plans: 9
   percent: 40
 ---
 
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 180 — Reproducible Admin Bundle and Before-Catalog
+**Current focus:** Phase 181 — Brand v2 Tokens, Fonts and Logo
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 181 (Brand v2 Tokens, Fonts and Logo) — READY TO EXECUTE
-Plan: Not started
+Phase: 181 (Brand v2 Tokens, Fonts and Logo) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-11-14 — Phase 180 complete, transitioned to Phase 181
+Last activity: 2026-11-15 — Phase 181 execution started
 
 Progress: [████░░░░░░] 40%
 
@@ -376,6 +376,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 180 P02 | 9 min | 3 tasks | 8 files |
 | Phase 180 P03 | 74min | 3 tasks | 8 files |
 | Phase 180 P04 | 30min | 3 tasks | 6 files |
+| Phase 181 P01 | 16 min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -737,6 +738,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 180]: 180-04: before-catalog bound to the repository by working-tree bytes (app.css sha256 + root layout blob), LIVE or a superseded.json naming the current bytes; no git objects, no ci.yml change (D-24 refined)
 - [Phase 180]: 180-04: delivered-no-open case mapped to pm-demo-invite-001 because the receipt row answers HTTP 400 on its non-UUID replay webhook_event_id (deferred-items.md item 6); DemoData untouched
 - [Phase 180]: 180-04: a discarded warm-up screenshot precedes every catalog capture so the double capture is byte-identical; seed runs on the in-harness fallback because exec mix run hits eaddrinuse
+- [Phase 181]: [Phase 181-01] Designed token values use one rounding rule, Contrast.composite/3 with Elixir round/1; tokens.json stores that output and token_parity_test recomputes it — A value that does not reproduce is a red test rather than a judgment call; the eleven designed values (link-hover, overlay, selected, eight *-bg tints) are two-book-hex composites
+- [Phase 181]: [Phase 181-01] Roles with no admin CSS consumer stay contrast-checked through role-level admin pairs, and a test proves app.css and lib never read them — The $description tag "unreferenced by admin CSS; contrast-checked as <pair id>" cannot rot: a later consumer turns the test red until the tag and pair are updated
 
 ## Quick Tasks Completed
 
@@ -797,9 +800,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T03:24:18.983Z
-Stopped at: Phase 181 context gathered (assumptions mode)
-Resume file: .planning/phases/181-brand-v2-tokens-fonts-and-logo/181-CONTEXT.md
+Last session: 2026-11-15T16:11:29.569Z
+Stopped at: Completed 181-01-PLAN.md
+Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
 

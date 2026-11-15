@@ -145,12 +145,12 @@ Plans:
   3. The admin renders Funnel Display at weight 600 and the other faces from the six bundled woff2 files in `priv/static/fonts`, with the OFL texts beside them. A static contract test in the required admin lane (`font_assets_contract_test`) proves the compiled bundle references no remote font or stylesheet URL and that the served fonts equal `@allowed_fonts`; a font outside `@allowed_fonts` returns 404 (`assets_test`). A local browser network check is recorded as advisory evidence, never as the proof.
   4. The new logo and favicon appear in the admin, and the `←` glyph is gone from every screen. The updated `brand_test` and `accessibility_test` pass, and the axe baseline is regenerated exactly once, as the phase's last change.
   5. `config.ex`, `theme.ex`, the email button colors and the VML goldens show no diff, and their existing tests pass without edits.
-**Plans**: 4 plans
+**Plans**: 1/4 plans executed
 **Plan budget**: about 4
 
 Plans:
 **Wave 1**
-- [ ] 181-01-PLAN.md — v2 tokens and role map (39 colour + 2 logo roles, three blocks), static contrast contract, rewritten brand/token_parity/accessibility tests, wording amendments (BRTOK-01, BRTOK-02, BRTOK-05)
+- [x] 181-01-PLAN.md — v2 tokens and role map (39 colour + 2 logo roles, three blocks), static contrast contract, rewritten brand/token_parity/accessibility tests, wording amendments (BRTOK-01, BRTOK-02, BRTOK-05)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 181-02-PLAN.md — `brand_pin.exs extend`, six v2 woff2 + OFL texts, compile-time font allow-list, weight 600, static font contract, publish allowlist and evidence scripts (BRTOK-03)
@@ -199,6 +199,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
-| 181. Brand v2 Tokens, Fonts and Logo | 0/TBD | Not started | - |
+| 181. Brand v2 Tokens, Fonts and Logo | 1/4 | In Progress | - |
 | 182. Admin Words and Layout, One Job First | 0/TBD | Not started | - |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
