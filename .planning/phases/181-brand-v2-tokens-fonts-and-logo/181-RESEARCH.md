@@ -215,16 +215,18 @@ Guard (BRTOK-02 success criterion 2): `git diff --exit-code -- mix.lock mailglas
 | success-bg | designed: 10% `#1D6B3C` over White = `#E8F0EC` | designed: 10% `#7FCB9A` over Roast Surface = `#333228` |
 | success-on-solid | White `#FFFFFF` | Roast `#1D1713` |
 | warning-text / -border / -solid | `#855300` | `#E3B25C` |
-| warning-bg | `#F3EEE6` | `#3D3022` |
+| warning-bg | designed: 10% `#855300` over White = `#F3EEE6` | designed: 10% `#E3B25C` over Roast Surface = `#3D3022` |
 | warning-on-solid | White | Roast |
 | error-text / -border / -solid | `#B3261E` | `#F09A93` |
-| error-bg | `#F7E9E8` | `#3E2D27` |
+| error-bg | designed: 10% `#B3261E` over White = `#F7E9E9` | designed: 10% `#F09A93` over Roast Surface = `#3E2D27` |
 | error-on-solid | White | Roast |
 | info-text / -border / -solid | Deep Glass `#0A6488` | Bright Glass `#6CC6F0` |
-| info-bg | `#E6F0F3` | `#313230` |
+| info-bg | designed: 10% Deep Glass over White = `#E7F0F3` | designed: 10% Bright Glass over Roast Surface = `#313230` |
 | info-on-solid | White | Roast |
 | `--mg-logo-glass` | `#1895C2` | `#46B6E8` |
 | `--mg-logo-overlap` | `#0A6488` | `#A8E4F7` |
+
+Rounding rule (single, binding): every designed value is `composite(fg, bg, alpha)` with per-channel `round(alpha*fg + (1-alpha)*bg)` using Elixir `round/1` (half away from zero). Re-verified 2026-11-15 during plan revision with a scratch Elixir script: nine designed values reproduce exactly; two light tints first written here as `#F7E9E8` (error-bg) and `#E6F0F3` (info-bg) did not, and are restated above to the `round/1` results `#F7E9E9` and `#E7F0F3`. Pairs on the restated tints: error-text on error-bg 5.54, info-text on info-bg 5.69, text on either >= 13.8.
 
 Counts: 39 roles x 3 CSS blocks = 117 declarations, plus 2 logo x 3 = 6, total 123 `--mg-*` declarations (matches the prototype bundle: `total mg decls 123`, all hex).
 
@@ -233,7 +235,7 @@ Rules of thumb behind the choices: `surface` is the card colour (book pairs `cap
 ### Computed contrast (WCAG 2.2, threshold 0.04045) [VERIFIED: computed this session]
 - All 24 published `contrastPairs` (12 per theme) recompute within **0.005** of the published value (largest diff 0.00496), so the D-07 tolerance of 0.02 is generous.
 - Every text role (`text`, `text-muted`, `link`, `accent-text`, `*-text`) on every surface role: minimum **5.18** light (`warning-text` on `surface-sunken`), **5.64** dark (`text-muted` on `surface-selected`).
-- Status text on its own `*-bg`: light 5.53 to 5.68, dark 6.06 to 6.73. `*-on-solid` on `*-solid`: light 6.49 to 6.58, dark 8.23 to 9.27.
+- Status text on its own `*-bg`: light 5.54 to 5.69, dark 6.06 to 6.73 (recomputed with the restated light error-bg/info-bg tints). `*-on-solid` on `*-solid`: light 6.49 to 6.58, dark 8.23 to 9.27.
 - daisyUI pairs (X on X-content): light 5.85 to 6.58; dark 8.08 to 9.27. `text-{success,warning,error,primary,secondary}` on its own 10% tint over base-100/base-200: tightest **4.97** (light `error` over base-100), all others above 5.0.
 - `border-input`: light 3.93 (Sand) / 4.42 (White); dark 4.45 (Roast) / 3.96 (Roast Surface) / 3.11 (selected). `focus-ring` >= 5.25 light, >= 6.47 dark. Logo glass on base-100: 3.05 light (book value, passes `>= 3.0`), 7.70 dark.
 - Intentionally sub-3:1 (exempt, keep pinned in `accessibility_test`): `border` Sand Line on Sand **1.32**, Roast Line on Roast **1.54**.
@@ -578,19 +580,22 @@ Specs: `mailglass_admin/e2e/admin-assets.spec.js:8-22` (token backgrounds, plus 
 | A8 | The title suffix change (F6) is cosmetic. | Planner Flags | Low. |
 | A9 | The `extend` verb name and `$extensions.mailglass` shape are Claude's Discretion choices. | Pattern 3, Code Examples | Low. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the axe producer's Preview scan exclude the email iframe?**
    - What we know: 180 deferred item 4 measured a ~30 s axe stall inside the script-disabled `srcdoc` email iframe; each producer cell is its own `test.slow()` test (90 s), so one stall per test is survivable; 180's summary says baseline regeneration is "Phase 181's single allowed change".
    - What's unclear: whether the stall hits the producer on this machine.
    - Recommendation: do not edit the spec; run the producer once, last. If a cell times out, re-run that cell, do not change scan scope in this phase.
+   - **RESOLVED:** scan scope is not changed; a timed-out cell is re-run before persisting. Carried by `181-04-PLAN.md` `<decisions_recorded>` ("Axe iframe stall") and Task 3 step 3.
 2. **Does the v2 accent colour (Deep Glass) trip the advisory "accent only on allowlisted elements" check?**
    - What we know: `structural.spec.js:13-21` allowlists `aria-selected`, `aria-current`, `.btn-primary`, `:focus-visible`.
    - Unclear: whether links now match the accent RGB.
    - Recommendation: run the spec locally in plan 3; update the allowlist (links) if required; advisory only.
+   - **RESOLVED (deferred to execution, advisory):** recorded as an assumption to check when the advisory spec runs; the allowlist is widened to links only if links legitimately match. Carried by `181-04-PLAN.md` `<flagged_assumptions>` ("Open Question 2") and Task 2 step 3. The spec is advisory, so either outcome leaves the required lanes untouched.
 3. **Do any tests outside the inspected files hard-code `font-bold` weight 700 or old family names?**
    - Known: 14 admin test/e2e files pin the class `font-bold` (unchanged); the computed weight assertions are in the two e2e files above.
    - Recommendation: re-grep `700`, `"Inter`, `IBM Plex` across `mailglass_admin/{test,e2e}` and `reference/demo_app/{test,assets/e2e}` at the start of plan 2.
+   - **RESOLVED:** the re-grep is an executor step with a tree-wide `git grep` gate (explicit, reasoned exclusions only). Carried by `181-02-PLAN.md` Task 3 (re-grep plus gate over the files 181-02 owns) and closed tree-wide with no deferral exclusions by `181-04-PLAN.md` Task 2, which owns the advisory e2e and demo font names.
 
 ## Environment Availability
 

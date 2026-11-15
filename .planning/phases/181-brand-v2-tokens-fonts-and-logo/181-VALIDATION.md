@@ -38,24 +38,28 @@ created: "2026-11-15"
 
 ## Per-Task Verification Map
 
-Task IDs are filled by the planner; requirement-level map from research:
+Per-task rows (task IDs from the four PLAN files). Admin commands run from `mailglass_admin/` with the toolchain env; root commands from the repo root. Exact command text and `<fails_when>` live in each task's `<verify>`; this table names them.
 
-| Requirement | Plan | Behavior | Test Type | Automated Command | File Exists | Status |
-|-------------|------|----------|-----------|-------------------|-------------|--------|
-| BRTOK-01 | 01 | tokens.json == tokens.css == bundle for all roles x 3 blocks; palette hex == brand.json by name | unit | `cd mailglass_admin && mix test test/mailglass_admin/token_parity_test.exs` | ✅ rewrite | ⬜ pending |
-| BRTOK-01 | 01 | v2 anchors present, v1 hexes absent | unit | `mix test test/mailglass_admin/brand_test.exs` | ✅ rewrite | ⬜ pending |
-| BRTOK-01 | 01 | bundle reproducible, catalog marker current | gate + unit | `mix mailglass_admin.assets.build --check`; `mix test test/mailglass_admin/{bundle_reproducibility_contract,before_catalog_manifest}_test.exs` | ✅ | ⬜ pending |
-| BRTOK-02 | 01 | book pairs + admin pairs + coverage guard + `never` rules | unit | `mix test test/mailglass_admin/contrast_contract_test.exs` | ❌ W0 | ⬜ pending |
-| BRTOK-02 | 01 | no dependency added | shell | `git diff --exit-code -- mix.lock mailglass_admin/mix.lock mailglass_inbound/mix.lock mailglass_admin/package-lock.json` | ✅ | ⬜ pending |
-| BRTOK-03 | 02 | woff2 magic, set equality, no remote URL, OFL texts, 404 outside allow-list | unit + endpoint | `mix test test/mailglass_admin/{font_assets_contract,assets,bundle}_test.exs` | ❌ W0 | ⬜ pending |
-| BRTOK-03 | 02 | pin ships exactly expected assets; owned-dir set equality | unit | `mix test test/scripts/brand_pin_test.exs` (root) | ✅ edit | ⬜ pending |
-| BRTOK-03 | 02 | Hex tarball file list | task | `MIX_ENV=test mix mailglass.publish.check --allowlist-only --package mailglass_admin` | ✅ | ⬜ pending |
-| BRTOK-03 | 02 | no glyph outside the 170-codepoint subset in rendered text | unit | `mix test test/mailglass_admin/glyph_contract_test.exs` | ❌ W0 | ⬜ pending |
-| BRTOK-04 | 03 | favicon and logo byte/path identical to pin; no U+2190-2193; every `hero-*` has a bundle rule | unit | `mix test test/mailglass_admin/{logo_assets_contract,glyph_contract,assets,bundle}_test.exs` | ❌ W0 | ⬜ pending |
-| BRTOK-05 | 04 | axe ratchet; baseline regenerated once, last | unit + producer | `mix test test/mailglass_admin/axe_baseline_test.exs`; `PERSIST_AXE_BASELINE=1 npm run test:operator-browser -- axe-baseline.spec.js` | ✅ | ⬜ pending |
-| BRTOK-06 | 04 | core defaults untouched | phase-scope diff + tests | `git diff --exit-code <PHASE_BASE>..HEAD -- lib test/mailglass test/fixtures test/support`; `mix test test/mailglass/components/vml_preservation_test.exs`; root `mix test --warnings-as-errors` | ✅ | ⬜ pending |
+| Task ID | Requirement | Behavior | Test Type | Automated Command | File Exists | Status |
+|---------|-------------|----------|-----------|-------------------|-------------|--------|
+| 181-01-T1 | BRTOK-01, BRTOK-05 | tokens.json == tokens.css == bundle for 41 roles x 3 blocks; palette == brand.json by name; designed values recompute under `round/1`; v2 anchors present, v1 hexes absent; marker current | gate + unit | `MIX_ENV=test mix mailglass_admin.assets.build --check && mix test test/mailglass_admin/{token_parity,brand,before_catalog_manifest,bundle_reproducibility_contract}_test.exs --warnings-as-errors --seed 0`; `grep -oE -- '--mg-[a-z-]+:#[0-9a-fA-F]{3,6}\b' priv/static/app.css \| wc -l` == 123 | ✅ rewrite | ⬜ pending |
+| 181-01-T2 | BRTOK-02, BRTOK-05 | book pairs, admin pairs (incl. designed/unconsumed roles), slot and designed-value coverage guards, `never` rules; accessibility_test on the 0.04045 helper | unit | `mix test test/mailglass_admin/{contrast_contract,accessibility}_test.exs --warnings-as-errors --seed 0` | ❌ W0 | ⬜ pending |
+| 181-01-T3 | BRTOK-01, BRTOK-03 (wording), BRTOK-02 (no dep) | slot/woff2 counts and criterion 3 static-proof wording amended; no lockfile or core change | shell | wording `grep -c` == 0; `git diff --exit-code 9bd70fa5 -- <lockfiles> lib test/mailglass test/fixtures test/support` | ✅ | ⬜ pending |
+| 181-01 plan-end | BRTOK-01/02/05 | whole admin lane cold, conformance, format, docs_contract | lane | `MIX_BUILD_PATH=<cold> mix verify.support_contract.admin`; conformance trio; root `mix test test/mailglass/docs_contract_test.exs test/scripts/icon_exists_gate_test.exs test/scripts/brand_pin_test.exs` | ✅ | ⬜ pending |
+| 181-02-T1 | BRTOK-03 | pin `extend` + verify; 16 shipped assets; compile-time font map; 404 outside allow-list; bundle/marker/allowlist current | unit + task | `mix run --no-start scripts/brand_pin.exs verify && mix test test/scripts/brand_pin_test.exs` (root); `mix test test/mailglass_admin/{bundle,assets,before_catalog_manifest,token_parity}_test.exs`; `MIX_ENV=test mix mailglass.publish.check --allowlist-only --package mailglass_admin` | ✅ edit | ⬜ pending |
+| 181-02-T2 | BRTOK-03 | woff2 magic, set equality, face table, no remote URL, OFL texts, tabular numerals on list rows; 400/600 docs | unit | `mix test test/mailglass_admin/{font_assets_contract,token_parity}_test.exs --warnings-as-errors --seed 0 && bash scripts/check-conformance.sh` | ❌ W0 | ⬜ pending |
+| 181-02-T3 | BRTOK-03 | evidence scripts name v2 fonts; no retired font in owned files | node + shell | `node --test scripts/check_phase174_evidence.test.cjs scripts/check_phase175_evidence.test.cjs scripts/phase174-review-claims.test.cjs mailglass_admin/e2e/support/storybook-axe.test.cjs`; retired-font `git grep` gate == 0 | ✅ edit | ⬜ pending |
+| 181-02 plan-end | BRTOK-03 | admin lane cold, root targeted files, pin verify, allowlist, conformance, lockfiles | lane | see 181-02 `<verification>` Plan-end gate | ✅ | ⬜ pending |
+| 181-03-T1 | BRTOK-04 | no U+2190-2193 in rendered lib text; every `hero-*` has a bundle rule | unit + gate | `MIX_ENV=test mix mailglass_admin.assets.build --check && mix test test/mailglass_admin/{glyph_contract,before_catalog_manifest,bundle}_test.exs && bash scripts/check-conformance.sh` | ❌ W0 | ⬜ pending |
+| 181-03-T2 | BRTOK-03 | no glyph outside the 170-codepoint subset; subset bound to pinned woff2 hashes; lib-derived pins follow | unit | `mix test test/mailglass_admin/{glyph_contract,before_catalog_manifest,operator_live,components,preview_live}_test.exs test/mailglass_admin/operator/repair_state_test.exs` | ❌ W0 | ⬜ pending |
+| 181-03-T3 | BRTOK-03, BRTOK-04 | e2e and demo replay pins follow lib text; fixtures and core untouched | shell | replay-audit middot `grep` == 0; `git diff --exit-code 9bd70fa5 -- <lockfiles> lib test/mailglass test/fixtures test/support mailglass_admin/test/support/operator_fixtures.ex` | ✅ | ⬜ pending |
+| 181-03 plan-end | BRTOK-03/04 | admin lane cold, conformance (ICON-EXISTS-GATE), icon_exists_gate_test, format | lane | see 181-03 `<verification>` Plan-end gate | ✅ | ⬜ pending |
+| 181-04-T1 | BRTOK-04 | logo byte/path/token identity; inline logo follows `<html data-theme>` | unit | `MIX_ENV=test mix mailglass_admin.assets.build --check && mix test test/mailglass_admin/{logo_assets_contract,bundle,before_catalog_manifest,root_theme_ownership_contract,glyph_contract}_test.exs && bash scripts/check-conformance.sh`; `cmp` logo == 0 | ❌ W0 | ⬜ pending |
+| 181-04-T2 | BRTOK-04 (+BRTOK-03 advisory half) | favicon byte identity; no v1 colour or retired font tree-wide; advisory specs expect v2 faces at 600 | unit + shell | `mix test test/mailglass_admin/{assets,logo_assets_contract}_test.exs`; `cmp` favicon == 0; v1-colour grep == 0; retired-font gate (no deferrals) == 0; `"700"` grep == 0 | ❌ W0 | ⬜ pending |
+| 181-04 plan-end | BRTOK-06, all | root full suite (`core_deterministic_suite` mirror), admin lane cold, pin, allowlist, conformance, node, format; run BEFORE the axe producer | lane | see 181-04 `<verification>` Plan-end gate | ✅ | ⬜ pending |
+| 181-04-T3 | BRTOK-05, BRTOK-06 | core defaults untouched; axe ratchet; baseline regenerated once, last, no new `color-contrast` | phase-scope diff + unit + producer | `git diff --exit-code 9bd70fa5 -- lib test/mailglass test/fixtures test/support <lockfiles> && mix test test/mailglass/components/vml_preservation_test.exs`; `mix test test/mailglass_admin/axe_baseline_test.exs` + commit count == 1; `PERSIST_AXE_BASELINE=1 npm run test:operator-browser -- axe-baseline.spec.js` (producer, once) | ✅ | ⬜ pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*. `<PHASE_BASE>` = `9bd70fa5`.
+*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*. `<PHASE_BASE>` = `9bd70fa5`. `<lockfiles>` = `mix.lock mailglass_admin/mix.lock mailglass_inbound/mix.lock mailglass_admin/package-lock.json`.
 
 ---
 

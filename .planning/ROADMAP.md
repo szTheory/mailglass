@@ -145,8 +145,21 @@ Plans:
   3. The admin renders Funnel Display at weight 600 and the other faces from the seven bundled woff2 files in `priv/static/fonts`, with the OFL texts beside them. A browser network check shows no font request leaves the host, and a font outside `@allowed_fonts` is rejected.
   4. The new logo and favicon appear in the admin, and the `←` glyph is gone from every screen. The updated `brand_test` and `accessibility_test` pass, and the axe baseline is regenerated exactly once, as the phase's last change.
   5. `config.ex`, `theme.ex`, the email button colors and the VML goldens show no diff, and their existing tests pass without edits.
-**Plans**: TBD
+**Plans**: 4 plans
 **Plan budget**: about 4
+
+Plans:
+**Wave 1**
+- [ ] 181-01-PLAN.md — v2 tokens and role map (39 colour + 2 logo roles, three blocks), static contrast contract, rewritten brand/token_parity/accessibility tests, wording amendments (BRTOK-01, BRTOK-02, BRTOK-05)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 181-02-PLAN.md — `brand_pin.exs extend`, six v2 woff2 + OFL texts, compile-time font allow-list, weight 600, static font contract, publish allowlist and evidence scripts (BRTOK-03)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 181-03-PLAN.md — Arrows as vendored hero icons, font-forced bullet separators, glyph/arrow/hero-rule contract bound to the pinned font subset (BRTOK-03, BRTOK-04)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 181-04-PLAN.md — Inline v2 typemark and pinned favicon, advisory colour and font pins (incl. the advisory browser font check), BRTOK-06 phase-scope proof, axe baseline regenerated once, last (BRTOK-03 advisory half, BRTOK-04, BRTOK-05, BRTOK-06)
 **UI hint**: yes
 
 ### Phase 182: Admin Words and Layout, One Job First
