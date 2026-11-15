@@ -87,7 +87,7 @@ defmodule MailglassAdmin.Copy do
       public_name: "Operator",
       on_screen: "Admin",
       gloss: "screen text and docs prose only; the public name stays",
-      wired: false
+      wired: true
     },
     %{
       key: :account,
@@ -101,7 +101,7 @@ defmodule MailglassAdmin.Copy do
       public_name: "Deliveries",
       on_screen: "Activity",
       gloss: "screen text and docs prose only; the public name stays",
-      wired: false
+      wired: true
     },
     %{
       key: :unmatched_reports,

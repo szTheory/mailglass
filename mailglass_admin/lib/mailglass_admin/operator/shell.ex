@@ -579,7 +579,7 @@ defmodule MailglassAdmin.Operator.Shell do
 
   defp copy_for(:deliveries) do
     %{
-      heading: "Deliveries",
+      heading: "Activity",
       tips: [
         "Delivery never arrived? Start here.",
         "Replay changed nothing? View the event timeline.",

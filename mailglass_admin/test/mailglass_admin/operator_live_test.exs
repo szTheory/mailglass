@@ -115,7 +115,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Deliveries"
+      assert html =~ "Activity"
       assert html =~ ~s(data-testid="operator-master-detail")
       assert html =~ delivery.recipient
       refute html =~ "s*******@e******.com"
@@ -4837,7 +4837,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert href =~ "tenant_id=#{@tenant_id}"
     end
 
-    test "?view=deliveries param shows Deliveries list not Health", %{conn: conn} do
+    test "?view=deliveries param shows the Activity list not Health", %{conn: conn} do
       conn = operator_conn(conn)
       _delivery = insert_delivery!(recipient: "view-test@example.com")
 
@@ -5910,15 +5910,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "subtitle must never contain 'Navigate to'"
     end
 
-    test "deliveries surface subtitle describes the investigation task", %{conn: conn} do
+    test "the Activity gloss line says what one row is", %{conn: conn} do
       conn = operator_conn(conn)
       insert_delivery!(recipient: "sub-test@example.com")
 
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Trace each delivery through its event history.",
-             "Deliveries subtitle should describe the work without promising proof"
+      assert html =~ "Every email your app sent, one row per delivery.",
+             "the Activity gloss should say what one row is, without promising proof"
     end
 
     test "zero observations never render global clearance language", %{conn: conn} do

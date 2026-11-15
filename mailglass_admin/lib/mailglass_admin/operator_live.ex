@@ -132,10 +132,17 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_errors, %{})
       |> assign(:filter_error_source, nil)
       |> assign(:filter_url_invalid, %{})
-      |> assign(:page_title, "mailglass — Operator")
+      |> assign(:page_title, "mailglass — Admin")
 
     {:ok, socket}
   end
+
+  # The document title names the screen the h1 names, so a tab reads Activity on the
+  # Activity screen (D-11). The overview keeps the product-level Admin title.
+  defp sync_page_title(socket), do: assign(socket, :page_title, page_title(socket.assigns.view))
+
+  defp page_title(:deliveries), do: "mailglass — Activity"
+  defp page_title(_view), do: "mailglass — Admin"
 
   # Persisted theme cookie value, surfaced into the LiveView via the router's
   # operator session callback (`__operator_session__` → "admin_chrome_theme_cookie").
@@ -205,10 +212,10 @@ defmodule MailglassAdmin.OperatorLive do
 
       cond do
         tenant_state == :auto_select ->
-          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+          {:noreply, clear_surface_state(socket) |> close_replay_modal() |> sync_page_title()}
 
         tenant_state in [:select_required, :none] ->
-          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+          {:noreply, clear_surface_state(socket) |> close_replay_modal() |> sync_page_title()}
 
         view == "deliveries" or not is_nil(delivery_id) ->
           {:noreply,
@@ -219,13 +226,15 @@ defmodule MailglassAdmin.OperatorLive do
              full?,
              support_focus?(support_state)
            )
-           |> close_replay_modal()}
+           |> close_replay_modal()
+           |> sync_page_title()}
 
         true ->
           {:noreply,
            socket
            |> assign_overview_state(filter_params)
-           |> close_replay_modal()}
+           |> close_replay_modal()
+           |> sync_page_title()}
       end
     end
   end
@@ -727,7 +736,7 @@ defmodule MailglassAdmin.OperatorLive do
       tenant_state={@tenant_state}
       account_labels={@account_labels}
       page_uri={@page_uri}
-      title={if @view == :overview, do: "Email health", else: "Deliveries"}
+      title={if @view == :overview, do: "Email health", else: "Activity"}
       subtitle={page_subtitle(@view)}
       flash={@flash}
     >
@@ -2801,8 +2810,10 @@ defmodule MailglassAdmin.OperatorLive do
   defp page_subtitle(:overview),
     do: "Find email issues and inspect the records behind them."
 
+  # The gloss under the Activity h1: the old word stays findable, and the screen says what
+  # one row is (D-11). Activity is the screen's name; a row is still a delivery.
   defp page_subtitle(:deliveries),
-    do: "Trace each delivery through its event history."
+    do: "Every email your app sent, one row per delivery."
 
   defp health_metric_count(nil, _metric), do: nil
 
