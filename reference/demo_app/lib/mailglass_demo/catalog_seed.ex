@@ -40,7 +40,9 @@ defmodule MailglassDemo.CatalogSeed do
   @demo_cases [
     {"nil-reason-bounce", {:provider_message_id, "pm-demo-payment-failed-001"}},
     {"deferred-no-retry", {:provider_message_id, "sg-demo-badge-deferred-001"}},
-    {"delivered-no-open", {:provider_message_id, "pm-demo-receipt-001"}},
+    # The invite row, not the receipt row: the receipt row carries replay events whose
+    # webhook_event_id is not a UUID, and its detail screen answers HTTP 400 on that seed.
+    {"delivered-no-open", {:provider_message_id, "pm-demo-invite-001"}},
     {"long-recipient", {:provider_message_id, "pm-demo-truncation-stress-001"}},
     {"complained", {:provider_message_id, "sg-demo-badge-complained-001"}},
     {"manual-suppressed", {:scenario, "incident_update"}}
