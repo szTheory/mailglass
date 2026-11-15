@@ -5,16 +5,16 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 180
 current_phase_name: Reproducible Admin Bundle and Before-Catalog
 status: executing
-stopped_at: Completed 180-01-PLAN.md
-last_updated: "2026-11-15T00:30:13.562Z"
+stopped_at: Completed 180-02-PLAN.md
+last_updated: "2026-11-15T00:41:50.392Z"
 last_activity: 2026-11-14
 last_activity_desc: Phase 180 execution started
-state_head: 049a117dec031ef155e8d26c415ee8b7244abfa5
+state_head: e65389e2d1f5542d6b94d33e1a391197812d1da2
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
   percent: 20
 ---
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 180 (Reproducible Admin Bundle and Before-Catalog) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-11-14 — Phase 180 execution started
 
@@ -372,6 +372,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 179 P04 | 17 min | 2 tasks | 4 files |
 | Phase 179 P02 | 10min | 2 tasks | 3 files |
 | Phase 180 P01 | 9 min | 3 tasks | 9 files |
+| Phase 180 P02 | 9 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -724,6 +725,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 180]: 180-01: bundle drift compare lives in non-shipped dev/ MailglassAdmin.AssetsCheck; the shipped assets.build task delegates via Code.ensure_loaded? and apply/3 — Tailwind is an only: [:dev, :test] dep, so the shipped task must not reference it at compile time; the Hex publish allowlist stayed unchanged (mailglass.publish.check --allowlist-only exit 0).
 - [Phase 180]: 180-01: contract test asserts drift shape for the removed-prose case, not the literal 139137/136877/74051 sizes — Literal sizes would turn every legitimate token or copy change (Phase 181) into required-lane churn; the measured numbers are recorded in 180-01-SUMMARY.md instead.
 - [Phase 180]: 180-01: D-07 ordering deviation held - emulated linux/amd64 cmp identical now; real ubuntu-latest proof is the first support_contract_admin run on the phase PR (run ID still to be appended) — Same sha256-verified Tailwind 4.1.12 binary and CPU architecture as ubuntu-latest; the repo keeps one open PR at a time. Fallback if CI bytes differ: pin the check to the CI platform, never loosen the compare.
+- [Phase 180]: 180-02: delete every nested data-theme (D-11); html in layouts/root.html.heex is the sole theme owner, enforced by a required-lane static scan plus document counts (1 for light/dark, 0 for system)
+- [Phase 180]: 180-02: Preview frame toggle is a wrapper with color-scheme + background: Canvas around a light-pinned iframe, never a token set; visible change moves from whole panel to email stage
+- [Phase 180]: 180-02: gallery duplicate ids floored at 39 (182 before collapse), not asserted zero; remaining ids are component-owned and deferred (deferred-items.md item 3)
 
 ## Quick Tasks Completed
 
@@ -784,8 +788,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T00:30:13.519Z
-Stopped at: Completed 180-01-PLAN.md
+Last session: 2026-11-15T00:41:50.352Z
+Stopped at: Completed 180-02-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
