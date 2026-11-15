@@ -1,9 +1,12 @@
-/* mailglass brand tokens — CSS custom properties.
-   Light values live under :root. Dark values are reassigned under
-   [data-theme="dark"] and, for viewers whose OS prefers dark, under the
-   media block at the end. Pages follow the OS setting by default; set
-   data-theme="light" or data-theme="dark" on the root element to force a
-   theme. tokens.json records the same values with the raw palette names.
+/* mailglass brand tokens — CSS custom properties, brand v2.0.
+   Light values (Sand, Espresso, Deep Glass) live under :root. Dark values
+   (Roast, Bone, Bright Glass) are reassigned under [data-theme="dark"] and,
+   for viewers whose OS prefers dark, under the media block at the end. Pages
+   follow the OS setting by default; set data-theme="light" or
+   data-theme="dark" on the root element to force a theme. tokens.json records
+   the same values with the raw palette names. The logo roles
+   (--mg-logo-glass, --mg-logo-overlap) follow the same data-theme, so the
+   typemark never depends on prefers-color-scheme.
 
    The mountable admin (mailglass_admin) drives its daisyUI themes with the
    prefixed names "mailglass-light"/"mailglass-dark", so every theme selector
@@ -16,52 +19,55 @@
 [data-theme="mailglass-light"] {
   color-scheme: light;
 
-  --mg-color-background: #F8FBFD;
+  --mg-color-background: #F6F1E8;
   --mg-color-surface: #FFFFFF;
   --mg-color-surface-raised: #FFFFFF;
   --mg-color-surface-overlay: #FFFFFF;
-  --mg-color-surface-sunken: #EAF6FB;
-  --mg-color-surface-selected: #DDF2F7;
+  --mg-color-surface-sunken: #ECE5D8;
+  --mg-color-surface-selected: #ECE5D8;
 
-  --mg-color-border: #C7DCE5;
-  --mg-color-border-input: #74909F;
-  --mg-color-border-strong: #5C6B7A;
+  --mg-color-border: #DDD3C4;
+  --mg-color-border-input: #857569;
+  --mg-color-border-strong: #857569;
 
-  --mg-color-text: #0D1B2A;
-  --mg-color-text-muted: #5C6B7A;
-  --mg-color-text-disabled: #9AA8B4;
+  --mg-color-text: #2A1D17;
+  --mg-color-text-muted: #665850;
+  --mg-color-text-disabled: #857569;
   --mg-color-text-inverse: #FFFFFF;
 
-  --mg-color-accent: #277B96;
-  --mg-color-accent-text: #1D637A;
-  --mg-color-link: #1D637A;
-  --mg-color-link-hover: #174E61;
-  --mg-color-link-active: #174E61;
-  --mg-color-focus-ring: #277B96;
+  --mg-color-accent: #0A6488;
+  --mg-color-accent-text: #0A6488;
+  --mg-color-link: #0A6488;
+  --mg-color-link-hover: #12526C;
+  --mg-color-link-active: #12526C;
+  --mg-color-focus-ring: #0A6488;
 
-  --mg-color-success-text: #166534;
-  --mg-color-success-bg: #E8F3EA;
-  --mg-color-success-border: #166534;
-  --mg-color-success-solid: #166534;
+  --mg-color-success-text: #1D6B3C;
+  --mg-color-success-bg: #E8F0EC;
+  --mg-color-success-border: #1D6B3C;
+  --mg-color-success-solid: #1D6B3C;
   --mg-color-success-on-solid: #FFFFFF;
 
-  --mg-color-warning-text: #96520E;
-  --mg-color-warning-bg: #FFF8F0;
-  --mg-color-warning-border: #A95F10;
-  --mg-color-warning-solid: #A95F10;
+  --mg-color-warning-text: #855300;
+  --mg-color-warning-bg: #F3EEE6;
+  --mg-color-warning-border: #855300;
+  --mg-color-warning-solid: #855300;
   --mg-color-warning-on-solid: #FFFFFF;
 
-  --mg-color-error-text: #B42318;
-  --mg-color-error-bg: #FAE7E5;
-  --mg-color-error-border: #B42318;
-  --mg-color-error-solid: #B42318;
+  --mg-color-error-text: #B3261E;
+  --mg-color-error-bg: #F7E9E9;
+  --mg-color-error-border: #B3261E;
+  --mg-color-error-solid: #B3261E;
   --mg-color-error-on-solid: #FFFFFF;
 
-  --mg-color-info-text: #1D637A;
-  --mg-color-info-bg: #EAF6FB;
-  --mg-color-info-border: #277B96;
-  --mg-color-info-solid: #1D637A;
+  --mg-color-info-text: #0A6488;
+  --mg-color-info-bg: #E7F0F3;
+  --mg-color-info-border: #0A6488;
+  --mg-color-info-solid: #0A6488;
   --mg-color-info-on-solid: #FFFFFF;
+
+  --mg-logo-glass: #1895C2;
+  --mg-logo-overlap: #0A6488;
 
   /* Theme-invariant tokens. Inter and IBM Plex Mono are the brand faces
      when installed; the chains below are the honest everyday rendering. */
@@ -97,103 +103,109 @@
 [data-theme="mailglass-dark"] {
   color-scheme: dark;
 
-  --mg-color-background: #0D1B2A;
-  --mg-color-surface: #0D1B2A;
-  --mg-color-surface-raised: #152538;
-  --mg-color-surface-overlay: #1F3049;
-  --mg-color-surface-sunken: #0A1521;
-  --mg-color-surface-selected: #1B3E55;
+  --mg-color-background: #1D1713;
+  --mg-color-surface: #2A211B;
+  --mg-color-surface-raised: #2A211B;
+  --mg-color-surface-overlay: #362D27;
+  --mg-color-surface-sunken: #14100D;
+  --mg-color-surface-selected: #323535;
 
-  --mg-color-border: #315069;
-  --mg-color-border-input: #62809A;
-  --mg-color-border-strong: #62809A;
+  --mg-color-border: #43372E;
+  --mg-color-border-input: #8B7D72;
+  --mg-color-border-strong: #8B7D72;
 
-  --mg-color-text: #EAF6FB;
-  --mg-color-text-muted: #B8CAD4;
-  --mg-color-text-disabled: #6B7E8F;
-  --mg-color-text-inverse: #0D1B2A;
+  --mg-color-text: #F3EEEA;
+  --mg-color-text-muted: #B9ADA3;
+  --mg-color-text-disabled: #8B7D72;
+  --mg-color-text-inverse: #1D1713;
 
-  --mg-color-accent: #A6EAF2;
-  --mg-color-accent-text: #A6EAF2;
-  --mg-color-link: #A6EAF2;
-  --mg-color-link-hover: #D6F7FB;
-  --mg-color-link-active: #D6F7FB;
-  --mg-color-focus-ring: #A6EAF2;
+  --mg-color-accent: #6CC6F0;
+  --mg-color-accent-text: #6CC6F0;
+  --mg-color-link: #6CC6F0;
+  --mg-color-link-hover: #A8E4F7;
+  --mg-color-link-active: #A8E4F7;
+  --mg-color-focus-ring: #6CC6F0;
 
-  --mg-color-success-text: #8BB77F;
-  --mg-color-success-bg: #142B22;
-  --mg-color-success-border: #8BB77F;
-  --mg-color-success-solid: #8BB77F;
-  --mg-color-success-on-solid: #0D1B2A;
+  --mg-color-success-text: #7FCB9A;
+  --mg-color-success-bg: #333228;
+  --mg-color-success-border: #7FCB9A;
+  --mg-color-success-solid: #7FCB9A;
+  --mg-color-success-on-solid: #1D1713;
 
-  --mg-color-warning-text: #E0A955;
-  --mg-color-warning-bg: #2B2314;
-  --mg-color-warning-border: #E0A955;
-  --mg-color-warning-solid: #E0A955;
-  --mg-color-warning-on-solid: #0D1B2A;
+  --mg-color-warning-text: #E3B25C;
+  --mg-color-warning-bg: #3D3022;
+  --mg-color-warning-border: #E3B25C;
+  --mg-color-warning-solid: #E3B25C;
+  --mg-color-warning-on-solid: #1D1713;
 
-  --mg-color-error-text: #E29089;
-  --mg-color-error-bg: #2E1B1E;
-  --mg-color-error-border: #E29089;
-  --mg-color-error-solid: #E29089;
-  --mg-color-error-on-solid: #0D1B2A;
+  --mg-color-error-text: #F09A93;
+  --mg-color-error-bg: #3E2D27;
+  --mg-color-error-border: #F09A93;
+  --mg-color-error-solid: #F09A93;
+  --mg-color-error-on-solid: #1D1713;
 
-  --mg-color-info-text: #A6EAF2;
-  --mg-color-info-bg: #11293A;
-  --mg-color-info-border: #A6EAF2;
-  --mg-color-info-solid: #A6EAF2;
-  --mg-color-info-on-solid: #0D1B2A;
+  --mg-color-info-text: #6CC6F0;
+  --mg-color-info-bg: #313230;
+  --mg-color-info-border: #6CC6F0;
+  --mg-color-info-solid: #6CC6F0;
+  --mg-color-info-on-solid: #1D1713;
+
+  --mg-logo-glass: #46B6E8;
+  --mg-logo-overlap: #A8E4F7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="mailglass-light"]) {
     color-scheme: dark;
 
-    --mg-color-background: #0D1B2A;
-    --mg-color-surface: #0D1B2A;
-    --mg-color-surface-raised: #152538;
-    --mg-color-surface-overlay: #1F3049;
-    --mg-color-surface-sunken: #0A1521;
-    --mg-color-surface-selected: #1B3E55;
+    --mg-color-background: #1D1713;
+    --mg-color-surface: #2A211B;
+    --mg-color-surface-raised: #2A211B;
+    --mg-color-surface-overlay: #362D27;
+    --mg-color-surface-sunken: #14100D;
+    --mg-color-surface-selected: #323535;
 
-    --mg-color-border: #315069;
-    --mg-color-border-input: #62809A;
-    --mg-color-border-strong: #62809A;
+    --mg-color-border: #43372E;
+    --mg-color-border-input: #8B7D72;
+    --mg-color-border-strong: #8B7D72;
 
-    --mg-color-text: #EAF6FB;
-    --mg-color-text-muted: #B8CAD4;
-    --mg-color-text-disabled: #6B7E8F;
-    --mg-color-text-inverse: #0D1B2A;
+    --mg-color-text: #F3EEEA;
+    --mg-color-text-muted: #B9ADA3;
+    --mg-color-text-disabled: #8B7D72;
+    --mg-color-text-inverse: #1D1713;
 
-    --mg-color-accent: #A6EAF2;
-    --mg-color-accent-text: #A6EAF2;
-    --mg-color-link: #A6EAF2;
-    --mg-color-link-hover: #D6F7FB;
-    --mg-color-link-active: #D6F7FB;
-    --mg-color-focus-ring: #A6EAF2;
+    --mg-color-accent: #6CC6F0;
+    --mg-color-accent-text: #6CC6F0;
+    --mg-color-link: #6CC6F0;
+    --mg-color-link-hover: #A8E4F7;
+    --mg-color-link-active: #A8E4F7;
+    --mg-color-focus-ring: #6CC6F0;
 
-    --mg-color-success-text: #8BB77F;
-    --mg-color-success-bg: #142B22;
-    --mg-color-success-border: #8BB77F;
-    --mg-color-success-solid: #8BB77F;
-    --mg-color-success-on-solid: #0D1B2A;
+    --mg-color-success-text: #7FCB9A;
+    --mg-color-success-bg: #333228;
+    --mg-color-success-border: #7FCB9A;
+    --mg-color-success-solid: #7FCB9A;
+    --mg-color-success-on-solid: #1D1713;
 
-    --mg-color-warning-text: #E0A955;
-    --mg-color-warning-bg: #2B2314;
-    --mg-color-warning-border: #E0A955;
-    --mg-color-warning-solid: #E0A955;
-    --mg-color-warning-on-solid: #0D1B2A;
+    --mg-color-warning-text: #E3B25C;
+    --mg-color-warning-bg: #3D3022;
+    --mg-color-warning-border: #E3B25C;
+    --mg-color-warning-solid: #E3B25C;
+    --mg-color-warning-on-solid: #1D1713;
 
-    --mg-color-error-text: #E29089;
-    --mg-color-error-bg: #2E1B1E;
-    --mg-color-error-border: #E29089;
-    --mg-color-error-solid: #E29089;
-    --mg-color-error-on-solid: #0D1B2A;
+    --mg-color-error-text: #F09A93;
+    --mg-color-error-bg: #3E2D27;
+    --mg-color-error-border: #F09A93;
+    --mg-color-error-solid: #F09A93;
+    --mg-color-error-on-solid: #1D1713;
 
-    --mg-color-info-text: #A6EAF2;
-    --mg-color-info-bg: #11293A;
-    --mg-color-info-border: #A6EAF2;
-    --mg-color-info-solid: #A6EAF2;
-    --mg-color-info-on-solid: #0D1B2A;
+    --mg-color-info-text: #6CC6F0;
+    --mg-color-info-bg: #313230;
+    --mg-color-info-border: #6CC6F0;
+    --mg-color-info-solid: #6CC6F0;
+    --mg-color-info-on-solid: #1D1713;
+
+    --mg-logo-glass: #46B6E8;
+    --mg-logo-overlap: #A8E4F7;
   }
 }
