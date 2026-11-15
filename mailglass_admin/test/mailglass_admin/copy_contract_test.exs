@@ -205,15 +205,6 @@ defmodule MailglassAdmin.CopyContractTest do
       disposition: :deferred
     },
     %{
-      path: "mailglass_admin/operator_live.ex",
-      phrase:
-        "Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results.",
-      word: "Failed",
-      atom: nil,
-      line_at: 2768,
-      disposition: :deferred
-    },
-    %{
       path: "mailglass_admin/inbound_live.ex",
       phrase: "Replay requested. The runtime reported that this replay is queued.",
       word: "Replay requested",
@@ -661,9 +652,12 @@ defmodule MailglassAdmin.CopyContractTest do
                "disposition deliberately."
     end
 
-    test "the recorded set is the 23 planned entries" do
-      assert length(@status_phrases) == 23
-      assert length(Enum.uniq_by(@status_phrases, &{&1.path, &1.phrase})) == 23
+    # 22, not 23: Phase 182 rewrote the Needs attention summary help to describe the
+    # delivery-class rule in lowercase prose ("failed, were delayed, or were not
+    # sent"), so it no longer carries a capitalised status word and left the set.
+    test "the recorded set is the 22 planned entries" do
+      assert length(@status_phrases) == 22
+      assert length(Enum.uniq_by(@status_phrases, &{&1.path, &1.phrase})) == 22
       assert Enum.all?(@status_phrases, &(&1.disposition in [:deferred, :not_a_status]))
     end
 

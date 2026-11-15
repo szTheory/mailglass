@@ -1003,27 +1003,37 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-delivery-summary"
                   class="mt-md border-b border-base-300 pb-md"
                 >
-                  <div class="mg-delivery-summary-counts">
-                    <Components.stat_card
-                      :for={{key, label, count, help} <- delivery_summary(@deliveries_page_meta)}
-                      id={"delivery-summary-#{key}"}
-                      label={label}
-                      value={count}
-                      severity={if key == :attention and count > 0, do: :warning, else: :neutral}
-                      severity_label={
-                        if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
-                      }
-                      compact
-                    >
-                      <:label_help>
-                        <Components.field_help
-                          id={"delivery-summary-#{key}-help"}
+                  <%= case delivery_summary(@deliveries_page_meta) do %>
+                    <% {:undetermined, sentence} -> %>
+                      <p
+                        data-testid="operator-delivery-summary-undetermined"
+                        class="text-body text-secondary"
+                      >
+                        {sentence}
+                      </p>
+                    <% cards -> %>
+                      <div class="mg-delivery-summary-counts">
+                        <Components.stat_card
+                          :for={{key, label, count, help} <- cards}
+                          id={"delivery-summary-#{key}"}
                           label={label}
-                          text={help}
-                        />
-                      </:label_help>
-                    </Components.stat_card>
-                  </div>
+                          value={count}
+                          severity={if key == :attention and count > 0, do: :warning, else: :neutral}
+                          severity_label={
+                            if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
+                          }
+                          compact
+                        >
+                          <:label_help>
+                            <Components.field_help
+                              id={"delivery-summary-#{key}-help"}
+                              label={label}
+                              text={help}
+                            />
+                          </:label_help>
+                        </Components.stat_card>
+                      </div>
+                  <% end %>
                 </section>
 
                 <section data-testid="operator-master-detail" class="mt-6">
@@ -2736,29 +2746,44 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(nil), do: nil
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
-  defp delivery_summary(page_meta) do
-    counts =
-      Enum.reduce(Map.get(page_meta, :outcome_groups, []), %{}, fn group, counts ->
-        # One rule for the summary and the row marks: bucket by the delivery
-        # class, which reads the lifecycle fields the outcome groups carry.
-        bucket =
-          case StatusMap.delivery_class(group) do
-            :delivered -> :delivered
-            class when class in [:failed, :delayed, :not_sent] -> :attention
-            :sent -> :awaiting
-          end
+  @undetermined_summary "Status cannot be fully determined with this mailglass version."
 
-        Map.update(counts, bucket, group.count, &(&1 + group.count))
-      end)
+  # The three summary buckets, counted by delivery class. When a group lacks the
+  # lifecycle keys (an older core that returns the three-field shape), the class
+  # cannot be read honestly, so the summary says so instead of printing counts.
+  @doc false
+  @spec delivery_summary(map()) ::
+          {:undetermined, String.t()}
+          | [{atom(), String.t(), non_neg_integer(), String.t()}]
+  def delivery_summary(page_meta) do
+    groups = Map.get(page_meta, :outcome_groups, [])
 
-    [
-      {:delivered, "Delivered", Map.get(counts, :delivered, 0),
-       "Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search."},
-      {:attention, "Needs attention", Map.get(counts, :attention, 0),
-       "Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results."},
-      {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
-       "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
-    ]
+    if Enum.any?(groups, &(not Map.has_key?(&1, :bounced_at))) do
+      {:undetermined, @undetermined_summary}
+    else
+      counts =
+        Enum.reduce(groups, %{}, fn group, counts ->
+          # One rule for the summary and the row marks: bucket by the delivery
+          # class, which reads the lifecycle fields the outcome groups carry.
+          bucket =
+            case StatusMap.delivery_class(group) do
+              :delivered -> :delivered
+              class when class in [:failed, :delayed, :not_sent] -> :attention
+              :sent -> :awaiting
+            end
+
+          Map.update(counts, bucket, group.count, &(&1 + group.count))
+        end)
+
+      [
+        {:delivered, "Delivered", Map.get(counts, :delivered, 0),
+         "Emails with a delivery report from the receiving server. Counts include all results for the applied provider, time window, and search."},
+        {:attention, "Needs attention", Map.get(counts, :attention, 0),
+         "Emails that failed, were delayed, or were not sent because the address is suppressed. Open a delivery to see what was recorded. Counts include all matching results."},
+        {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
+         "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
+      ]
+    end
   end
 
   defp page_subtitle(:overview),

@@ -323,15 +323,19 @@ defmodule MailglassAdmin.StatusMapTest do
       assert delivery_class!(delivery) == :failed
     end
 
-    test "operator row limitation: a bounce overwritten by a later open reads sent" do
-      # This three-field row is what the operator projection returns. It carries neither
-      # bounced_at nor terminal, so the earlier bounce is invisible and the history reads
-      # Sent. That is the recorded limitation of this row shape, not a bug to fix here.
+    test "an operator projection row for a bounce overwritten by a later open reads Failed" do
+      # The shape Mailglass.Operator.Deliveries returns: the lifecycle fields ride along
+      # with the three display fields, so a later open no longer hides the bounce.
       assert delivery_class!(%{
                status: :sent,
                last_event_type: :opened,
-               delivery_confirmed: false
-             }) == :sent
+               delivery_confirmed: false,
+               bounced_at: @t0,
+               terminal: true,
+               delivered_at: nil,
+               complained_at: nil,
+               suppressed_at: nil
+             }) == :failed
     end
   end
 

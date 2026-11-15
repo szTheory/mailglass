@@ -40,12 +40,10 @@ defmodule MailglassAdmin.StatusMap do
   # then a send-time failure, then a deferral, and otherwise Sent. Engagement never
   # implies delivered and never erases a confirmed delivery.
   #
-  # The operator Deliveries projection carries only status, last_event_type and
-  # delivery_confirmed. Because last_event_type advances on every event, a bounce
-  # followed by a later open or click reads Sent on that row shape. Rows that carry
-  # bounced_at or the terminal latch (a full Delivery, or a later projection) classify
-  # such a history as Failed. terminal alone is not a failure signal: the projector
-  # also latches it on delivered, complained and suppressed.
+  # The operator Deliveries projection carries bounced_at, terminal, delivered_at,
+  # complained_at and suppressed_at beside the display fields, so a bounce followed by
+  # a later open or click still classifies Failed. terminal alone is not a failure
+  # signal: the projector also latches it on delivered, complained and suppressed.
   #
   # classify/1 has no catch-all clause on purpose: an atom that is not in the table
   # must raise rather than be quietly labelled. classify_or_unknown/1 is the only
