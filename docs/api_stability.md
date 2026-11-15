@@ -83,6 +83,8 @@ them requires a major-version change.
   packages: `Mailglass.Operator.Deliveries`,
   `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`,
   `Mailglass.Operator.Timeline`, and `Mailglass.Operator.Suppressions`.
+  Operator read-model maps may gain keys in a minor release; match on the
+  keys you use, not the whole map.
 - Stable Mix tasks: `mix mailglass.install`, `mix mailglass.gen.migration`,
   `mix mailglass.reconcile`,
   `mix mail.doctor`, `mix mailglass.publish.check`,

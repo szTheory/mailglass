@@ -36,7 +36,9 @@ These surfaces are part of the documented `v1.x` admin contract:
 - operator read-model and service seams exposed through the admin package docs:
   `Mailglass.Operator.Deliveries`, `Mailglass.Operator.Timeline`,
   `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`, and
-  `Mailglass.Operator.Suppressions`
+  `Mailglass.Operator.Suppressions`.
+  Operator read-model maps may gain keys in a minor release; match on the
+  keys you use, not the whole map.
 
 ### `internal`
 
