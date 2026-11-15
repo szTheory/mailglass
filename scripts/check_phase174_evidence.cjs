@@ -42,12 +42,12 @@ const HOOK_CASE_IDS = [
   "inbound:escape-focus-return"
 ];
 const FONT_FILES = [
-  "inter-400.woff2",
-  "inter-700.woff2",
-  "inter-tight-400.woff2",
-  "inter-tight-700.woff2",
-  "ibm-plex-mono-400.woff2",
-  "ibm-plex-mono-700.woff2"
+  "a-display-600.woff2",
+  "ui-400.woff2",
+  "ui-600.woff2",
+  "ui-400i.woff2",
+  "a-mono-400.woff2",
+  "a-mono-600.woff2"
 ];
 const WORKFLOW_STEPS = [
   "Checkout",

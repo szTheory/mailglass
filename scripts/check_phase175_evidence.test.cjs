@@ -123,7 +123,7 @@ function phase175FidelityReceipt(evidenceDir, runRevision = REVISION) {
     assets: {
       stylesheet: { url: `${origin}/dev/mail/css-${cssMd5}`, status: 200, bytes: css.byteLength, sha256: hash(css), md5: cssMd5, matchesBuilt: true },
       fonts,
-      loadedFaces: fonts.map((item, index) => ({ family: ["Inter", "Inter", "Inter Tight", "Inter Tight", "IBM Plex Mono", "IBM Plex Mono"][index], weight: [400, 700, 400, 700, 400, 700][index], status: "loaded" }))
+      loadedFaces: fonts.map((item, index) => ({ family: ["Funnel Display", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Mono", "Atkinson Hyperlegible Mono"][index], weight: [600, 400, 600, 400, 400, 600][index], status: "loaded" }))
     },
     hooks: { storyHostConnected: true, quickViewClosed: true, exactFocusReturnId: "delivery-opener" },
     widths: FIDELITY_CAPTURE_GEOMETRIES.slice(0, 2).map((capture, index) => ({
@@ -275,7 +275,7 @@ test("Phase 175 fidelity rejects stale source and wrong CSS/font URLs or bytes",
     wrongCss.cases[0].assets.stylesheet.url = "http://demo:4015/dev/mail/css-00000000000000000000000000000000";
     assert.throws(() => checker.validateFidelityReceipt(wrongCss, { root: ROOT, revision: REVISION, evidenceDir: temp }), /bytes or version URL/);
     const wrongFont = structuredClone(valid);
-    wrongFont.cases[0].assets.fonts[0].url = "http://other:4015/dev/mail/fonts/inter-400.woff2";
+    wrongFont.cases[0].assets.fonts[0].url = `http://other:4015/dev/mail/fonts/${wrongFont.cases[0].assets.fonts[0].path}`;
     assert.throws(() => checker.validateFidelityReceipt(wrongFont, { root: ROOT, revision: REVISION, evidenceDir: temp }), /wrong-source/);
     const wrongResponsiveDpr = structuredClone(valid);
     wrongResponsiveDpr.cases[0].widths[0].geometry.devicePixelRatio = 2;

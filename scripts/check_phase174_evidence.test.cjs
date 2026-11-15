@@ -188,7 +188,7 @@ function fidelityReceipt(runId, condition, identity) {
   });
   const fonts = area => ({
     caseId: `fonts:${area}:northstar_normal`,
-    assets: ["inter-400.woff2", "inter-700.woff2", "inter-tight-400.woff2", "inter-tight-700.woff2", "ibm-plex-mono-400.woff2", "ibm-plex-mono-700.woff2"].map(file => ({ path: file, status: 200, bytes: 12, loadedFace: "loaded" }))
+    assets: ["a-display-600.woff2", "ui-400.woff2", "ui-600.woff2", "ui-400i.woff2", "a-mono-400.woff2", "a-mono-600.woff2"].map(file => ({ path: file, status: 200, bytes: 12, loadedFace: "loaded" }))
   });
   const widthCases = area => [320, 375, 768, 1280, 1440].flatMap((width, index) => ["light", "dark"].map(themeName => {
     const boundary = (index + (themeName === "dark" ? 1 : 0)) % 2 === 1;
