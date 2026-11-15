@@ -21,6 +21,23 @@ defmodule Mailglass.Operator.DeliveriesProjectionTest do
 
   @flag_keys [:bounced_at, :terminal, :complained_at, :suppressed_at]
 
+  # Keys the operator read model carried before Phase 182. Maps may gain keys in a
+  # minor release, so the guard is "these are still present", never the exact set.
+  @legacy_keys ~w[id tenant_id mailable stream recipient subject provider
+                  provider_message_id status last_event_type delivery_confirmed
+                  last_event_at inserted_at]a
+
+  # {label, event history, last_event_type, bounced?, delivered?}
+  # Each history leaves the evidence a consumer needs to read the row as a failed
+  # delivery. `rejected` has no timestamp column, so only the `terminal` latch
+  # carries it; a bounce also leaves `bounced_at`.
+  @failure_histories [
+    {"bounce then open", [:sent, :bounced, :opened], :opened, true, false},
+    {"bounce then click", [:sent, :bounced, :clicked], :clicked, true, false},
+    {"rejected then open", [:sent, :rejected, :opened], :opened, false, false},
+    {"delivered then bounce", [:sent, :delivered, :bounced], :bounced, true, true}
+  ]
+
   describe "bounce then open" do
     test "both read functions return the stored lifecycle fields" do
       tenant = tenant("bounce-open")
@@ -54,6 +71,76 @@ defmodule Mailglass.Operator.DeliveriesProjectionTest do
       assert %{count: 1, terminal: true} = Enum.find(opened, &(&1.bounced_at == true))
       assert %{count: 1, terminal: nil} = Enum.find(opened, &(&1.bounced_at == nil))
       assert plain.terminal == false
+    end
+  end
+
+  describe "histories that contain a failure" do
+    for {label, types, last, bounced?, delivered?} <- @failure_histories do
+      test "#{label} keeps the failure evidence on the row" do
+        tenant = tenant("history")
+        delivery = delivery_with_history(tenant, unquote(types))
+
+        detail = Deliveries.get_delivery(%{tenant_id: tenant, delivery_id: delivery.id}, [])
+        %{entries: [entry]} = Deliveries.list_recent_deliveries_page(%{tenant_id: tenant})
+
+        for row <- [detail, entry] do
+          assert row.last_event_type == unquote(last)
+          assert row.terminal == true
+          assert row.bounced_at != nil == unquote(bounced?)
+          assert row.delivered_at != nil == unquote(delivered?)
+          assert row.complained_at == nil
+          assert row.suppressed_at == nil
+
+          # The evidence a consumer needs to call this row failed: a recorded bounce,
+          # or a terminal latch with no delivery, complaint or suppression behind it.
+          assert row.bounced_at != nil or
+                   (row.terminal == true and row.delivered_at == nil and
+                      row.complained_at == nil and row.suppressed_at == nil)
+        end
+      end
+    end
+
+    test "a complaint with no delivery is not mistaken for a failure signal" do
+      tenant = tenant("complaint")
+      delivery = delivery_with_history(tenant, [:sent, :complained])
+
+      row = Deliveries.get_delivery(%{tenant_id: tenant, delivery_id: delivery.id}, [])
+
+      # `terminal` latches on a complaint too, which is why the row also carries the
+      # fields that tell a complaint from a failure.
+      assert row.terminal == true
+      assert %DateTime{} = row.complained_at
+      assert row.bounced_at == nil
+      assert row.delivered_at == nil
+    end
+
+    test "a suppression carries suppressed_at and the terminal latch" do
+      tenant = tenant("suppression")
+      delivery = delivery_with_history(tenant, [:suppressed])
+
+      row = Deliveries.get_delivery(%{tenant_id: tenant, delivery_id: delivery.id}, [])
+
+      assert row.terminal == true
+      assert %DateTime{} = row.suppressed_at
+      assert row.bounced_at == nil
+    end
+  end
+
+  describe "additive-only read model" do
+    test "every pre-existing key is still present on both read functions" do
+      tenant = tenant("legacy")
+      delivery = delivery_with_history(tenant, [:sent, :delivered])
+
+      %{entries: [entry]} = Deliveries.list_recent_deliveries_page(%{tenant_id: tenant})
+      detail = Deliveries.get_delivery(%{tenant_id: tenant, delivery_id: delivery.id}, [])
+
+      for row <- [entry, detail], key <- @legacy_keys do
+        assert Map.has_key?(row, key),
+               "pre-existing key #{inspect(key)} is gone from #{inspect(row)}"
+      end
+
+      assert entry.delivery_confirmed == true
+      assert %DateTime{} = entry.delivered_at
     end
   end
 
