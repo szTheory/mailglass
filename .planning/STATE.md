@@ -4,17 +4,17 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
-status: planning
-stopped_at: Phase 182 context gathered (assumptions mode)
-last_updated: "2026-11-15T19:51:13.430Z"
+status: executing
+stopped_at: Completed 182-01-PLAN.md
+last_updated: "2026-11-15T22:11:27.202Z"
 last_activity: 2026-11-15
-last_activity_desc: Phase 181 complete, transitioned to Phase 182
-state_head: a700f9b0c5be7e804f16f1c01a510959caca6538
+last_activity_desc: Phase 182 execution started
+state_head: dc84507f547912bff199eff3a9345350046a43ac
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 18
+  completed_plans: 13
   percent: 60
 ---
 
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 181 — Brand v2 Tokens, Fonts and Logo
+**Current focus:** Phase 182 — Admin Words and Layout, One Job First
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 182 — Admin Words and Layout, One Job First
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-15 — Phase 181 complete, transitioned to Phase 182
+Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
+Plan: 2 of 6
+Status: Executing Phase 182
+Last activity: 2026-11-15 — Phase 182 execution started
 
 Progress: [██████░░░░] 60%
 
@@ -381,6 +381,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 181 P02 | 14 min | 3 tasks | 39 files |
 | Phase 181 P03 | 17min | 3 tasks | 24 files |
 | Phase 181 P04 | 26min | 3 tasks | 17 files |
+| Phase 182 P01 | 20 min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -752,6 +753,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 181]: Opacity-modified colour utilities in admin lib are keyed by utility string: seven composite rows (base-content and secondary over base-100 and base-200, both themes, >= 4.5) and three reasoned sub-3:1 edge exemptions whose carrying pair must exist; only a stale exemption is red
 - [Phase 181]: Label text takes the secondary role through a zero-specificity :where(.label) rule in @layer utilities (daisyUI draws .label at a 60% mix, 4.2:1 on Sand); a contract guards every daisyUI text colour that mixes with transparent
 - [Phase 181]: The axe producer scan is unchanged; a run that scanned a dialog mid fade-in was discarded and re-run, hardening is deferred (deferred-items.md item 3)
+- [Phase 182]: 182-01: operator outcome_groups lifecycle flags are true-or-nil (CASE WHEN ... THEN true END in group_by and select), never false, because StatusMap reads any non-nil value as a recorded fact — A false bounced_at would classify every group Failed; the DB-backed core test proves the producer never emits false
+- [Phase 182]: 182-01: pinned pane-mark geometry lives in brandbook/status-marks.json (outside pin-owned brandbook/v2); Components.status_mark/1 carries a literal copy and a required-lane test compares the two — brand_pin_test treats brandbook/v2 as owned and the Hex package ships lib, priv/static and docs only, so lib cannot read the repo file
+- [Phase 182]: 182-01: BRADM-01 and BRADM-02 stay open in REQUIREMENTS.md after plan 01 (shared-ID gate); summary counts a complained-only row under Awaiting confirmation, not Needs attention — Sibling plans 182-02..05 declare the same requirement IDs; delivery_class returns sent for a complaint with no delivery problem (D-07)
 
 ## Quick Tasks Completed
 
@@ -812,9 +816,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T19:51:13.084Z
-Stopped at: Phase 182 context gathered (assumptions mode)
-Resume file: .planning/phases/182-admin-words-and-layout-one-job-first/182-CONTEXT.md
+Last session: 2026-11-15T22:11:26.907Z
+Stopped at: Completed 182-01-PLAN.md
+Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
 

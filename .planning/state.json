@@ -21,7 +21,7 @@
     {
       "number": "182",
       "name": "Admin Words and Layout, One Job First",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "183",
@@ -31,8 +31,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step (plan phase 182)",
-    "reason": "Phase 4 of 5 — needs a plan"
+    "label": "Advance to the next step",
+    "reason": "Phase 4 of 5 · 60% · executing"
   },
-  "updated_at": "2026-11-15T19:37:12.987Z"
+  "updated_at": "2026-11-15T22:11:16.370Z"
 }
