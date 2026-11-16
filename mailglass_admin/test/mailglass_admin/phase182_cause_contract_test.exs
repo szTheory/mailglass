@@ -38,7 +38,7 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Suppression.Entry
-  alias MailglassAdmin.{Components, Copy, TestRepo}
+  alias MailglassAdmin.{Components, Copy, StatusMap, TestRepo}
   alias MailglassAdmin.Operator.{DetailHeader, QuickView, SuppressionCard, Timeline}
   alias MailglassAdmin.TestSupport.OperatorFixtures
 
@@ -444,6 +444,52 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
 
       assert %{cause: "The provider reported: blocked by the receiving server."} =
                Copy.delivery_verdict(row, %{events: events})
+    end
+  end
+
+  # -- a :failed event is a send-time failure only when the row says so (CR-01) ---------
+
+  describe "a failed event with no reason is a send-time failure only when the row says so" do
+    # Mailgun "failed" without a severity and SES "Rendering Failure" are provider events:
+    # the provider accepted the email and then failed it. Those rows are :sent, so the
+    # handoff sentence would claim the app never reached the provider, which is false.
+    test "a provider-reported :failed with no reason on a handed-off row reads the fallback" do
+      cell = {:event, :failed, nil}
+      provider_row = %{row(cell) | status: :sent}
+      evidence = %{events: events(cell)}
+
+      assert StatusMap.delivery_class(provider_row) == :failed
+
+      verdict = Copy.delivery_verdict(provider_row, evidence)
+      assert verdict.cause == @fallback
+
+      html = detail_html(cell, %{delivery: provider_row})
+      assert cell_violations({:exact, @fallback}, verdict_section(html)) == []
+      refute visible_text(html) =~ @send_failure
+    end
+
+    test "a provider-reported :failed with a reason still reads that reason on a handed-off row" do
+      cell = {:event, :failed, :blocked}
+      provider_row = %{row(cell) | status: :sent}
+
+      assert %{cause: "The provider reported: blocked by the receiving server."} =
+               Copy.delivery_verdict(provider_row, %{events: events(cell)})
+    end
+
+    test "the send-time failure (row status :failed) still reads the handoff sentence" do
+      cell = {:event, :failed, nil}
+      send_time_row = row(cell)
+
+      assert send_time_row.status == :failed
+      assert Copy.delivery_verdict(send_time_row, %{events: events(cell)}).cause == @send_failure
+      assert Copy.delivery_verdict(send_time_row, %{events: []}).cause == @send_failure
+    end
+
+    test "a handed-off row with no failure event in a loaded timeline reads the fallback" do
+      cell = {:event, :failed, nil}
+      provider_row = %{row(cell) | status: :sent}
+
+      assert Copy.delivery_verdict(provider_row, %{events: []}).cause == @fallback
     end
   end
 

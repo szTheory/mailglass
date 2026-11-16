@@ -422,13 +422,17 @@ defmodule MailglassAdmin.Copy do
   defp failure_cause(row, events) when is_list(events) do
     case events |> Enum.filter(&(Map.get(&1, :type) in @failure_event_types)) |> List.last() do
       nil -> {send_failure_or_fallback(row), []}
-      event -> {event_cause(event), []}
+      event -> {event_cause(row, event), []}
     end
   end
 
-  defp event_cause(event) do
+  # A :failed event with no reason is a send-time failure only when the row says so.
+  # Provider mappers also emit {:failed, nil} for an email the provider accepted and then
+  # failed (Mailgun "failed" without a severity, SES "Rendering Failure"); that row is
+  # :sent, and claiming the handoff failed would be false.
+  defp event_cause(row, event) do
     case {Map.get(event, :type), Map.get(event, :reject_reason)} do
-      {:failed, nil} -> @send_failure_cause
+      {:failed, nil} -> send_failure_or_fallback(row)
       {_type, reason} -> reason_cause(:reject_reason, @reject_reason_sentences, reason)
     end
   end
