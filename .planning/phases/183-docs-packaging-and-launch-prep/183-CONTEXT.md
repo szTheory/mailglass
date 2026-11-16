@@ -64,6 +64,13 @@ Carry brand v2.0 through adopter-facing README and HexDocs surfaces, ship only t
 
 </code_context>
 
+### Owner-approved favicon recovery (2026-11-16)
+- The reviewed small-size favicon source correction is pinned to `szTheory/mailglass-brand` commit `677b9d300e0da01abb199076b301bae36447d2da`; source archive SHA-256 is `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56`.
+- The owner approved one fresh browser catalog capture after syncing the served favicon with the approved pin. Preserve the ink cutoff of `1.15` and minimum cross-engine IoU of `0.90`.
+- The first invocation failed before its first PNG because the default Playwright cache lacked Chromium; its exact failure is preserved at `.planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-299c1aa-20261116T214650Z/CAPTURE-FAILURE.md`.
+- After the owner authorized one new attempt, the capture used the existing pinned Playwright 1.65.1 browsers in `/private/tmp/mailglass-183-02-playwright`. It produced all 108 cells (81,102 PNG bytes) at `.planning/research/brand-v2-adoption/favicon-catalog/favicon-299c1aa-20261116T231912Z`; the independent validator passed 13 tests with no failures.
+- This successful capture consumes the new authorization. No further capture is authorized. The fixed thresholds remain unchanged, and real Safari tab chrome remains unobserved.
+
 <specifics>
 ## Specific Ideas
 

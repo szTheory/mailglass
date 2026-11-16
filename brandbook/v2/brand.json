@@ -1,9 +1,14 @@
 {
-  "about": "mailglass brand data, version 2.0. Every rule in the brand book as structured data; American English. This edition defines no logo animation and no sound.",
+  "about": "mailglass brand data, version 2.0.1. Every rule in the brand book as structured data; American English. This edition defines no logo animation and no sound.",
   "name": "mailglass",
-  "version": "2.0",
-  "date": "November 13, 2026",
+  "version": "2.0.1",
+  "date": "November 16, 2026",
   "revisions": [
+    {
+      "version": "2.0.1",
+      "date": "November 16, 2026",
+      "changes": "This patch refines only the favicon’s upper curves for small raster sizes; it preserves the two-pane silhouette, overlap, colors, stems and openings."
+    },
     {
       "version": "2.0",
       "date": "November 13, 2026",
@@ -95,7 +100,7 @@
     "wordmark": "mailglass, one word, all lowercase, in Funnel Display SemiBold with the tracking tightened a little (minus 10 thousandths of an em), outlined so no live text is needed. The typemark is the word with the drawn m; there is no separate symbol beside it.",
     "together": "The typemark is the logo. Do not rearrange it, redraw the m, split the two panes apart, or tint one pane differently from the other.",
     "mono": "One color is the same drawing in a single color: the overlap drops out, so the m reads as one plain arched m. Espresso on light, Bone on dark. Nothing else is redrawn.",
-    "small": "The m alone is the symbol, for avatars, app icons and stickers. The favicon is the m drawn for exactly 16 and 32 px: stems of 2 and 4 px, openings of 4 and 8 px, so the stems land on the pixel grid. At 16 px the overlap is a hairline and the m reads as a plain arched m; that is expected. Below 16 px, do not use the mark.",
+    "small": "The m alone is the symbol, for avatars, app icons and stickers. The favicon uses an optical correction to its upper arches for small raster sizes. At 16 px, the inner crown is slightly fuller and the outer crown tighter; the 2 px stems and 4 px openings stay on the pixel grid. At 32 px, the corresponding stem and opening widths are 4 px and 8 px. At 16 px the overlap is a hairline and the m reads as a plain arched m; that is expected. Below 16 px, do not use the mark.",
     "clear": "Keep clear space on every side equal to a quarter of the typemark’s height, measured from the outermost edge of the typemark. Nothing enters it: no text, edge or other logo.",
     "minNote": "On screen, the typemark is never narrower than 96 px and the m never narrower than 16 px. In print, the typemark is never narrower than 25 mm.",
     "theme": "The logo has a version for each theme. On light, the word is Espresso, the panes are Glass and the overlap is Deep Glass, which is darker. On dark, the word is Bone, the panes are Glass Light and the overlap is Lit Glass, which is lighter. Use the version made for the background; do not make one by inverting the colors of the other.",

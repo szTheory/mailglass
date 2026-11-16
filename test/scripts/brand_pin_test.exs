@@ -12,7 +12,7 @@ defmodule Mailglass.Scripts.BrandPinTest do
 
   # Test-owned on purpose: a pin-only edit of the zip hash fails here. A deliberate bump
   # (scripts/brand_pin.exs update) edits this constant and the pin in one chore(brand) commit.
-  @expected_zip_sha256 "ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b"
+  @expected_zip_sha256 "3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56"
 
   # The `init` contract: the four assets `init` writes (and `parse` requires). Not the whole
   # pin; see @extension_assets.
