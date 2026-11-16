@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:59:36.665Z",
+  "timestamp": "2026-11-16T21:50:56.931Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
@@ -11,89 +11,91 @@
   "completed_tasks": [
     {
       "id": 1,
-      "name": "Trademark gate and public claim scanner",
+      "name": "Prove the current record blocks the announcement through the hardened production gate",
       "status": "done"
     },
     {
       "id": 2,
-      "name": "Design docs and owner patches",
+      "name": "Publish v2 design guidance locally and prepare the paired pending owner patches",
       "status": "done"
+    },
+    {
+      "id": 3,
+      "name": "Pin launch artwork and prove favicon legibility from three browser raster catalogs",
+      "status": "in_progress",
+      "progress": "Approved source correction pinned at 677b9d300e0da01abb199076b301bae36447d2da; served favicon synchronized; brand pin suite passes (77 tests); one authorized capture failed before PNG output because the pinned Chromium executable is missing."
     }
   ],
   "remaining_tasks": [
     {
       "id": 3,
-      "name": "Pinned favicon capture and independent pixel validation",
+      "name": "Complete the 108-cell favicon capture and independent validation",
       "status": "blocked",
-      "progress": "The elevated Playwright 1.65.1 run produced 108 cells and passed all three dark-theme probes, but the independent ExUnit validator failed light 16px/DPR1 cross-engine ink-mask IoU at 0.886 against the required 0.90. The full catalog is preserved under failed-favicon-catalog-evidence; no retry is authorized."
+      "progress": "Capture authorization is consumed; no install or retry without a new explicit owner decision."
     },
     {
-      "id": "183-01",
-      "name": "Docs, packaging and launch-prep plan",
+      "id": 4,
+      "name": "Execute dependent plan 183-01",
       "status": "not_started",
-      "progress": "Depends on plan 183-02 passing; do not start while its catalog acceptance gate is blocked."
+      "progress": "Blocked until plan 183-02 task 3 passes."
     }
   ],
   "blockers": [
     {
-      "description": "The latest 108-cell catalog passes dark-theme probes but fails the fixed cross-engine IoU threshold at light 16px/DPR1: Chromium/Firefox IoU is 1.0, while both pairs against WebKit score 0.886 < 0.90 on all three light backgrounds. The masks differ at eight curved-edge pixels; lowering the threshold is prohibited, the last capture authorization is consumed, and plan 183-01 remains gated.",
+      "description": "The one owner-authorized capture after the source correction failed before its first image because the pinned Chromium headless executable does not exist at the Playwright cache path. No browser cells or manifest were produced; the capture authorization is consumed.",
       "type": "human_action",
-      "workaround": "Preserve the catalog and test output. The next viable path is an explicitly approved brandbook/source-artwork revision aimed at WebKit's 16px curved-edge raster, followed by a separately authorized exact-source capture. Do not modify pinned artwork, alter acceptance criteria, rerun capture, or start plan 183-01 without an explicit owner decision."
+      "workaround": "Wait for the owner to explicitly authorize installing the missing pinned browser executable and a new capture attempt, or leave Phase 183 paused. Preserve ink cutoff 1.15 and minimum IoU 0.90."
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "Decide whether to authorize a brandbook-approved favicon source revision and a new capture attempt, or leave Phase 183 blocked with its current evidence.",
-      "context": "Playwright 1.65.1 / WebKit 27.2 passes the dark-theme probes. Pairwise analysis shows Chromium and Firefox masks match exactly (IoU 1.0), while each has IoU 0.886 against WebKit at light 16px/DPR1 on all backgrounds. Eight curved-edge pixels differ; the source is pinned to the approved brandbook archive, so any correction needs a brandbook/source decision. The one authorized retry is consumed.",
+      "action": "Decide whether to authorize installing the missing pinned browser executable and one new capture attempt, or to leave Phase 183 paused.",
+      "context": "The prior authorization covered one capture and that invocation failed before producing any PNG because Chromium was absent. Plan 183-02 and Phase 183 cannot complete without an accepted 108-cell catalog. Do not change thresholds or proceed to dependent plan 183-01.",
       "blocking": true
     }
   ],
   "decisions": [
     {
-      "decision": "The prior corrective capture authorization was consumed. A distinct new recovery attempt has since been approved using Playwright 1.65.1.",
-      "rationale": "The earlier attempt failed its WebKit dark-mode probe. The owner explicitly approved exactly one additional capture after the Playwright upgrade.",
+      "decision": "Use the owner-approved favicon correction pinned to szTheory/mailglass-brand@677b9d300e0da01abb199076b301bae36447d2da with archive SHA-256 3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56.",
+      "rationale": "The owner approved a small-size source correction before exactly one fresh capture.",
       "phase": "183"
     },
     {
-      "decision": "Keep the approved 0.90 cross-engine IoU threshold and preserve both failed evidence sets.",
-      "rationale": "The phase plan forbids lowering the pixel thresholds to accept a failing catalog.",
+      "decision": "Preserve ink cutoff 1.15 and minimum cross-engine IoU 0.90.",
+      "rationale": "These are the accepted plan thresholds and must not be lowered to force a passing result.",
       "phase": "183"
     },
     {
-      "decision": "Owner approved updating the pinned Playwright runtime to 1.65 and exactly one fresh capture; pin the latest 1.65 patch (1.65.1), keep the 0.90 threshold, and stop after this attempt if any capture gate fails.",
-      "rationale": "The latest stable Playwright 1.65.1 package carries WebKit 27.2; the prior authorization was consumed, so this explicit approval renews exactly one attempt.",
-      "phase": "183"
-    },
-    {
-      "decision": "The one Playwright 1.65.1 capture attempt was consumed by Chromium's sandbox startup failure; no images were produced and no retry is authorized yet.",
-      "rationale": "The child failed bootstrap_check_in with Permission denied (1100) and exited SIGTRAP before capture. The owner explicitly authorized one attempt and was told the workflow would stop if it failed.",
-      "phase": "183"
-    },
-    {
-      "decision": "Owner explicitly approved exactly one retry with the Playwright 1.65.1 capture command using require_escalated after the sandbox startup failure.",
-      "rationale": "The prior run failed before producing image evidence because Chromium could not register with macOS bootstrap inside the current sandbox; elevated execution is required to test the approved runtime.",
-      "phase": "183"
-    },
-    {
-      "decision": "The elevated Playwright 1.65.1 capture completed all 108 cells and passed its dark-theme probes, but independent validation failed light 16px/DPR1 cross-engine IoU at 0.886; do not lower 0.90 or recapture without new authorization.",
-      "rationale": "The plan requires IoU >= 0.90 and explicitly forbids lowering the pixel thresholds to accept failures.",
-      "phase": "183"
-    },
-    {
-      "decision": "Offline pairwise analysis isolates the IoU failure to WebKit's eight curved-edge mask pixels at light 16px/DPR1; Chromium and Firefox masks match exactly. Keep the 1.15 mask cutoff and 0.90 IoU acceptance unchanged.",
-      "rationale": "The same pairwise scores occur on all light backgrounds, and larger sizes pass; threshold sensitivity confirms the mismatches are edge coverage around the cutoff. A pinned-art revision requires brandbook authority.",
+      "decision": "The one authorized capture invocation failed at Chromium launch; do not install or retry without a new explicit owner decision.",
+      "rationale": "The user required the evidence to be preserved and work to stop if the fresh capture failed; the error was a missing pinned executable before any output.",
       "phase": "183"
     }
   ],
   "uncommitted_files": [
+    " M .planning/HANDOFF.json",
     " M .planning/config.json",
+    " M .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.md",
+    " M .planning/phases/183-docs-packaging-and-launch-prep/183-02-PLAN.md",
+    " M .planning/phases/183-docs-packaging-and-launch-prep/183-CONTEXT.md",
+    " M brandbook/brand.pin.json",
+    " M brandbook/v2/brand.json",
+    " M brandbook/v2/favicon-16-dark.png",
+    " M brandbook/v2/favicon-16-light.png",
+    " M brandbook/v2/favicon-32-dark.png",
+    " M brandbook/v2/favicon-32-light.png",
+    " M brandbook/v2/favicon.ico",
+    " M brandbook/v2/favicon.svg",
+    " M brandbook/v2/mailglass-mark-dark.svg",
+    " M brandbook/v2/mailglass-mark-light.svg",
+    " M mailglass_admin/priv/static/favicon.svg",
+    " M test/scripts/brand_pin_test.exs",
     "?? .planning/research/brand-v2-adoption/PHASE-183-A-readme-hexpm.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-C-design-system-docs.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-D-lint-allowlist.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Wait for the owner to decide whether to approve a brandbook/source-artwork revision aimed at WebKit's small-size curve raster, and then separately authorize a new capture, or to leave Phase 183 blocked. Until then, do not modify pinned artwork, lower the 1.15 mask cutoff or 0.90 IoU threshold, rerun capture, or start plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The restricted-sandbox startup failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The elevated Playwright 1.65.1 run produced 108 cells and 81,747 PNG bytes at .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z; dark probes passed, but the independent validator recorded 13 tests with 1 failure at light 16px/DPR1 IoU 0.886 < 0.90. Read-only comparison reproduces the validator's mask algorithm: Chromium/Firefox score 1.0; each versus WebKit scores 0.885714 on all three light backgrounds. The 8 mismatches are at curved top edges. Threshold sensitivity shows 1.10 yields 0.904 and 1.15 yields 0.886, but the contract cutoff remains 1.15; at 24px the score is 0.976 and at 32px 0.988. See VALIDATION-FAILURE.md in that directory. The standard favicon-catalog directory is empty. Commit 1d9050d9 pins @playwright/test 1.65.1; the browser revisions remain in /private/tmp/mailglass-183-02-playwright. The one elevated retry is consumed; the brandbook source pin and acceptance threshold are unchanged. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Wait for explicit owner authorization before installing the missing pinned Chromium executable or invoking the capture again. Do not start plan 183-01, lower thresholds, or mark task 183-02-03 complete.",
+  "context_notes": "Source/served favicon preflight passes at SHA-256 299c1aaa2dfc772bf375de0d51ef4dae0b442969684cc4d393887b87f3f037a5. The 77-test brand-pin suite passes. The failed fresh capture is preserved at .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-299c1aa-20261116T214650Z/CAPTURE-FAILURE.md. Earlier raster failures remain under the same failed-favicon-catalog-evidence directory, including the complete 108-cell catalog whose independent validator measured 0.886 IoU at light 16px/DPR1 (< 0.90). Plan 183-01 remains gated. Preserve owner-modified .planning/config.json and the four untracked research notes; do not stage them. No process is running."
 }
