@@ -9,6 +9,12 @@
 // validate -> re-check the tree -> write manifest.json -> promote atomically.
 //
 //   node reference/demo_app/assets/catalog/capture-before-catalog.cjs [--only <ids|smoke>] [--no-promote]
+//   node reference/demo_app/assets/catalog/capture-before-catalog.cjs --mode after [--catalog-root <dir>] [--no-promote]
+//
+// `--mode after` (Phase 182, BRADM-07) runs the same order for the after catalog: both seeds (the
+// Phase 180 CatalogSeed, then the password-reset JourneySeed), the spec `catalog/phase182-journey.spec.js`
+// and a catalog id `after-<sha7>-<UTCstamp>`. The default mode is `before` and behaves exactly as it did
+// in Phase 180: it passes `catalog/before-catalog.spec.js` and the CatalogSeed expression only.
 //
 // Environment: DEMO_BASE_URL (default http://127.0.0.1:${MAILGLASS_DEMO_HTTP_PORT:-4015}/),
 // DEMO_EVIDENCE_RESET_TOKEN (default: the compose dev default). Neither value is ever written
@@ -31,15 +37,61 @@ const CATALOG_SMOKE_IDS = [
   "inbound-quick-view__northstar__first-message__1440__light" // tier E
 ];
 
+// The fourteen after-catalog scenario ids (Phase 182 D-21, checker W2). The `reset-*` ids render the
+// JourneySeed password-reset rows; the last two reuse Phase 180 capture ids, so they pair with the
+// identically named before shots. Pairing is by exact id only (a password-reset shot is never judged
+// against a before shot of another mailable).
+const AFTER_SCENARIO_IDS = [
+  "deliveries__northstar__reset-search__375__light",
+  "deliveries__northstar__reset-search__375__dark",
+  "deliveries__northstar__reset-search__1440__light",
+  "delivery-detail__reset-typo-bounce__default__375__light",
+  "delivery-detail__reset-typo-bounce__default__375__dark",
+  "delivery-detail__reset-typo-bounce__default__1440__light",
+  "delivery-detail__reset-nil-reason-bounce__default__375__light",
+  "delivery-detail__reset-deferred__default__375__light",
+  "delivery-detail__reset-suppressed__default__375__light",
+  "delivery-detail__reset-sent-no-report__default__375__light",
+  "delivery-detail__reset-bounce-then-open__default__375__light",
+  "deliveries__northstar__empty-search__375__light",
+  "deliveries__northstar__default__1440__light",
+  "delivery-detail__typo-bounce__default__375__light"
+];
+
+// Two injected-defect shots for the reviewer calibration. Each removes one thing from a real
+// page with `page.evaluate` before the shot, so a reviewer that cannot reject them cannot be trusted.
+const AFTER_CALIBRATION_CAPTURE_IDS = [
+  "calib-defect-no-zone__reset-typo-bounce__default__375__light",
+  "calib-defect-no-status-word__reset-typo-bounce__default__375__light"
+];
+
 const CAP_IMAGES = 80;
 const CAP_BYTES = 15_000_000;
-const SCHEMA = "mailglass.before_catalog.v1";
 const BUNDLE_PATH = "mailglass_admin/priv/static/app.css";
 const ROOT_LAYOUT_PATH = "mailglass_admin/lib/mailglass_admin/layouts/root.html.heex";
-const CATALOG_DIR_REL = ".planning/research/brand-v2-adoption/before-catalog";
 const COMPOSE = ["compose", "-f", "compose.demo.yml"];
-const SEED_EXPR = "MailglassDemo.CatalogSeed.seed!()";
-const SENTINEL = "CATALOG_CASES_JSON=";
+
+// Per-mode constants. `before` is the Phase 180 behaviour, byte for byte.
+const MODES = {
+  before: {
+    schema: "mailglass.before_catalog.v1",
+    catalogDirRel: ".planning/research/brand-v2-adoption/before-catalog",
+    idPrefix: "before",
+    spec: "catalog/before-catalog.spec.js",
+    seedExpr: "MailglassDemo.CatalogSeed.seed!()",
+    sentinels: { catalog: "CATALOG_CASES_JSON=" },
+    seedLabel: "CatalogSeed.seed!()"
+  },
+  after: {
+    schema: "mailglass.after_catalog.v1",
+    catalogDirRel: ".planning/research/brand-v2-adoption/after-catalog",
+    idPrefix: "after",
+    spec: "catalog/phase182-journey.spec.js",
+    seedExpr: "MailglassDemo.CatalogSeed.seed!(); MailglassDemo.JourneySeed.seed!()",
+    sentinels: { catalog: "CATALOG_CASES_JSON=", journey: "JOURNEY_CASES_JSON=" },
+    seedLabel: "CatalogSeed.seed!(); JourneySeed.seed!()"
+  }
+};
 const SLUG_FILE = /^[a-z0-9_.-]+\.png$/;
 const EMAIL = /[\p{L}\p{N}._%+-]+@([\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+)/gu;
 const RESERVED_SUFFIXES = [".example.com", ".example", ".local", ".test", ".invalid", ".localhost"];
@@ -75,7 +127,7 @@ function utcStamp(date) {
 }
 
 function parseArgs(argv) {
-  const options = { only: null, promote: true };
+  const options = { only: null, promote: true, mode: "before", catalogRoot: null };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--no-promote") options.promote = false;
@@ -83,7 +135,18 @@ function parseArgs(argv) {
       options.only = argv[index + 1];
       index += 1;
       if (!options.only) refuse("--only needs a comma-separated list of capture ids, or `smoke`");
+    } else if (argument === "--mode") {
+      options.mode = argv[index + 1];
+      index += 1;
+      if (!Object.hasOwn(MODES, options.mode)) refuse("--mode needs `before` or `after`");
+    } else if (argument === "--catalog-root") {
+      options.catalogRoot = argv[index + 1];
+      index += 1;
+      if (!options.catalogRoot) refuse("--catalog-root needs a directory");
     } else refuse(`Unknown option: ${argument}`);
+  }
+  if (options.catalogRoot && options.mode !== "after") {
+    refuse("--catalog-root is only valid with --mode after (the before catalog always lives at its planning path)");
   }
   return options;
 }
@@ -92,12 +155,38 @@ function parseArgs(argv) {
 // Step (a): clean tree and source identity
 // ---------------------------------------------------------------------------------------
 
+// The single path a clean tree may differ in. `.planning/config.json` holds the GSD workflow and model
+// settings; the demo and the admin bundle never read it, so it cannot change what is served or captured.
+// No other path is exempt. The shell form of the exclusion:
+//   git status --porcelain --untracked-files=all -- . ':!.planning/config.json'
+const CLEAN_TREE_EXEMPT_PATH = ".planning/config.json";
+
+// Pure: the lines of `git status --porcelain` output that block a capture. The pathspec exclusion in
+// `assertCleanTree` already hides the exempt path from git; this filter states the same rule on the
+// text so it is checkable without git (a rename `a -> b` blocks unless both sides are exempt).
+function dirtyPathsBlocking(porcelainText) {
+  return `${porcelainText}`
+    .split("\n")
+    .map((line) => line.replace(/\r$/, ""))
+    .filter((line) => line.trim() !== "")
+    .filter((line) => {
+      const paths = line.slice(3).split(" -> ").map((entry) => entry.trim().replace(/^"|"$/g, ""));
+      return !paths.every((entry) => entry === CLEAN_TREE_EXEMPT_PATH);
+    });
+}
+
 function assertCleanTree(repoRoot, when) {
-  const dirty = git(repoRoot, ["status", "--porcelain", "--untracked-files=all"]);
-  if (dirty !== "") {
+  // Raw output, not `git()`: trimming would eat the leading status column of the first line.
+  const status = execFileSync(
+    "git",
+    ["status", "--porcelain", "--untracked-files=all", "--", ".", `:!${CLEAN_TREE_EXEMPT_PATH}`],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+  const dirty = dirtyPathsBlocking(status);
+  if (dirty.length > 0) {
     refuse(
       `${when}: the working tree is dirty, so the recorded commit would not describe what was captured.\n` +
-        `${dirty.split("\n").slice(0, 12).join("\n")}\nCommit or discard these changes, then run again.`
+        `${dirty.slice(0, 12).join("\n")}\nCommit or discard these changes, then run again.`
     );
   }
 }
@@ -144,7 +233,7 @@ function docker(repoRoot, args, options = {}) {
   });
 }
 
-function restartDemo(repoRoot, runId, commitTime) {
+function restartDemo(repoRoot, runId, commitTime, scriptStartedAt) {
   console.log(`Restarting the demo so it serves the current commit (run ${runId})...`);
   const env = { ...process.env, DEMO_EVIDENCE_PROJECT_ID: runId };
   const up = docker(repoRoot, [...COMPOSE, "up", "-d", "--force-recreate", "--wait", "demo"], {
@@ -157,7 +246,10 @@ function restartDemo(repoRoot, runId, commitTime) {
   }
   const id = docker(repoRoot, [...COMPOSE, "ps", "-q", "demo"], { env }).stdout.trim();
   if (id === "") refuse("docker compose ps found no demo container after the restart");
-  const startedAt = docker(repoRoot, ["inspect", "--format", "{{.State.StartedAt}}", id]).stdout.trim();
+  const inspected = docker(repoRoot, ["inspect", "--format", "{{.State.Pid}} {{.State.StartedAt}}", id]).stdout.trim();
+  const separator = inspected.indexOf(" ");
+  const pid = Number(inspected.slice(0, separator));
+  const startedAt = inspected.slice(separator + 1);
   const started = new Date(startedAt);
   if (Number.isNaN(started.getTime()) || started.getTime() <= new Date(commitTime).getTime()) {
     refuse(
@@ -165,7 +257,16 @@ function restartDemo(repoRoot, runId, commitTime) {
         "A stale server would serve old bytes, so nothing is captured."
     );
   }
-  return started.toISOString();
+  // D-21: the server must have been started by THIS run, after the script began, or it could be a
+  // container left over from an earlier run that happens to be newer than the commit.
+  if (started.getTime() <= new Date(scriptStartedAt).getTime()) {
+    refuse(
+      `The demo container started at ${startedAt}, which is not later than this script's start (${scriptStartedAt}). ` +
+        "The served bytes would not be proven to come from this run, so nothing is captured."
+    );
+  }
+  if (!Number.isInteger(pid) || pid <= 0) refuse(`docker inspect returned no container PID (${inspected})`);
+  return { startedAt: started.toISOString(), pid };
 }
 
 async function resetDemo(assetsDir, env) {
@@ -179,21 +280,25 @@ async function resetDemo(assetsDir, env) {
   }
 }
 
-function runSeed(repoRoot, args) {
+function runSeed(repoRoot, args, sentinels) {
   const result = docker(repoRoot, args, { timeout: 5 * 60 * 1000 });
-  const line = `${result.stdout || ""}`
-    .split("\n")
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith(SENTINEL));
-  return { ok: result.status === 0 && Boolean(line), line, result };
+  const lines = `${result.stdout || ""}`.split("\n").map((entry) => entry.trim());
+  const found = {};
+  for (const [name, sentinel] of Object.entries(sentinels)) {
+    const line = lines.find((entry) => entry.startsWith(sentinel));
+    if (line) found[name] = line.slice(sentinel.length);
+  }
+  const ok = result.status === 0 && Object.keys(sentinels).every((name) => Object.hasOwn(found, name));
+  return { ok, found, result };
 }
 
-async function seedCatalog(repoRoot, assetsDir, resetEnv) {
-  const primary = ["compose", "-f", "compose.demo.yml", "exec", "-T", "demo", "mix", "run", "-e", SEED_EXPR];
-  const first = runSeed(repoRoot, primary);
+async function seedCatalog(repoRoot, assetsDir, resetEnv, modeConfig) {
+  const { seedExpr, sentinels, seedLabel } = modeConfig;
+  const primary = ["compose", "-f", "compose.demo.yml", "exec", "-T", "demo", "mix", "run", "-e", seedExpr];
+  const first = runSeed(repoRoot, primary, sentinels);
   if (first.ok) {
     console.log("seed branch: primary (docker compose exec demo mix run)");
-    return { line: first.line, seed_command: "docker compose exec -T demo mix run -e CatalogSeed.seed!()" };
+    return { found: first.found, seed_command: `docker compose exec -T demo mix run -e ${seedLabel}` };
   }
   console.log(
     `The primary seed command failed (exit ${first.result.status}); resetting, then taking the in-harness fallback.`
@@ -201,8 +306,8 @@ async function seedCatalog(repoRoot, assetsDir, resetEnv) {
   console.log(`${first.result.stderr || ""}`.split("\n").slice(-8).join("\n"));
   // A partly applied primary seed would collide with the fixed catalog idempotency keys.
   await resetDemo(assetsDir, resetEnv);
-  const fallback = ["compose", "-f", "compose.demo.yml", "run", "--rm", "--no-deps", "-T", "demo", "mix", "run", "-e", SEED_EXPR];
-  const second = runSeed(repoRoot, fallback);
+  const fallback = ["compose", "-f", "compose.demo.yml", "run", "--rm", "--no-deps", "-T", "demo", "mix", "run", "-e", seedExpr];
+  const second = runSeed(repoRoot, fallback, sentinels);
   if (!second.ok) {
     refuse(
       `The catalog seed failed on both branches (exit ${second.result.status}).\n` +
@@ -210,7 +315,7 @@ async function seedCatalog(repoRoot, assetsDir, resetEnv) {
     );
   }
   console.log("seed branch: in-harness fallback (docker compose run --rm --no-deps)");
-  return { line: second.line, seed_command: "docker compose run --rm --no-deps -T demo mix run -e CatalogSeed.seed!()" };
+  return { found: second.found, seed_command: `docker compose run --rm --no-deps -T demo mix run -e ${seedLabel}` };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -325,9 +430,16 @@ function printBudget(captures) {
   return total;
 }
 
-function validate({ staging, captures, source, casesText, resetToken, full }) {
+function validate({ staging, captures, source, casesText, resetToken, full, mode = "before" }) {
   const total = printBudget(captures);
-  if (full) {
+  if (full && mode === "after") {
+    // The after catalog is a fixed list of ids, not tiers: every scenario and calibration shot must exist.
+    const have = new Set(captures.map((capture) => capture.id));
+    const missing = [...AFTER_SCENARIO_IDS, ...AFTER_CALIBRATION_CAPTURE_IDS].filter((id) => !have.has(id));
+    const extra = [...have].filter((id) => !AFTER_SCENARIO_IDS.includes(id) && !AFTER_CALIBRATION_CAPTURE_IDS.includes(id));
+    if (missing.length > 0) refuse(`The full after capture run produced no shot for: ${missing.join(", ")}.`);
+    if (extra.length > 0) refuse(`The after capture run produced unexpected shots: ${extra.join(", ")}.`);
+  } else if (full) {
     const tiers = new Set(captures.map((capture) => capture.tier));
     const missing = ["A", "B", "C", "D", "E"].filter((tier) => !tiers.has(tier));
     if (missing.length > 0) refuse(`The full capture run produced no shots for tier ${missing.join(", ")}.`);
@@ -399,17 +511,30 @@ function toolVersions(assetsDir, scriptHash) {
   };
 }
 
-function buildManifest({ repoRoot, assetsDir, catalogId, runId, source, serverStartedAt, captures, casesSha, caseData, checked }) {
+function buildManifest({
+  repoRoot,
+  assetsDir,
+  modeConfig,
+  catalogId,
+  runId,
+  source,
+  server,
+  scriptStartedAt,
+  captures,
+  casesSha,
+  caseData,
+  checked
+}) {
   const { computeSourceIdentity } = require(path.join(repoRoot, "scripts/check_phase174_evidence.cjs"));
   const identity = computeSourceIdentity(repoRoot, source.git_sha);
-  const spec = fs.readFileSync(path.join(assetsDir, "catalog/before-catalog.spec.js"));
+  const spec = fs.readFileSync(path.join(assetsDir, modeConfig.spec));
   const driver = fs.readFileSync(__filename);
   // sha256(spec bytes, NUL, driver bytes): the two scripts that produced the capture.
   const scriptHash = sha256(Buffer.concat([spec, Buffer.from([0]), driver]));
   const fonts = [...new Set(captures.flatMap((capture) => capture._fonts))].sort();
 
-  return {
-    schema: SCHEMA,
+  const manifest = {
+    schema: modeConfig.schema,
     catalog_id: catalogId,
     run_id: runId,
     source_revision: identity.source_revision,
@@ -423,7 +548,7 @@ function buildManifest({ repoRoot, assetsDir, catalogId, runId, source, serverSt
         matches_git_blob: asset.matches_git_blob,
         git_blob_sha: asset.git_blob_sha
       })),
-      server_started_at: serverStartedAt
+      server_started_at: server.startedAt
     },
     cases: { file: "cases.json", sha256: casesSha },
     tools: toolVersions(assetsDir, scriptHash),
@@ -451,6 +576,12 @@ function buildManifest({ repoRoot, assetsDir, catalogId, runId, source, serverSt
       return entry;
     })
   };
+  if (modeConfig.idPrefix === "after") {
+    // D-21 served SHA: this run restarted the server (PID and start time recorded) after the script began.
+    manifest.script_started_at = scriptStartedAt;
+    manifest.server = { container_pid: server.pid, started_at: server.startedAt };
+  }
+  return manifest;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -458,10 +589,13 @@ function buildManifest({ repoRoot, assetsDir, catalogId, runId, source, serverSt
 // ---------------------------------------------------------------------------------------
 
 async function main() {
+  // D-21: recorded first, so a server that started before it cannot be mistaken for this run's server.
+  const scriptStartedAt = new Date().toISOString();
   const options = parseArgs(process.argv.slice(2));
+  const modeConfig = MODES[options.mode];
   const repoRoot = repoRootFrom(__dirname);
   const assetsDir = path.join(repoRoot, "reference/demo_app/assets");
-  const catalogRoot = path.join(repoRoot, CATALOG_DIR_REL);
+  const catalogRoot = options.catalogRoot ? path.resolve(options.catalogRoot) : path.join(repoRoot, modeConfig.catalogDirRel);
   const baseUrl = process.env.DEMO_BASE_URL || `http://127.0.0.1:${process.env.MAILGLASS_DEMO_HTTP_PORT || "4015"}/`;
   const resetToken = process.env.DEMO_EVIDENCE_RESET_TOKEN || "mailglass-dev-demo";
 
@@ -471,7 +605,7 @@ async function main() {
   // (b) ids; refuse to reuse an existing catalog
   const now = new Date();
   const runId = `mailglass-evidence-${utcStamp(now).replace("T", "").replace("Z", "")}-${process.pid}-${Math.floor(Math.random() * 90000) + 10000}`;
-  const catalogId = `before-${source.git_sha.slice(0, 7)}-${utcStamp(now)}`;
+  const catalogId = `${modeConfig.idPrefix}-${source.git_sha.slice(0, 7)}-${utcStamp(now)}`;
   const finalDir = path.join(catalogRoot, catalogId);
   const staging = path.join(catalogRoot, ".cache", catalogId);
   if (fs.existsSync(finalDir) || fs.existsSync(staging)) refuse(`Refusing to reuse existing catalog ${catalogId}`);
@@ -480,7 +614,7 @@ async function main() {
   console.log(`catalog ${catalogId} from ${source.git_sha} (staging ${staging})`);
 
   // (c) restart so the server serves this commit
-  const serverStartedAt = restartDemo(repoRoot, runId, source.committed_at);
+  const server = restartDemo(repoRoot, runId, source.committed_at, scriptStartedAt);
 
   // (d) reset through the guarded helper
   const resetEnv = {
@@ -491,9 +625,11 @@ async function main() {
   await resetDemo(assetsDir, resetEnv);
 
   // (e) seed the four missing cases
-  const seeded = await seedCatalog(repoRoot, assetsDir, resetEnv);
-  const caseData = JSON.parse(seeded.line.slice(SENTINEL.length));
-  const casesText = `${JSON.stringify(caseData, null, 2)}\n`;
+  const seeded = await seedCatalog(repoRoot, assetsDir, resetEnv, modeConfig);
+  const caseData = JSON.parse(seeded.found.catalog);
+  // Before mode: cases.json is the CatalogSeed payload, as in Phase 180. After mode: both payloads.
+  const casesDocument = options.mode === "after" ? { catalog: caseData, journey: JSON.parse(seeded.found.journey) } : caseData;
+  const casesText = `${JSON.stringify(casesDocument, null, 2)}\n`;
   fs.writeFileSync(path.join(staging, "cases.json"), casesText);
 
   // (f) capture
@@ -506,16 +642,31 @@ async function main() {
   };
   if (options.only) env.CATALOG_ONLY = options.only;
   else delete env.CATALOG_ONLY;
-  const playwright = spawnSync(
-    path.join(assetsDir, "node_modules/.bin/playwright"),
-    ["test", "--config=playwright.catalog.config.cjs"],
-    { cwd: assetsDir, env, stdio: "inherit" }
-  );
+  const playwrightBin = path.join(assetsDir, "node_modules/.bin/playwright");
+  // The spec file is passed positionally: `testDir` is `./catalog`, which holds both specs, and each
+  // mode must run only its own (before mode runs before-catalog.spec.js, after mode the journey spec).
+  const captureArgs = ["test", "--config=playwright.catalog.config.cjs", modeConfig.spec];
+  if (options.mode === "after") captureArgs.push("--grep-invert", "@advisory");
+  const playwright = spawnSync(playwrightBin, captureArgs, { cwd: assetsDir, env, stdio: "inherit" });
   if (playwright.status !== 0) refuse(`The capture spec failed (exit ${playwright.status}). Nothing is promoted.`);
+
+  // (f2) after mode: the advisory browser journey (D-20). Reported, never required proof, never a
+  // reason to withhold the evidence, so its exit status is printed rather than refused on.
+  let advisory = null;
+  if (options.mode === "after") {
+    console.log("\nRunning the advisory browser journey (375 and 1440, light and dark, three time zones)...");
+    const adv = spawnSync(
+      playwrightBin,
+      ["test", "--config=playwright.catalog.config.cjs", modeConfig.spec, "--grep", "@advisory"],
+      { cwd: assetsDir, env, stdio: "inherit" }
+    );
+    advisory = { status: adv.status === 0 ? "pass" : "fail", exit: adv.status };
+    console.log(`ADVISORY journey: ${advisory.status} (exit ${adv.status}); advisory results are never the required proof.`);
+  }
 
   // (g) validate
   const captures = collectCaptures(staging);
-  const checked = validate({ staging, captures, source, casesText, resetToken, full: !options.only });
+  const checked = validate({ staging, captures, source, casesText, resetToken, full: !options.only, mode: options.mode });
 
   // (h) the tree and HEAD must not have moved; then the manifest
   try {
@@ -529,10 +680,12 @@ async function main() {
   const manifest = buildManifest({
     repoRoot,
     assetsDir,
+    modeConfig,
     catalogId,
     runId,
     source,
-    serverStartedAt,
+    server,
+    scriptStartedAt,
     captures,
     casesSha: sha256(Buffer.from(casesText)),
     caseData,
@@ -552,15 +705,24 @@ async function main() {
   // (i) stop at staging, or promote with nothing between the recheck and the rename
   if (!options.promote) {
     console.log(`staged ${catalogId} at ${staging} (${captures.length} captures, ${checked.total} bytes; seed ${seeded.seed_command})`);
+    if (advisory) console.log(`advisory journey: ${advisory.status}`);
     return;
   }
   assertCleanTree(repoRoot, "Refusing to promote");
   if (fs.existsSync(finalDir)) refuse(`Refusing to reuse existing catalog ${catalogId}`);
   fs.renameSync(staging, finalDir);
   console.log(`promoted ${catalogId} to ${finalDir} (${captures.length} captures, ${checked.total} bytes; seed ${seeded.seed_command})`);
+  if (advisory) console.log(`advisory journey: ${advisory.status}`);
 }
 
-module.exports = { CATALOG_SMOKE_IDS };
+module.exports = {
+  CATALOG_SMOKE_IDS,
+  AFTER_SCENARIO_IDS,
+  AFTER_CALIBRATION_CAPTURE_IDS,
+  CLEAN_TREE_EXEMPT_PATH,
+  dirtyPathsBlocking,
+  assertCleanTree
+};
 
 if (require.main === module) {
   main().catch((error) => {
