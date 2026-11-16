@@ -122,7 +122,9 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
     "calib-defect-no-status-word__reset-typo-bounce__default__375__light"
   ]
   @known_good_scenario "delivery-detail__reset-typo-bounce__default__375__light"
-  @known_good_id "calib-known-good__reset-typo-bounce__default__375__light"
+  # Calibration items carry neutral ids (calib-01, ...): a reviewer told that an item is "known-good" or
+  # "no-zone" would be biased, so the ids say nothing. The kind and the files say what each one is.
+  @calibration_id ~r/\Acalib-\d{2}\z/
   @before_as_after_sources [
     "delivery-detail__typo-bounce__default__375__light",
     "delivery-detail__typo-bounce__default__375__dark",
@@ -1611,10 +1613,12 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
     items = list(review["calibration"]) |> Enum.filter(&is_map/1)
     kinds = Enum.frequencies_by(items, & &1["kind"])
     ids = Enum.map(items, & &1["id"])
+    stems_of = fn kind -> items |> Enum.filter(&(&1["kind"] == kind)) |> Enum.map(&png_stem/1) end
 
     check(
-      Map.get(kinds, "before_as_after", 0) >= 5,
-      "calibration needs at least five before_as_after items, found #{Map.get(kinds, "before_as_after", 0)}"
+      Map.get(kinds, "before_as_after", 0) >= 5 and
+        length(Enum.uniq(stems_of.("before_as_after"))) >= 5,
+      "calibration needs at least five before_as_after items from five distinct Phase 180 captures, found #{Map.get(kinds, "before_as_after", 0)}"
     ) ++
       check(
         Map.get(kinds, "injected_defect", 0) == 2,
@@ -1626,19 +1630,19 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
       ) ++
       check(length(Enum.uniq(ids)) == length(ids), "calibration ids must be unique") ++
       check(
-        items
-        |> Enum.filter(&(&1["kind"] == "injected_defect"))
-        |> Enum.map(& &1["id"])
-        |> Enum.sort() == Enum.sort(@defect_ids),
-        "the injected_defect items must be the two calibration defect captures #{inspect(@defect_ids)}"
+        Enum.sort(stems_of.("injected_defect")) == Enum.sort(@defect_ids),
+        "the injected_defect items must show the two calibration defect captures #{inspect(@defect_ids)}"
       ) ++
       check(
-        items |> Enum.filter(&(&1["kind"] == "known_good")) |> Enum.map(& &1["id"]) == [
-          @known_good_id
-        ],
-        "the known_good item must be #{@known_good_id}"
+        stems_of.("known_good") == [@known_good_scenario],
+        "the known_good item must show the capture #{@known_good_scenario}"
       )
   end
+
+  defp png_stem(%{"png" => png}) when is_binary(png),
+    do: png |> Path.basename() |> String.replace_suffix(".png", "")
+
+  defp png_stem(_item), do: nil
 
   # Builds the gate input from the files and returns every failure the build itself finds. The gate runs
   # on whatever could be read, so one missing verdict file does not hide the rest.
@@ -1805,19 +1809,17 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
   defp calibration_sources(entry, id, kind, label, captures, dir, repo_root) do
     png = entry["png"]
     aria = entry["aria"]
+    stem = png_stem(entry)
 
     {expected_png, expected_aria} =
       case kind do
         "before_as_after" ->
-          source = String.replace_prefix(id, "calib-before__", "")
-
-          {Regex.match?(@before_png_pattern, png || "") and
-             Path.basename(png || "") == "#{source}.png",
+          {Regex.match?(@before_png_pattern, png || "") and stem in @before_as_after_sources,
            Regex.match?(@before_aria_pattern, aria || "") and
-             Path.basename(aria || "") == "#{source}.yml"}
+             Path.basename(aria || "") == "#{stem}.yml"}
 
         "injected_defect" ->
-          {png == "#{id}.png", aria == "aria/#{id}.yml"}
+          {png == "#{stem}.png" and stem in @defect_ids, aria == "aria/#{stem}.yml"}
 
         "known_good" ->
           {png == "#{@known_good_scenario}.png", aria == "aria/#{@known_good_scenario}.yml"}
@@ -1828,27 +1830,23 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
 
     capture =
       case kind do
-        "injected_defect" -> Map.get(captures, id, %{})
+        "injected_defect" -> Map.get(captures, stem, %{})
         "known_good" -> Map.get(captures, @known_good_scenario, %{})
         _ -> %{}
       end
 
-    source_ids_ok =
-      kind != "before_as_after" or
-        String.replace_prefix(id, "calib-before__", "") in @before_as_after_sources
-
     failures =
       check(
-        expected_png,
-        "#{label}: png #{inspect(png)} is not the screenshot a #{kind} item must show"
+        is_binary(id) and Regex.match?(@calibration_id, id),
+        "#{label}: a calibration id must be neutral (calib-NN), so a judge is told nothing about the item"
       ) ++
+        check(
+          expected_png,
+          "#{label}: png #{inspect(png)} is not the screenshot a #{kind} item must show (a before_as_after item shows one of #{inspect(@before_as_after_sources)}, an injected_defect one of #{inspect(@defect_ids)})"
+        ) ++
         check(
           expected_aria,
           "#{label}: aria #{inspect(aria)} is not the aria sidecar a #{kind} item must carry"
-        ) ++
-        check(
-          source_ids_ok,
-          "#{label}: a before_as_after item must come from the Phase 180 Activity and delivery-detail captures #{inspect(@before_as_after_sources)}"
         ) ++
         file_sha_failures(png, entry["png_sha256"], label <> " png", dir, repo_root) ++
         file_sha_failures(aria, entry["aria_sha256"], label <> " aria", dir, repo_root) ++
@@ -2407,44 +2405,44 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
 
     before_items =
       for source <- @before_as_after_sources do
-        cid = "calib-before__#{source}"
         png = "#{before_rel}/#{source}.png"
         aria_path = "#{before_rel}/aria/#{source}.yml"
 
         template =
-          reject(cid, "a", "after_only")
+          reject("x", "a", "after_only")
           |> Map.put("rules", [rule("R-WORDS-1", false, "heading \"Deliveries\" [level=1]")])
 
-        {cid, "before_as_after", "reject", png, aria_path,
+        {"before_as_after", "reject", png, aria_path,
          sha256(File.read!(Path.join(before_dir, "#{source}.png"))),
          sha256(File.read!(Path.join(before_dir, "aria/#{source}.yml"))), template}
       end
 
     defect_items =
-      for cid <- @defect_ids do
-        capture = by_id[cid]
+      for defect <- @defect_ids do
+        capture = by_id[defect]
 
         quote_text =
-          if String.contains?(cid, "no-zone"),
+          if String.contains?(defect, "no-zone"),
             do: "time: Nov 15, 2026, 2:05 PM",
-            else: "text: #{cid}"
+            else: "text: #{defect}"
 
-        rid = if String.contains?(cid, "no-zone"), do: "R-TIME-1", else: "R-STATUS-1"
+        rid = if String.contains?(defect, "no-zone"), do: "R-TIME-1", else: "R-STATUS-1"
 
-        {cid, "injected_defect", "reject", capture["file"], capture["aria_file"],
-         capture["sha256"], capture["aria_sha256"],
-         reject(cid, "a", "after_only") |> Map.put("rules", [rule(rid, false, quote_text)])}
+        {"injected_defect", "reject", capture["file"], capture["aria_file"], capture["sha256"],
+         capture["aria_sha256"],
+         reject("x", "a", "after_only") |> Map.put("rules", [rule(rid, false, quote_text)])}
       end
 
     good = by_id[@known_good_scenario]
 
     good_item =
-      {@known_good_id, "known_good", "pass", good["file"], good["aria_file"], good["sha256"],
-       good["aria_sha256"], pass(@known_good_id, "a", "after_only")}
+      {"known_good", "pass", good["file"], good["aria_file"], good["sha256"], good["aria_sha256"],
+       pass("x", "a", "after_only")}
 
     calibration =
-      for {cid, kind, expect, png, aria_path, png_sha, aria_sha, template} <-
-            before_items ++ defect_items ++ [good_item] do
+      for {{kind, expect, png, aria_path, png_sha, aria_sha, template}, index} <-
+            Enum.with_index(before_items ++ defect_items ++ [good_item], 1) do
+        cid = "calib-" <> String.pad_leading("#{index}", 2, "0")
         inputs = [png, aria_path, rubric_rel, "goal"]
 
         verdicts =
