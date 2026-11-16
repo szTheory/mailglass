@@ -120,20 +120,22 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
     end
   end
 
-  @doc "Decodes bounded 8-bit RGBA PNG bytes, validating chunk CRCs and all PNG row filters."
+  @doc "Decodes bounded 8-bit RGB/RGBA PNG bytes, validating chunk CRCs and all PNG row filters."
   def decode_png(bytes) when is_binary(bytes) and byte_size(bytes) <= @png_cap do
     with <<@png_signature, rest::binary>> <- bytes,
          {:ok, chunks} <- parse_chunks(rest, [], 0),
          [{"IHDR", ihdr} | _] <- chunks,
-         <<width::unsigned-big-32, height::unsigned-big-32, 8, 6, 0, 0, 0>> <- ihdr,
+         <<width::unsigned-big-32, height::unsigned-big-32, 8, color_type, 0, 0, 0>> <- ihdr,
+         bpp when bpp in [3, 4] <- png_bytes_per_pixel(color_type),
          true <- width in 1..@max_dimension and height in 1..@max_dimension,
          idat when is_binary(idat) <-
            chunks
            |> Enum.filter(&(elem(&1, 0) == "IDAT"))
            |> Enum.map(&elem(&1, 1))
            |> IO.iodata_to_binary(),
-         {:ok, raw} <- bounded_inflate(idat, (width * 4 + 1) * height),
-         {:ok, pixels} <- unfilter_rows(raw, width, height) do
+         {:ok, raw} <- bounded_inflate(idat, (width * bpp + 1) * height),
+         {:ok, pixels} <- unfilter_rows(raw, width, height, bpp) do
+      pixels = if bpp == 3, do: expand_rgb_to_rgba(pixels), else: pixels
       {:ok, %{width: width, height: height, pixels: pixels}}
     else
       false -> {:error, :png_dimensions_out_of_bounds}
@@ -957,31 +959,41 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
     end
   end
 
-  defp unfilter_rows(raw, width, height) do
-    stride = width * 4
+  defp png_bytes_per_pixel(2), do: 3
+  defp png_bytes_per_pixel(6), do: 4
+  defp png_bytes_per_pixel(_), do: nil
+
+  defp expand_rgb_to_rgba(<<r, g, b, rest::binary>>),
+    do: <<r, g, b, 255, expand_rgb_to_rgba(rest)::binary>>
+
+  defp expand_rgb_to_rgba(<<>>), do: <<>>
+
+  defp unfilter_rows(raw, width, height, bpp) do
+    stride = width * bpp
     expected = (stride + 1) * height
 
     if byte_size(raw) != expected,
       do: {:error, :decoded_length_mismatch},
-      else: do_unfilter(raw, stride, height, <<>>, [])
+      else: do_unfilter(raw, stride, height, bpp, <<>>, [])
   end
 
-  defp do_unfilter(<<>>, _stride, 0, _previous, rows),
+  defp do_unfilter(<<>>, _stride, 0, _bpp, _previous, rows),
     do: {:ok, rows |> Enum.reverse() |> IO.iodata_to_binary()}
 
-  defp do_unfilter(raw, stride, count, previous, rows)
+  defp do_unfilter(raw, stride, count, bpp, previous, rows)
        when count > 0 and byte_size(raw) >= stride + 1 do
     <<filter, row::binary-size(stride), rest::binary>> = raw
 
     if filter in 0..4 do
-      decoded = unfilter_row(filter, row, previous, 4)
-      do_unfilter(rest, stride, count - 1, decoded, [decoded | rows])
+      decoded = unfilter_row(filter, row, previous, bpp)
+      do_unfilter(rest, stride, count - 1, bpp, decoded, [decoded | rows])
     else
       {:error, :row_filter_invalid}
     end
   end
 
-  defp do_unfilter(_, _stride, _count, _previous, _rows), do: {:error, :row_filter_invalid}
+  defp do_unfilter(_, _stride, _count, _bpp, _previous, _rows),
+    do: {:error, :row_filter_invalid}
 
   defp unfilter_row(0, row, _previous, _bpp), do: row
 

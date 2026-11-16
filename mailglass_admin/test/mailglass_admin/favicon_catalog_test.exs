@@ -188,6 +188,11 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     assert pixels == IO.iodata_to_binary(source_rows)
   end
 
+  test "PNG decoder expands RGB screenshots into opaque RGBA pixels" do
+    assert {:ok, %{width: 1, height: 1, pixels: <<24, 149, 194, 255>>}} =
+             FaviconCatalog.decode_png(png_rgb(1, 1, <<0, 24, 149, 194>>))
+  end
+
   test "catalog mutation cases reject stale source, forged metrics, missing engines and duplicate cells" do
     dir = catalog!()
 
@@ -353,6 +358,13 @@ defmodule MailglassAdmin.FaviconCatalogTest do
 
   defp png(width, height, scanlines) do
     ihdr = <<width::unsigned-big-32, height::unsigned-big-32, 8, 6, 0, 0, 0>>
+
+    @png_signature <>
+      chunk("IHDR", ihdr) <> chunk("IDAT", :zlib.compress(scanlines)) <> chunk("IEND", <<>>)
+  end
+
+  defp png_rgb(width, height, scanlines) do
+    ihdr = <<width::unsigned-big-32, height::unsigned-big-32, 8, 2, 0, 0, 0>>
 
     @png_signature <>
       chunk("IHDR", ihdr) <> chunk("IDAT", :zlib.compress(scanlines)) <> chunk("IEND", <<>>)
