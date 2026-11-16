@@ -2800,7 +2800,7 @@ defmodule MailglassAdmin.OperatorLive do
         {:attention, "Needs attention", Map.get(counts, :attention, 0),
          "Emails that failed, were delayed, or were not sent because the address is suppressed. Open a delivery to see what was recorded. Counts include all matching results."},
         {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
-         "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
+         "Emails are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
       ]
     end
   end

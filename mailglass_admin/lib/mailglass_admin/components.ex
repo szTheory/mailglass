@@ -1823,15 +1823,14 @@ defmodule MailglassAdmin.Components do
   defp outcome_help(:inbound, :missing_history),
     do: "No mailbox processing attempt is recorded for this message."
 
-  defp outcome_help(:delivery, :queued), do: "This message is waiting to be sent to the provider."
+  defp outcome_help(:delivery, :queued), do: "This email is waiting to be sent to the provider."
 
   defp outcome_help(:delivery, :dispatched),
-    do:
-      "This message was handed to the provider. Delivery to the recipient has not been confirmed."
+    do: "This email was handed to the provider. Delivery to the recipient has not been confirmed."
 
   defp outcome_help(:delivery, :delivered),
     do:
-      "The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read."
+      "The provider reported that the recipient's mail server accepted this email. This does not confirm it reached the inbox or was read."
 
   defp outcome_help(:delivery, :opened),
     do:
@@ -1848,11 +1847,11 @@ defmodule MailglassAdmin.Components do
 
   defp outcome_help(:delivery, :bounced),
     do:
-      "The provider reported that this message could not be delivered. Full detail shows the reason when the provider sent one."
+      "The provider reported that this email could not be delivered. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :rejected),
     do:
-      "The provider rejected this message. Full detail shows the reason when the provider sent one."
+      "The provider rejected this email. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :deferred),
     do: "The provider reported a temporary delivery delay. Delivery has not been confirmed."
@@ -1861,14 +1860,17 @@ defmodule MailglassAdmin.Components do
     do: "Sending to this recipient was blocked by a suppression rule."
 
   defp outcome_help(:delivery, :complained),
-    do: "The provider reported a spam complaint for this message."
+    do: "The provider reported a spam complaint for this email."
 
   defp outcome_help(:delivery, :unsubscribed),
     do: "The provider recorded an unsubscribe for this recipient."
 
   defp outcome_help(:delivery, :autoresponded),
     do:
-      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the message."
+      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the email."
+
+  # A delivery status with no clause above names an email, never a "message" (the brand words).
+  defp outcome_help(:delivery, _), do: "Open the email to inspect its recorded history."
 
   defp outcome_help(_, _), do: "Open the message to inspect its recorded processing history."
 
