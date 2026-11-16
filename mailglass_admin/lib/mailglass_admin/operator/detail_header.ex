@@ -133,7 +133,9 @@ defmodule MailglassAdmin.Operator.DetailHeader do
        when read_state in [:ready, :stale] and map_size(state) > 0,
        do: %{reason: Map.get(state, :reason)}
 
-  defp suppression_evidence(:ready, _state), do: %{reason: nil}
+  # The read succeeded and no entry matches: an entry that expired or was removed. That
+  # is the absence of an entry, not an entry with no reason (an entry always has one).
+  defp suppression_evidence(:ready, _state), do: :no_entry
   defp suppression_evidence(_read_state, _state), do: :read_failed
 
   defp label(nil), do: "Unknown"

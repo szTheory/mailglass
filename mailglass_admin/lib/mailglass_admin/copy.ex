@@ -196,7 +196,10 @@ defmodule MailglassAdmin.Copy do
 
   # Evidence the verdict may read beyond the list row. :not_loaded means the caller
   # has no events or suppression state (the Quick view), :read_failed means the read
-  # failed. Neither may produce a cause or the no-reason fallback.
+  # failed. Neither may produce a cause or the no-reason fallback. For suppression,
+  # :no_entry means the read succeeded and no entry matches now (it expired or was
+  # removed): that is the absence of an entry, not an entry that recorded no reason, so
+  # it gets its own note and never the no-reason fallback.
   @default_evidence %{events: :not_loaded, suppression: :not_loaded}
 
   @doc """
@@ -266,6 +269,7 @@ defmodule MailglassAdmin.Copy do
   @unrecognized_reason "The recorded reason is not one this version recognises."
   @events_unreadable "The event history could not be read, so no reason is shown."
   @suppression_unreadable "The suppression record could not be read, so no reason is shown."
+  @no_suppression_entry "No current suppression entry matches this address."
 
   @doc """
   The sentence for one recorded reason: `{:reject_reason, r}` for a provider reason or
@@ -390,6 +394,21 @@ defmodule MailglassAdmin.Copy do
           "Correct it in your app, then trigger the email again.",
       cause: cause,
       notes: notes
+    })
+    |> engagement_note(row, evidence)
+  end
+
+  # The read succeeded and no entry matches now, so the address is not on the list at
+  # this moment. The recorded suppression is still the fact; saying the address "is on"
+  # the list, or telling the reader to remove it, would contradict the suppression card.
+  defp verdict(:not_sent, row, %{suppression: :no_entry} = evidence) do
+    base(:not_sent, row, evidence, %{
+      sentence: [
+        "Not sent: nothing was sent. This address was on your suppression list when this was recorded."
+      ],
+      rule: nil,
+      next_step: "Trigger the email from your app again if it should be sent.",
+      notes: [@no_suppression_entry]
     })
     |> engagement_note(row, evidence)
   end

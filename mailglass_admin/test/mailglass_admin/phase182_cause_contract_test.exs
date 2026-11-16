@@ -493,6 +493,94 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
     end
   end
 
+  # -- no current suppression entry (WR-02) ------------------------------------------------
+
+  describe "a Not sent email with no current suppression entry (WR-02)" do
+    # The suppression read succeeded and nothing matches: the entry expired or was
+    # removed. That is not an entry that recorded no reason, so the fixed no-reason
+    # sentence would be false, and "on your suppression list" and "remove this address"
+    # would contradict the suppression card below ("No current Mailglass match").
+    @no_entry "No current suppression entry matches this address."
+
+    test "the verdict names the absence, never a missing reason" do
+      cell = {:suppression, nil}
+      html = detail_html(cell, %{suppression_state: nil, suppression_read_state: :ready})
+      section = verdict_section(html)
+      text = visible_text(section)
+
+      assert cell_violations(:none, section) == []
+      refute text =~ @fallback
+      assert text =~ @no_entry
+      refute text =~ "is on your suppression list"
+      refute text =~ "Remove this address"
+      refute section =~ "#delivery-suppression"
+    end
+
+    test "an empty suppression map reads the same as no entry" do
+      cell = {:suppression, nil}
+      html = detail_html(cell, %{suppression_state: %{}, suppression_read_state: :ready})
+
+      assert visible_text(verdict_section(html)) =~ @no_entry
+      refute visible_text(verdict_section(html)) =~ @fallback
+    end
+
+    test "the verdict and the suppression card agree there is no current entry" do
+      card =
+        render_component(&SuppressionCard.suppression_card/1,
+          suppression_state: nil,
+          read_state: :ready
+        )
+
+      assert visible_text(card) =~ "No current Mailglass match"
+
+      verdict =
+        Copy.delivery_verdict(row({:suppression, nil}), %{suppression: :no_entry})
+
+      assert verdict.class == :not_sent
+      assert verdict.cause == nil
+      assert @no_entry in verdict.notes
+      assert verdict.next_link == nil
+    end
+
+    test "an entry that exists with no reason still reads the fixed fallback (D-02)" do
+      cell = {:suppression, nil}
+      section = cell |> detail_html() |> verdict_section()
+
+      assert cell_violations({:exact, @fallback}, section) == []
+      assert visible_text(section) =~ "Remove this address from the suppression list"
+    end
+
+    test "a real Full detail read with no entry shows the absence, not the fallback", %{
+      conn: conn
+    } do
+      OperatorFixtures.reset!()
+
+      delivery =
+        %{
+          tenant_id: @tenant_id,
+          mailable: "MailglassAdmin.Fixtures.AccountMailer",
+          stream: :transactional,
+          recipient: "pw-no-entry@example.com",
+          provider: nil,
+          status: :suppressed,
+          last_event_type: :suppressed,
+          last_event_at: DateTime.add(DateTime.utc_now(), -1, :hour),
+          suppressed_at: DateTime.add(DateTime.utc_now(), -1, :hour),
+          terminal: true,
+          metadata: %{"subject" => "Reset your password"}
+        }
+        |> Delivery.changeset()
+        |> TestRepo.insert!()
+
+      {:ok, _view, full} = live(operator_conn(conn), path(delivery.id, full: true))
+      text = visible_text(full)
+
+      assert text =~ "Not sent"
+      assert text =~ @no_entry
+      refute text =~ @fallback
+    end
+  end
+
   # -- last_error -------------------------------------------------------------------------
 
   describe "last_error is never rendered (D-02)" do
@@ -741,7 +829,7 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
       end
 
     evidences =
-      [%{}, %{events: :read_failed, suppression: :read_failed}] ++
+      [%{}, %{events: :read_failed, suppression: :read_failed}, %{suppression: :no_entry}] ++
         for(reason <- [nil | @reject_reasons], do: %{events: [failure_event(reason)]}) ++
         for(reason <- [nil | @suppression_reasons], do: %{suppression: %{reason: reason}}) ++
         [%{events: [], suppression: %{reason: :not_listed}}]
