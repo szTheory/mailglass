@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:46:27.299Z",
+  "timestamp": "2026-11-16T20:53:11.837Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
   "plan": 2,
   "task": 3,
   "total_tasks": 3,
-  "status": "in_progress",
+  "status": "paused",
   "completed_tasks": [
     {
       "id": 1,
@@ -24,8 +24,8 @@
     {
       "id": 3,
       "name": "Pinned favicon capture and independent pixel validation",
-      "status": "in_progress",
-      "progress": "Owner has authorized exactly one retry with Playwright 1.65.1 outside the current sandbox after the previous attempt failed at Chromium bootstrap before any PNGs. The retry is underway; preserve its output and validate with the 0.90 threshold unchanged."
+      "status": "blocked",
+      "progress": "The elevated Playwright 1.65.1 run produced 108 cells and passed all three dark-theme probes, but the independent ExUnit validator failed light 16px/DPR1 cross-engine ink-mask IoU at 0.886 against the required 0.90. The full catalog is preserved under failed-favicon-catalog-evidence; no retry is authorized."
     },
     {
       "id": "183-01",
@@ -34,9 +34,21 @@
       "progress": "Depends on plan 183-02 passing; do not start while its catalog acceptance gate is blocked."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "The latest 108-cell catalog passes dark-theme probes but fails the fixed cross-engine IoU threshold at light 16px/DPR1: 0.886 < 0.90. Lowering the threshold is prohibited, the last capture authorization is consumed, and plan 183-01 remains gated.",
+      "type": "human_action",
+      "workaround": "Preserve the catalog and test output. The likely next path is a brand-authorized source-artwork revision that improves tiny-size raster agreement, followed by a new exact-source capture authorization. Do not modify pinned artwork, alter acceptance criteria, rerun capture, or start plan 183-01 without an explicit owner decision."
+    }
+  ],
   "async_jobs": [],
-  "human_actions_pending": [],
+  "human_actions_pending": [
+    {
+      "action": "Decide whether to authorize a brandbook-approved favicon source revision and a new capture attempt, or leave Phase 183 blocked with its current evidence.",
+      "context": "Playwright 1.65.1 / WebKit 27.2 now passes the dark-theme probes, but the independent raster validator still measures 0.886 IoU at light 16px/DPR1 against the fixed 0.90 minimum. The source artwork is pinned to the approved brandbook archive, so any correction must preserve or explicitly revise that authority. The one authorized retry is consumed.",
+      "blocking": true
+    }
+  ],
   "decisions": [
     {
       "decision": "The prior corrective capture authorization was consumed. A distinct new recovery attempt has since been approved using Playwright 1.65.1.",
@@ -62,6 +74,11 @@
       "decision": "Owner explicitly approved exactly one retry with the Playwright 1.65.1 capture command using require_escalated after the sandbox startup failure.",
       "rationale": "The prior run failed before producing image evidence because Chromium could not register with macOS bootstrap inside the current sandbox; elevated execution is required to test the approved runtime.",
       "phase": "183"
+    },
+    {
+      "decision": "The elevated Playwright 1.65.1 capture completed all 108 cells and passed its dark-theme probes, but independent validation failed light 16px/DPR1 cross-engine IoU at 0.886; do not lower 0.90 or recapture without new authorization.",
+      "rationale": "The plan requires IoU >= 0.90 and explicitly forbids lowering the pixel thresholds to accept failures.",
+      "phase": "183"
     }
   ],
   "uncommitted_files": [
@@ -72,6 +89,6 @@
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Run exactly one PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright node e2e/favicon-capture.cjs --capture command with require_escalated. If capture succeeds, run the focused ExUnit catalog validator; if it fails, preserve its output and stop without another retry or plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). A third Playwright 1.65.1 attempt failed before images under the restrictive sandbox; its log is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The owner has now explicitly authorized exactly one retry using require_escalated. The attempt directory was moved out of favicon-catalog. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Commit 1d9050d9 pins @playwright/test 1.65.1; the new browser revisions remain in /private/tmp/mailglass-183-02-playwright. The earlier full catalog misses the 0.90 IoU threshold (0.886). User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Wait for the owner to decide whether to authorize a brandbook-approved source-artwork correction and another exact-source capture, or to leave Phase 183 blocked. Until then, do not modify the pinned artwork, lower the 0.90 threshold, rerun capture, or start plan 183-01.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The restricted-sandbox startup failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The elevated Playwright 1.65.1 run produced 108 cells and 81,747 PNG bytes at .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z; dark probes passed, but the independent validator recorded 13 tests with 1 failure at light 16px/DPR1 IoU 0.886 < 0.90. See VALIDATION-FAILURE.md in that directory. The standard favicon-catalog directory is empty. Commit 1d9050d9 pins @playwright/test 1.65.1; the browser revisions remain in /private/tmp/mailglass-183-02-playwright. The one elevated retry is consumed; the brandbook source pin and acceptance threshold are unchanged. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
 }
