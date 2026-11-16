@@ -11,8 +11,8 @@ Advisory ledger. One row per finding; `open` means seen and not yet acted on.
 | ID | Severity | Disposition | Note |
 |----|----------|-------------|------|
 | CR-01 | critical | fixed | CLI entrypoints in `scripts/brand_pin.exs` and `scripts/brand_trademark_gate.exs` no longer gate on `Mix.env()`; tests opt into library mode via `Application.put_env(:mailglass, :script_library_mode, true)`. Subprocess regression tests run each CLI under `MIX_ENV=test`; the trademark one was mutation-proven red against the old guard. `scripts/reconcile_release_versions.exs:777` has the same latent guard (outside phase scope, open). |
-| WR-01 | warning | open | Gate allows `overall: "clear"` with a required register at `caution`. Harden before Phase 183 depends on the gate; moot while the record is `caution`. |
-| WR-02 | warning | open | No `date <= today` check, no `expires` bound; `--today`/`--path` can bypass expiry. Same hand-off as WR-01. |
+| WR-01 | warning | fixed | Closed in Phase 183-02: `test/scripts/brand_trademark_gate_test.exs` rejects a clear record when any required register is only at `caution`; all required registers must report `clear`. |
+| WR-02 | warning | fixed | Closed in Phase 183-02: the gate rejects future-dated and over-180-day records, and production CLI tests prove `--today`/`--path` remain unavailable even with `MAILGLASS_GATE_TEST=1`. |
 | WR-03 | warning | open | Policy lists names `api_stability.md` calls internal. Needs a scope decision on the "stays" table. |
 | WR-04 | warning | open | `grep`-kind rows match moduledoc text in `router.ex`. |
 | WR-05 | warning | open | `copy_contract_test` Part B "without a test edit" promise contradicts its own `wired == false` assertion. |

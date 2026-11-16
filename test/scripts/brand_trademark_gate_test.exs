@@ -27,22 +27,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
 
   @agent_by ~r/automated|agent|claude/i
 
-  # The prose surfaces that must stay free of trademark symbols until an announcement is
-  # allowed.
-  @symbol_globs [
-    "README.md",
-    "CHANGELOG.md",
-    "mailglass_admin/README.md",
-    "mailglass_admin/CHANGELOG.md",
-    "mailglass_inbound/README.md",
-    "mailglass_inbound/CHANGELOG.md",
-    "docs/**/*.md",
-    "guides/**/*.md",
-    "mailglass_admin/docs/**/*.md",
-    "mailglass_inbound/docs/**/*.md",
-    "brandbook/**/*.md"
-  ]
-  @symbols ["™", "®"]
+  @announcement_marker "MAILGLASS BRAND ANNOUNCEMENT DRAFT"
 
   setup_all do
     Application.put_env(:mailglass, :script_library_mode, true)
@@ -126,17 +111,19 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
     end
 
     test "production CLI refuses injected date and record paths" do
-      {output, status} =
-        System.cmd(
-          "mix",
-          ["run", "--no-start", @script, "check", "--today", "2026-11-13"],
-          cd: @repo_root,
-          env: [{"MIX_ENV", "prod"}],
-          stderr_to_stdout: true
-        )
+      for options <- [["--today", "2026-11-13"], ["--path", "/tmp/not-the-record.json"]] do
+        {output, status} =
+          System.cmd(
+            "mix",
+            ["run", "--no-start", @script, "check"] ++ options,
+            cd: @repo_root,
+            env: [{"MIX_ENV", "prod"}, {"MAILGLASS_GATE_TEST", "1"}],
+            stderr_to_stdout: true
+          )
 
-      assert status == 2
-      assert output =~ "only available in MIX_ENV=test"
+        assert status == 2
+        assert output =~ "only available in MIX_ENV=test"
+      end
     end
   end
 
@@ -173,10 +160,12 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
     end
 
     test "clear requires each required register to report clear, not merely checked" do
-      record = clear_record() |> set_outcome(["uspto"], "caution")
+      for id <- gate(:required_source_ids, []) do
+        record = clear_record() |> set_outcome([id], "caution")
 
-      assert {:error, _issues} = gate(:validate, [record])
-      assert gate(:decision, [record, before_expiry(record)]) == {:deny, :invalid_record}
+        assert {:error, _issues} = gate(:validate, [record])
+        assert gate(:decision, [record, before_expiry(record)]) == {:deny, :invalid_record}
+      end
     end
 
     test "a search record dated in the future is invalid" do
@@ -519,12 +508,106 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
              ]
     end
 
+    test "fails closed on unreadable text encoding", %{tmp_dir: tmp_dir} do
+      path = write!(tmp_dir, "invalid.html", <<255, 254, 60, 112, 62>>)
+
+      assert {:error, {:invalid_public_text_encoding, "invalid.html"}} =
+               gate(:scan_public_text, [[path]])
+    end
+
+    test "decodes named, numeric and CSS/Unicode escapes for both mark families", %{
+      tmp_dir: tmp_dir
+    } do
+      path =
+        write!(
+          tmp_dir,
+          "encoded.html",
+          "registered &reg; &#174; &#x00AE; \\u00AE \\00AE\n" <>
+            "unregistered &trade; &#8482; &#x2122; \\u2122 \\2122 ( TM )\n"
+        )
+
+      assert {:ok, hits} = gate(:scan_public_text, [[path]])
+
+      assert Enum.map(hits, &{&1.line, &1.kind}) == [
+               {1, :registered_mark},
+               {2, :unregistered_mark}
+             ]
+    end
+
     test "exempts only the exact pinned rule-text file", %{tmp_dir: tmp_dir} do
       File.mkdir_p!(Path.join(tmp_dir, "brandbook/v2"))
       File.write!(Path.join(tmp_dir, "brandbook/v2/brand.json"), ~s({"rule":"Use ™, not ®"}))
       File.write!(Path.join(tmp_dir, "brandbook/v2/extra.json"), ~s({"claim":"mailglass®"}))
 
-      assert symbol_hits(tmp_dir) == ["brandbook/v2/extra.json:1"]
+      assert symbol_hits(tmp_dir) == ["brandbook/v2/brand.json:1", "brandbook/v2/extra.json:1"]
+    end
+
+    test "the actual pinned rule text is the only tracked public-text exception" do
+      assert {:ok, []} = gate(:scan_public_text, [nil])
+    end
+
+    test "registered marks are denied even when the record is clear", %{tmp_dir: tmp_dir} do
+      path = write!(tmp_dir, "registered.html", "<p>mailglass &reg;</p>\n")
+      today = Date.utc_today()
+
+      assert {:deny, {:registered_mark_claim, hits}} =
+               gate(:scan_public_claims, [[path], clear_record(), today])
+
+      assert Enum.any?(hits, &(&1.kind == :registered_mark))
+    end
+
+    test "unregistered marks follow the current record and no-claim files need no record", %{
+      tmp_dir: tmp_dir
+    } do
+      path = write!(tmp_dir, "generated.html", "<p>mailglass (TM)</p>\n")
+      today = Date.utc_today()
+
+      assert {:deny, {:unregistered_mark_claim, :not_clear, _hits}} =
+               gate(:scan_public_claims, [[path], committed_record(), today])
+
+      assert {:allow, {:unregistered_mark_claim, :clear, _hits}} =
+               gate(:scan_public_claims, [[path], clear_record(), today])
+
+      clean = write!(tmp_dir, "clean.html", "<p>mailglass is plain text.</p>\n")
+
+      assert {:allow, {:no_claims, []}} =
+               gate(:scan_public_claims, [[clean], {:error, {:missing, "unused"}}, nil])
+    end
+
+    test "a blocked announcement draft is unmarked and cannot leak its marker to public files" do
+      draft = Path.join(@repo_root, ".planning/research/brand-v2-adoption/ANNOUNCEMENT-DRAFT.md")
+      body = File.read!(draft)
+      record = committed_record()
+      today = Date.utc_today()
+
+      assert body =~ "Status: BLOCKED"
+      refute body =~ "™" or body =~ "®" or body =~ "&trade;" or body =~ "&reg;"
+      assert gate(:decision, [record, today]) == {:deny, :not_clear}
+      assert announcement_marker_hits(@repo_root, @announcement_marker) == []
+
+      assert announcement_marker_hits(
+               [{"README.md", @announcement_marker}, {"docs/announcement.md", "clean"}],
+               @announcement_marker
+             ) == ["README.md", "docs/announcement.md"]
+    end
+  end
+
+  describe "the gate is separate from code and package publication" do
+    test "application and package-release files do not depend on the announcement gate" do
+      files = rollout_gate_files(@repo_root)
+      assert rollout_gate_references(files) == []
+    end
+
+    test "the release-coupling check detects both a package hook and a workflow needs edge" do
+      planted = [
+        {"mailglass_admin/mix.exs", "def release, do: Mailglass.BrandTrademarkGate.check()"},
+        {".github/workflows/publish-hex.yml", "needs: [brand_trademark_gate]\n"}
+      ]
+
+      assert Enum.sort(rollout_gate_references(planted)) == [
+               ".github/workflows/publish-hex.yml:1",
+               "mailglass_admin/mix.exs:1"
+             ]
     end
   end
 
@@ -613,13 +696,88 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
 
   defp agent_override?(_record, _override), do: true
 
-  # "relative/path:line" for every line in the scanned markdown that holds a symbol.
+  # "relative/path:line" for every public text line that holds a symbol.
   defp symbol_hits(root) do
-    for glob <- @symbol_globs,
-        file <- Path.wildcard(Path.join(root, glob)),
-        {line, number} <- file |> File.read!() |> String.split("\n") |> Enum.with_index(1),
-        String.contains?(line, @symbols) do
-      "#{Path.relative_to(file, root)}:#{number}"
+    scan_path = if Path.expand(root) == Path.expand(@repo_root), do: nil, else: root
+    assert {:ok, hits} = gate(:scan_public_text, [scan_path])
+
+    hits
+    |> Enum.map(fn hit -> "#{hit.path}:#{hit.line || 1}" end)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  defp announcement_marker_hits(root, marker) when is_binary(root) do
+    {paths, 0} = System.cmd("git", ["ls-files", "-z"], cd: root)
+
+    paths
+    |> String.split(<<0>>, trim: true)
+    |> Enum.filter(fn path ->
+      not String.starts_with?(path, [".planning/", "test/"]) and
+        Path.extname(path) in [
+          ".md",
+          ".mdx",
+          ".ex",
+          ".exs",
+          ".heex",
+          ".eex",
+          ".html",
+          ".css",
+          ".js",
+          ".json",
+          ".svg",
+          ".xml",
+          ".txt",
+          ".yml",
+          ".yaml",
+          ".toml",
+          ".sh"
+        ]
+    end)
+    |> Enum.map(fn path -> {path, root |> Path.join(path) |> File.read!()} end)
+    |> Enum.filter(fn {path, body} ->
+      String.contains?(String.downcase(path), "announce") or String.contains?(body, marker)
+    end)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.sort()
+  end
+
+  defp announcement_marker_hits(files, marker) when is_list(files) do
+    files
+    |> Enum.filter(fn {path, body} ->
+      String.contains?(String.downcase(path), "announce") or String.contains?(body, marker)
+    end)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.sort()
+  end
+
+  defp rollout_gate_files(root) do
+    {paths, 0} = System.cmd("git", ["ls-files", "-z"], cd: root)
+
+    paths
+    |> String.split(<<0>>, trim: true)
+    |> Enum.filter(&rollout_gate_path?/1)
+    |> Enum.map(fn path -> {path, root |> Path.join(path) |> File.read!()} end)
+  end
+
+  defp rollout_gate_path?(path) do
+    String.starts_with?(path, ["lib/", "mailglass_admin/lib/", "mailglass_inbound/lib/"]) or
+      path in [
+        "mix.exs",
+        "mailglass_admin/mix.exs",
+        "mailglass_inbound/mix.exs",
+        ".github/workflows/publish-hex.yml",
+        ".github/workflows/release-please.yml"
+      ] or
+      (String.starts_with?(path, "scripts/release_") and String.ends_with?(path, ".sh")) or
+      String.starts_with?(path, ".github/workflows/")
+  end
+
+  defp rollout_gate_references(files) do
+    for {path, body} <- files,
+        {line, number} <- body |> String.split("\n") |> Enum.with_index(1),
+        String.contains?(line, ["brand_trademark_gate", "BrandTrademarkGate"]) do
+      "#{path}:#{number}"
     end
   end
 
