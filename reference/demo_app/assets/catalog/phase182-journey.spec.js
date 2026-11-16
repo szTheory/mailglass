@@ -137,7 +137,8 @@ async function injectNoStatusWord(page) {
     document.querySelectorAll("[data-verdict-class] p").forEach((paragraph) => {
       const node = paragraph.firstChild;
       if (!node || node.nodeType !== Node.TEXT_NODE) return;
-      const stripped = node.textContent.replace(/^(Sent|Delivered|Delayed|Failed|Not sent|Queued)(:|\b)\s*/, "");
+      // The text node opens with template whitespace, so the pattern allows leading space.
+      const stripped = node.textContent.replace(/^\s*(Sent|Delivered|Delayed|Failed|Not sent|Queued)(:|\b)\s*/, "");
       if (stripped === node.textContent) return;
       node.textContent = stripped.charAt(0).toUpperCase() + stripped.slice(1);
       count += 1;
