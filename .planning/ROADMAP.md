@@ -213,8 +213,17 @@ Plans:
 **Wave 1**
 - [ ] 183-02-PLAN.md — Harden the announcement/claim boundary, align design guidance and pending owner drafts, pin launch artwork and independently validate favicon evidence (BRDOC-03, BRDOC-05, BRDOC-06)
 
-**Wave 2** *(depends on the launch safeguards and pinned assets)*
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 183-01-PLAN.md — Theme-aware immutable README headers, three real branded docs builds, lowercase prose and actual package payload contracts (BRDOC-01, BRDOC-02, BRDOC-04)
+
+**Cross-cutting constraints:** <!-- gsd:generated -->
+- Missing or unreadable static logo/favicon assets fail validation; README keeps lowercase mailglass alt text.
+- No custom media loader is added; browser evidence waits for image decode before saving a capture.
+- Missing, undecodable or pin-mismatched media bytes fail validation and README retains the lowercase name as fallback.
+- Populated surfaces use their matching artwork and ExDoc's class-driven toggle; favicon evidence covers both themes and 16, 24 and 32 px in Chromium, Firefox and WebKit.
+- The README has one lowercase H1 and a separate wrapping tagline; its artwork is never stretched, cropped or truncated.
+- The README lockup fits content width at its original ratio, remains at least 96 px wide, and its tagline wraps without horizontal scrolling.
+
 **UI hint**: yes
 
 ## Progress
