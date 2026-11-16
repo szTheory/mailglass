@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:53:11.837Z",
+  "timestamp": "2026-11-16T20:59:36.665Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
@@ -36,16 +36,16 @@
   ],
   "blockers": [
     {
-      "description": "The latest 108-cell catalog passes dark-theme probes but fails the fixed cross-engine IoU threshold at light 16px/DPR1: 0.886 < 0.90. Lowering the threshold is prohibited, the last capture authorization is consumed, and plan 183-01 remains gated.",
+      "description": "The latest 108-cell catalog passes dark-theme probes but fails the fixed cross-engine IoU threshold at light 16px/DPR1: Chromium/Firefox IoU is 1.0, while both pairs against WebKit score 0.886 < 0.90 on all three light backgrounds. The masks differ at eight curved-edge pixels; lowering the threshold is prohibited, the last capture authorization is consumed, and plan 183-01 remains gated.",
       "type": "human_action",
-      "workaround": "Preserve the catalog and test output. The likely next path is a brand-authorized source-artwork revision that improves tiny-size raster agreement, followed by a new exact-source capture authorization. Do not modify pinned artwork, alter acceptance criteria, rerun capture, or start plan 183-01 without an explicit owner decision."
+      "workaround": "Preserve the catalog and test output. The next viable path is an explicitly approved brandbook/source-artwork revision aimed at WebKit's 16px curved-edge raster, followed by a separately authorized exact-source capture. Do not modify pinned artwork, alter acceptance criteria, rerun capture, or start plan 183-01 without an explicit owner decision."
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
       "action": "Decide whether to authorize a brandbook-approved favicon source revision and a new capture attempt, or leave Phase 183 blocked with its current evidence.",
-      "context": "Playwright 1.65.1 / WebKit 27.2 now passes the dark-theme probes, but the independent raster validator still measures 0.886 IoU at light 16px/DPR1 against the fixed 0.90 minimum. The source artwork is pinned to the approved brandbook archive, so any correction must preserve or explicitly revise that authority. The one authorized retry is consumed.",
+      "context": "Playwright 1.65.1 / WebKit 27.2 passes the dark-theme probes. Pairwise analysis shows Chromium and Firefox masks match exactly (IoU 1.0), while each has IoU 0.886 against WebKit at light 16px/DPR1 on all backgrounds. Eight curved-edge pixels differ; the source is pinned to the approved brandbook archive, so any correction needs a brandbook/source decision. The one authorized retry is consumed.",
       "blocking": true
     }
   ],
@@ -79,6 +79,11 @@
       "decision": "The elevated Playwright 1.65.1 capture completed all 108 cells and passed its dark-theme probes, but independent validation failed light 16px/DPR1 cross-engine IoU at 0.886; do not lower 0.90 or recapture without new authorization.",
       "rationale": "The plan requires IoU >= 0.90 and explicitly forbids lowering the pixel thresholds to accept failures.",
       "phase": "183"
+    },
+    {
+      "decision": "Offline pairwise analysis isolates the IoU failure to WebKit's eight curved-edge mask pixels at light 16px/DPR1; Chromium and Firefox masks match exactly. Keep the 1.15 mask cutoff and 0.90 IoU acceptance unchanged.",
+      "rationale": "The same pairwise scores occur on all light backgrounds, and larger sizes pass; threshold sensitivity confirms the mismatches are edge coverage around the cutoff. A pinned-art revision requires brandbook authority.",
+      "phase": "183"
     }
   ],
   "uncommitted_files": [
@@ -89,6 +94,6 @@
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Wait for the owner to decide whether to authorize a brandbook-approved source-artwork correction and another exact-source capture, or to leave Phase 183 blocked. Until then, do not modify the pinned artwork, lower the 0.90 threshold, rerun capture, or start plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The restricted-sandbox startup failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The elevated Playwright 1.65.1 run produced 108 cells and 81,747 PNG bytes at .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z; dark probes passed, but the independent validator recorded 13 tests with 1 failure at light 16px/DPR1 IoU 0.886 < 0.90. See VALIDATION-FAILURE.md in that directory. The standard favicon-catalog directory is empty. Commit 1d9050d9 pins @playwright/test 1.65.1; the browser revisions remain in /private/tmp/mailglass-183-02-playwright. The one elevated retry is consumed; the brandbook source pin and acceptance threshold are unchanged. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Wait for the owner to decide whether to approve a brandbook/source-artwork revision aimed at WebKit's small-size curve raster, and then separately authorize a new capture, or to leave Phase 183 blocked. Until then, do not modify pinned artwork, lower the 1.15 mask cutoff or 0.90 IoU threshold, rerun capture, or start plan 183-01.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The restricted-sandbox startup failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The elevated Playwright 1.65.1 run produced 108 cells and 81,747 PNG bytes at .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z; dark probes passed, but the independent validator recorded 13 tests with 1 failure at light 16px/DPR1 IoU 0.886 < 0.90. Read-only comparison reproduces the validator's mask algorithm: Chromium/Firefox score 1.0; each versus WebKit scores 0.885714 on all three light backgrounds. The 8 mismatches are at curved top edges. Threshold sensitivity shows 1.10 yields 0.904 and 1.15 yields 0.886, but the contract cutoff remains 1.15; at 24px the score is 0.976 and at 32px 0.988. See VALIDATION-FAILURE.md in that directory. The standard favicon-catalog directory is empty. Commit 1d9050d9 pins @playwright/test 1.65.1; the browser revisions remain in /private/tmp/mailglass-183-02-playwright. The one elevated retry is consumed; the brandbook source pin and acceptance threshold are unchanged. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
 }
