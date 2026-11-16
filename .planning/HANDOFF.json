@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:43:12.039Z",
+  "timestamp": "2026-11-16T20:46:27.299Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
   "plan": 2,
   "task": 3,
   "total_tasks": 3,
-  "status": "paused",
+  "status": "in_progress",
   "completed_tasks": [
     {
       "id": 1,
@@ -24,8 +24,8 @@
     {
       "id": 3,
       "name": "Pinned favicon capture and independent pixel validation",
-      "status": "blocked",
-      "progress": "The owner-approved attempt using Playwright 1.65.1 failed at Chromium startup before producing any PNG cells: macOS denied bootstrap_check_in and the process exited with SIGTRAP. No WebKit probe, manifest, or catalog acceptance ran. The failure record is preserved under failed-favicon-catalog-evidence."
+      "status": "in_progress",
+      "progress": "Owner has authorized exactly one retry with Playwright 1.65.1 outside the current sandbox after the previous attempt failed at Chromium bootstrap before any PNGs. The retry is underway; preserve its output and validate with the 0.90 threshold unchanged."
     },
     {
       "id": "183-01",
@@ -34,21 +34,9 @@
       "progress": "Depends on plan 183-02 passing; do not start while its catalog acceptance gate is blocked."
     }
   ],
-  "blockers": [
-    {
-      "description": "The one newly approved capture attempt was consumed by a Chromium startup failure under the current sandbox: bootstrap_check_in returned Permission denied (1100), and the child exited with SIGTRAP before any images were captured. The prior 108-cell catalog still fails WebKit dark colors and 16px DPR1 IoU (0.886 < 0.90).",
-      "type": "human_action",
-      "workaround": "Preserve all evidence. Ask the owner to explicitly authorize exactly one retry of the same Playwright 1.65.1 capture with the browser process outside the restrictive sandbox. Until then, do not run another capture or start plan 183-01; keep the 0.90 threshold unchanged."
-    }
-  ],
+  "blockers": [],
   "async_jobs": [],
-  "human_actions_pending": [
-    {
-      "action": "Decide whether to authorize exactly one retry of the Playwright 1.65.1 capture with browser startup outside the current sandbox, or leave Phase 183 paused.",
-      "context": "The newly authorized capture command launched Chromium, but macOS rejected its bootstrap registration before any image cells were produced. The authorization was for one capture and is now consumed; a retry would be a new browser attempt. The source pin and 1.65.1 browser binaries are ready, and no acceptance threshold needs to change.",
-      "blocking": true
-    }
-  ],
+  "human_actions_pending": [],
   "decisions": [
     {
       "decision": "The prior corrective capture authorization was consumed. A distinct new recovery attempt has since been approved using Playwright 1.65.1.",
@@ -69,6 +57,11 @@
       "decision": "The one Playwright 1.65.1 capture attempt was consumed by Chromium's sandbox startup failure; no images were produced and no retry is authorized yet.",
       "rationale": "The child failed bootstrap_check_in with Permission denied (1100) and exited SIGTRAP before capture. The owner explicitly authorized one attempt and was told the workflow would stop if it failed.",
       "phase": "183"
+    },
+    {
+      "decision": "Owner explicitly approved exactly one retry with the Playwright 1.65.1 capture command using require_escalated after the sandbox startup failure.",
+      "rationale": "The prior run failed before producing image evidence because Chromium could not register with macOS bootstrap inside the current sandbox; elevated execution is required to test the approved runtime.",
+      "phase": "183"
     }
   ],
   "uncommitted_files": [
@@ -79,6 +72,6 @@
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Wait for the owner to decide whether to authorize exactly one Playwright 1.65.1 capture retry outside the current sandbox. Until that explicit decision, do not launch favicon-capture.cjs --capture or start plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The Playwright 1.65.1 attempt is preserved under .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md; Chromium failed bootstrap_check_in with Permission denied (1100) and SIGTRAP before any images, so no WebKit probe or manifest exists. The attempt directory was moved out of favicon-catalog. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Commit 1d9050d9 pins @playwright/test 1.65.1 and records the authorized attempt. The 1.65.1 browser revisions remain in /private/tmp/mailglass-183-02-playwright. Earlier catalog acceptance remains at 0.886 against the unchanged 0.90 IoU threshold. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Run exactly one PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright node e2e/favicon-capture.cjs --capture command with require_escalated. If capture succeeds, run the focused ExUnit catalog validator; if it fails, preserve its output and stop without another retry or plan 183-01.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). A third Playwright 1.65.1 attempt failed before images under the restrictive sandbox; its log is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md. The owner has now explicitly authorized exactly one retry using require_escalated. The attempt directory was moved out of favicon-catalog. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Commit 1d9050d9 pins @playwright/test 1.65.1; the new browser revisions remain in /private/tmp/mailglass-183-02-playwright. The earlier full catalog misses the 0.90 IoU threshold (0.886). User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
 }
