@@ -1,10 +1,11 @@
+# mailglass
+
 <p align="center">
-  <img src="brandbook/examples/readme-header.svg" alt="mailglass - Email, made visible." width="580">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-light.svg#gh-light-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-dark.svg#gh-dark-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
 </p>
 
-# Mailglass
-
-> *Mail you can see through.*
+See your email before it ships. Trace it after.
 
 [![CI](https://github.com/szTheory/mailglass/actions/workflows/ci.yml/badge.svg)](https://github.com/szTheory/mailglass/actions/workflows/ci.yml)
 [![Hex.pm](https://img.shields.io/hexpm/v/mailglass.svg)](https://hex.pm/packages/mailglass)
