@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:22:50.955Z",
+  "timestamp": "2026-11-16T20:36:54.905Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
   "plan": 2,
   "task": 3,
   "total_tasks": 3,
-  "status": "paused",
+  "status": "in_progress",
   "completed_tasks": [
     {
       "id": 1,
@@ -24,8 +24,8 @@
     {
       "id": 3,
       "name": "Pinned favicon capture and independent pixel validation",
-      "status": "blocked",
-      "progress": "First catalog has 108 PNGs but fails WebKit dark colors and 16px DPR1 IoU (0.886 < 0.90). The one corrective pass captured 72 Chromium/Firefox PNGs; the pixel-verified WebKit dark probe still returned light colors and stopped before WebKit cells or manifest."
+      "status": "in_progress",
+      "progress": "Owner approved exactly one new recovery attempt on Playwright 1.65.1 / WebKit 27.2. The package and lockfile are updated; read-only pin check passes. Install the 1.65.1 browser revisions into the task cache, then run one capture and independent validation with the 0.90 IoU threshold unchanged."
     },
     {
       "id": "183-01",
@@ -34,30 +34,23 @@
       "progress": "Depends on plan 183-02 passing; do not start while its catalog acceptance gate is blocked."
     }
   ],
-  "blockers": [
-    {
-      "description": "The one additional capture authorization is consumed. The pinned Playwright 1.59.1 runtime still renders light SVG colors in the dark embedded-image probe; the first full catalog also misses the fixed 0.90 cross-engine IoU threshold at 16px DPR1 (0.886). Official Playwright 1.65 now bundles WebKit 27.2, but it has not been tested here and WebKit's SVG image dark-mode issue remains reopened.",
-      "type": "human_action",
-      "workaround": "Preserve both evidence sets. Ask the owner to authorize updating the pinned Playwright runtime to 1.65 and exactly one fresh capture, or to wait/choose another recovery scope. Do not launch browsers or start plan 183-01 before that decision."
-    }
-  ],
+  "blockers": [],
   "async_jobs": [],
-  "human_actions_pending": [
-    {
-      "action": "Decide whether to authorize a Playwright 1.65 dependency update and exactly one fresh capture, or to keep the phase paused while waiting/choosing another recovery scope.",
-      "context": "The two authorized capture runs failed. Official Playwright 1.65 now bundles WebKit 27.2, while this project is pinned to 1.59.1. The corrective run tested scheme-specific resource identity, explicit image-level color-scheme, and a pixel-verified theme probe, but WebKit still returned light colors. The new runtime is untested and another browser run requires explicit owner authorization.",
-      "blocking": true
-    }
-  ],
+  "human_actions_pending": [],
   "decisions": [
     {
-      "decision": "The one corrective capture was used; no further browser run is authorized.",
-      "rationale": "The owner authorized exactly one additional capture after the first catalog failed, and that pass also failed its dark-mode probe.",
+      "decision": "The prior corrective capture authorization was consumed. A distinct new recovery attempt has since been approved using Playwright 1.65.1.",
+      "rationale": "The earlier attempt failed its WebKit dark-mode probe. The owner explicitly approved exactly one additional capture after the Playwright upgrade.",
       "phase": "183"
     },
     {
       "decision": "Keep the approved 0.90 cross-engine IoU threshold and preserve both failed evidence sets.",
       "rationale": "The phase plan forbids lowering the pixel thresholds to accept a failing catalog.",
+      "phase": "183"
+    },
+    {
+      "decision": "Owner approved updating the pinned Playwright runtime to 1.65 and exactly one fresh capture; pin the latest 1.65 patch (1.65.1), keep the 0.90 threshold, and stop after this attempt if any capture gate fails.",
+      "rationale": "The latest stable Playwright 1.65.1 package carries WebKit 27.2; the prior authorization was consumed, so this explicit approval renews exactly one attempt.",
       "phase": "183"
     }
   ],
@@ -69,6 +62,6 @@
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Wait for the owner to authorize updating the Playwright pin to 1.65 and exactly one fresh capture, or to choose a different recovery scope. Until then, do not run favicon-capture.cjs --capture or start plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The corrective failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The earlier mistaken --check launch failed before capture; --check is now a read-only source-pin check. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Node decoding was checked against all 108 first-catalog images; the WebKit dark colors are genuinely light. The full Admin lane on the first catalog had 1814 tests, 1 catalog acceptance failure, 1 excluded. Official Playwright 1.65 bundles WebKit 27.2; the WebKit SVG image dark-mode issue remains reopened. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Install Playwright 1.65.1 Chromium, Firefox and WebKit revisions into /private/tmp/mailglass-183-02-playwright with --no-remove; then run exactly one favicon-capture.cjs --capture and the focused ExUnit catalog validator. Preserve any failed output and stop if a gate fails. Do not start plan 183-01 unless all acceptance checks pass.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The second failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The earlier mistaken --check launch failed before capture; --check is now a read-only source-pin check. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Node decoding confirmed the first catalog's WebKit dark colors are genuinely light. The full Admin lane on the first catalog had 1814 tests, 1 catalog acceptance failure, 1 excluded. Owner approved exactly one further recovery attempt using Playwright 1.65.1 (latest 1.65 patch), which bundles WebKit 27.2. Package pin and lockfile are updated; pin check passes. New browser revisions are not installed yet. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
 }
