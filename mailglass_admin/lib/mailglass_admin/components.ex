@@ -1841,9 +1841,12 @@ defmodule MailglassAdmin.Components do
       "The provider recorded a link click. Security scanners or other automated activity can trigger this signal."
 
   # No text below promises a reason or an error: the reason is shown on Full detail only
-  # when the provider sent one, and a send-time failure records no provider reason.
+  # when the provider sent one. This help is context-free, keyed on the event type alone,
+  # and a :failed event is either a send-time failure or a provider-reported one (Mailgun
+  # "failed", SES "Rendering Failure"), so it cannot say which. Only the verdict reads the
+  # row, so only the verdict may say the handoff failed.
   defp outcome_help(:delivery, :failed),
-    do: "Sending failed before a successful handoff to the provider."
+    do: "The email did not get through: sending failed, or the provider reported a failure."
 
   defp outcome_help(:delivery, :bounced),
     do:

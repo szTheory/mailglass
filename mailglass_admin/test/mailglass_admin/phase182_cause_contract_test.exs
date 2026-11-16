@@ -493,6 +493,85 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
     end
   end
 
+  # -- the per-event help is context-free (WR-01, iteration 2) -----------------------------
+
+  describe "the per-event help does not claim the send-time cause (WR-01)" do
+    # The timeline and the status tooltip know an event type, never the row's status, so
+    # they cannot tell a send-time :failed event (the app never reached the provider) from a
+    # provider-reported one (Mailgun "failed" without a severity, SES "Rendering Failure":
+    # the provider accepted the email and then failed it). Only the verdict reads the row,
+    # so only the verdict may say the handoff failed. The help stays true for both.
+    @failed_help "The email did not get through: sending failed, or the provider reported a failure."
+
+    test "the timeline help for a :failed event is the neutral sentence" do
+      text = {:event, :failed, nil} |> timeline_html() |> visible_text()
+
+      # Non-vacuous: the :failed event's tooltip is on screen.
+      assert text =~ @failed_help
+      refute text =~ @send_failure
+      refute text =~ "before a successful handoff"
+    end
+
+    test "the Failed status tooltip is the same neutral sentence in the delivery context" do
+      text =
+        (&Components.outcome_badge/1)
+        |> render_component(id: "tip-failed", status: :failed, context: :delivery)
+        |> visible_text()
+
+      assert text =~ @failed_help
+      refute text =~ "before a successful handoff"
+    end
+
+    test "a provider-reported failure on a handed-off email never says the handoff failed", %{
+      conn: conn
+    } do
+      OperatorFixtures.reset!()
+
+      delivery =
+        insert_failed_delivery!("pw-provider-failed@example.com", %{
+          status: :sent,
+          provider: "mailgun",
+          provider_message_id: "pm_provider_failed"
+        })
+
+      insert_event!(delivery, %{type: :sent, occurred_at: hours_ago(3)})
+      insert_event!(delivery, %{type: :failed, occurred_at: hours_ago(2)})
+
+      {:ok, _view, full} = live(operator_conn(conn), path(delivery.id, full: true))
+      text = visible_text(full)
+
+      # The verdict and the timeline agree: a failure with no recorded reason.
+      assert section_text(full, "#delivery-detail-verdict") =~ @fallback
+      assert section_text(full, "[data-testid=operator-timeline]") =~ @failed_help
+
+      # Nothing on the screen claims the app never reached the provider.
+      refute text =~ @send_failure
+      refute text =~ "before a successful handoff"
+    end
+
+    test "a send-time failure reads the handoff sentence in the verdict only", %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      delivery =
+        insert_failed_delivery!("pw-send-time-failed@example.com", %{
+          status: :failed,
+          provider: nil,
+          provider_message_id: nil
+        })
+
+      insert_event!(delivery, %{type: :failed, occurred_at: hours_ago(2)})
+
+      {:ok, _view, full} = live(operator_conn(conn), path(delivery.id, full: true))
+
+      verdict = section_text(full, "#delivery-detail-verdict")
+      timeline = section_text(full, "[data-testid=operator-timeline]")
+
+      assert verdict =~ @send_failure
+      assert timeline =~ @failed_help
+      refute timeline =~ @send_failure
+    end
+  end
+
   # -- no current suppression entry (WR-02) ------------------------------------------------
 
   describe "a Not sent email with no current suppression entry (WR-02)" do
@@ -865,6 +944,45 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
     |> Floki.find("dd")
     |> Floki.text()
     |> String.trim()
+  end
+
+  # The visible text of the one element a selector names. Fails loudly when the element is
+  # absent, so a screen that stops showing it cannot pass as "does not say X".
+  defp section_text(html, selector) do
+    case html |> Floki.parse_document!() |> Floki.find(selector) do
+      [] -> flunk("no element matches #{selector}")
+      nodes -> nodes |> Floki.raw_html() |> visible_text()
+    end
+  end
+
+  defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours, :hour)
+
+  defp insert_failed_delivery!(recipient, overrides) do
+    %{
+      tenant_id: @tenant_id,
+      mailable: "MailglassAdmin.Fixtures.AccountMailer",
+      stream: :transactional,
+      recipient: recipient,
+      last_event_type: :failed,
+      last_event_at: hours_ago(2),
+      terminal: true,
+      metadata: %{"subject" => "Reset your password"}
+    }
+    |> Map.merge(overrides)
+    |> Delivery.changeset()
+    |> TestRepo.insert!()
+  end
+
+  defp insert_event!(delivery, attrs) do
+    %{
+      tenant_id: delivery.tenant_id,
+      delivery_id: delivery.id,
+      metadata: %{},
+      normalized_payload: %{}
+    }
+    |> Map.merge(attrs)
+    |> Event.changeset()
+    |> TestRepo.insert!()
   end
 
   defp path(id, full: full?) do
