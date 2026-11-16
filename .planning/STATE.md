@@ -4,17 +4,17 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 182
 current_phase_name: Admin Words and Layout, One Job First
-status: executing
-stopped_at: Completed 182-05-PLAN.md
-last_updated: "2026-11-15T23:56:32.498Z"
+status: verifying
+stopped_at: Completed 182-06-PLAN.md
+last_updated: "2026-11-16T00:49:16.223Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 182 execution started
-state_head: f4fbf0ea577f24f1fa5b9c28c5d3a1bcd4bc1f89
+state_head: 0ed96559efadb85b5d18e8eb3a02407a9dff4db7
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 60
 ---
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 182 (Admin Words and Layout, One Job First) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-15 — Phase 182 execution started
 
 Progress: [██████░░░░] 60%
@@ -386,6 +386,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 182 P03 | 26 min | 2 tasks | 21 files |
 | Phase 182 P04 | 29 min | 3 tasks | 41 files |
 | Phase 182 P05 | 20 min | 3 tasks | 20 files |
+| Phase 182 P06 | 49 min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -774,6 +775,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 182]: 182-05: the structural title assertion follows the screen: Activity on the Activity screen, Admin on the Health overview, Inbound on the Inbound list — 182-04 made the document title follow the screen, so one /Admin/ on the Activity screen would fail a correct product; the Admin assertion is mutation-proven (title reverted to Operator turns it red)
 - [Phase 182]: 182-05: advisory e2e drift that kept a spec from its word pins was fixed in the spec, not excused as pre-existing — collapsed Technical details (182-02), the second timestamp (182-03) and the Activity gloss were deliberate; every advisory lane the plan ran ended green (operator 135 and 137, demo 111, navigation test 9)
 - [Phase 182]: 182-05: lane runs rewrite tracked archived PNGs under .planning/milestones; restore with git checkout -- <paths> and never stage them — structural, phase169-journey and the demo evidence run overwrite v2.9 phase 168, 169 and 172 artifacts; logged in deferred-items.md
+- [Phase 182]: 182-06: a schema-invalid judge verdict is discarded and a fresh judge replaces it, never edited; the after-catalog review gate is the one gate rule (unverifiable rejects dropped, a lone reject stands unless a third judge passes, any known-bad pass is red)
+- [Phase 182]: 182-06: the after-catalog was judged in three iterations; rubric clarifications for locked decisions (Queued qualifier, event names) were made only with a recapture under a new id and fresh judges
+- [Phase 182]: 182-06: after-1a0b741-20261116T004020Z is bound to the current app.css and root layout; a later bundle or layout change must add its superseded.json in the same change
 
 ## Quick Tasks Completed
 
@@ -834,8 +838,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-15T23:56:32.207Z
-Stopped at: Completed 182-05-PLAN.md
+Last session: 2026-11-16T00:49:15.888Z
+Stopped at: Completed 182-06-PLAN.md
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
