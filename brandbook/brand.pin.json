@@ -125,6 +125,76 @@
       "sha256": "f0c204dd564955724d5bd443687794657cad1ba0e4d200c8e20be9b658dc133d",
       "bytes": 790,
       "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-32-light.svg",
+      "to": "brandbook/v2/mailglass-mark-light.svg",
+      "sha256": "39af38d8f8b0fe2fa5f187ee7fce6785eb33d93e7b1bf4345cb3d9bc084c29ea",
+      "bytes": 666,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-32-dark.svg",
+      "to": "brandbook/v2/mailglass-mark-dark.svg",
+      "sha256": "d59d6eb71df3e70b16cfa1631b5e846ac3f4447bdef09e7a09bbfe7ff71775cb",
+      "bytes": 666,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon.ico",
+      "to": "brandbook/v2/favicon.ico",
+      "sha256": "5b320d858880324bb013cd76c93a7c2e50c48493f60e41b0d24615f1dff5bf33",
+      "bytes": 1145,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-16-light.png",
+      "to": "brandbook/v2/favicon-16-light.png",
+      "sha256": "c53ebbc9170ee8db80f868ee4ea96708395fb8d213b3604f48d8bbea9a074997",
+      "bytes": 390,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-16-dark.png",
+      "to": "brandbook/v2/favicon-16-dark.png",
+      "sha256": "8b190d685fdc94ab8e86bbf3758c47323007616d232fe3c8aea23af8a80df6fa",
+      "bytes": 386,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-32-light.png",
+      "to": "brandbook/v2/favicon-32-light.png",
+      "sha256": "06a28f96b8e150f77442af369f70b8568183e8d0b3b1c1485671b97fe81338d9",
+      "bytes": 717,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/icon/favicon-32-dark.png",
+      "to": "brandbook/v2/favicon-32-dark.png",
+      "sha256": "e49e02c1a77769d928dc865f7bce97eeff8cef7b10d6b54acffa11afc42ebd38",
+      "bytes": 721,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/avatar/mailglass-avatar-512-light.png",
+      "to": "brandbook/v2/avatar-512-light.png",
+      "sha256": "18e02bdb5d694e90783283e328f965d01aa89a52f5a26260e354723e887953e3",
+      "bytes": 13687,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/avatar/mailglass-avatar-512-dark.png",
+      "to": "brandbook/v2/avatar-512-dark.png",
+      "sha256": "aabc0c79dfdb61cb2642c32fd2acf4005bf937f09d470eea9ed8caa1ef9c0d64",
+      "bytes": 13766,
+      "license": "MIT"
+    },
+    {
+      "from": "assets/social/mailglass-social-card-1280x640.png",
+      "to": "brandbook/v2/social-card-1280x640.png",
+      "sha256": "520f7366e36c0abf2d74f31abb366cdf019c20f3ed5c401e5202e7633b8d5123",
+      "bytes": 41547,
+      "license": "MIT"
     }
   ],
   "note": "Offline verification (test/scripts/brand_pin_test.exs) is merge-blocking. The online check (mix run --no-start scripts/brand_pin.exs check) is advisory. Update with: mix run --no-start scripts/brand_pin.exs update --commit <sha> --expect-sha256 <hex>, and bump @expected_zip_sha256 in the same chore(brand) commit; never hand-edit."

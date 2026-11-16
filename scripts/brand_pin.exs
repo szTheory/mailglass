@@ -42,10 +42,10 @@ defmodule Mailglass.BrandPin do
   ]
   @required_assets for {_from, to, _license} <- @initial_manifest, do: to
 
-  # Phase 181 (D-18): the assets the admin ships beyond the four `init` assets. `extend/3`
-  # copies them from the same pinned zip. `@required_assets` stays the four-asset `init`
-  # contract, so `init` still builds a pin `ensure_parses` accepts. The three OFL texts also
-  # ship to `brandbook/v2` above: a duplicate `from` is fine, a duplicate `to` is not.
+  # Shipped assets beyond the four `init` assets. `extend/3` and `update/4` copy these from
+  # the same pinned zip. `@required_assets` stays the four-asset `init` contract, so `init`
+  # still builds a pin `ensure_parses` accepts. Duplicate `from` members are allowed; duplicate
+  # destinations are not.
   @fonts_dir "mailglass_admin/priv/static/fonts"
   @extension_manifest [
     {"assets/fonts/web/a-display-600.woff2", @fonts_dir <> "/a-display-600.woff2", "OFL-1.1"},
@@ -61,7 +61,18 @@ defmodule Mailglass.BrandPin do
      @fonts_dir <> "/OFL-AtkinsonHyperlegibleMono.txt", "OFL-1.1"},
     {"assets/logo/mailglass-lockup-light.svg", "brandbook/v2/mailglass-lockup-light.svg", "MIT"},
     {"assets/logo/mailglass-lockup-dark.svg", "brandbook/v2/mailglass-lockup-dark.svg", "MIT"},
-    {"assets/icon/favicon.svg", "brandbook/v2/favicon.svg", "MIT"}
+    {"assets/icon/favicon.svg", "brandbook/v2/favicon.svg", "MIT"},
+    {"assets/icon/favicon-32-light.svg", "brandbook/v2/mailglass-mark-light.svg", "MIT"},
+    {"assets/icon/favicon-32-dark.svg", "brandbook/v2/mailglass-mark-dark.svg", "MIT"},
+    {"assets/icon/favicon.ico", "brandbook/v2/favicon.ico", "MIT"},
+    {"assets/icon/favicon-16-light.png", "brandbook/v2/favicon-16-light.png", "MIT"},
+    {"assets/icon/favicon-16-dark.png", "brandbook/v2/favicon-16-dark.png", "MIT"},
+    {"assets/icon/favicon-32-light.png", "brandbook/v2/favicon-32-light.png", "MIT"},
+    {"assets/icon/favicon-32-dark.png", "brandbook/v2/favicon-32-dark.png", "MIT"},
+    {"assets/avatar/mailglass-avatar-512-light.png", "brandbook/v2/avatar-512-light.png", "MIT"},
+    {"assets/avatar/mailglass-avatar-512-dark.png", "brandbook/v2/avatar-512-dark.png", "MIT"},
+    {"assets/social/mailglass-social-card-1280x640.png", "brandbook/v2/social-card-1280x640.png",
+     "MIT"}
   ]
 
   @months %{
@@ -106,9 +117,10 @@ defmodule Mailglass.BrandPin do
 
     update --commit <sha> --expect-sha256 <hex>
       Move the pin to a reviewed commit. Refuses a zip whose sha256 differs from
-      --expect-sha256, rewrites the pin and the copied assets, and writes nothing on a
-      refusal. Bump @expected_zip_sha256 in test/scripts/brand_pin_test.exs in the same
-      chore(brand) commit. Never hand-edit the pin.
+      --expect-sha256, refreshes shipped rows and adds any missing declared extension assets
+      from the same archive, and writes nothing on a validation refusal. Bump
+      @expected_zip_sha256 in test/scripts/brand_pin_test.exs in the same chore(brand) commit.
+      Never hand-edit the pin.
 
     extend --expect-sha256 <hex> [--zip <path>]
       Add the shipped assets listed in @extension_manifest (the admin fonts, their OFL
@@ -518,7 +530,7 @@ defmodule Mailglass.BrandPin do
          {:ok, zip_bin} <- download(current["repo"], commit, expect, getter),
          {:ok, members} <- read_pin_members(zip_bin, current),
          {:ok, book} <- book_meta(members),
-         pin = rewrite_pin(current, commit, zip_bin, book, members),
+         {:ok, pin} <- rewrite_pin(current, commit, zip_bin, book, members),
          :ok <- ensure_parses(pin),
          :ok <- write_all(target, pin, members) do
       {:ok, pin}
@@ -681,7 +693,10 @@ defmodule Mailglass.BrandPin do
   end
 
   defp read_pin_members(zip_bin, current) do
-    froms = Enum.map(current["shipped"], & &1["from"])
+    froms =
+      Enum.map(current["shipped"], & &1["from"]) ++
+        Enum.map(@extension_manifest, fn {from, _to, _license} -> from end)
+
     collect_members(zip_bin, current["root"], Enum.uniq([@book_meta_member | froms]))
   end
 
@@ -768,21 +783,25 @@ defmodule Mailglass.BrandPin do
   end
 
   defp rewrite_pin(current, commit, zip_bin, book, members) do
-    shipped =
+    refreshed =
       for entry <- current["shipped"] do
         data = Map.fetch!(members, entry["from"])
         %{entry | "sha256" => sha256_hex(data), "bytes" => byte_size(data)}
       end
 
-    %{
-      current
-      | "commit" => commit,
-        "url" => zip_url(current["repo"], commit),
-        "sha256" => sha256_hex(zip_bin),
-        "size" => byte_size(zip_bin),
-        "book" => book,
-        "shipped" => shipped
-    }
+    with {:ok, shipped} <- extend_shipped(%{current | "shipped" => refreshed}, members) do
+      pin = %{
+        current
+        | "commit" => commit,
+          "url" => zip_url(current["repo"], commit),
+          "sha256" => sha256_hex(zip_bin),
+          "size" => byte_size(zip_bin),
+          "book" => book,
+          "shipped" => shipped
+      }
+
+      {:ok, extended_pin(pin, shipped)}
+    end
   end
 
   # Never write a pin we would refuse to read.

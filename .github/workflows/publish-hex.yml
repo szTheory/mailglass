@@ -758,7 +758,8 @@ jobs:
               'Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)',
               'Provider Compatibility Advisory (Elixir 1.18 / OTP 27)',
               'Inbound Full Suite Advisory (schema public)',
-              'Inbound Full Suite Advisory (schema mailglass)'
+              'Inbound Full Suite Advisory (schema mailglass)',
+              'Favicon Raster Re-render Advisory'
             ];
 
             const startsWithAny = (name, lanes) => lanes.some(l => name.startsWith(l));

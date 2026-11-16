@@ -900,7 +900,7 @@ defmodule Mailglass.Scripts.BrandPinTest do
                  no_network()
                ])
 
-      assert length(extended["shipped"]) == 16
+      assert length(extended["shipped"]) == 26
     end
 
     test "refuses a local zip that hashes differently from the pin and writes nothing",

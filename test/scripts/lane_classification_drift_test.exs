@@ -61,10 +61,11 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @ci_yml_suite_floor_occurrences 1
 
   # Every RUNTIME lane name advisory-matrix.yml produces: 2 Core Full Suite legs +
-  # 2 next-toolchain legs + 1 Provider Compatibility leg + 2 Inbound Full Suite legs.
+  # 2 next-toolchain legs + 1 Provider Compatibility leg + 2 Inbound Full Suite legs +
+  # 1 favicon raster advisory.
   # Deliberately NOT derived from the parser under test — a count computed from the
   # thing it is counting cannot fail.
-  @advisory_matrix_runtime_lane_count 7
+  @advisory_matrix_runtime_lane_count 8
 
   # The MAINTAINING.md top-level heading bounding the advisory-matrix table. Its own
   # heading, never rows inside "Required Checks": that section's parser is bounded by
@@ -76,7 +77,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # the same reason every other count in this file is: a size derived from the list
   # it describes cannot fail.
   @advisory_matrix_gating_count 2
-  @advisory_matrix_advisory_count 5
+  @advisory_matrix_advisory_count 6
 
   @required_lanes MapSet.new(Mailglass.CILanes.release_required_lanes())
   @merge_required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
@@ -793,7 +794,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
-  # D-24 / D-25: the third classification axis — advisory-matrix.yml's seven
+  # D-24 / D-25: the third classification axis — advisory-matrix.yml's eight
   # runtime lanes, bound three ways (workflow ↔ registry ↔ MAINTAINING.md), the
   # same three-way agreement Phase 141 built for ci.yml.
   # ---------------------------------------------------------------------------
@@ -1041,7 +1042,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
                "'#{name}' sits in #{expected_bucket} but MAINTAINING.md records " <>
                  "classification '#{cls}' rather than '#{expected_classification}'. " <>
                  "gate-ci-green reads advisory-matrix.yml as of plan 143-13: the two " <>
-                 "Core Full Suite floor legs block a Hex publish, and the other five " <>
+                 "Core Full Suite floor legs block a Hex publish, and the other six " <>
                  "block nothing. A doc that says otherwise is the signal-honesty defect " <>
                  "this milestone exists to fix."
 
