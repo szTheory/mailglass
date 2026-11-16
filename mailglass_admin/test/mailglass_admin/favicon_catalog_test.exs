@@ -193,6 +193,35 @@ defmodule MailglassAdmin.FaviconCatalogTest do
              FaviconCatalog.decode_png(png_rgb(1, 1, <<0, 24, 149, 194>>))
   end
 
+  test "RGB PNG decoder applies all row filters with three-byte pixels" do
+    source_rows =
+      for y <- 1..5 do
+        for x <- 1..2, into: <<>> do
+          <<y * 10 + x, y * 20 + x, y * 30 + x>>
+        end
+      end
+
+    filtered =
+      source_rows
+      |> Enum.with_index()
+      |> Enum.reduce({<<>>, <<>>}, fn {row, index}, {scanlines, previous} ->
+        filter = rem(index, 5)
+        encoded = filter_row(filter, row, previous, 3)
+        {scanlines <> <<filter>> <> encoded, row}
+      end)
+      |> elem(0)
+
+    expected =
+      for row <- source_rows, into: <<>> do
+        for <<r, g, b <- row>>, into: <<>>, do: <<r, g, b, 255>>
+      end
+
+    assert {:ok, %{width: 2, height: 5, pixels: pixels}} =
+             FaviconCatalog.decode_png(png_rgb(2, 5, filtered))
+
+    assert pixels == expected
+  end
+
   test "catalog mutation cases reject stale source, forged metrics, missing engines and duplicate cells" do
     dir = catalog!()
 

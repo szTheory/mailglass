@@ -3,6 +3,7 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const zlib = require("node:zlib");
 const { chromium, firefox, webkit } = require("playwright");
 
 const REPO_ROOT = path.resolve(__dirname, "../..");
@@ -56,6 +57,105 @@ function parsePngHeader(bytes) {
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
+function paethPredictor(left, up, upperLeft) {
+  const estimate = left + up - upperLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upperLeftDistance = Math.abs(estimate - upperLeft);
+  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) return left;
+  if (upDistance <= upperLeftDistance) return up;
+  return upperLeft;
+}
+
+// Decode only bounded, 8-bit, non-interlaced screenshot PNGs used by the theme probe. The
+// independent ExUnit validator still checks chunk CRCs and all catalog metrics.
+function decodePngPixels(bytes) {
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  if (!bytes.subarray(0, 8).equals(signature)) throw new Error("PNG signature is invalid");
+
+  let offset = 8;
+  let width;
+  let height;
+  let bitDepth;
+  let colorType;
+  let interlace;
+  const idat = [];
+  let ended = false;
+
+  while (offset + 12 <= bytes.length) {
+    const length = bytes.readUInt32BE(offset);
+    const type = bytes.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    if (dataEnd + 4 > bytes.length) throw new Error("PNG chunk is truncated");
+    const data = bytes.subarray(dataStart, dataEnd);
+    offset = dataEnd + 4;
+
+    if (type === "IHDR") {
+      if (length !== 13) throw new Error("PNG IHDR is malformed");
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8];
+      colorType = data[9];
+      interlace = data[12];
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      ended = true;
+      break;
+    }
+  }
+
+  const channels = colorType === 2 ? 3 : colorType === 6 ? 4 : 0;
+  if (!ended || !width || !height || width > 64 || height > 64 || bitDepth !== 8 || !channels || interlace !== 0) {
+    throw new Error("PNG format is unsupported for the theme probe");
+  }
+
+  const stride = width * channels;
+  const expectedBytes = (stride + 1) * height;
+  const filtered = zlib.inflateSync(Buffer.concat(idat), { maxOutputLength: expectedBytes });
+  if (filtered.length !== expectedBytes) throw new Error("PNG decompressed size does not match IHDR");
+
+  const decoded = Buffer.alloc(stride * height);
+  let sourceOffset = 0;
+  for (let y = 0; y < height; y += 1) {
+    const filter = filtered[sourceOffset];
+    const rowOffset = y * stride;
+    sourceOffset += 1;
+    if (filter > 4) throw new Error(`PNG row filter ${filter} is unsupported`);
+
+    for (let x = 0; x < stride; x += 1) {
+      const left = x >= channels ? decoded[rowOffset + x - channels] : 0;
+      const up = y > 0 ? decoded[rowOffset - stride + x] : 0;
+      const upperLeft = x >= channels && y > 0 ? decoded[rowOffset - stride + x - channels] : 0;
+      let predictor = 0;
+      if (filter === 1) predictor = left;
+      else if (filter === 2) predictor = up;
+      else if (filter === 3) predictor = Math.floor((left + up) / 2);
+      else if (filter === 4) predictor = paethPredictor(left, up, upperLeft);
+      decoded[rowOffset + x] = (filtered[sourceOffset + x] + predictor) & 255;
+    }
+    sourceOffset += stride;
+  }
+
+  const pixels = Buffer.alloc(width * height * 4);
+  for (let index = 0; index < width * height; index += 1) {
+    const inputOffset = index * channels;
+    const outputOffset = index * 4;
+    pixels[outputOffset] = decoded[inputOffset];
+    pixels[outputOffset + 1] = decoded[inputOffset + 1];
+    pixels[outputOffset + 2] = decoded[inputOffset + 2];
+    pixels[outputOffset + 3] = channels === 4 ? decoded[inputOffset + 3] : 255;
+  }
+
+  return { width, height, pixels };
+}
+
+function pixelAt(raster, x, y) {
+  const offset = (y * raster.width + x) * 4;
+  return [...raster.pixels.subarray(offset, offset + 3)];
+}
+
 function rgb(hex) {
   const value = hex.replace("#", "");
   return [0, 2, 4].map(offset => Number.parseInt(value.slice(offset, offset + 2), 16));
@@ -80,8 +180,8 @@ async function screenshotTile(page, size, background, scheme) {
     `<!doctype html><meta name="color-scheme" content="light dark"><style>` +
       `html,body{margin:0;width:100%;height:100%;overflow:hidden}` +
       `.tile{width:${size}px;height:${size}px;display:grid;place-items:center;background:${background};color-scheme:${scheme}}` +
-      `img{display:block;width:${size}px;height:${size}px}</style>` +
-      `<div class="tile"><img alt="mailglass favicon" width="${size}" height="${size}" src="${page.__faviconDataUrl}"></div>`,
+      `img{display:block;width:${size}px;height:${size}px;color-scheme:${scheme}}</style>` +
+      `<div class="tile"><img alt="mailglass favicon" width="${size}" height="${size}" src="${page.__faviconDataUrls[scheme]}"></div>`,
     { waitUntil: "load", timeout: 15_000 },
   );
   await page.locator("img").evaluate(async img => {
@@ -100,7 +200,7 @@ async function screenshotTile(page, size, background, scheme) {
   return page.locator(".tile").screenshot({ animations: "disabled", scale: "device", timeout: 15_000 });
 }
 
-async function themeProbe(engine, faviconDataUrl) {
+async function themeProbe(engine, faviconDataUrls) {
   const captures = [];
   for (const scheme of SCHEMES) {
     const context = await engine.newContext({
@@ -116,27 +216,37 @@ async function themeProbe(engine, faviconDataUrl) {
     if (emulatedScheme !== scheme) {
       throw new Error(`expected page media ${scheme}, got ${emulatedScheme}`);
     }
-    page.__faviconDataUrl = faviconDataUrl;
-    captures.push(await screenshotTile(page, 32, "#ffffff", scheme));
+    page.__faviconDataUrls = faviconDataUrls;
+    const png = await screenshotTile(page, 32, "#ffffff", scheme);
+    const raster = decodePngPixels(png);
+    const expected = scheme === "dark"
+      ? { glass: [70, 182, 232], pane: [168, 228, 247] }
+      : { glass: [24, 149, 194], pane: [10, 100, 136] };
+    // These samples land inside the flat glass stem and pane at 32 CSS pixels.
+    const observed = { glass: pixelAt(raster, 3, 18), pane: pixelAt(raster, 16, 20) };
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      throw new Error(`${scheme} theme probe used unexpected SVG colors ${JSON.stringify(observed)}`);
+    }
+    captures.push({ png, pixels: raster.pixels });
     await context.close();
   }
-  if (captures[0].equals(captures[1])) {
-    throw new Error("light/dark theme probe produced identical favicon raster bytes");
+  if (captures[0].pixels.equals(captures[1].pixels)) {
+    throw new Error("light/dark theme probe produced identical favicon pixels");
   }
   return {
-    lightSha256: sha256(captures[0]),
-    darkSha256: sha256(captures[1]),
+    lightSha256: sha256(captures[0].png),
+    darkSha256: sha256(captures[1].png),
     different: true,
   };
 }
 
-async function captureEngine(name, engineType, dataUrl, catalogDir, records, byteCount) {
+async function captureEngine(name, engineType, dataUrls, catalogDir, records, byteCount) {
   let browser;
   let currentEngine = null;
   const work = (async () => {
     browser = await engineType.launch({ headless: true, timeout: ENGINE_TIMEOUT_MS });
     currentEngine = { name, version: browser.version() };
-    currentEngine.themeProbe = await themeProbe(browser, dataUrl);
+    currentEngine.themeProbe = await themeProbe(browser, dataUrls);
 
     for (const scheme of SCHEMES) {
       for (const dpr of DPRS) {
@@ -148,7 +258,7 @@ async function captureEngine(name, engineType, dataUrl, catalogDir, records, byt
         const page = await context.newPage();
         await page.emulateMedia({ colorScheme: scheme });
         page.setDefaultTimeout(15_000);
-        page.__faviconDataUrl = dataUrl;
+        page.__faviconDataUrls = dataUrls;
 
         for (const size of SIZES) {
           for (const background of BACKGROUNDS[scheme]) {
@@ -220,17 +330,27 @@ async function main() {
   }
   if (servedSha !== sourceSha) throw new Error("served favicon does not match the pinned source");
 
+  if (mode === "--check") {
+    console.log(`favicon source pin passed (${sourceSha}); independent pixel checks run through ExUnit`);
+    return;
+  }
+
   fs.mkdirSync(CATALOG_ROOT, { recursive: true });
   const catalogId = `favicon-${sourceSha.slice(0, 7)}-${timestamp()}`;
   const catalogDir = confined(catalogId, CATALOG_ROOT);
   fs.mkdirSync(catalogDir, { recursive: false });
-  const faviconDataUrl = `data:image/svg+xml;base64,${source.toString("base64")}`;
+  const base64 = source.toString("base64");
+  // Keep the SVG bytes identical while giving WebKit's SVG image cache a scheme-distinct key.
+  const faviconDataUrls = {
+    light: `data:image/svg+xml;base64,${base64}`,
+    dark: `data:image/svg+xml;charset=utf-8;base64,${base64}`,
+  };
   const records = [];
   const byteCount = { value: 0 };
   const engines = [];
 
   for (const [name, engineType] of Object.entries({ chromium, firefox, webkit })) {
-    const result = await captureEngine(name, engineType, faviconDataUrl, catalogDir, records, byteCount);
+    const result = await captureEngine(name, engineType, faviconDataUrls, catalogDir, records, byteCount);
     engines.push(result);
     if (sha256(fs.readFileSync(sourcePath)) !== sourceSha) {
       throw new Error("favicon source changed while the browser capture was running");
@@ -287,7 +407,11 @@ async function main() {
   console.log(`source sha256 ${sourceSha}; ${byteCount.value} PNG bytes`);
 }
 
-main().catch(error => {
-  console.error(error?.stack || String(error));
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch(error => {
+    console.error(error?.stack || String(error));
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { decodePngPixels };
