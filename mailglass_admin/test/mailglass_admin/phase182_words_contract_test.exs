@@ -414,8 +414,10 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       end
     end
 
-    test "a nil or blank mailable renders no mailer row and no invented name" do
-      for mailable <- [nil, "", "   ", "\n", "..."] do
+    # Core persists `inspect(rendered.mailable)`, so a message built without a mailable is
+    # stored as the text "nil". That is a missing mailer, not one named Nil (WR-03).
+    test "a nil, blank or persisted-nil mailable renders no mailer row and no invented name" do
+      for mailable <- [nil, "", "   ", "\n", "...", "nil", " nil\n"] do
         html =
           render_component(&DetailHeader.detail_header/1, delivery: row(%{mailable: mailable}))
 
@@ -457,13 +459,17 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       assert length(names) == 2 * map_size(journey.ids)
       assert Enum.sort(Enum.uniq(names)) == ["Account mailer", "Password reset"]
 
-      rows = [row(%{mailable: nil}), row(%{id: "row-2", mailable: "   "})]
+      rows = [
+        row(%{mailable: nil}),
+        row(%{id: "row-2", mailable: "   "}),
+        row(%{id: "row-3", mailable: "nil"})
+      ]
 
       html =
         render_component(&DeliveriesList.deliveries_list/1,
           deliveries: rows,
           page_meta: %{
-            total_count: 2,
+            total_count: 3,
             page: 1,
             total_pages: 1,
             has_previous?: false,

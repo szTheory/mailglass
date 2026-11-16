@@ -69,6 +69,23 @@ defmodule MailglassAdmin.Operator.MailerNameTest do
       assert MailerName.plain_name("\n\t") == nil
     end
 
+    test "the text core stores for a message with no mailable has no name (WR-03)" do
+      # `Mailglass.Outbound.Persistence` writes `inspect(rendered.mailable)`, which is the
+      # text "nil" when the message was built without a mailable.
+      assert MailerName.plain_name(inspect(nil)) == nil
+      assert MailerName.plain_name("nil") == nil
+      assert MailerName.plain_name("  nil\n") == nil
+      assert MailerName.identity("nil") == nil
+      assert MailerName.identity(" nil ") == nil
+
+      # A module that really is called Nil, in any case, is a name; only the exact
+      # lower-case text `inspect(nil)` produces is the absence of one.
+      assert MailerName.plain_name("Nil") == "Nil"
+      assert MailerName.plain_name("MyApp.Nil") == "Nil"
+      assert MailerName.plain_name("MyApp.NilMailer") == "Nil mailer"
+      assert MailerName.identity("MyApp.Nil") == "MyApp.Nil"
+    end
+
     test "a value with nothing to name has no name" do
       # Nothing here is a name: no letter or digit survives the derivation.
       for odd <- [".", "...", "/1", ".../2", "_", "__", "._.", "-", "/"] do

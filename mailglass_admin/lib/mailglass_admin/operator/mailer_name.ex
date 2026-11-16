@@ -8,7 +8,8 @@ defmodule MailglassAdmin.Operator.MailerName do
   # stored value is usually `MyApp.AccountMailer` and the plain name is its humanized
   # leaf, "Account mailer". Seeded data carries `Module.function`, so the plain name is the
   # humanized function, "Password reset". No name is invented: a nil, blank or unreadable
-  # value has no name, and a value with no letter or digit in it has none either.
+  # value has no name, the text "nil" (what core stores for a message with no mailable) has
+  # none, and a value with no letter or digit in it has none either.
   #
   # Pure and total: it only reads the value it is given, never creates an atom (it works
   # on binaries with `String.split/2` and `Macro.underscore/1`), and emits no diagnostics.
@@ -35,14 +36,21 @@ defmodule MailglassAdmin.Operator.MailerName do
     end
   end
 
+  # `Mailglass.Outbound.Persistence` stores `inspect(rendered.mailable)`, and a message
+  # built without a mailable stores `inspect(nil)`. That text is the absence of a mailer,
+  # not a mailer named "Nil". A module really called `Nil` inspects as "Nil", so only the
+  # exact lower-case text is treated as missing.
+  @missing_mailable inspect(nil)
+
   @doc """
-  The stored value, trimmed, to show in full; nil for nil, blank or unreadable text.
+  The stored value, trimmed, to show in full; nil for nil, blank or unreadable text, and
+  for the text core stores when a message has no mailable.
   """
   @spec identity(String.t() | nil) :: String.t() | nil
   def identity(value) when is_binary(value) do
     trimmed = String.trim(value)
 
-    if trimmed != "" and String.valid?(trimmed), do: trimmed
+    if trimmed not in ["", @missing_mailable] and String.valid?(trimmed), do: trimmed
   end
 
   def identity(_value), do: nil
