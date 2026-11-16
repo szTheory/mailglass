@@ -201,13 +201,20 @@ Plans:
 **Depends on**: Phase 182 (milestone order); needs Phase 181's logo and font assets and Phase 179's search result
 **Requirements**: BRDOC-01, BRDOC-02, BRDOC-03, BRDOC-04, BRDOC-05, BRDOC-06
 **Success Criteria** (what must be TRUE):
-  1. The README header uses `<picture>` with absolute `raw.githubusercontent.com` URLs pinned to a tag, so it renders on hex.pm. A test rejects relative image paths in the README.
+  1. README headers use separate light and dark lockup images selected correctly by GitHub, Hex.pm and HexDocs. Absolute `raw.githubusercontent.com` URLs use the immutable asset commit SHA, and an offline contract checks their refs and bytes against the brand pin.
   2. A real `mix docs` build succeeds for each of the three packages. The output carries the "m" logo and code-color-only CSS with no OS `prefers-color-scheme` media query, and the ExDoc body font stays Lato.
   3. `design-system.md` and the `.impeccable` config exist, and the CLAUDE.md/PRODUCT.md updates are drafted and waiting for owner sign-off.
   4. The lowercase-name lint passes. The Hex file allowlist includes the shipped brand assets (fonts, OFL texts, logo) and nothing more, and `mix mailglass.publish.check` passes for every package.
   5. Automated favicon captures at 16, 24 and 32 px exist for Chromium, Firefox and WebKit. A social card/avatar manual-upload checklist with full URLs is written. The announcement and any ™ text are blocked unless the Phase 179 search result clears them, while the code rollout itself is not gated.
-**Plans**: TBD
-**Plan budget**: about 3
+**Plans**: 2 plans
+**Plan budget**: exactly 2 (the milestone has 18 completed plans and a hard cap of 20)
+
+Plans:
+**Wave 1**
+- [ ] 183-02-PLAN.md — Harden the announcement/claim boundary, align design guidance and pending owner drafts, pin launch artwork and independently validate favicon evidence (BRDOC-03, BRDOC-05, BRDOC-06)
+
+**Wave 2** *(depends on the launch safeguards and pinned assets)*
+- [ ] 183-01-PLAN.md — Theme-aware immutable README headers, three real branded docs builds, lowercase prose and actual package payload contracts (BRDOC-01, BRDOC-02, BRDOC-04)
 **UI hint**: yes
 
 ## Progress
@@ -220,4 +227,4 @@ Plans:
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
 | 182. Admin Words and Layout, One Job First | 6/6 | Complete    | 2026-11-15 |
-| 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
+| 183. Docs, Packaging and Launch Prep | 0/2 | Planned | - |
