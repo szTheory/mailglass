@@ -75,11 +75,11 @@ function contrastRatio(first, second) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-async function screenshotTile(page, size, background) {
+async function screenshotTile(page, size, background, scheme) {
   await page.setContent(
     `<!doctype html><meta name="color-scheme" content="light dark"><style>` +
       `html,body{margin:0;width:100%;height:100%;overflow:hidden}` +
-      `.tile{width:${size}px;height:${size}px;display:grid;place-items:center;background:${background}}` +
+      `.tile{width:${size}px;height:${size}px;display:grid;place-items:center;background:${background};color-scheme:${scheme}}` +
       `img{display:block;width:${size}px;height:${size}px}</style>` +
       `<div class="tile"><img alt="mailglass favicon" width="${size}" height="${size}" src="${page.__faviconDataUrl}"></div>`,
     { waitUntil: "load", timeout: 15_000 },
@@ -110,8 +110,14 @@ async function themeProbe(engine, faviconDataUrl) {
     });
     const page = await context.newPage();
     await page.emulateMedia({ colorScheme: scheme });
+    const emulatedScheme = await page.evaluate(() =>
+      window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+    );
+    if (emulatedScheme !== scheme) {
+      throw new Error(`expected page media ${scheme}, got ${emulatedScheme}`);
+    }
     page.__faviconDataUrl = faviconDataUrl;
-    captures.push(await screenshotTile(page, 32, "#ffffff"));
+    captures.push(await screenshotTile(page, 32, "#ffffff", scheme));
     await context.close();
   }
   if (captures[0].equals(captures[1])) {
@@ -149,7 +155,7 @@ async function captureEngine(name, engineType, dataUrl, catalogDir, records, byt
             if (records.length >= PNG_CAP) throw new Error(`PNG cap ${PNG_CAP} would be exceeded`);
             const file = `${name}__${scheme}__${size}__${dpr}x__${background.id}.png`;
             const output = confined(file, catalogDir);
-            const png = await screenshotTile(page, size, background.color);
+            const png = await screenshotTile(page, size, background.color, scheme);
             const { width, height } = parsePngHeader(png);
             if (width !== size * dpr || height !== size * dpr) {
               throw new Error(`${file}: expected ${size * dpr}x${size * dpr}, got ${width}x${height}`);
