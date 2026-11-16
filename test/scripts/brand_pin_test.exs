@@ -23,10 +23,8 @@ defmodule Mailglass.Scripts.BrandPinTest do
     "brandbook/v2/brand.json"
   ]
 
-  # What `extend` adds (Phase 181, D-18): six woff2 and three OFL texts in the admin fonts
-  # directory, and the two lockups and the favicon beside the book. Test-owned, so a pin-only
-  # edit of the shipped list fails here. A deliberate change edits this list and the pin
-  # together in one chore(brand) commit.
+  # What update/extend add from the reviewed zip: Admin fonts, brand marks and launch media.
+  # Test-owned, so a pin-only edit of the shipped list fails here.
   @fonts_dir "mailglass_admin/priv/static/fonts"
   @extension_assets [
     @fonts_dir <> "/OFL-AtkinsonHyperlegibleMono.txt",
@@ -39,6 +37,16 @@ defmodule Mailglass.Scripts.BrandPinTest do
     @fonts_dir <> "/ui-400i.woff2",
     @fonts_dir <> "/ui-600.woff2",
     "brandbook/v2/favicon.svg",
+    "brandbook/v2/mailglass-mark-light.svg",
+    "brandbook/v2/mailglass-mark-dark.svg",
+    "brandbook/v2/favicon.ico",
+    "brandbook/v2/favicon-16-light.png",
+    "brandbook/v2/favicon-16-dark.png",
+    "brandbook/v2/favicon-32-light.png",
+    "brandbook/v2/favicon-32-dark.png",
+    "brandbook/v2/avatar-512-light.png",
+    "brandbook/v2/avatar-512-dark.png",
+    "brandbook/v2/social-card-1280x640.png",
     "brandbook/v2/mailglass-lockup-dark.svg",
     "brandbook/v2/mailglass-lockup-light.svg"
   ]
@@ -128,9 +136,9 @@ defmodule Mailglass.Scripts.BrandPinTest do
                :ok
     end
 
-    test "ships exactly the four init assets plus the twelve extend assets" do
+    test "ships exactly the four init assets plus the twenty-two declared extension assets" do
       assert real_pin()["shipped"] |> Enum.map(& &1["to"]) |> Enum.sort() == @expected_shipped
-      assert length(@expected_shipped) == 16
+      assert length(@expected_shipped) == 26
     end
 
     test "owns exactly brandbook/v2 and the admin fonts directory, never priv/static itself" do
@@ -433,13 +441,30 @@ defmodule Mailglass.Scripts.BrandPinTest do
       for {member, label} <- [
             {"assets/logo/mailglass-lockup-light.svg", "lockup light"},
             {"assets/logo/mailglass-lockup-dark.svg", "lockup dark"},
-            {"assets/icon/favicon.svg", "favicon"}
+            {"assets/icon/favicon.svg", "favicon"},
+            {"assets/icon/favicon-32-light.svg", "light mark"},
+            {"assets/icon/favicon-32-dark.svg", "dark mark"}
           ],
           into: %{} do
         {member, "<svg xmlns=\"http://www.w3.org/2000/svg\"><!-- #{label} #{seed} --></svg>\n"}
       end
 
-    Map.merge(woff2, svg)
+    static_media =
+      for member <- [
+            "assets/icon/favicon.ico",
+            "assets/icon/favicon-16-light.png",
+            "assets/icon/favicon-16-dark.png",
+            "assets/icon/favicon-32-light.png",
+            "assets/icon/favicon-32-dark.png",
+            "assets/avatar/mailglass-avatar-512-light.png",
+            "assets/avatar/mailglass-avatar-512-dark.png",
+            "assets/social/mailglass-social-card-1280x640.png"
+          ],
+          into: %{} do
+        {member, "fixture bytes for #{member} #{seed}"}
+      end
+
+    Map.merge(woff2, svg) |> Map.merge(static_media)
   end
 
   defp build_zip(files) do
@@ -656,6 +681,22 @@ defmodule Mailglass.Scripts.BrandPinTest do
       assert File.ls!(tmp_dir) == []
     end
 
+    test "update refuses a zip missing a newly declared asset before any write",
+         %{tmp_dir: tmp_dir} do
+      old_files = synthetic_files("old")
+      current = synthetic_pin(old_files, book_zip(old_files))
+      from = "assets/icon/favicon.ico"
+      new_zip = "new" |> synthetic_files() |> Map.delete(from) |> book_zip()
+
+      assert pin(:update, [
+               current,
+               [commit: @new_commit, expect_sha256: sha(new_zip), target_dir: tmp_dir],
+               getter_returning(new_zip)
+             ]) == {:error, {:zip_member_missing, from}}
+
+      assert File.ls!(tmp_dir) == []
+    end
+
     test "update twice with the same zip writes a byte-identical pin and byte-identical assets",
          %{tmp_dir: tmp_dir} do
       old_files = synthetic_files("old")
@@ -667,11 +708,11 @@ defmodule Mailglass.Scripts.BrandPinTest do
 
       assert {:ok, updated} = pin(:update, [current, opts, getter_returning(new_zip)])
       first_pin = File.read!(pin_file)
-      first_assets = for to <- @required_assets, do: File.read!(tmp_path(tmp_dir, to))
+      first_assets = for to <- @expected_shipped, do: File.read!(tmp_path(tmp_dir, to))
 
       assert {:ok, ^updated} = pin(:update, [current, opts, getter_returning(new_zip)])
       assert File.read!(pin_file) == first_pin
-      assert for(to <- @required_assets, do: File.read!(tmp_path(tmp_dir, to))) == first_assets
+      assert for(to <- @expected_shipped, do: File.read!(tmp_path(tmp_dir, to))) == first_assets
 
       assert {:ok, ^updated} = pin(:update, [updated, opts, getter_returning(new_zip)])
       assert File.read!(pin_file) == first_pin
