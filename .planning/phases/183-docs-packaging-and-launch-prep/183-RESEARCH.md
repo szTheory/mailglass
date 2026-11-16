@@ -59,3 +59,14 @@ Add a blocked announcement draft and tests that prove the gate blocks announceme
 2. **Design and launch guardrails:** design-system and `.impeccable` artifacts, pending owner drafts, favicon capture/validation and social checklist, hardened trademark gate plus blocked announcement contract (BRDOC-03, 05, 06).
 
 This is a planning constraint, not a reason to weaken acceptance criteria. If the checker cannot produce two coherent plans without losing required evidence, stop for an owner decision rather than exceeding the 20-plan cap.
+
+## Validation Architecture
+
+- **BRDOC-01:** Add an offline ExUnit contract that parses all three adopter-facing README headers, requires correctly ordered light/dark image variants with lowercase alt text, validates the immutable commit-SHA URL, and compares local asset bytes with `brandbook/brand.pin.json`. Include mutation cases for relative URLs, wrong refs, swapped variants, missing alt text, and missing images. Do not require network access in CI; the SHA URL cannot resolve before the task commit is pushed.
+- **BRDOC-02:** Run `mix docs` separately from the core, admin, and inbound package roots. Inspect generated output for the v2 mark and favicon, the injected code-color-only CSS, the absence of `prefers-color-scheme`, and ExDoc's Lato body font and class-driven theme toggle.
+- **BRDOC-03:** Add an offline parity test for `.impeccable/design.json` token values against `brandbook/v2/brand.json` and `brandbook/tokens.json`; verify the package design guide and both owner-signoff drafts remain present and marked pending.
+- **BRDOC-04:** Add a hermetic lowercase-name lint test with planted false-positive and violation cases, plus package-content assertions against the pin and explicit file manifests. Run `mix mailglass.publish.check` for core, admin, and inbound, including the already-known admin golden drift from Phase 182.
+- **BRDOC-05:** Produce favicon captures for Chromium, Firefox, and WebKit in light and dark at 16, 24, and 32 pixels. Validate the manifest, exact favicon SHA, dimensions, and legibility metrics recomputed from PNG bytes. Do not require cross-engine byte identity or real Safari tab-chrome evidence.
+- **BRDOC-06:** Extend the hermetic trademark-gate tests with mutations for register completeness, future dates, excessive validity windows, production CLI overrides, symbol/entity scanning, and record-dependent ™ behavior. Prove that the current caution record blocks announcement/TM text while publish/code checks remain usable.
+
+Use existing ExUnit, Mix, and Playwright infrastructure with no new runtime dependency. Run targeted tests after their task, then the required core/admin/inbound suites and three docs/package checks at the plan's final gates. Browser evidence and docs builds must be launched in the background so they do not take the shared desktop focus. Do not perform network publication, social upload, or remote-tag operations.
