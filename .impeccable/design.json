@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "title": "Design System: mailglass",
+  "extensions": {
+    "colorMeta": {
+      "background": { "role": "neutral", "displayName": "Sand", "canonical": "#F6F1E8", "darkName": "Roast", "dark": "#1D1713" },
+      "surface": { "role": "neutral", "displayName": "White", "canonical": "#FFFFFF", "darkName": "Roast Surface", "dark": "#2A211B" },
+      "text": { "role": "neutral", "displayName": "Espresso", "canonical": "#2A1D17", "darkName": "Bone", "dark": "#F3EEEA" },
+      "text-muted": { "role": "neutral", "displayName": "Muted Espresso", "canonical": "#665850", "darkName": "Muted Bone", "dark": "#B9ADA3" },
+      "accent": { "role": "primary", "displayName": "Deep Glass", "canonical": "#0A6488", "darkName": "Bright Glass", "dark": "#6CC6F0" },
+      "border": { "role": "neutral", "displayName": "Sand Line", "canonical": "#DDD3C4", "darkName": "Roast Line", "dark": "#43372E" },
+      "status-delivered": { "role": "success", "displayName": "Delivered", "canonical": "#1D6B3C", "darkName": "Delivered", "dark": "#7FCB9A" },
+      "status-delayed": { "role": "warning", "displayName": "Delayed", "canonical": "#855300", "darkName": "Delayed", "dark": "#E3B25C" },
+      "status-failed": { "role": "error", "displayName": "Failed", "canonical": "#B3261E", "darkName": "Failed", "dark": "#F09A93" },
+      "logo-glass": { "role": "brand-artwork", "displayName": "Glass", "canonical": "#1895C2", "darkName": "Glass Light", "dark": "#46B6E8" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Funnel Display", "purpose": "Weight 600 for headings and page titles; never for identifiers or code." },
+      "body": { "displayName": "Atkinson Hyperlegible Next", "purpose": "Weights 400 and 600 for body and interface text." },
+      "mono": { "displayName": "Atkinson Hyperlegible Mono", "purpose": "Identifiers, addresses, headers, commands and code." }
+    },
+    "motion": [
+      { "name": "reveal", "value": "opacity and translateY 6px over 220ms", "purpose": "Ease-out entrance for detail panes, cards and flash." },
+      { "name": "timeline-in", "value": "40ms stagger capped at 8 items", "purpose": "Ease-out, restrained timeline entrance." },
+      { "name": "tab-swap", "value": "150ms opacity crossfade", "purpose": "Ease-out switch between preview tabs and modal backdrop." },
+      { "name": "overlay", "value": "scale from 0.98 to 1 with opacity over 220ms", "purpose": "Ease-out modal panel entrance." },
+      { "name": "row-state", "value": "color transition using --duration-fast", "purpose": "Ease-out state changes for rows, navigation and tabs." },
+      { "name": "flash", "value": "motion-reveal on toast", "purpose": "Ease-out toast arrival; reduced motion is honored." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Delivered status mark and word",
+      "kind": "custom",
+      "refersTo": "status-delivered",
+      "description": "The pinned delivered mark is paired with its status word.",
+      "html": "<span class=\"ds-status ds-status-delivered\"><svg viewBox=\"0 0 100 120\" width=\"17\" height=\"20\" aria-hidden=\"true\"><rect width=\"100\" height=\"120\" fill=\"var(--mg-color-success-text)\"/><path d=\"M24 62L43 82L77 38\" fill=\"none\" stroke=\"var(--mg-color-surface)\" stroke-width=\"13\"/></svg><span>Delivered</span></span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 8px; font-family: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; } .ds-status-delivered { color: var(--mg-color-success-text); }"
+    },
+    {
+      "name": "Delayed status mark and word",
+      "kind": "custom",
+      "refersTo": "status-delayed",
+      "description": "The pinned delayed mark is paired with its status word.",
+      "html": "<span class=\"ds-status ds-status-delayed\"><svg viewBox=\"0 0 100 120\" width=\"17\" height=\"20\" aria-hidden=\"true\"><rect x=\"6\" y=\"6\" width=\"88\" height=\"108\" fill=\"none\" stroke=\"var(--mg-color-warning-text)\" stroke-width=\"12\"/><path d=\"M50 24V62L72 78\" fill=\"none\" stroke=\"var(--mg-color-warning-text)\" stroke-width=\"12\"/></svg><span>Delayed</span></span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 8px; font-family: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; } .ds-status-delayed { color: var(--mg-color-warning-text); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Two Panes, One Email",
+    "overview": "**Two Panes, One Email.** The two panes let you see the email before it ships and inspect its delivery record after. The tagline stays beside the mark, not inside it.\n\n`brandbook/v2/brand.json` defines identity and voice. `brandbook/tokens.json` defines the resolved design tokens. The typemark is the logo: its first letter is drawn as two overlapping panes of glass.",
+    "dos": [
+      "Use the matching light or dark typemark and keep one quarter of its height clear on every side.",
+      "Keep the product name lowercase in prose and write the delivery status beside its mark.",
+      "Use the logo unchanged to refer to mailglass; use by others does not imply endorsement or certification."
+    ],
+    "donts": [
+      "Do not use logo Glass for text, links or controls, and do not put a shape behind the typemark.",
+      "Do not add a tagline or descriptor inside the logo, recolor the mark or make patterns from its arches.",
+      "Do not use the retired sealed-flap identity or imply that a status mark replaces its word."
+    ]
+  }
+}

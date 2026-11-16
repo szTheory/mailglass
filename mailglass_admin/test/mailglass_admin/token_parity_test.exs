@@ -159,8 +159,7 @@ defmodule MailglassAdmin.TokenParityTest do
            "tokens.json not found at #{@tokens_path} — run from mailglass_admin/"
 
     {:ok,
-     tokens: Jason.decode!(File.read!(@tokens_path)),
-     brand: Jason.decode!(File.read!(@brand_path))}
+     tokens: Jason.decode!(File.read!(@tokens_path)), brand: Jason.decode!(File.read!(@brand_path))}
   end
 
   setup do
@@ -247,15 +246,18 @@ defmodule MailglassAdmin.TokenParityTest do
   end
 
   test "design-system guide matches current token ownership, scales, and review surfaces" do
-    guide = File.read!(@design_system_path)
+    guide = @design_system_path |> File.read!() |> String.replace(~r/\s+/, " ")
     source_css = File.read!(@css_source_path)
     gallery = File.read!(@gallery_path)
     storybook = File.read!(@storybook_path)
     demo_router = File.read!(@demo_router_path)
     tokens = File.read!(Path.expand("../../../brandbook/tokens.css", __DIR__))
 
-    assert guide =~ "brandbook/brand-book.md owns identity and voice"
-    assert guide =~ "brandbook/tokens.css owns"
+    assert guide =~ "brandbook/v2/brand.json and brandbook/tokens.json define identity and voice"
+    assert guide =~ "brandbook/tokens.css mirrors the resolved token source"
+    assert guide =~ "Funnel Display at 600 for headings"
+    assert guide =~ "Atkinson Hyperlegible Next at 400 or 600 for body and interface text"
+    assert guide =~ "brandbook/status-marks.json"
     assert guide =~ "assets/css/app.css maps those values"
     assert guide =~ "base-200 | White #FFFFFF | Roast Surface #2A211B"
     assert guide =~ "14/16/20/28px"

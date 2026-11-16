@@ -1,14 +1,16 @@
-# mailglass_admin Design System
+# mailglass_admin design system
 
-This guide explains the current implementation mechanics for Mailglass Admin.
-brandbook/brand-book.md owns identity and voice; brandbook/tokens.css owns
-canonical brand values; assets/css/app.css maps those values to the semantic
-roles and utilities used by Admin. Keep examples here aligned with the shipped
-source CSS and committed bundle.
+This guide explains the implementation mechanics for `mailglass_admin`.
+brandbook/v2/brand.json and brandbook/tokens.json define identity and voice;
+brandbook/tokens.css mirrors the resolved token source; assets/css/app.css maps
+those values to the semantic roles and utilities used by Admin. The earlier
+brandbook/brand-book.md is retired v1 material. Keep examples aligned with the
+shipped source CSS and committed bundle.
 
-> Ownership: brand values live in the brandbook. Admin CSS owns their
-> implementation mapping. Components use the semantic roles and scales defined
-> by that mapping.
+> Ownership: `brandbook/v2/brand.json` defines identity and voice;
+> `brandbook/tokens.json` defines the resolved brand tokens and
+> `brandbook/tokens.css` mirrors them. Admin CSS owns the implementation
+> mapping. Components use the semantic roles and scales defined by that mapping.
 
 ---
 
@@ -52,10 +54,29 @@ semantic tokens. Use the semantic names, never raw Tailwind palette
 | secondary / neutral | Muted Espresso #665850 | Muted Bone #B9ADA3 | secondary text |
 | success / warning / error | Delivered #1D6B3C / Delayed #855300 / Failed #B3261E | Delivered #7FCB9A / Delayed #E3B25C / Failed #F09A93 | status only |
 
-**Accent discipline (the 10% rule):** `primary`/Glass appears only on the
+**Accent discipline (the 10% rule):** `primary` / Deep Glass appears only on the
 selected-row border, the primary CTA, the active nav/timeline node, and focus
 emphasis. It is never the default border or badge color. Status tints use
 opacity (`bg-warning/10`), not new tokens.
+
+### Typography, status words and logo
+
+`brandbook/v2/brand.json` defines the three current font families. Use Funnel
+Display at 600 for headings and page titles; never use it for identifiers,
+addresses or code. Use Atkinson Hyperlegible Next at 400 or 600 for body and
+interface text. Use Atkinson Hyperlegible Mono for ids, addresses, headers,
+commands and code. The body, `font-display` and `font-mono` styles in
+`assets/css/app.css` map to those faces.
+
+`brandbook/status-marks.json` defines the status marks. Always pair each mark
+with one of the words Sent, Delivered, Delayed, Failed and Not sent. The color
+and shape support the word; neither replaces it.
+
+Use the theme-matched typemark without recoloring or inversion. Keep clear space
+equal to one quarter of the typemark height on every side, and keep the full
+typemark at least 96px wide on screen. Keep shapes and text outside its clear
+space, including the tagline. Use by others does not imply endorsement or
+certification.
 
 ### 2. Structure — `@theme` block + `:root` tokens (theme-independent)
 
@@ -78,14 +99,14 @@ failure.
 
 **Elevation is borders-first.** Default surfaces are `border border-base-300`
 with no shadow (brand `--depth:0`, flat — no glassmorphism/bevels). Only
-modals/popovers use `shadow-overlay` (a faint Espresso-tinted shadow). Never
+modals/popovers use the theme-specific `shadow-overlay` token. Never
 `shadow-2xl`/`-xl`/`-lg`.
 
 ## Motion vocabulary
 
-Brand metaphor "clarity through panes": content **arrives by becoming visible**
-(opacity) and settling a few px into place — never sliding across the screen,
-never bouncing. Six named motions, deliberately restrained.
+Motion is deliberately restrained: content arrives by becoming visible and
+settling a few px into place, never sliding across the screen or bouncing. The
+six named motions preserve that behavior.
 
 | Motion | Class / mechanism | Where |
 |---|---|---|

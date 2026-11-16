@@ -471,6 +471,8 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
 
     assert guide =~ "period and the last-checked timestamp are both observation basis"
     assert guide =~ "with Refresh adjacent to the timestamp"
+    assert guide =~ "brandbook/status-marks.json"
+    assert guide =~ "Sent, Delivered, Delayed, Failed and Not sent"
     assert guide =~ "No activity shows a neutral “No mail activity in this period”."
 
     refute guide =~ "stays separate"

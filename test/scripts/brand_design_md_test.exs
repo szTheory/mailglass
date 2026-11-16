@@ -22,6 +22,15 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     "Do's and Don'ts"
   ]
 
+  @retired_palette_hexes [
+    "#0D1B2A",
+    "#277B96",
+    "#A6EAF2",
+    "#EAF6FB",
+    "#F8FBFD",
+    "#5C6B7A"
+  ]
+
   @color_tokens %{
     "background" => ["color", "light", "background"],
     "surface" => ["color", "light", "surface"],
@@ -71,7 +80,7 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     assert design =~ "brandbook/v2/brand.json"
     assert design =~ "brandbook/tokens.json"
     assert design =~ "Two Panes, One Email"
-    assert design =~ "the tagline outside the logo"
+    assert design =~ "The tagline stays beside the mark, not inside it."
     assert design =~ "does not imply endorsement or certification"
 
     refute design =~ "brandbook/brand-book.md owns"
@@ -80,7 +89,21 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     refute design =~ "sealed-flap identity as canonical"
     refute design =~ "Inter Tight"
     refute design =~ "IBM Plex Mono"
-    refute design =~ ~r/[←-↓]/
+    refute Enum.any?(["←", "→", "↑", "↓"], &String.contains?(design, &1))
+
+    for retired_hex <- @retired_palette_hexes do
+      refute design =~ retired_hex
+    end
+
+    status_marks = json!("brandbook/status-marks.json")["marks"]
+
+    expected_words =
+      ["sent", "delivered", "delayed", "failed", "not_sent"]
+      |> Enum.map(&status_marks[&1]["word"])
+
+    [_, status_line] = Regex.run(~r/Pair every status mark with its word: ([^.]+)\./, design)
+    actual_words = Regex.split(~r/, | or /, status_line)
+    assert actual_words == expected_words
 
     assert File.read!(@status_path) == "pending\n"
     assert design =~ "the palette, type, tagline and mark wait for owner sign-off"
@@ -113,7 +136,12 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     assert frontmatter["rounded"] == direct_tokens(tokens, "radius")
     assert frontmatter["spacing"] == direct_tokens(tokens, "space")
 
-    palette_hexes = tokens["palette"] |> Map.values() |> Enum.map(& &1["$value"]) |> MapSet.new()
+    palette_hexes =
+      tokens["palette"]
+      |> Map.drop(["$type"])
+      |> Map.values()
+      |> Enum.map(& &1["$value"])
+      |> MapSet.new()
 
     for [hex] <- Regex.scan(~r/#[0-9A-Fa-f]{6}/, design) do
       assert MapSet.member?(palette_hexes, String.upcase(hex)),
@@ -135,7 +163,7 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     color_meta = sidecar["extensions"]["colorMeta"]
 
     assert sidecar["schemaVersion"] == 2
-    assert Map.keys(color_meta) |> Enum.sort() == Map.keys(frontmatter["colors"]) |> Enum.sort()
+    assert Enum.sort(Map.keys(color_meta)) == Enum.sort(Map.keys(frontmatter["colors"]))
 
     for {role, light_token} <- frontmatter["colors"] do
       meta = color_meta[role]
@@ -156,7 +184,8 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
 
     assert Enum.all?(
              motions,
-             &(String.contains?(&1["purpose"], "ease-out") or &1["name"] == "timeline-in")
+             &(String.contains?(String.downcase(&1["purpose"]), "ease-out") or
+                 &1["name"] == "timeline-in")
            )
 
     narrative = sidecar["narrative"]
@@ -166,15 +195,37 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     assert narrative["donts"] == @donts
     assert Enum.count(sidecar["components"]) in 2..4
     assert Enum.all?(sidecar["components"], &(&1["html"] && &1["css"] && &1["refersTo"]))
+
+    assert Enum.all?(
+             sidecar["components"],
+             &String.contains?(&1["css"], "Atkinson Hyperlegible Next")
+           )
+
+    refute Enum.any?(sidecar["components"], &String.contains?(&1["css"], "--font-ui"))
+
+    guide = File.read!(@guide_path)
+    sidecar_text = Jason.encode!(sidecar)
+
+    for doc <- [design, sidecar_text, guide] do
+      for retired_hex <- @retired_palette_hexes, do: refute(doc =~ retired_hex)
+      refute doc =~ "Inter Tight"
+      refute doc =~ "IBM Plex Mono"
+      refute doc =~ "Source of truth: `brandbook/brand-book.md`"
+      refute doc =~ "brandbook/brand-book.md owns identity and voice"
+    end
+
+    refute design =~ "Inter"
+    refute sidecar_text =~ "Inter"
+    refute guide =~ "Inter"
   end
 
   test "Admin guide uses v2 sources, typography, status words and logo rules" do
-    guide = File.read!(@guide_path)
+    guide = @guide_path |> File.read!() |> String.replace(~r/\s+/, " ")
 
     assert guide =~ "brandbook/v2/brand.json and brandbook/tokens.json define identity and voice"
     assert guide =~ "Funnel Display at 600 for headings"
     assert guide =~ "Atkinson Hyperlegible Next at 400 or 600 for body and interface text"
-    assert guide =~ "Atkinson Hyperlegible Mono for ids, addresses, headers and code"
+    assert guide =~ "Atkinson Hyperlegible Mono for ids, addresses, headers, commands and code"
     assert guide =~ "brandbook/status-marks.json"
     assert guide =~ "Sent, Delivered, Delayed, Failed and Not sent"
     assert guide =~ "one quarter of the typemark height"
@@ -199,7 +250,7 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     assert ignore["value"] == "inter"
     assert ignore["files"] == ["lib/mailglass/compliance/unsubscribe_html/**"]
     assert ignore["reason"] =~ "brandbook/v2/brand.json"
-    assert ignore["reason"] =~ "retired"
+    assert ignore["reason"] =~ ~r/retired|retires/
     assert ignore["reason"] =~ ".planning/todos/pending/183-unsubscribe-inline-brand-css.md"
 
     todo = File.read!(@todo_path)
@@ -217,10 +268,18 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
              "owner handoff artifact must exist: #{Path.relative_to(path, @repo_root)}"
     end
 
-    status = File.read!(@status_path)
+    status = @status_path |> File.read!() |> String.trim()
     signoff = File.read!(@signoff_path)
+    claude_patch = File.read!(@claude_patch)
+    product_patch = File.read!(@product_patch)
 
-    assert status == "pending\n"
+    added_patch_text =
+      [claude_patch, product_patch]
+      |> Enum.flat_map(&String.split(&1, "\n"))
+      |> Enum.filter(&(String.starts_with?(&1, "+") and not String.starts_with?(&1, "+++")))
+      |> Enum.join("\n")
+
+    assert status == "pending"
     assert owner_state_consistent?(status, claude, product)
     assert signoff =~ ".planning/research/brand-v2-adoption/owner-signoff/CLAUDE.md.patch"
     assert signoff =~ ".planning/research/brand-v2-adoption/owner-signoff/PRODUCT.md.patch"
@@ -230,6 +289,11 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     assert signoff =~
              "https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/owner-signoff/SIGNOFF.md"
 
+    for patch_path <- ["CLAUDE.md.patch", "PRODUCT.md.patch"] do
+      assert signoff =~
+               "https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/owner-signoff/#{patch_path}"
+    end
+
     for patch <- [@claude_patch, @product_patch] do
       {output, 0} =
         System.cmd("git", ["-C", @repo_root, "apply", "--check", patch], stderr_to_stdout: true)
@@ -237,10 +301,40 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
       assert output == ""
     end
 
+    tokens = json!("brandbook/tokens.json")
+    brand = json!("brandbook/v2/brand.json")
+
+    palette_hexes =
+      tokens["palette"]
+      |> Map.drop(["$type"])
+      |> Map.values()
+      |> Enum.map(&String.upcase(&1["$value"]))
+      |> MapSet.new()
+
+    for [hex] <- Regex.scan(~r/#[0-9A-Fa-f]{6}/, added_patch_text) do
+      assert MapSet.member?(palette_hexes, String.upcase(hex)),
+             "added patch color #{hex} is absent from brandbook/tokens.json"
+    end
+
+    for family <- [
+          brand["type"]["display"]["family"],
+          brand["type"]["text"]["family"],
+          brand["type"]["mono"]["family"]
+        ] do
+      assert added_patch_text =~ family
+    end
+
+    retired_copy = Enum.join(brand["retired"], " ")
+    assert retired_copy =~ "Inter"
+    assert retired_copy =~ "IBM Plex Mono"
+    assert added_patch_text =~ brand["tagline"]
+
     temporary =
       Path.join(System.tmp_dir!(), "brand-owner-patches-#{System.unique_integer([:positive])}")
 
     File.mkdir_p!(temporary)
+    {output, 0} = System.cmd("git", ["-C", temporary, "init", "--quiet"], stderr_to_stdout: true)
+    assert output == ""
     File.cp!(Path.join(@repo_root, "CLAUDE.md"), Path.join(temporary, "CLAUDE.md"))
     File.cp!(Path.join(@repo_root, "PRODUCT.md"), Path.join(temporary, "PRODUCT.md"))
     on_exit(fn -> File.rm_rf!(temporary) end)
@@ -250,11 +344,9 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
         "git",
         [
           "-C",
-          @repo_root,
+          temporary,
           "apply",
           "--check",
-          "--directory",
-          temporary,
           @claude_patch,
           @product_patch
         ],
@@ -266,7 +358,7 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     {output, 0} =
       System.cmd(
         "git",
-        ["-C", @repo_root, "apply", "--directory", temporary, @claude_patch, @product_patch],
+        ["-C", temporary, "apply", @claude_patch, @product_patch],
         stderr_to_stdout: true
       )
 
@@ -282,14 +374,14 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
       Path.join(System.tmp_dir!(), "brand-owner-half-#{System.unique_integer([:positive])}")
 
     File.mkdir_p!(half_applied)
+    {output, 0} = System.cmd("git", ["-C", half_applied, "init", "--quiet"], stderr_to_stdout: true)
+    assert output == ""
     File.cp!(Path.join(@repo_root, "CLAUDE.md"), Path.join(half_applied, "CLAUDE.md"))
     File.cp!(Path.join(@repo_root, "PRODUCT.md"), Path.join(half_applied, "PRODUCT.md"))
     on_exit(fn -> File.rm_rf!(half_applied) end)
 
     {output, 0} =
-      System.cmd("git", ["-C", @repo_root, "apply", "--directory", half_applied, @claude_patch],
-        stderr_to_stdout: true
-      )
+      System.cmd("git", ["-C", half_applied, "apply", @claude_patch], stderr_to_stdout: true)
 
     assert output == ""
     half_claude = File.read!(Path.join(half_applied, "CLAUDE.md"))
@@ -329,14 +421,15 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
       |> String.split("\n")
       |> Enum.reject(&(String.trim(&1) == "" or String.starts_with?(String.trim(&1), "#")))
       |> Enum.map(fn line ->
-        [_, indent, key, value] = Regex.run(~r/^( *)([^:]+):(?:\s+(.*))?$/, line) ++ [""]
-        {String.length(indent), String.trim(key), value |> to_string() |> String.trim()}
+        [_, indent, key | value_captures] = Regex.run(~r/^( *)([^:]+):(?:\s+(.*))?$/, line)
+        value = List.first(value_captures) || ""
+        {String.length(indent), String.trim(key), String.trim(value)}
       end)
 
     {parsed, _stack} =
       Enum.reduce(lines, {%{}, []}, fn {indent, key, value}, {acc, stack} ->
-        parents = Enum.take_while(stack, fn {level, _parent} -> level < indent end)
-        path = Enum.map(parents, &elem(&1, 1)) ++ [key]
+        parents = Enum.filter(stack, fn {level, _parent} -> level < indent end)
+        path = (parents |> Enum.map(&elem(&1, 1)) |> Enum.reverse()) ++ [key]
 
         if value == "" do
           {put_path(acc, path, %{}), [{indent, key} | parents]}

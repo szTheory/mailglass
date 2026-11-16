@@ -550,6 +550,11 @@ defmodule Mailglass.DocsContractTest do
                "Hard refreshes and direct deep links should stay styled. If they do not, run the admin asset browser proof and treat it as a regression."
 
       assert design_system =~ "resolved and proven in v2.1 Phase 139"
+
+      assert design_system =~
+               "brandbook/v2/brand.json and brandbook/tokens.json define identity and voice"
+
+      assert design_system =~ "brandbook/status-marks.json"
       assert design_system =~ "stylesheet responses, font responses"
       assert design_system =~ "token-backed computed styling"
       assert design_system =~ "admin asset hard load"
