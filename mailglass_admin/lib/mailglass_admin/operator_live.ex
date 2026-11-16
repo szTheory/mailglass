@@ -2887,7 +2887,8 @@ defmodule MailglassAdmin.OperatorLive do
 
     delivery_issues =
       [
-        {:failed, "Failed emails", "Sending failed before a successful handoff to the provider."},
+        {:failed, "Failed emails",
+         "These emails did not get through: sending failed, or the provider reported a failure."},
         {:bounced, "Bounced emails",
          "The provider reported that these messages could not be delivered."},
         {:rejected, "Rejected emails", "The provider rejected these messages."},
@@ -2895,7 +2896,7 @@ defmodule MailglassAdmin.OperatorLive do
          "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
       ]
       |> Enum.map(fn {event, label, help} ->
-        matching = Enum.filter(groups, &(Components.delivery_display_status(&1) == event))
+        matching = Enum.filter(groups, &(health_delivery_card(&1) == event))
         count = Enum.reduce(matching, 0, &(&1.count + &2))
         # Older records can have a failure status without a matching latest event.
         # Keep the problem visible; don't send that subset to an empty event filter.
@@ -2940,6 +2941,26 @@ defmodule MailglassAdmin.OperatorLive do
 
     (delivery_issues ++ inbound_issues ++ webhook_issues)
     |> Enum.filter(&(is_integer(&1.count) and &1.count > 0))
+  end
+
+  # The Health delivery card an outcome group counts under, or nil when it is not a
+  # problem. The delivery class decides whether it is one, the same rule the Activity
+  # summary and the row marks use, so a bounce followed by an open still counts and a
+  # confirmed delivery followed by a deferral does not. The card only names how it
+  # failed: the latest failure event, else the durable bounce, else a plain failure.
+  defp health_delivery_card(group) do
+    case StatusMap.delivery_class(group) do
+      :failed -> health_failure_card(group)
+      :delayed -> :deferred
+      _other -> nil
+    end
+  end
+
+  defp health_failure_card(group) do
+    case Map.get(group, :last_event_type) do
+      event when event in [:bounced, :rejected, :failed] -> event
+      _other -> if Map.get(group, :bounced_at), do: :bounced, else: :failed
+    end
   end
 
   defp support_evidence_path(base_path, filter_params, dark_chrome, :orphan_backlog, summary) do

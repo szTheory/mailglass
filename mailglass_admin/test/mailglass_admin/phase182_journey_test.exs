@@ -21,6 +21,9 @@ defmodule MailglassAdmin.Phase182JourneyTest do
   @tenant_id "browser-tenant"
   @base_path "/ops/mail"
   @attention_classes [:failed, :delayed, :not_sent]
+  # The four Health delivery cards, by the event name in their testid. :deferred is the
+  # "Delayed emails" card.
+  @health_events [:failed, :bounced, :rejected, :deferred]
   @undetermined "Status cannot be fully determined with this mailglass version."
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
@@ -130,6 +133,88 @@ defmodule MailglassAdmin.Phase182JourneyTest do
       assert summary_count(html, :attention) == 3
       assert summary_count(html, :delivered) == 1
       assert summary_count(html, :awaiting) == 4
+    end
+  end
+
+  # The Health overview counts delivery problems for the same emails the Activity summary
+  # does (WR-01): one rule, the delivery class. Health has a card for Failed, Bounced,
+  # Rejected and Delayed emails and none for Not sent, so its cards together must equal
+  # the Activity Needs attention count minus the Not sent rows.
+  describe "Health delivery cards follow the Activity rule (WR-01)" do
+    for {label, attrs, _bucket} <- @bucket_rows do
+      test "#{label} is counted by Health exactly when Activity counts it as failed or delayed",
+           %{conn: conn} do
+        OperatorFixtures.reset!()
+        attrs = resolve_times(unquote(Macro.escape(attrs)))
+        insert_delivery!(attrs)
+
+        {:ok, activity, _html} = live(operator_conn(conn), deliveries_path())
+        activity_html = render(activity)
+        {:ok, health, _html} = live(operator_conn(conn), health_path())
+        cards = health_card_counts(render(health))
+
+        activity_problem =
+          summary_count(activity_html, :attention) - not_sent_count(attrs)
+
+        assert Enum.sum(Map.values(cards)) == activity_problem,
+               "#{unquote(label)}: Health cards #{inspect(cards)} disagree with Activity " <>
+                 "(#{activity_problem} failed or delayed)"
+      end
+    end
+
+    test "a bounce followed by an open is a Bounced email on Health, not nowhere", %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      insert_delivery!(%{
+        recipient: "pw-bounce-then-open@example.com",
+        status: :sent,
+        last_event_type: :opened,
+        bounced_at: DateTime.add(DateTime.utc_now(), -5, :hour),
+        terminal: true
+      })
+
+      {:ok, health, _html} = live(operator_conn(conn), health_path())
+      html = render(health)
+
+      assert health_card_counts(html) == %{bounced: 1}
+
+      # The latest event is the open, so an event filter would link to an empty list.
+      refute health_card_href(html, :bounced) =~ "event=bounced"
+    end
+
+    test "a confirmed delivery whose latest event is a later deferral is not a Delayed email",
+         %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      insert_delivery!(%{
+        recipient: "pw-delivered-then-deferred@example.com",
+        status: :sent,
+        last_event_type: :deferred,
+        delivered_at: DateTime.add(DateTime.utc_now(), -5, :hour),
+        terminal: true
+      })
+
+      {:ok, health, _html} = live(operator_conn(conn), health_path())
+
+      assert health_card_counts(render(health)) == %{}
+    end
+
+    test "a provider-reported failure on a handed-off email is a Failed email on Health",
+         %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      insert_delivery!(%{
+        recipient: "pw-provider-failed@example.com",
+        status: :sent,
+        last_event_type: :failed,
+        terminal: true
+      })
+
+      {:ok, health, _html} = live(operator_conn(conn), health_path())
+      html = render(health)
+
+      assert health_card_counts(html) == %{failed: 1}
+      assert health_card_href(html, :failed) =~ "event=failed"
     end
   end
 
@@ -672,6 +757,44 @@ defmodule MailglassAdmin.Phase182JourneyTest do
 
   defp deliveries_path do
     @base_path <> "?" <> URI.encode_query(%{"tenant_id" => @tenant_id, "view" => "deliveries"})
+  end
+
+  defp health_path, do: @base_path <> "?" <> URI.encode_query(%{"tenant_id" => @tenant_id})
+
+  # Health shows only non-zero delivery cards, so the map holds just the cards present.
+  defp health_card_counts(html) do
+    doc = Floki.parse_document!(html)
+
+    for event <- @health_events,
+        [count] <-
+          [Floki.find(doc, "[data-testid='operator-health-deliveries-#{event}-count']")],
+        into: %{} do
+      {event, count |> Floki.text() |> String.trim() |> String.to_integer()}
+    end
+  end
+
+  defp health_card_href(html, event) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("[data-testid='operator-health-deliveries-#{event}-link']")
+    |> Floki.attribute("href")
+    |> hd()
+  end
+
+  # The Not sent rows of one seeded attrs map: Health has no card for them.
+  defp not_sent_count(attrs) do
+    row = %{
+      status: Map.get(attrs, :status, :sent),
+      last_event_type: Map.get(attrs, :last_event_type),
+      delivery_confirmed: Map.has_key?(attrs, :delivered_at),
+      delivered_at: Map.get(attrs, :delivered_at),
+      bounced_at: Map.get(attrs, :bounced_at),
+      terminal: Map.get(attrs, :terminal),
+      complained_at: Map.get(attrs, :complained_at),
+      suppressed_at: Map.get(attrs, :suppressed_at)
+    }
+
+    if StatusMap.delivery_class(row) == :not_sent, do: 1, else: 0
   end
 
   # The integer inside the summary stat card `#delivery-summary-<key>`.
