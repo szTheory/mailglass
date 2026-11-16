@@ -127,10 +127,19 @@ async function injectNoStatusWord(page) {
       badge.removeAttribute("aria-label");
       badge.removeAttribute("title");
     });
-    // The verdict heading repeats the class word beside its mark; without this the word would still be
-    // on the page and the defect would be arguable rather than plain.
+    // The verdict heading repeats the class word beside its mark, and the sentence under it opens with the
+    // same word ("Failed: the email ..."); without removing both the word would still be on the page and
+    // the defect would be arguable rather than plain.
     document.querySelectorAll("[data-verdict-class] h3").forEach((heading) => {
       heading.textContent = "";
+      count += 1;
+    });
+    document.querySelectorAll("[data-verdict-class] p").forEach((paragraph) => {
+      const node = paragraph.firstChild;
+      if (!node || node.nodeType !== Node.TEXT_NODE) return;
+      const stripped = node.textContent.replace(/^(Sent|Delivered|Delayed|Failed|Not sent|Queued)(:|\b)\s*/, "");
+      if (stripped === node.textContent) return;
+      node.textContent = stripped.charAt(0).toUpperCase() + stripped.slice(1);
       count += 1;
     });
     return count;

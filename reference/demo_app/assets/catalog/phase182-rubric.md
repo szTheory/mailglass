@@ -52,6 +52,15 @@ status on screen has a drawn mark AND one of those words. A mark alone, a colour
 is not one of the five (for example "Bounced", "Deferred", "Dispatched", "Suppressed" used as the
 status) is a breach.
 
+Two things that look like a sixth status word but are not a breach:
+- A **queued** email (accepted by the app, not yet handed to the provider) is the Sent class with the
+  qualifier word **Queued** and the sentence "Not handed to the provider yet." The qualifier exists so the
+  screen never implies a handoff that did not happen. It is never "Delivered".
+- **Event names** are not statuses. The "Latest recorded event" filter, a row's "Latest: Bounced" line and the
+  card titles in the delivery timeline (Sent, Bounced, Opened, Deferred, Suppressed and so on) name recorded
+  events, and are allowed there. The breach is an event word standing in for the delivery's status badge or
+  verdict.
+
 What the words mean (`color.status[*].meaning`):
 - Sent: "Your app handed the email to the provider, such as Postmark. Not the same as delivered."
 - Delivered: "The receiving server took the email. This does not mean the person opened it or that it
@@ -101,7 +110,9 @@ The job is: "a customer says the password reset never arrived." Check:
   first, above the evidence and the raw events.
 - On the Activity list the search comes before the list, and each row shows a status mark plus word.
 - At a phone width (375 px) the verdict is visible near the top of the page, without long scrolling.
-- Nothing important is hidden or cut off.
+- Nothing important is hidden or cut off. A list or table that scrolls inside its own bordered area (with a
+  pagination bar under it) shows only the rows that fit; a row partly hidden at the bottom of such an area is
+  not cut-off content.
 
 ### R-TRUTH-1: no claim the product cannot know
 
