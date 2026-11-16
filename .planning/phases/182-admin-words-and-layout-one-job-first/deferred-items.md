@@ -33,3 +33,20 @@ Out-of-scope discoveries logged by plan executors. Nothing here was fixed by the
 - **Where:** `mailglass_admin/e2e/structural.spec.js` (`.../168-.../artifacts/review-fix/*.png`), `mailglass_admin/e2e/phase169-journey.spec.js` (`.../169-.../artifacts/after/*.png`), and a demo spec in the evidence run (`.../172-.../artifacts/browser-evidence/invoice-preview-{320,375}.png`).
 - **Effect:** every full run of those lanes dirties 4, 20 and 2 tracked PNGs of archived milestones. 182-05 restored them with `git checkout -- <paths>` after each run and never staged them (T-182-16). A careless `git add -A` after a lane run would rewrite archived evidence.
 - **Not fixed here:** moving the output paths changes what the archived phases' evidence checks read, so it needs its own decision.
+
+## 182-06
+
+### Inbound outcome help and the support-card help strings still say "message"
+
+- **Where:** `mailglass_admin/lib/mailglass_admin/components.ex` (`outcome_help(:inbound, ...)` and the generic `outcome_help(_, _)` fallback), `mailglass_admin/lib/mailglass_admin/operator_live.ex` (the Failed/Bounced/Rejected/Delayed support-card help, `"The provider reported that these messages could not be delivered."` and its siblings).
+- **Why it stayed:** the BRADM-07 review rejected only delivery screens, so 182-06 changed only the delivery outcome help and the Awaiting confirmation tile. The support-card strings are pinned by the evidence-bound `reference/persona_spec/quick_view_scenarios.json` (line 1504), which this plan must not edit; the inbound screens are not among the 14 captured scenarios. The brand book (`voice.terms`) prefers "email" (and "inbound email") to "message" on screens, so a later words pass can finish the sweep together with a re-baselined persona file.
+
+### The Activity list at 1440 shows a scrolling table whose last visible row is partly hidden in a full-page screenshot
+
+- **Where:** `deliveries__northstar__default__1440__light` (the iteration-1 judge `b` flagged it under R-HIER-1; after the rubric said a list that scrolls inside its own bordered area is not cut-off content, both judges passed it).
+- **Not fixed here:** it is the existing bordered, scrollable table with the pagination bar under it, not a regression of this phase. If the owner wants the whole page to scroll instead, that is a layout change with a bundle rebuild.
+
+### `mix verify.support_contract.admin` with `MIX_BUILD_PATH` pointing at a fresh temp directory fails to compile `premailex`
+
+- **Seen:** `MIX_BUILD_PATH="$(mktemp -d)/test" mix verify.support_contract.admin` stops with `could not read file ".../test/lib/premailex/priv/entities.txt"` (the dependency reads its own `priv` at compile time and the override build path has no `priv` link yet). Pre-seeding the link by hand did not help.
+- **Workaround used for the cold proof:** the admin `_build/test` directory was moved aside, the lane was run (a true cold compile, 1756 tests, 0 failures), and the warm build was restored. The same quirk is why `MIX_DEPS_PATH`/`MIX_BUILD_PATH` overrides are unreliable on this machine.
