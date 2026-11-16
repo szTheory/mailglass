@@ -127,6 +127,12 @@ async function injectNoStatusWord(page) {
       badge.removeAttribute("aria-label");
       badge.removeAttribute("title");
     });
+    // The verdict heading repeats the class word beside its mark; without this the word would still be
+    // on the page and the defect would be arguable rather than plain.
+    document.querySelectorAll("[data-verdict-class] h3").forEach((heading) => {
+      heading.textContent = "";
+      count += 1;
+    });
     return count;
   });
   expect(removed, "the status-word defect must remove at least one badge word").toBeGreaterThan(0);
@@ -189,7 +195,8 @@ function buildMatrix() {
       theme: "light",
       prepare: async (page) => {
         await openOperator(page, `${NORTHSTAR_ACTIVITY}&search=${encodeURIComponent("nobody@northstar.example")}`);
-        await expect(page.getByTestId("operator-empty-filtered"), "an address with no email must show the filtered empty state").toBeVisible();
+        // `operator-empty-filtered` is a hidden marker node; the visible filtered empty state ends in the reset control.
+        await expect(page.getByTestId("operator-empty-reset"), "an address with no email must show the filtered empty state").toBeVisible();
       }
     }),
     make({ tier: "J", screen: "deliveries", fixture: "northstar", viewport: 1440, theme: "light", prepare: (page) => openOperator(page, NORTHSTAR_ACTIVITY) }),
@@ -236,13 +243,16 @@ async function openOperator(page, target) {
   await connected(page);
 }
 
-// Rows render twice (desktop table and mobile list); only the visible one is the real row.
+// Rows render twice (desktop table and mobile list); only the visible one is the real row. The row's
+// open control is the visible button that selects it: the table cell's "Open delivery for ..." button
+// on desktop, the whole card (which is itself the `operator-delivery-row` button) on a phone.
+function rowOpenControl(page) {
+  return page.locator('button[phx-click="select_delivery"]').filter({ visible: true }).first();
+}
+
 async function openFirstDeliveryRow(page) {
-  const rows = page.getByTestId("operator-delivery-row").filter({ visible: true });
-  await expect(rows.first()).toBeVisible();
-  const button = rows.first().getByRole("button", { name: /Open delivery/ });
-  if ((await button.count()) > 0) await button.first().click();
-  else await rows.first().click();
+  await expect(rowOpenControl(page)).toBeVisible();
+  await rowOpenControl(page).click();
   await expect(page.getByTestId("operator-quick-view")).toBeVisible();
   await expect(page).toHaveURL(/delivery_id=/);
 }
@@ -526,8 +536,7 @@ test.describe("advisory: password-reset journey @advisory", () => {
       await connected(page);
       const rows = page.getByTestId("operator-delivery-row").filter({ visible: true });
       await expect(rows).toHaveCount(1);
-      const openButton = rows.first().getByRole("button", { name: /Open delivery/ });
-      await minTarget(openButton.first(), "the row's open control");
+      await minTarget(rowOpenControl(page), "the row's open control");
       await noHorizontalScroll(page, "searched list");
 
       await openFirstDeliveryRow(page);
