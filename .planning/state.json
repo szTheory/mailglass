@@ -21,7 +21,7 @@
     {
       "number": "182",
       "name": "Admin Words and Layout, One Job First",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "183",
@@ -31,8 +31,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 4 of 5 · 60% · ready to verify"
+    "label": "Advance to the next step (plan phase 183)",
+    "reason": "Phase 5 of 5 — needs a plan"
   },
-  "updated_at": "2026-11-16T00:49:08.815Z"
+  "updated_at": "2026-11-16T01:32:13.024Z"
 }

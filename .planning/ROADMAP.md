@@ -54,7 +54,7 @@
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (completed 2026-11-14)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
-- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen
+- [x] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (completed 2026-11-15)
 - [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry brand v2; announcement and any trademark claim wait on the search result
 
 <details>
@@ -173,7 +173,7 @@ Plans:
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
 **Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
-**Plans**: 6/6 plans executed (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
+**Plans**: 6/6 plans complete (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
 
 Plans:
 **Wave 1**
@@ -219,5 +219,5 @@ Plans:
 | 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
-| 182. Admin Words and Layout, One Job First | 6/6 | In Progress | - |
+| 182. Admin Words and Layout, One Job First | 6/6 | Complete    | 2026-11-15 |
 | 183. Docs, Packaging and Launch Prep | 0/TBD | Not started | - |
