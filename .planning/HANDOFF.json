@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-16T20:01:45.404Z",
+  "timestamp": "2026-11-16T20:22:50.955Z",
   "phase": "183",
   "phase_name": "Docs, Packaging and Launch Prep",
   "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
@@ -36,16 +36,16 @@
   ],
   "blockers": [
     {
-      "description": "The one additional capture authorization is consumed. Available WebKit still renders light SVG colors in the dark embedded-image probe; the first full catalog also misses the fixed 0.90 cross-engine IoU threshold at 16px DPR1 (0.886).",
+      "description": "The one additional capture authorization is consumed. The pinned Playwright 1.59.1 runtime still renders light SVG colors in the dark embedded-image probe; the first full catalog also misses the fixed 0.90 cross-engine IoU threshold at 16px DPR1 (0.886). Official Playwright 1.65 now bundles WebKit 27.2, but it has not been tested here and WebKit's SVG image dark-mode issue remains reopened.",
       "type": "human_action",
-      "workaround": "Preserve both evidence sets. Wait for an updated WebKit runtime or an explicit owner decision to change the recovery/acceptance scope. Do not launch browsers or start plan 183-01."
+      "workaround": "Preserve both evidence sets. Ask the owner to authorize updating the pinned Playwright runtime to 1.65 and exactly one fresh capture, or to wait/choose another recovery scope. Do not launch browsers or start plan 183-01 before that decision."
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "Decide whether to wait for a WebKit runtime that passes the SVG dark-mode probe or approve a materially changed acceptance/recovery approach.",
-      "context": "The two authorized capture runs failed. The corrective run tested scheme-specific resource identity, explicit image-level color-scheme, and a pixel-verified theme probe, but WebKit still returned light colors. No additional browser run is authorized.",
+      "action": "Decide whether to authorize a Playwright 1.65 dependency update and exactly one fresh capture, or to keep the phase paused while waiting/choosing another recovery scope.",
+      "context": "The two authorized capture runs failed. Official Playwright 1.65 now bundles WebKit 27.2, while this project is pinned to 1.59.1. The corrective run tested scheme-specific resource identity, explicit image-level color-scheme, and a pixel-verified theme probe, but WebKit still returned light colors. The new runtime is untested and another browser run requires explicit owner authorization.",
       "blocking": true
     }
   ],
@@ -62,16 +62,13 @@
     }
   ],
   "uncommitted_files": [
-    " M .planning/STATE.md",
     " M .planning/config.json",
-    " M .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.md",
-    "?? .planning/HANDOFF.json",
     "?? .planning/research/brand-v2-adoption/PHASE-183-A-readme-hexpm.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-C-design-system-docs.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-D-lint-allowlist.md",
     "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
     "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
   ],
-  "next_action": "Wait for the owner to choose whether to wait for an updated WebKit runtime or approve a materially changed recovery/acceptance scope. Until then, do not run favicon-capture.cjs --capture or start plan 183-01.",
-  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The corrective failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The earlier mistaken --check launch failed before capture; --check is now a read-only source-pin check. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Node decoding was checked against all 108 first-catalog images; the WebKit dark colors are genuinely light. The full Admin lane on the first catalog had 1814 tests, 1 catalog acceptance failure, 1 excluded. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+  "next_action": "Wait for the owner to authorize updating the Playwright pin to 1.65 and exactly one fresh capture, or to choose a different recovery scope. Until then, do not run favicon-capture.cjs --capture or start plan 183-01.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The corrective failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The earlier mistaken --check launch failed before capture; --check is now a read-only source-pin check. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Node decoding was checked against all 108 first-catalog images; the WebKit dark colors are genuinely light. The full Admin lane on the first catalog had 1814 tests, 1 catalog acceptance failure, 1 excluded. Official Playwright 1.65 bundles WebKit 27.2; the WebKit SVG image dark-mode issue remains reopened. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
 }
