@@ -3,7 +3,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   Read-only tenant-scoped support cues for the selected delivery context.
 
   Two-tier hierarchy per 74-UI-SPEC.md Support-Card Primary/Secondary Hierarchy Layout:
-  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, unmatched webhooks)
+  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, provider reports that match no email)
   - Tier 2: compact horizontal row for zero-state items and the always-informational suppression count
   """
 
@@ -429,7 +429,10 @@ defmodule MailglassAdmin.Operator.SupportCards do
     do: "Showing exact Account Event"
 
   defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing a webhook processing failure"
-  defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched webhook evidence"
+
+  defp drilldown_banner(%{focus: :orphan_backlog}),
+    do: "Showing provider reports that match no email"
+
   defp drilldown_banner(%{focus: :replay_outcomes}), do: "Showing replay audit fact"
   defp drilldown_banner(%{focus: :reconcile_facts}), do: "Showing reconcile fact"
   defp drilldown_banner(_support_state), do: nil

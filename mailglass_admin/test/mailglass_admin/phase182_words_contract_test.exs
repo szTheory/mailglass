@@ -337,6 +337,39 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
   # -- the orphan sentence (Task 3, D-12) -----------------------------------------------------
 
   describe "the provider-report sentence (BRADM-05, D-12)" do
+    # The drill-down banner is the only place the old word could survive: it shows when the
+    # Health link has no oldest event to name (WR-04). `unmatched` is a retired word on
+    # every focus state, so the scan covers all of them, not just the orphan one.
+    test "no drill-down banner says unmatched, and the provider-report focus says the sentence" do
+      banner = fn state ->
+        support_cards_html(3, 1, state)
+        |> Floki.parse_fragment!()
+        |> Floki.find(~s([data-testid="support-card-drilldown-banner"]))
+        |> Floki.text()
+        |> String.trim()
+      end
+
+      states = [
+        %{focus: :orphan_backlog, event_id: nil, webhook_event_id: nil},
+        %{focus: :orphan_backlog, event_id: "evt-1", webhook_event_id: nil},
+        %{focus: :failed_ingest, event_id: nil, webhook_event_id: nil},
+        %{focus: :failed_ingest, event_id: nil, webhook_event_id: "wh-1"},
+        %{focus: :replay_outcomes, event_id: nil, webhook_event_id: nil},
+        %{focus: :reconcile_facts, event_id: nil, webhook_event_id: nil}
+      ]
+
+      for state <- states do
+        text = banner.(state)
+
+        # Non-vacuous: every focus state really draws a banner.
+        assert text =~ "Showing", "no banner for #{inspect(state)}"
+        refute text =~ ~r/unmatched|orphan/i, "#{inspect(state)} says #{inspect(text)}"
+      end
+
+      assert banner.(%{focus: :orphan_backlog, event_id: nil, webhook_event_id: nil}) ==
+               "Showing provider reports that match no email"
+    end
+
     test "label/1 is exact for 0, 1, 2, 11 and 1000, with no grouping or abbreviation" do
       assert OrphanCount.label(0) == "0 provider reports match no email"
       assert OrphanCount.label(1) == "1 provider report matches no email"
@@ -869,7 +902,11 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
     )
   end
 
-  defp support_cards_html(orphan_count, still_unmatched) do
+  defp support_cards_html(
+         orphan_count,
+         still_unmatched,
+         support_state \\ %{focused_card: nil, drilldown_banner: nil}
+       ) do
     render_component(&SupportCards.support_cards/1,
       support_summary: %{
         failed_ingest: %{count: 0, latest: nil},
@@ -881,7 +918,7 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
           latest_reconciled: nil
         }
       },
-      support_state: %{focused_card: nil, drilldown_banner: nil},
+      support_state: support_state,
       suppression_count: 0
     )
   end
@@ -987,6 +1024,7 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
       "Unmatched events",
       "Unmatched Events",
       "Unmatched webhook evidence",
+      "unmatched webhook",
       "Still unmatched",
       "Oldest unmatched"
     ]
