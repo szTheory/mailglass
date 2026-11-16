@@ -124,6 +124,20 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
       assert function_exported?(Mailglass.BrandTrademarkGate, :announcement_allowed?, 1)
       assert function_exported?(Mailglass.BrandTrademarkGate, :announcement_allowed?, 2)
     end
+
+    test "production CLI refuses injected date and record paths" do
+      {output, status} =
+        System.cmd(
+          "mix",
+          ["run", "--no-start", @script, "check", "--today", "2026-11-13"],
+          cd: @repo_root,
+          env: [{"MIX_ENV", "prod"}],
+          stderr_to_stdout: true
+        )
+
+      assert status == 2
+      assert output =~ "only available in MIX_ENV=test"
+    end
   end
 
   describe "evidence invariants" do
@@ -156,6 +170,29 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
 
       assert :clear_without_evidence in issues(record)
       assert :blocked_source_not_reflected in issues(record)
+    end
+
+    test "clear requires each required register to report clear, not merely checked" do
+      record = clear_record() |> set_outcome(["uspto"], "caution")
+
+      assert {:error, _issues} = gate(:validate, [record])
+      assert gate(:decision, [record, before_expiry(record)]) == {:deny, :invalid_record}
+    end
+
+    test "a search record dated in the future is invalid" do
+      record = clear_record()
+      today = Date.from_iso8601!(record["date"]) |> Date.add(-1)
+
+      assert gate(:decision, [record, today]) == {:deny, :future_dated}
+    end
+
+    test "a search validity window longer than 180 days is invalid" do
+      record = clear_record()
+      date = Date.from_iso8601!(record["date"])
+      long_lived = Map.put(record, "expires", date |> Date.add(181) |> Date.to_iso8601())
+
+      assert {:error, _issues} = gate(:validate, [long_lived])
+      assert gate(:decision, [long_lived, date]) == {:deny, :invalid_record}
     end
 
     test "a blocked source under caution is invalid" do
@@ -465,6 +502,29 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
       File.write!(Path.join(tmp_dir, "docs/sub/a.md"), "clean\n")
       File.write!(Path.join(tmp_dir, "brandbook/b.md"), "clean\n")
       assert symbol_hits(tmp_dir) == []
+    end
+
+    test "finds encoded claims in source, bundled assets and HTML text", %{tmp_dir: tmp_dir} do
+      File.mkdir_p!(Path.join(tmp_dir, "lib/mailglass"))
+      File.mkdir_p!(Path.join(tmp_dir, "priv/static"))
+      File.mkdir_p!(Path.join(tmp_dir, "docs"))
+      File.write!(Path.join(tmp_dir, "lib/mailglass/page.ex"), "# mailglass (TM)\n")
+      File.write!(Path.join(tmp_dir, "priv/static/app.css"), ".brand { content: '\\\\2122'; }\n")
+      File.write!(Path.join(tmp_dir, "docs/page.html"), "<p>mailglass &trade; and &#x2122;</p>\n")
+
+      assert Enum.sort(symbol_hits(tmp_dir)) == [
+               "docs/page.html:1",
+               "lib/mailglass/page.ex:1",
+               "priv/static/app.css:1"
+             ]
+    end
+
+    test "exempts only the exact pinned rule-text file", %{tmp_dir: tmp_dir} do
+      File.mkdir_p!(Path.join(tmp_dir, "brandbook/v2"))
+      File.write!(Path.join(tmp_dir, "brandbook/v2/brand.json"), ~s({"rule":"Use ™, not ®"}))
+      File.write!(Path.join(tmp_dir, "brandbook/v2/extra.json"), ~s({"claim":"mailglass®"}))
+
+      assert symbol_hits(tmp_dir) == ["brandbook/v2/extra.json:1"]
     end
   end
 
