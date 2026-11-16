@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-11-16T18:59:50.011Z",
+  "phase": "183",
+  "phase_name": "Docs, Packaging and Launch Prep",
+  "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
+  "plan": 2,
+  "task": 3,
+  "total_tasks": 3,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Harden trademark gate and public claim scanning",
+      "status": "done",
+      "commit": "4767f96e"
+    },
+    {
+      "id": 2,
+      "name": "Publish v2 design guidance and pending owner patches",
+      "status": "done",
+      "commit": "8b5e4568"
+    },
+    {
+      "id": 3,
+      "name": "Pin launch artwork and validate favicon captures",
+      "status": "in_progress",
+      "commit": "869397a1",
+      "progress": "Implementation and non-browser checks are committed. The preserved catalog contains 72 Chromium/Firefox cells, no WebKit cells, and no manifest."
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": 3,
+      "name": "Complete or explicitly leave blocked the 108-cell browser catalog acceptance",
+      "status": "blocked",
+      "details": "Owner decision required before any further capture because the approved plan prohibits browser retries."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "WebKit's light/dark theme probe produced identical raster output, leaving the required 36 WebKit cells and complete catalog manifest absent.",
+      "type": "human_action",
+      "workaround": "No workaround within the approved no-retry plan. Owner may authorize one fresh bounded capture pass after targeted diagnosis, or keep Phase 183 incomplete."
+    }
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {
+      "action": "Decide whether to authorize one additional bounded favicon capture pass despite the approved no-retry limit, or preserve the phase as incomplete.",
+      "context": "Plan 183-02 requires 108 captures; the current directory has 72 actual captures and no manifest. Plan 183-01 depends on 183-02.",
+      "blocking": true
+    },
+    {
+      "action": "Review/apply the paired CLAUDE.md and PRODUCT.md patches when ready.",
+      "context": "The patches are pending under owner-signoff; canonical files are unchanged.",
+      "blocking": false
+    },
+    {
+      "action": "Make the trademark/counsel decision before any public announcement or trademark claim.",
+      "context": "The current production gate denies announcement under the caution record.",
+      "blocking": false
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Do not start plan 183-01 before 183-02 completes.",
+      "rationale": "The plan dependency and missing catalog acceptance are explicit."
+    },
+    {
+      "decision": "Do not claim a complete catalog or create the normal 183-02 summary.",
+      "rationale": "The preserved 72-cell output has no WebKit data and no manifest."
+    }
+  ],
+  "uncommitted_files": [
+    " M .planning/STATE.md",
+    " M .planning/config.json",
+    " M .planning/state.json",
+    "?? .planning/HANDOFF.json",
+    "?? .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-A-readme-hexpm.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-C-design-system-docs.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-D-lint-allowlist.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
+    "?? .planning/research/brand-v2-adoption/favicon-catalog/"
+  ],
+  "next_action": "Owner decision: authorize one fresh capture pass after targeted WebKit diagnosis, with no retries if it fails, or keep the plan incomplete. After authorization, resume via $gsd-resume-work and continue only plan 183-02.",
+  "context_notes": "The Claude session identifier was supplied, but repo artifacts were sufficient to resume. Task-scoped implementation and test updates are committed in main through 869397a1. Owner config and research notes were preserved. No external writes occurred."
+}

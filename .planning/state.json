@@ -26,13 +26,13 @@
     {
       "number": "183",
       "name": "Docs, Packaging and Launch Prep",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step (plan phase 183)",
-    "reason": "Phase 5 of 5 — needs a plan"
+    "command": "$gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 5 of 5 · 80% · executing"
   },
-  "updated_at": "2026-11-16T01:32:13.024Z"
+  "updated_at": "2026-11-16T16:30:24.487Z"
 }
