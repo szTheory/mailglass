@@ -57,6 +57,8 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
   alias MailglassAdmin.TestSupport.ReviewGate
 
   @repo_root Path.expand("../../..", __DIR__)
+  @catalog_root_rel ".planning/research/brand-v2-adoption/after-catalog"
+  @catalog_root Path.join(@repo_root, @catalog_root_rel)
   @before_root_rel ".planning/research/brand-v2-adoption/before-catalog"
   @seed_source_path Path.join(@repo_root, "reference/demo_app/lib/mailglass_demo/journey_seed.ex")
 
@@ -139,6 +141,45 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
   # ---------------------------------------------------------------------------------------
   # The committed catalog
   # ---------------------------------------------------------------------------------------
+
+  describe "the committed after-catalog" do
+    test "the catalog directory exists and holds at least one catalog" do
+      assert File.dir?(@catalog_root), "#{@catalog_root_rel} is missing"
+      assert [_ | _] = catalog_dirs(), "#{@catalog_root_rel} holds no catalog directory"
+    end
+
+    test "every catalog directory validates, its review passes the gate, and the calibration is complete" do
+      for dir <- catalog_dirs() do
+        assert {:ok, manifest} = read_json(Path.join(dir, "manifest.json"))
+        assert length(manifest["captures"]) == 16, "#{Path.basename(dir)} must list 16 captures"
+
+        failures = validate_catalog(dir, repo_root: @repo_root)
+        assert failures == [], failure_message(dir, failures)
+
+        assert {:ok, review} = read_json(Path.join(dir, @review_manifest_rel))
+        assert length(review["scenarios"]) == 14
+        assert Enum.all?(review["scenarios"], &(length(&1["verdicts"]) >= 2))
+        kinds = review["calibration"] |> Enum.map(& &1["kind"]) |> Enum.sort() |> Enum.uniq()
+        assert kinds == Enum.sort(ReviewGate.kinds())
+
+        assert Enum.count(review["calibration"], &(&1["kind"] == "before_as_after")) >= 5
+        # Two exact-id pairs with a Phase 180 capture; every other scenario is judged after_only.
+        assert Enum.count(review["scenarios"], &(&1["before_png"] != nil)) == 2
+
+        # The gate on the committed verdict files, not only through validate_catalog/2.
+        assert {:ok, %{scenarios: scenarios, calibration: calibration}} =
+                 gate_input(dir, review, @repo_root)
+
+        assert ReviewGate.gate(%{scenarios: scenarios, calibration: calibration}) == {:pass, []}
+
+        # The LIVE binding: the manifest's bundle and root layout are the checkout's current bytes
+        # (or a current superseded.json says they moved).
+        state = binding_state(manifest, dir, @repo_root)
+        assert elem(state, 0) in [:live, :superseded], failure_message(dir, [inspect(state)])
+        IO.puts("after-catalog #{Path.basename(dir)}: #{state_label(state)}")
+      end
+    end
+  end
 
   describe "capture tooling" do
     test "the capture driver lists every scenario and calibration id" do
@@ -1997,6 +2038,33 @@ defmodule MailglassAdmin.AfterCatalogManifestTest do
   # ---------------------------------------------------------------------------------------
   # Small helpers
   # ---------------------------------------------------------------------------------------
+
+  defp catalog_dirs do
+    case File.ls(@catalog_root) do
+      {:ok, names} ->
+        names
+        |> Enum.reject(&String.starts_with?(&1, "."))
+        |> Enum.map(&Path.join(@catalog_root, &1))
+        |> Enum.filter(&File.dir?/1)
+        |> Enum.sort()
+
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp failure_message(dir, failures) do
+    lines = Enum.map_join(failures, "\n", &"  - #{&1}")
+
+    "#{Path.relative_to(dir, @repo_root)} fails validation:\n#{lines}\n" <>
+      "The catalog PNGs, aria sidecars, cases.json, manifest.json and the review are immutable evidence: " <>
+      "recapture under a new catalog_id instead of editing them. A moved bundle or root layout needs a " <>
+      "current superseded.json."
+  end
+
+  defp state_label({:live, _}), do: "LIVE"
+  defp state_label({:superseded, _}), do: "SUPERSEDED (current superseded.json)"
+  defp state_label({:unbound, _}), do: "UNBOUND"
 
   defp assert_red(failures, fragment) do
     assert Enum.any?(failures, &String.contains?(&1, fragment)),
