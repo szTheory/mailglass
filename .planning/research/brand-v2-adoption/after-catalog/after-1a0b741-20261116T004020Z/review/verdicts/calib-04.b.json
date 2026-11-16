@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-04",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:16 AM",
+      "screenshot_region": "first row, Updated line at the bottom of the card"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Dispatched\"",
+      "screenshot_region": "status badges on the third row and others (Dispatched, Bounced, Deferred, Suppressed)"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading and the Deliveries nav link at the top"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "button \"Filters\"",
+      "screenshot_region": "Filters button above the list, followed by the rows with status badges"
+    }
+  ],
+  "reasons": "Each row's visible time reads like \"Nov 15, 2026, 2:16 AM\" with no time zone. The zone appears only in a hidden copy-button label, so the visible time is bare. Status badges use words outside the five allowed (Dispatched, Bounced, Deferred, Suppressed, Rejected) in place of Sent, Failed, Delayed and Not sent. The screen is titled \"Deliveries\" instead of Activity, which breaks the product's word rules."
+}

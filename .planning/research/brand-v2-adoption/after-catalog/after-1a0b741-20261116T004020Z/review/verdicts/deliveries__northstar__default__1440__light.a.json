@@ -1,0 +1,45 @@
+{
+  "scenario_id": "deliveries__northstar__default__1440__light",
+  "judge": "a",
+  "order": "after_first",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:35 AM UTC",
+      "screenshot_region": "Updated column, all visible rows"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Not sent",
+      "screenshot_region": "Outcome column, first row and the other visible rows (mark drawn beside each word)"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Open a delivery to see what was recorded.",
+      "screenshot_region": "summary cards (Needs attention) and page intro"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading and left navigation"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Also matches subjects.",
+      "screenshot_region": "search field above the Activity table, then the table rows with status marks"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "A missing result does not mean delivery failed.",
+      "screenshot_region": "Awaiting confirmation card and Outcome column (Failed rows with Latest: Opened still read Failed)"
+    }
+  ],
+  "reasons": "Every time in the list ends in UTC. Each visible status shows a drawn mark with one of the allowed words, and the page uses Activity, Account and provider correctly. The search comes before the list. No retry promise or delivered-means-opened claim appears. The last row is partly hidden only because the table scrolls inside its own bordered area."
+}

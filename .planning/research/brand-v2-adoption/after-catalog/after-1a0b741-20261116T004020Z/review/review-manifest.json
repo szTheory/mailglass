@@ -1,0 +1,815 @@
+{
+  "schema": "mailglass.after_catalog.review.v1",
+  "catalog_id": "after-1a0b741-20261116T004020Z",
+  "manifest_sha256": "770debfd41bfab27cadf43e099020a6b3a0f8c8cdfe0fb574257d7f49a9f5738",
+  "rng_seed": 309608052,
+  "rubric_sha256": "95488cae7e027ac4c2f95bdc8df42bd7ba63f3ba6e60736f6058fb18b332f2ea",
+  "scenarios": [
+    {
+      "scenario_id": "deliveries__northstar__reset-search__375__light",
+      "after_png": "deliveries__northstar__reset-search__375__light.png",
+      "after_png_sha256": "470f14914f6673e4d2c09506696ddbce7f3f083be4336b5b8bab795c1518ba68",
+      "aria": "aria/deliveries__northstar__reset-search__375__light.yml",
+      "aria_sha256": "1599c6712c7c87cd419eac39ef71533693eceb8f0cd9dee431e037eaec8dacd3",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person searches the Activity list for a customer's address and needs to see whether the password reset email is there and what its status is.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/deliveries__northstar__reset-search__375__light.a.json",
+          "sha256": "68a2264e81fc3534d49f26826657ca780c40e5eaec456f476bf87a817415997c",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__375__light.png",
+            "aria/deliveries__northstar__reset-search__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/deliveries__northstar__reset-search__375__light.b.json",
+          "sha256": "ea7b4dcfa7720de98a18805cada6707c4256ef08afa6dfd58e6fb39af38a835a",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__375__light.png",
+            "aria/deliveries__northstar__reset-search__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "deliveries__northstar__reset-search__375__dark",
+      "after_png": "deliveries__northstar__reset-search__375__dark.png",
+      "after_png_sha256": "437b4ed94030d9ba43de7c70f36f1939b82b53a1ade1274fff62ff7a4fa9389f",
+      "aria": "aria/deliveries__northstar__reset-search__375__dark.yml",
+      "aria_sha256": "25025fa85274209dd5fd4b0a2e41779949c1f012a714715cc6ccdc0dc41c72ba",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone in dark mode, a support person searches the Activity list for a customer's address and needs to see whether the password reset email is there and what its status is.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/deliveries__northstar__reset-search__375__dark.a.json",
+          "sha256": "91bf9a60bd12b94f5b946fed085267badc238c9040d5fbe39cee81e9aa2abe5a",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__375__dark.png",
+            "aria/deliveries__northstar__reset-search__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/deliveries__northstar__reset-search__375__dark.b.json",
+          "sha256": "c7fa84cb9cf971f6cd104b82fc50122fde553cc4b640f47b34e630443df0fdbb",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__375__dark.png",
+            "aria/deliveries__northstar__reset-search__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "deliveries__northstar__reset-search__1440__light",
+      "after_png": "deliveries__northstar__reset-search__1440__light.png",
+      "after_png_sha256": "ce2da30f0e406d52e65523d53cef9c0e612798e76d8c06c8445858ae525f0692",
+      "aria": "aria/deliveries__northstar__reset-search__1440__light.yml",
+      "aria_sha256": "5ecbcbc61ac32d49e0c17e50f12e3bc229d515c3c5207babaafdaae221b3597b",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a desktop, a support person searches the Activity list for a customer's address and needs to see whether the password reset email is there and what its status is.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/deliveries__northstar__reset-search__1440__light.a.json",
+          "sha256": "a58a6ec7f1357faef936d5d61e343488d1a78a1abe03d91d510cabdffcdb012b",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__1440__light.png",
+            "aria/deliveries__northstar__reset-search__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/deliveries__northstar__reset-search__1440__light.b.json",
+          "sha256": "4ea4784398568ff656467130b957b7a3f1abca7390aebd62f89e8b4dae343ccb",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__reset-search__1440__light.png",
+            "aria/deliveries__northstar__reset-search__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-typo-bounce__default__375__light",
+      "after_png": "delivery-detail__reset-typo-bounce__default__375__light.png",
+      "after_png_sha256": "0635b57010ec8af3f1ac42781241c9cfd6d749708aa1da940ace7f760d1988f3",
+      "aria": "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+      "aria_sha256": "b8edf76f431ca26b5f6d2c6e22a845d6f4a53c5c39c4f9c548069e5943393063",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that bounced and needs to know what happened and what to do next.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__375__light.a.json",
+          "sha256": "b4a0b30dfa30303f6c8405a28aedcb0a66be39c30ab8cc7bec9a6eeecd096a96",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__375__light.b.json",
+          "sha256": "aabe07595801197c26e0108944e6194445ee6663a99ae6fb46448bd036e3447b",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-typo-bounce__default__375__dark",
+      "after_png": "delivery-detail__reset-typo-bounce__default__375__dark.png",
+      "after_png_sha256": "3f048041c3fcc8d73eb817050979439d92b45a16bef6831f23778c1160aa3254",
+      "aria": "aria/delivery-detail__reset-typo-bounce__default__375__dark.yml",
+      "aria_sha256": "0369abaa5bfb8d3b6727262344fe6a91a9b25a1d3b08a18780a4ee8e8d13e07d",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone in dark mode, a support person opens a password reset email that bounced and needs to know what happened and what to do next.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__375__dark.a.json",
+          "sha256": "df1db5ad4264a69d4564ef3cc2643c76f2885734f01d243076d7f6ce9a6223eb",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__dark.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__375__dark.b.json",
+          "sha256": "5c7958cb573b74ec77916e4764549c987340c1d7809fe67108ec101ecb6d4edb",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__dark.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-typo-bounce__default__1440__light",
+      "after_png": "delivery-detail__reset-typo-bounce__default__1440__light.png",
+      "after_png_sha256": "4e23daf23f54d3f68f0a853b631de795ea7385249bd01b9bc3d286e002a4689b",
+      "aria": "aria/delivery-detail__reset-typo-bounce__default__1440__light.yml",
+      "aria_sha256": "44bcdf5f99273987788d3f62ca242f405a5e265e8a136ee26a3a4895b3e1419e",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a desktop, a support person opens a password reset email that bounced and needs to know what happened and what to do next.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__1440__light.a.json",
+          "sha256": "97534919e371cca8cfdc1024b2398eb5f580dd7064bd93ad8898bd5aa309621d",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__1440__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-typo-bounce__default__1440__light.b.json",
+          "sha256": "088f5d93eb932b8fe9a1e0a0ee6f097797cd7b22685abffd8582df3e2dc3a288",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__1440__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-nil-reason-bounce__default__375__light",
+      "after_png": "delivery-detail__reset-nil-reason-bounce__default__375__light.png",
+      "after_png_sha256": "77e49c4b2b0130e7adb004d72b8f1190998393c73be433462618dde1a0c7ec01",
+      "aria": "aria/delivery-detail__reset-nil-reason-bounce__default__375__light.yml",
+      "aria_sha256": "29d8d308fafb824d79aca36fe04b5ac021ddb7770744201be6d9a6a4f4126381",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that bounced where the provider gave no reason; the page must not invent one.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-nil-reason-bounce__default__375__light.a.json",
+          "sha256": "243b8d4a631ee89c1224fc1fbc705b9bd749582b3350f7b8512df2bc91be7d2f",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-nil-reason-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-nil-reason-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-nil-reason-bounce__default__375__light.b.json",
+          "sha256": "223bcba870dd0a3e944008ad26eea70d4827d717db415da1a72148a04cf7a933",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-nil-reason-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-nil-reason-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-deferred__default__375__light",
+      "after_png": "delivery-detail__reset-deferred__default__375__light.png",
+      "after_png_sha256": "7bcde2875e35ae50005c4123a1c1167577b4bc8438e6243e4ed4642a9c20e6e0",
+      "aria": "aria/delivery-detail__reset-deferred__default__375__light.yml",
+      "aria_sha256": "2148a65f9e3b47de320da97bb9518a11bf877c64715b2410ab4588eee9434f1d",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that the receiving server asked to try again later; no final result is recorded.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-deferred__default__375__light.a.json",
+          "sha256": "d8e43eb3df936ce1d76e9aeea35a196d37015f53ec0dd0a02b7c6304ad21b2c4",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-deferred__default__375__light.png",
+            "aria/delivery-detail__reset-deferred__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-deferred__default__375__light.b.json",
+          "sha256": "c0af49d1659e06630ac432f568f25e32035664a11cc24a7746c1d528ad8b0118",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-deferred__default__375__light.png",
+            "aria/delivery-detail__reset-deferred__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-suppressed__default__375__light",
+      "after_png": "delivery-detail__reset-suppressed__default__375__light.png",
+      "after_png_sha256": "a83bce611b50de004317e2a55a4cdb0ef9e89930eec7754f5a122a8e5df9f120",
+      "aria": "aria/delivery-detail__reset-suppressed__default__375__light.yml",
+      "aria_sha256": "02253e1ea3a98875589b31601bc144eb595e84f16d6fec173eb0481c84544ad9",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that was never sent because the address is on the suppression list.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-suppressed__default__375__light.a.json",
+          "sha256": "6f033d111d4e715d42858d14f8f99a96abce4861dfcca12aed0727d87db570db",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-suppressed__default__375__light.png",
+            "aria/delivery-detail__reset-suppressed__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-suppressed__default__375__light.b.json",
+          "sha256": "a3ef52b6ecf79e25d7c0c7c992d6203040057a0b513e16bab7c4d8e02ae79950",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-suppressed__default__375__light.png",
+            "aria/delivery-detail__reset-suppressed__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-sent-no-report__default__375__light",
+      "after_png": "delivery-detail__reset-sent-no-report__default__375__light.png",
+      "after_png_sha256": "718095d8bd8c5c339ec2995755b9f348c6738062fce72e4fe785315fa1d5236d",
+      "aria": "aria/delivery-detail__reset-sent-no-report__default__375__light.yml",
+      "aria_sha256": "271e3ca3e9173f0b8638ff3836a6776d02e84be8837941ead9c909fea595b01f",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that was handed to the provider and has no delivery report yet.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-sent-no-report__default__375__light.a.json",
+          "sha256": "61d11cf62ba54b55bfe1406988cd264dcb1eda620e59c4295c5a40ee48685945",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-sent-no-report__default__375__light.png",
+            "aria/delivery-detail__reset-sent-no-report__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-sent-no-report__default__375__light.b.json",
+          "sha256": "14cda96959377a015f1da0b8ff2e136e1724d8962604017d458a7ad6de7af302",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-sent-no-report__default__375__light.png",
+            "aria/delivery-detail__reset-sent-no-report__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__reset-bounce-then-open__default__375__light",
+      "after_png": "delivery-detail__reset-bounce-then-open__default__375__light.png",
+      "after_png_sha256": "a9bbaef5b0430e043b879afea9ca7cd89f2059f1a862383b0886466ec4c7a148",
+      "aria": "aria/delivery-detail__reset-bounce-then-open__default__375__light.yml",
+      "aria_sha256": "4d62d7d88b38e5cb02d76c9a34879901ecba976d38b4cd7ce29e58123d50895d",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person opens a password reset email that bounced and was then reported as opened; the page must not read as delivered.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__reset-bounce-then-open__default__375__light.a.json",
+          "sha256": "34106c208aba4c4db56807125b7b6a0c0d0a198d16f9ac31ecaa3e08efb02a04",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-bounce-then-open__default__375__light.png",
+            "aria/delivery-detail__reset-bounce-then-open__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__reset-bounce-then-open__default__375__light.b.json",
+          "sha256": "bed8b02ae19ab520f4a70376b2de7db814467a7d76b96cbf7cf5bc6176fa8422",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-bounce-then-open__default__375__light.png",
+            "aria/delivery-detail__reset-bounce-then-open__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "deliveries__northstar__empty-search__375__light",
+      "after_png": "deliveries__northstar__empty-search__375__light.png",
+      "after_png_sha256": "758feb22a720cf65551d9da7ace54b5c11426f145bf68b1ff314003f39c634d2",
+      "aria": "aria/deliveries__northstar__empty-search__375__light.yml",
+      "aria_sha256": "55e4e7404cf430c7bc116eb066fbf4d745c1d1f362aaabba00849390f768aa8d",
+      "before_png": null,
+      "before_png_sha256": null,
+      "goal": "On a phone, a support person searches the Activity list for an address that has no email and needs a clear empty state with a next step.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/deliveries__northstar__empty-search__375__light.a.json",
+          "sha256": "e1c568ccc8a155eddc4b7290499f0a71245c8d9e914a9c23cb6a3f5be223b4c9",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__empty-search__375__light.png",
+            "aria/deliveries__northstar__empty-search__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/deliveries__northstar__empty-search__375__light.b.json",
+          "sha256": "e43b04f89214fad41cc2b638ef368f7cef5571d873d3bafb2e8db225a1ac60e1",
+          "order": "after_only",
+          "inputs": [
+            "deliveries__northstar__empty-search__375__light.png",
+            "aria/deliveries__northstar__empty-search__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "deliveries__northstar__default__1440__light",
+      "after_png": "deliveries__northstar__default__1440__light.png",
+      "after_png_sha256": "cd5e53cd1919315cf64da5800efc4051133446f65a5da4a9930fa9055e559a70",
+      "aria": "aria/deliveries__northstar__default__1440__light.yml",
+      "aria_sha256": "b726376219ac87e475a37baf518652fe58dc55cd51f0a051a529e7d944485644",
+      "before_png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png",
+      "before_png_sha256": "ee923564bf87d88582ada82c11b511737d5030d32d911efd8419d2baf96a1ecb",
+      "goal": "On a desktop, a support person opens the Activity list and scans the most recent emails and their statuses.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/deliveries__northstar__default__1440__light.a.json",
+          "sha256": "4990de0c8318144e7438f072b7e149fb60850ae3630f7aae431a992d6e0d9a07",
+          "order": "after_first",
+          "inputs": [
+            "deliveries__northstar__default__1440__light.png",
+            "aria/deliveries__northstar__default__1440__light.yml",
+            "review/rubric.md",
+            "goal",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/deliveries__northstar__default__1440__light.b.json",
+          "sha256": "da8f14b19b3a18893fd6632054ae845347a5ddd2951335bed2e0a21809de91bf",
+          "order": "before_first",
+          "inputs": [
+            "deliveries__northstar__default__1440__light.png",
+            "aria/deliveries__northstar__default__1440__light.yml",
+            "review/rubric.md",
+            "goal",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "delivery-detail__typo-bounce__default__375__light",
+      "after_png": "delivery-detail__typo-bounce__default__375__light.png",
+      "after_png_sha256": "9b81363a4a800b34bd7cabfeba6b10fdbf7d4984f692475e0201c2ccd09998bf",
+      "aria": "aria/delivery-detail__typo-bounce__default__375__light.yml",
+      "aria_sha256": "de306edc05073f3dacbe45547a3e7fb697e4f9686a7a3cdc9f922ac2c68ef1ff",
+      "before_png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png",
+      "before_png_sha256": "5c2b40ddb553228ba1e8ae294d5543aa98b58977955633978fbe22b85bededf1",
+      "goal": "On a phone, a support person opens an invitation email that bounced and needs to know what happened and what to do next.",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/delivery-detail__typo-bounce__default__375__light.a.json",
+          "sha256": "7bfac25417df2711316bddc4f6be3470f4052a1297ea5db21d1e97f7e7269806",
+          "order": "before_first",
+          "inputs": [
+            "delivery-detail__typo-bounce__default__375__light.png",
+            "aria/delivery-detail__typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/delivery-detail__typo-bounce__default__375__light.b.json",
+          "sha256": "d6c83e5a2515958effb9be3d904f1adb16318506aa34609341560d84dfea0654",
+          "order": "after_first",
+          "inputs": [
+            "delivery-detail__typo-bounce__default__375__light.png",
+            "aria/delivery-detail__typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png"
+          ]
+        }
+      ]
+    }
+  ],
+  "calibration": [
+    {
+      "id": "calib-01",
+      "kind": "before_as_after",
+      "expect": "reject",
+      "png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png",
+      "png_sha256": "5c2b40ddb553228ba1e8ae294d5543aa98b58977955633978fbe22b85bededf1",
+      "aria": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__light.yml",
+      "aria_sha256": "033e9f934ade1d9a81e03c3460b253ac6434915657ffdb72cfc96551d87fb77b",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-01.a.json",
+          "sha256": "0aed722a081217c5834c72e67384dbc9d14576d7cdb2d3f97d707f2d4eab0530",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-01.b.json",
+          "sha256": "a3ec528ce852d59fd918b5b699c692fb3bd2b8e3c41cbaeb74a1cba1242301c5",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-02",
+      "kind": "before_as_after",
+      "expect": "reject",
+      "png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__dark.png",
+      "png_sha256": "7ed44505440f3139cec3d076bbededc8adad63a0d9bb06ef3b9600c152cbb8f4",
+      "aria": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__dark.yml",
+      "aria_sha256": "b0d5297945555ad2fb56a14496b298d5a81b847185dde48ff2d149b749e7feb9",
+      "verdicts": [
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-02.b.json",
+          "sha256": "12cba09595c61262668ca0898c470b61dbbd44f128f54b83ac8c9d979b348e98",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__dark.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "d",
+          "file": "review/verdicts/calib-02.d.json",
+          "sha256": "727d7b9582a64e6a93dfc75520c6dc648ca0dff1f0794462047912aaef55f6d4",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__375__dark.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-03",
+      "kind": "before_as_after",
+      "expect": "reject",
+      "png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png",
+      "png_sha256": "ee923564bf87d88582ada82c11b511737d5030d32d911efd8419d2baf96a1ecb",
+      "aria": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__1440__light.yml",
+      "aria_sha256": "779fb8f63d9bca802c8656d85b84b17c677a214a895f25e6f865eb5a0063afc1",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-03.a.json",
+          "sha256": "7a815d4e658bdbbdcf8696a22aae24132ca7a5bf8b1ac128145add48bf329cf5",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-03.b.json",
+          "sha256": "2743eea8103c8510c357d7c58ea2906d89ab65bfd5fa443c2b615f5b1bda15a0",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__1440__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-04",
+      "kind": "before_as_after",
+      "expect": "reject",
+      "png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__375__dark.png",
+      "png_sha256": "3f72c51c0f56e869f94161febc8126513651633473d0ec81473674c98952edbf",
+      "aria": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__375__dark.yml",
+      "aria_sha256": "3a02a3a46f061fe52580260cd47249cfc8b9776d7ab63baba4e0ac59e1be0b32",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-04.a.json",
+          "sha256": "c13204f43cd9ce494d3e09e9184733d7e939bf94802d3a0f1da14f40d5982307",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__375__dark.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-04.b.json",
+          "sha256": "cc65196845046972c26dbbe5113179eb47f5f3f960dd7c3fc1eb29c113955265",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/deliveries__northstar__default__375__dark.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/deliveries__northstar__default__375__dark.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-05",
+      "kind": "before_as_after",
+      "expect": "reject",
+      "png": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__1440__light.png",
+      "png_sha256": "c43bc729316b356de440c278cf4b34d31f923cc0d91bf2d7963347461096b452",
+      "aria": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__1440__light.yml",
+      "aria_sha256": "670e1db05aa0ec7b8911cd0ae7fa162d1fcc5371147c65257a80c5a861dd00a5",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-05.a.json",
+          "sha256": "189006f58a8aab1ae3f1036682cf3f4f0d02744a14a8345e1d89c33a8792bf8f",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__1440__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-05.b.json",
+          "sha256": "e6acb47ad27a43527af4aea1f595d3a251d877e44be775ed58039b52afb89ae7",
+          "order": "after_only",
+          "inputs": [
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/delivery-detail__typo-bounce__default__1440__light.png",
+            ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/aria/delivery-detail__typo-bounce__default__1440__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-06",
+      "kind": "injected_defect",
+      "expect": "reject",
+      "png": "calib-defect-no-zone__reset-typo-bounce__default__375__light.png",
+      "png_sha256": "f6a90dc5558630734244aa00dcca017f4577d49121243f0ff8f3f73a3f756dbf",
+      "aria": "aria/calib-defect-no-zone__reset-typo-bounce__default__375__light.yml",
+      "aria_sha256": "f01666c1c6ca739e7a597aeb3879b828b295f186c21a856d363382048815b154",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-06.a.json",
+          "sha256": "9a65d0fa3b2190e8d2531abcb7cb4932658704e73e58d4be3128451e44889d9c",
+          "order": "after_only",
+          "inputs": [
+            "calib-defect-no-zone__reset-typo-bounce__default__375__light.png",
+            "aria/calib-defect-no-zone__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-06.b.json",
+          "sha256": "15fc42a2b155da36aca0bcb2e76adfd59b7f08304b9922312edaa36fe9a962dd",
+          "order": "after_only",
+          "inputs": [
+            "calib-defect-no-zone__reset-typo-bounce__default__375__light.png",
+            "aria/calib-defect-no-zone__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-07",
+      "kind": "injected_defect",
+      "expect": "reject",
+      "png": "calib-defect-no-status-word__reset-typo-bounce__default__375__light.png",
+      "png_sha256": "6c718589171232fc7922cc0b9c3e26a88c0256f44c1c88818f5de3254a78d8db",
+      "aria": "aria/calib-defect-no-status-word__reset-typo-bounce__default__375__light.yml",
+      "aria_sha256": "7710b294dc99797a69a4c4ec133f1a06e4c3d4610468ab9e9dda190e146a0417",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-07.a.json",
+          "sha256": "70f01a89c2f92a022bd33d1cb2ae751239672c4dc49cdba5c53dac72d4c7a473",
+          "order": "after_only",
+          "inputs": [
+            "calib-defect-no-status-word__reset-typo-bounce__default__375__light.png",
+            "aria/calib-defect-no-status-word__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-07.b.json",
+          "sha256": "ea27b25dbad1d4f9e4c359f65fe6350a7569a2d9cc1c9f3920ad3f8fc39b7187",
+          "order": "after_only",
+          "inputs": [
+            "calib-defect-no-status-word__reset-typo-bounce__default__375__light.png",
+            "aria/calib-defect-no-status-word__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calib-08",
+      "kind": "known_good",
+      "expect": "pass",
+      "png": "delivery-detail__reset-typo-bounce__default__375__light.png",
+      "png_sha256": "0635b57010ec8af3f1ac42781241c9cfd6d749708aa1da940ace7f760d1988f3",
+      "aria": "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+      "aria_sha256": "b8edf76f431ca26b5f6d2c6e22a845d6f4a53c5c39c4f9c548069e5943393063",
+      "verdicts": [
+        {
+          "judge": "a",
+          "file": "review/verdicts/calib-08.a.json",
+          "sha256": "e24d6e4ae740926db912baca2cb69f27ba2e702a5070b1ef6c7a242f20b598f7",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        },
+        {
+          "judge": "b",
+          "file": "review/verdicts/calib-08.b.json",
+          "sha256": "731eee852eacae58129afc45c7b52529e0a476ccde077dc973ac41ca7f02c039",
+          "order": "after_only",
+          "inputs": [
+            "delivery-detail__reset-typo-bounce__default__375__light.png",
+            "aria/delivery-detail__reset-typo-bounce__default__375__light.yml",
+            "review/rubric.md",
+            "goal"
+          ]
+        }
+      ]
+    }
+  ],
+  "prior_iterations": [
+    {
+      "catalog_id": "after-202dc87-20261116T003123Z",
+      "rejected": [
+        "deliveries__northstar__empty-search__375__light",
+        "deliveries__northstar__default__1440__light",
+        "deliveries__northstar__reset-search__1440__light",
+        "delivery-detail__reset-typo-bounce__default__375__dark",
+        "delivery-detail__reset-sent-no-report__default__375__light"
+      ]
+    },
+    {
+      "catalog_id": "after-f2e8eee-20261116T003731Z",
+      "rejected": []
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "scenario_id": "calib-05",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field in the header card and the timestamps on the timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "Red status badge beside the subject heading"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "Page heading, sidebar nav and the Mailable label"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": false,
+      "evidence_quote": "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "Verdict area near the subject and badge"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": false,
+      "evidence_quote": "paragraph: Subject",
+      "screenshot_region": "Top of the detail card"
+    }
+  ],
+  "reasons": "Visible times such as \"Nov 15, 2026, 2:04 AM\" have no time zone. The status badge says \"Bounced\", which is not one of the five status words, and it stands in for the delivery's status. The page uses \"Deliveries\", \"Mailable\" and \"message\" instead of Activity, Mailer and email. The verdict is not a plain sentence with a next step: it only tells the reader to open the delivery they are already viewing. The page also shows ids and a Mailable name alongside the evidence."
+}

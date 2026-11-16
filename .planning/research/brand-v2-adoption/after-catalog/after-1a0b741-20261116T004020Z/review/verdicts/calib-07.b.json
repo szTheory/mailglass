@@ -1,0 +1,27 @@
+{
+  "scenario_id": "calib-07",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "The email did not get through.",
+      "screenshot_region": "verdict block under the subject, with a red mark and no status word"
+    },
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated field and event timeline times"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    }
+  ],
+  "reasons": "The verdict block shows a red failure mark, but the status heading is empty and the word \"Failed\" never appears. The page says only \"The email did not get through.\" and the Latest event field reads \"Bounced\". A mark without one of the five status words breaches R-STATUS-1. The times carry UTC and the next step is clear, but the missing status word is enough to reject."
+}

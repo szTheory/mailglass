@@ -1,0 +1,27 @@
+{
+  "scenario_id": "calib-03",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:16 AM",
+      "screenshot_region": "Updated column, first row"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Dispatched\"",
+      "screenshot_region": "Outcome column, third row (finance@northstar.example) and the Suppressed and Bounced badges in rows 1, 2, 6 and 8"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading and the sidebar link"
+    }
+  ],
+  "reasons": "Every Updated time is shown as a bare time such as \"Nov 15, 2026, 2:16 AM\" with no zone. The zone appears only in the copy-button label and not in the visible text. The Outcome badges use Suppressed, Bounced and Dispatched as status words, which are not among the five allowed words (Sent, Delivered, Delayed, Failed, Not sent). The admin's main screen is titled \"Deliveries\" instead of \"Activity\"."
+}

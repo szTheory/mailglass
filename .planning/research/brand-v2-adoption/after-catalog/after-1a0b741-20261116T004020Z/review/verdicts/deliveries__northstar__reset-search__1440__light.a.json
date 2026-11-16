@@ -1,0 +1,39 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__1440__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated column of the first row"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed Latest: Bounced",
+      "screenshot_region": "Outcome column of the first row, red Failed badge with a drawn mark"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\": pw-typo-bounce@northstar.example",
+      "screenshot_region": "Email address search above the Activity table, and the first row"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading, side navigation and table header"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "Failed Latest: Bounced",
+      "screenshot_region": "Outcome cell, with no invented cause, retry promise or retry time"
+    }
+  ],
+  "reasons": "The search sits above the list. The one matching row shows a drawn Failed mark with the word Failed. The row gives the time as \"Nov 16, 2026, 12:05 AM UTC\", with its zone. \"Bounced\" appears only as a recorded event under the status. The page uses the product's own words (Activity, Account, provider). It makes no retry promise or retry time, and nothing is cut off."
+}

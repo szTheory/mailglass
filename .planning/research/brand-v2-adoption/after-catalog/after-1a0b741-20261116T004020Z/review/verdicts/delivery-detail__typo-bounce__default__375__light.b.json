@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__typo-bounce__default__375__light",
+  "judge": "b",
+  "order": "after_first",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:23 AM UTC",
+      "screenshot_region": "Updated field and the two event timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "status badge and verdict block under the subject"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step text in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading Activity and back link"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block near the top of the page, above the details and timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block and Bounced timeline card with its recorded reason"
+    }
+  ],
+  "reasons": "The Failed verdict, with a mark and the word, sits right under the subject and address. It states what happened, gives a cause that the provider recorded, and ends with a concrete next step. Every time shows UTC, the product words are correct, and there is no retry promise or invented claim."
+}

@@ -1,0 +1,27 @@
+{
+  "scenario_id": "deliveries__northstar__empty-search__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Change or clear a filter to see more.",
+      "screenshot_region": "empty-state card, body line and Clear filters button"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "No activity matches the current filters",
+      "screenshot_region": "search field near the top, empty-state card directly below"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading and Account selector at the top"
+    }
+  ],
+  "reasons": "The search box sits above the list. The empty state says plainly that nothing matches, then gives a next step (\"Change or clear a filter to see more.\") and a visible Clear filters button. The product's words are used correctly (Activity, Account), no times or status rows are shown, and the screen makes no claim the product cannot know."
+}

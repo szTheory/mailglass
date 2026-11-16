@@ -1,0 +1,81 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Activity":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Activity and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - link "Back to Activity":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Reset your password" [level=2]
+  - text: Delayed
+  - paragraph: To pw-deferred@northstar.example
+  - region "Delayed":
+    - heading "Delayed" [level=3]
+    - paragraph: "Delayed: the receiving server asked to try again later. No final result is recorded yet."
+    - heading "Next step" [level=4]
+    - paragraph: Nothing to do yet. Check this page again later, or see the retry schedule in Postmark’s logs.
+  - term: Mailer
+  - definition:
+    - button "Password reset"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.password_reset MailglassDemoWeb.Mailers.AccountMailer.password_reset
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - button "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)":
+      - time: Nov 16, 2026, 12:22 AM UTC
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Latest event
+  - definition: Deferred
+  - group: Technical details
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This email was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: postmark • api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-6293-7910-9151-f74441f9ef1f"': 01a1e1cc-6293-7910-9151-f74441f9ef1f
+      - button "Copy Nov 16, 2026, 12:21 AM UTC (copies the exact UTC value 2026-11-16 00:21:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:21 AM UTC
+    - listitem:
+      - button "Deferred"
+      - text: The provider reported a temporary delivery delay. Delivery has not been confirmed.
+      - paragraph: postmark • webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-6294-7c96-8f33-2764a36ae35d"': 01a1e1cc-6294-7c96-8f33-2764a36ae35d
+      - button "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:22 AM UTC
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

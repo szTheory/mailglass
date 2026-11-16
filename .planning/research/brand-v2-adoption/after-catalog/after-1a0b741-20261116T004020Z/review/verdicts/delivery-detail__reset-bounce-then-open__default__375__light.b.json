@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-bounce-then-open__default__375__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:12 AM UTC",
+      "screenshot_region": "Updated value and the three event timeline timestamps, each with UTC under the time"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "Failed badge beside the subject and the verdict block with the red mark and the word Failed"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "Page heading Activity, the Account selector and the Provider field"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: bounced.",
+      "screenshot_region": "Verdict block near the top of the page, above Mailer details and the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "Open and click reports are not delivery reports.",
+      "screenshot_region": "Verdict block, with Latest event Opened lower down and the timeline Opened card"
+    }
+  ],
+  "reasons": "The page reads Failed, with a red mark and the word, and it sits at the top of the page. The sentence 'Open and click reports are not delivery reports.' makes clear that the later open does not turn the bounce into a success. Every time shows UTC, the words are the product's own, there is no retry promise, and the next step is given."
+}

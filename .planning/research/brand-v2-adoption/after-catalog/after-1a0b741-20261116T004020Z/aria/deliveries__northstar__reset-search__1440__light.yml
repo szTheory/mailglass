@@ -1,0 +1,110 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Northstar Logistics
+      - text: northstar
+      - link "Health":
+        - /url: /ops/mail?tenant_id=northstar
+      - link "Activity":
+        - /url: /ops/mail?tenant_id=northstar&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=northstar
+      - text: Applies to Health, Activity and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 1 email matches
+  - text: Email address
+  - searchbox "Email address": pw-typo-bounce@northstar.example
+  - paragraph: Also matches subjects.
+  - group "Filters":
+    - text: Filters Time window
+    - button "Help for Time window"
+    - text: Show emails with activity during this period.
+    - combobox "Time window":
+      - option "Last 24 hours"
+      - option "Last 7 days" [selected]
+      - option "Last 30 days"
+    - text: Latest recorded event
+    - button "Help for Latest recorded event"
+    - text: Filter by the latest event recorded for each delivery.
+    - combobox "Latest recorded event":
+      - option "Any status" [selected]
+      - option "Queued"
+      - option "Sent"
+      - option "Rejected"
+      - option "Failed"
+      - option "Bounced"
+      - option "Deferred"
+      - option "Delivered"
+      - option "Autoresponded"
+      - option "Opened"
+      - option "Clicked"
+      - option "Complained"
+      - option "Unsubscribed"
+      - option "Subscribed"
+      - option "Unknown"
+      - option "Dispatched"
+      - option "Suppressed"
+    - text: Provider
+    - button "Help for Provider"
+    - text: Filter by the sending provider recorded for this account.
+    - combobox "Provider":
+      - option "Any provider" [selected]
+      - option "Postmark"
+      - option "SendGrid"
+  - button "Clear filters"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Emails with a delivery report from the receiving server. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "0"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Emails that failed, were delayed, or were not sent because the address is suppressed. Open a delivery to see what was recorded. Counts include all matching results.
+    - paragraph: "1"
+    - paragraph: Needs attention
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Emails are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "0"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Activity 1 email" [level=2]: Activity (1)
+    - region "Delivery records":
+      - table:
+        - rowgroup:
+          - row "Recipient / Subject Outcome Provider Updated":
+            - columnheader "Recipient / Subject"
+            - columnheader "Outcome"
+            - columnheader "Provider"
+            - columnheader "Updated"
+        - rowgroup:
+          - 'row "Open delivery for pw-typo-bounce@northstar.example Failed Latest: Bounced POSTMARK Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)"':
+            - cell "Open delivery for pw-typo-bounce@northstar.example":
+              - button "Open delivery for pw-typo-bounce@northstar.example": pw-typo-bounce@northstar.example Reset your password Password reset
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:05 AM UTC

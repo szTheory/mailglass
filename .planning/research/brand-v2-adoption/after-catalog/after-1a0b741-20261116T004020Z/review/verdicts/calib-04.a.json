@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-04",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "Nov 15, 2026, 2:16 AM",
+      "screenshot_region": "first row, Updated line"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Dispatched\"",
+      "screenshot_region": "third row status badge"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "This does not confirm it reached the inbox or was read.",
+      "screenshot_region": "Delivered rows, description text"
+    }
+  ],
+  "reasons": "The visible times (for example 'Nov 15, 2026, 2:16 AM') show no time zone. The zone appears only in the hidden copy-button label. Row statuses use words outside the five allowed ones, such as 'Dispatched', 'Bounced', 'Deferred' and 'Suppressed'. The page and its navigation call the main screen 'Deliveries' instead of 'Activity'. Delivered rows do say they don't confirm inbox arrival or reading, so that part of R-TRUTH-1 is fine."
+}

@@ -1,0 +1,45 @@
+{
+  "scenario_id": "deliveries__northstar__default__1440__light",
+  "judge": "b",
+  "order": "before_first",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:35 AM UTC",
+      "screenshot_region": "Updated column, all visible rows"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "text: Not sent",
+      "screenshot_region": "Outcome column, first row and the other visible rows"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading and sidebar navigation"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\"",
+      "screenshot_region": "search field above the filters and the Activity table"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "Latest: Opened",
+      "screenshot_region": "Outcome column, rows with a Latest line"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Open a delivery to see what was recorded.",
+      "screenshot_region": "summary cards and page copy"
+    }
+  ],
+  "reasons": "Every time shows UTC, and every visible status is a drawn mark plus one of the allowed words (Sent, Delivered, Failed, Not sent). The page is called Activity, the search sits above the list, and the partly cut-off last row is inside a scrolling table with pagination, which is allowed. Event words such as Suppressed, Bounced and Opened appear only on the \"Latest:\" lines and in the event filter, and no retry promise is made."
+}

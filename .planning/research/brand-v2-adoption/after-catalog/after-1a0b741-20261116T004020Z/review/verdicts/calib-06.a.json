@@ -1,0 +1,27 @@
+{
+  "scenario_id": "calib-06",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM",
+      "screenshot_region": "Updated field in the detail block, and the two timestamps in the event timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "verdict block under the subject, with the Failed badge (mark plus word)"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "top of the page, verdict and next step above the evidence and the timeline"
+    }
+  ],
+  "reasons": "The verdict (Failed mark and word, one sentence, the recorded cause and a next step) sits near the top of the phone view, ahead of the evidence and the raw events. Every time on the page, in the Updated field and on both timeline cards, is written like \"Nov 16, 2026, 12:05 AM\" with no time zone, which breaches R-TIME-1."
+}

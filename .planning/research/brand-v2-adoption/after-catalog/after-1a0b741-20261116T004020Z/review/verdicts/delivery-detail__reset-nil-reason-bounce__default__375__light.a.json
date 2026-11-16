@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-nil-reason-bounce__default__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:16 AM UTC",
+      "screenshot_region": "Updated field and the two timeline cards, each time with UTC on the line below"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "text: Failed",
+      "screenshot_region": "badge beside the subject and the verdict block, both with a drawn mark and the word Failed"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading and the Account selector"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "paragraph: \"Failed: the email did not get through.\"",
+      "screenshot_region": "verdict block near the top of the page, above the timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "paragraph: No reason was recorded for this email.",
+      "screenshot_region": "verdict block, under the Failed sentence"
+    }
+  ],
+  "reasons": "The Failed verdict sits near the top with a mark, the word Failed, one sentence and a next step. It says exactly \"No reason was recorded for this email.\" and invents no cause, and it makes no retry promise. Every time shows UTC, and the page uses the product's words (Activity, Account, Mailer, provider)."
+}

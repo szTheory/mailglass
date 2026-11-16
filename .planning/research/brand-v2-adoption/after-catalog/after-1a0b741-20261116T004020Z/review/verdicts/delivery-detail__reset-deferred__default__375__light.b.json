@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-deferred__default__375__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:22 AM UTC",
+      "screenshot_region": "Updated value and the two event timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Delayed\" [level=3]",
+      "screenshot_region": "Delayed badge under the subject and the verdict block with clock mark"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Nothing to do yet. Check this page again later, or see the retry schedule in Postmark’s logs.",
+      "screenshot_region": "Next step in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Delayed: the receiving server asked to try again later. No final result is recorded yet.",
+      "screenshot_region": "Verdict block and Latest event row"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "heading \"Reset your password\" [level=2]",
+      "screenshot_region": "Top of the detail card, above the metadata and event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported a temporary delivery delay. Delivery has not been confirmed.",
+      "screenshot_region": "Deferred card in the event timeline and the verdict sentence"
+    }
+  ],
+  "reasons": "The verdict (Delayed badge, clock mark, plain sentence, next step) sits near the top of the phone layout, above the metadata and the raw events. Every time ends in UTC. The page does not promise a retry or give a next-try time, and the wording is calm and uses the product's own words. Deferred appears only as an event name, which is allowed."
+}

@@ -1,0 +1,83 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Activity":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Activity and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - link "Back to Activity":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Welcome to Northstar Logistics, Maya" [level=2]
+  - text: Failed
+  - paragraph: To maya.okafor@northstr.example
+  - region "Failed":
+    - heading "Failed" [level=3]
+    - paragraph: "Failed: the email did not get through."
+    - paragraph: "The provider reported: invalid address."
+    - heading "Next step" [level=4]
+    - paragraph: Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.
+  - term: Mailer
+  - definition:
+    - button "Invite admin"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.invite_admin MailglassDemoWeb.Mailers.AccountMailer.invite_admin
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - button "Copy Nov 16, 2026, 12:23 AM UTC (copies the exact UTC value 2026-11-16 00:23:30.000000 UTC)":
+      - time: Nov 16, 2026, 12:23 AM UTC
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Latest event
+  - definition: Bounced
+  - group: Technical details
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This email was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: postmark • api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-6265-77e1-95c0-cc227f88a375"': 01a1e1cc-6265-77e1-95c0-cc227f88a375
+      - button "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:22 AM UTC
+    - listitem:
+      - button "Bounced"
+      - text: The provider reported that this email could not be delivered. Full detail shows the reason when the provider sent one.
+      - paragraph: postmark • webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-6271-7262-b1b4-c106de1c0027"': 01a1e1cc-6271-7262-b1b4-c106de1c0027
+      - paragraph: "Reason: Invalid"
+      - button "Copy Nov 16, 2026, 12:23 AM UTC (copies the exact UTC value 2026-11-16 00:23:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:23 AM UTC
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

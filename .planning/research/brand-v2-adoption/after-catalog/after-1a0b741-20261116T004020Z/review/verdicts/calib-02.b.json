@@ -1,0 +1,39 @@
+{
+  "scenario_id": "calib-02",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field and the two event timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "status badge under the subject heading in the top card"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "term: Mailable",
+      "screenshot_region": "details card, the Mailable field, and the Deliveries page heading"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": false,
+      "evidence_quote": "text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "top card, verdict area under the subject"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "text: This message was handed to the provider. Delivery to the recipient has not been confirmed.",
+      "screenshot_region": "Sent card in the event timeline"
+    }
+  ],
+  "reasons": "The status badge reads \"Bounced\", which is not one of the five allowed status words (Sent, Delivered, Delayed, Failed, Not sent). Every time is shown without a time zone, for example \"Nov 15, 2026, 2:04 AM\". The page also uses \"Deliveries\" and \"Mailable\" where the product words are Activity and email/Mailer. The verdict sentence only says to open the delivery, which is the page already open, so it gives no real next step."
+}

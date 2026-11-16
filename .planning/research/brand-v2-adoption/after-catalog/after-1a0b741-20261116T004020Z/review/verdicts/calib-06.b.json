@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-06",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM",
+      "screenshot_region": "Updated value and the two timeline card timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "Failed badge next to the subject and the verdict block"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "verdict block near the top of the phone page"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block, cause line"
+    }
+  ],
+  "reasons": "The verdict comes first and is clear: a Failed mark plus the word, a recorded cause, and a next step. It makes no retry promise. However, the Updated time and both timeline times (\"Nov 16, 2026, 12:05 AM\" and \"Nov 16, 2026, 12:04 AM\") show no time zone, which breaks R-TIME-1."
+}

@@ -1,0 +1,288 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Northstar Logistics
+      - text: northstar
+      - link "Health":
+        - /url: /ops/mail?tenant_id=northstar
+      - link "Activity":
+        - /url: /ops/mail?tenant_id=northstar&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=northstar
+      - text: Applies to Health, Activity and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - text: Email address
+  - searchbox "Email address"
+  - paragraph: Also matches subjects.
+  - group "Filters":
+    - text: Filters Time window
+    - button "Help for Time window"
+    - text: Show emails with activity during this period.
+    - combobox "Time window":
+      - option "Last 24 hours"
+      - option "Last 7 days" [selected]
+      - option "Last 30 days"
+    - text: Latest recorded event
+    - button "Help for Latest recorded event"
+    - text: Filter by the latest event recorded for each delivery.
+    - combobox "Latest recorded event":
+      - option "Any status" [selected]
+      - option "Queued"
+      - option "Sent"
+      - option "Rejected"
+      - option "Failed"
+      - option "Bounced"
+      - option "Deferred"
+      - option "Delivered"
+      - option "Autoresponded"
+      - option "Opened"
+      - option "Clicked"
+      - option "Complained"
+      - option "Unsubscribed"
+      - option "Subscribed"
+      - option "Unknown"
+      - option "Dispatched"
+      - option "Suppressed"
+    - text: Provider
+    - button "Help for Provider"
+    - text: Filter by the sending provider recorded for this account.
+    - combobox "Provider":
+      - option "Any provider" [selected]
+      - option "Postmark"
+      - option "SendGrid"
+  - button "Clear filters"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Emails with a delivery report from the receiving server. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "10"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Emails that failed, were delayed, or were not sent because the address is suppressed. Open a delivery to see what was recorded. Counts include all matching results.
+    - paragraph: "12"
+    - paragraph: Needs attention
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Emails are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "4"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Activity 26 emails" [level=2]: Activity (26)
+    - region "Delivery records":
+      - table:
+        - rowgroup:
+          - row "Recipient / Subject Outcome Provider Updated":
+            - columnheader "Recipient / Subject"
+            - columnheader "Outcome"
+            - columnheader "Provider"
+            - columnheader "Updated"
+        - rowgroup:
+          - 'row "Open delivery for ops@northstar.example Not sent Latest: Suppressed SENDGRID Copy Nov 16, 2026, 12:35 AM UTC (copies the exact UTC value 2026-11-16 00:35:29.000000 UTC)"':
+            - cell "Open delivery for ops@northstar.example":
+              - button "Open delivery for ops@northstar.example": ops@northstar.example INC-4421 is monitoring Incident update
+            - 'cell "Not sent Latest: Suppressed"':
+              - text: Not sent
+              - paragraph: "Latest: Suppressed"
+            - cell "SENDGRID"
+            - cell "Copy Nov 16, 2026, 12:35 AM UTC (copies the exact UTC value 2026-11-16 00:35:29.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:35 AM UTC (copies the exact UTC value 2026-11-16 00:35:29.000000 UTC)":
+                - time: Nov 16, 2026, 12:35 AM UTC
+          - 'row "Open delivery for ops@northstar.example Failed Latest: Bounced SENDGRID Copy Nov 16, 2026, 12:32 AM UTC (copies the exact UTC value 2026-11-16 00:32:29.000000 UTC)"':
+            - cell "Open delivery for ops@northstar.example":
+              - button "Open delivery for ops@northstar.example": ops@northstar.example Northstar Logistics email usage reached 85% Usage alert
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "SENDGRID"
+            - cell "Copy Nov 16, 2026, 12:32 AM UTC (copies the exact UTC value 2026-11-16 00:32:29.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:32 AM UTC (copies the exact UTC value 2026-11-16 00:32:29.000000 UTC)":
+                - time: Nov 16, 2026, 12:32 AM UTC
+          - row "Open delivery for finance@northstar.example Sent POSTMARK Copy Nov 16, 2026, 12:31 AM UTC (copies the exact UTC value 2026-11-16 00:31:30.000000 UTC)":
+            - cell "Open delivery for finance@northstar.example":
+              - button "Open delivery for finance@northstar.example": finance@northstar.example Northstar Logistics onboarding checklist Receipt paid
+            - cell "Sent"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:31 AM UTC (copies the exact UTC value 2026-11-16 00:31:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:31 AM UTC (copies the exact UTC value 2026-11-16 00:31:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:31 AM UTC
+          - 'row "Open delivery for pw-suppressed@northstar.example Not sent Latest: Suppressed UNKNOWN Copy Nov 16, 2026, 12:28 AM UTC (copies the exact UTC value 2026-11-16 00:28:30.000000 UTC)"':
+            - cell "Open delivery for pw-suppressed@northstar.example":
+              - button "Open delivery for pw-suppressed@northstar.example": pw-suppressed@northstar.example Reset your password Password reset
+            - 'cell "Not sent Latest: Suppressed"':
+              - text: Not sent
+              - paragraph: "Latest: Suppressed"
+            - cell "UNKNOWN"
+            - cell "Copy Nov 16, 2026, 12:28 AM UTC (copies the exact UTC value 2026-11-16 00:28:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:28 AM UTC (copies the exact UTC value 2026-11-16 00:28:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:28 AM UTC
+          - row "Open delivery for dispatch@northstar.example Failed UNKNOWN Copy Nov 16, 2026, 12:26 AM UTC (copies the exact UTC value 2026-11-16 00:26:30.000000 UTC)":
+            - cell "Open delivery for dispatch@northstar.example":
+              - button "Open delivery for dispatch@northstar.example": dispatch@northstar.example Northstar Logistics weekly shipment digest Usage alert
+            - cell "Failed"
+            - cell "UNKNOWN"
+            - cell "Copy Nov 16, 2026, 12:26 AM UTC (copies the exact UTC value 2026-11-16 00:26:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:26 AM UTC (copies the exact UTC value 2026-11-16 00:26:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:26 AM UTC
+          - row "Open delivery for alex.rivera@northstar.example Delivered POSTMARK Copy Nov 16, 2026, 12:24 AM UTC (copies the exact UTC value 2026-11-16 00:24:29.000000 UTC)":
+            - cell "Open delivery for alex.rivera@northstar.example":
+              - button "Open delivery for alex.rivera@northstar.example": alex.rivera@northstar.example Your Northstar Logistics sign-in link Magic link
+            - cell "Delivered"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:24 AM UTC (copies the exact UTC value 2026-11-16 00:24:29.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:24 AM UTC (copies the exact UTC value 2026-11-16 00:24:29.000000 UTC)":
+                - time: Nov 16, 2026, 12:24 AM UTC
+          - 'row "Open delivery for maya.okafor@northstr.example Failed Latest: Bounced POSTMARK Copy Nov 16, 2026, 12:23 AM UTC (copies the exact UTC value 2026-11-16 00:23:30.000000 UTC)"':
+            - cell "Open delivery for maya.okafor@northstr.example":
+              - button "Open delivery for maya.okafor@northstr.example": maya.okafor@northstr.example Welcome to Northstar Logistics, Maya Invite admin
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:23 AM UTC (copies the exact UTC value 2026-11-16 00:23:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:23 AM UTC (copies the exact UTC value 2026-11-16 00:23:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:23 AM UTC
+          - 'row "Open delivery for pw-deferred@northstar.example Delayed Latest: Deferred POSTMARK Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)"':
+            - cell "Open delivery for pw-deferred@northstar.example":
+              - button "Open delivery for pw-deferred@northstar.example": pw-deferred@northstar.example Reset your password Password reset
+            - 'cell "Delayed Latest: Deferred"':
+              - text: Delayed
+              - paragraph: "Latest: Deferred"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:22 AM UTC
+          - row "Open delivery for mira.chen@northstar.example Delivered POSTMARK Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:29.000000 UTC)":
+            - cell "Open delivery for mira.chen@northstar.example":
+              - button "Open delivery for mira.chen@northstar.example": mira.chen@northstar.example Sam Rivera invited you to Northstar Logistics Invite admin
+            - cell "Delivered"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:29.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:22 AM UTC (copies the exact UTC value 2026-11-16 00:22:29.000000 UTC)":
+                - time: Nov 16, 2026, 12:22 AM UTC
+          - 'row "Open delivery for billing@northstar.example Failed Latest: Bounced POSTMARK Copy Nov 16, 2026, 12:20 AM UTC (copies the exact UTC value 2026-11-16 00:20:29.000000 UTC)"':
+            - cell "Open delivery for billing@northstar.example":
+              - button "Open delivery for billing@northstar.example": billing@northstar.example Payment action needed for Northstar Logistics Payment failed
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:20 AM UTC (copies the exact UTC value 2026-11-16 00:20:29.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:20 AM UTC (copies the exact UTC value 2026-11-16 00:20:29.000000 UTC)":
+                - time: Nov 16, 2026, 12:20 AM UTC
+          - 'row "Open delivery for pw-nil-reason-bounce@northstar.example Failed Latest: Bounced POSTMARK Copy Nov 16, 2026, 12:16 AM UTC (copies the exact UTC value 2026-11-16 00:16:30.000000 UTC)"':
+            - cell "Open delivery for pw-nil-reason-bounce@northstar.example":
+              - button "Open delivery for pw-nil-reason-bounce@northstar.example": pw-nil-reason-bounce@northstar.example Reset your password Password reset
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:16 AM UTC (copies the exact UTC value 2026-11-16 00:16:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:16 AM UTC (copies the exact UTC value 2026-11-16 00:16:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:16 AM UTC
+          - 'row "Open delivery for pw-bounce-then-open@northstar.example Failed Latest: Opened POSTMARK Copy Nov 16, 2026, 12:12 AM UTC (copies the exact UTC value 2026-11-16 00:12:30.000000 UTC)"':
+            - cell "Open delivery for pw-bounce-then-open@northstar.example":
+              - button "Open delivery for pw-bounce-then-open@northstar.example": pw-bounce-then-open@northstar.example Reset your password Password reset
+            - 'cell "Failed Latest: Opened"':
+              - text: Failed
+              - paragraph: "Latest: Opened"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:12 AM UTC (copies the exact UTC value 2026-11-16 00:12:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:12 AM UTC (copies the exact UTC value 2026-11-16 00:12:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:12 AM UTC
+          - row "Open delivery for zoë.müller@northstar.example Delivered POSTMARK Copy Nov 16, 2026, 12:10 AM UTC (copies the exact UTC value 2026-11-16 00:10:30.000000 UTC)":
+            - cell "Open delivery for zoë.müller@northstar.example":
+              - button "Open delivery for zoë.müller@northstar.example": zoë.müller@northstar.example Your Northstar Logistics workspace is ready Invite admin
+            - cell "Delivered"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:10 AM UTC (copies the exact UTC value 2026-11-16 00:10:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:10 AM UTC (copies the exact UTC value 2026-11-16 00:10:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:10 AM UTC
+          - 'row "Open delivery for pw-typo-bounce@northstar.example Failed Latest: Bounced POSTMARK Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)"':
+            - cell "Open delivery for pw-typo-bounce@northstar.example":
+              - button "Open delivery for pw-typo-bounce@northstar.example": pw-typo-bounce@northstar.example Reset your password Password reset
+            - 'cell "Failed Latest: Bounced"':
+              - text: Failed
+              - paragraph: "Latest: Bounced"
+            - cell "POSTMARK"
+            - cell "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+              - button "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+                - time: Nov 16, 2026, 12:05 AM UTC
+          - row "Open delivery for pw-sent-no-report@northstar.example Sent POSTMARK Copy Nov 15, 2026, 11:58 PM UTC (copies the exact UTC value 2026-11-15 23:58:30.000000 UTC)":
+            - cell "Open delivery for pw-sent-no-report@northstar.example":
+              - button "Open delivery for pw-sent-no-report@northstar.example": pw-sent-no-report@northstar.example Reset your password Password reset
+            - cell "Sent"
+            - cell "POSTMARK"
+            - cell "Copy Nov 15, 2026, 11:58 PM UTC (copies the exact UTC value 2026-11-15 23:58:30.000000 UTC)":
+              - button "Copy Nov 15, 2026, 11:58 PM UTC (copies the exact UTC value 2026-11-15 23:58:30.000000 UTC)":
+                - time: Nov 15, 2026, 11:58 PM UTC
+          - row "Open delivery for billing@northstar.example Delivered POSTMARK Copy Nov 15, 2026, 11:56 PM UTC (copies the exact UTC value 2026-11-15 23:56:29.000000 UTC)":
+            - cell "Open delivery for billing@northstar.example":
+              - button "Open delivery for billing@northstar.example": billing@northstar.example Receipt INV-2026-0601 for Northstar Logistics Receipt paid
+            - cell "Delivered"
+            - cell "POSTMARK"
+            - cell "Copy Nov 15, 2026, 11:56 PM UTC (copies the exact UTC value 2026-11-15 23:56:29.000000 UTC)":
+              - button "Copy Nov 15, 2026, 11:56 PM UTC (copies the exact UTC value 2026-11-15 23:56:29.000000 UTC)":
+                - time: Nov 15, 2026, 11:56 PM UTC
+          - row "Open delivery for queued@northstar.example Queued POSTMARK Copy Nov 15, 2026, 10:27 PM UTC (copies the exact UTC value 2026-11-15 22:27:29.000000 UTC)":
+            - cell "Open delivery for queued@northstar.example":
+              - button "Open delivery for queued@northstar.example": queued@northstar.example Sam Rivera invited you to Northstar Logistics Invite admin
+            - cell "Queued"
+            - cell "POSTMARK"
+            - cell "Copy Nov 15, 2026, 10:27 PM UTC (copies the exact UTC value 2026-11-15 22:27:29.000000 UTC)":
+              - button "Copy Nov 15, 2026, 10:27 PM UTC (copies the exact UTC value 2026-11-15 22:27:29.000000 UTC)":
+                - time: Nov 15, 2026, 10:27 PM UTC
+          - 'row "Open delivery for rejected@northstar.example Failed Latest: Rejected POSTMARK Copy Nov 15, 2026, 10:26 PM UTC (copies the exact UTC value 2026-11-15 22:26:29.000000 UTC)"':
+            - cell "Open delivery for rejected@northstar.example":
+              - button "Open delivery for rejected@northstar.example": rejected@northstar.example Sam Rivera invited you to Northstar Logistics Invite admin
+            - 'cell "Failed Latest: Rejected"':
+              - text: Failed
+              - paragraph: "Latest: Rejected"
+            - cell "POSTMARK"
+            - cell "Copy Nov 15, 2026, 10:26 PM UTC (copies the exact UTC value 2026-11-15 22:26:29.000000 UTC)":
+              - button "Copy Nov 15, 2026, 10:26 PM UTC (copies the exact UTC value 2026-11-15 22:26:29.000000 UTC)":
+                - time: Nov 15, 2026, 10:26 PM UTC
+          - 'row "Open delivery for deferred@northstar.example Delayed Latest: Deferred SENDGRID Copy Nov 15, 2026, 10:24 PM UTC (copies the exact UTC value 2026-11-15 22:24:29.000000 UTC)"':
+            - cell "Open delivery for deferred@northstar.example":
+              - button "Open delivery for deferred@northstar.example": deferred@northstar.example Sam Rivera invited you to Northstar Logistics Invite admin
+            - 'cell "Delayed Latest: Deferred"':
+              - text: Delayed
+              - paragraph: "Latest: Deferred"
+            - cell "SENDGRID"
+            - cell "Copy Nov 15, 2026, 10:24 PM UTC (copies the exact UTC value 2026-11-15 22:24:29.000000 UTC)":
+              - button "Copy Nov 15, 2026, 10:24 PM UTC (copies the exact UTC value 2026-11-15 22:24:29.000000 UTC)":
+                - time: Nov 15, 2026, 10:24 PM UTC
+          - 'row "Open delivery for opened@northstar.example Delivered Latest: Opened POSTMARK Copy Nov 15, 2026, 10:22 PM UTC (copies the exact UTC value 2026-11-15 22:22:29.000000 UTC)"':
+            - cell "Open delivery for opened@northstar.example":
+              - button "Open delivery for opened@northstar.example": opened@northstar.example Receipt INV-2026-0601 for Northstar Logistics Receipt paid
+            - 'cell "Delivered Latest: Opened"':
+              - text: Delivered
+              - paragraph: "Latest: Opened"
+            - cell "POSTMARK"
+            - cell "Copy Nov 15, 2026, 10:22 PM UTC (copies the exact UTC value 2026-11-15 22:22:29.000000 UTC)":
+              - button "Copy Nov 15, 2026, 10:22 PM UTC (copies the exact UTC value 2026-11-15 22:22:29.000000 UTC)":
+                - time: Nov 15, 2026, 10:22 PM UTC
+    - navigation "Activity pagination":
+      - text: Previous Page 1 of 2
+      - link "Next":
+        - /url: /ops/mail?page=2&tenant_id=northstar&view=deliveries&window_hours=168

@@ -1,0 +1,27 @@
+{
+  "scenario_id": "deliveries__northstar__empty-search__375__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Change or clear a filter to see more.",
+      "screenshot_region": "empty state card, below the heading and above the Clear filters button"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading and intro line under Activity"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "No activity matches the current filters",
+      "screenshot_region": "empty state card below the search box and summary counts"
+    }
+  ],
+  "reasons": "The search box sits above the list, and the empty state is visible within the first screen at phone width. The empty state says plainly that nothing matches. It gives a next step in the sentence 'Change or clear a filter to see more.' and a 'Clear filters' button. The screen uses the product's words (Activity, Account, email). It shows no times and no status rows, so the time and status rules don't apply and I didn't cite them."
+}
