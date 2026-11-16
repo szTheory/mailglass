@@ -2898,10 +2898,23 @@ defmodule MailglassAdmin.OperatorLive do
       |> Enum.map(fn {event, label, help} ->
         matching = Enum.filter(groups, &(health_delivery_card(&1) == event))
         count = Enum.reduce(matching, 0, &(&1.count + &2))
-        # Older records can have a failure status without a matching latest event.
-        # Keep the problem visible; don't send that subset to an empty event filter.
+
+        # The Activity event filter matches the latest recorded event alone, so it is used
+        # only when it opens exactly the emails this card counts. Two things make it not so.
+        # Older records can have a failure status without a matching latest event: keep the
+        # problem visible, and don't send that subset to an empty event filter. And an
+        # email with the same latest event can be counted by another card or by none: a
+        # confirmed delivery followed by a later deferral reads Delivered, so an event
+        # filter on "deferred" would open it under the Delayed card.
+        exact_filter? =
+          Enum.all?(matching, &(&1.last_event_type == event)) and
+            not Enum.any?(
+              groups,
+              &(&1.last_event_type == event and health_delivery_card(&1) != event)
+            )
+
         destination =
-          if Enum.all?(matching, &(&1.last_event_type == event)),
+          if exact_filter?,
             do: Map.put(params, "event", Atom.to_string(event)),
             else: params
 

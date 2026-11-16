@@ -218,6 +218,130 @@ defmodule MailglassAdmin.Phase182JourneyTest do
     end
   end
 
+  # The cards count by the delivery class but the Activity event filter matches the latest
+  # recorded event alone, so a card's link can open a wider list than the card counts (WR-02).
+  # The filter is therefore used only when it opens exactly the emails the card counts. A
+  # server-side filter by class is a later core change (D-07), so when the event filter would
+  # be wider the link opens the unfiltered list, where every counted email is present and
+  # reads its own class word.
+  describe "Health card links open the list the card counts (WR-02)" do
+    test "each card's link opens exactly the emails the card counts", %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      seeds = [
+        {:failed, 1, %{last_event_type: :failed, terminal: true}},
+        {:bounced, 2, %{last_event_type: :bounced, bounced_at: :hours_ago_2, terminal: true}},
+        {:rejected, 3, %{last_event_type: :rejected, terminal: true}},
+        {:deferred, 4, %{last_event_type: :deferred}}
+      ]
+
+      for {event, n, attrs} <- seeds, i <- 1..n do
+        insert_delivery!(
+          attrs
+          |> resolve_times()
+          |> Map.merge(%{
+            recipient: "card-#{event}-#{i}@example.com",
+            provider_message_id: "pm_card_#{event}_#{i}"
+          })
+        )
+      end
+
+      {:ok, health, _html} = live(operator_conn(conn), health_path())
+      html = render(health)
+
+      # Distinct counts, so a link that opens another card's list cannot pass.
+      assert health_card_counts(html) == %{failed: 1, bounced: 2, rejected: 3, deferred: 4}
+
+      for {event, n, _attrs} <- seeds do
+        assert health_card_href(html, event) =~ "event=#{event}"
+        assert landing_row_count(conn, health_card_href(html, event)) == n, "#{event} card"
+      end
+    end
+
+    # One row per way a later deferral can sit on an email that is not Delayed: a confirmed
+    # delivery, a durable bounce and a suppression, each with `deferred` as its latest event.
+    for {label, attrs} <- [
+          {"a confirmed delivery", %{delivered_at: :hours_ago_2, terminal: true}},
+          {"a durable bounce", %{bounced_at: :hours_ago_2, terminal: true}},
+          {"a suppression", %{suppressed_at: :hours_ago_2, terminal: true}}
+        ] do
+      test "#{label} followed by a deferral does not widen the Delayed link", %{conn: conn} do
+        OperatorFixtures.reset!()
+
+        delayed =
+          insert_delivery!(%{
+            recipient: "pw-delayed@example.com",
+            provider_message_id: "pm_delayed",
+            last_event_type: :deferred
+          })
+
+        later_deferred =
+          insert_delivery!(
+            %{last_event_type: :deferred}
+            |> Map.merge(resolve_times(unquote(Macro.escape(attrs))))
+            |> Map.merge(%{
+              recipient: "pw-later-deferred@example.com",
+              provider_message_id: "pm_later_deferred"
+            })
+          )
+
+        {:ok, health, _html} = live(operator_conn(conn), health_path())
+        html = render(health)
+
+        # Non-vacuous: the later deferral is not Delayed, so the card counts one email, and
+        # the event filter alone (latest event: deferred) would open both.
+        assert health_card_counts(html)[:deferred] == 1
+
+        assert Deliveries.list_recent_deliveries_page(%{tenant_id: @tenant_id, event: :deferred}).total_count ==
+                 2
+
+        href = health_card_href(html, :deferred)
+        refute href =~ "event=deferred"
+
+        landing = landing_html(conn, href)
+        assert landing_badge_words(landing, delayed.id) == ["Delayed"]
+        assert landing_badge_words(landing, later_deferred.id) != []
+        refute landing_badge_words(landing, later_deferred.id) == ["Delayed"]
+      end
+    end
+
+    test "a widened Delayed card leaves the other cards' links exact", %{conn: conn} do
+      OperatorFixtures.reset!()
+
+      for i <- 1..2 do
+        insert_delivery!(%{
+          recipient: "pw-failed-#{i}@example.com",
+          provider_message_id: "pm_failed_#{i}",
+          last_event_type: :failed,
+          terminal: true
+        })
+      end
+
+      insert_delivery!(%{
+        recipient: "pw-delayed@example.com",
+        provider_message_id: "pm_delayed",
+        last_event_type: :deferred
+      })
+
+      insert_delivery!(%{
+        recipient: "pw-delivered-then-deferred@example.com",
+        provider_message_id: "pm_delivered_then_deferred",
+        last_event_type: :deferred,
+        delivered_at: DateTime.add(DateTime.utc_now(), -2, :hour),
+        terminal: true
+      })
+
+      {:ok, health, _html} = live(operator_conn(conn), health_path())
+      html = render(health)
+
+      assert health_card_counts(html) == %{failed: 2, deferred: 1}
+      refute health_card_href(html, :deferred) =~ "event=deferred"
+
+      assert health_card_href(html, :failed) =~ "event=failed"
+      assert landing_row_count(conn, health_card_href(html, :failed)) == 2
+    end
+  end
+
   describe "summary without lifecycle keys (D-06)" do
     test "an outcome group from an older core reads undetermined, never a count" do
       three_field_group = %{
@@ -771,6 +895,19 @@ defmodule MailglassAdmin.Phase182JourneyTest do
         into: %{} do
       {event, count |> Floki.text() |> String.trim() |> String.to_integer()}
     end
+  end
+
+  # The Activity screen a Health card link opens, rendered the way an operator reaches it.
+  defp landing_html(conn, href) do
+    {:ok, view, _html} = live(operator_conn(conn), href)
+    render(view)
+  end
+
+  defp landing_row_count(conn, href), do: conn |> landing_html(href) |> row_count(:table)
+
+  # The class word(s) a delivery's row carries on a landing screen; [] when it is not listed.
+  defp landing_badge_words(html, id) do
+    html |> row_badges(:mobile, id) |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
   end
 
   defp health_card_href(html, event) do
