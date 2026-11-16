@@ -42,7 +42,7 @@
 
 ### Docs, Packaging, Launch Prep (BRDOC)
 
-- [ ] **BRDOC-01**: The README header uses `<picture>` with absolute `raw.githubusercontent.com` URLs pinned to a tag, so it renders on hex.pm.
+- [ ] **BRDOC-01**: README headers use separate light and dark lockup images selected correctly by GitHub, Hex.pm and HexDocs, with absolute `raw.githubusercontent.com` URLs pinned to the immutable asset commit SHA. An offline contract verifies the refs and image bytes against the brand pin.
 - [ ] **BRDOC-02**: ExDoc CSS (code colors only, no OS dark-media query) and the "m" logo are set in all three `mix.exs`, verified by a real `mix docs` build per package.
 - [ ] **BRDOC-03**: `design-system.md` and the `.impeccable` config exist, and CLAUDE.md/PRODUCT.md updates are drafted for owner sign-off.
 - [ ] **BRDOC-04**: A lowercase-name lint passes, the Hex file allowlist is updated, and `mix mailglass.publish.check` passes.
