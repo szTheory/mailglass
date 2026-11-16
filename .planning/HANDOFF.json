@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-11-16T20:01:45.404Z",
+  "phase": "183",
+  "phase_name": "Docs, Packaging and Launch Prep",
+  "phase_dir": ".planning/phases/183-docs-packaging-and-launch-prep",
+  "plan": 2,
+  "task": 3,
+  "total_tasks": 3,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Trademark gate and public claim scanner",
+      "status": "done"
+    },
+    {
+      "id": 2,
+      "name": "Design docs and owner patches",
+      "status": "done"
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": 3,
+      "name": "Pinned favicon capture and independent pixel validation",
+      "status": "blocked",
+      "progress": "First catalog has 108 PNGs but fails WebKit dark colors and 16px DPR1 IoU (0.886 < 0.90). The one corrective pass captured 72 Chromium/Firefox PNGs; the pixel-verified WebKit dark probe still returned light colors and stopped before WebKit cells or manifest."
+    },
+    {
+      "id": "183-01",
+      "name": "Docs, packaging and launch-prep plan",
+      "status": "not_started",
+      "progress": "Depends on plan 183-02 passing; do not start while its catalog acceptance gate is blocked."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "The one additional capture authorization is consumed. Available WebKit still renders light SVG colors in the dark embedded-image probe; the first full catalog also misses the fixed 0.90 cross-engine IoU threshold at 16px DPR1 (0.886).",
+      "type": "human_action",
+      "workaround": "Preserve both evidence sets. Wait for an updated WebKit runtime or an explicit owner decision to change the recovery/acceptance scope. Do not launch browsers or start plan 183-01."
+    }
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {
+      "action": "Decide whether to wait for a WebKit runtime that passes the SVG dark-mode probe or approve a materially changed acceptance/recovery approach.",
+      "context": "The two authorized capture runs failed. The corrective run tested scheme-specific resource identity, explicit image-level color-scheme, and a pixel-verified theme probe, but WebKit still returned light colors. No additional browser run is authorized.",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "The one corrective capture was used; no further browser run is authorized.",
+      "rationale": "The owner authorized exactly one additional capture after the first catalog failed, and that pass also failed its dark-mode probe.",
+      "phase": "183"
+    },
+    {
+      "decision": "Keep the approved 0.90 cross-engine IoU threshold and preserve both failed evidence sets.",
+      "rationale": "The phase plan forbids lowering the pixel thresholds to accept a failing catalog.",
+      "phase": "183"
+    }
+  ],
+  "uncommitted_files": [
+    " M .planning/STATE.md",
+    " M .planning/config.json",
+    " M .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.md",
+    "?? .planning/HANDOFF.json",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-A-readme-hexpm.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-C-design-system-docs.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-D-lint-allowlist.md",
+    "?? .planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
+    "?? .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/"
+  ],
+  "next_action": "Wait for the owner to choose whether to wait for an updated WebKit runtime or approve a materially changed recovery/acceptance scope. Until then, do not run favicon-capture.cjs --capture or start plan 183-01.",
+  "context_notes": "The first failed catalog is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z (108 PNGs, manifest, 81,722 PNG bytes). The corrective failure is .planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z (72 Chromium/Firefox PNGs, no manifest). The earlier mistaken --check launch failed before capture; --check is now a read-only source-pin check. Commit e037ceec adds RGB decoding to the independent ExUnit validator. Commit ad4af343 updates the producer with scheme-distinct but byte-identical SVG data URLs, explicit image-level color-scheme, pixel-verified theme probes, and RGB filter coverage. Node decoding was checked against all 108 first-catalog images; the WebKit dark colors are genuinely light. The full Admin lane on the first catalog had 1814 tests, 1 catalog acceptance failure, 1 excluded. User-owned .planning/config.json and four untracked Phase 183 research notes remain untouched and unstaged."
+}

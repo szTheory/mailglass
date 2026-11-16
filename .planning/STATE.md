@@ -5,11 +5,11 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 183
 current_phase_name: Docs, Packaging and Launch Prep
 status: executing
-stopped_at: Resumed Phase 183 plan 183-02 under authorization for one corrected capture
-last_updated: "2026-11-16T19:41:15.955Z"
+stopped_at: Phase 183 plan 183-02 stopped after the one corrective favicon capture failed WebKit's dark probe
+last_updated: "2026-11-16T19:59:16.503Z"
 last_activity: 2026-11-16
 last_activity_desc: Phase 183 execution started
-state_head: 39d9f7ed4adda83a3d27774b14f17d28946ca4b6
+state_head: ad4af34352e1d64af6fc7415306151adcb61b9e7
 progress:
   total_phases: 5
   completed_phases: 4
@@ -840,8 +840,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-16T19:41:15.622Z
-Stopped at: Resumed Phase 183 plan 183-02 under authorization for one corrected capture
+Last session: 2026-11-16T19:59:16.169Z
+Stopped at: Phase 183 plan 183-02 stopped after the one corrective favicon capture failed WebKit's dark probe
 Resume file: .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.md
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -867,4 +867,4 @@ Resume file: .planning/phases/183-docs-packaging-and-launch-prep/.continue-here.
 
 ### Blockers
 
-- Phase 183 plan 183-02 Task 3: the first 108-cell catalog fails independent pixel validation (WebKit dark SVG-as-img colors and light 16px DPR1 cross-engine IoU 0.886 < 0.90). The owner authorized exactly one additional capture after a targeted correction. Do not launch it before the non-browser harness checks pass; after that pass, do not retry if acceptance still fails. Keep plan 183-01 stopped until plan 183-02 passes.
+- Phase 183 plan 183-02 Task 3 remains blocked after the sole corrective capture: Chromium and Firefox produced 72 PNGs, then WebKit's pixel-verified dark probe returned light glass/pane colors and aborted before WebKit cells or manifest. The earlier 108-cell catalog also fails the unchanged cross-engine IoU threshold (0.886 < 0.90). The additional capture authorization is consumed. Do not launch another browser/capture command or start plan 183-01 until the owner authorizes a materially changed recovery scope.
