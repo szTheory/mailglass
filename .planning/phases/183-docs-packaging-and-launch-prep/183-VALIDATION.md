@@ -5,7 +5,7 @@ status: partial
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-11-16"
-audited_at: "2026-11-17T14:19:23Z"
+audited_at: "2026-11-17T19:40:58Z"
 ---
 
 # Phase 183 — Validation Strategy
@@ -39,7 +39,7 @@ Plan 02 runs in wave 1; plan 01 runs in wave 2 after its pinned assets and guide
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 183-02-01 | 02 | 1 | BRDOC-06 | T-183-01, T-183-02 | Actual caution denies; registers/dates/production flags fail closed; encoded public claims are checked without a publish prerequisite | Hermetic ExUnit and actual CLI tracer | `mix test test/scripts/brand_trademark_gate_test.exs --warnings-as-errors --seed 0` | ✅ existing, extended | 🟢 verified |
 | 183-02-02 | 02 | 1 | BRDOC-03 | T-183-06 | Design parity, narrow Inter exception and pending paired patches preserve canonical owner files | ExUnit contract | `mix test test/scripts/brand_design_md_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors --seed 0`; `cd mailglass_admin && mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/operator/health_overview_test.exs --warnings-as-errors --seed 0` | ✅ created | 🟢 verified |
-| 183-02-03 | 02 | 1 | BRDOC-05 | T-183-03, T-183-04, T-183-05 | Atomic manifest-driven update; complete browser matrix; independent PNG metrics; repository-only checklist | Source-pin ExUnit, browser producer, required Admin validator | `mix test test/scripts/brand_pin_test.exs --warnings-as-errors --seed 0`; `PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright node mailglass_admin/e2e/favicon-capture.cjs --capture` (single authorized run); `cd mailglass_admin && mix test test/mailglass_admin/favicon_catalog_test.exs --warnings-as-errors --seed 0` | ✅ created | 🟢 verified |
+| 183-02-03 | 02 | 1 | BRDOC-05 | T-183-03, T-183-04, T-183-05 | Atomic manifest-driven update; complete browser matrix; independent PNG metrics; repository-only checklist | Source-pin ExUnit, browser producer, required Admin validator | `mix test test/scripts/brand_pin_test.exs --warnings-as-errors --seed 0`; `PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright node mailglass_admin/e2e/favicon-capture.cjs --capture` (single authorized run); `cd mailglass_admin && mix test test/mailglass_admin/favicon_catalog_test.exs --warnings-as-errors --seed 0` | ✅ created | 🔴 Escalated — current Admin suite reports a producer-SHA mismatch for the accepted catalog; prior green catalog validation is historical (see Current Validation Refresh) |
 | 183-01-01 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08, T-183-11 | Core real docs retain pinned bytes, native font/theme, syntax-only CSS and the current claim boundary | Real build, tagged output ExUnit, headless local browser | `mix docs`; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --only core --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --package core` | ✅ created | 🟢 verified — core output contract passed; the clean-checkout/output-root gap was closed in 183-03, and matching Docker browser evidence is recorded below |
 | 183-01-02 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08 | Both sibling outputs enforce the same full default contract; all six static-media UI behaviors are checked | Two real builds, default ExUnit and browser | Separate `mix docs` in Admin/Inbound; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --all` | ✅ created | 🟢 verified — all three real outputs passed; matching Docker browser evidence covers the theme/layout behavior as recorded below |
 | 183-01-03 | 01 | 2 | BRDOC-04, BRDOC-06 separation | T-183-09, T-183-10, T-183-11 | Effective prose/API exceptions; actual tarball/pin/golden/digest equality; full readiness remains independent of announcement denial | ExUnit, corpus CLI and all-three full package checks | `mix test test/scripts/brand_name_lint_test.exs test/mailglass/publish/brand_asset_allowlist_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs --warnings-as-errors --seed 0`; `mix run --no-start scripts/brand_name_lint.exs check`; `mix mailglass.publish.check --allowlist-only`; separate full `--package mailglass`, `--package mailglass_admin`, `--package mailglass_inbound` runs | ✅ created | 🟢 verified |
@@ -193,3 +193,27 @@ The default root suite remains recorded as **2,448 tests, 7 failures, 27 exclude
 The former README-renderer and favicon-order UAT prompts are now covered by candidate-local automated evidence. `test/scripts/readme_image_contract_test.exs` and the final `scripts/verify_brand_docs.sh --browser` run cover the three README sources, immutable assets, and generated ExDoc theme/layout contract. `mailglass_admin/e2e/favicon-capture-order.test.cjs` exercises the actual capture/save helper and proves image decode and frame settling finish before screenshot and file output; `mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs` asserts the manifest does not claim real Safari tab-chrome observation.
 
 The new Node test is placed directly after Node setup in the existing operator-browser CI job, before dependency resolution and browser installation. It uses no browser or new dependency. Local syntax, pin, test, workflow-lint, and whitespace checks passed. No hosted CI, full root-suite rerun, additional favicon capture, or publication occurred. The full root suite remains partial at the recorded 2,448 tests with 7 failures, so this validation strategy remains `partial` and Nyquist noncompliant.
+
+## Current Validation Refresh — 2026-11-17
+
+**Verdict: PARTIAL.** Wave 0 remains complete, but the current Admin result makes BRDOC-05's catalog validation non-green. The frontmatter remains `status: partial`, `nyquist_compliant: false`, and `wave_0_complete: true`.
+
+| Current observation | Result | Scope and limit |
+|---|---|---|
+| Storybook contracts | 42 passed | Current local result supplied for this refresh; exact invocation/transcript was not retained in this artifact. |
+| Core lane | 82 passed | Current local result supplied for this refresh; exact invocation/transcript was not retained in this artifact. |
+| Inbound lane | 481 passed; 3 property exclusions | Current local result supplied for this refresh; exclusions remain exclusions. Exact invocation/transcript was not retained in this artifact. |
+| Admin package suite | 1,824 tests; 1 failure in `FaviconCatalogTest` | The existing accepted catalog `favicon-299c1aa-20261116T231912Z` has a producer-SHA mismatch against the current producer. This is a real validator failure; the earlier 13-test pass is historical. |
+| Full root suite | Not rerun | Its last recorded result remains 2,448 tests, 7 failures, 27 excluded, and 7 skipped. |
+| Hosted CI and browser lanes | Not run in this refresh | Historical Docker/browser evidence above remains historical and is not presented as a current run. |
+| Favicon capture | Not repeated | The accepted catalog was not recaptured; Safari tab chrome remains unobserved. |
+
+No new test was added: the existing independent catalog validator already covers the producer binding and detected the current mismatch. No retry of the stopped Admin suite, browser run, or capture was made. The producer/catalog provenance mismatch remains escalated; BRDOC-05 is not currently proven green. The remaining current local lane results do not resolve that gap. The current observations did not include exact command transcripts, so this refresh records the results without inventing commands or claiming hosted/browser evidence.
+
+## Validation Audit 2026-11-17
+
+| Metric | Count |
+|---|---|
+| Gaps found | 1 |
+| Resolved | 0 |
+| Escalated | 1 |
