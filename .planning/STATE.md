@@ -5,17 +5,17 @@ milestone_name: Brand v2.0 Adoption
 current_phase: 183
 current_phase_name: Docs, Packaging and Launch Prep
 status: verifying
-stopped_at: Verification refresh paused before the required regression gate because its script launches Chromium with automatic retries; the no-retry limit remains active.
-last_updated: "2026-11-17T04:11:14.946Z"
-last_activity: 2026-11-16
-state_head: 3d0db10e2340c0f0372e95cf7d591ea346ce215d
+stopped_at: "Regression gate ran once with Docker remote Chromium: two persistent-context tests sought a missing host binary and one Axe frame.evaluate timed out. Correct in-container runner mode is prepared; awaiting authorization before another browser run."
+last_updated: "2026-11-17T05:07:24.714Z"
+last_activity: 2026-11-17
+state_head: cebb2d5d8719edf096d64789bf2c742cf452e21c
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 21
   completed_plans: 21
   percent: 80
-last_activity_desc: Phase 183 verification paused at the browser regression gate
+last_activity_desc: Phase 183 regression gate tried once in Docker; remote runner mismatch diagnosed and corrected in local gate path, awaiting authorization for one final in-container run
 ---
 
 # Project State
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 Phase: 183 (Docs, Packaging and Launch Prep) — VERIFYING
 Plan: 3 of 3
 Status: verifying
-Last activity: 2026-11-16
+Last activity: 2026-11-17
 
 Progress: [████████░░] 80%
 
@@ -849,7 +849,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-17T03:36:26.732Z
-Stopped at: Verification refresh paused before the required regression gate because its script launches Chromium with automatic retries; the no-retry limit remains active.
+Stopped at: Regression gate ran once with Docker remote Chromium: two persistent-context tests sought a missing host binary and one Axe frame.evaluate timed out. Correct in-container runner mode is prepared; awaiting authorization before another browser run.
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02

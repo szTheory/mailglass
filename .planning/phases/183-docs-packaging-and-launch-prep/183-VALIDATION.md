@@ -113,3 +113,14 @@ GitHub, Hex.pm, and HexDocs theme rendering; the paired CLAUDE.md/PRODUCT.md own
 - No hosted CI was dispatched. The original clean-checkout wiring issue is implemented, but phase verification remains partial until browser behavior and the full-suite failures are reconciled.
 
 The local command for any later authorized browser re-verification is `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright bash scripts/verify_brand_docs.sh --browser`. This execution did not repeat the browser attempt or dispatch remote CI.
+
+## Regression Gate Refresh — 2026-11-17
+
+**Verdict: PARTIAL.** One regression-gate invocation used Playwright 1.65.1 in the matching `mcr.microsoft.com/playwright:v1.65.1-noble` image, with a fixed port and an auto-removed, resource-limited container. Storybook contracts (42), targeted Core tests (81), Admin tests (1,816), and Inbound tests (481) passed. The browser lane completed 34 cases and reported three failures:
+
+1. Two tests call `chromium.launchPersistentContext()` directly. Because the Playwright Test runner remained on macOS and only its fixture browser was connected remotely, those calls attempted to launch the absent host binary under `/Users/jon/Library/Caches/ms-playwright/chromium-1255/`.
+2. The Axe baseline case rendered its page, then timed out after 90 seconds in a `frame.evaluate()` during `AxeBuilder.analyze()`. The same evaluation timed out on the configured test retry; no assertion result was produced.
+
+The failures show that a remote browser fixture is insufficient for this suite. The opt-in Docker path prepared in `scripts/gsd-regression-gate.sh` runs the Playwright Test runner and all Chromium contexts inside the matching image, keeps the app server on host loopback, and disables test retries. Its shell/config syntax and container config-loading checks passed; that path has **not** run the browser suite. The first Docker container was removed, and no unrelated Docker service was touched.
+
+The generated-docs three-package theme/layout browser contract had already passed in the matching Docker image. The unrelated full root suite's seven failures from the prior validation remain unresolved; their names and observed causes are recorded in `183-03-SUMMARY.md`. The phase verifier has not been refreshed, and phase status remains partial. No second regression-browser attempt is authorized by the earlier one-run limit.
