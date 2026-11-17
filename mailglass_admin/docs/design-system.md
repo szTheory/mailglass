@@ -258,5 +258,5 @@ filled selection tile. Keep the 44px targets and visible keyboard focus.
 ## Repository social preview
 
 The pinned social card is prepared for the mailglass repository only. Upload and read-back steps
-are documented in `.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md`; no upload is
-performed by this guide or the build.
+are documented in the [repository-only social upload checklist](https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md);
+no upload is performed by this guide or the build.

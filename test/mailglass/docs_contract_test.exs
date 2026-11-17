@@ -585,6 +585,16 @@ defmodule Mailglass.DocsContractTest do
       end
     end
 
+    test "packaged Admin design guide links to the repository-only social checklist" do
+      design_system = File.read!("mailglass_admin/docs/design-system.md")
+
+      assert design_system =~
+               "[repository-only social upload checklist](https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md)"
+
+      refute design_system =~
+               "are documented in `.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md`"
+    end
+
     test "learning-path is registered in both mix.exs docs lists" do
       mix_exs = File.read!("mix.exs")
       matches = Regex.scan(~r/"guides\/learning-path\.md"/, mix_exs)
