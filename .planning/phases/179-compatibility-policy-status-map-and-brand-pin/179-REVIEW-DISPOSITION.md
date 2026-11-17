@@ -1,27 +1,47 @@
 ---
-phase: 179-compatibility-policy-status-map-and-brand-pin
+phase: 179
 review: 179-REVIEW.md
-updated: 2026-11-14
+titles: json
+findings:
+  - id: CR-01
+    severity: critical
+    disposition: fixed
+    title: "Semicolonless HTML character references bypass the trademark claim gate"
+  - id: WR-01
+    severity: warning
+    disposition: fixed
+    title: "A suppressed row with a terminal latch is classified as Failed"
+  - id: WR-02
+    severity: warning
+    disposition: fixed
+    title: "grep compatibility proofs pass when the implementation is removed"
+  - id: WR-03
+    severity: warning
+    disposition: fixed
+    title: "Compatibility policy contradicts the published stability inventory"
+  - id: WR-04
+    severity: warning
+    disposition: deferred
+    title: "Brand pin writes assets in place before the manifest, leaving partial updates on error"
+  - id: WR-05
+    severity: warning
+    disposition: fixed
+    title: "The CLI update test can overwrite the repository's real brand assets"
+open: 0
+total: 6
+recorded: 2026-11-17T18:51:58Z
 ---
 
-# Phase 179 — Code Review Disposition
+# Phase 179: Code Review Disposition
 
-Advisory ledger. One row per finding; `open` means seen and not yet acted on.
+| Finding | Severity | Disposition | Source |
+|---------|----------|-------------|--------|
+| CR-01 | critical | fixed | Commit `9ff763cd`; semicolonless numeric and named references are decoded; trademark gate contract passed with 45 tests. |
+| WR-01 | warning | fixed | Commit `10ff86cf`; suppression now precedes the durable terminal latch; status-map contract passed. |
+| WR-02 | warning | fixed | Commit `70884c85`; Elixir grep proofs ignore `@moduledoc` and `@doc`; planted docs-only proof test passed. |
+| WR-03 | warning | fixed | Commit `70884c85`; branding-name retention is explicitly separate from the canonical adopter stability inventory. |
+| WR-04 | warning | deferred | Multi-file replacement across the brandbook and Admin asset roots needs a separate staging and rollback design; current file update contract was preserved during verification. |
+| WR-05 | warning | fixed | Commit `ce35fc8a`; removed the real-tree mutation case; temp-tree update refusal coverage remains; root brand pin contracts passed. |
 
-| ID | Severity | Disposition | Note |
-|----|----------|-------------|------|
-| CR-01 | critical | fixed | CLI entrypoints in `scripts/brand_pin.exs` and `scripts/brand_trademark_gate.exs` no longer gate on `Mix.env()`; tests opt into library mode via `Application.put_env(:mailglass, :script_library_mode, true)`. Subprocess regression tests run each CLI under `MIX_ENV=test`; the trademark one was mutation-proven red against the old guard. `scripts/reconcile_release_versions.exs:777` has the same latent guard (outside phase scope, open). |
-| WR-01 | warning | fixed | Closed in Phase 183-02: `test/scripts/brand_trademark_gate_test.exs` rejects a clear record when any required register is only at `caution`; all required registers must report `clear`. |
-| WR-02 | warning | fixed | Closed in Phase 183-02: the gate rejects future-dated and over-180-day records, and production CLI tests prove `--today`/`--path` remain unavailable even with `MAILGLASS_GATE_TEST=1`. |
-| WR-03 | warning | open | Policy lists names `api_stability.md` calls internal. Needs a scope decision on the "stays" table. |
-| WR-04 | warning | open | `grep`-kind rows match moduledoc text in `router.ex`. |
-| WR-05 | warning | open | `copy_contract_test` Part B "without a test edit" promise contradicts its own `wired == false` assertion. |
-| WR-06 | warning | open | Part B keyed on atom alone; would collide with inbound `:rejected`/`:bounced`. Phase 182 hand-off. |
-| WR-07 | warning | open | `delivery_class/1` returns `:failed` for suppressed + terminal. |
-| WR-08 | warning | open | Operator projections lack fields `delivery_class/1` needs; already recorded as a Phase 182 limitation in 179-01-SUMMARY. |
-| WR-09 | warning | open | `brand_pin_test.exs` `update` CLI case runs against the real tree despite header. |
-| IN-01 | info | open | Duplicated `insert_suppression!/2` helper. |
-| IN-02 | info | open | Raw U+00A0 literal in `brand_v2_compat_policy_test.exs`. |
-| IN-03 | info | open | Trademark-symbol scan covers markdown only. |
-| IN-04 | info | open | `Copy` comment/binding looseness. |
-| IN-05 | info | open | Minor `brand_pin.exs` gaps. |
+Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
+Deferred findings include their reason in the Source cell.
