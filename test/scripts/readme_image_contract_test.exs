@@ -11,12 +11,12 @@ defmodule Mailglass.Scripts.ReadmeImageContractTest do
     :ok
   end
 
-  @tag :core
-  test "core README has one lowercase heading, immutable theme lockups, and a separate tagline" do
-    assert [] == docs_check(:readme_issues, [File.read!(@readme)])
+  test "all package READMEs have one lowercase heading, immutable theme lockups, and a separate tagline" do
+    for readme <- ["README.md", "mailglass_admin/README.md", "mailglass_inbound/README.md"] do
+      assert [] == docs_check(:readme_source_issues, [Path.join(@repo_root, readme)])
+    end
   end
 
-  @tag :core
   test "wrong image host, path, ref, and relative paths each fail the URL contract" do
     readme = File.read!(@readme)
     [light, dark] = theme_urls()
@@ -33,7 +33,6 @@ defmodule Mailglass.Scripts.ReadmeImageContractTest do
     end
   end
 
-  @tag :core
   test "missing images, missing alt text, and unsupported picture markup fail with named reasons" do
     readme = File.read!(@readme)
 
@@ -50,7 +49,6 @@ defmodule Mailglass.Scripts.ReadmeImageContractTest do
            ])
   end
 
-  @tag :core
   test "distorted or too-small lockups fail the responsive geometry contract" do
     readme = File.read!(@readme)
 
@@ -64,7 +62,6 @@ defmodule Mailglass.Scripts.ReadmeImageContractTest do
     end
   end
 
-  @tag :core
   test "the immutable asset commit blobs equal the current shipped pin bytes" do
     pin = File.read!(Path.join(@repo_root, "brandbook/brand.pin.json")) |> Jason.decode!()
 

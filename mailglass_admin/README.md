@@ -1,4 +1,11 @@
-# mailglass_admin
+# mailglass
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-light.svg#gh-light-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-dark.svg#gh-dark-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
+</p>
+
+See your email before it ships. Trace it after.
 
 Mountable LiveView surfaces for mailglass. Today that means:
 

@@ -244,8 +244,15 @@ defmodule MailglassAdmin.MixProject do
       main: "MailglassAdmin",
       source_url: @source_url,
       source_ref: "v" <> @version,
-      logo: "../brandbook/assets/logo-mark.svg",
-      favicon: "../brandbook/assets/favicon.svg",
+      logo: Path.expand("../brandbook/exdoc/mailglass-mark-light.svg", __DIR__),
+      favicon: Path.expand("../brandbook/v2/favicon.svg", __DIR__),
+      assets: %{Path.expand("../brandbook/exdoc", __DIR__) => "assets"},
+      before_closing_head_tag: fn _format ->
+        ~s(<link rel="stylesheet" href="assets/code-colors.css">)
+      end,
+      before_closing_body_tag: fn _format ->
+        ~s(<script defer src="assets/theme-mark.js"></script>)
+      end,
       extras: [
         "README.md",
         "docs/design-system.md",

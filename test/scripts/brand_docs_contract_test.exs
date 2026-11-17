@@ -12,20 +12,19 @@ defmodule Mailglass.Scripts.BrandDocsContractTest do
     :ok
   end
 
-  @tag :core
-  test "real core generated output contains pinned media and native ExDoc behavior" do
-    assert {:ok, %{package: "core"}} =
-             docs_check(:verify_output, [Path.join(@repo_root, "doc"), "core"])
+  test "all real package outputs contain pinned media and native ExDoc behavior" do
+    for package <- ["core", "admin", "inbound"] do
+      assert {:ok, %{package: ^package}} =
+               docs_check(:verify_output, [docs_check(:package_doc_dir, [package]), package])
+    end
   end
 
-  @tag :core
   @tag :tmp_dir
   test "a generated-output fixture passes without a server or network", %{tmp_dir: tmp_dir} do
     fixture_output!(tmp_dir)
     assert {:ok, _result} = docs_check(:verify_output, [Path.join(tmp_dir, "doc"), "core"])
   end
 
-  @tag :core
   @tag :tmp_dir
   test "missing or pin-mismatched media is rejected", %{tmp_dir: tmp_dir} do
     fixture_output!(tmp_dir)
@@ -35,7 +34,6 @@ defmodule Mailglass.Scripts.BrandDocsContractTest do
     assert {:missing_or_unreadable_asset, "assets/favicon.svg"} in issues
   end
 
-  @tag :core
   test "custom CSS rejects layout, font, link, OS-scheme, and non-syntax changes" do
     assert [] =
              docs_check(:syntax_css_issues, [
@@ -51,7 +49,6 @@ defmodule Mailglass.Scripts.BrandDocsContractTest do
     end
   end
 
-  @tag :core
   test "pinned image bytes reject corruption" do
     bytes = File.read!(Path.join(@repo_root, "brandbook/v2/mailglass-lockup-light.svg"))
 
