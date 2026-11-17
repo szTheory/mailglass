@@ -10,11 +10,11 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.10 UI Repairs & Faithful Storybook completed and archived 2026-11-02.** All 31 requirements across Phases 174–178 were satisfied and all five phase verification reports passed. The milestone audit found no blockers: 15/15 integration paths and 7/7 end-to-end flows passed. The closeout is an override because 9 open deferred records were acknowledged; 34 earlier acknowledgements remain carried forward. See the archived audit and .planning/STATE.md for the disclosed follow-ups.
+**v2.11 Brand v2.0 Adoption completed all five phases on 2026-11-17 and is ready for milestone audit and archive.** Phase 183 passed goal-backward verification 20/20 and closed both UAT rows with automated evidence. The earlier root suite's seven failures remain recorded with baseline attribution unknown; the suite was not rerun. No hosted CI run, package publication, or announcement occurred. The trademark claim and announcement gate remains closed pending the recorded search result. See `.planning/STATE.md` and the v2.11 phase artifacts for the remaining evidence and boundaries.
 
-The core value remains **email you can see, audit, and trust before it ships**. This milestone improved operator and maintainer workflows without changing Mailglass's transactional-email focus. No next milestone has been approved; use $gsd-new-milestone to define its goals.
+The core value remains **email you can see, audit, and trust before it ships**. v2.11 aligned the repository's identity and adopter-facing surfaces with the pinned brand book without changing Mailglass's transactional-email focus. Next: `$gsd-complete-milestone v2.11` for the separate audit and archive; milestone completion does not authorize publication or announcement.
 
-## Current Milestone: v2.11 Brand v2.0 Adoption
+## Current Milestone: v2.11 Brand v2.0 Adoption — all phases complete; closeout pending
 
 **Goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
 
@@ -1237,7 +1237,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-11-13 after v2.11 Brand v2.0 Adoption milestone start.*
+*Last updated: 2026-11-17 after Phase 183 completion.*
 <!-- prior footer: 2026-11-02 after the v2.10 milestone closeout review. -->
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->

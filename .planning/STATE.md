@@ -3,40 +3,39 @@ gsd_state_version: "1.0"
 milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 183
-current_phase_name: Docs, Packaging and Launch Prep
-status: verifying
-stopped_at: "Regression gate ran once with Docker remote Chromium: two persistent-context tests sought a missing host binary and one Axe frame.evaluate timed out. Correct in-container runner mode is prepared; awaiting authorization before another browser run."
-last_updated: "2026-11-17T05:07:24.714Z"
+status: completed
+stopped_at: Phase 183 complete — all phases complete
+last_updated: "2026-11-17T15:32:22.083Z"
 last_activity: 2026-11-17
-state_head: cebb2d5d8719edf096d64789bf2c742cf452e21c
+last_activity_desc: Phase 183 complete
+state_head: 8ed9102f3323695db9db668eb059a328688d83a4
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 21
   completed_plans: 21
-  percent: 80
-last_activity_desc: Phase 183 regression gate tried once in Docker; remote runner mismatch diagnosed and corrected in local gate path, awaiting authorization for one final in-container run
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-02)
+See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 183 — Docs, Packaging and Launch Prep
+**Current focus:** v2.11 milestone closeout — all five phases are complete; audit and archive remain.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 183 (Docs, Packaging and Launch Prep) — VERIFYING
-Plan: 3 of 3
-Status: verifying
-Last activity: 2026-11-17
+Phase: 183
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-11-17 — Phase 183 complete
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## v2.11 Roadmap Shape
 
@@ -166,7 +165,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 206
+- Total plans completed: 209
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -194,6 +193,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 180 | 4 | - | - |
 | 181 | 4 | - | - |
 | 182 | 6 | - | - |
+| 183 | 3 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -404,6 +404,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - Phase 173.1 inserted after Phase 173: Address tech debt: demo auth + browser evidence (from v2.9-MILESTONE-AUDIT.md) (URGENT)
 
 ### Decisions
+
+- [Phase 183]: Machine-observable README, generated ExDoc, and favicon capture-order checks now close UAT automatically. Live GitHub and Hex.pm pages remain explicitly unobserved while the candidate is unpublished.
+- [Phase 183]: The corrected Docker-backed regression gate passed. Preserve the earlier root-suite result of seven failures with baseline attribution unknown; it was not rerun under the owner's preserve-and-continue choice.
 
 - v2.7 is evidence-first, bounded maintenance: no product/API/schema/UI work, dependency churn, CI-efficiency redesign, speculative architecture, or forced release.
 - Preserve and inventory workspace/release state before cleanup; reconcile immutable release facts before scheduled-control recovery; repair observed timeouts only at their narrow seams; complete documentation/artifact truth last.
@@ -849,7 +852,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-17T03:36:26.732Z
-Stopped at: Regression gate ran once with Docker remote Chromium: two persistent-context tests sought a missing host binary and one Axe frame.evaluate timed out. Correct in-container runner mode is prepared; awaiting authorization before another browser run.
+Stopped at: Phase 183 complete — all phases complete
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -875,5 +878,4 @@ Resume file: None
 
 ### Blockers
 
-- Phase 183-03 browser behavior remains unverified: the installed Chromium SIGTRAPed at macOS Mach port bootstrap registration with permission denied (1100), before any scenario.
-- The unchanged default root mix test finished with 7 failures out of 2448; first-failure details and unverified baseline attribution are in 183-03-SUMMARY.md.
+- The unchanged default root mix test finished with 7 failures out of 2,448; baseline attribution is unknown, and it was not rerun after the owner chose preserve-and-continue. First-failure details are in `183-03-SUMMARY.md`.
