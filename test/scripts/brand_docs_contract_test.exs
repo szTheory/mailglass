@@ -12,13 +12,6 @@ defmodule Mailglass.Scripts.BrandDocsContractTest do
     :ok
   end
 
-  test "all real package outputs contain pinned media and native ExDoc behavior" do
-    for package <- ["core", "admin", "inbound"] do
-      assert {:ok, %{package: ^package}} =
-               docs_check(:verify_output, [docs_check(:package_doc_dir, [package]), package])
-    end
-  end
-
   @tag :tmp_dir
   test "a generated-output fixture passes without a server or network", %{tmp_dir: tmp_dir} do
     fixture_output!(tmp_dir)

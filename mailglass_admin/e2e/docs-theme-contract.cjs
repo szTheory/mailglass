@@ -48,10 +48,7 @@ function pinnedLockups() {
   return assets;
 }
 
-async function verifyScenario(browser, packageName, colorScheme, theme) {
-  const { docs } = packageDirs[packageName];
-  const readmePath = path.join(docs, "README.html");
-  assert.ok(fs.existsSync(readmePath), `${packageName} docs are missing README.html; build docs first`);
+async function verifyScenario(browser, packageName, readmePath, colorScheme, theme) {
   const pinned = pinnedLockups();
   const context = await browser.newContext({
     colorScheme,
@@ -149,28 +146,81 @@ async function verifyScenario(browser, packageName, colorScheme, theme) {
   await context.close();
 }
 
-async function verifyPackage(browser, packageName) {
+async function verifyPackage(browser, packageName, readmePath) {
   for (const [colorScheme, theme] of [
     ["dark", "light"],
     ["light", "dark"],
   ]) {
-    await verifyScenario(browser, packageName, colorScheme, theme);
+    await verifyScenario(browser, packageName, readmePath, colorScheme, theme);
   }
 }
 
-async function main(args) {
-  const all = args.includes("--all");
-  const packageIndex = args.indexOf("--package");
-  const packageName = packageIndex >= 0 ? args[packageIndex + 1] : null;
-  const packages = all ? Object.keys(packageDirs) : packageName ? [packageName] : [];
+function parseCliArgs(args) {
+  let all = false;
+  let packageName = null;
+  let outputRoot = null;
 
-  assert.ok(packages.length > 0, "usage: node mailglass_admin/e2e/docs-theme-contract.cjs --package core|admin|inbound|--all");
-  for (const name of packages) assert.ok(packageDirs[name], `unknown package: ${name}`);
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === "--all") {
+      assert.equal(all, false, "--all may only be provided once");
+      all = true;
+    } else if (argument === "--package") {
+      assert.equal(packageName, null, "--package may only be provided once");
+      packageName = args[index + 1];
+      assert.ok(packageName && !packageName.startsWith("--"), "--package requires a package name");
+      index += 1;
+    } else if (argument === "--output-root") {
+      assert.equal(outputRoot, null, "--output-root may only be provided once");
+      outputRoot = args[index + 1];
+      assert.ok(outputRoot && !outputRoot.startsWith("--"), "--output-root requires a path");
+      index += 1;
+    } else {
+      assert.fail(`unexpected argument: ${argument}`);
+    }
+  }
+
+  assert.ok(all || packageName, "usage: node mailglass_admin/e2e/docs-theme-contract.cjs --package core|admin|inbound|--all");
+  assert.ok(!(all && packageName), "--all and --package cannot be combined");
+  if (packageName) assert.ok(packageDirs[packageName], `unknown package: ${packageName}`);
+
+  return {
+    packages: all ? Object.keys(packageDirs) : [packageName],
+    outputRoot: outputRoot === null ? null : path.resolve(outputRoot),
+  };
+}
+
+function outputPathsFor(packages, outputRoot) {
+  return Object.fromEntries(packages.map((packageName) => {
+    assert.ok(packageDirs[packageName], `unknown package: ${packageName}`);
+    const docs = outputRoot
+      ? path.resolve(outputRoot, packageName)
+      : packageDirs[packageName].docs;
+    return [packageName, { docs, readmePath: path.join(docs, "README.html") }];
+  }));
+}
+
+function validateOutputPaths(outputPaths) {
+  for (const [packageName, output] of Object.entries(outputPaths)) {
+    let isFile = false;
+    try {
+      isFile = fs.statSync(output.readmePath).isFile();
+    } catch (_error) {
+      isFile = false;
+    }
+    assert.ok(isFile, `${packageName} docs output is missing README.html: ${output.readmePath}`);
+  }
+  return outputPaths;
+}
+
+async function main(args) {
+  const options = parseCliArgs(args);
+  const outputPaths = validateOutputPaths(outputPathsFor(options.packages, options.outputRoot));
 
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const name of packages) {
-      await verifyPackage(browser, name);
+    for (const name of options.packages) {
+      await verifyPackage(browser, name, outputPaths[name].readmePath);
       process.stdout.write(`[docs-theme-contract] ${name}: both native themes, pinned images, and narrow layout pass\n`);
     }
   } finally {
@@ -178,7 +228,11 @@ async function main(args) {
   }
 }
 
-main(process.argv.slice(2)).catch((error) => {
-  process.stderr.write(`${error.stack || error}\n`);
-  process.exitCode = 1;
-});
+module.exports = { parseCliArgs, outputPathsFor, validateOutputPaths };
+
+if (require.main === module) {
+  main(process.argv.slice(2)).catch((error) => {
+    process.stderr.write(`${error.stack || error}\n`);
+    process.exitCode = 1;
+  });
+}
