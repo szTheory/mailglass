@@ -18,7 +18,7 @@ defmodule Mailglass.BrandNameLint do
   @iex_lines ~r/(?m)^\s*(?:iex>|\.\.\.)[^\n]*(?:\n|$)/u
   @source_code_line ~r/(?m)^\s*(?:alias|import|require|defmodule|use)\s+Mailglass\b[^\n]*(?:\n|$)/u
   @accessible_attribute ~r/\b(?:aria-label|aria-description|title|alt|placeholder)\s*=\s*["']([^"']*)["']/isu
-  @gettext_field ~r/^\s*(?:msgid|msgstr(?:\[[^]]+\])?)\s+"((?:\\.|[^"\\])*)"\s*$/u
+  @gettext_field ~r/^\s*(?:msgid_plural|msgid|msgstr(?:\[[^]]+\])?)\s+"((?:\\.|[^"\\])*)"\s*$/u
   @gettext_quoted_continuation ~r/^\s*"((?:\\.|[^"\\])*)"\s*$/u
 
   # These path-specific exceptions preserve historical release text and the pending

@@ -113,6 +113,18 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
              ["Mailglass", "Mailglass"]
   end
 
+  test "scans plural PO source fields and their continuation lines" do
+    po = """
+    msgid "A message"
+    msgid_plural "Many "
+    "Mailglass messages"
+    msgstr[0] "A message"
+    msgstr[1] "Messages"
+    """
+
+    assert [%{match: "Mailglass", line: 2}] = findings(po, :gettext, "priv/gettext/default.po")
+  end
+
   test "the casing rewrite touches only scanner-confirmed prose and keeps structural tokens byte-stable" do
     source =
       "# Mailglass\nMailglass delivers Mailglass.Config; `MailGlass` stays code. " <>
