@@ -1,12 +1,15 @@
 ---
 phase: 179-compatibility-policy-status-map-and-brand-pin
-reviewed: 2026-11-17T18:40:00Z
+reviewed: 2026-11-17T20:21:49Z
 depth: standard
-files_reviewed: 14
+files_reviewed: 17
 files_reviewed_list:
   - mailglass_admin/lib/mailglass_admin/status_map.ex
   - mailglass_admin/lib/mailglass_admin/copy.ex
   - mailglass_admin/lib/mailglass_admin/components.ex
+  - mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex
+  - mailglass_admin/test/mailglass_admin/components_test.exs
+  - mailglass_admin/test/mailglass_admin/operator_live_test.exs
   - scripts/brand_pin.exs
   - scripts/brand_trademark_gate.exs
   - mailglass_admin/test/mailglass_admin/brand_v2_compat_policy_test.exs
@@ -29,21 +32,29 @@ status: issues_found
 
 # Phase 179: Code Review Report
 
-**Reviewed:** 2026-11-17T18:40:00Z
+**Reviewed:** 2026-11-17T20:21:49Z
 **Depth:** standard
-**Files Reviewed:** 14
+**Files Reviewed:** 17 (14 baseline files plus 3 additional unique files in this refresh)
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the Phase 179 status and copy contracts, compatibility policy, brand pin tooling,
-trademark gate, and their related tests. The trademark scanner has a fail-open case for
-semicolonless HTML character references. Other findings concern status precedence, contract
-proofs that accept documentation text as code, conflicting compatibility promises, partial
-asset writes, and a CLI test that can mutate the real brand tree if its hash guard regresses.
-No tests were run as part of this read-only review. The configured agent-skills query returned
-no project skills; `necessity-review.md` was read and no necessity finding met its evidence
-threshold.
+The original review covered the Phase 179 status and copy contracts, compatibility policy,
+brand pin tooling, trademark gate, and related tests. Its findings and dispositions remain the
+baseline record: five findings are marked fixed and WR-04 remains deferred in
+`179-REVIEW-DISPOSITION.md`.
+
+This refresh reviewed only the incremental status-badge sizing and mobile delivery-card spacing
+changes in the four scoped files. No new actionable finding was identified: `:sm`/`:md` select
+the matching badge class and row/detail mark dimensions, and the mobile card has the `space-y-sm`
+class present in the shipped CSS. The focused result supplied for these files was 303 tests, 0
+failures, 302 excluded; this review did not rerun tests. No browser or capture was performed, so
+rendered spacing and visual balance remain unverified. The root curated gate's known pre-existing
+Admin FaviconCatalogTest SHA-256 provenance mismatch was not retried and is unrelated to these
+changes.
+
+The configured agent-skills query returned no project skills. `necessity-review.md` was read;
+no necessity finding met its evidence threshold.
 
 ## Narrative Findings (AI reviewer)
 
@@ -134,6 +145,6 @@ tree API.
 
 ---
 
-_Reviewed: 2026-11-17T18:40:00Z_
+_Reviewed: 2026-11-17T20:21:49Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
