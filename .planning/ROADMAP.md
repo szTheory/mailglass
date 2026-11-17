@@ -45,17 +45,17 @@
 
 **Milestone goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
 
-**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Cap:** 5 phases, 20 plans or fewer (the per-phase budgets below sum to 19), one open PR at a time.
+**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Baseline cap:** 5 phases, 20 plans or fewer (the original per-phase budgets below sum to 19), one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, permitting at most 24 total plans; see `.planning/research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md`.
 
 **Verification:** D-52 zero human UAT. Every success criterion below is machine-observable. Owner hand-off is limited to ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement, and sign-off on CLAUDE.md/PRODUCT.md edits.
 
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183).
 
-- [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (completed 2026-11-14)
+- [ ] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (implementation completed 2026-11-14; audit gap closure in progress)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
-- [x] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (completed 2026-11-15)
-- [x] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry brand v2; announcement and any trademark claim wait on the search result (completed 2026-11-17)
+- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; audit gap closure in progress)
+- [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (implementation completed 2026-11-17; audit gap closure in progress)
 
 <details>
 <summary>✅ v2.10 UI Repairs & Faithful Storybook (Phases 174–178) — SHIPPED 2026-11-02</summary>
@@ -94,9 +94,9 @@ Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-RO
   1. A maintainer can open the compatibility policy file and find every public name that stays (`Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry event names, the `Delivery.status` enum), plus the rule that on-screen and docs words are glossed, never renamed.
   2. The status map's unit test covers all 26 status/event atoms (the 25 badge atoms plus `:subscribed`). Each atom maps to exactly one of Sent, Delivered, Delayed, Failed, Not sent, or "not a delivery status", and an unmapped atom fails the test. The answer to "is Not sent ever a persisted `Delivery.status :suppressed` row, or only a pre-send block?" is recorded with the code path that settles it.
   3. Changing a screen string owned by `MailglassAdmin.Copy` without updating `Copy` fails the copy contract test. A recorded mutation run proves this.
-  4. The brand pin test passes against zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b` and fails when the recorded hash or a copied-in shipped asset is altered. The full book is not in the repository tree.
+  4. The brand pin test passes against the owner-approved brand v2.0.1 zip sha256 `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56` and fails when the recorded hash or a copied-in shipped asset is altered. The full book is not in the repository tree. This supersedes the original v2.0 digest documented in the Phase 179 plan.
   5. The trademark, image and register search result for the name and mark is committed with its date, sources searched and outcome, in the place Phase 183 reads as its announcement gate.
-**Plans**: 4/4 plans complete
+**Plans**: 4/5 plans complete (one approved BRPOL-04 gap-closure plan remains)
 
 Plans:
 **Wave 1**
@@ -106,6 +106,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 179-02-PLAN.md — Brand v2 compatibility policy with parsed, live-verified stays table and api_stability pointer (BRPOL-01)
+- [ ] 179-05-PLAN.md — Reconcile the approved v2.0.1 pin across current acceptance sources and record fresh offline tamper evidence (BRPOL-04 gap closure)
 
 **Plan budget**: about 3
 
@@ -173,7 +174,7 @@ Plans:
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
 **Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
-**Plans**: 6/6 plans complete (over the about-5 budget: the plan checker split the words plan by surface; milestone total becomes 18 of the 20-plan cap, leaving 2 for Phase 183, which budgeted about 3. Owner may veto.)
+**Plans**: 6/7 plans complete (the sixth original plan brought the milestone to 18 against its 20-plan baseline; one owner-authorized gap-closure plan remains.)
 
 Plans:
 **Wave 1**
@@ -193,11 +194,14 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 - [x] 182-06-PLAN.md — JourneySeed and after-mode capture, advisory browser journey, two-judge calibrated review gate, committed after-catalog bound in the admin lane (BRADM-07; BRADM-01 advisory)
+
+**Wave 7** *(after Phase 183-04 provenance closure)*
+- [ ] 182-07-PLAN.md — Provenance-gated current mobile journey, served-SHA binding and independent review (gap closure; requires Phase 183-04)
 **Plan budget**: about 5
 **UI hint**: yes
 
 ### Phase 183: Docs, Packaging and Launch Prep
-**Goal**: Everywhere an adopter meets mailglass outside the dashboard (the hex.pm README, HexDocs, Hex package contents, browser favicon) carries brand v2.0 correctly. Nothing irreversible (an announcement or a ™ claim) goes out before the Phase 179 search result allows it.
+**Goal**: Everywhere an adopter meets mailglass outside the dashboard (the hex.pm README, HexDocs, Hex package contents and browser favicon) carries the owner-approved brand version correctly. Nothing irreversible (an announcement or a ™ claim) goes out before the Phase 179 search result allows it.
 **Depends on**: Phase 182 (milestone order); needs Phase 181's logo and font assets and Phase 179's search result
 **Requirements**: BRDOC-01, BRDOC-02, BRDOC-03, BRDOC-04, BRDOC-05, BRDOC-06
 **Success Criteria** (what must be TRUE):
@@ -206,8 +210,8 @@ Plans:
   3. `design-system.md` and the `.impeccable` config exist, and the CLAUDE.md/PRODUCT.md updates are drafted and waiting for owner sign-off.
   4. The lowercase-name lint passes. The Hex file allowlist includes the shipped brand assets (fonts, OFL texts, logo) and nothing more, and `mix mailglass.publish.check` passes for every package.
   5. Automated favicon captures at 16, 24 and 32 px exist for Chromium, Firefox and WebKit. A social card/avatar manual-upload checklist with full URLs is written. The announcement and any ™ text are blocked unless the Phase 179 search result clears them, while the code rollout itself is not gated.
-**Plans**: 3/3 plans complete
-**Original plan budget**: 2 (the milestone had 18 completed plans against a hard cap of 20). The owner authorized this single scoped gap-closure plan after verification, so the milestone now exceeds its original cap by one plan. No further plan expansion is authorized.
+**Plans**: 3/4 plans complete
+**Original plan budget**: 2 (three original plans were completed). After the audit, the owner authorized up to three scoped gap-closure plans, one each in Phases 179, 182 and 183. The bounded exception permits at most 24 total plans; no further plan expansion is authorized.
 
 Plans:
 - [x] 183-03-PLAN.md
@@ -217,6 +221,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 183-01-PLAN.md — Theme-aware immutable README headers, three real branded docs builds, lowercase prose and actual package payload contracts (BRDOC-01, BRDOC-02, BRDOC-04)
+- [ ] 183-04-PLAN.md — Authenticate only the accepted historical favicon producer and prove offline portability without recapture (BRDOC-05 gap closure)
 
 **Cross-cutting constraints:** <!-- gsd:generated -->
 - Missing or unreadable static logo/favicon assets fail validation; README keeps lowercase mailglass alt text.
