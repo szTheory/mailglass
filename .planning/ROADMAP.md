@@ -51,7 +51,7 @@
 
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183).
 
-- [ ] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (implementation completed 2026-11-14; audit gap closure in progress)
+- [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (gap verification passed 2026-11-17)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
 - [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; audit gap closure in progress)
@@ -106,7 +106,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 179-02-PLAN.md — Brand v2 compatibility policy with parsed, live-verified stays table and api_stability pointer (BRPOL-01)
-- [x] 179-05-PLAN.md — Reconcile the approved v2.0.1 pin across current acceptance sources and record fresh offline tamper evidence (BRPOL-04 gap closure; phase verification pending)
+- [x] 179-05-PLAN.md — Reconcile the approved v2.0.1 pin across current acceptance sources and record fresh offline tamper evidence (BRPOL-04 gap closure; phase verification passed)
 
 **Plan budget**: about 3
 
