@@ -2671,7 +2671,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default${themed}`);
         await expect(page.getByTestId("preview-shell")).toBeVisible();
 
-        const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
+        // The preview HTML is inside a sandboxed srcdoc iframe. axe-core/playwright's
+        // partial-frame mode can stall while collecting that frame; legacy mode
+        // runs the same tagged audit in the active document without creating a
+        // second page in the browser context.
+        const results = await new AxeBuilder({ page })
+          .setLegacyMode()
+          .withTags(WCAG_22_AA_TAGS)
+          .analyze();
         const measured = {};
         for (const violation of results.violations) {
           measured[violation.id] = (measured[violation.id] || 0) + violation.nodes.length;

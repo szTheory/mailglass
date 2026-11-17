@@ -116,10 +116,10 @@
   "schema": "mailglass.status_marks.v1",
   "source": {
     "extracted_by": "scripts/brand_status_marks.exs",
-    "member_sha256": "1699d693c4ebd9d2548b58ce702468e37e7c8345687f956f8c5bcb3459104db8",
+    "member_sha256": "f1db09b9406d1145ed4ff8da539ffd60779c7042a952bc7c371cdf6eceb9fa96",
     "pin": "brandbook/brand.pin.json",
     "zip_member": "mailglass-brand/mailglass-brand-book.html",
-    "zip_sha256": "ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b"
+    "zip_sha256": "3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56"
   },
   "view_box": "0 0 100 120"
 }

@@ -66,7 +66,9 @@ run_browser_suite_docker() {
   cat >"$runner_file" <<'NODE'
 const net = require('node:net');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const appPort = Number(process.env.BROWSER_SERVER_PORT);
+fs.mkdirSync(process.env.XDG_CACHE_HOME, { recursive: true });
 const relay = net.createServer((client) => {
   const upstream = net.connect(appPort, 'host.docker.internal', () => client.pipe(upstream).pipe(client));
   client.once('error', () => upstream.destroy());
@@ -128,14 +130,43 @@ NODE
     return 1
   fi
 
+  if ! docker run --rm --init --network=bridge --memory=512m --cpus=1 \
+    --name "mailglass-gsd-regression-preflight-$$" \
+    --entrypoint node "$image" -e '
+      const http = require("node:http");
+      let timeout;
+      const request = http.get(process.argv[1], (response) => {
+        clearTimeout(timeout);
+        response.resume();
+        if (response.statusCode !== 200) {
+          console.error(`[gsd-regression-docker] host readiness returned HTTP ${response.statusCode}`);
+          process.exitCode = 1;
+          return;
+        }
+        console.log("[gsd-regression-docker] container-to-host readiness preflight passed");
+      });
+      timeout = setTimeout(() => request.destroy(new Error("request timed out")), 3000);
+      request.once("error", (error) => {
+        clearTimeout(timeout);
+        console.error(`[gsd-regression-docker] container-to-host readiness preflight failed: ${error.message}`);
+        process.exitCode = 1;
+      });
+    ' "http://host.docker.internal:${BROWSER_SERVER_PORT}/ops/browser-ready"; then
+    echo "Docker could not reach the host operator browser server; skipping the full browser suite."
+    tail -n 120 "$server_log" >&2
+    stop_docker_browser_server
+    return 1
+  fi
+
   if docker run --rm --init --read-only --network=bridge \
     --name "mailglass-gsd-regression-browser-$$" \
-    --tmpfs /tmp:rw,nosuid,size=1g --shm-size=512m --memory=2g --cpus=2 --pids-limit=128 \
+    --tmpfs /tmp:rw,nosuid,size=1g --shm-size=512m --memory=2g --cpus=2 --pids-limit=512 \
     --volume "$ROOT_DIR:/workspace/mailglass:rw" \
     --volume "$runner_file:/runner.cjs:ro" \
     --workdir /workspace/mailglass/mailglass_admin \
     --env BROWSER_SERVER_PORT="$BROWSER_SERVER_PORT" \
     --env OPERATOR_BASE_URL="http://127.0.0.1:${BROWSER_SERVER_PORT}" \
+    --env XDG_CACHE_HOME=/tmp/.cache \
     --env OPERATOR_BROWSER_EXTERNAL_SERVER=1 --env CI=1 \
     --entrypoint node "$image" /runner.cjs >"$log_file" 2>&1; then
     status=0
