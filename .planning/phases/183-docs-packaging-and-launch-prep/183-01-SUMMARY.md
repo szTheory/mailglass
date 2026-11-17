@@ -212,4 +212,3 @@ At inspection, this run was still in progress; it was not changed or rerun:
 - Summary file exists at the expected phase path.
 - All five task commits are ancestors of the current HEAD.
 - `git diff --check` passed.
-
