@@ -522,8 +522,9 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
         write!(
           tmp_dir,
           "encoded.html",
-          "registered &reg; &#174; &#x00AE; \\u00AE \\00AE\n" <>
-            "unregistered &trade; &#8482; &#x2122; \\u2122 \\2122 ( TM )\n"
+          "registered &reg; &reg &#174; &#174 &#x00AE; &#x00AE \\u00AE \\00AE\n" <>
+            "unregistered &trade; &trade &#8482; &#8482 &#x2122; &#x2122 \\u2122 \\2122 ( TM )\n" <>
+            "longer numeric references stay distinct: &#1740; &#xAE0; &#84820; &#x21220;\n"
         )
 
       assert {:ok, hits} = gate(:scan_public_text, [[path]])
@@ -547,7 +548,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
     end
 
     test "registered marks are denied even when the record is clear", %{tmp_dir: tmp_dir} do
-      path = write!(tmp_dir, "registered.html", "<p>mailglass &reg;</p>\n")
+      path = write!(tmp_dir, "registered.html", "<p>mailglass &#174 </p>\n")
       today = before_expiry(clear_record())
 
       assert {:deny, {:registered_mark_claim, hits}} =
@@ -559,7 +560,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
     test "unregistered marks follow the current record and no-claim files need no record", %{
       tmp_dir: tmp_dir
     } do
-      path = write!(tmp_dir, "generated.html", "<p>mailglass (TM)</p>\n")
+      path = write!(tmp_dir, "generated.html", "<p>mailglass &#8482 </p>\n")
       today = before_expiry(committed_record())
 
       assert {:deny, {:unregistered_mark_claim, :not_clear, _hits}} =

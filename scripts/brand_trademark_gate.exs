@@ -734,12 +734,12 @@ defmodule Mailglass.BrandTrademarkGate do
 
   defp decode_claim_encodings(text) do
     text
-    |> String.replace(~r/&(?:reg);/i, "®")
-    |> String.replace(~r/&#0*174;/i, "®")
-    |> String.replace(~r/&#x0*ae;/i, "®")
-    |> String.replace(~r/&trade;/i, "™")
-    |> String.replace(~r/&#0*8482;/i, "™")
-    |> String.replace(~r/&#x0*2122;/i, "™")
+    |> String.replace(~r/&reg(?:;|(?![[:alnum:]=]))/i, "®")
+    |> String.replace(~r/&#0*174(?:;|(?![0-9]))/i, "®")
+    |> String.replace(~r/&#x0*ae(?:;|(?![0-9a-f]))/i, "®")
+    |> String.replace(~r/&trade(?:;|(?![[:alnum:]=]))/i, "™")
+    |> String.replace(~r/&#0*8482(?:;|(?![0-9]))/i, "™")
+    |> String.replace(~r/&#x0*2122(?:;|(?![0-9a-f]))/i, "™")
     |> String.replace(~r/\\(?:0*ae)(?:[ \t\r\n])?/i, "®")
     |> String.replace(~r/\\u(?:0*ae)/i, "®")
     |> String.replace(~r/\\u\{0*ae\}/i, "®")
