@@ -29,6 +29,8 @@ The core value remains **email you can see, audit, and trust before it ships**. 
 
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (approved by owner 2026-11-13, recommended defaults accepted).
 
+**Verification reaffirmation by the owner, 2026-11-17 (Phase 183):** Do not forward an agent-generated `human_needed` list without first reconciling every item against current-source tests, generated artifacts, browser/smoke tools, and authorized release boundaries. A missing machine check is engineering work. Prove unpublished candidates with local source/package/output contracts; keep live-service gaps honest and do not create a publish solely for UAT. Record automated closure and use the shared GSD predicate so resolved checks do not return in a later session. See [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default) and [AUTONOMOUS-PLAYBOOK.md](AUTONOMOUS-PLAYBOOK.md).
+
 ## Completed Milestone: v2.10 UI Repairs & Faithful Storybook
 
 **Shipped and archived 2026-11-02.** Five phases, 76 plans, and 117 tasks completed.

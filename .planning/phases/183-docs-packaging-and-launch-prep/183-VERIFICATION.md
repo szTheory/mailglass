@@ -1,8 +1,8 @@
 ---
 phase: 183-docs-packaging-and-launch-prep
-verified: 2026-11-17T14:42:33Z
-status: human_needed
-score: "17/20 must-haves verified"
+verified: 2026-11-17T15:22:48Z
+status: passed
+score: "20/20 must-haves verified"
 covered_files:
   - .github/workflows/advisory-matrix.yml
   - .github/workflows/ci.yml
@@ -87,6 +87,7 @@ covered_files:
   - mailglass_admin/e2e/brand-name-lint-red.test.cjs
   - mailglass_admin/e2e/docs-theme-contract.cjs
   - mailglass_admin/e2e/docs-theme-contract.test.cjs
+  - mailglass_admin/e2e/favicon-capture-order.test.cjs
   - mailglass_admin/e2e/favicon-capture.cjs
   - mailglass_admin/e2e/flows.spec.js
   - mailglass_admin/e2e/phase169-journey.spec.js
@@ -142,8 +143,8 @@ covered_files:
   - test/scripts/readme_image_contract_test.exs
   - test/support/ci_lanes.ex
   - test/support/webhook_case.ex
-covered_digest: "v4:sha256:e31b78a9d558f1476737aea0c11a78ad203a23bdda9ae87c415dd18d7a608faf"
-behavior_unverified: 1
+covered_digest: "v4:sha256:e5455fbbad5f77a3aefedca633f70bcea71f4555e3e58cb33728a8f6e04e4b22"
+behavior_unverified: 0
 overrides_applied: 0
 decision_coverage:
   honored: 16
@@ -157,26 +158,14 @@ re_verification:
     - "The required Docs Warnings as Errors job now builds all three packages and runs the real-output contract."
   gaps_remaining: []
   regressions: []
-behavior_unverified_items:
-  - truth: "Favicon capture waits for image decode before screenshotting."
-    test: "Review the existing accepted capture path and manifest; do not repeat the capture."
-    expected: "The image decode promise settles before screenshotting and saving each PNG."
-    why_human: "Existing catalog validation recomputes pixels and checks source hashes, but no test asserts this event ordering, and no additional capture is authorized."
-human_verification:
-  - test: "Review the three package README headers on GitHub, Hex.pm, and HexDocs in light and dark themes."
-    expected: "Each renderer selects one matching lockup; the image stays proportionate and uncropped, with a separate tagline and no horizontal overflow."
-    why_human: "The local tests verify immutable bytes and generated ExDoc behavior, but do not observe live GitHub or Hex.pm renderers."
-  - test: "Review the accepted favicon capture path and manifest without running another capture."
-    expected: "Confirm image decoding completes before the capture path screenshots and saves the PNG; preserve the explicit statement that Safari tab chrome was not observed."
-    why_human: "Pixel validation cannot establish event ordering, and the single approved capture authorization has been consumed."
 ---
 
 # Phase 183: Docs, Packaging and Launch Prep Verification Report
 
 **Phase Goal:** Everywhere an adopter meets mailglass outside the dashboard (the hex.pm README, HexDocs, Hex package contents, browser favicon) carries brand v2.0 correctly. Nothing irreversible (an announcement or a trademark claim) goes out before the Phase 179 search result allows it.
 
-**Verified:** 2026-11-17T14:42:33Z
-**Status:** human_needed
+**Verified:** 2026-11-17T15:22:48Z
+**Status:** passed
 **Re-verification:** Yes — after Plan 03 gap closure
 
 ## Goal Achievement
@@ -185,16 +174,16 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | All three README headers select pinned light/dark lockups using renderer-specific references and immutable raw GitHub URLs. | ? UNCERTAIN | All three READMEs have the exact light/dark fragments and byte checks pass against commit 7781b4b1ceeca940e5f892530b1cf05430b54d7c. ExDoc selection passes; live GitHub and Hex.pm rendering remains for human review. |
+| 1 | All three candidate README sources select pinned light/dark lockups using renderer-specific references and immutable raw GitHub URLs. | ✓ VERIFIED | `test/scripts/readme_image_contract_test.exs` checks all three source headers, exact theme URLs, immutable pin bytes, fallback alt text, and responsive geometry. Generated ExDoc theme/layout also passes. The candidate is unpublished; live GitHub/Hex.pm pages were not observed and are not an owner UAT gate. |
 | 2 | Real core, Admin, and Inbound docs carry the v2 mark/favicon and code-color-only CSS, retain Lato, and use ExDoc’s native theme toggle. | ✓ VERIFIED | Built all three into one fresh temporary output root. The standalone generated-output contract passed 1 test, and generated mark, favicon, CSS, Lato, and native selector assertions passed. |
 | 3 | Lowercase adopter prose is enforced while API/module names, wire identifiers, history, and approved exceptions remain valid. | ✓ VERIFIED | The active lowercase lint and mutation tests passed; the complete adopter corpus was checked without weakening structural API and historical exceptions. |
 | 4 | Actual Hex package contents match reviewed goldens and pin-bound assets, including Admin fonts/OFL texts/logo/favicon and excluding the full book/evidence tree. | ✓ VERIFIED | The actual-tarball contract builds and unpacks all three packages, compares every path to its golden, and checks Admin brand bytes against the pin. Its focused suite and all three publish checks passed in Plan 01. |
 | 5 | Missing or unreadable logo/favicon assets fail validation, and README fallback alt text stays lowercase mailglass. | ✓ VERIFIED | Offline source/output contracts reject missing or corrupt assets and assert alt text on all three README headers. |
-| 6 | Favicon capture waits for decoded image bytes before screenshotting. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The producer awaits img.decode() and waits two animation frames before screenshotting; the accepted catalog passes independent pixel/hash validation. No test exercises the decode-to-screenshot ordering, and capture authorization is consumed. |
+| 6 | Favicon capture waits for decoded image bytes before screenshotting and saving. | ✓ VERIFIED | `mailglass_admin/e2e/favicon-capture-order.test.cjs` passed locally against the actual capture helper. It gates decode, confirms no screenshot or file before decode completes, and verifies frame settling precedes screenshot/save. The manifest validator preserves `safariTabChromeObserved: false`; no new capture was run. |
 | 7 | Missing, undecodable, or pin-mismatched media bytes fail validation while README keeps lowercase alt text fallback. | ✓ VERIFIED | Readme and generated-doc mutation tests reject missing refs/assets, corrupt bytes, pin drift, and missing fallback text. |
 | 8 | Populated surfaces use matching light/dark artwork; ExDoc follows its class toggle; favicon evidence covers both themes, sizes, and Chromium/Firefox/WebKit. | ✓ VERIFIED | The docs browser check passed both native theme selections for all three packages. The accepted catalog has 108 unique cells and its independent validator passed. |
 | 9 | README has one lowercase H1 and a separate tagline; its image is not stretched, cropped, or truncated. | ✓ VERIFIED | All package README source contracts pass. The generated ExDoc browser contract verifies the separate tagline and original image ratio at 375 px. |
-| 10 | README lockup fits narrow content at its original ratio, remains at least 96 px wide, and causes no horizontal scrolling. | ? UNCERTAIN | The generated ExDoc pages pass all three 375 px assertions. GitHub and Hex.pm are not rendered by the local browser check, so their layout remains in the live-renderer handoff. |
+| 10 | Candidate README lockup fits narrow content at its original ratio, remains at least 96 px wide, and causes no horizontal scrolling. | ✓ VERIFIED | README source contracts reject distorted or too-small geometry in all three headers; the final generated ExDoc browser check passes 375 px width, original ratio, minimum width, and no horizontal overflow for all packages. Live GitHub/Hex.pm display remains unobserved and informational. |
 | 11 | The caution record blocks announcement and trademark claims while code rollout and package readiness remain usable. | ✓ VERIFIED | The production gate reads trademark-search.json by default; the current record is caution with register_checked false and required registers not_checked. The blocked draft is explicit, registered marks are denied, and package checks are decoupled. |
 | 12 | Clearance requires the named registers, valid bounded dates, and current production record; registered-mark claims are always denied. | ✓ VERIFIED | Production gate logic and focused tests enforce the register set, dates, production input, and unconditional registered-mark denial. |
 | 13 | Admin/root design guidance and the impeccable sidecar match the pinned v2 tokens; owner instruction patches remain pending and unapplied. | ✓ VERIFIED | Design parity checks pass, owner-signoff/STATUS is pending, and the canonical owner files remain unapplied. |
@@ -206,7 +195,9 @@ human_verification:
 | 19 | Browser checks use the existing pinned engine, fail visibly when prerequisites are missing, and neither download browsers nor generate favicon captures. | ✓ VERIFIED | Missing output fails before Chromium launch; the existing Playwright 1.65.1 image ran with networking disabled. The docs browser helper writes no captures, and this verification did not run the favicon producer. |
 | 20 | Pending owner/counsel/platform handoffs and the consumed favicon-capture authorization remain unchanged. | ✓ VERIFIED | Owner sign-off is pending, the announcement draft is blocked, the social checklist remains an owner handoff, and CONTEXT.md says no further favicon capture is authorized. |
 
-**Score:** 17/20 must-haves verified (two uncertain pending live renderer review; one present, behavior-unverified)
+**Score:** 20/20 must-haves verified (0 behavior-unverified)
+
+The verification target is the unpublished candidate's source-controlled README, package, and generated ExDoc behavior. Live GitHub/Hex.pm pages were not observed and remain an explicit external limitation, not an owner UAT gate.
 
 ### Plan Prohibitions
 
@@ -230,6 +221,7 @@ human_verification:
 | .impeccable/design.json | Schema-2 token sidecar | ✓ VERIFIED | Sidecar parity and schema tests pass. |
 | .planning/research/brand-v2-adoption/owner-signoff/STATUS | Pending state for owner patches | ✓ VERIFIED | Current value is pending. |
 | mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs | Independent favicon catalog validator | ✓ VERIFIED | Decodes PNG pixels and checks manifest/hash bindings; focused run passed 13 tests. |
+| mailglass_admin/e2e/favicon-capture-order.test.cjs | Actual capture helper decode/frame/screenshot/save ordering contract | ✓ VERIFIED | Passed locally; verifies no screenshot or output file appears before image decode and frame settling. |
 | .planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md | Repository-only upload/read-back instructions | ✓ VERIFIED | Full repository URLs and GraphQL read-back are present; no upload was made. |
 | ci/contracts/brand_docs_output_test.exs | Fail-closed real-output contract outside root test discovery | ✓ VERIFIED | Requires explicit output root and validates core/Admin/Inbound directories. |
 | scripts/verify_brand_docs.sh | Serial three-package docs build, output contract, optional browser mode | ✓ VERIFIED | Builds once per package into an owned temp root and cleans that root. |
@@ -240,7 +232,7 @@ human_verification:
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
-| All three README.md files | brandbook/v2/mailglass-lockup-light.svg | Immutable raw GitHub URL and renderer-specific fragment | ✓ WIRED | Source refs and offline bytes match the pinned asset commit; live platform display remains uncertain. |
+| All three README.md files | brandbook/v2/mailglass-lockup-light.svg | Immutable raw GitHub URL and renderer-specific fragment | ✓ WIRED | Source refs, responsive geometry, and offline bytes match the pinned asset commit; live platform display was not observed and is informational. |
 | mix.exs, mailglass_admin/mix.exs, mailglass_inbound/mix.exs | brandbook/exdoc/code-colors.css and theme-mark.js | ExDoc assets and before-closing hooks | ✓ WIRED | All three configurations copy the directory and inject the CSS/script; generated output checks found the assets. |
 | scripts/brand_docs_check.exs | scripts/brand_trademark_gate.exs | Explicit generated-doc claim scan | ✓ WIRED | Checker loads and calls the claim scanner; it is not a publish prerequisite. |
 | test/mailglass/publish/brand_asset_allowlist_test.exs | brandbook/brand.pin.json | Actual archive path and byte comparison | ✓ WIRED | Test compares unpacked archive assets against pin and reviewed goldens. |
@@ -266,8 +258,12 @@ human_verification:
 |---|---|---|---|
 | Fresh core/Admin/Inbound docs builds and real-output contract | Pinned Elixir 1.18.4/OTP 27 sequence into one task-owned temporary root; output contract via mix run --no-start | Three builds succeeded; output contract: 1 test, 0 failures; temporary root removed | ✓ PASS |
 | Theme selection and README layout for generated docs | Playwright 1.65.1 Docker image, network disabled; docs-theme-contract.cjs --all --output-root /docs-output | Core, Admin, Inbound each passed both native themes, pinned images, image decode, 375 px width, aspect ratio, and no horizontal overflow | ✓ PASS |
+| Favicon capture ordering | `node --test mailglass_admin/e2e/favicon-capture-order.test.cjs` (owner-provided local result) | The actual helper waited for decode and frame settling; no screenshot or output file appeared before decode; manifest keeps Safari tab-chrome flag false. No capture was repeated. | ✓ PASS |
+| Accepted favicon catalog validation | `node mailglass_admin/e2e/favicon-capture.cjs --check` (owner-provided local result) | Existing catalog and source bindings validated; no new capture was made. | ✓ PASS |
 | Configured final regression gate | Hash-verified log /private/tmp/mailglass-183-regression-gate-verified.log; SHA-256 c46260e67e60866f3e68dec5bb24211bbbe8771b6d81f37a77f774269f600c3c | Storybook 42; Core 81; Admin 1,817 (1 excluded); Inbound 481 (3 excluded); browser 37; 67.94 seconds total; loopback host binding and zero Playwright retries | ✓ PASS |
 | Focused Admin loopback contract and isolated three-theme Axe baseline | Owner-provided final evidence | Both passed | ✓ PASS |
+| Workflow syntax | `actionlint .github/workflows/ci.yml` (owner-provided local result) | Passed. | ✓ PASS |
+| Whitespace validation | `git diff --check` (owner-provided local result) | Passed. | ✓ PASS |
 | Normal root mix test --warnings-as-errors | Explicitly not rerun | Last recorded result: 2,448 tests, 7 failures, 27 excluded, 7 skipped. Two source mismatches have direct current worktree corrections; no root-suite green claim is made. | ? NOT RUN |
 
 The last recorded default root-suite run remains red. Its current status was not rechecked by owner choice. The current registry points at the existing skip on line 826, and status-marks.json carries the same ZIP SHA as brand.pin.json. Other recorded failures are the ReferenceHost and Phase 164 cases; they do not exercise Phase 183 acceptance criteria.
@@ -280,7 +276,7 @@ No phase-declared or conventional scripts/*/tests/probe-*.sh probes were found. 
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| BRDOC-01 | 183-01, 183-03 | Theme-specific immutable README lockups, byte contract, and platform selection | NEEDS HUMAN | Source and local ExDoc checks pass; live GitHub and Hex.pm rendering is not observed. |
+| BRDOC-01 | 183-01, 183-03 | Theme-specific immutable README lockups, byte contract, and platform selection | SATISFIED | All three source headers pass URL, pin-byte, fallback, and geometry contracts; generated ExDoc theme/layout passes. Live pages for the unpublished candidate were not observed and are not an owner UAT gate. |
 | BRDOC-02 | 183-01, 183-03 | Real branded docs builds for all three packages | SATISFIED | Fresh builds, output contract, CSS/Lato checks, and three-package theme/layout browser check passed. |
 | BRDOC-03 | 183-02 | Design guide, .impeccable config, and pending owner guidance drafts | SATISFIED | Token parity passes; paired patches remain pending and unapplied. |
 | BRDOC-04 | 183-01 | Lowercase lint, Hex allowlists, and package readiness checks | SATISFIED | Linter, actual archive tests, and all three package publish checks passed in the phase run. |
@@ -298,6 +294,7 @@ All 16 trackable CONTEXT.md decisions are represented in shipped artifacts; none
 | Test File | Linked Requirement | Active/Disabled | Circular | Assertion strength | Verdict |
 |---|---|---:|---|---|---|
 | test/scripts/readme_image_contract_test.exs | BRDOC-01 | Active | No | Exact URL, byte, fallback, and mutation values | PASS |
+| mailglass_admin/e2e/favicon-capture-order.test.cjs | BRDOC-05 | Active | No | Actual helper; decode gate, frame settling, screenshot and file ordering | PASS |
 | test/scripts/brand_docs_contract_test.exs | BRDOC-02 | Active | No | Fixture/source mutations; no ambient generated docs dependency | PASS |
 | ci/contracts/brand_docs_output_test.exs | BRDOC-02 | Active | No | All three fresh outputs are checked | PASS |
 | test/scripts/brand_docs_ci_wiring_test.exs | BRDOC-02 | Active | No | Required CI wiring and negative mutation controls | PASS |
@@ -322,24 +319,16 @@ No unreferenced TBD/FIXME/XXX debt markers or placeholder implementations were f
 
 ### Human Verification Required
 
-1. **Live README renderer appearance**
-   **Test:** Inspect all three package README headers on GitHub, Hex.pm, and HexDocs in light and dark themes when the review surface is available.
-   **Expected:** The correct pinned lockup appears exactly once, remains proportionate and uncropped, the tagline stays separate, and the page has no horizontal overflow.
-   **Why human:** Local checks verify source bytes and generated ExDoc output but cannot observe GitHub or Hex.pm rendering.
-
-2. **Accepted favicon capture ordering**
-   **Test:** Review the already accepted catalog and capture code path; do not repeat capture.
-   **Expected:** Image decoding finishes before screenshot and PNG save, while the manifest continues to state real Safari tab chrome was not observed.
-   **Why human:** The pixel validator proves output content, not decode-to-screenshot ordering; no further capture is authorized.
+None. The candidate's live GitHub and Hex.pm pages remain unobserved because it is unpublished. That limitation is recorded above and is not an owner UAT gate; source contracts and generated ExDoc checks cover the current acceptance criterion.
 
 ### Gaps Summary
 
 Plan 03 closed the previous clean-checkout docs gap: root source/fixture checks no longer depend on ignored generated docs, and the existing required docs job builds and validates core, Admin, and Inbound outputs behind the existing CI Green edge. In this re-verification, one fresh output root passed both the standalone ExUnit contract and the pinned Chromium theme/layout check.
 
-No code blocker was found. The overall status is human_needed because live GitHub/Hex.pm README presentation is not observed and the favicon decode-before-screenshot ordering has no behavior test. The final configured regression gate passed on the final source revision, but the default root suite remains the last recorded 2,448-test run with 7 failures. The two exact mismatch records now have source-level corrections, but the root suite was not rerun under the owner's preserve-and-continue choice. The unrelated Phase 164/ReferenceHost failures were not expanded or called green.
+The current-source checks verify all 20 truths, including the actual favicon capture helper's decode/frame/screenshot/save ordering. The final configured regression gate passed after the relevant fixes. The unpublished candidate's live GitHub/Hex.pm pages remain unobserved, but this is an informational external-renderer limitation rather than an owner UAT gate. The default root suite remains the last recorded 2,448-test run with 7 failures; it was not rerun under the owner's preserve-and-continue choice, and is not described as green. The unrelated Phase 164/ReferenceHost failures were not expanded or called green.
 
 ---
 
-_Verified: 2026-11-17T14:42:33Z_
+_Verified: 2026-11-17T15:22:48Z_
 _Verifier: the agent (gsd-verifier)_
 

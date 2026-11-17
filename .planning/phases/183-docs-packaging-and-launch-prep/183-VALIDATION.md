@@ -98,9 +98,9 @@ At the initial audit, `test/scripts/brand_docs_contract_test.exs:15` still depen
 
 No new test was added in this audit: the behavioral output test already exists, and the identified gap is its generated-output/CI wiring. This record does not claim full CI completion. The unrelated CI run described by plan 01 was still in progress at the recorded observation, and plan 02 records no CI run.
 
-### Manual Handoffs Preserved
+### External Owner / Legal Actions
 
-GitHub, Hex.pm, and HexDocs theme rendering; the paired CLAUDE.md/PRODUCT.md owner review; trademark-register/counsel review and any announcement decision; and optional social-card upload/read-back remain external owner or legal actions. The favicon capture remains a single authorized run; real Safari tab chrome was not observed, and no additional capture is authorized.
+The candidate's live GitHub and Hex.pm pages were not observed because it remains unpublished. Their candidate-controlled README source contract and generated ExDoc theme/layout behavior are covered by automated evidence; live rendering is informational and is not an owner UAT gate. The paired CLAUDE.md/PRODUCT.md review, trademark-register/counsel decision and any announcement, optional social-card upload/read-back, and publication authority remain separate owner or legal actions. The accepted favicon catalog remains the single authorized capture; real Safari tab chrome was not observed, and no additional capture was made.
 
 ## Execution Re-verification — 183-03
 
@@ -187,3 +187,9 @@ The focused Admin bind contract, `test endpoint binds only to loopback` in `mail
 The authoritative gate took **67.94 seconds** overall; browser took **25.1 seconds** and Admin was the longest non-browser lane at **31.6 seconds**. Its hash-verified log is `/private/tmp/mailglass-183-regression-gate-verified.log` with SHA-256 `c46260e67e60866f3e68dec5bb24211bbbe8771b6d81f37a77f774269f600c3c`. No hosted CI ran.
 
 The default root suite remains recorded as **2,448 tests, 7 failures, 27 excluded, and 7 skipped**. The owner selected preserve-and-continue, so that suite was not rerun. The two Phase 183 focused contracts still pass (exception registry **3/3**; status marks **19/19**), but do not establish that the full root lane is green. Nyquist remains partial and `nyquist_compliant` remains false.
+
+## Automation-First Verification Follow-up — 2026-11-17
+
+The former README-renderer and favicon-order UAT prompts are now covered by candidate-local automated evidence. `test/scripts/readme_image_contract_test.exs` and the final `scripts/verify_brand_docs.sh --browser` run cover the three README sources, immutable assets, and generated ExDoc theme/layout contract. `mailglass_admin/e2e/favicon-capture-order.test.cjs` exercises the actual capture/save helper and proves image decode and frame settling finish before screenshot and file output; `mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs` asserts the manifest does not claim real Safari tab-chrome observation.
+
+The new Node test is placed directly after Node setup in the existing operator-browser CI job, before dependency resolution and browser installation. It uses no browser or new dependency. Local syntax, pin, test, workflow-lint, and whitespace checks passed. No hosted CI, full root-suite rerun, additional favicon capture, or publication occurred. The full root suite remains partial at the recorded 2,448 tests with 7 failures, so this validation strategy remains `partial` and Nyquist noncompliant.

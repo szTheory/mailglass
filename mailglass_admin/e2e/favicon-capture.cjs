@@ -4,8 +4,6 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const zlib = require("node:zlib");
-const { chromium, firefox, webkit } = require("playwright");
-
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const CATALOG_ROOT = path.join(
   REPO_ROOT,
@@ -200,6 +198,13 @@ async function screenshotTile(page, size, background, scheme) {
   return page.locator(".tile").screenshot({ animations: "disabled", scale: "device", timeout: 15_000 });
 }
 
+async function captureAndSaveTile(page, output, size, background, scheme, validate) {
+  const png = await screenshotTile(page, size, background, scheme);
+  validate?.(png);
+  fs.writeFileSync(output, png, { flag: "wx" });
+  return png;
+}
+
 async function themeProbe(engine, faviconDataUrls) {
   const captures = [];
   for (const scheme of SCHEMES) {
@@ -265,14 +270,18 @@ async function captureEngine(name, engineType, dataUrls, catalogDir, records, by
             if (records.length >= PNG_CAP) throw new Error(`PNG cap ${PNG_CAP} would be exceeded`);
             const file = `${name}__${scheme}__${size}__${dpr}x__${background.id}.png`;
             const output = confined(file, catalogDir);
-            const png = await screenshotTile(page, size, background.color, scheme);
-            const { width, height } = parsePngHeader(png);
-            if (width !== size * dpr || height !== size * dpr) {
-              throw new Error(`${file}: expected ${size * dpr}x${size * dpr}, got ${width}x${height}`);
-            }
-            byteCount.value += png.length;
-            if (byteCount.value > BYTE_CAP) throw new Error(`capture exceeds ${BYTE_CAP} byte cap`);
-            fs.writeFileSync(output, png, { flag: "wx" });
+            let width;
+            let height;
+            const png = await captureAndSaveTile(page, output, size, background.color, scheme, bytes => {
+              ({ width, height } = parsePngHeader(bytes));
+              if (width !== size * dpr || height !== size * dpr) {
+                throw new Error(`${file}: expected ${size * dpr}x${size * dpr}, got ${width}x${height}`);
+              }
+              if (byteCount.value + bytes.length > BYTE_CAP) {
+                throw new Error(`capture exceeds ${BYTE_CAP} byte cap`);
+              }
+              byteCount.value += bytes.length;
+            });
             records.push({
               file,
               engine: name,
@@ -335,6 +344,7 @@ async function main() {
     return;
   }
 
+  const { chromium, firefox, webkit } = require("playwright");
   fs.mkdirSync(CATALOG_ROOT, { recursive: true });
   const catalogId = `favicon-${sourceSha.slice(0, 7)}-${timestamp()}`;
   const catalogDir = confined(catalogId, CATALOG_ROOT);
@@ -414,4 +424,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { decodePngPixels };
+module.exports = { captureAndSaveTile, decodePngPixels };

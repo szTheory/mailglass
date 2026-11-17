@@ -1,8 +1,8 @@
 ---
 phase: 183-docs-packaging-and-launch-prep
-reviewed: 2026-11-17T14:15:50Z
+reviewed: 2026-11-17T15:15:57Z
 depth: standard
-files_reviewed: 13
+files_reviewed: 15
 files_reviewed_list:
   - .github/workflows/ci.yml
   - ci/contracts/brand_docs_output_test.exs
@@ -17,6 +17,8 @@ files_reviewed_list:
   - mailglass_admin/test/support/admin_bootstrap.ex
   - mailglass_admin/test/mailglass_admin/test_support/admin_bootstrap_test.exs
   - mailglass_admin/e2e/structural.spec.js
+  - mailglass_admin/e2e/favicon-capture.cjs
+  - mailglass_admin/e2e/favicon-capture-order.test.cjs
 findings:
   critical: 0
   warning: 0
@@ -28,9 +30,9 @@ status: clean
 
 # Phase 183: Code Review Report
 
-**Reviewed:** 2026-11-17T14:15:50Z
+**Reviewed:** 2026-11-17T15:15:57Z
 **Depth:** standard
-**Files Reviewed:** 13
+**Files Reviewed:** 15
 **Status:** clean
 
 ## Summary
@@ -39,7 +41,7 @@ The prior standard-depth review of the first seven files remains clean. It inclu
 
 The next supplemental review covered `config/test_exceptions.exs` and `brandbook/status-marks.json`. The exception registry's changed source reference points to the live `@tag :skip` at `test/mailglass/docs_contract_test.exs:826`; its fields and expiry date match the validation script's contract. The status-marks JSON uses the pinned zip SHA and member path, and its schema, role mappings, dimensions, labels, shapes, and canonical key order match the generator and its validation fixtures. No discrepancies were found. Focused checks were reported as passed and were not rerun.
 
-The final Docker browser gate review found no endpoint exposure, resource-limit, cache, or Axe-scope issue. It initially identified a gap in the container readiness preflight's deadline; the follow-up below confirms that fix. No active findings remain. Tests were not rerun, as requested.
+The final Docker browser gate review found no endpoint exposure, resource-limit, cache, or Axe-scope issue. It initially identified a gap in the container readiness preflight's deadline; the follow-up below confirms that fix. No active findings remain.
 
 ## Follow-up Review (two files added)
 
@@ -57,14 +59,23 @@ No tests or online re-extraction were run during that follow-up review.
 ## Follow-up Review (preflight deadline fix)
 
 - The previous WR-01 is resolved. `scripts/gsd-regression-gate.sh` now starts a 3-second wall-clock timer immediately after creating the HTTP request, before asynchronous hostname resolution completes, and clears it on response or request error. The timeout therefore covers the DNS gap identified in the earlier review.
-- Static checks (`bash -n`, embedded runner `node --check`, and `git diff --check`) were reported as passed and were not rerun during this review.
+- Static checks (`bash -n`, embedded runner `node --check`, and `git diff --check`) were reported as passed and were not rerun during that review.
+
+## Follow-up Review (favicon capture ordering)
+
+- `mailglass_admin/e2e/favicon-capture-order.test.cjs` calls `captureAndSaveTile`, the same production helper used by `captureEngine`. Its gated `img.decode()` mock demonstrates that capture cannot reach the screenshot/save stage while decoding is pending, then checks the final order and saved bytes.
+- `captureEngine` supplies a validation callback to that helper. PNG signature/dimensions and the total-byte cap are checked before the helper's exclusive file write; the PNG count cap is checked before capture. The order test now passes a validator and asserts it runs after screenshot completion while the output file is still absent, then checks the saved bytes.
+- Playwright is loaded inside `main()` only after the `--check` early return. Requiring the module for the order test therefore uses only Node built-ins and does not require installed browser dependencies.
+- CI runs the cheap Node test after Node setup and before dependency installation, database setup, Playwright browser installation, and the full browser gate. The job-level PostgreSQL service and runtime setup still occur before its steps.
+
+No tests were run during this follow-up review.
 
 ## Narrative Findings (AI reviewer)
 
-The original seven-file review and both earlier follow-ups remain clean. The final Docker browser gate follow-up is clean after resolving WR-01.
+The original seven-file review and all follow-ups are clean. The preflight deadline warning was resolved before this favicon review; no active findings remain.
 
 ---
 
-_Reviewed: 2026-11-17T14:15:50Z_
+_Reviewed: 2026-11-17T15:15:57Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_

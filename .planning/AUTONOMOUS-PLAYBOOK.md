@@ -2,7 +2,7 @@
 
 Standing owner instructions for every GSD run in this repo, including `/gsd-autonomous`. Subagents and orchestrators read this through the pointer in `CLAUDE.md`. It extends, and never overrides, `CLAUDE.md` § Decision Policy and § Verification Policy (D-52) and `.planning/METHODOLOGY.md`.
 
-Recorded 2026-11-15. Do not re-ask the owner about anything below.
+Recorded 2026-11-15; verification rules reaffirmed 2026-11-17. Do not re-ask the owner about anything below.
 
 ## 1. Discuss phases: fan out, synthesize, decide
 
@@ -26,6 +26,8 @@ Canonical rules: `.planning/METHODOLOGY.md` § "Shift-Left Verification by Defau
 3. **Owner hand-off is limited to** ship/no-ship, brand/visual identity, secrets/credentials/interactive login, the `hex-publish` approval and physical devices, each with a full-URL runbook.
 4. **Take automation as far as you can without the owner, but only where it gives useful feedback.** Do not paint yourself into a corner, and do not build verification that cannot tell you anything.
 5. **Do not loop back here.** If a verification question is already settled by this file, METHODOLOGY or a recorded decision, apply it and move on.
+6. **Reconcile verifier hand-offs before stopping.** `human_needed` is a missing-evidence signal, not permission to return a deterministic test to the owner. Check the current candidate and existing tests first; add the cheapest useful automation for machine-observable behavior, record it as `source: automated`, and clear UAT with the shared GSD predicate. If a live service does not yet contain the candidate, verify source/package/generated-output contracts and keep the live limitation explicit; never publish or ask the owner to publish just to satisfy UAT. Add a read-only post-publish check only when it has recurring value.
+7. **Keep human checks irreducible and exact.** Reserve owner UAT for genuine subjective identity/product judgment, legal/policy or ship authority, physical devices, secrets/interactive authentication, or unavailable external state that materially changes the decision. Give the owner one precise action and its consequence; never ask them to inspect deterministic receipts or repeat automated checks.
 
 ## 3. Cheap checks first, then the long suite
 
