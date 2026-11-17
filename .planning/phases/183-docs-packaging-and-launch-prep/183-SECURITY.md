@@ -26,6 +26,9 @@ created: "2026-11-17"
 | Source config/assets to generated docs | Hooks and CSS must preserve renderer security and native theme/font behavior | ExDoc assets and generated HTML |
 | Prose scanner to public compatibility names | Mechanical rewriting must not rename wire/API contracts | Source prose, modules and headers |
 | Package globs/goldens to actual tarballs | A reviewed list alone does not prove payload or license completeness | Hex package contents |
+| Generated filesystem output to validator | Require fresh explicit package roots and complete package membership instead of ambient ignored docs | Output paths, pinned media, generated HTML |
+| Generated pages to headless browser | Serve only pinned immutable image bytes and deny unrelated network requests | README assets and browser requests |
+| CI wiring to merge/release verdict | Preserve fatal validation and the required CI Green dependency | Docs job result and required-check policy |
 
 ---
 
@@ -44,9 +47,13 @@ created: "2026-11-17"
 | T-183-09 | Elevation of privilege | Mechanical source prose edits | medium | mitigate | Masks structural module/wire/code identifiers and scans multiline Gettext values, including plural continuations; regression fixtures cover those boundaries (`scripts/brand_name_lint.exs`, `test/scripts/brand_name_lint_test.exs`) | closed |
 | T-183-10 | Information disclosure | Hex package payload | high | mitigate | Validates actual unpacked packages against goldens, digest coverage and forbidden roots; checks exact pinned Admin fonts/OFL/logo/favicon (`test/mailglass/publish/brand_asset_allowlist_test.exs`, `lib/mix/tasks/mailglass.publish.check.ex`) | closed |
 | T-183-11 | Spoofing | Generated public trademark claims | high | mitigate | Scans generated core/Admin/Inbound output through the hardened current-record gate without coupling it to package publication (`scripts/brand_docs_check.exs`, `test/scripts/brand_trademark_gate_test.exs`) | closed |
+| T-183-12 | Tampering | Generated docs output selection | medium | mitigate | Builds fresh core/Admin/Inbound outputs serially, requires an explicit output root, and rejects any missing package or pinned asset (`scripts/verify_brand_docs.sh`, `ci/contracts/brand_docs_output_test.exs`) | closed |
+| T-183-13 | Tampering | Required CI docs verdict | high | mitigate | The existing required docs job invokes the all-package gate with fatal error propagation and remains required by CI Green; structural mutation tests cover the job, prerequisites and dependency edge (`.github/workflows/ci.yml`, `test/scripts/brand_docs_ci_wiring_test.exs`) | closed |
+| T-183-14 | Information disclosure | Local generated-page browser requests | medium | mitigate | Browser mode serves only exact Git-blob assets verified against the pin and aborts other network requests (`mailglass_admin/e2e/docs-theme-contract.cjs`) | closed |
+| T-183-15 | Denial of service | Temporary docs build lifecycle | low | mitigate | Uses one unique temporary directory, serial builds, bounded failure propagation and cleanup limited to its own output root (`scripts/verify_brand_docs.sh`) | closed |
 | T-183-SC | Tampering | Package-manager installs | high | mitigate | Adds no new package names or Mix lock changes. The Playwright 1.65.1 update was explicitly owner-approved (`HANDOFF.json` in commit `1d9050d9`); package-lock integrity pins remain in place and CI uses `npm ci` with the local locked CLI | closed |
 
-*The plans contain two rows for T-183-SC; they represent one distinct threat and are recorded once here.*
+*The plans contain three rows for T-183-SC; they represent one distinct threat and are recorded once here.*
 
 *Status: open · closed · open — below high threshold (non-blocking)*
 *Severity: critical > high > medium > low — only open threats at or above workflow.security_block_on count toward threats_open*
@@ -64,7 +71,7 @@ No accepted risks.
 
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
-| 2026-11-17 | 12 distinct (13 plan rows) | 12 | 0 | gsd-security-auditor (ASVS L1) |
+| 2026-11-17 | 16 distinct (18 plan rows) | 16 | 0 | gsd-security-auditor (ASVS L1) |
 
 ---
 
@@ -76,3 +83,11 @@ No accepted risks.
 - [x] `status: verified` set in frontmatter
 
 **Approval:** verified 2026-11-17
+
+## Security Audit 2026-11-17
+
+| Metric | Count |
+|---|---|
+| Threats found | 16 |
+| Closed | 16 |
+| Open | 0 |
