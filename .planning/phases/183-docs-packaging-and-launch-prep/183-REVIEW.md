@@ -1,6 +1,6 @@
 ---
 phase: 183-docs-packaging-and-launch-prep
-reviewed: 2026-11-17T01:24:35Z
+reviewed: 2026-11-17T01:50:44Z
 depth: standard
 files_reviewed: 126
 files_reviewed_list:
@@ -132,65 +132,34 @@ files_reviewed_list:
   - test/support/webhook_case.ex
 findings:
   critical: 0
-  warning: 5
+  warning: 1
   info: 0
-  total: 5
+  total: 1
   necessity: 0
 status: issues_found
 ---
 
 # Phase 183: Code Review Report
 
-**Reviewed:** 2026-11-17T01:24:35Z  
-**Depth:** standard  
-**Files Reviewed:** 126  
-**Status:** issues_found
+**Reviewed:** 2026-11-17T01:50:44Z · **Depth:** standard · **Files Reviewed:** 126 · **Status:** issues_found
 
 ## Summary
 
-Reviewed the Phase 183 task-commit source scope at standard depth. Five warnings remain: the favicon advisory job does not rasterize, the casing linter misses valid violation forms and corrupts a multiline code example, and the published Admin guide points to a checklist excluded from its package. The evaluation-scope resolver command was unavailable in the installed GSD runtime, so scope was reconstructed from the completed plan summaries and task commits. The Admin Hex package tarball could not be built locally because the pinned Elixir 1.18.4 runtime is not installed; the package allowlist confirms the guide is included while `.planning` is excluded. No tests were run and no source files were edited.
+Re-reviewed the exact original 126-file Phase 183 scope and checked the five committed fixes. The favicon advisory now captures and independently validates raster output in an isolated source tree; the casing scanner catches mixed-case variants; the multiline code sample retains its `Mailglass` module name; and the packaged Admin guide links to the repository checklist. One warning remains: the Gettext scanner handles multiline `msgid` and `msgstr` fields but skips standard `msgid_plural` fields. No tests were run and no source files were edited.
 
 ## Narrative Findings (AI reviewer)
 
 ## Warnings
 
-### WR-01: Advisory favicon job never rasterizes
+### WR-03: Plural PO message fields bypass brand scanning
 
 **Severity:** WARNING  
-**File:** `.github/workflows/advisory-matrix.yml:478`  
-**Issue:** The job named “Favicon Raster Re-render Advisory” invokes `node e2e/favicon-capture.cjs --check`. In that mode, the script verifies only source/pin/served-file hashes and returns at `mailglass_admin/e2e/favicon-capture.cjs:333-335`, before launching any browser. The path-filtered advisory therefore cannot detect changed raster output or rendering regressions, despite installing Chromium, Firefox, and WebKit.
-**Fix:** Run the browser capture mode and validate its generated catalog with the independent catalog validator, using an isolated output location and cleanup for the ephemeral CI artifact.
-
-### WR-02: Case linter accepts unlisted capitalization variants
-
-**Severity:** WARNING  
-**File:** `scripts/brand_name_lint.exs:4`  
-**Issue:** `@proper_name` recognizes only the exact spellings `Mailglass`, `MailGlass`, and `MAILGLASS`. A prohibited prose spelling such as `mAiLgLaSs` does not match, so `scan_repo` accepts it and the lowercasing rewrite leaves it unchanged. This violates the documented requirement that the product name be lowercase in prose (`DESIGN.md:88`).
-**Fix:** Match the product token case-insensitively, then report/rewrite every matched token whose original text is not `mailglass`, while continuing to mask structural API and wire identifiers.
-
-### WR-03: Multiline Gettext values bypass brand scanning
-
-**Severity:** WARNING  
-**File:** `scripts/brand_name_lint.exs:267-276`  
-**Issue:** `gettext_fragments/1` only collects lines that independently match a complete `msgid` or `msgstr` expression. Standard PO continuation lines are ignored; for example, `msgid ""` followed by `"Mailglass text"` yields no lint fragment for the prohibited spelling. The scanner inventories `.po`/`.pot` files, so multiline translations silently escape the new gate.
-**Fix:** Parse PO entries including quoted continuation lines with a PO parser (or a complete stateful parser) and lint the concatenated `msgid`/`msgstr` values.
-
-### WR-04: Multiline inline code sample is rewritten as prose
-
-**Severity:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/preview/discovery.ex:38`  
-**Issue:** The multiline inline code span contains `deps: [Mailglass]`, the actual root boundary module. The linter's `@inline_code` regex at `scripts/brand_name_lint.exs:11` excludes newlines, so the span is not protected and the phase lowercasing rewrite changed the sample to `deps: [mailglass]`. That is not a valid Elixir module reference and misleads adopters copying the documented configuration.
-**Fix:** Restore `Mailglass` in the example and make code-span masking/rewrite preserve inline spans that cross line breaks.
-
-### WR-05: Published Admin guide references an excluded checklist
-
-**Severity:** WARNING  
-**File:** `mailglass_admin/docs/design-system.md:260-262`  
-**Issue:** The shipped design guide names `.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md` in plain inline code, not as a link. The Admin package includes `docs/` but not `.planning` in its strict file allowlist (`mailglass_admin/mix.exs:238`), so readers of the packaged guide cannot find that file in the package/HexDocs context. A direct local package build was unavailable because Elixir 1.18.4 is not installed; the package file list establishes the exclusion.
-**Fix:** Move the adopter-facing checklist under published docs and include it in the package, or link to a stable public repository URL instead of a package-relative `.planning` path.
+**File:** `scripts/brand_name_lint.exs:21`
+**Issue:** `@gettext_field` recognizes `msgid` and `msgstr` (including indexed `msgstr` fields), but omits the standard `msgid_plural` field. `gettext_fragments/1` therefore treats `msgid_plural "Mailglass messages"` as a non-field line, discards it instead of scanning its value or continuation lines, and can let a prohibited product-name spelling through when it appears only in the plural source text. The inventory scans `.po` and `.pot` files, so this is a valid input to the gate.
+**Fix:** Recognize `msgid_plural` as a Gettext field and add a plural-entry fixture, including a continuation line, to verify its concatenated value is scanned.
 
 ---
 
-_Reviewed: 2026-11-17T01:24:35Z_  
+_Reviewed: 2026-11-17T01:50:44Z_
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
