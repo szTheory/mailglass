@@ -4,6 +4,7 @@
 **Baseline:** `183-UI-SPEC.md` (frontmatter says draft; the document's sign-off says approved with one non-blocking inventory provenance flag)
 **Screenshots:** not captured (no positively identified Phase 183 server; localhost:8080 belongs to the owner-demo Docker services and was not contacted)
 **Interaction captures:** off (workflow.ui_interaction_capture is false)
+**Evidence update (2026-11-17):** The current Admin suite run found one `FaviconCatalogTest` producer-SHA mismatch in `favicon-299c1aa-20261116T231912Z`. Earlier catalog and browser results cited below are historical; this refresh did not retry the alias, recapture favicon evidence, or run a browser.
 
 ---
 
@@ -40,11 +41,11 @@ No BLOCKER findings. All findings are WARNINGs: they reduce documentation qualit
 
 ### Pillar 2: Visuals (3/4)
 
-**WARNING —** The three README headers use the exact immutable light/dark SVG URLs and constrain a 580px source width with `max-width:100%;height:auto` (`README.md:3-8`; same markup in both sibling READMEs). The ExDoc setup copies theme marks and adds a class-following hook (`mix.exs:495-503`, `mailglass_admin/mix.exs:247-255`, `mailglass_inbound/mix.exs:174-182`). The latest validation records the all-package theme/layout browser contract passing in the matching Docker image (`183-VALIDATION.md:126,139`; the corrected final gate is summarized in `183-03-SUMMARY.md:220-230`), resolving the earlier host Chromium launch gap. Those checks cover both themes, image decode, and the 375px ratio/overflow assertions. No audit screenshots were captured, so this remains automated layout evidence rather than a human visual review of GitHub/HexDocs renderer chrome.
+**WARNING —** The three README headers use the exact immutable light/dark SVG URLs and constrain a 580px source width with `max-width:100%;height:auto` (`README.md:3-8`; same markup in both sibling READMEs). The ExDoc setup copies theme marks and adds a class-following hook (`mix.exs:495-503`, `mailglass_admin/mix.exs:247-255`, `mailglass_inbound/mix.exs:174-182`). The original phase validation records the all-package theme/layout browser contract passing in the matching Docker image (`183-VALIDATION.md:126,139`; the corrected final gate is summarized in `183-03-SUMMARY.md:220-230`); this remains historical evidence, not a current rerun. Those checks cover both themes, image decode, and the 375px ratio/overflow assertions. The current refresh found the separate FaviconCatalogTest producer-SHA mismatch and captured no audit screenshots, so current layout and renderer chrome remain unobserved.
 
 ### Pillar 3: Color (3/4)
 
-**WARNING —** Source-level color use is appropriately narrow: the ExDoc stylesheet changes only Makeup syntax-token text colors, with light `#0a6488` and dark `#46b6e8` under ExDoc's `.dark` class (`brandbook/exdoc/code-colors.css:1-22`). These values correspond to the declared syntax-only accent use; the 108-cell favicon catalog and independent legibility check are reported as passing (`183-02-SUMMARY.md:134-148`). No current docs-page screenshot was available to confirm the final stylesheet cascade and token contrast against both native code-block backgrounds.
+**WARNING —** Source-level color use is appropriately narrow: the ExDoc stylesheet changes only Makeup syntax-token text colors, with light `#0a6488` and dark `#46b6e8` under ExDoc's `.dark` class (`brandbook/exdoc/code-colors.css:1-22`). These values correspond to the declared syntax-only accent use; the 108-cell favicon catalog and independent legibility check were reported as passing in the original phase evidence (`183-02-SUMMARY.md:134-148`). The current source-hash mismatch means that catalog result is not revalidated by this refresh. No current docs-page screenshot was available to confirm the final stylesheet cascade and token contrast against both native code-block backgrounds.
 
 ### Pillar 4: Typography (2/4)
 
@@ -56,7 +57,7 @@ No BLOCKER findings. All findings are WARNINGs: they reduce documentation qualit
 
 ### Pillar 6: Experience Design (3/4)
 
-**WARNING —** This phase adds static docs and brand assets, not dashboard controls; the spec therefore correctly has no CTA, empty data, destructive action, or loading UI. Missing or mismatched assets fail the docs verifier, README images retain `alt="mailglass"`, and no custom loader was added (`scripts/brand_docs_check.exs:21-43,48-75`; `README.md:3-5`). The ExDoc hook follows the native body `.dark` class through a `MutationObserver` and avoids OS preference or network access (`brandbook/exdoc/theme-mark.js:1-18`). The all-package browser contract now passes native theme selection, mark decode, opposite OS-scheme cases, and 375px width in the matching Docker image (`183-VALIDATION.md:126,139`). Cross-package compatibility links remain a documentation navigation gap under Pillar 1; no dashboard interaction was added by this phase.
+**WARNING —** This phase adds static docs and brand assets, not dashboard controls; the spec therefore correctly has no CTA, empty data, destructive action, or loading UI. Missing or mismatched assets fail the docs verifier, README images retain `alt="mailglass"`, and no custom loader was added (`scripts/brand_docs_check.exs:21-43,48-75`; `README.md:3-5`). The ExDoc hook follows the native body `.dark` class through a `MutationObserver` and avoids OS preference or network access (`brandbook/exdoc/theme-mark.js:1-18`). The original phase browser contract reported native theme selection, mark decode, opposite OS-scheme cases, and 375px width passing in the matching Docker image (`183-VALIDATION.md:126,139`); it remains historical evidence. Cross-package compatibility links remain a documentation navigation gap under Pillar 1; no dashboard interaction was added by this phase.
 
 ## Files Audited
 
