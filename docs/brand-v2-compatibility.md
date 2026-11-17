@@ -1,10 +1,17 @@
 # Brand v2 compatibility policy
 
 Brand v2 changes the words and visuals on screens and in docs. This policy
-lists the public names that must not move while that happens, and a test reads
-the table below to prove each one still exists in the code.
+lists source names whose spelling must stay unchanged while those glosses are
+introduced, and a test reads the table below to prove each name still exists.
 
-On-screen and docs words are glossed, never renamed: every public name in the table below stays.
+Table membership is a guard for this branding change; it does not by itself
+make a name part of the stable adopter API. The canonical stability inventory
+for each package determines that promise: the core inventory is
+[`docs/api_stability.md`](api_stability.md), with separate inventories for
+Admin and Inbound.
+
+On-screen and docs words are glossed, never renamed: the source spellings in
+this table remain in place while the branding change is applied.
 
 ## Names that stay
 
@@ -12,7 +19,7 @@ Each row is checked against the code by
 `mailglass_admin/test/mailglass_admin/brand_v2_compat_policy_test.exs`, which
 parses this table and holds no second list. The columns are:
 
-- **name**: the public name, exactly as written in code.
+- **name**: the source name, exactly as written in code.
 - **kind**: how the test verifies it. `module` is loaded, `macro` and `function`
   are exported at the stated arity, `enum` lists atoms that must remain members
   of the live enum, `schema_field` is a field of the Ecto schema, `topic` is the
@@ -138,5 +145,8 @@ This policy links to the stability inventories and does not restate them.
 
 ## Changing this file
 
-Adding a row is always allowed. Removing a row requires the deprecation process
-in `guides/compatibility-and-deprecations.md` and a major version.
+Adding a row is always allowed. Removing a row requires review against the
+package's canonical stability inventory. A row that is part of the stable
+adopter API still requires the deprecation process in
+`guides/compatibility-and-deprecations.md` and a major version; table membership
+alone does not change that API boundary.

@@ -251,7 +251,7 @@ defmodule MailglassAdmin.BrandV2CompatPolicyTest do
   defp verify_row(%{kind: "grep", name: name, proof: proof} = row) do
     with {:ok, rel} <- safe_relative(proof, row),
          {:ok, content} <- read_proof(rel, row) do
-      if Enum.any?(grep_patterns(name), &String.contains?(content, &1)),
+      if grep_proof_match?(rel, name, content),
         do: :ok,
         else: {:error, row, "#{name} not found in #{proof}"}
     end
@@ -321,6 +321,17 @@ defmodule MailglassAdmin.BrandV2CompatPolicyTest do
   defp grep_patterns(":" <> atom = name), do: [name, atom <> ":"]
   defp grep_patterns(name), do: [name]
 
+  defp grep_proof_match?(rel, name, content) do
+    implementation =
+      if Path.extname(rel) in [".ex", ".exs"] do
+        Regex.replace(~r/@(?:moduledoc|doc)\s+""".*?"""/s, content, "")
+      else
+        content
+      end
+
+    Enum.any?(grep_patterns(name), &String.contains?(implementation, &1))
+  end
+
   defp failures(rows) do
     rows
     |> Enum.map(&verify_row/1)
@@ -336,7 +347,8 @@ defmodule MailglassAdmin.BrandV2CompatPolicyTest do
 
     "#{@policy_rel} lists public names that the code no longer provides:\n" <>
       Enum.join(lines, "\n") <>
-      "\nRestore the name. Removing a row needs the deprecation process in " <>
+      "\nRestore the name for the branding change. Review row removal against the package's " <>
+      "canonical stability inventory; stable adopter APIs need the deprecation process in " <>
       "guides/compatibility-and-deprecations.md and a major version."
   end
 
@@ -454,6 +466,14 @@ defmodule MailglassAdmin.BrandV2CompatPolicyTest do
       assert policy_markdown!() =~ "glossed, never renamed"
     end
 
+    test "does not make compatibility-table membership an adopter stability promise" do
+      markdown = policy_markdown!()
+
+      assert markdown =~ "Table membership is a guard for this branding change"
+      assert markdown =~ ~r/does not by itself\s+make a name part of the stable adopter API/
+      assert markdown =~ "docs/api_stability.md"
+    end
+
     test "keeps citing the Not sent proof, the pinned tests and the stability inventories" do
       markdown = policy_markdown!()
 
@@ -487,6 +507,15 @@ defmodule MailglassAdmin.BrandV2CompatPolicyTest do
 
     test "every row verifies against live code" do
       assert failures(compat_rows!()) == [], failure_message(failures(compat_rows!()))
+    end
+
+    test "Elixir grep proofs ignore documentation text and check implementation source" do
+      rel = "mailglass_admin/lib/mailglass_admin/router.ex"
+      docs_only = "@moduledoc \"\"\"\n  deliveries_path: []\n  \"\"\""
+      implementation = "@navigation_opts_schema [deliveries_path: [type: :string]]"
+
+      refute grep_proof_match?(rel, "deliveries_path", docs_only)
+      assert grep_proof_match?(rel, "deliveries_path", implementation)
     end
 
     test "no row is repeated" do
