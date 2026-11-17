@@ -101,6 +101,18 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
     assert [%{match: "Mailglass", line: 2}] = findings(po, :gettext, "priv/gettext/default.po")
   end
 
+  test "scans concatenated PO continuation lines in msgid and msgstr fields" do
+    po = """
+    msgid ""
+    "Mailglass message id"
+    msgstr ""
+    "Translated Mailglass message"
+    """
+
+    assert Enum.map(findings(po, :gettext, "priv/gettext/default.po"), & &1.match) ==
+             ["Mailglass", "Mailglass"]
+  end
+
   test "the casing rewrite touches only scanner-confirmed prose and keeps structural tokens byte-stable" do
     source =
       "# Mailglass\nMailglass delivers Mailglass.Config; `MailGlass` stays code. " <>

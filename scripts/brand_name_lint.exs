@@ -18,6 +18,8 @@ defmodule Mailglass.BrandNameLint do
   @iex_lines ~r/(?m)^\s*(?:iex>|\.\.\.)[^\n]*(?:\n|$)/u
   @source_code_line ~r/(?m)^\s*(?:alias|import|require|defmodule|use)\s+Mailglass\b[^\n]*(?:\n|$)/u
   @accessible_attribute ~r/\b(?:aria-label|aria-description|title|alt|placeholder)\s*=\s*["']([^"']*)["']/isu
+  @gettext_field ~r/^\s*(?:msgid|msgstr(?:\[[^]]+\])?)\s+"((?:\\.|[^"\\])*)"\s*$/u
+  @gettext_quoted_continuation ~r/^\s*"((?:\\.|[^"\\])*)"\s*$/u
 
   # These path-specific exceptions preserve historical release text and the pending
   # owner-approved product definition. Each exception is required to match at least one
@@ -265,16 +267,32 @@ defmodule Mailglass.BrandNameLint do
   defp ast_fragments(_other, _line, acc), do: acc
 
   defp gettext_fragments(text) do
-    text
-    |> String.split("\n")
-    |> Enum.with_index(1)
-    |> Enum.flat_map(fn {line, number} ->
-      case Regex.run(~r/^\s*(?:msgid|msgstr(?:\[[^]]+\])?)\s+"(.*)"\s*$/, line, capture: :all_but_first) do
-        [value] -> [{number, value}]
-        _ -> []
-      end
-    end)
+    {fragments, current} =
+      text
+      |> String.split("\n", trim: false)
+      |> Enum.with_index(1)
+      |> Enum.reduce({[], nil}, fn {line, number}, {fragments, current} ->
+        case Regex.run(@gettext_field, line, capture: :all_but_first) do
+          [value] ->
+            {flush_gettext_fragment(fragments, current), {number, value}}
+
+          _ ->
+            case Regex.run(@gettext_quoted_continuation, line, capture: :all_but_first) do
+              [continued] when not is_nil(current) ->
+                {base_line, value} = current
+                {fragments, {base_line, value <> continued}}
+
+              _ ->
+                {flush_gettext_fragment(fragments, current), nil}
+            end
+        end
+      end)
+
+    flush_gettext_fragment(fragments, current) |> Enum.reverse()
   end
+
+  defp flush_gettext_fragment(fragments, nil), do: fragments
+  defp flush_gettext_fragment(fragments, fragment), do: [fragment | fragments]
 
   defp prose_view(text, :plain), do: text
 
