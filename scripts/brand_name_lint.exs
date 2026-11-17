@@ -8,7 +8,7 @@ defmodule Mailglass.BrandNameLint do
   @module_name ~r/\bMailglass(?:Admin|Inbound)?(?:\.[A-Z][A-Za-z0-9_]*)+(?:\/\d+)?\b/iu
   @module_alias ~r/\bMailglass\.\{[^}]+\}/iu
   @fenced ~r/(?ms)^ {0,3}(?:`{3,}|~{3,})[^\n]*\n.*?^ {0,3}(?:`{3,}|~{3,})[ \t]*$/
-  @inline_code ~r/(`+)[^`\n]*\1/u
+  @inline_code ~r/(`+)[^`]*\1/u
   @html_code ~r/(?is)<(code|pre)\b[^>]*>.*?<\/\1\s*>/u
   @html_comment ~r/(?s)<!--.*?-->/u
   @link_destinations ~r/\]\([^)]*\)/u
@@ -155,6 +155,7 @@ defmodule Mailglass.BrandNameLint do
   def lowercase_lines(text, line_numbers, format) when is_binary(text) and is_list(line_numbers) do
     protected = [@url, @module_alias, @module_name, @wire_header, @inline_code, @html_code]
     protected = if format == :markdown, do: [@html_comment, @fenced | protected], else: protected
+    {text, protected_inline} = protect_multiline_inline_code(text)
     lines = String.split(text, "\n", trim: false)
     targets = MapSet.new(line_numbers)
 
@@ -170,6 +171,11 @@ defmodule Mailglass.BrandNameLint do
       end
     end)
     |> Enum.join("\n")
+    |> then(fn rewritten ->
+      Enum.reduce(protected_inline, rewritten, fn {marker, original}, current ->
+        String.replace(current, marker, original)
+      end)
+    end)
   end
 
   defp glob(root, pattern, format, surface) do
@@ -351,6 +357,29 @@ defmodule Mailglass.BrandNameLint do
 
   defp mask(text, regex) do
     Regex.replace(regex, text, fn matched -> String.replace(matched, ~r/[^\n]/u, " ") end)
+  end
+
+  defp protect_multiline_inline_code(text) do
+    text
+    |> then(&Regex.scan(@inline_code, &1, capture: :first))
+    |> List.flatten()
+    |> Enum.uniq()
+    |> Enum.filter(&String.contains?(&1, "\n"))
+    |> Enum.with_index()
+    |> Enum.reduce({text, []}, fn {matched, span_index}, {current, protected} ->
+      parts = String.split(matched, "\n", trim: false)
+
+      {markers, replacements} =
+        parts
+        |> Enum.with_index()
+        |> Enum.map_reduce([], fn {part, line_index}, replacements ->
+          marker = "__LINT_PROTECTED_CODE_#{span_index}_#{line_index}__"
+          {marker, [{marker, part} | replacements]}
+        end)
+
+      replacement = Enum.join(markers, "\n")
+      {String.replace(current, matched, replacement), replacements ++ protected}
+    end)
   end
 
   defp lowercase_line(line, protected_patterns) do

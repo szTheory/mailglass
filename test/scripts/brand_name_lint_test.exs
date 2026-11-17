@@ -123,6 +123,15 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
              lint(:lowercase_lines, [source, [1, 2], :markdown])
   end
 
+  test "multiline inline code stays masked during both scanning and lowercase rewrites" do
+    text = "Mailglass is the prose name.\n`deps: [\nMailglass\n]`"
+
+    assert Enum.map(findings(text), &{&1.line, &1.match}) == [{1, "Mailglass"}]
+
+    assert "mailglass is the prose name.\n`deps: [\nMailglass\n]`" ==
+             lint(:lowercase_lines, [text, [1, 2, 3, 4], :markdown])
+  end
+
   test "the checked-in adopter corpus stays non-vacuous and all owner/history exceptions stay live" do
     inventory = lint(:inventory, [@repo_root])
     counts = Enum.frequencies_by(inventory, &elem(&1, 2))
