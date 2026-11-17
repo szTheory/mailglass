@@ -455,7 +455,12 @@ jobs:
             mailglass_admin/priv/static/favicon.svg \
             mailglass_admin/e2e/favicon-capture.cjs \
             mailglass_admin/package.json \
-            mailglass_admin/package-lock.json | grep -q .; then
+            mailglass_admin/package-lock.json \
+            mailglass_admin/mix.exs \
+            mailglass_admin/mix.lock \
+            mailglass_admin/test/support/favicon_catalog.ex \
+            mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs \
+            .github/workflows/advisory-matrix.yml | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -472,7 +477,57 @@ jobs:
         if: steps.paths.outputs.changed == 'true'
         working-directory: mailglass_admin
         run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
-      - name: Re-render favicon matrix
+      - name: Prepare isolated favicon catalog output
+        id: favicon-output
+        if: steps.paths.outputs.changed == 'true'
+        run: |
+          catalog_root="$(mktemp -d "$RUNNER_TEMP/mailglass-favicon-catalog.XXXXXX")"
+          echo "root=$catalog_root" >> "$GITHUB_OUTPUT"
+      - name: Set up Elixir for independent catalog validation
+        if: steps.paths.outputs.changed == 'true'
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.3.4.15"
+      - name: Install Admin validator dependencies
         if: steps.paths.outputs.changed == 'true'
         working-directory: mailglass_admin
-        run: node e2e/favicon-capture.cjs --check
+        run: mix deps.get
+      - name: Re-render favicon matrix
+        id: favicon-capture
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: mailglass_admin
+        env:
+          MAILGLASS_FAVICON_CATALOG_ROOT: ${{ steps.favicon-output.outputs.root }}
+        run: |
+          node e2e/favicon-capture.cjs --capture
+          catalog_dir="$(find "$MAILGLASS_FAVICON_CATALOG_ROOT" -mindepth 1 -maxdepth 1 -type d -name 'favicon-*' -print -quit)"
+          test -n "$catalog_dir"
+          echo "catalog_dir=$catalog_dir" >> "$GITHUB_OUTPUT"
+      - name: Validate captured catalog independently
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: mailglass_admin
+        env:
+          MAILGLASS_FAVICON_CATALOG_DIR: ${{ steps.favicon-capture.outputs.catalog_dir }}
+        run: |
+          mix run --no-start -e '
+            Code.require_file("test/support/favicon_catalog.ex")
+            repo_root = Path.expand("..", File.cwd!())
+            catalog_dir = System.fetch_env!("MAILGLASS_FAVICON_CATALOG_DIR")
+            failures = MailglassAdmin.TestSupport.FaviconCatalog.validate_catalog(catalog_dir, repo_root)
+            if failures == [] do
+              IO.puts("independent favicon catalog validation passed")
+            else
+              Enum.each(failures, &IO.puts(:stderr, &1))
+              System.halt(1)
+            end
+          '
+      - name: Remove ephemeral favicon catalog
+        if: always() && steps.favicon-output.outputs.root != ''
+        env:
+          FAVICON_CATALOG_ROOT: ${{ steps.favicon-output.outputs.root }}
+        run: |
+          case "$FAVICON_CATALOG_ROOT" in
+            "$RUNNER_TEMP"/mailglass-favicon-catalog.*) rm -rf -- "$FAVICON_CATALOG_ROOT" ;;
+            *) echo "Refusing to clean unexpected favicon catalog path: $FAVICON_CATALOG_ROOT" >&2; exit 1 ;;
+          esac

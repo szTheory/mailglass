@@ -11,6 +11,9 @@ const CATALOG_ROOT = path.join(
   REPO_ROOT,
   ".planning/research/brand-v2-adoption/favicon-catalog",
 );
+const OUTPUT_ROOT = process.env.MAILGLASS_FAVICON_CATALOG_ROOT
+  ? path.resolve(process.env.MAILGLASS_FAVICON_CATALOG_ROOT)
+  : CATALOG_ROOT;
 const SOURCE_REL = "brandbook/v2/favicon.svg";
 const SERVED_REL = "mailglass_admin/priv/static/favicon.svg";
 const SCRIPT_REL = "mailglass_admin/e2e/favicon-capture.cjs";
@@ -335,9 +338,9 @@ async function main() {
     return;
   }
 
-  fs.mkdirSync(CATALOG_ROOT, { recursive: true });
+  fs.mkdirSync(OUTPUT_ROOT, { recursive: true });
   const catalogId = `favicon-${sourceSha.slice(0, 7)}-${timestamp()}`;
-  const catalogDir = confined(catalogId, CATALOG_ROOT);
+  const catalogDir = confined(catalogId, OUTPUT_ROOT);
   fs.mkdirSync(catalogDir, { recursive: false });
   const base64 = source.toString("base64");
   // Keep the SVG bytes identical while giving WebKit's SVG image cache a scheme-distinct key.
