@@ -62,7 +62,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <Components.data_state
           kind={:stale}
           title={ResultsStatus.stale_title(@loaded_at)}
-          body="Mailglass couldn't re-read these results. Retry to check for updates."
+          body="mailglass couldn't re-read these results. Retry to check for updates."
         />
         <p
           :if={@loaded_at}

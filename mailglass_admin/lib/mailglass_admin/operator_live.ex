@@ -781,7 +781,7 @@ defmodule MailglassAdmin.OperatorLive do
               >
                 <div class="text-body font-bold text-base-content">Choose an Account</div>
                 <div class="text-body text-secondary">
-                  Select an Account to see its activity. Mailglass keeps that account boundary
+                  Select an Account to see its activity. mailglass keeps that account boundary
                   in the URL as <code class="mono">tenant_id</code> so refreshes and shared links stay
                   scoped.
                 </div>
@@ -3032,10 +3032,10 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :orphan_backlog}),
     do:
-      "Review provider webhooks Mailglass received but has not linked to a delivery. These can arrive before the send record is visible, or with provider identifiers that need reconciliation."
+      "Review provider webhooks mailglass received but has not linked to a delivery. These can arrive before the send record is visible, or with provider identifiers that need reconciliation."
 
   defp support_focus_body(%{focus: :failed_ingest}),
-    do: "Review provider events Mailglass could not process in the current support window."
+    do: "Review provider events mailglass could not process in the current support window."
 
   defp support_focus_body(%{focus: :replay_outcomes}),
     do: "Review the latest replay outcome and its recorded audit trail."

@@ -6,10 +6,10 @@ defmodule Mix.Tasks.Mailglass.Gen.Unsubscribe do
   alias Mailglass.Config
   alias Mailglass.Compliance.UnsubscribeController
 
-  @shortdoc "Print the Mailglass unsubscribe installation checklist"
+  @shortdoc "Print the mailglass unsubscribe installation checklist"
 
   @moduledoc """
-  Prints the read-only Mailglass unsubscribe installation checklist.
+  Prints the read-only mailglass unsubscribe installation checklist.
 
   This task copies zero files and exists to keep adopters aligned with the
   runtime RFC 8058 config and router contract.
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Mailglass.Gen.Unsubscribe do
 
   defp heading do
     """
-    Mailglass unsubscribe checklist
+    mailglass unsubscribe checklist
 
     This task intentionally copies zero files. Wire the config and router manually, then run the UAT steps below.
     """

@@ -362,7 +362,7 @@ defmodule Mailglass.WebhookCase do
   def freeze_timestamp(%DateTime{} = dt), do: Mailglass.Clock.Frozen.freeze(dt)
 
   @doc """
-  Dispatches a webhook payload for the given provider through the Mailglass
+   Dispatches a webhook payload for the given provider through mailglass
   webhook plug pipeline, asserting a 20x response and waiting for the
   subsequent Event Projector broadcast to verify ingestion.
 

@@ -101,7 +101,7 @@ defmodule MailglassAdmin.Phase177ReturnNavigationTest do
       links =
         Floki.find(
           doc,
-          ~s([data-testid="surface-nav-sidebar"][aria-label="Mailglass sections"] a)
+          ~s([data-testid="surface-nav-sidebar"][aria-label="mailglass sections"] a)
         )
 
       first = hd(links)

@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Mailglass.Install do
   ## Options
 
     * `--dry-run` - plan and classify operations without mutating files.
-    * `--no-admin` - skip adding Mailglass admin router mounts.
+    * `--no-admin` - skip adding mailglass admin router mounts.
     * `--force` - allow explicit overwrite/append on unmanaged drift.
   """
 
@@ -148,14 +148,14 @@ defmodule Mix.Tasks.Mailglass.Install do
     """
     Installation blocked: #{endpoint_path} has a `plug Plug.Parsers` without a `:body_reader`.
 
-    Mailglass needs to read the raw request body to verify webhook signatures. With an
-    unmanaged parser ahead of it, the body is consumed before Mailglass sees it and every
+    mailglass needs to read the raw request body to verify webhook signatures. With an
+    unmanaged parser ahead of it, the body is consumed before mailglass sees it and every
     inbound webhook silently returns 401 in production.
 
     Fix one of these, then re-run `mix mailglass.install`:
       1. Add `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}` to your
          `plug Plug.Parsers` in #{endpoint_path}, OR
-      2. Re-run with `--force` to let Mailglass insert its managed parser block ABOVE yours
+      2. Re-run with `--force` to let mailglass insert its managed parser block ABOVE yours
          (Plug runs parsers in source order, so the managed body_reader wins).
     """
   end

@@ -520,7 +520,7 @@ Anymail taxonomy atoms:
 - `:subscribed`
 - `:unknown`
 
-Mailglass-internal atoms:
+mailglass-internal atoms:
 
 - `:dispatched`
 - `:suppressed`

@@ -38,7 +38,7 @@ Open the Dashboard URL and click around. When you're done, `make demo-down`.
 The demo plays the role of **AtlasDesk** - a fictional support SaaS using
 mailglass in production. **Northstar Logistics** is the seeded customer account,
 so every screen has something real to inspect. The UI calls this an Account; in
-code and URLs the Mailglass `tenant_id` remains `northstar`, which is why the
+code and URLs the mailglass `tenant_id` remains `northstar`, which is why the
 operator URLs include `tenant_id=northstar`.
 
 | Open | To see |

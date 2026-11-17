@@ -22,7 +22,7 @@ and metadata keys that the current code emits.
 | `[:mailglass, :delivery, :feedback, :stop]` | single emit after commit | `count` (always `1`) | `tenant_id, delivery_id, provider, stream, mailable, status` |
 
 Feedback status is one of `sent`, `delivered`, `bounced`, `complained`,
-`deferred`, `rejected`, `opened`, `clicked`, or `unsubscribed`. Mailglass emits
+`deferred`, `rejected`, `opened`, `clicked`, or `unsubscribed`. mailglass emits
 the event only for a newly persisted fact; idempotent webhook and unsubscribe
 replays do not emit it again. Internal transitions such as `queued`,
 `dispatched`, `suppressed`, and `reconciled` are excluded.
@@ -96,7 +96,7 @@ deriving outcomes from the dispatch span:
 For a low-volume launch, page on every `:complained` event. Do not wait for a
 percentage threshold whose denominator is only tens or hundreds of messages.
 Provider-side reputation and inbox placement remain provider truth; this event
-reports the facts Mailglass durably received.
+reports the facts mailglass durably received.
 
 ## Reading the support model correctly
 

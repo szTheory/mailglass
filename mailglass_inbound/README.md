@@ -7,7 +7,7 @@
 
 See your email before it ships. Trace it after.
 
-`mailglass_inbound` is the inbound sibling package for Mailglass. This README
+`mailglass_inbound` is the inbound sibling package for mailglass. This README
 is the canonical adoption lane for the shipped inbound slice: install the
 package manually, wire the endpoint/body-reader path explicitly, mount the
 provider plugs you need, choose the async execution mode you want, and verify

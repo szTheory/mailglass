@@ -2052,7 +2052,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="data-state-stale")
       assert html =~ "Showing earlier results; refresh failed"
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       refute html =~ ~s(data-testid="inbound-stale-loaded-at")
       refute html =~ "14:32"
     end
@@ -3438,7 +3438,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert has_element?(view, "[data-testid='inbound-stale-results']")
       assert html =~ "Showing results from "
       assert html =~ " UTC; refresh failed"
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert has_element?(view, "[data-testid='inbound-stale-loaded-at']", "Results loaded")
       assert has_element?(view, "[data-testid='inbound-retry-messages']", "Retry messages")
       assert html =~ "stale-one@example.com"

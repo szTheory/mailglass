@@ -90,7 +90,7 @@ MyApp.UserMailer.welcome(%{email: "migrated@example.com"})
 |> Mailglass.deliver()
 ```
 
-Mailglass still accepts a plain `%Swoosh.Email{}` when you need parity during an incremental migration.
+mailglass still accepts a plain `%Swoosh.Email{}` when you need parity during an incremental migration.
 
 That raw-email path is a retained compatibility bridge, not the preferred
 `1.x` authoring lane. For the canonical support horizon and replacement story,

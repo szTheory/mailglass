@@ -1,11 +1,11 @@
 # Compatibility and Deprecations
 
 This guide is the canonical `2.x` compatibility, upgrade, and deprecation
-policy for Mailglass.
+policy for mailglass.
 
 Use this guide when you need to answer any of these questions:
 
-- Which Mailglass surfaces are the stable default path for `2.x`
+- Which mailglass surfaces are the stable default path for `2.x`
 - Which older surfaces still work only as retained compatibility bridges
 - What a patch, minor, or major release may change
 - Which runtime, framework, database, and sibling-package combinations the
@@ -24,7 +24,7 @@ That inventory is the canonical stable/internal/deferred source for
 
 ## Contract shape
 
-Mailglass keeps a two-lane public posture for the `2.x` line:
+mailglass keeps a two-lane public posture for the `2.x` line:
 
 - `stable lane`:
   [`Mailglass.deliver/2`](https://hexdocs.pm/mailglass/Mailglass.html#deliver/2),
@@ -130,7 +130,7 @@ and have the explicit v3.0 removal target shown in the table.
 
 ## Security and correctness exception
 
-Mailglass keeps a narrow exception for security and correctness incidents.
+mailglass keeps a narrow exception for security and correctness incidents.
 
 If a documented behavior must change to fix a security issue, prevent data
 loss, restore signature correctness, or recover from a demonstrably unsafe
@@ -146,7 +146,7 @@ stable-lane contract for convenience.
 
 ## Warnings-as-errors guidance
 
-Mailglass supports strict adopters that compile and test with
+mailglass supports strict adopters that compile and test with
 `--warnings-as-errors`.
 
 - Paths with explicit `@deprecated` metadata should be treated as migration work
@@ -196,7 +196,7 @@ Those integrations are documented and compiled as optional dependencies in
 `mix.exs`. They are supported when present in a compatible adopter app, but the
 repo does not claim that every project must install them to remain inside the
 core `2.x` contract. Authentication libraries such as Sigra are owned by the
-host app and are not Mailglass dependencies.
+host app and are not mailglass dependencies.
 
 ## Sibling-package policy
 

@@ -7,7 +7,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   `Mailglass.Outbound.deliver_later/2` falls back to `Task.Supervisor` with a
   `Logger.warning` emitted at boot (see `Mailglass.Application`).
 
-  Mailglass keeps Oban-specific calls behind this gateway so core delivery,
+  mailglass keeps Oban-specific calls behind this gateway so core delivery,
   configuration, and telemetry code can compile cleanly when Oban is absent.
 
   ## TenancyMiddleware
@@ -20,7 +20,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   `mix compile --no-optional-deps --warnings-as-errors` passes cleanly.
 
   OSS Oban 2.21 has no first-class middleware behaviour (that lives in Oban
-  Pro). Mailglass ships the middleware as a plain module exposing `call/2`
+  Pro). mailglass ships the middleware as a plain module exposing `call/2`
   (the shape an adopter using Oban Pro can register directly) PLUS a
   `wrap_perform/2` helper that adopters using OSS Oban invoke inside their
   worker's `perform/1`. Both paths converge on the same

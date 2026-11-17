@@ -1,6 +1,6 @@
 # Upgrading to v2.0
 
-This is the canonical `1.x` to `2.0` upgrade guide for Mailglass.
+This is the canonical `1.x` to `2.0` upgrade guide for mailglass.
 
 The one change that matters in `2.0` is where mailglass keeps its tables. In
 `1.x`, mailglass installed its four domain tables into your `public` Postgres
@@ -95,7 +95,7 @@ the `mailglass` schema later via Route B whenever it suits you.
 ## Route B — adopt the `mailglass` schema (recommended long-term)
 
 Route B moves your four existing tables from `public` into the `mailglass`
-schema. Mailglass ships a first-class Mix task that writes the migration for you —
+schema. mailglass ships a first-class Mix task that writes the migration for you —
 you review it, then run it like any other migration.
 
 ```bash

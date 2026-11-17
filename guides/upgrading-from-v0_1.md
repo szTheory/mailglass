@@ -137,7 +137,7 @@ v0.2 introduces a multi-bucket rate limiter to protect your sender reputation. O
 - `:sender_domain` limits (500/min default)
 
 If you see `{:error, %Mailglass.RateLimitError{}}`, your message was throttled.
-See the current rate-limiting guide in the published Mailglass docs for
+See the current rate-limiting guide in the published mailglass docs for
 configuration overrides.
 
 ### Enhanced Test Assertions

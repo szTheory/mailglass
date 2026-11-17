@@ -517,7 +517,7 @@ defmodule MailglassAdmin.Operator.Shell do
               />
               <span>
                 Account maps to <code class="mono">tenant_id</code>
-                in code and URLs. Mailglass uses it to keep email records isolated.
+                in code and URLs. mailglass uses it to keep email records isolated.
               </span>
             </p>
             <div class="mt-md grid gap-sm">

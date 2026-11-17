@@ -1,6 +1,6 @@
 # Upgrading to v1.0
 
-This is the canonical latest-`0.x` to `1.0` upgrade guide for Mailglass.
+This is the canonical latest-`0.x` to `1.0` upgrade guide for mailglass.
 
 Use this guide as the single upgrade authority when moving an existing
 `mailglass` deployment onto the `1.x` contract. The older guides

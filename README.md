@@ -12,7 +12,7 @@ See your email before it ships. Trace it after.
 [![HexDocs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/mailglass)
 [![License](https://img.shields.io/hexpm/l/mailglass.svg)](https://github.com/szTheory/mailglass/blob/main/LICENSE)
 
-Mailglass is a batteries-included transactional email framework for
+mailglass is a batteries-included transactional email framework for
 Phoenix. It composes on top of [Swoosh](https://hex.pm/packages/swoosh)
 and ships the framework layer Swoosh deliberately leaves out: HEEx-native
 components with Outlook MSO/VML fallbacks, a LiveView preview/admin
@@ -245,7 +245,7 @@ stability inventory alone.
   [`gen_smtp`](https://hex.pm/packages/gen_smtp).
 
 Authentication libraries such as [Sigra](https://hex.pm/packages/sigra) are
-host-owned dependencies; Mailglass does not install them as optional deps.
+host-owned dependencies; mailglass does not install them as optional deps.
 
 ## Packages
 
@@ -300,7 +300,7 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 
 ## Contributing
 
-Mailglass is developed in public. Contributor conventions, decision
+mailglass is developed in public. Contributor conventions, decision
 log, and phase-by-phase roadmap live in [`CLAUDE.md`](CLAUDE.md) and
 [`.planning/PROJECT.md`](.planning/PROJECT.md); a dedicated `CONTRIBUTING.md` lands in
 Phase 7.

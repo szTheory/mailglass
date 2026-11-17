@@ -1,6 +1,6 @@
-# Contributing to Mailglass
+# Contributing to mailglass
 
-We welcome contributions! Mailglass is developed using a phase-based roadmap found in [`.planning/PROJECT.md`](.planning/PROJECT.md).
+We welcome contributions! mailglass is developed using a phase-based roadmap found in [`.planning/PROJECT.md`](.planning/PROJECT.md).
 
 ## Local Setup
 

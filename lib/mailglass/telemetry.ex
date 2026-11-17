@@ -41,7 +41,7 @@ defmodule Mailglass.Telemetry do
 
   `:telemetry.span/3` wraps each attached handler in a try/catch. A handler
   that raises is detached automatically and `[:telemetry, :handler, :failure]`
-  is emitted — the caller's pipeline is unaffected. Mailglass does **not**
+  is emitted — the caller's pipeline is unaffected. mailglass does **not**
   add a parallel try/rescue wrapper (would duplicate or — worse — swallow
   the meta-event operators rely on).
 
@@ -49,7 +49,7 @@ defmodule Mailglass.Telemetry do
 
   Call `attach_default_logger/1` at boot (or configure
   `[telemetry: [default_logger: true]]` in the Application env) to log every
-  Mailglass event:
+  mailglass event:
 
       Mailglass.Telemetry.attach_default_logger()
       Mailglass.Telemetry.attach_default_logger(level: :warning)
@@ -223,6 +223,6 @@ defmodule Mailglass.Telemetry do
   defp format_event(event, measurements, metadata) do
     [_mailglass | rest] = event
     label = rest |> Enum.map_join(".", &Atom.to_string/1)
-    "[Mailglass] #{label} #{inspect(measurements)} #{inspect(metadata)}"
+    "[mailglass] #{label} #{inspect(measurements)} #{inspect(metadata)}"
   end
 end

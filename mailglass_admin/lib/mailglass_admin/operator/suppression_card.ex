@@ -32,7 +32,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
           <Components.field_help
             id="delivery-suppression-scope"
             label="suppression scope"
-            text="This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
+            text="This shows one current mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
           />
         </div>
         <span class="badge badge-outline">{headline(@suppression_state, @read_state)}</span>
@@ -102,7 +102,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       <% else %>
         <%= if @read_state == :ready do %>
           <p class="text-body text-secondary" data-testid="operator-suppression-empty">
-            No current Mailglass suppression matches this delivery.
+            No current mailglass suppression matches this delivery.
           </p>
         <% end %>
       <% end %>
@@ -128,9 +128,9 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   defp headline(_state, :unavailable), do: "Unavailable"
 
   defp headline(state, _read_state) when is_map(state) and map_size(state) > 0,
-    do: "Current Mailglass match"
+    do: "Current mailglass match"
 
-  defp headline(_, _read_state), do: "No current Mailglass match"
+  defp headline(_, _read_state), do: "No current mailglass match"
 
   # A suppression with no recorded reason reads the fixed sentence, never "Unavailable":
   # the entry exists, it just carries no reason.
@@ -155,12 +155,12 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
   defp removal_copy(%{removal_policy: :blocked, reason: reason})
        when reason in [:complaint, :unsubscribe] do
-    "Mailglass does not allow removal of #{label(reason)} suppressions."
+    "mailglass does not allow removal of #{label(reason)} suppressions."
   end
 
   defp removal_copy(%{removal_policy: :supported, reason: reason})
        when reason in [:hard_bounce, :manual, :policy, :invalid_recipient] do
-    "Mailglass allows removal of #{label(reason)} suppressions."
+    "mailglass allows removal of #{label(reason)} suppressions."
   end
 
   defp removal_copy(_), do: "Removal policy not recorded."

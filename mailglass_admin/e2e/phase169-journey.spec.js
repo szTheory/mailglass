@@ -216,7 +216,7 @@ test.describe("Phase 169 connected journey", () => {
     await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
 
     const current = page.getByTestId("operator-suppression-card");
-    await expect(current).toContainText("Current Mailglass match");
+    await expect(current).toContainText("Current mailglass match");
     await expect(current).toContainText(fixture.recipient);
     await expect(current).toContainText("Address • Account-local");
     await expect(current).toContainText("Policy");
@@ -255,7 +255,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
     await expect(current).toContainText("Couldn’t refresh suppression evidence. Try again.");
     await expect(current).toContainText("last retrieved record and may be out of date");
-    await expect(current).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(current).toContainText("mailglass allows removal of Policy suppressions.");
     await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);
     await expect(page.locator("body")).not.toContainText("never render");
 
@@ -270,13 +270,13 @@ test.describe("Phase 169 connected journey", () => {
       if (variant === "empty") {
         // Shorter absence copy; the scope limit (other stores and provider
         // restrictions are not checked) is the card's shared scope help.
-        await expect(card).toContainText("No current Mailglass match");
-        await expect(card).toContainText("No current Mailglass suppression matches this delivery.");
+        await expect(card).toContainText("No current mailglass match");
+        await expect(card).toContainText("No current mailglass suppression matches this delivery.");
         await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
       } else {
         await expect(card).toContainText("Address + stream • Account-local");
         await expect(card).toContainText("Complaint");
-        await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+        await expect(card).toContainText("mailglass does not allow removal of Complaint suppressions.");
         await expect(card).toContainText(nextFixture.recipient);
       }
     }

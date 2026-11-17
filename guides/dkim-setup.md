@@ -1,10 +1,10 @@
 # DKIM Setup
 
-This guide covers the Mailglass-specific DKIM checks that matter for RFC 8058 unsubscribe. The core rule is simple: if you ship one-click unsubscribe, both unsubscribe headers must be covered by the DKIM `h=` list.
+This guide covers the mailglass-specific DKIM checks that matter for RFC 8058 unsubscribe. The core rule is simple: if you ship one-click unsubscribe, both unsubscribe headers must be covered by the DKIM `h=` list.
 
 ## 1) Required headers for RFC 8058
 
-For Mailglass unsubscribe flows, verify that your ESP signs both of these headers:
+For mailglass unsubscribe flows, verify that your ESP signs both of these headers:
 
 - `List-Unsubscribe`
 - `List-Unsubscribe-Post`
@@ -27,7 +27,7 @@ Case does not matter, but both header names must be present.
 
 ### Postmark
 
-Postmark is the expected happy path. After Mailglass injects both unsubscribe headers, verify in Postmark's delivered-message diagnostics that both headers appear in the DKIM `h=` list before calling rollout complete.
+Postmark is the expected happy path. After mailglass injects both unsubscribe headers, verify in Postmark's delivered-message diagnostics that both headers appear in the DKIM `h=` list before calling rollout complete.
 
 ### SendGrid
 
@@ -54,4 +54,4 @@ If SendGrid signs only `List-Unsubscribe`, treat that as a rollout blocker for o
 
 ### ESP documentation says it supports List-Unsubscribe
 
-That is not enough. Mailglass requires verification against a delivered message because RFC 8058 rollout depends on the signed `List-Unsubscribe-Post` header, not marketing copy in provider docs.
+That is not enough. mailglass requires verification against a delivered message because RFC 8058 rollout depends on the signed `List-Unsubscribe-Post` header, not marketing copy in provider docs.

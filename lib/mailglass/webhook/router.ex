@@ -1,11 +1,11 @@
 defmodule Mailglass.Webhook.Router do
   @moduledoc """
-  Router macro for mounting Mailglass webhook endpoints in an adopter
+  Router macro for mounting mailglass webhook endpoints in an adopter
   Phoenix router.
 
   Mirrors the `Phoenix.LiveDashboard.Router` + `Oban.Web.Router` idiom:
   the macro is invoked inside an adopter-owned `scope` block with
-  adopter-owned `pipe_through` (CONTEXT ). Mailglass does NOT
+  adopter-owned `pipe_through` (CONTEXT ). mailglass does NOT
   provide its own router — adopters keep full control over the
   surrounding pipeline (CORS, IP allowlist, rate-limit, endpoint
   selection).
@@ -52,7 +52,7 @@ defmodule Mailglass.Webhook.Router do
   ## Endpoint wiring (separate from this macro)
 
   The macro only generates routes. Adopters MUST also configure
-  `Plug.Parsers` in their endpoint with Mailglass's
+  `Plug.Parsers` in their endpoint with mailglass's
   `Mailglass.Webhook.CachingBodyReader`:
 
       plug Plug.Parsers,

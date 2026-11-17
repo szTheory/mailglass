@@ -55,7 +55,7 @@ defmodule MailglassAdmin.SurfaceNav do
     ~H"""
     <nav
       class={nav_class(@layout)}
-      aria-label="Mailglass sections"
+      aria-label="mailglass sections"
       data-testid={"surface-nav-#{@layout}"}
     >
       <.link

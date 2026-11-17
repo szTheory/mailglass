@@ -4,7 +4,7 @@ defmodule MailglassInbound.InboundMessage do
   Canonical normalized inbound message passed to routing and mailbox code.
 
   `MailglassInbound.InboundMessage` is the stable adopter-facing contract for
-  the first inbound package slice. It models the normalized fields Mailglass
+  the first inbound package slice. It models the normalized fields mailglass
   can promise across first-party ingress providers while keeping raw payloads,
   signature evidence, replay metadata, and mailbox execution state out of the
   public struct.
@@ -43,7 +43,7 @@ defmodule MailglassInbound.InboundMessage do
       end
 
   > **Deviation:** the spec's literal wording exposes the flag at
-  > `%InboundMessage{}.metadata.suppression_flagged`. Mailglass instead ships
+  > `%InboundMessage{}.metadata.suppression_flagged`. mailglass instead ships
   > `%InboundMessage{}.signals.suppression_flagged` as a deliberate, documented
   > improvement (the erratum precedent): `:metadata` is reserved
   > framework-wide for adopter-owned data, so framework-derived facts live on the

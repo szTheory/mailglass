@@ -51,7 +51,9 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
   @rules [
     {:deliveries_word, ~r/(?<![\w-])deliveries(?![\w-])/iu},
     {:operator_word, ~r/(?<![\w-])operators?(?![\w-])/iu},
-    {:tenant_word, ~r/(?<![\w-])tenants?(?![\w-])/iu}
+    {:tenant_word, ~r/(?<![\w-])tenants?(?![\w-])/iu},
+    {:brand_name,
+     ~r/(?<![\p{L}\p{N}_-])(?:Mailglass|MailGlass|MAILGLASS)(?![\p{L}\p{N}_]|-Mailable|\.[A-Za-z_{])/u}
   ]
 
   # Attributes a reader or a screen reader meets as words.
@@ -530,6 +532,17 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
   end
 
   describe "detectors have teeth (fail-first proof)" do
+    test "the rendered copy detector enforces lowercase mailglass prose" do
+      for planted <- ["Mailglass is a library", "# Mailglass", "This is Mailglass.", "Mailglass's", "MAILGLASS"] do
+        assert :brand_name in rules(scan_text("planted", planted)), planted
+        assert :brand_name in rules(scan_html("planted", "<p>#{planted}</p>", nil)), planted
+      end
+
+      for clean <- ["mailglass is lowercase", "MailglassAdmin.Auth", "Mailglass-Mailable", "X-Mailglass-Foo"] do
+        refute :brand_name in rules(scan_text("clean", clean)), clean
+      end
+    end
+
     test "each detector flags its planted word, in any case and with an apostrophe" do
       for planted <- ["Deliveries", "deliveries pagination", "All DELIVERIES", "no deliveries"] do
         assert :deliveries_word in rules(scan_text("planted", planted)), planted
@@ -1078,6 +1091,9 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   defp fix(:retired_phrase),
     do: "this sentence was reworded; use the Activity, Admin and Account words"
+
+  defp fix(:brand_name),
+    do: "use lowercase mailglass in visible prose; preserve module, API and wire identifiers"
 
   # Printed only when asked, so a plan summary can record the inventory.
   defp report_inventory(%{read: read, hits: hits}) do

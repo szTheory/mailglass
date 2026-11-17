@@ -1732,7 +1732,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(suppression).toBeVisible();
     await suppression.getByTestId("operator-suppression-refresh").click();
     await expect(suppression).toContainText(
-      /No current Mailglass suppression matches this delivery|Current Mailglass match|unavailable/i
+      /No current mailglass suppression matches this delivery|Current mailglass match|unavailable/i
     );
 
     await page.getByTestId("operator-replay-open").click();
@@ -2226,7 +2226,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     const originalUrl = page.url();
     const card = page.getByTestId("operator-suppression-card");
     const refresh = card.getByTestId("operator-suppression-refresh");
-    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("Current mailglass match");
     await expect(card).toContainText("operator review · Ångström");
     await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
     await expect(refresh).toHaveClass(/btn-ghost/);
@@ -2268,7 +2268,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(changedResponse.ok()).toBeTruthy();
 
     await refresh.click();
-    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("Current mailglass match");
     await expect(card).toContainText("phase169-address-stream");
     await expect(card).toContainText("Complaint");
     await expect(card).not.toContainText("operator review · Ångström");
@@ -2303,7 +2303,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       refresh.evaluate(button => button.parentElement?.lastElementChild === button);
 
     await expect(card).toContainText("Removal policy");
-    await expect(card).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(card).toContainText("mailglass allows removal of Policy suppressions.");
     await expect(card.getByText("Expiry date not recorded", { exact: true })).toHaveCount(0);
     await expect(card.locator("time[data-local-time='true']")).toHaveCount(1);
     await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
@@ -2319,7 +2319,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     const originalUrl = page.url();
     await refresh.click();
-    await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+    await expect(card).toContainText("mailglass does not allow removal of Complaint suppressions.");
     await expect(card).toContainText("Expiry date not recorded");
     await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
     await expect(card).toContainText("Address + stream • Account-local");

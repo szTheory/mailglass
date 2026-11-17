@@ -578,7 +578,7 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
     # The suppression read succeeded and nothing matches: the entry expired or was
     # removed. That is not an entry that recorded no reason, so the fixed no-reason
     # sentence would be false, and "on your suppression list" and "remove this address"
-    # would contradict the suppression card below ("No current Mailglass match").
+    # would contradict the suppression card below ("No current mailglass match").
     @no_entry "No current suppression entry matches this address."
 
     test "the verdict names the absence, never a missing reason" do
@@ -610,7 +610,7 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
           read_state: :ready
         )
 
-      assert visible_text(card) =~ "No current Mailglass match"
+      assert visible_text(card) =~ "No current mailglass match"
 
       verdict =
         Copy.delivery_verdict(row({:suppression, nil}), %{suppression: :no_entry})
@@ -784,8 +784,8 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
         "retry window" => "Still inside the retry window.",
         "we'll try again" => "We'll try again.",
         "try again at or in" => "The server will try again in an hour.",
-        "automatic" => "Mailglass retries automatically.",
-        "a clock time after try" => "Mailglass will try at 3:15 PM.",
+         "automatic" => "mailglass retries automatically.",
+         "a clock time after try" => "mailglass will try at 3:15 PM.",
         "retried" => "The email was retried."
       }
 

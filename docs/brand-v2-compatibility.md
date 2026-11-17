@@ -90,7 +90,7 @@ words; see "Tests that pin the current words" below.
 
 ## Not sent
 
-Not sent is a pre-send block only. Mailglass never stores a suppressed send as a delivery.
+Not sent is a pre-send block only. mailglass never stores a suppressed send as a delivery.
 
 - `Mailglass.Outbound.send/2` and `deliver_later/2` check suppression in
   `lib/mailglass/outbound/preflight.ex`, through `lib/mailglass/suppression.ex`,

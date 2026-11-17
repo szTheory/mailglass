@@ -218,9 +218,11 @@ defmodule MailglassAdmin.LogoAssetsContractTest do
       pinned = File.read!(@book_favicon)
 
       redrawn = String.replace(pinned, ~s(viewBox="0 0 32 32"), ~s(viewBox="0 0 16 16"))
+      refute redrawn == pinned
       assert [_] = byte_identity_failures("favicon copy", redrawn, pinned)
 
-      moved = String.replace(pinned, "M9.98 11.88", "M9.98 11.89", global: false)
+      moved = String.replace(pinned, "M9.98 12.2", "M9.98 12.21", global: false)
+      refute moved == pinned
       assert [_] = byte_identity_failures("favicon copy", moved, pinned)
     end
 

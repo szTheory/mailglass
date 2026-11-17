@@ -1,6 +1,6 @@
-# Maintaining Mailglass
+# Maintaining mailglass
 
-This document covers the release flow and maintenance protocols for Mailglass.
+This document covers the release flow and maintenance protocols for mailglass.
 
 ## Current protected release and recovery path
 
@@ -481,7 +481,7 @@ editing any one of the three without the others fails CI.
 
 ## Bus Factor & Continuity
 
-Mailglass remains single-maintainer. A green gate alone does not authorize
+mailglass remains single-maintainer. A green gate alone does not authorize
 release or publish progress. Every current release continues to require the
 protected exact-candidate dispatch and fresh exact repository-admin
 authorization described at the start of this document.
@@ -575,7 +575,7 @@ written to be kept, not aspired to.
 
 A missed cycle does not lose signal: the next `mix hex.audit`/`mix deps.audit`
 run re-surfaces every outstanding advisory from scratch, so nothing is
-silently dropped, only delayed. Mailglass is single-maintainer (see "Bus
+silently dropped, only delayed. mailglass is single-maintainer (see "Bus
 Factor & Continuity" above), so concurrent-maintainer triage races are out of
 scope for this cadence — that is an already-documented posture, not a new gap
 this section invents.
@@ -614,7 +614,7 @@ executable named above.
 
 ### Historical v0.1/v0.5 bus-factor rationale
 
-Mailglass was single-maintainer at v0.1. The release pipeline was intentionally
+mailglass was single-maintainer at v0.1. The release pipeline was intentionally
 hands-free after the repo-proved gates passed: `gate-ci-green` checked the
 release SHA and the `hex-publish` environment had no required reviewers. This
 was documented rather than presented as a stronger human approval control than

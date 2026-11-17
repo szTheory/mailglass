@@ -45,7 +45,9 @@ lib/mailglass_admin/operator/detail_header.ex
 lib/mailglass_admin/operator/filter_commit.ex
 lib/mailglass_admin/operator/filters_form.ex
 lib/mailglass_admin/operator/health_overview.ex
+lib/mailglass_admin/operator/mailer_name.ex
 lib/mailglass_admin/operator/mount.ex
+lib/mailglass_admin/operator/orphan_count.ex
 lib/mailglass_admin/operator/quick_view.ex
 lib/mailglass_admin/operator/repair_state.ex
 lib/mailglass_admin/operator/replay_action.ex

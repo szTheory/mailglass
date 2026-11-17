@@ -1,6 +1,6 @@
 # Populated-Table Migration Policy
 
-Mailglass migrations are package-owned DDL executed by an adopter's Ecto Repo. Treat every existing
+mailglass migrations are package-owned DDL executed by an adopter's Ecto Repo. Treat every existing
 table as populated and serving live traffic. Append a new `VNN` module; never edit a shipped migration.
 Core V01–V05 and inbound V01 are byte-frozen by
 `test/mailglass/shipped_migration_divergence_test.exs`.

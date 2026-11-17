@@ -777,6 +777,7 @@ defmodule Mailglass.DocsContractTest do
       compatibility = File.read!("guides/compatibility-and-deprecations.md")
       upgrade = File.read!("guides/upgrading-to-v1_0.md")
       testing = File.read!("guides/testing.md")
+      incident = File.read!("guides/operator-incident-support.md")
       trust_doc = File.read!("mailglass_admin/docs/operator-trust.md")
       docs_check = File.read!("lib/mix/tasks/mailglass.docs.check.ex")
 
@@ -793,6 +794,9 @@ defmodule Mailglass.DocsContractTest do
       assert trust_doc =~ "## Stable seams"
       assert trust_doc =~ "new work"
       assert docs_check =~ "\"guides/testing.md\""
+      assert docs_check =~ "\"guides/operator-incident-support.md\""
+      assert docs_check =~ "mailglass can tell you this"
+      assert incident =~ "mailglass cannot tell you this"
       assert docs_check =~ "\"mailglass_admin/docs/operator-trust.md\""
     end
 

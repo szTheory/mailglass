@@ -119,7 +119,7 @@ defmodule MailglassAdmin.Phase175ProhibitionContractTest do
     test "a stale or unavailable read never presents an empty result as current" do
       for read_state <- [:stale, :unavailable] do
         text = suppression_card(%{}, read_state)
-        refute text =~ "No current Mailglass match"
+        refute text =~ "No current mailglass match"
         assert text =~ "Couldn’t refresh suppression evidence."
       end
     end

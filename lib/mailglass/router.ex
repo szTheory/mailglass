@@ -1,6 +1,6 @@
 defmodule Mailglass.Router do
   @moduledoc """
-  Router macro for mounting Mailglass unsubscribe endpoints in an adopter
+  Router macro for mounting mailglass unsubscribe endpoints in an adopter
   Phoenix router.
 
   ## Usage

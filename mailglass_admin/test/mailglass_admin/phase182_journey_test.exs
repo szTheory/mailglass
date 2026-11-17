@@ -514,7 +514,7 @@ defmodule MailglassAdmin.Phase182JourneyTest do
       text = verdict_text(html)
 
       assert text =~ "Sent is not delivered"
-      assert text =~ "Sent with Postmark. Mailglass has recorded no delivery report"
+      assert text =~ "Sent with Postmark. mailglass has recorded no delivery report"
       assert text =~ "Next step"
     end
 

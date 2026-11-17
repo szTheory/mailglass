@@ -38,7 +38,7 @@ defmodule Mailglass.BrandTrademarkGate do
   @iso_date ~r/\A\d{4}-\d{2}-\d{2}\z/
   @max_validity_days 180
   @pinned_rule_path "brandbook/v2/brand.json"
-  @pinned_rule_sha256 "c2f77d011e11b472cfc7ecfedb4de550b79822d2a77f280ce49a00e8b7dd08f9"
+  @pinned_rule_sha256 "db98e7a10c7f7873dee61139048cb788b0f7cea9ddd66e28a04a3661b0629b30"
 
   @public_text_extensions ~w(.md .mdx .ex .exs .heex .eex .html .css .js .json .svg .xml .yml .yaml .toml .sh)
   @public_text_prefixes [

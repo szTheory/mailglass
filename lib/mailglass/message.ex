@@ -12,7 +12,7 @@ defmodule Mailglass.Message do
   The Renderer populates `swoosh_email.html_body` and `swoosh_email.text_body`
   by transforming the HEEx template through the CSS inliner and plaintext extractor.
 
-  Mailglass never bypasses Swoosh for content — it enriches the inner struct.
+  mailglass never bypasses Swoosh for content — it enriches the inner struct.
   The Message adds the metadata Swoosh doesn't model: which mailable built it,
   which tenant it belongs to, which stream it rides on, and adopter-supplied
   tags and metadata.

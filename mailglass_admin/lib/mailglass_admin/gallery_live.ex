@@ -683,7 +683,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        kind: :error,
        message:
-         "Delivery status could not be refreshed because the provider response exceeded the available inspection window. Refresh the page to try again, then contact your Mailglass host administrator if the same recorded failure remains unavailable. " <>
+         "Delivery status could not be refreshed because the provider response exceeded the available inspection window. Refresh the page to try again, then contact your mailglass host administrator if the same recorded failure remains unavailable. " <>
            String.duplicate("unbroken-recovery-evidence-", 8)
      }},
 

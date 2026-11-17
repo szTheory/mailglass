@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Mailglass.Gen.Migration do
   use Boundary, classify_to: Mailglass
   use Mix.Task
 
-  @shortdoc "Generate Mailglass migration wrappers for a configured Ecto repo"
+  @shortdoc "Generate mailglass migration wrappers for a configured Ecto repo"
 
   @impl Mix.Task
   def run(argv) do

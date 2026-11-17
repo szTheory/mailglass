@@ -504,7 +504,7 @@ defmodule MailglassAdmin.Copy do
       ["Not handed to the provider yet."]
     else
       lead = if provider, do: "Sent with #{provider}.", else: "Sent to the provider."
-      [lead <> " Mailglass has recorded no delivery report for this email."]
+      [lead <> " mailglass has recorded no delivery report for this email."]
     end
   end
 

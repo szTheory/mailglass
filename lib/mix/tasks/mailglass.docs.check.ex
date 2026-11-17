@@ -36,6 +36,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "guides/getting-started.md",
     "guides/upgrading-from-v0_1.md",
     "guides/migration-from-swoosh.md",
+    "guides/operator-incident-support.md",
     "guides/authoring-mailables.md",
     "guides/unsubscribe.md",
     "guides/dkim-setup.md",
@@ -63,7 +64,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "guides/webhook-troubleshooting.md",
     "mailglass_admin/docs/operator-trust.md"
   ]
-  @trust_internal_detail_regex ~r/(?:Mix\.Tasks\.Mailglass\.Trust\.Run|trust-runner|checkpoint internals|provider modules)/i
+  @trust_internal_detail_regex ~r/(?:Mix\.Tasks\.mailglass\.Trust\.Run|trust-runner|checkpoint internals|provider modules)/i
   @trust_contract_claim_regex ~r/(?:stable public API(?: guarantee)?|public API guarantee|is API-contract truth|canonical contract truth)/i
   @allowed_non_contract_framing_regex ~r/(?:implementation detail|usage-proof evidence only|not API-contract truth|not canonical contract truth)/i
   @internal_id_exempt_paths MapSet.new(@trust_entry_paths)
@@ -300,10 +301,21 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "subordinate raw-Swoosh migration reference",
         "upgrading-to-v1_0.md",
         "{:mailglass, \"~> <CORE_MAJOR_MINOR>\"}",
-        "Mailglass still accepts a plain `%Swoosh.Email{}`",
+        "mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
       ],
       forbidden: ["Add `:mailglass` to your `mix.exs` and run `mix mailglass.install`."]
+    },
+    "guides/operator-incident-support.md" => %{
+      required: [
+        "mailglass can tell you this",
+        "mailglass cannot tell you this",
+        "## Delivery send and provider lifecycle facts",
+        "## Webhook signature and ingest facts",
+        "## Orphan backlog and reconcile facts",
+        "## Replay and reconcile repair actions"
+      ],
+      forbidden: []
     },
     "guides/authoring-mailables.md" => %{
       required: [

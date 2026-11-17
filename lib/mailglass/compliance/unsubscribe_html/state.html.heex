@@ -48,7 +48,7 @@
   </head>
   <body>
     <main class={if @state == :valid, do: "state-valid", else: "state-error"}>
-      <p class="brand">Mailglass</p>
+      <p class="brand">mailglass</p>
       <h1>
         <%= case @state do %>
           <% :valid -> %>Unsubscribe<% :invalid -> %>This unsubscribe link is not valid.<% :expired -> %>This unsubscribe link has expired.<% end %>

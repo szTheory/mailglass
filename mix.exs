@@ -25,7 +25,7 @@ defmodule Mailglass.MixProject do
       deps: deps(),
       aliases: aliases(),
       dialyzer: dialyzer(),
-      name: "Mailglass",
+      name: "mailglass",
       description: "Transactional email framework for Phoenix. Composes on Swoosh",
       source_url: @source_url,
       homepage_url: @source_url,

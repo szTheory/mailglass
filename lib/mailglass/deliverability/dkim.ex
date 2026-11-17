@@ -44,7 +44,7 @@ defmodule Mailglass.Deliverability.DKIM do
                 :pass,
                 :selectors_present,
                 "DKIM selector records are present",
-                "Mailglass can confirm that every explicit selector published DNS material without guessing provider folklore.",
+                "mailglass can confirm that every explicit selector published DNS material without guessing provider folklore.",
                 "Validated #{length(normalized_selectors)} explicit DKIM selector records.",
                 "Keep using explicit selectors when auditing DKIM changes."
               )
@@ -298,7 +298,7 @@ defmodule Mailglass.Deliverability.DKIM do
             :pass,
             :selector_record_present,
             "Selector #{selector.selector} published DKIM material",
-            "Mailglass can confirm this selector has DNS material without claiming the whole domain passes DKIM in production.",
+            "mailglass can confirm this selector has DNS material without claiming the whole domain passes DKIM in production.",
             observed_selector(selector, tags),
             "Confirm your ESP signs mail with this selector and rotate keys on your normal schedule."
           )

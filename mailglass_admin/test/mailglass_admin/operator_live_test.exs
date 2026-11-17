@@ -484,7 +484,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "pm_123"
       assert html =~ "Current suppression"
       assert html =~ "Address • Account-local"
-      assert html =~ "Mailglass allows removal of Manual suppressions."
+      assert html =~ "mailglass allows removal of Manual suppressions."
       assert html =~ "Other configured stores and provider restrictions are not checked."
 
       assert html =~ "Sent"
@@ -544,17 +544,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Couldn’t refresh suppression evidence. Try again."
       assert html =~ "Stale"
       assert html =~ "last retrieved record and may be out of date"
-      assert html =~ "Mailglass allows removal of Policy suppressions."
+      assert html =~ "mailglass allows removal of Policy suppressions."
       assert html =~ "Suppressed"
       assert html =~ ~s(data-testid="operator-timeline")
-      refute html =~ "No current matching suppression recorded in Mailglass was found"
+      refute html =~ "No current matching suppression recorded in mailglass was found"
 
       view
       |> element(~s([data-testid="operator-suppression-refresh"]))
       |> render_click()
 
       html = render(view)
-      assert html =~ "Current Mailglass match"
+      assert html =~ "Current mailglass match"
       assert html =~ "ops:review"
       refute html =~ "Couldn’t refresh suppression evidence. Try again."
     end
@@ -574,15 +574,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Unavailable"
       assert html =~ "Couldn’t refresh suppression evidence. Try again."
-      refute html =~ "No current Mailglass suppression matches this delivery."
+      refute html =~ "No current mailglass suppression matches this delivery."
 
       view
       |> element(~s([data-testid="operator-suppression-refresh"]))
       |> render_click()
 
       html = render(view)
-      assert html =~ "No current Mailglass match"
-      assert html =~ "No current Mailglass suppression matches this delivery."
+      assert html =~ "No current mailglass match"
+      assert html =~ "No current mailglass suppression matches this delivery."
       refute html =~ "Couldn’t refresh suppression evidence. Try again."
 
       before_refresh_counts = %{
@@ -626,7 +626,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert supported_html =~ "Removal policy"
-      assert supported_html =~ "Mailglass allows removal of Manual suppressions."
+      assert supported_html =~ "mailglass allows removal of Manual suppressions."
 
       assert supported_html =~
                "data-utc=\"#{Calendar.strftime(future_expiry, "%Y-%m-%d %H:%M:%S")} UTC\""
@@ -644,7 +644,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert blocked_html =~ "Expiry date not recorded"
-      assert blocked_html =~ "Mailglass does not allow removal of Complaint suppressions."
+      assert blocked_html =~ "mailglass does not allow removal of Complaint suppressions."
       refute blocked_html =~ "permanent"
 
       unknown_policy_html =
@@ -789,8 +789,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> render_click()
 
       html = render(view)
-      assert html =~ "No current Mailglass match"
-      assert html =~ "No current Mailglass suppression matches this delivery."
+      assert html =~ "No current mailglass match"
+      assert html =~ "No current mailglass suppression matches this delivery."
       refute html =~ "external-account-match"
       refute html =~ "foreign-account-match"
       refute html =~ "other-stream-match"
@@ -1076,7 +1076,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ "No events are recorded for this Delivery."
-      assert html =~ "Mailglass does not allow removal of Complaint suppressions."
+      assert html =~ "mailglass does not allow removal of Complaint suppressions."
       refute html =~ "This Suppression is permanent."
     end
 
@@ -2168,10 +2168,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "suppression card renders successful no-match and configured-store caveat" do
       html = render_component(&SuppressionCard.suppression_card/1, suppression_state: %{})
 
-      assert html =~ "No current Mailglass match"
+      assert html =~ "No current mailglass match"
 
       assert html =~
-               "No current Mailglass suppression matches this delivery."
+               "No current mailglass suppression matches this delivery."
 
       assert html =~ "Other configured stores and provider restrictions are not checked."
     end
@@ -3765,7 +3765,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~
                ~r/Showing results from [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M UTC; refresh failed/
 
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert has_element?(view, "[data-testid='operator-stale-loaded-at']", "Results loaded")
 
       assert has_element?(
@@ -5625,7 +5625,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="data-state-stale")
       assert html =~ "Showing earlier results; refresh failed"
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert html =~ "Retry loading activity"
       refute html =~ ~s(data-testid="operator-stale-loaded-at")
       refute html =~ "14:32"
