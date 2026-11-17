@@ -27,11 +27,13 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
     MAILGLASS is a shout.
     It is the mailglass platform.
     Mailglass-powered integrations.
+    mAiLgLaSs is another capitalization variant.
     """
 
     matches = findings(text) |> Enum.map(& &1.match)
-    assert length(matches) == 9
+    assert length(matches) == 10
     assert "Mailglass" in matches
+    assert "mAiLgLaSs" in matches
     assert "Mail Glass" in matches
     assert "the mailglass platform" in matches
   end
@@ -46,6 +48,7 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
     ```
     <code>Mailglass&#46;Runtime</code>
     Mailglass-Mailable and X-Mailglass-Foo are wire headers.
+    MAILGLASS.Admin.Router and mAiLgLaSs-MaIlAbLe remain structural identifiers.
     MAILGLASS_TIMEOUT remains an environment identifier.
     See https://hex.pm/packages/Mailglass for the package.
     <!-- Mailglass is a hidden comment. -->

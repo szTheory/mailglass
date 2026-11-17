@@ -1,12 +1,12 @@
 defmodule Mailglass.BrandNameLint do
   @moduledoc false
 
-  @proper_name ~r/(?<![\p{L}\p{N}_])(?:Mailglass|MailGlass|MAILGLASS)(?![\p{L}\p{N}_]|-Mailable|\.[A-Za-z_{])/u
+  @proper_name ~r/(?<![\p{L}\p{N}_])mailglass(?![\p{L}\p{N}_]|-Mailable|\.[A-Za-z_{])/iu
   @split_name ~r/(?<![\p{L}\p{N}_])[Mm]ail\s+[Gg]lass(?![\p{L}\p{N}_])/u
   @platform_claim ~r/\bthe\s+mailglass\s+platform\b/iu
-  @wire_header ~r/\b(?:Mailglass-Mailable|X-Mailglass-[A-Za-z0-9-]+)\b/u
-  @module_name ~r/\bMailglass(?:Admin|Inbound)?(?:\.[A-Z][A-Za-z0-9_]*)+(?:\/\d+)?\b/u
-  @module_alias ~r/\bMailglass\.\{[^}]+\}/u
+  @wire_header ~r/\b(?:Mailglass-Mailable|X-Mailglass-[A-Za-z0-9-]+)\b/iu
+  @module_name ~r/\bMailglass(?:Admin|Inbound)?(?:\.[A-Z][A-Za-z0-9_]*)+(?:\/\d+)?\b/iu
+  @module_alias ~r/\bMailglass\.\{[^}]+\}/iu
   @fenced ~r/(?ms)^ {0,3}(?:`{3,}|~{3,})[^\n]*\n.*?^ {0,3}(?:`{3,}|~{3,})[ \t]*$/
   @inline_code ~r/(`+)[^`\n]*\1/u
   @html_code ~r/(?is)<(code|pre)\b[^>]*>.*?<\/\1\s*>/u
@@ -367,10 +367,11 @@ defmodule Mailglass.BrandNameLint do
           {@platform_claim, "unsupported platform claim"}
         ],
         [match] <- Regex.scan(regex, text, return: :index),
-        {offset, match_length} = match do
+        {offset, match_length} = match,
+        matched_text = binary_part(text, offset, match_length),
+        matched_text != "mailglass" do
       prefix = binary_part(text, 0, offset)
       line = base_line + length(String.split(prefix, "\n")) - 1
-      matched_text = binary_part(text, offset, match_length)
       %{path: path, line: line, match: matched_text, rule: label}
     end
   end
