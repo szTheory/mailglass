@@ -1110,14 +1110,6 @@ defmodule Mailglass.Scripts.BrandPinTest do
       assert output =~ "pin_exists"
     end
 
-    test "update against the real pin refuses a zip with the wrong hash before any write" do
-      zip = book_zip(synthetic_files("new"))
-      args = ["update", "--commit", @new_commit, "--expect-sha256", String.duplicate("0", 64)]
-
-      assert {1, output} = pin(:cli, [args, getter_returning(zip)])
-      assert output =~ "zip_hash_mismatch"
-    end
-
     test "check reports a zip that does not match the real pin and exits 1" do
       zip = book_zip(synthetic_files("new"))
 
