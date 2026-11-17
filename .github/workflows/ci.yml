@@ -772,9 +772,15 @@ jobs:
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
-        run: mix deps.get
+        run: MIX_ENV=dev mix deps.get --check-locked
+      - name: Install Admin deps
+        working-directory: mailglass_admin
+        run: MIX_ENV=dev mix deps.get --check-locked
+      - name: Install Inbound deps
+        working-directory: mailglass_inbound
+        run: MIX_ENV=dev mix deps.get --check-locked
       - name: Build docs
-        run: mix docs --warnings-as-errors
+        run: bash scripts/verify_brand_docs.sh
       - name: Validate guides have no leaked internal IDs (REL-02)
         run: mix mailglass.docs.check
 

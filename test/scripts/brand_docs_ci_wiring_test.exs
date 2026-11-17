@@ -69,7 +69,7 @@ defmodule Mailglass.Scripts.BrandDocsCIWiringTest do
     assert has_step?(steps, "run: mix mailglass.docs.check"),
            "the existing core guide validation must remain in the required docs job"
 
-    refute Enum.any?(steps, &Regex.match?(~r/^        continue-on-error: true\s*$/m, &1)),
+    refute docs_job =~ ~r/^\s*continue-on-error:/m,
            "the required docs job must propagate failures"
 
     ci_green = extract_job_block(source, "ci_green")
