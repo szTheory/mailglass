@@ -5,7 +5,7 @@ status: partial
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-11-16"
-audited_at: "2026-11-17T02:42:37Z"
+audited_at: "2026-11-17T03:30:13Z"
 ---
 
 # Phase 183 — Validation Strategy
@@ -70,16 +70,16 @@ Existing ExUnit, Mix, and Playwright infrastructure covers all requirements. Add
 - [ ] Feedback latency < 30s is not established by the recorded command output
 - [ ] `nyquist_compliant: true` set in frontmatter after validation audit
 
-**Approval:** Partial validation audit recorded; clean-checkout docs-output wiring remains open. The owner-authorized single gap-closure plan is now `183-03-PLAN.md`; its implementation and runtime evidence are pending. Manual platform, owner-file, and legal handoffs remain pending.
+**Approval:** Partial. Plan 183-03 implemented clean-checkout output selection and required CI wiring. Its output and focused workflow contracts passed, but the local browser did not start and the unchanged full root suite failed. Keep Nyquist false and the phase verification at `gaps_found`; manual platform, owner-file, and legal handoffs remain pending.
 
 ## Gap-closure validation planned — 183-03
 
 | Task | Requirement | Threat Ref | Planned evidence | Status |
 |------|-------------|------------|------------------|--------|
-| 183-03 task 1 | BRDOC-01, BRDOC-02 | T-183-12, T-183-14, T-183-15 | Default fixture/source test without checkout docs; explicit-root standalone real-output checks; one background serial three-package build/output/browser run using existing pinned Chromium; both native themes and 375px layout for all packages; owned temp-output cleanup | Pending implementation and execution |
-| 183-03 task 2 | BRDOC-02 | T-183-13 | Structural workflow tests and in-memory mutation rejection; unchanged existing CI gate/identity contracts; full normal root `mix test --warnings-as-errors` with all generated README outputs absent | Pending implementation and execution |
+| 183-03 task 1 | BRDOC-01, BRDOC-02 | T-183-12, T-183-14, T-183-15 | Default fixture/source test without checkout docs; explicit-root standalone real-output checks; one background serial three-package build/output/browser run using existing pinned Chromium; both native themes and 375px layout for all packages; owned temp-output cleanup | 🟡 Partial — source/fixture tests, three builds, output contract and cleanup passed; Chromium failed at launch before theme/layout scenarios |
+| 183-03 task 2 | BRDOC-02 | T-183-13 | Structural workflow tests and in-memory mutation rejection; unchanged existing CI gate/identity contracts; full normal root `mix test --warnings-as-errors` with all generated README outputs absent | 🟡 Partial — focused contracts passed; default root suite ended with 7 failures and is not green |
 
-The standalone real-output contract is outside default root test discovery and runs in the existing required Docs job after three same-job builds. Default root fixture/mutation/source checks stay active. Local browser mode consumes the same fresh outputs, uses `/private/tmp/mailglass-183-02-playwright`, and fails visibly if the matching installed browser is unavailable; no download, favicon capture, preview or remote CI action is planned. Core docs keep the existing warnings-as-errors policy; existing Admin/Inbound link warnings remain disclosed without expanding this gap into unrelated repairs. Planning has not closed the gap, changed Nyquist compliance, or consumed any owner handoff.
+The standalone real-output contract is outside default root test discovery and is wired into the existing required Docs job after three same-job builds. Default root fixture/mutation/source checks stay active. Local browser mode consumes the same fresh outputs and uses `/private/tmp/mailglass-183-02-playwright`; its one attempt reached the installed binary but Chromium failed at macOS bootstrap registration before any scenario. No download, favicon capture, preview, or remote CI action occurred. Core docs kept the existing warnings-as-errors policy; Admin/Inbound warnings were preserved. The original clean-checkout wiring issue is implemented, but phase verification remains partial because browser behavior and the full default root suite are not green.
 
 ## Validation Audit Record — 2026-11-17
 
@@ -94,10 +94,22 @@ The standalone real-output contract is outside default root test discovery and r
 
 ### Known Partial Blocker
 
-`test/scripts/brand_docs_contract_test.exs:15` reads ignored generated outputs for core, Admin, and Inbound. A clean checkout has none; the recorded named test failed. The normal deterministic test job does not build them, while the separate docs job builds only core in another job. The browser runner also hardcodes the ignored repo paths, so the final verifier could not run `docs-theme-contract.cjs --all` against temporary output. Keep 183-01-01 and 183-01-02 partial until the owner-authorized gap-closure plan makes this check self-contained or gives it a same-job three-package docs lane, then reruns the named test from a clean checkout and the browser contract.
+The original `test/scripts/brand_docs_contract_test.exs:15` generated-output dependency is resolved: that assertion now runs in a standalone output contract outside root discovery, and the required docs job builds all three packages before invoking it. The local native-theme/layout browser check remains unverified because Chromium failed at startup. The unchanged full root suite also failed in seven tests, recorded by name in `183-03-SUMMARY.md`; their baseline attribution is unverified. Keep the phase partial until the browser and full-suite gates are reconciled.
 
 No new test was added in this audit: the behavioral output test already exists, and the identified gap is its generated-output/CI wiring. This record does not claim full CI completion. The unrelated CI run described by plan 01 was still in progress at the recorded observation, and plan 02 records no CI run.
 
 ### Manual Handoffs Preserved
 
 GitHub, Hex.pm, and HexDocs theme rendering; the paired CLAUDE.md/PRODUCT.md owner review; trademark-register/counsel review and any announcement decision; and optional social-card upload/read-back remain external owner or legal actions. The favicon capture remains a single authorized run; real Safari tab chrome was not observed, and no additional capture is authorized.
+
+## Execution Re-verification — 183-03
+
+- The root source/fixture contract passed with all three checkout README outputs absent (4 tests).
+- One serial validation invocation built core (2s), Admin (1s), and Inbound (1s); the standalone three-package output contract passed (1s), and the owned temporary root was removed by the EXIT trap.
+- Admin and Inbound emitted existing hidden-link/cross-package warnings. Core retained `--warnings-as-errors` and passed.
+- Browser verification is blocked: installed Chromium SIGTRAPed during `bootstrap_check_in` with permission denied (1100). No package scenario ran; there was no browser install or second attempt.
+- Focused workflow, required-check, lane parity, and classification contracts passed (85 tests). Mutation controls rejected removing the script, Inbound locked-dependency step, or CI Green edge.
+- The unchanged full root suite ran with default discovery and all generated README outputs absent. It finished in 399.8s with 2,448 tests, 7 failures, 27 excluded, and 7 skipped. Exact failure names and first locations are in `183-03-SUMMARY.md`; baseline attribution is explicitly unverified. Three Phase 164 cases could not create sibling fixtures outside the workspace writable root.
+- No hosted CI was dispatched. The original clean-checkout wiring issue is implemented, but phase verification remains partial until browser behavior and the full-suite failures are reconciled.
+
+The local command for any later authorized browser re-verification is `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright bash scripts/verify_brand_docs.sh --browser`. This execution did not repeat the browser attempt or dispatch remote CI.

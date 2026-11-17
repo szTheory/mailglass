@@ -1,6 +1,6 @@
 ---
 phase: 183-docs-packaging-and-launch-prep
-verified: 2026-11-17T02:30:55Z
+verified: 2026-11-17T03:30:13Z
 status: gaps_found
 score: 12/15 must-haves verified
 covered_files:
@@ -12,6 +12,8 @@ covered_files:
   - .planning/phases/183-docs-packaging-and-launch-prep/183-01-SUMMARY.md
   - .planning/phases/183-docs-packaging-and-launch-prep/183-02-PLAN.md
   - .planning/phases/183-docs-packaging-and-launch-prep/183-02-SUMMARY.md
+  - .planning/phases/183-docs-packaging-and-launch-prep/183-03-PLAN.md
+  - .planning/phases/183-docs-packaging-and-launch-prep/183-03-SUMMARY.md
   - CONTRIBUTING.md
   - DESIGN.md
   - MAINTAINING.md
@@ -169,9 +171,9 @@ behavior_unverified_items:
 
 **Phase Goal:** Everywhere an adopter meets mailglass outside the dashboard (the hex.pm README, HexDocs, Hex package contents, browser favicon) carries brand v2.0 correctly. Nothing irreversible (an announcement or a ™ claim) goes out before the Phase 179 search result allows it.
 
-**Verified:** 2026-11-17T02:30:55Z  
+**Verified:** 2026-11-17T03:30:13Z
 **Status:** gaps_found  
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — Phase 183 plan 03 execution evidence
 
 ## Goal Achievement
 
@@ -182,7 +184,7 @@ behavior_unverified_items:
 | 1 | All package README headers use renderer-specific light/dark fragments and full immutable raw GitHub URLs whose referenced bytes match the brand pin. | ✓ VERIFIED | Three README source contracts agree; the focused immutable-blob test passed against commit `7781b4b1ceeca940e5f892530b1cf05430b54d7c`. |
 | 2 | Missing, unreadable, corrupted, or pin-mismatched static media fails validation, and README alt text stays lowercase `mailglass`. | ✓ VERIFIED | `brand_docs_check.exs` checks the pin and byte count; readme/docs mutation tests cover missing refs, bad bytes, fallback text, and dimensions. |
 | 3 | Real generated docs for core, Admin, and Inbound carry the pinned mark/favicon, code-color-only CSS, Lato, and no OS color-scheme media query. | ✓ VERIFIED | Built all three packages into `/private/tmp`; each generated directory passed `BrandDocsCheck.verify_output/2`. CSS selectors are limited to `.makeup` and `color`/`background-color`; native output contains Lato and ExDoc theme selectors. |
-| 4 | The ExDoc sidebar mark follows the native theme class when a reader switches light/dark mode. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The script and MutationObserver are present and generated assets validate, but the browser transition could not be exercised because its current runner only reads ignored repo `doc/` directories. See Human Verification. |
+| 4 | The ExDoc sidebar mark follows the native theme class when a reader switches light/dark mode. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The explicit-output browser runner now validates generated README paths before launch, but the one browser attempt failed at Chromium startup with macOS bootstrap permission denied; no theme scenario ran. |
 | 5 | The lowercase-name lint enforces adopter prose while preserving public API/module names, wire identifiers, history, and approved exceptions. | ✓ VERIFIED | Full `brand_name_lint.exs check` passed; the plural-Gettext regression test passed; exception-boundary tests are active. |
 | 6 | Actual Hex payloads match the reviewed file goldens and brand pin: Admin includes the six fonts, three OFL texts, logo and favicon, with no source/evidence tree shipped. | ✓ VERIFIED | The actual-tarball test passed and `mix mailglass.publish.check --allowlist-only` passed for all three packages. |
 | 7 | Full package readiness checks pass for all three packages and remain independent from announcement clearance. | ✓ VERIFIED | Full `mix mailglass.publish.check` passed for mailglass, mailglass_admin, and mailglass_inbound; the release-coupling test also passed. |
@@ -190,7 +192,7 @@ behavior_unverified_items:
 | 9 | The production claim gate validates named registers and bounded current dates, denies the current caution record and all registered-mark claims, and does not gate code/package rollout. | ✓ VERIFIED | The current record is `caution`, `register_checked: false`, with USPTO/TMview/WIPO `not_checked`; focused deny and release-separation tests passed. |
 | 10 | Favicon evidence binds unique catalogs to pinned source and served bytes and independently validates 16/24/32 px captures across Chromium, Firefox, and WebKit in both themes. | ✓ VERIFIED | The checked-in 108-cell catalog passed the independent PNG/pixel validator test. The owner accepted Playwright WebKit evidence with the documented Safari limitation. |
 | 11 | The social card handoff has complete repository URLs and a read-back step, with no upload or personal-avatar change. | ✓ VERIFIED | The checklist and its focused contract test contain the full URLs, GraphQL read-back, and explicit no-upload/personal-avatar scope. |
-| 12 | README headings and tagline stay separate; the visible lockup remains proportionate, at least 96 px wide, and fits a narrow viewport without horizontal scrolling. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Static header checks pass and the browser test covers these dimensions, but that browser test was not run against generated output in this verification. |
+| 12 | README headings and tagline stay separate; the visible lockup remains proportionate, at least 96 px wide, and fits a narrow viewport without horizontal scrolling. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The generated outputs pass the static contract; Chromium failed before opening them, so the native theme and 375 px layout assertions remain unverified. |
 | 13 | Favicon capture uses no custom media loader and waits for the image to decode before screenshotting. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Source explicitly awaits `img.decode()` before raster screenshot, and the saved catalog passes pixel validation; no new capture was run because the phase records that no further capture is authorized. |
 | 14 | Public brand guidance says use by others does not imply endorsement or certification. | ✓ VERIFIED | The disclaimer appears in `DESIGN.md`, `.impeccable/design.json`, and the Admin design guide; the owner explicitly approved this disclaimer wording. |
 | 15 | The browser evidence does not claim that real Safari tab chrome was observed. | ✓ VERIFIED | The manifest and checklist state that Safari tab chrome was not observed; the owner explicitly accepted the Playwright WebKit evidence with that limitation retained. No direct-Safari claim is made. |
@@ -202,7 +204,9 @@ behavior_unverified_items:
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
 | `test/scripts/readme_image_contract_test.exs` | Offline README ref/byte contract | ✓ VERIFIED | Substantive tests cover all three package READMEs, mutation rejection, geometry, and immutable blob bytes. |
-| `scripts/brand_docs_check.exs` | Generated-output and public-claim checker | ✓ VERIFIED | Substantive output checks validated all three isolated docs builds. |
+| `scripts/brand_docs_check.exs` | Generated-output and public-claim checker | ✓ VERIFIED | The standalone output contract validated all three fresh isolated docs builds. |
+| `ci/contracts/brand_docs_output_test.exs` | Fail-closed real-output contract outside default root discovery | ✓ VERIFIED | The three-package contract passed against the temporary outputs; missing-root control exited nonzero. |
+| `scripts/verify_brand_docs.sh` | Serial three-package build, output contract, and optional local browser verification | ✓ WIRED | All builds and the output contract passed; Chromium startup failed before browser assertions. |
 | `brandbook/exdoc/code-colors.css` | Syntax-only class-driven colors | ✓ VERIFIED | Only `.makeup` selectors and color properties; generated outputs passed the checker. |
 | `brandbook/exdoc/theme-mark.js` | v2 mark follows ExDoc dark class | ✓ VERIFIED | Uses the ExDoc body class and MutationObserver; runtime transition remains behavior-unverified above. |
 | `scripts/brand_name_lint.exs` | Hermetic prose lint with structural exceptions | ✓ VERIFIED | Full adopter-corpus command passed; regression and exception tests are present. |
@@ -246,8 +250,11 @@ behavior_unverified_items:
 | Lowercase adopter corpus | `mix run --no-start scripts/brand_name_lint.exs check` | Passed all inventoried surfaces and approved exceptions | ✓ PASS |
 | Core, Admin, and Inbound generated docs | `mix docs --output /private/tmp/mailglass-183-verify-docs-{core,admin,inbound}` plus `BrandDocsCheck.verify_output/2` | All builds and all three output contracts passed; 211/62/54 HTML files generated | ✓ PASS |
 | Full package release readiness | `mix mailglass.publish.check` with temporary `MIX_HOME` and `HEX_HOME` | All three package checks passed, including isolated compilation and advisory checks; temp summaries restored | ✓ PASS |
-| Clean-checkout generated-doc test prerequisite | `mix test test/scripts/brand_docs_contract_test.exs:15 --warnings-as-errors --seed 0` | Failed: expected files under ignored `doc/` directories are absent | ✗ FAIL — blocker |
-| Browser theme and narrow-layout interaction | `node mailglass_admin/e2e/docs-theme-contract.cjs --all` | Not run: current runner hardcodes ignored repo `doc/` outputs; no outputs were written into the checkout | ? SKIP — see behavior-unverified items |
+| Checkout-independent source/fixture checks | `mix test test/scripts/brand_docs_contract_test.exs --warnings-as-errors --seed 0` | 4 tests passed with generated checkout docs absent | ✓ PASS |
+| Three-package real-output check | `bash scripts/verify_brand_docs.sh --browser` | Core/Admin/Inbound builds and standalone output contract passed; Admin/Inbound emitted existing hidden-link warnings | ✓ PASS — output contract only |
+| Browser theme and narrow-layout interaction | `bash scripts/verify_brand_docs.sh --browser` | Installed Chromium failed at `chromium.launch` with macOS bootstrap permission denied before any scenario ran | ? BLOCKED — behavior unverified |
+| CI wiring and existing required-check/lane-parity contracts | Focused five-file Mix command in 183-03-SUMMARY.md | 85 tests passed; the mutation controls rejected removed invocation, dependency prerequisite, and required edge | ✓ PASS |
+| Full default root suite | `mix test --warnings-as-errors` with all three generated README paths absent | 2,448 tests, 7 failures, 27 excluded, 7 skipped; exact failures recorded in 183-03-SUMMARY.md, baseline attribution unverified | ✗ FAIL — not green |
 
 ### Probe Execution
 
@@ -280,7 +287,9 @@ All 16 trackable decisions in `183-CONTEXT.md` are represented in the shipped ar
 | Test File | Linked Requirement | Active | Disabled | Circular | Assertion Level | Verdict |
 |---|---|---:|---:|---:|---|---|
 | `test/scripts/readme_image_contract_test.exs` | BRDOC-01 | Yes | 0 | No | Value/byte and mutation rejection | PASS |
-| `test/scripts/brand_docs_contract_test.exs` | BRDOC-02 | Yes | 0 | No | Generated output and mutation rejection | BLOCKED — assumes ignored docs were built first |
+| `test/scripts/brand_docs_contract_test.exs` | BRDOC-02 | Yes | 0 | No | Fixture/source assertions and mutation rejection | PASS — no generated docs dependency |
+| `ci/contracts/brand_docs_output_test.exs` | BRDOC-02 | Yes | 0 | No | Three explicit generated output roots | PASS — dedicated same-job contract |
+| `test/scripts/brand_docs_ci_wiring_test.exs` | BRDOC-02 | Yes | 0 | No | Structural workflow and mutation rejection | PASS — CI edge and prerequisites checked |
 | `test/scripts/brand_name_lint_test.exs` | BRDOC-04 | Yes | 0 | No | Specific findings and rewrite boundaries | PASS |
 | `test/mailglass/publish/brand_asset_allowlist_test.exs` | BRDOC-04 | Yes | 0 | No | Actual payload equality and digest coverage | PASS |
 | `test/scripts/brand_trademark_gate_test.exs` | BRDOC-06 | Yes | 0 | No | Decision and deny-path behavior | PASS |
@@ -293,23 +302,21 @@ All 16 trackable decisions in `183-CONTEXT.md` are represented in the shipped ar
 
 | File | Line | Pattern | Severity | Impact |
 |---|---:|---|---|---|
-| `test/scripts/brand_docs_contract_test.exs` | 15 | Generated-output test reads ignored files that a clean test lane has not built | BLOCKER | Named test fails on a fresh checkout; the root CI test lane is unprepared. |
+| `test/scripts/brand_docs_contract_test.exs` | 15 | The generated-output test depended on ignored checkout docs | RESOLVED | The real-output check now lives in `ci/contracts/brand_docs_output_test.exs`; default source/fixture tests pass without generated docs. |
 
 No unreferenced `TBD`, `FIXME`, or `XXX` debt comments or implementation stubs were found in the changed implementation files. The completed code review is clean after all recorded fixes.
 
 ### Human Verification Required
 
 1. **README platform rendering** — After the review surface is available, inspect the three package README headers on GitHub, Hex.pm, and HexDocs in light and dark themes. The correct lockup should appear, remain uncropped, and keep its tagline separate. Offline checks cannot observe each platform's renderer.
-2. **Docs visual/theme review** — After the generated-output test gap is closed, inspect the generated docs in light and dark themes at desktop and 375 px. The theme-matched mark should switch, the lockup should remain proportionate and at least 96 px wide, the tagline should wrap, and the page should not scroll horizontally.
+2. **Docs visual/theme review** — The generated-output test and CI wiring gap is implemented. The local headless run could not start Chromium, so theme switching and 375 px layout remain behavior-unverified; retain this gate until orchestration reconciles the launch restriction.
 3. **Capture-order acceptance** — Review the accepted catalog and capture sequence without rerunning capture. Confirm the existing `await img.decode()` precedes screenshotting; the output checks prove its pixels, but not the historical event ordering.
 
 ### Gaps Summary
 
-The brand assets and all three package implementations are present and substantive. I built each ExDoc package into a temporary directory and its generated output passed the pinned-asset/CSS/theme checker. The full package readiness task also passed for all three packages. The blocking gap is that `test/scripts/brand_docs_contract_test.exs:15` reads generated output from ignored repo directories, while the normal root test job runs that test without building docs. A clean checkout therefore fails the named test. The docs build runs in a separate CI job and currently builds only core, so it does not prepare the Admin/Inbound output or the root test workspace.
-
-**Gap closure:** Make the docs-output test self-contained or give it a dedicated integration lane that builds all three packages and runs the test in the same job. If the test remains tied to ignored output paths, exclude it from generic `mix test` and make the dedicated docs lane build core, Admin, and Inbound before invoking it. Then rerun the named test from a clean checkout and the existing docs-theme browser contract.
+The initial verification found that the root docs test depended on ignored checkout output and the required job only built core. Plan 183-03 removed that dependency, added a standalone explicit-root contract, and wired serial three-package builds into the same required job; focused contracts and the real-output check passed. Two gates remain unresolved in this re-verification: the local Chromium process failed before any theme/layout behavior ran, and the unchanged full root suite finished with seven failures. The exact failure names and first locations are in `183-03-SUMMARY.md`; their baseline attribution is unverified. Keep the phase status at `gaps_found` until the remaining gates are reconciled. No remote CI was dispatched.
 
 ---
 
-_Verified: 2026-11-17T02:30:55Z_  
+_Verified: 2026-11-17T03:30:13Z_
 _Verifier: the agent (gsd-verifier)_

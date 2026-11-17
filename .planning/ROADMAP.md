@@ -206,11 +206,11 @@ Plans:
   3. `design-system.md` and the `.impeccable` config exist, and the CLAUDE.md/PRODUCT.md updates are drafted and waiting for owner sign-off.
   4. The lowercase-name lint passes. The Hex file allowlist includes the shipped brand assets (fonts, OFL texts, logo) and nothing more, and `mix mailglass.publish.check` passes for every package.
   5. Automated favicon captures at 16, 24 and 32 px exist for Chromium, Firefox and WebKit. A social card/avatar manual-upload checklist with full URLs is written. The announcement and any ™ text are blocked unless the Phase 179 search result clears them, while the code rollout itself is not gated.
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 **Original plan budget**: 2 (the milestone had 18 completed plans against a hard cap of 20). The owner authorized this single scoped gap-closure plan after verification, so the milestone now exceeds its original cap by one plan. No further plan expansion is authorized.
 
 Plans:
-- [ ] 183-03-PLAN.md
+- [x] 183-03-PLAN.md
 
 **Wave 1**
 - [x] 183-02-PLAN.md — Harden the announcement/claim boundary, align design guidance and pending owner drafts, pin launch artwork and independently validate favicon evidence (BRDOC-03, BRDOC-05, BRDOC-06)
@@ -238,4 +238,4 @@ Plans:
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
 | 182. Admin Words and Layout, One Job First | 6/6 | Complete    | 2026-11-15 |
-| 183. Docs, Packaging and Launch Prep | 2/3 | In Progress | - |
+| 183. Docs, Packaging and Launch Prep | 3/3 | In Progress | - |

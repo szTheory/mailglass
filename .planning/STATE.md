@@ -4,17 +4,17 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 183
 current_phase_name: Docs, Packaging and Launch Prep
-status: executing
-stopped_at: Completed 183-01-PLAN.md
-last_updated: "2026-11-17T01:05:20.359Z"
+status: verifying
+stopped_at: Completed implementation for 183-03; browser and full-root verification remain unresolved
+last_updated: "2026-11-17T03:36:27.468Z"
 last_activity: 2026-11-16
 last_activity_desc: Phase 183 execution started
-state_head: a1d342e4a85d4983b2745c0fd8c57f3c815158d1
+state_head: 250d7feede1295fe3e88770a34080f5d3b9056e6
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 21
+  completed_plans: 21
   percent: 80
 ---
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 183 (Docs, Packaging and Launch Prep) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-16 — Phase 183 execution started
 
 Progress: [████████░░] 80%
@@ -389,6 +389,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 182 P05 | 20 min | 3 tasks | 20 files |
 | Phase 182 P06 | 49 min | 3 tasks | 12 files |
 | Phase 183 P01 | 83m | 3 tasks | 98 files |
+| Phase 183 P03 | 28min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -784,6 +785,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 183]: Keep ExDoc 0.40.4, Lato, and its native class-driven theme; add only syntax color CSS and a small class-driven logo selector.
 - [Phase 183]: Keep the trademark announcement gate independent from package publication readiness; the caution record remains denied for announcement.
 - [Phase 183]: Preserve canonical CLAUDE.md and PRODUCT.md for owner review and do not introduce dependencies.
+- [Phase 183]: Keep real generated-output checks outside default root discovery and require an explicit output root.
+- [Phase 183]: Build each package once in the existing required docs job and reuse outputs for validation.
+- [Phase 183]: Preserve the Chromium launch failure as unverified behavior; no download or second attempt.
 
 ## Quick Tasks Completed
 
@@ -844,8 +848,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-17T01:02:58.337Z
-Stopped at: Completed 183-01-PLAN.md
+Last session: 2026-11-17T03:36:26.732Z
+Stopped at: Completed implementation for 183-03; browser and full-root verification remain unresolved
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -870,4 +874,6 @@ Resume file: None
 - Plan Phase 179 with `/gsd-plan-phase 179` (or `/gsd-discuss-phase 179` first)
 
 ### Blockers
-None
+
+- Phase 183-03 browser behavior remains unverified: the installed Chromium SIGTRAPed at macOS Mach port bootstrap registration with permission denied (1100), before any scenario.
+- The unchanged default root mix test finished with 7 failures out of 2448; first-failure details and unverified baseline attribution are in 183-03-SUMMARY.md.
