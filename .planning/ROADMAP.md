@@ -96,7 +96,7 @@ Two phases completed: 10 plans, 26 tasks. Full phase detail: [milestones/v2.8-RO
   3. Changing a screen string owned by `MailglassAdmin.Copy` without updating `Copy` fails the copy contract test. A recorded mutation run proves this.
   4. The brand pin test passes against the owner-approved brand v2.0.1 zip sha256 `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56` and fails when the recorded hash or a copied-in shipped asset is altered. The full book is not in the repository tree. This supersedes the original v2.0 digest documented in the Phase 179 plan.
   5. The trademark, image and register search result for the name and mark is committed with its date, sources searched and outcome, in the place Phase 183 reads as its announcement gate.
-**Plans**: 4/5 plans complete (one approved BRPOL-04 gap-closure plan remains)
+**Plans**: 5/5 plans complete
 
 Plans:
 **Wave 1**
@@ -106,7 +106,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 179-02-PLAN.md — Brand v2 compatibility policy with parsed, live-verified stays table and api_stability pointer (BRPOL-01)
-- [ ] 179-05-PLAN.md — Reconcile the approved v2.0.1 pin across current acceptance sources and record fresh offline tamper evidence (BRPOL-04 gap closure)
+- [x] 179-05-PLAN.md — Reconcile the approved v2.0.1 pin across current acceptance sources and record fresh offline tamper evidence (BRPOL-04 gap closure; phase verification pending)
 
 **Plan budget**: about 3
 

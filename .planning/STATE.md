@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v2.11
 milestone_name: Brand v2.0 Adoption
-current_phase: 183
-status: completed
-stopped_at: Phase 183 complete — all phases complete
-last_updated: "2026-11-17T15:32:22.083Z"
+current_phase: 179
+status: in_progress
+stopped_at: Phase 179 plan 05 complete — phase re-verification pending
+last_updated: "2026-11-17T23:17:27Z"
 last_activity: 2026-11-17
-last_activity_desc: Phase 183 complete
-state_head: 8ed9102f3323695db9db668eb059a328688d83a4
+last_activity_desc: Phase 179 plan 05 evidence and offline test complete; phase verifier pending
+state_head: 73791dd59294b0174b5a8f991d9a54d2417f5f3d
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 21
-  completed_plans: 21
-  percent: 100
+  completed_phases: 2
+  total_plans: 24
+  completed_plans: 22
+  percent: 92
 ---
 
 # Project State
@@ -24,26 +24,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.11 milestone closeout — all five phases are complete; audit and archive remain.
+**Current focus:** v2.11 audit gap closure. Phase 179 plan 05 is complete; its fresh phase verification is pending. Phase 183 producer provenance remains open, and Phase 182 browser evidence depends on that closure.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 183
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-11-17 — Phase 183 complete
+Phase: 179
+Plan: 05 — BRPOL-04 pin reconciliation
+Status: Plan tasks complete; phase verification pending
+Last activity: 2026-11-17 — offline pin/tamper contract passed
 
-Progress: [██████████] 100%
+Progress: [█████████░] 92%
 
 ## v2.11 Roadmap Shape
 
-- **Goal:** the repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0 (zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`), and every identity claim is true or tested.
-- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, ~3 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, ~4) → 181 Tokens, fonts, logo (BRTOK-01..06, ~4) → 182 Admin words and layout, one job first (BRADM-01..07, ~5) → 183 Docs, packaging, launch prep (BRDOC-01..06, ~3). Budget 19 of the 20-plan cap.
+- **Goal:** the repo's identity (words, colors, type, logo, docs assets, admin screens) matches the owner-approved brand v2.0.1 archive (zip sha256 `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56`), and every identity claim is true or tested.
+- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, 5 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, 4) → 181 Tokens, fonts, logo (BRTOK-01..06, 4) → 182 Admin words and layout, one job first (BRADM-01..07, 7) → 183 Docs, packaging, launch prep (BRDOC-01..06, 4). The bounded audit remediation has 24 plans across the same five phases.
 - **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
 - **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
-- **Cap and WIP:** 5 phases, 20 plans or fewer, one open PR at a time.
+- **Cap and WIP:** The baseline was 5 phases and 20 plans or fewer, with one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, allowing at most 24 plans. No further expansion is authorized.
+- **Audit status:** Phase 180 and 181 verifications passed. Phase 179's new plan is complete and awaits re-verification. Phase 183's producer-provenance gap remains open; Phase 182's current browser evidence depends on that closure. No archive or tag is authorized by this state update.
 - **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
 - **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
 
@@ -851,8 +852,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-17T03:36:26.732Z
-Stopped at: Phase 183 complete — all phases complete
+Last session: 2026-11-17T23:17:27Z
+Stopped at: Phase 179 plan 05 complete; fresh Phase 179 verification is next
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -874,7 +875,7 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Plan Phase 179 with `/gsd-plan-phase 179` (or `/gsd-discuss-phase 179` first)
+- Re-verify Phase 179 against the approved pin decision and fresh offline evidence. If it passes, execute Phase 183 plan 04 (`$gsd-execute-phase 183 --gaps-only`); Phase 182 plan 07 remains gated on that provenance closure.
 
 ### Blockers
 
