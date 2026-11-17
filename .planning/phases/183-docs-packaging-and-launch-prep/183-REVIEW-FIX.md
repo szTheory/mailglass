@@ -1,15 +1,43 @@
 ---
 phase: 183-docs-packaging-and-launch-prep
-fixed_at: 2026-11-17T01:44:22Z
+fixed_at: 2026-11-17T01:56:35Z
 review_path: .planning/phases/183-docs-packaging-and-launch-prep/183-REVIEW.md
-iteration: 1
-findings_in_scope: 5
-fixed: 5
+iteration: 2
+findings_in_scope: 1
+fixed: 1
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 183: Code Review Fix Report
+
+## Iteration 2
+
+**Fixed at:** 2026-11-17T01:56:35Z
+**Source review:** `.planning/phases/183-docs-packaging-and-launch-prep/183-REVIEW.md`
+**Iteration:** 2
+
+**Summary:**
+- Findings in scope: 1
+- Fixed: 1
+- Skipped: 0
+
+### WR-03: Plural PO message fields bypass brand scanning
+
+**Files modified:** `scripts/brand_name_lint.exs`, `test/scripts/brand_name_lint_test.exs`
+**Commit:** `84cfc573`
+**Applied fix:** The Gettext scanner now recognizes `msgid_plural` and appends its quoted continuation lines. A plural-entry fixture confirms that a prohibited spelling on a continuation line is detected.
+**Status:** fixed: requires human verification
+
+## Verification
+
+All verification ran in the main checkout because `.planning/config.json` sets `workflow.use_worktrees` to `false`.
+
+- `ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/scripts/brand_name_lint_test.exs` passed (12 tests).
+- `ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix run --no-start scripts/brand_name_lint.exs check` passed across the adopter corpus.
+- The focused test emitted the existing optional `opentelemetry_exporter` warning; the test run succeeded.
+
+## Iteration 1 (previous fixes)
 
 **Fixed at:** 2026-11-17T01:44:22Z  
 **Source review:** `.planning/phases/183-docs-packaging-and-launch-prep/183-REVIEW.md`  
@@ -68,3 +96,9 @@ All verification ran in the main checkout because `.planning/config.json` sets `
 _Fixed: 2026-11-17T01:44:22Z_  
 _Fixer: the agent (gsd-code-fixer)_  
 _Iteration: 1_
+
+---
+
+_Updated: 2026-11-17T01:56:35Z_
+_Fixer: the agent (gsd-code-fixer)_
+_Iteration: 2_
