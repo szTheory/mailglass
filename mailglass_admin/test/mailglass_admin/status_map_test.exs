@@ -285,6 +285,10 @@ defmodule MailglassAdmin.StatusMapTest do
              }) == :failed
     end
 
+    test "a terminal latch cannot turn a suppressed row into a failure" do
+      assert delivery_class!(%{status: :suppressed, terminal: true}) == :not_sent
+    end
+
     test "a complaint with no delivery report is engagement, not failure" do
       assert delivery_class!(%{
                status: :sent,

@@ -35,10 +35,10 @@ defmodule MailglassAdmin.StatusMap do
   #
   # delivery_class/1 classifies one delivery row instead of one atom, because
   # last_event_type advances on every event and a late :opened or :clicked would
-  # otherwise hide a delivery or a bounce. Precedence, first match wins: a failure
-  # report or a durable failure field, then a suppression, then a confirmed delivery,
-  # then a send-time failure, then a deferral, and otherwise Sent. Engagement never
-  # implies delivered and never erases a confirmed delivery.
+  # otherwise hide a delivery or a bounce. Precedence, first match wins: an explicit
+  # failure event, then a suppression, then a durable failure field, then a confirmed
+  # delivery, then a send-time failure, then a deferral, and otherwise Sent. Engagement
+  # never implies delivered and never erases a confirmed delivery.
   #
   # The operator Deliveries projection carries bounced_at, terminal, delivered_at,
   # complained_at and suppressed_at beside the display fields, so a bounce followed by
@@ -129,8 +129,9 @@ defmodule MailglassAdmin.StatusMap do
     confirmed? = confirmed?(row, last)
 
     cond do
-      last in @failure_events or durable_failure?(row, confirmed?) -> :failed
+      last in @failure_events -> :failed
       status == :suppressed or last == :suppressed or present?(row, :suppressed_at) -> :not_sent
+      durable_failure?(row, confirmed?) -> :failed
       confirmed? -> :delivered
       status == :failed -> :failed
       last == :deferred -> :delayed
