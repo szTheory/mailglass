@@ -548,7 +548,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
 
     test "registered marks are denied even when the record is clear", %{tmp_dir: tmp_dir} do
       path = write!(tmp_dir, "registered.html", "<p>mailglass &reg;</p>\n")
-      today = Date.utc_today()
+      today = before_expiry(clear_record())
 
       assert {:deny, {:registered_mark_claim, hits}} =
                gate(:scan_public_claims, [[path], clear_record(), today])
@@ -560,7 +560,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
       tmp_dir: tmp_dir
     } do
       path = write!(tmp_dir, "generated.html", "<p>mailglass (TM)</p>\n")
-      today = Date.utc_today()
+      today = before_expiry(committed_record())
 
       assert {:deny, {:unregistered_mark_claim, :not_clear, _hits}} =
                gate(:scan_public_claims, [[path], committed_record(), today])
@@ -578,7 +578,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
       draft = Path.join(@repo_root, ".planning/research/brand-v2-adoption/ANNOUNCEMENT-DRAFT.md")
       body = File.read!(draft)
       record = committed_record()
-      today = Date.utc_today()
+      today = before_expiry(record)
 
       assert body =~ "Status: BLOCKED"
       refute body =~ "™" or body =~ "®" or body =~ "&trade;" or body =~ "&reg;"
