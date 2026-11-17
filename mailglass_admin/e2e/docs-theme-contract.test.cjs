@@ -4,7 +4,22 @@ const path = require("node:path");
 const test = require("node:test");
 
 const repoRoot = path.resolve(__dirname, "../..");
+const browserContract = fs.readFileSync(path.join(__dirname, "docs-theme-contract.cjs"), "utf8");
 const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
+
+test("browser contract exposes output-root argument and path helpers without launching Chromium", () => {
+  assert.match(browserContract, /module\.exports\s*=\s*\{[^}]*parseCliArgs[^}]*outputPathsFor/s);
+  assert.match(browserContract, /function parseCliArgs\s*\(/);
+  assert.match(browserContract, /function outputPathsFor\s*\(/);
+});
+
+test("browser contract rejects missing explicit package output before Chromium launch", () => {
+  const validation = browserContract.indexOf("validateOutputPaths(");
+  const launch = browserContract.indexOf("chromium.launch(");
+
+  assert.notEqual(validation, -1, "all selected README outputs must be validated");
+  assert.ok(validation < launch, "output validation must happen before Chromium launches");
+});
 
 test("core README uses one lowercase heading, immutable theme lockups, and a separate tagline", () => {
   const header = readme.split(/^## /m, 1)[0];
