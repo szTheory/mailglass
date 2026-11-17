@@ -216,3 +216,17 @@ None. The changes add no network endpoint, auth path, schema change, or filesyst
 ---
 *Phase: 183-docs-packaging-and-launch-prep*
 *Completed: 2026-11-17*
+
+## Corrected Docker Gate Follow-up — 2026-11-17
+
+This section supersedes the earlier statements that the Docker browser path had not run or that another browser attempt was unauthorized. The owner later authorized continued browser runs.
+
+The first corrected full gate confirmed the container-to-host route but exposed three browser failures. Chromium reached the container's 128-process cap during persistent-context launches, and Fontconfig tried read-only cache locations. Raising the bounded cap to 512, placing its cache under the existing writable `/tmp`, and keeping the same 2 GB / 2 CPU limits fixed those launch failures. A second full gate then passed 36 of 37 browser cases; the remaining Axe baseline case reproduced in isolation.
+
+The Playwright trace showed Axe's partial-frame collector timing out while walking the preview's script-sandboxed `srcdoc` frame. The timeout closed the test context before Axe's cleanup page was created. The preview baseline check now uses Axe legacy mode with the same WCAG 2.2 AA tags. An isolated Docker run passed in all three themes and matched the committed baseline.
+
+The final full gate used the pinned Playwright 1.65.1 image, fixed `BROWSER_SERVER_PORT=51130`, and zero Playwright retries. Results: Storybook 42 passed; Core 81 passed; Admin 1,817 passed with 1 excluded; Inbound 481 passed with 3 excluded; browser 37 passed. The last full run took 67.94 seconds; the browser lane took 25.1 seconds and Admin was the longest non-browser lane at 31.6 seconds. After the reviewer identified and we fixed a DNS-resolution timeout gap in the preflight, this exact gate ran again and passed. The authoritative hash-verified output is `/private/tmp/mailglass-183-regression-gate-verified.log` (`c46260e67e60866f3e68dec5bb24211bbbe8771b6d81f37a77f774269f600c3c`).
+
+During diagnosis, a temporary all-interface bind was tried. A cheap Docker Desktop probe then proved the container can reach a host listener bound only to `127.0.0.1`, so the broader bind was removed before the final full gate. The Admin test now asserts loopback binding, and the gate probes the actual container-to-host readiness route before launching Chromium. The task-created browser containers were removed automatically, the host server stopped, port 51130 was clear afterward, and the existing `mailglass-demo` containers remained running. No hosted CI was dispatched.
+
+The previously recorded default root suite result remains **2,448 tests, 7 failures, 27 excluded, and 7 skipped**. The owner selected preserve-and-continue; that suite was not rerun, and its remaining failures stay outside this phase's scope. The phase verifier is being refreshed against the final source and test evidence.

@@ -5,7 +5,7 @@ status: partial
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-11-16"
-audited_at: "2026-11-17T03:30:13Z"
+audited_at: "2026-11-17T14:19:23Z"
 ---
 
 # Phase 183 — Validation Strategy
@@ -40,8 +40,8 @@ Plan 02 runs in wave 1; plan 01 runs in wave 2 after its pinned assets and guide
 | 183-02-01 | 02 | 1 | BRDOC-06 | T-183-01, T-183-02 | Actual caution denies; registers/dates/production flags fail closed; encoded public claims are checked without a publish prerequisite | Hermetic ExUnit and actual CLI tracer | `mix test test/scripts/brand_trademark_gate_test.exs --warnings-as-errors --seed 0` | ✅ existing, extended | 🟢 verified |
 | 183-02-02 | 02 | 1 | BRDOC-03 | T-183-06 | Design parity, narrow Inter exception and pending paired patches preserve canonical owner files | ExUnit contract | `mix test test/scripts/brand_design_md_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors --seed 0`; `cd mailglass_admin && mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/operator/health_overview_test.exs --warnings-as-errors --seed 0` | ✅ created | 🟢 verified |
 | 183-02-03 | 02 | 1 | BRDOC-05 | T-183-03, T-183-04, T-183-05 | Atomic manifest-driven update; complete browser matrix; independent PNG metrics; repository-only checklist | Source-pin ExUnit, browser producer, required Admin validator | `mix test test/scripts/brand_pin_test.exs --warnings-as-errors --seed 0`; `PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright node mailglass_admin/e2e/favicon-capture.cjs --capture` (single authorized run); `cd mailglass_admin && mix test test/mailglass_admin/favicon_catalog_test.exs --warnings-as-errors --seed 0` | ✅ created | 🟢 verified |
-| 183-01-01 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08, T-183-11 | Core real docs retain pinned bytes, native font/theme, syntax-only CSS and the current claim boundary | Real build, tagged output ExUnit, headless local browser | `mix docs`; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --only core --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --package core` | ✅ created | 🟡 partial — output build/check recorded green; clean-checkout/browser wiring gap below |
-| 183-01-02 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08 | Both sibling outputs enforce the same full default contract; all six static-media UI behaviors are checked | Two real builds, default ExUnit and browser | Separate `mix docs` in Admin/Inbound; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --all` | ✅ created | 🟡 partial — clean-checkout/browser wiring gap below |
+| 183-01-01 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08, T-183-11 | Core real docs retain pinned bytes, native font/theme, syntax-only CSS and the current claim boundary | Real build, tagged output ExUnit, headless local browser | `mix docs`; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --only core --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --package core` | ✅ created | 🟢 verified — core output contract passed; the clean-checkout/output-root gap was closed in 183-03, and matching Docker browser evidence is recorded below |
+| 183-01-02 | 01 | 2 | BRDOC-01, BRDOC-02 | T-183-07, T-183-08 | Both sibling outputs enforce the same full default contract; all six static-media UI behaviors are checked | Two real builds, default ExUnit and browser | Separate `mix docs` in Admin/Inbound; `mix test test/scripts/readme_image_contract_test.exs test/scripts/brand_docs_contract_test.exs --warnings-as-errors --seed 0`; `node mailglass_admin/e2e/docs-theme-contract.cjs --all` | ✅ created | 🟢 verified — all three real outputs passed; matching Docker browser evidence covers the theme/layout behavior as recorded below |
 | 183-01-03 | 01 | 2 | BRDOC-04, BRDOC-06 separation | T-183-09, T-183-10, T-183-11 | Effective prose/API exceptions; actual tarball/pin/golden/digest equality; full readiness remains independent of announcement denial | ExUnit, corpus CLI and all-three full package checks | `mix test test/scripts/brand_name_lint_test.exs test/mailglass/publish/brand_asset_allowlist_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs --warnings-as-errors --seed 0`; `mix run --no-start scripts/brand_name_lint.exs check`; `mix mailglass.publish.check --allowlist-only`; separate full `--package mailglass`, `--package mailglass_admin`, `--package mailglass_inbound` runs | ✅ created | 🟢 verified |
 
 All Mix commands use `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27` as written in the plans. Focused checks target under 60 seconds; real docs/full package/browser checks run in the background and retain their actual elapsed time. Every automated command has a sibling `fails_when` in its task. No watch mode or new required CI job is introduced. Tests/producer are authored in the same task before behavior; new paths are not claimed to exist already.
@@ -70,20 +70,20 @@ Existing ExUnit, Mix, and Playwright infrastructure covers all requirements. Add
 - [ ] Feedback latency < 30s is not established by the recorded command output
 - [ ] `nyquist_compliant: true` set in frontmatter after validation audit
 
-**Approval:** Partial. Plan 183-03 implemented clean-checkout output selection and required CI wiring. Its output and focused workflow contracts passed, but the local browser did not start and the unchanged full root suite failed. Keep Nyquist false and the phase verification at `gaps_found`; manual platform, owner-file, and legal handoffs remain pending.
+**Approval:** Partial. Plan 183-03 implemented clean-checkout output selection and required CI wiring. The latest verified loopback-only Docker regression gate and browser suite passed after the readiness-preflight deadline fix. The unchanged full root suite remains recorded as failed and was not rerun under the owner's preserve-and-continue choice. Keep Nyquist false; manual platform, owner-file, and legal handoffs remain pending.
 
 ## Gap-closure validation planned — 183-03
 
 | Task | Requirement | Threat Ref | Planned evidence | Status |
 |------|-------------|------------|------------------|--------|
-| 183-03 task 1 | BRDOC-01, BRDOC-02 | T-183-12, T-183-14, T-183-15 | Default fixture/source test without checkout docs; explicit-root standalone real-output checks; one background serial three-package build/output/browser run using existing pinned Chromium; both native themes and 375px layout for all packages; owned temp-output cleanup | 🟡 Partial — source/fixture tests, three builds, output contract and cleanup passed; Chromium failed at launch before theme/layout scenarios |
-| 183-03 task 2 | BRDOC-02 | T-183-13 | Structural workflow tests and in-memory mutation rejection; unchanged existing CI gate/identity contracts; full normal root `mix test --warnings-as-errors` with all generated README outputs absent | 🟡 Partial — focused contracts passed; default root suite ended with 7 failures and is not green |
+| 183-03 task 1 | BRDOC-01, BRDOC-02 | T-183-12, T-183-14, T-183-15 | Default fixture/source test without checkout docs; explicit-root standalone real-output checks; one background serial three-package build/output/browser run using existing pinned Chromium; both native themes and 375px layout for all packages; owned temp-output cleanup | 🟢 Verified — the initial macOS launch failed before scenarios, then the three-package docs theme/layout browser contract passed in the matching Docker image (Regression Gate Refresh below) |
+| 183-03 task 2 | BRDOC-02 | T-183-13 | Structural workflow tests and in-memory mutation rejection; unchanged existing CI gate/identity contracts; full normal root `mix test --warnings-as-errors` with all generated README outputs absent | 🟡 Partial — focused contracts passed, but the recorded default root suite remains 2,448 tests with 7 failures; it was not rerun after two focused Phase 183 fixes |
 
-The standalone real-output contract is outside default root test discovery and is wired into the existing required Docs job after three same-job builds. Default root fixture/mutation/source checks stay active. Local browser mode consumes the same fresh outputs and uses `/private/tmp/mailglass-183-02-playwright`; its one attempt reached the installed binary but Chromium failed at macOS bootstrap registration before any scenario. No download, favicon capture, preview, or remote CI action occurred. Core docs kept the existing warnings-as-errors policy; Admin/Inbound warnings were preserved. The original clean-checkout wiring issue is implemented, but phase verification remains partial because browser behavior and the full default root suite are not green.
+The standalone real-output contract is outside default root test discovery and is wired into the existing required Docs job after three same-job builds. Default root fixture/mutation/source checks stay active. The initial local browser invocation used `/private/tmp/mailglass-183-02-playwright` but Chromium failed at macOS bootstrap registration before any scenario; the later matching-Docker browser pass is recorded in the Regression Gate Refresh. No browser download, favicon capture, preview, or remote CI action occurred. Core docs kept the existing warnings-as-errors policy; Admin/Inbound warnings were preserved. The original clean-checkout wiring issue is implemented. Phase validation remains partial because the default root suite is still recorded non-green and was not rerun after two targeted fixes.
 
 ## Validation Audit Record — 2026-11-17
 
-**Verdict: PARTIAL.** The two final plans, their summaries, the final verification report, and review/fix evidence show substantive behavioral checks for all six requirements. The focused tests and package/docs checks reported green are recorded as green above. Nyquist compliance remains false because the generated-doc contract is not clean-checkout runnable and the browser runner cannot consume the temporary output paths used by final verification.
+**Verdict: PARTIAL.** The plans, summaries, verification report, and review/fix evidence show substantive behavioral checks for all six requirements. The original clean-checkout/output-root issue was fixed by 183-03, and matching-Docker browser evidence later verified the three-package docs theme/layout behavior. Nyquist compliance remains false because the recorded default root suite is non-green; two focused Phase 183 failures have since passed targeted tests, but the full suite was not rerun.
 
 ### Evidence Reviewed
 
@@ -92,9 +92,9 @@ The standalone real-output contract is outside default root test discovery and i
 - `183-VERIFICATION.md`: isolated temporary docs builds and output checks passed for all packages; `mix test test/scripts/brand_docs_contract_test.exs:15 --warnings-as-errors --seed 0` failed because ignored `doc/` outputs were absent; `node mailglass_admin/e2e/docs-theme-contract.cjs --all` was not run because it hardcodes those repo output paths. The report marks BRDOC-02 implementation satisfied while documenting this test/CI wiring blocker.
 - `183-REVIEW-FIX.md`: WR-03's plural-Gettext regression test (12 tests) and adopter-corpus lint passed after the final fix. `183-REVIEW.md` is clean, but explicitly says the reviewer ran no tests; its clean verdict is not treated as validation evidence.
 
-### Known Partial Blocker
+### Initial Partial Blocker (reconciled below)
 
-The original `test/scripts/brand_docs_contract_test.exs:15` generated-output dependency is resolved: that assertion now runs in a standalone output contract outside root discovery, and the required docs job builds all three packages before invoking it. The local native-theme/layout browser check remains unverified because Chromium failed at startup. The unchanged full root suite also failed in seven tests, recorded by name in `183-03-SUMMARY.md`; their baseline attribution is unverified. Keep the phase partial until the browser and full-suite gates are reconciled.
+At the initial audit, `test/scripts/brand_docs_contract_test.exs:15` still depended on generated output. 183-03 moved that assertion to a standalone contract outside root discovery, and the required docs job now builds all three packages before invoking it. Its first local native-theme/layout launch failed before scenarios. The unchanged full root suite also failed in seven tests, recorded by name in `183-03-SUMMARY.md`; baseline attribution was unverified. Later Docker browser evidence reconciles the browser result; the root suite remains partial as described below.
 
 No new test was added in this audit: the behavioral output test already exists, and the identified gap is its generated-output/CI wiring. This record does not claim full CI completion. The unrelated CI run described by plan 01 was still in progress at the recorded observation, and plan 02 records no CI run.
 
@@ -107,10 +107,10 @@ GitHub, Hex.pm, and HexDocs theme rendering; the paired CLAUDE.md/PRODUCT.md own
 - The root source/fixture contract passed with all three checkout README outputs absent (4 tests).
 - One serial validation invocation built core (2s), Admin (1s), and Inbound (1s); the standalone three-package output contract passed (1s), and the owned temporary root was removed by the EXIT trap.
 - Admin and Inbound emitted existing hidden-link/cross-package warnings. Core retained `--warnings-as-errors` and passed.
-- Browser verification is blocked: installed Chromium SIGTRAPed during `bootstrap_check_in` with permission denied (1100). No package scenario ran; there was no browser install or second attempt.
+- The first browser invocation was blocked: installed Chromium SIGTRAPed during `bootstrap_check_in` with permission denied (1100), so no package scenario ran in that invocation. The later Regression Gate Refresh records a passing three-package theme/layout browser contract in the matching Docker image.
 - Focused workflow, required-check, lane parity, and classification contracts passed (85 tests). Mutation controls rejected removing the script, Inbound locked-dependency step, or CI Green edge.
 - The unchanged full root suite ran with default discovery and all generated README outputs absent. It finished in 399.8s with 2,448 tests, 7 failures, 27 excluded, and 7 skipped. Exact failure names and first locations are in `183-03-SUMMARY.md`; baseline attribution is explicitly unverified. Three Phase 164 cases could not create sibling fixtures outside the workspace writable root.
-- No hosted CI was dispatched. The original clean-checkout wiring issue is implemented, but phase verification remains partial until browser behavior and the full-suite failures are reconciled.
+- No hosted CI was dispatched. The original clean-checkout wiring issue is implemented and browser behavior was later verified in matching Docker; phase validation remains partial because the full-root result is still non-green and was not rerun after targeted fixes.
 
 The local command for any later authorized browser re-verification is `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 PLAYWRIGHT_BROWSERS_PATH=/private/tmp/mailglass-183-02-playwright bash scripts/verify_brand_docs.sh --browser`. This execution did not repeat the browser attempt or dispatch remote CI.
 
@@ -121,6 +121,69 @@ The local command for any later authorized browser re-verification is `ASDF_ERLA
 1. Two tests call `chromium.launchPersistentContext()` directly. Because the Playwright Test runner remained on macOS and only its fixture browser was connected remotely, those calls attempted to launch the absent host binary under `/Users/jon/Library/Caches/ms-playwright/chromium-1255/`.
 2. The Axe baseline case rendered its page, then timed out after 90 seconds in a `frame.evaluate()` during `AxeBuilder.analyze()`. The same evaluation timed out on the configured test retry; no assertion result was produced.
 
-The failures show that a remote browser fixture is insufficient for this suite. The opt-in Docker path prepared in `scripts/gsd-regression-gate.sh` runs the Playwright Test runner and all Chromium contexts inside the matching image, keeps the app server on host loopback, and disables test retries. Its shell/config syntax and container config-loading checks passed; that path has **not** run the browser suite. The first Docker container was removed, and no unrelated Docker service was touched.
+The failures show that a remote browser fixture is insufficient for this suite. The opt-in Docker path prepared in `scripts/gsd-regression-gate.sh` runs the Playwright Test runner and all Chromium contexts inside the matching image, keeps the app server on host loopback, and disables test retries. At this initial observation, its shell/config syntax and container config-loading checks passed but the path had **not yet** run the browser suite. The first Docker container was removed, and no unrelated Docker service was touched; the later successful gate is recorded below.
 
-The generated-docs three-package theme/layout browser contract had already passed in the matching Docker image. The unrelated full root suite's seven failures from the prior validation remain unresolved; their names and observed causes are recorded in `183-03-SUMMARY.md`. The phase verifier has not been refreshed, and phase status remains partial. No second regression-browser attempt is authorized by the earlier one-run limit.
+The generated-docs three-package theme/layout browser contract had already passed in the matching Docker image. At this observation, the unrelated full root suite's seven failures from prior validation were unresolved; the later focused follow-up below fixes two phase-related contracts, while the full root suite remains unrerun and non-green. The phase verifier was not yet refreshed. The owner later authorized the follow-up runs recorded below.
+
+## Focused Follow-up — 2026-11-17
+
+Two failures from the recorded default root suite were traced to Phase 183 state that changed in this phase and now pass their focused behavioral contracts:
+
+| Failure in recorded root run | Follow-up | Result |
+|---|---|---|
+| `TestExceptionsContractTest`: registry referenced `test/mailglass/docs_contract_test.exs:807` after the documented skip moved | Updated `config/test_exceptions.exs` to line 826; `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/scripts/test_exceptions_contract_test.exs --warnings-as-errors --seed 0` | **Pass: 3 tests** |
+| `BrandStatusMarksTest`: committed status marks named the previous zip SHA | Regenerated `brandbook/status-marks.json` from the exact owner-approved archive pinned at `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56`; `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/scripts/brand_status_marks_test.exs --warnings-as-errors --seed 0` | **Pass: 19 tests** |
+
+The full default root suite was deliberately not rerun. Its last recorded result remains **2,448 tests, 7 failures, 27 excluded, and 7 skipped**. Therefore the root lane is not green and this update does not claim that it would pass now. The remaining recorded failures are the reference-host public-seam contract (its lowercase token expectation differs from an untouched README), the established Phase 164 gitignore assertion, and three Phase 164 fixture tests blocked by writes outside the workspace's writable root. These remain outside this validation update's scope.
+
+The docs theme/layout browser behavior is recorded as passing in the matching Docker image in the Regression Gate Refresh above. The earlier macOS Chromium launch failure remains historical evidence for that invocation only; it did not produce a behavior result. The phase verifier remains stale and is not refreshed by this validation-map update.
+
+## Previous Full Regression Gate — Superseded — 2026-11-17
+
+This earlier corrected regression gate passed in the matching Playwright 1.65.1 Docker image with `BROWSER_SERVER_PORT=51130` and zero Playwright retries. Its counts and findings are retained as history; it used a temporary all-interface host bind and is superseded by the final loopback-only run below.
+
+| Lane | Result |
+|---|---|
+| Storybook evidence and review contracts | 42 passed |
+| Core deterministic contracts | 81 passed |
+| Admin LiveView and component suite | 1,817 passed, 1 excluded |
+| Inbound deterministic suite | 481 passed, 3 excluded |
+| Connected operator and preview browser suite | 37 passed |
+
+The Admin bind contract and Docker container-to-host readiness preflight passed before browser launch. The isolated Axe baseline case initially timed out while using partial-frame collection. The focused Docker rerun used Axe legacy mode with the same WCAG 2.2 AA tags and passed the Phase 178 baseline test in light, dark, and system themes: **1 passed in 3.1 seconds**, with the measured findings matching the committed baseline.
+
+This earlier gate took 66.13 seconds overall; its browser lane took 25.4 seconds and Admin was the longest non-browser lane at 29.2 seconds. Its hash-verified log is `/private/tmp/mailglass-183-regression-gate-final.log` with SHA-256 `ff77a92d6b20a9820fa6e7a240e50360dd1855bf856638bf04e14c04e70eb278`.
+
+## Prior Loopback-Only Regression Gate — Superseded — 2026-11-17
+
+This earlier loopback-only gate passed with the Admin app server bound only to `127.0.0.1`. Docker Desktop reachability was verified from a container to a host listener bound to `127.0.0.1`; the gate's readiness preflight passed before Chromium ran. The later verified gate is authoritative below.
+
+| Lane | Result |
+|---|---|
+| Storybook evidence and review contracts | 42 passed |
+| Core deterministic contracts | 81 passed |
+| Admin LiveView and component suite | 1,817 passed, 1 excluded |
+| Inbound deterministic suite | 481 passed, 3 excluded |
+| Connected operator and preview browser suite | 37 passed |
+
+The focused Admin bind contract, `test endpoint binds only to loopback` in `mailglass_admin/test/mailglass_admin/test_support/admin_bootstrap_test.exs`, passed in the Admin lane and asserts the endpoint binds to `{127, 0, 0, 1}`. The isolated Axe legacy-mode check passed the Phase 178 baseline in light, dark, and system themes, with results matching the committed baseline.
+
+This earlier loopback-only gate took **64.51 seconds** overall; browser took 25.1 seconds and Admin was the longest non-browser lane at 27.5 seconds. Its hash-verified log is `/private/tmp/mailglass-183-regression-gate-loopback.log` with SHA-256 `b07cb3cc6c03f92d2180759cec2744e26e3699e404dd3ebbe5eb865f0dd8cf84`. It is superseded by the verified run below.
+
+## Authoritative Final Loopback-Only Regression Gate — 2026-11-17
+
+After the 3-second readiness-preflight deadline fix, the full regression gate passed with the Admin app server bound only to `127.0.0.1`. Docker Desktop reachability was verified from a container to the loopback-only host listener; the final app server stayed loopback-only.
+
+| Lane | Result |
+|---|---|
+| Storybook evidence and review contracts | 42 passed |
+| Core deterministic contracts | 81 passed |
+| Admin LiveView and component suite | 1,817 passed, 1 excluded |
+| Inbound deterministic suite | 481 passed, 3 excluded |
+| Connected operator and preview browser suite | 37 passed |
+
+The focused Admin bind contract, `test endpoint binds only to loopback` in `mailglass_admin/test/mailglass_admin/test_support/admin_bootstrap_test.exs`, passed in the Admin lane. The isolated Axe legacy-mode check passed the Phase 178 baseline in light, dark, and system themes, with results matching the committed baseline.
+
+The authoritative gate took **67.94 seconds** overall; browser took **25.1 seconds** and Admin was the longest non-browser lane at **31.6 seconds**. Its hash-verified log is `/private/tmp/mailglass-183-regression-gate-verified.log` with SHA-256 `c46260e67e60866f3e68dec5bb24211bbbe8771b6d81f37a77f774269f600c3c`. No hosted CI ran.
+
+The default root suite remains recorded as **2,448 tests, 7 failures, 27 excluded, and 7 skipped**. The owner selected preserve-and-continue, so that suite was not rerun. The two Phase 183 focused contracts still pass (exception registry **3/3**; status marks **19/19**), but do not establish that the full root lane is green. Nyquist remains partial and `nyquist_compliant` remains false.
