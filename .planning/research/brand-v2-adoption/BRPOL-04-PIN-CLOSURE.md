@@ -39,9 +39,28 @@ Task 2 ran the existing test without source or test edits. The exact command was
 - Attempt 1's ExUnit output showed `76 tests, 0 failures`, but a zsh read-only `status` variable in the wrapper prevented it from recording the process exit code. The shell issue was diagnosed; it was not a test failure.
 - Attempt 2 used a corrected Bash wrapper and recorded exit code `0`, `76 tests, 0 failures`, elapsed time 4 seconds, start `2026-11-17T23:13:14Z`, finish `2026-11-17T23:13:18Z`. Log: `/private/tmp/phase179-brand-pin-test-final.log`; metadata: `/private/tmp/phase179-brand-pin-test-final.meta`.
 - The output also contained the pre-existing warning that `opentelemetry_exporter` is not available. It did not affect the focused test result.
+- SHA-256 of the exact Attempt 2 log is `7ccb73033bd968ec0e8e925865390dd76dc4434d6fe0ca92dfe41e483b5d8e46`.
+
+Exact Attempt 2 stdout/stderr:
+
+```text
+18:13:15.088 [warning] OTLP exporter module `opentelemetry_exporter` not found. Verify you have included the `opentelemetry_exporter` dependency.
+Running ExUnit with seed: 0, max_cases: 36
+Excluding tags: [:phase_164_installed_production_boundary, :phase_165_installed_production_boundary, :phase_165_controlled_host]
+
+............................................................................
+Finished in 3.0 seconds (3.0s async, 0.00s sync)
+76 tests, 0 failures
+
+== Mailglass.TestSupport.SuiteFloor (schema "public") ==
+  total: 76, excluded: 0, skipped: 0, executed: 76, failures: 0
+  signature tally: already_shared=0, formatter_violations=0
+  scope: scoped run (MAILGLASS_SUITE_FLOOR unset) — the executed floor, growth nudge and skipped ceiling describe a COMPLETE suite and were not evaluated. The exclusion allowlist and the :already_shared / formatter assertions above did run, and nothing halts this run.
+  0 violation(s).
+```
 
 The exact post-test inventory compared 39 protected path entries against the pre-task baseline. All matched: the pin file SHA-256 is `5d853e8ba0788528879241fe4f27e6df0e5f4f181270d2f8fcf480aeab088950`; the test oracle SHA-256 is `7d8e5aaae64989e2416e9acc4611a61edeb2abff57d72cb2078aff3711ec5201`; and all 109 files in the accepted favicon catalog are unchanged, with aggregate tree SHA-256 `32b3741505a4599b26ecd7ad7cfb6894c0ad9bcd59567b080fe6b8c5efd83e1f`. The pinned source and served assets, other shipped brand assets and historical Phase 179 plans/summaries/context/research also match byte-for-byte. No capture or browser alias ran.
 
 ## Limits and handoff
 
-This closes only the stale BRPOL-04 acceptance-identity mismatch, subject to fresh Phase 179 re-verification. It does not authenticate the Phase 183 browser producer, clear the trademark caution, or alter the approved pin. The accepted favicon catalog and its PNGs remain unchanged; do not recapture, rewrite a manifest, loosen producer validation or rerun the blocked alias. After Task 2, `git status --short` had 74 entries and SHA-256 `1fcf575f249e3dffb3f6232f6716abe12319c285f021deb4f2807615c5a9d3d8`; the sole new untracked path was this closure evidence file. Existing worktree changes were preserved.
+This closes only the stale BRPOL-04 acceptance-identity mismatch, subject to fresh Phase 179 re-verification. It does not authenticate the Phase 183 browser producer, clear the trademark caution, or alter the approved pin. The accepted favicon catalog and its PNGs remain unchanged; do not recapture, rewrite a manifest, loosen producer validation or rerun the blocked alias. Immediately after Task 2 and before the first evidence commit, `git status --short` had 74 entries and SHA-256 `1fcf575f249e3dffb3f6232f6716abe12319c285f021deb4f2807615c5a9d3d8`; the sole task-created path was this evidence file. After adding the exact test output and completing the final inventory, status still had 74 entries and SHA-256 `d04f6ad526fae6103aa2b58e4e385eb535226f8e877315bcddecce6c8188c689`; this evidence file was the only task-owned working-tree change. The other 73 pre-existing entries were preserved.
