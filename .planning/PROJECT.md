@@ -10,7 +10,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.11 Brand v2.0 Adoption completed all five phases on 2026-11-17 and is ready for milestone audit and archive.** Phase 183 passed goal-backward verification 20/20 and closed both UAT rows with automated evidence. The earlier root suite's seven failures remain recorded with baseline attribution unknown; the suite was not rerun. No hosted CI run, package publication, or announcement occurred. The trademark claim and announcement gate remains closed pending the recorded search result. See `.planning/STATE.md` and the v2.11 phase artifacts for the remaining evidence and boundaries.
+**v2.11 Brand v2.0 Adoption completed all five phases on 2026-11-17 and is ready for milestone audit and archive.** Phase 183 passed goal-backward verification 20/20 and closed both UAT rows with automated evidence. The earlier root suite's seven failures remain recorded with baseline attribution unknown; the suite was not rerun. Phase 183 did not dispatch hosted CI or publish a package or announcement. The current trademark caution record continues to block public claims. See `.planning/STATE.md` and the v2.11 phase artifacts for the remaining evidence and boundaries.
 
 The core value remains **email you can see, audit, and trust before it ships**. v2.11 aligned the repository's identity and adopter-facing surfaces with the pinned brand book without changing Mailglass's transactional-email focus. Next: `$gsd-complete-milestone v2.11` for the separate audit and archive; milestone completion does not authorize publication or announcement.
 
