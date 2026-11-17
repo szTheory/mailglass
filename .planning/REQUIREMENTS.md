@@ -42,12 +42,12 @@
 
 ### Docs, Packaging, Launch Prep (BRDOC)
 
-- [ ] **BRDOC-01**: README headers use separate light and dark lockup images selected correctly by GitHub, Hex.pm and HexDocs, with absolute `raw.githubusercontent.com` URLs pinned to the immutable asset commit SHA. An offline contract verifies the refs and image bytes against the brand pin.
-- [ ] **BRDOC-02**: ExDoc CSS (code colors only, no OS dark-media query) and the "m" logo are set in all three `mix.exs`, verified by a real `mix docs` build per package.
-- [ ] **BRDOC-03**: `design-system.md` and the `.impeccable` config exist, and CLAUDE.md/PRODUCT.md updates are drafted for owner sign-off.
-- [ ] **BRDOC-04**: A lowercase-name lint passes, the Hex file allowlist is updated, and `mix mailglass.publish.check` passes.
-- [ ] **BRDOC-05**: Favicon legibility is checked at 16, 24 and 32 px in three browsers, and a social card/avatar manual-upload checklist is written.
-- [ ] **BRDOC-06**: The announcement and any ™ claim are gated on the BRPOL-05 result; code rollout is not gated.
+- [x] **BRDOC-01**: README headers use separate light and dark lockup images selected correctly by GitHub, Hex.pm and HexDocs, with absolute `raw.githubusercontent.com` URLs pinned to the immutable asset commit SHA. An offline contract verifies the refs and image bytes against the brand pin.
+- [x] **BRDOC-02**: ExDoc CSS (code colors only, no OS dark-media query) and the "m" logo are set in all three `mix.exs`, verified by a real `mix docs` build per package.
+- [x] **BRDOC-03**: `design-system.md` and the `.impeccable` config exist, and CLAUDE.md/PRODUCT.md updates are drafted for owner sign-off.
+- [x] **BRDOC-04**: A lowercase-name lint passes, the Hex file allowlist is updated, and `mix mailglass.publish.check` passes.
+- [x] **BRDOC-05**: Favicon legibility is checked at 16, 24 and 32 px in three browsers, and a social card/avatar manual-upload checklist is written.
+- [x] **BRDOC-06**: The announcement and any ™ claim are gated on the BRPOL-05 result; code rollout is not gated.
 
 ## v2 Requirements (deferred to a later "insight" milestone)
 
@@ -94,12 +94,12 @@ Updated during roadmap creation (2026-11-13).
 | BRADM-05 | Phase 182 | Complete |
 | BRADM-06 | Phase 182 | Complete |
 | BRADM-07 | Phase 182 | Complete |
-| BRDOC-01 | Phase 183 | Pending |
-| BRDOC-02 | Phase 183 | Pending |
-| BRDOC-03 | Phase 183 | Pending |
-| BRDOC-04 | Phase 183 | Pending |
-| BRDOC-05 | Phase 183 | Pending |
-| BRDOC-06 | Phase 183 | Pending |
+| BRDOC-01 | Phase 183 | Complete |
+| BRDOC-02 | Phase 183 | Complete |
+| BRDOC-03 | Phase 183 | Complete |
+| BRDOC-04 | Phase 183 | Complete |
+| BRDOC-05 | Phase 183 | Complete |
+| BRDOC-06 | Phase 183 | Complete |
 
 **Coverage:**
 - v1 requirements: 27 total
