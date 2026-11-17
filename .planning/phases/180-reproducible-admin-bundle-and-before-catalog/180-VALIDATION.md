@@ -2,16 +2,17 @@
 phase: "180"
 slug: reproducible-admin-bundle-and-before-catalog
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-11-14"
 ---
 
 # Phase 180 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
-> Source: `180-RESEARCH.md` § Validation Architecture (lane facts verified against `ci.yml` and `config/quality/ci_policy.exs`).
+> Audit result: BRPIPE-01, BRPIPE-02, and BRPIPE-03 have existing behavioral tests with phase-completion execution evidence. The former Wave 0 checklist was stale: its tests and support files are present. No uncovered machine-checkable behavior remained, so this audit added no tests.
+>
+> Coverage sign-off does not mean every current project lane is green. The current Admin alias evidence supplied for this audit contains one FaviconCatalogTest producer-SHA mismatch. That failure is preserved as an evidence limitation; this audit did not rerun the alias or recapture/rewrite favicon evidence. See Current Audit Evidence.
 
 ---
 
@@ -19,90 +20,115 @@ created: "2026-11-14"
 
 | Property | Value |
 |----------|-------|
-| **Framework** | ExUnit (Elixir 1.18.4 / OTP 27) in `mailglass_admin`; Playwright 1.59.1 for browser (advisory) |
-| **Config file** | `mailglass_admin/mix.exs` aliases; `mailglass_admin/playwright.config.cjs` |
-| **Quick run command** | `cd mailglass_admin && mix mailglass_admin.assets.build --check && mix test test/mailglass_admin/<new_file>_test.exs --seed 0` |
-| **Full suite command** | `cd mailglass_admin && mix verify.support_contract.admin` |
-| **Browser (advisory)** | `cd mailglass_admin && npx playwright test --config=playwright.config.cjs --workers=1 e2e/theme-ownership.spec.js` |
-| **Estimated runtime** | quick ~10 s; full admin lane several minutes |
+| Framework | ExUnit in mailglass_admin; Playwright 1.59.1 for advisory browser checks |
+| Config | mailglass_admin/mix.exs aliases; mailglass_admin/playwright.config.cjs; reference/demo_app/assets/playwright.catalog.config.cjs |
+| Required lane | cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix verify.support_contract.admin |
+| Bundle contract | cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/bundle_reproducibility_contract_test.exs --warnings-as-errors --seed 0 |
+| Theme ownership contracts | cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/root_theme_ownership_contract_test.exs test/mailglass_admin/admin_shell_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/router_test.exs --warnings-as-errors --seed 0 |
+| Catalog contract | cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/before_catalog_manifest_test.exs --warnings-as-errors --seed 0 |
+| Browser, advisory | cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27 npx playwright test --config=playwright.config.cjs --workers=1 e2e/theme-ownership.spec.js |
+| Toolchain | ASDF_ERLANG_VERSION=27.3.4.15 and ASDF_ELIXIR_VERSION=1.18.4-otp-27 for Mix commands |
 
-Toolchain: export `ASDF_ERLANG_VERSION=27.3.4.15 ASDF_ELIXIR_VERSION=1.18.4-otp-27` before any `mix` command.
-
----
-
-## Sampling Rate
-
-- **After every task commit:** `mix mailglass_admin.assets.build --check` (about 1 s) plus the touched contract file
-- **After every plan wave:** `cd mailglass_admin && mix verify.support_contract.admin`, then `mix format --check-formatted` inside `mailglass_admin`
-- **Before `/gsd-verify-work`:** full suite green, advisory browser spec and reworked e2e files run locally, `bash scripts/gsd-regression-gate.sh`
-- **Max feedback latency:** 60 seconds for per-task checks
-
-Lane rule: only `support_contract_admin` (required, in `ci_green.needs`) counts as proof. `operator_browser_gate` and `demo_browser_evidence` are advisory and are never cited as the proof of a requirement.
+Only support_contract_admin is required evidence for the ExUnit contracts. The browser suites and catalog capture run are advisory or one-shot evidence; neither replaces the required-lane tests.
 
 ---
 
-## Per-Task Verification Map
+## Per-Requirement Verification Map
 
-Task IDs are finalized by the planner; rows below are the requirement-level contract each plan must cover.
+| Requirement | Observable behavior | Test type | Automated command / artifact | Lane | Audit status |
+|-------------|---------------------|-----------|------------------------------|------|--------------|
+| BRPIPE-01 | Fresh pinned Tailwind build matches committed app.css; byte drift, truncation, missing output, source drift, bad wiring, or installer failure is rejected | Integration + hermetic unit | Bundle command above; mailglass_admin/test/mailglass_admin/bundle_reproducibility_contract_test.exs | REQUIRED | COVERED — 26 tests passed at phase completion; mutation cases were shown red and restored green. |
+| BRPIPE-01 | Required alias begins with --check and CI wires that alias into ci_green | Static contract | Same bundle contract file; cd mailglass_admin && mix verify.support_contract.admin | REQUIRED | COVERED — wiring assertions and cold-start lane evidence are in 180-01-SUMMARY.md. |
+| BRPIPE-01 | Official ubuntu-latest runner produces identical committed bytes | CI environment | First support_contract_admin run on the phase PR; record run ID and the bundle check line | REQUIRED external observation | PENDING — the phase summaries record emulated linux/amd64 byte equality, but no ubuntu-latest run result was supplied or observed in this audit. |
+| BRPIPE-02 | Root html owns data-theme; nested theme attributes and local color-token redeclarations are rejected; shell and preview state render without nested ownership | Static + LiveView | Theme contract command above; mailglass_admin/test/mailglass_admin/operator_live_test.exs and inbound_live_test.exs are part of the required support lane | REQUIRED | COVERED — the root ownership contract had 23 passing tests and mutation evidence; phase summaries record the required lane green at completion. |
+| BRPIPE-02 | Computed theme tokens follow the html element across the cookie × OS matrix | Browser | mailglass_admin/e2e/theme-ownership.spec.js | ADVISORY | COVERED historically — 37 browser cases passed in 180-03-SUMMARY.md; this audit did not run a browser check and makes no claim about current rendered output. |
+| BRPIPE-03 | Catalog schema, content hashes, file allowlist, source binding, budgets, privacy rules, and seeded-case stop line are checked | Hermetic unit | Catalog command above; mailglass_admin/test/mailglass_admin/before_catalog_manifest_test.exs | REQUIRED | COVERED — 48 tests passed, the catalog evaluated LIVE, and recorded mutation cases were red before restoration. |
+| BRPIPE-03 | Capture refuses dirty/stale inputs, checks served bytes and determinism, and promotes only validated output | Script / one-shot integration | reference/demo_app/assets/catalog/capture-before-catalog.cjs and before-catalog.spec.js | One-shot; not CI | COVERED historically — the final run reported 82 Playwright tests passed and promoted 80 captures. No capture was run during this audit. |
 
-| Requirement | Behavior | Test Type | Automated Command | Lane | File Exists |
-|-------------|----------|-----------|-------------------|------|-------------|
-| BRPIPE-01 | Fresh build equals committed bundle | integration | `mix mailglass_admin.assets.build --check` (exit 0) + positive case in `bundle_reproducibility_contract_test.exs` | REQUIRED | ❌ W0 |
-| BRPIPE-01 | Flipped byte, truncation, missing file each fail and name `mix mailglass_admin.assets.build` | unit (hermetic tmp) | `mix test test/mailglass_admin/bundle_reproducibility_contract_test.exs --seed 0` | REQUIRED | ❌ W0 |
-| BRPIPE-01 | Source-side drift (appended rule, planted utility token in tmp `lib/`, removed `prose` directive) | unit (tmp tree) | same file | REQUIRED | ❌ W0 |
-| BRPIPE-01 | Wiring: `ci.yml` runs `verify.support_contract.admin`, alias has no file list and contains `--check`, `ci_green.needs` has the job | static | same file | REQUIRED | ❌ W0 |
-| BRPIPE-01 | Fails closed when the Tailwind binary cannot be installed | unit (injected installer raises) | same file | REQUIRED | ❌ W0 |
-| BRPIPE-01 | Real `ubuntu-latest` byte equality | CI | first PR run of `support_contract_admin` | REQUIRED | n/a |
-| BRPIPE-02 | No `data-theme=` literal under `lib/**/*.{ex,heex}` except `layouts/root.html.heex`; no `--mg-`/`--color-` redeclaration | static grep | `mix test test/mailglass_admin/root_theme_ownership_contract_test.exs` | REQUIRED | ❌ W0 |
-| BRPIPE-02 | Document-level `data-theme` count: explicit = 1, system = 0 (preview show, operator, inbound, gallery), red on current code first | integration | same file | REQUIRED | ❌ W0 |
-| BRPIPE-02 | `AdminShell.shell/1` renders no `data-theme` | unit | `mix test test/mailglass_admin/admin_shell_test.exs` | REQUIRED | ✅ rework |
-| BRPIPE-02 | Preview frame toggle keeps state marker, no `data-theme` on panes | integration | `mix test test/mailglass_admin/preview_live_test.exs` | REQUIRED | ✅ rework |
-| BRPIPE-02 | Computed `--color-base-100` and `color-scheme` equal `<html>`'s across the cookie × OS matrix | browser | `npx playwright test ... e2e/theme-ownership.spec.js` | ADVISORY | ❌ W0 |
-| BRPIPE-03 | Manifest shape, per-file sha256, no unlisted file, 40-hex `git_sha`, `dirty == false`, ≤ 80 images / 15 MB, `nested_theme_attr_count == 0` | unit | `mix test test/mailglass_admin/before_catalog_manifest_test.exs` | REQUIRED (catalog and test land in the same PR) | ❌ W0 |
-| BRPIPE-03 | Capture determinism self-test, clean-tree refusal, served-bytes equality | script self-checks | the committed capture script | run is not CI; manifest test is the required proof | ❌ W0 |
+### Phase Artifacts Present
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+The tests and support files listed by the original Wave 0 checklist exist:
 
----
-
-## Mutation Checks (each shown red, then restored)
-
-- Delete `@source not inline("prose");` → `--check` red (`{:drift, 139137, 136877, 74051}`)
-- Flip one byte / truncate / delete the committed bundle copy (hermetic) → red naming the fix command
-- Plant `tracking-widest` in a tmp `lib/` copy → red
-- Remove the `--check` step from the alias, or the job from `ci_green.needs` (tmp text copy) → wiring assertion red
-- Plant `data-theme="mailglass-light"` in a tmp template, and `style="--color-base-100: #fff"` / `[--mg-color-background:#fff]` → ownership grep red
-- Re-introduce `theme_attr` into `AdminShell` (scratch) → document-count test red
-- Manifest: flip a PNG byte, add an unlisted PNG, set `dirty: true`, exceed byte cap → red
+- mailglass_admin/test/mailglass_admin/bundle_reproducibility_contract_test.exs
+- mailglass_admin/test/mailglass_admin/root_theme_ownership_contract_test.exs
+- mailglass_admin/test/mailglass_admin/before_catalog_manifest_test.exs
+- mailglass_admin/e2e/theme-ownership.spec.js
+- mailglass_admin/dev/mailglass_admin/assets_check.ex
+- reference/demo_app/lib/mailglass_demo/catalog_seed.ex
+- reference/demo_app/assets/catalog/before-catalog.spec.js
+- reference/demo_app/assets/catalog/capture-before-catalog.cjs
+- reference/demo_app/assets/playwright.catalog.config.cjs
 
 ---
 
-## Wave 0 Requirements
+## Mutation Evidence
 
-- [ ] `mailglass_admin/test/mailglass_admin/bundle_reproducibility_contract_test.exs` — BRPIPE-01
-- [ ] `mailglass_admin/test/mailglass_admin/root_theme_ownership_contract_test.exs` — BRPIPE-02 (red first)
-- [ ] `mailglass_admin/test/mailglass_admin/before_catalog_manifest_test.exs` — BRPIPE-03
-- [ ] `mailglass_admin/e2e/theme-ownership.spec.js` — BRPIPE-02 browser (advisory)
-- [ ] `mailglass_admin/dev/mailglass_admin/assets_check.ex` (or inline in the task) — BRPIPE-01
-- [ ] `reference/demo_app/lib/mailglass_demo/catalog_seed.ex` and the capture spec/config outside the demo `./e2e` dir — BRPIPE-03
+The phase summaries record negative controls for every required contract family, then restoration and green reruns:
 
-No framework install needed.
+- BRPIPE-01: byte flips, truncation, deletion, source-side drift, removed prose exclusion, alias wiring changes, and installer failure.
+- BRPIPE-02: nested data-theme attributes, color-token redeclarations, preview iframe sandbox changes, and removed frame state marker.
+- BRPIPE-03: modified PNG bytes, unlisted files, dirty manifests, budget violations, stale source markers, and seeded-case stop-line violations.
+
+These are behavioral tests and failure-path checks, not file-existence assertions alone.
 
 ---
 
-## Manual-Only Verifications
+## Historical Phase-Completion Evidence
 
-All phase behaviors have automated verification (zero-UAT policy, D-52). Evidence that only a real CI run can supply (ubuntu-latest byte equality, optional drifted-bundle draft PR) is collected from the lane itself, not by owner review.
+The following results are from the phase execution records, not fresh browser or lane output from this audit:
+
+| Plan | Recorded result |
+|------|-----------------|
+| 180-01 | Bundle contract: 26 tests, 0 failures. Empty-build-path required lane: 1318 tests, 0 failures, 1 excluded. Emulated linux/amd64 Tailwind binary matched the committed bundle. |
+| 180-02 | Root theme contract: 23 tests, 0 failures. Required lane: 1341 tests, 0 failures, 1 excluded. |
+| 180-03 | Theme ownership browser spec: 37 passed. Its browser lane was advisory; the required proof remained in support_contract_admin. |
+| 180-04 | Manifest contract: 48 tests, 0 failures; catalog LIVE. Final catalog run: 82 Playwright tests passed, 80 captures promoted. Required lane: 1389 tests, 0 failures, 1 excluded. |
+
+See 180-01-SUMMARY.md through 180-04-SUMMARY.md for commands, mutation details, and recorded caveats.
+
+---
+
+## Current Audit Evidence
+
+Results below were supplied from the 2026-11-17 run. The full Admin alias was not rerun during this audit.
+
+| Check | Reported result | Scope and limitation |
+|-------|-----------------|----------------------|
+| Storybook/evidence contracts | 42 passed | Contract result only; no browser output is inferred. |
+| Core contracts | 82 passed | Contract result only. |
+| Inbound deterministic suite | 481 passed; 3 properties excluded | Exclusions remain recorded; they are not counted as passed properties. |
+| Focused rendering checks | Delivery badge sizing and mobile card spacing passed | No unseen browser rendering or screenshot result is claimed. |
+| Admin support alias | Reached ExUnit and reported 1824 tests, 1 failure | Sole failure: FaviconCatalogTest found that the existing favicon-299c1aa-20261116T231912Z producer SHA differs from the current file. Preserve this as an evidence limitation; do not recapture or rewrite favicon evidence. The alias result is not green, and this failure is not classified as a Phase 180 implementation defect. |
+
+No additional browser suite or catalog capture was run during this audit; the focused rendering checks above are separately reported as passed.
+
+---
+
+## External Evidence and Limits
+
+- The real ubuntu-latest byte-equality run remains unobserved in the evidence supplied for this audit. The historical linux/amd64 emulation result does not substitute for that CI record.
+- Browser output in the map is explicitly historical and advisory. No current browser result is claimed.
+- The current favicon producer/file SHA mismatch remains an evidence stop. Resolving it requires a separate authorized evidence decision; this audit preserves the mismatch and does not recapture or rewrite its artifact.
+- The before-catalog artifact remains unchanged. Its established constraints and Phase 181 hand-off are documented in 180-04-SUMMARY.md.
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All BRPIPE-01 through BRPIPE-03 behaviors map to existing automated tests or recorded one-shot checks.
+- [x] All original Wave 0 tests and support files are present.
+- [x] Existing mutation evidence covers the negative paths recorded by the plans.
+- [x] Advisory browser evidence is distinguished from required-lane proof.
+- [x] nyquist_compliant: true — no uncovered Phase 180 test behavior was found.
+- [ ] Real ubuntu-latest byte-equality run ID recorded — post-PR evidence remains pending.
+- [ ] Current Admin alias green — not established; the supplied run stopped on the preserved favicon SHA evidence mismatch.
 
-**Approval:** pending
+**Approval:** Nyquist coverage audit complete; the two open evidence rows above remain explicit.
+
+## Validation Audit 2026-11-17
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
