@@ -1,5 +1,28 @@
 # Phase 183 source coverage and planning assumptions
 
+## Owner-authorized single gap-closure addendum — 183-03
+
+The owner approved exactly one additional plan after final verification found a clean-checkout CI prerequisite gap. This explicitly supersedes the original D-15 two-plan count for this gap only; the historical audit below remains the original two-plan record. No new research or implementation is performed during gap planning.
+
+| Source | ID | Gap-closure coverage | Plan/task | Status |
+|--------|----|----------------------|-----------|--------|
+| GOAL | Phase 183 / SC-1 / SC-2 | Preserve existing brand identity; make the three-package generated contract a required same-job check and verify local theme/layout against fresh outputs | 03-1/2 | COVERED |
+| REQ | BRDOC-01 | Native theme selection and narrow README layout remain asserted in all three packages | 03-1 | COVERED |
+| REQ | BRDOC-02 | Three real docs builds, pin/CSS/Lato/claim checks, required docs-job invocation and clean generic tests | 03-1/2 | COVERED |
+| REQ | BRDOC-03 / BRDOC-04 / BRDOC-05 / BRDOC-06 | Existing completed work remains covered by plans 01/02; pending owner sign-off, no-capture stop and legal handoff are retained | 01/02; 03 boundaries | COVERED |
+| RESEARCH | ExDoc / Validation | Reuse existing verify_output/2 and pinned local Playwright; source/fixture tests stay hermetic, outputs built once per package in the existing required job | 03-1/2 | COVERED |
+| RESEARCH | Other original findings | No new research in gaps mode; historical coverage remains in the original audit below | 01/02 | COVERED |
+| CONTEXT | D-01 / D-02 / D-03 / D-04 / D-05 | Preserve renderer fragments, full-SHA bytes, lowercase H1/alt, separate tagline, native typography/themes and real package docs checks | 03-1 | COVERED |
+| CONTEXT | D-06 / D-07 / D-08 / D-10 | Existing guide/lint/asset work remains covered by original completed plans; no changes are planned | 01/02 | COVERED |
+| CONTEXT | D-09 / D-11 / D-12 / D-13 / D-14 / D-16 | Preserve pending canonical patches, consumed capture authorization, platform/Safari limits, no social actions, current caution and no publication/claim authority | 03-1/2 | COVERED |
+| CONTEXT | D-15 | Owner expressly authorized one additional gap plan; no broader scope/cap change inferred | 03 objective | COVERED |
+| VERIFICATION | sole gaps item | Remove ignored-output dependency from default tests and require same-job real core/Admin/Inbound output validation | 03-1/2 | COVERED |
+| VERIFICATION | associated browser items | Explicit output-root support and six existing native-theme/narrow-layout scenarios using installed Chromium; no browser download or favicon capture | 03-1 | COVERED |
+
+Plan 03 depends on completed 183-01 and is wave 3, after its wave 2. Task 1 creates the standalone output consumer and one build/check/browser path; task 2 binds that proven path to the existing required docs job and proves default root discovery. Paths are repository-relative except the pre-existing owner-authorized installed browser resource. The new script and contract paths are created by task 1; the workflow regression test is created by task 2. No count/grep acceptance gate is authored. The absent-README shell checks are explicit cleanliness prerequisites for the full suite, not claims of newly delivered behavior. Calibration is factor 1, zero samples, low confidence; raw/calibrated estimate 26k tokens.
+
+The existing 91s core-only docs observation and 356s/528s unrelated-run critical-path observations support retaining the existing docs job and avoiding repeated generation in generic tests; they do not establish candidate runner-minute savings. Local per-package/build/browser timings will be recorded during execution. No remote CI profiling or dispatch is authorized. Deferred ideas and all owner handoffs remain excluded from implementation scope.
+
 Exactly two plans, three executable tasks each. Execution is **02 in wave 1, then 01 in wave 2**. The launch gate is hardened before source artwork/catalog/checklist work; docs consume the resulting marks and guide. The phase-specific D-15 cap supersedes generic five-file task sizing for the explicitly inventoried package locksteps and mechanical prose sweep. No requirement is reduced or deferred to fit the cap.
 
 ## Multi-source coverage audit

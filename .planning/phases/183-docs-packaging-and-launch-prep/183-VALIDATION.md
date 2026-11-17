@@ -70,7 +70,16 @@ Existing ExUnit, Mix, and Playwright infrastructure covers all requirements. Add
 - [ ] Feedback latency < 30s is not established by the recorded command output
 - [ ] `nyquist_compliant: true` set in frontmatter after validation audit
 
-**Approval:** Partial validation audit recorded; clean-checkout docs-output wiring remains open pending the owner-authorized gap-closure plan. Manual platform, owner-file, and legal handoffs remain pending.
+**Approval:** Partial validation audit recorded; clean-checkout docs-output wiring remains open. The owner-authorized single gap-closure plan is now `183-03-PLAN.md`; its implementation and runtime evidence are pending. Manual platform, owner-file, and legal handoffs remain pending.
+
+## Gap-closure validation planned — 183-03
+
+| Task | Requirement | Threat Ref | Planned evidence | Status |
+|------|-------------|------------|------------------|--------|
+| 183-03 task 1 | BRDOC-01, BRDOC-02 | T-183-12, T-183-14, T-183-15 | Default fixture/source test without checkout docs; explicit-root standalone real-output checks; one background serial three-package build/output/browser run using existing pinned Chromium; both native themes and 375px layout for all packages; owned temp-output cleanup | Pending implementation and execution |
+| 183-03 task 2 | BRDOC-02 | T-183-13 | Structural workflow tests and in-memory mutation rejection; unchanged existing CI gate/identity contracts; full normal root `mix test --warnings-as-errors` with all generated README outputs absent | Pending implementation and execution |
+
+The standalone real-output contract is outside default root test discovery and runs in the existing required Docs job after three same-job builds. Default root fixture/mutation/source checks stay active. Local browser mode consumes the same fresh outputs, uses `/private/tmp/mailglass-183-02-playwright`, and fails visibly if the matching installed browser is unavailable; no download, favicon capture, preview or remote CI action is planned. Core docs keep the existing warnings-as-errors policy; existing Admin/Inbound link warnings remain disclosed without expanding this gap into unrelated repairs. Planning has not closed the gap, changed Nyquist compliance, or consumed any owner handoff.
 
 ## Validation Audit Record — 2026-11-17
 
