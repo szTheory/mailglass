@@ -48,7 +48,6 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     }
 
     File.write!(Path.join(dir, "manifest.json"), Jason.encode!(manifest))
-    on_exit(fn -> File.rm_rf!(dir) end)
 
     failures = FaviconCatalog.validate_catalog(dir, @repo_root)
 
@@ -61,7 +60,6 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     root = temporary_catalog()
     catalog = Path.join(root, "catalog")
     File.mkdir_p!(catalog)
-    on_exit(fn -> File.rm_rf!(root) end)
 
     manifest_catalog = Path.join(root, "manifest-link-catalog")
     File.mkdir_p!(manifest_catalog)
@@ -144,11 +142,8 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     assert_provenance_invalid(catalog, root, "historical producer snapshot")
     File.write!(snapshot_path, snapshot_bytes)
 
-    outside_record =
-      Path.join(
-        System.tmp_dir!(),
-        "favicon-provenance-record-#{System.unique_integer([:positive])}"
-      )
+    outside_record_root = temporary_directory!("favicon-provenance-record")
+    outside_record = Path.join(outside_record_root, "record.json")
 
     File.write!(outside_record, record_bytes)
     File.rm!(record_path)
@@ -158,11 +153,8 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     File.write!(record_path, record_bytes)
     File.rm!(outside_record)
 
-    outside_snapshot =
-      Path.join(
-        System.tmp_dir!(),
-        "favicon-provenance-snapshot-#{System.unique_integer([:positive])}"
-      )
+    outside_snapshot_root = temporary_directory!("favicon-provenance-snapshot")
+    outside_snapshot = Path.join(outside_snapshot_root, "snapshot.cjs")
 
     File.write!(outside_snapshot, snapshot_bytes)
     File.rm!(snapshot_path)
@@ -202,13 +194,8 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     fixture_dir = Path.join(root, @provenance_relative_dir)
     moved_dir = fixture_dir <> "-moved"
 
-    external_dir =
-      Path.join(
-        System.tmp_dir!(),
-        "favicon-provenance-dir-#{System.unique_integer([:positive])}"
-      )
-
-    on_exit(fn -> File.rm_rf!(external_dir) end)
+    external_root = temporary_directory!("favicon-provenance-dir")
+    external_dir = Path.join(external_root, "fixture-link-target")
     File.cp_r!(fixture_dir, external_dir)
     File.rename!(fixture_dir, moved_dir)
     File.ln_s!(external_dir, fixture_dir)
@@ -437,26 +424,38 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     |> Enum.sort()
   end
 
-  defp temporary_catalog do
+  defp temporary_directory!(prefix), do: temporary_directory!(prefix, 0)
+
+  defp temporary_directory!(prefix, attempts) when attempts < 64 do
     path =
       Path.join(
         System.tmp_dir!(),
-        "favicon-catalog-contract-#{System.unique_integer([:positive])}"
+        "#{prefix}-#{System.unique_integer([:positive])}"
       )
 
-    File.mkdir_p!(path)
-    path
+    case File.mkdir(path) do
+      :ok ->
+        on_exit(fn -> File.rm_rf!(path) end)
+        path
+
+      {:error, :eexist} ->
+        temporary_directory!(prefix, attempts + 1)
+
+      {:error, reason} ->
+        raise "cannot create owned temporary directory #{inspect(path)}: #{inspect(reason)}"
+    end
+  end
+
+  defp temporary_directory!(prefix, _attempts) do
+    raise "cannot allocate an exclusive temporary directory for #{inspect(prefix)}"
+  end
+
+  defp temporary_catalog do
+    temporary_directory!("favicon-catalog-contract")
   end
 
   defp git_free_accepted_repo do
-    root =
-      Path.join(
-        System.tmp_dir!(),
-        "favicon-provenance-contract-#{System.unique_integer([:positive])}"
-      )
-
-    File.mkdir_p!(root)
-    on_exit(fn -> File.rm_rf!(root) end)
+    root = temporary_directory!("favicon-provenance-contract")
 
     source_catalog = Path.join(@catalog_root, @accepted_catalog_id)
     catalog = Path.join([root, @catalog_relative_root, @accepted_catalog_id])
@@ -570,15 +569,11 @@ defmodule MailglassAdmin.FaviconCatalogTest do
   defp catalog!, do: List.last(catalog_dirs()) || flunk("no captured favicon catalog exists")
 
   defp copy_catalog(source) do
-    target =
-      Path.join(System.tmp_dir!(), "favicon-catalog-test-#{System.unique_integer([:positive])}")
-
-    File.mkdir_p!(target)
+    target = temporary_directory!("favicon-catalog-test")
 
     for file <- Path.wildcard(Path.join(source, "*")),
         do: File.cp!(file, Path.join(target, Path.basename(file)))
 
-    on_exit(fn -> File.rm_rf!(target) end)
     target
   end
 
