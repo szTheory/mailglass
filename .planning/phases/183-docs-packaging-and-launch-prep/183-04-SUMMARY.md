@@ -20,16 +20,17 @@ affects:
   - Phase 183 verification
   - Phase 182 plan 07
 actuals:
-  tokens: 9989
+  tokens: 10471
   tasks: 2
-  commits: 2
+  commits: 4
   plan_head_before: 48c3b310830d44a80f5ef5beb4895f23d37f42bc
-  plan_head_after: 314890d747bafb04b16d121290040133bb9cd218
+  plan_head_after: 3639ceb5429d7f46a36c52d3617d3c89bd2e6329
 tech-stack:
   added: []
   patterns:
     - OTP SHA-256 and Git-blob SHA-1 over bounded fixture bytes
     - Fixed-path provenance reads with lstat checks and pre-read byte caps
+    - Atomic temporary-directory creation with collision retry and owned cleanup
 key-files:
   created:
     - mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.cjs
@@ -44,6 +45,7 @@ key-decisions:
 patterns-established:
   - Pin machine-readable provenance records to independent validator constants and reject any extra, missing, changed, or mistyped field.
   - Bound and lstat-check fixed evidence paths before reading archive-portable fixture data.
+  - Create every top-level test temp directory with exclusive mkdir and register cleanup only after creation succeeds.
 requirements-completed:
   - BRDOC-05
 coverage:
@@ -58,7 +60,7 @@ coverage:
         ref: node --test mailglass_admin/e2e/favicon-capture-order.test.cjs
         status: pass
     human_judgment: false
-duration: 21m
+duration: 38m
 completed: 2026-11-18
 status: complete
 ---
@@ -71,7 +73,7 @@ status: complete
 
 - **Duration:** Approximately 21 minutes, including source preflight, implementation and focused verification.
 - **Started:** Approximately 2026-11-17T23:45:00Z.
-- **Completed:** 2026-11-18T00:05:48Z.
+- **Completed:** 2026-11-18T00:22:36Z.
 - **Tasks:** 2.
 - **Files modified:** 4 plan artifacts, plus this summary.
 
@@ -80,6 +82,7 @@ status: complete
 - Added an exact, non-executable 16,209-byte copy of the historical producer and an offline record binding its source commit, blob, tree, hashes, accepted manifest, brand pin and favicon identity.
 - The validator chooses historical evidence only for manifest SHA-256 `ef614ecee58a440887d1bfbede7f777d31f97ab37b61acf82c4e7d0d6c204e11` and catalog ID `favicon-299c1aa-20261116T231912Z`. It independently compares every provenance-record field with compiled constants, then validates snapshot length, SHA-256 and Git-blob identity.
 - Added Git-free tests for the accepted catalog, all provenance identity fields, missing/malformed/oversized/corrupted/symlinked evidence, symlinked parent directories, raw-manifest whitespace changes, and synthetic future catalogs using the current producer digest.
+- Hardened every test-owned top-level temporary directory: atomic `File.mkdir` retries collisions across VMs, and cleanup is registered only after exclusive creation succeeds.
 - Kept source, served favicon, pin, manifest, PNG, pixel, threshold and Safari-disclosure checks active. No dependency was added.
 
 ## Historical Source Authentication
@@ -121,6 +124,7 @@ The baseline regression was run before implementation with the existing full val
 | `mix test test/mailglass_admin/favicon_catalog_test.exs:100 --warnings-as-errors --seed 0` with the pinned ASDF environment and a 60-second cap | Expected red: one accepted-catalog assertion reported only `producer: SHA-256 differs from current file`; 13 tests, 1 failing assertion, 12 excluded; 0.4s. Log SHA-256 `8322682cdeed41d9838192d0d008761be7df85dc599d22695bd848f9c638bf4d`. |
 | `mix test test/mailglass_admin/favicon_catalog_test.exs --warnings-as-errors --seed 0` with the pinned ASDF environment and a 60-second cap | Pass: 18 tests, no test errors, 10.8s. Log SHA-256 `74c4f72953c81c28183ffb2bce51cd464a95c1d770d2ee07f0b75dd1e756f5d7`. |
 | Same focused ExUnit command, final Task 2 run, 60-second cap | Pass: 18 tests, no test errors, 11.0s. Log SHA-256 `e48b08905203facd33911da611f05feddb7b003e79377a416bbe519e2a25091d`. |
+| Same focused ExUnit command after exclusive temporary-directory hardening, 60-second cap | Pass: 18 tests, no test errors, 10.9s. Log SHA-256 `f85cf2bc797a241d9bd44069bf1c35940fce18a83fbc83656b7f649f0c6872d1`. |
 | node --test mailglass_admin/e2e/favicon-capture-order.test.cjs, 60-second cap | Pass: 1 test, 38.6ms. Log SHA-256 `8dd35fa0ec60f4ac0f2d325db911c74b1e9bcf936fcaba1b16cd0f48f3f51d4e`. |
 | Targeted `mix format --check-formatted` and `git diff --check` | Pass. |
 
@@ -144,6 +148,7 @@ The per-file inventory is `/private/tmp/phase183-04-protected-before.sha256` and
 
 1. **Task 1: Authenticate the accepted historical producer through the full catalog validator** — `2d443e1f` (`fix(183-04): authenticate accepted favicon producer bytes`).
 2. **Task 2: Prove archive portability and reject provenance substitutions** — `314890d7` (`test(183-04): cover offline provenance and producer fallback`).
+3. **Task 2 follow-up: Give each test VM exclusive temporary roots** — `3639ceb5` (`test(183-04): create temporary test roots exclusively`).
 
 ## Decisions Made
 
@@ -151,6 +156,7 @@ The per-file inventory is `/private/tmp/phase183-04-protected-before.sha256` and
 - The JSON record is evidence to compare against independent code constants, never authority for its own values. Both evidence files use fixed repository-relative paths, real-directory/regular-file checks and pre-read byte limits.
 - OTP crypto computes SHA-256 and the standard Git-blob SHA-1 at runtime; no dependency or runtime Git operation was introduced.
 - `sourceRevision` remains the approved brand source commit, not the application producer commit.
+- Temporary test roots use atomic `File.mkdir` with collision retry; only successfully created roots register cleanup.
 
 ## Deviations from Plan
 
@@ -160,6 +166,7 @@ None. The two implementation tasks and focused verification stayed within the ap
 
 - The first post-edit ExUnit run caught a compile error in the new test's map assignment. It was fixed before the successful bounded reruns.
 - The formatter initially had no selected ASDF version; the plan-pinned environment was applied and the targeted formatting check passed.
+- The phase verifier identified that per-VM unique integers alone could collide across concurrent test VMs. The temp helper now retries atomic mkdir collisions and owns cleanup only after successful creation.
 
 ## Preserved Stops and Next Gate
 
@@ -168,7 +175,7 @@ The consumed capture authorization and blocked alias remain stopped. No accepted
 ## Self-Check: PASSED
 
 - Both fixture files, the validator and the focused contract test exist.
-- Task commits `2d443e1f` and `314890d7` are in the checked plan history.
+- Task commits `2d443e1f`, `314890d7` and `3639ceb5` are in the checked plan history.
 - The before/after protected inventory hashes match and temporary test roots are absent.
 
 ---
