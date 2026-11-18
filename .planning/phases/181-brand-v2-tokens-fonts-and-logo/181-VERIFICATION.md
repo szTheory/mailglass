@@ -1,6 +1,6 @@
 ---
 phase: 181-brand-v2-tokens-fonts-and-logo
-verified: 2026-11-17T21:21:14Z
+verified: 2026-11-18T00:52:02.534Z
 status: passed
 score: 18/18 must-haves verified
 covered_files:
@@ -54,6 +54,8 @@ covered_files:
   - mailglass_admin/priv/static/fonts/ui-600.woff2
   - mailglass_admin/priv/static/mailglass-logo.svg
   - mailglass_admin/scripts/check-conformance.sh
+  - mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.cjs
+  - mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.json
   - mailglass_admin/test/mailglass_admin/accessibility_test.exs
   - mailglass_admin/test/mailglass_admin/assets_test.exs
   - mailglass_admin/test/mailglass_admin/brand_test.exs
@@ -83,7 +85,7 @@ covered_files:
   - scripts/check_phase175_evidence.cjs
   - scripts/check_phase175_evidence.test.cjs
   - test/scripts/brand_pin_test.exs
-covered_digest: "v4:sha256:b089daae2aec079c0386686e9158be405490d6f7df67a399b48440fa9e0eb354"
+covered_digest: "v4:sha256:7049aab4f6b6230131640208385999dc42c7f148579deb963457e68a1867787e"
 behavior_unverified: 0
 overrides_applied: 0
 ---
@@ -91,14 +93,20 @@ overrides_applied: 0
 # Phase 181: Brand v2 Tokens, Fonts and Logo Verification Report
 
 **Phase Goal:** In one coordinated change, the admin dashboard takes on brand v2.0 colors, typography and mark in light and dark. Every contrast pair and font asset is verified by tests, and the host's email defaults stay exactly as they were.
-**Verified:** 2026-11-17T21:21:14Z
+**Verified:** 2026-11-18T00:52:02.534Z
 **Status:** passed
-**Re-verification:** No — the prior report had no gaps section. This is an initial goal-backward verification using current source evidence.
+**Re-verification:** Initial-mode findings retained; freshness refresh rechecked the two stale shared catalog-validator files and their provenance fixtures.
 **Phase base / completion:** 9bd70fa5 / 644412c3. Current working-tree changes from later work were inspected where they affect the evidence below.
 
 ## Goal Achievement
 
-The five ROADMAP success criteria and plan must-haves were checked against source, wiring, tests, and current lane results. The four summaries and old verification were used only as historical context. No browser, screenshot, capture, curated gate, or retry was run during this verification.
+The five ROADMAP success criteria and plan must-haves remain supported by the source, wiring, tests, and lane results below. This freshness refresh inspected the only two files GSD flagged as stale and their new provenance fixtures, then reused the focused Phase 183 validator result. No Phase 181 lane, full Admin suite, browser, screenshot, capture, build, curated gate, or CI was rerun.
+
+### Freshness Refresh Evidence
+
+GSD marked this report stale only because Phase 183 changed `mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs` and `mailglass_admin/test/support/favicon_catalog.ex`. The helper now accepts historical producer bytes only when both the catalog ID and raw manifest SHA match the single reviewed catalog; it then checks the fixed provenance record and snapshot against compiled values. Every other catalog still compares its producer SHA to the current producer file. The test additions cover the Git-free accepted catalog, provenance substitution and symlink failures, and current-producer behavior for future catalogs. The temporary test roots now use exclusive directory creation.
+
+These are test and test-support changes. They do not change the Phase 181 runtime token, font, logo, favicon-serving, or email paths. The existing source/served/pin asset checks remain separate from producer provenance. Phase 183's focused validator result records 18 tests with 0 failures; this refresh did not rerun the broader Admin suite. The provenance evidence establishes historical source-byte identity only, not a new browser observation or a fresh capture.
 
 ### Observable Truths
 
@@ -106,22 +114,22 @@ The five ROADMAP success criteria and plan must-haves were checked against sourc
 |---|---|---|---|
 | 1 | All 39 color roles and both logo roles resolve in light, dark, and system blocks, and the 20 daisyUI slots map to those roles. | VERIFIED | Current tokens contain 39 roles per theme and two logo roles. Each current light/dark block maps 20 color slots. The compiled CSS and tokens CSS carry 123 role declarations across three theme blocks; token parity tests cover all 41 roles in each block. |
 | 2 | The bundle is connected to the token source and its drift/parity contracts are substantive. | VERIFIED | app.css imports brandbook/tokens.css; the compiled bundle contains the mapped roles. Direct wiring resolves a false negative from the automated key-link matcher, which did not recognize the relative import. Current bundle hash matches the before-catalog superseded marker; the current bundle was not rebuilt in this verification. |
-| 3 | Static contrast tests cover the book pairs and admin roles, enforce the 0.04045 sRGB threshold, and no dependency was added. | VERIFIED | Current contrast contract reads every book contrast pair and includes admin pair, coverage, designed-value, and never-rule checks. The shared helper uses 0.04045. The current test suite result supplied by the coordinator has one failure in FaviconCatalogTest; no contrast failure was reported. Lockfile diff from the phase base through completion is empty. |
+| 3 | Static contrast tests cover the book pairs and admin roles, enforce the 0.04045 sRGB threshold, and no dependency was added. | VERIFIED | Current contrast contract reads every book contrast pair and includes admin pair, coverage, designed-value, and never-rule checks. The shared helper uses 0.04045. The previously recorded Admin aggregate had one unrelated FaviconCatalogTest failure and no reported contrast failure; Phase 183's focused validator now records 18 tests with 0 failures. Lockfile diff from the phase base through completion is empty. |
 | 4 | Six local woff2 fonts and OFL texts are present; compiled styles do not fetch remote font or stylesheet assets. | VERIFIED | Current fonts directory contains the six expected faces and three OFL files. All six files have wOF2 signatures and match the current brand pin hashes/byte counts. The bundle has six local @font-face rules and no remote font/style URL or weight-700 face. |
 | 5 | The font serving contract is restricted to the compile-time allow-list, and an unlisted font is rejected. | VERIFIED | Assets controller embeds the explicit six-file map and serves through Map.fetch; @allowed_fonts is derived from that map. font_assets_contract_test and assets_test assert served-list parity, valid font responses, and 404 behavior for unlisted files. This is the required static/package contract; a current browser network check is advisory under the ROADMAP. |
 | 6 | Font roles and typographic settings use Funnel Display 600, the bundled body/mono faces, and the specified tabular numeral treatment. | VERIFIED | Current CSS and font contract contain the expected font-face, heading/body/code, weight, and tabular-number settings. No current evidence depends on a remote font. |
 | 7 | The pinned v2 logo and favicon are wired into the admin and follow the theme roles. | VERIFIED | Root layout links the favicon route; admin shell and gallery render Components.logo. The inline SVG uses the pinned paths and theme classes, and those classes resolve through the light/dark logo tokens. Source and served favicon SVG hashes both equal the current brand pin. |
 | 8 | The left arrow and the other prohibited arrow glyphs are absent from rendered admin strings, with icon replacements present. | VERIFIED | The glyph contract scans rendered admin text and checks hero icon rules; current source uses the icon replacements. The aggregate Admin suite reports no failure in this contract. |
-| 9 | Brand and accessibility contracts cover the updated tokens and accessibility expectations. | VERIFIED | brand_test and accessibility_test exist and are part of the current Admin suite result. The sole reported Admin failure is FaviconCatalogTest producer provenance, not either named contract. |
+| 9 | Brand and accessibility contracts cover the updated tokens and accessibility expectations. | VERIFIED | brand_test and accessibility_test exist and were part of the previously recorded Admin aggregate; its only reported failure was FaviconCatalogTest producer provenance, not either named contract. Phase 183's focused catalog validator now records 18 tests with 0 failures; the full Admin suite was not rerun here. |
 | 10 | The axe baseline was regenerated exactly once and last within the phase, retaining the prior baseline and adding no color-contrast regression. | VERIFIED | Git history records one baseline change after the phase base, commit 644412c3. Its run id is current for that change; prior and schema are preserved, and its persisted diff adds no color-contrast entries. No later baseline edit is present. |
 | 11 | Host email defaults and VML goldens stayed unchanged. | VERIFIED | The phase-base-to-completion diff is empty for core config/theme/email paths, email tests, fixtures, root test support, and all lockfiles. The current core lane reports 82 passing tests. |
 | 12 | Palette provenance and designed values are constrained to the brand book. | VERIFIED | Current token data retains book/designed provenance; contrast and token tests assert source values and recompute designed colors. No source or test stub was found in these paths. |
-| 13 | Token parity selects and checks all three exact compiled theme blocks with mutation teeth. | VERIFIED | token_parity_test has per-block selector and value assertions. The current Admin result reports only the unrelated catalog-producer failure; phase summaries record the prior mutation demonstrations, treated as historical rather than rerun evidence. |
+| 13 | Token parity selects and checks all three exact compiled theme blocks with mutation teeth. | VERIFIED | token_parity_test has per-block selector and value assertions. The previously recorded Admin aggregate reported only the unrelated catalog-producer failure; phase summaries record the prior mutation demonstrations, treated as historical rather than rerun evidence. |
 | 14 | Contrast coverage guards and all three book never rules are enforced. | VERIFIED | Current contrast contract contains slot/designed-value coverage checks and separate never-rule assertions; current contrast helper and CSS checks remain wired. |
 | 15 | The before-catalog marker is bound to the current bundle hash and root-layout blob. | VERIFIED | Current app.css SHA-256 equals superseded_by.bundle_sha256, and the current root layout Git blob equals the marker's recorded blob. This establishes marker alignment, not a fresh build. |
 | 16 | Shipped assets are pinned, local font licensing is included, and the current pin owns only the intended asset directories. | VERIFIED | brand pin owned_dirs are brandbook/v2 and mailglass_admin/priv/static/fonts. The current pin and all six font bytes agree; the three OFL texts are present. Retired fonts are absent from the live font directory. |
 | 17 | Admin pages load the stylesheet/theme, logo component, favicon route, and font route through connected source paths. | VERIFIED | Root layout binds theme, stylesheet, and favicon; the admin shell calls the logo component; the assets controller serves pinned logo/favicon/font artifacts. This is source and contract-test evidence, not a fresh browser rendering claim. |
-| 18 | Current project checks support the static and package contracts without concealing the known adjacent failure. | VERIFIED | Latest lane results supplied by the coordinator: Storybook/evidence/review 42 pass; core 82 pass; Admin 1,824 tests with one FaviconCatalogTest failure; inbound 481 pass with three property exclusions. The failure and stop are described below. These are reported current results, not reruns by this verifier. |
+| 18 | Current project checks support the static and package contracts without concealing the adjacent validator issue. | VERIFIED | The previously recorded lanes were Storybook/evidence/review 42 pass, core 82 pass, Admin 1,824 tests with one FaviconCatalogTest producer-SHA mismatch, and inbound 481 pass with three property exclusions. Phase 183's focused validator run then recorded 18 tests with 0 failures after the provenance change. The full Admin suite was not rerun for this freshness refresh. |
 
 **Score:** 18/18 truths verified (0 behavior-unverified).
 
@@ -131,7 +139,7 @@ The five ROADMAP success criteria and plan must-haves were checked against sourc
 |---|---|---|---|
 | brandbook/tokens.json and tokens.css | v2 palette, provenance, roles for light/dark/system | VERIFIED | Roles and values are present; compiled bundle carries the declarations. |
 | mailglass_admin/assets/css/app.css and priv/static/app.css | token import and generated theme bundle | VERIFIED | Relative source import is wired; bundle has 20 mapped slots per light/dark theme and 123 role declarations across theme blocks. |
-| contrast helper and contrast/token/accessibility tests | static pair and theme contract | VERIFIED | Substantive assertions and coverage guards exist; current aggregate has no reported failure in these tests. |
+| contrast helper and contrast/token/accessibility tests | static pair and theme contract | VERIFIED | Substantive assertions and coverage guards exist; the prior aggregate had no reported failure in these tests. |
 | priv/static/fonts and OFL files | six pinned font files and adjacent licenses | VERIFIED | Six woff2 plus three OFL texts; current hashes and sizes agree with the pin. |
 | Assets controller and asset contract tests | local compile-time serving and allow-list behavior | VERIFIED | Explicit embedded map, allow-list derivation, route, and matching tests are wired. |
 | Components.logo, logo/favicon SVGs, and root layout | pinned brand mark and favicon in admin | VERIFIED | Inline mark and favicon route are linked to pinned assets and theme tokens. |
@@ -165,11 +173,11 @@ The five ROADMAP success criteria and plan must-haves were checked against sourc
 
 | Behavior | Evidence used | Result | Status |
 |---|---|---|---|
-| Current project regression lanes | Coordinator's latest lane record; not rerun here | Storybook/evidence/review 42 pass; core 82 pass; Admin 1,824 tests with one FaviconCatalogTest failure; inbound 481 pass, three property exclusions | PASS WITH KNOWN ADJACENT FAILURE |
+| Recorded project lanes and focused catalog refresh | Prior Phase 181 lane record plus Phase 183 focused validator result; not rerun here | Storybook/evidence/review 42 pass; core 82 pass; prior Admin 1,824 tests with one catalog producer-SHA mismatch; Phase 183 focused catalog test 18 pass, 0 failures; inbound 481 pass, three property exclusions | FOCUSED VALIDATOR PASS; FULL ADMIN NOT RERUN |
 | Font and favicon package contracts | Current source, pin, and test coverage | Six fonts and favicon bytes match current pin; static serving and rejection tests are wired | VERIFIED BY SOURCE/CONTRACT |
 | Current browser/capture outcome | Explicit existing no-recapture stop | Not run; no new screenshot, network observation, or live browser result is claimed | SKIPPED |
 
-The current FaviconCatalogTest failure is a producer-script SHA mismatch. The catalog's recorded producer SHA is bff05d778648d4d900c9e977e89227ea3290ede9490e1e7fd5de28bdda7f6ee3; the current producer script SHA is 55208d4010bd21fbb03f48754a320b1672e5d2846d919ac915d1fd9a1fc235a9. The favicon bytes themselves are not mismatched: source, served copy, and brand pin all have SHA-256 299c1aaa2dfc772bf375de0d51ef4dae0b442969684cc4d393887b87f3f037a5. This remains the active stop for the curated gate and captures; it was not retried or bypassed.
+The previously observed FaviconCatalogTest producer-SHA mismatch is addressed by Phase 183's exact historical-provenance path and its focused 18-test passing result. The source, served copy, and brand pin still have matching SHA-256 `299c1aaa…`. This refresh did not rerun the curated gate or Admin aggregate, and it made no new browser observation or capture; the existing stop against recapturing remains in force.
 
 Historical Phase 181 lane and browser evidence recorded in the old report/summaries is labeled historical and was not used as proof of a current browser render. The ROADMAP calls the browser font-network check advisory; static bundle, font allow-list, and asset contracts are the acceptance proof.
 
@@ -196,7 +204,7 @@ The decision coverage query reports 23 of 23 decisions honored, with no blocking
 
 ### Plan Prohibitions
 
-The plan prohibitions are test-tier items. Current source retains enforcement for provenance, forbidden role uses, no dependency/remote fonts, pin ownership, font allow-listing, prohibited glyphs, and logo path reuse. No reported current lane failure maps to those prohibitions. The one current Admin failure is the separate producer-SHA catalog provenance mismatch described above.
+The plan prohibitions are test-tier items. Current source retains enforcement for provenance, forbidden role uses, no dependency/remote fonts, pin ownership, font allow-listing, prohibited glyphs, and logo path reuse. The prior Admin aggregate's one failure was the separate producer-SHA catalog provenance mismatch described above; Phase 183's focused validator now records 18 tests with 0 failures.
 
 ### Anti-Patterns Found
 
@@ -209,13 +217,13 @@ The current placeholder contrast path has an explicit secondary-color override a
 
 ### Human Verification Required
 
-None for the Phase 181 acceptance criteria. Direct current browser screenshots and capture evidence are unavailable because the existing producer-SHA stop is being preserved. The remaining browser font-network check is advisory per the phase criteria; source and static contracts establish the required behavior. No current rendered screenshot is claimed.
+None for the Phase 181 acceptance criteria. Direct current browser screenshots and capture evidence remain unavailable; this refresh made no new browser observation or capture authorization. The browser font-network check is advisory per the phase criteria; source and static contracts establish the required behavior. No current rendered screenshot is claimed.
 
 ### Gaps Summary
 
-Phase 181's required token, contrast, font, logo/glyph, accessibility/brand, axe-baseline, and host-email criteria are established by current source/test contracts and the current lane record. The adjacent FaviconCatalogTest producer-SHA failure is real and remains an active stop for the curated gate and captures, but it does not indicate mismatched favicon bytes or failure of a BRTOK criterion. No phase gap was found.
+Phase 181's required token, contrast, font, logo/glyph, accessibility/brand, axe-baseline, and host-email criteria remain established by the source/test contracts and recorded lane evidence. The adjacent FaviconCatalogTest producer-provenance issue now has a passing focused Phase 183 validator result; the full Admin aggregate was not rerun here. It did not indicate mismatched favicon bytes or failure of a BRTOK criterion. No Phase 181 gap was found.
 
 ---
 
-_Verified: 2026-11-17T21:21:14Z_
+_Verified: 2026-11-18T00:52:02.534Z_
 _Verifier: gsd-verifier agent_

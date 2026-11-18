@@ -54,8 +54,8 @@
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (gap verification passed 2026-11-17)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
-- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; audit gap closure in progress)
-- [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (implementation completed 2026-11-17; audit gap closure in progress)
+- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; plan 182-07 is blocked before runtime on exact-candidate hosted/cost gates)
+- [x] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (gap verification passed 2026-11-18)
 
 <details>
 <summary>✅ v2.10 UI Repairs & Faithful Storybook (Phases 174–178) — SHIPPED 2026-11-02</summary>
@@ -196,7 +196,7 @@ Plans:
 - [x] 182-06-PLAN.md — JourneySeed and after-mode capture, advisory browser journey, two-judge calibrated review gate, committed after-catalog bound in the admin lane (BRADM-07; BRADM-01 advisory)
 
 **Wave 7** *(after Phase 183-04 provenance closure)*
-- [ ] 182-07-PLAN.md — Provenance-gated current mobile journey, served-SHA binding and independent review (gap closure; requires Phase 183-04)
+- [ ] 182-07-PLAN.md — Provenance-gated current mobile journey, served-SHA binding and independent review (blocked before runtime: no frozen candidate or exact-SHA hosted/cost proof; current plan forbids manufacturing those gates)
 **Plan budget**: about 5
 **UI hint**: yes
 
@@ -210,7 +210,7 @@ Plans:
   3. `design-system.md` and the `.impeccable` config exist, and the CLAUDE.md/PRODUCT.md updates are drafted and waiting for owner sign-off.
   4. The lowercase-name lint passes. The Hex file allowlist includes the shipped brand assets (fonts, OFL texts, logo) and nothing more, and `mix mailglass.publish.check` passes for every package.
   5. Automated favicon captures at 16, 24 and 32 px exist for Chromium, Firefox and WebKit. A social card/avatar manual-upload checklist with full URLs is written. The announcement and any ™ text are blocked unless the Phase 179 search result clears them, while the code rollout itself is not gated.
-**Plans**: 3/4 plans complete
+**Plans**: 4/4 plans complete
 **Original plan budget**: 2 (three original plans were completed). After the audit, the owner authorized up to three scoped gap-closure plans, one each in Phases 179, 182 and 183. The bounded exception permits at most 24 total plans; no further plan expansion is authorized.
 
 Plans:
@@ -221,7 +221,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 183-01-PLAN.md — Theme-aware immutable README headers, three real branded docs builds, lowercase prose and actual package payload contracts (BRDOC-01, BRDOC-02, BRDOC-04)
-- [ ] 183-04-PLAN.md — Authenticate only the accepted historical favicon producer and prove offline portability without recapture (BRDOC-05 gap closure)
+- [x] 183-04-PLAN.md — Authenticate only the accepted historical favicon producer and prove offline portability without recapture (BRDOC-05 gap closure; phase verification passed)
 
 **Cross-cutting constraints:** <!-- gsd:generated -->
 - Missing or unreadable static logo/favicon assets fail validation; README keeps lowercase mailglass alt text.
@@ -239,8 +239,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 179. Compatibility Policy, Status Map and Brand Pin | 4/4 | Complete    | 2026-11-14 |
+| 179. Compatibility Policy, Status Map and Brand Pin | 5/5 | Complete    | 2026-11-17 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
-| 182. Admin Words and Layout, One Job First | 6/6 | Complete    | 2026-11-15 |
-| 183. Docs, Packaging and Launch Prep | 3/3 | Complete    | 2026-11-17 |
+| 182. Admin Words and Layout, One Job First | 6/7 | Blocked before current browser evidence | — |
+| 183. Docs, Packaging and Launch Prep | 4/4 | Complete    | 2026-11-18 |

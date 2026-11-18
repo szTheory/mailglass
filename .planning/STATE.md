@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v2.11
 milestone_name: Brand v2.0 Adoption
-current_phase: 183
+current_phase: 182
 status: in_progress
-stopped_at: Phase 179 verified — next execute Phase 183 plan 04
-last_updated: "2026-11-17T23:40:41Z"
-last_activity: 2026-11-17
-last_activity_desc: Phase 179 verification passed; moving to Phase 183 producer provenance
-state_head: 2fc134e83647dbf6b32d5881965fe2430271f2fb
+stopped_at: Phase 182 plan 07 preflight — exact candidate hosted/cost gates missing; no runtime started
+last_updated: "2026-11-18T01:00:27Z"
+last_activity: 2026-11-18
+last_activity_desc: Phase 183 passed; Phase 182 current-evidence preflight blocked before preview
+state_head: 826962d6dc3d477c0fcc6bf67ff234f7e53d1fd3
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 24
-  completed_plans: 22
-  percent: 92
+  completed_plans: 23
+  percent: 96
 ---
 
 # Project State
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.11 audit gap closure. Phase 179, 180 and 181 now pass verification. Phase 183 producer provenance is the next closure; Phase 182 browser evidence depends on it.
+**Current focus:** v2.11 milestone audit. Phases 179, 180, 181 and 183 pass fresh verification. Phase 182's current browser evidence remains open: its plan preflight found no frozen candidate, exact-SHA hosted status or cost disposition, and the plan forbids pushing or running hosted CI to manufacture those gates.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 183
-Plan: 04 — accepted favicon producer provenance
-Status: Ready to execute; preserve the capture and alias stop
-Last activity: 2026-11-17 — Phase 179 verification passed
+Phase: 182
+Plan: 07 — current mobile journey evidence
+Status: Preflight blocked before runtime; preserve the existing plan and wait for an owner decision before expanding candidate/hosted-gate scope
+Last activity: 2026-11-18 — Phase 183 passed; Phase 182 preview not started
 
-Progress: [█████████░] 92%
+Progress: [█████████░] 96%
 
 ## v2.11 Roadmap Shape
 
@@ -44,7 +44,7 @@ Progress: [█████████░] 92%
 - **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
 - **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
 - **Cap and WIP:** The baseline was 5 phases and 20 plans or fewer, with one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, allowing at most 24 plans. No further expansion is authorized.
-- **Audit status:** Phases 179, 180 and 181 verifications passed. Phase 183's producer-provenance gap remains open; Phase 182's current browser evidence depends on that closure. No archive or tag is authorized by this state update.
+- **Audit status:** Phases 179, 180, 181 and 183 verifications pass. Phase 182 remains gaps_found for BRADM-01/07 current journey and reviewer evidence. Its 182-07 preflight is recorded at .planning/phases/182-admin-words-and-layout-one-job-first/182-07-EVIDENCE.json; the current plan forbids push/hosted CI to create the exact-candidate gates it requires. No preview allowance was consumed. No archive or tag is authorized by this state update.
 - **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
 - **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
 
@@ -852,8 +852,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-17T23:40:41Z
-Stopped at: Phase 179 passed; Phase 183 plan 04 is next
+Last session: 2026-11-18T01:00:27Z
+Stopped at: Phase 182 plan 07 preflight is blocked before runtime; owner decision is needed to amend its candidate/hosted-gate boundary
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -875,8 +875,10 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Execute Phase 183 plan 04 (`$gsd-execute-phase 183 --gaps-only`) to close historical producer provenance offline; Phase 182 plan 07 remains gated on that provenance closure.
+- Decide whether to amend the existing Phase 182-07 plan to authorize a clean, task-scoped candidate and its hosted/cost gates. The current plan forbids push/CI to manufacture eligibility. If amended and gates pass, use the existing one-time isolated preview allowance; otherwise preserve the BRADM-01/07 gap. Do not rerun favicon capture or its alias.
 
 ### Blockers
+
+- Phase 182-07 is blocked before launch: the current worktree is dirty and no frozen Admin candidate binds it; the checked local base SHA has no hosted workflow/statuses or exact-candidate cost record. Its plan explicitly prohibits creating those gates by pushing or dispatching CI.
 
 - The unchanged default root mix test finished with 7 failures out of 2,448; baseline attribution is unknown, and it was not rerun after the owner chose preserve-and-continue. First-failure details are in `183-03-SUMMARY.md`.

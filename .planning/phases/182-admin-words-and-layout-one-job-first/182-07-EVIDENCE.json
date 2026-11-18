@@ -1,0 +1,2258 @@
+{
+  "schema": "mailglass.phase182_current_admin_preflight.v1",
+  "status": "blocked",
+  "recorded_at": "2026-11-18T00:43:43Z",
+  "plan": "182-07",
+  "preflight_only": true,
+  "phase183_provenance": {
+    "status": "passed",
+    "verification_path": ".planning/phases/183-docs-packaging-and-launch-prep/183-VERIFICATION.md",
+    "verification_sha256": "ce890ec8e1e4388cfc871e257210d059d486dd3c2de9afcb342b732ad8b71126"
+  },
+  "candidate": {
+    "frozen": false,
+    "candidate_sha": null,
+    "local_branch": "main",
+    "local_head_not_candidate": "826962d6dc3d477c0fcc6bf67ff234f7e53d1fd3",
+    "ahead_of_origin_main": 292,
+    "behind_origin_main": 0,
+    "worktree_has_uncommitted_changes": true,
+    "owner_worktree_inventory": {
+      "exclusions": [
+        ".planning/ROADMAP.md",
+        ".planning/STATE.md",
+        ".planning/phases/182-admin-words-and-layout-one-job-first/182-07-EVIDENCE.json",
+        ".planning/phases/182-admin-words-and-layout-one-job-first/182-VERIFICATION.md",
+        ".planning/phases/183-docs-packaging-and-launch-prep/183-VERIFICATION.md"
+      ],
+      "path_count": 365,
+      "sha256": "62f1b76c86d25438dfc5531a52d393e90806135448c718c5ce0d0d228e79c6e1",
+      "paths": [
+        {
+          "path": ".impeccable/config.json",
+          "status": " M",
+          "type": "file",
+          "sha256": "9a35d1b0ce1c930779919c99411d75757e9fb5d515cd676c2f7f4884e41e38ad"
+        },
+        {
+          "path": ".planning/WINDOWS.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "26b74e2b9440cf731024ffd732d161c0c31c38fc1655e3fb10ef3728d14414c7"
+        },
+        {
+          "path": ".planning/config.json",
+          "status": " M",
+          "type": "file",
+          "sha256": "f263adf26dd34f5da268dcc6b34f785b9ad2da9fa37439a9bb755e454d0f7d84"
+        },
+        {
+          "path": ".planning/phases/180-reproducible-admin-bundle-and-before-catalog/deferred-items.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "abff1b1ea408505fbd1b28f3005f6bb1dbb6c8dc1acf3fd124c697d22de4a4f8"
+        },
+        {
+          "path": ".planning/phases/181-brand-v2-tokens-fonts-and-logo/deferred-items.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "72072cb23fb43e69c7315092b2f331aee09b50010c4e30f7ebd3df226b40707a"
+        },
+        {
+          "path": ".planning/phases/182-admin-words-and-layout-one-job-first/deferred-items.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "33691271b9e80cd9919e03c872d8b88a5d49f0a4323851bd3eb2ab84cd7e0f22"
+        },
+        {
+          "path": ".planning/phases/183-docs-packaging-and-launch-prep/deferred-items.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "f1fc45f81d2e3b3319cb96abe98594f02c220b030c06b6354f135cce80c31c8a"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/PHASE-183-A-readme-hexpm.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "f86c8bd6b341afe3e934f760cceeee6453f3dae01137b3380e8ea546b4d60714"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/PHASE-183-C-design-system-docs.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "1c28b65095bd45ed428a59cb4b2bb00e13c4c2bae6babad54f77234ce8c1c5b9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/PHASE-183-D-lint-allowlist.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "19a01467e9b728eb9fad5ea6f6ba28a29e77877190e37c0a78a9c0d9617301d6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/PHASE-183-E-favicon-social-gate.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "d9ec5a8ae3fb87245cee40b3874e6fc2c13653e1ddd29e4482f096cda7126b30"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/after-catalog/after-1a0b741-20261116T004020Z/superseded.json",
+          "status": "??",
+          "type": "file",
+          "sha256": "66945d58f771d68614384b0f33ab1eccc7faa3d4b2dd58258119f3e9a6f7cd87"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/before-catalog/before-9eb9dee-20261115T022124Z/superseded.json",
+          "status": " M",
+          "type": "file",
+          "sha256": "60de38445b432d7ed31505c7eddef1faf1bbc6ea1831e7f902ba73dea740e6c1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-299c1aa-20261116T214650Z/CAPTURE-FAILURE.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "a17d45fd658007824f418f2b65817efd470ca05a57deef1879d62a75355d1bff"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e7a3ece6a2eaef77cd61ee771f9c9f51904b1a7d30b31c3f36308f0f5dfc1b0f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d5edf9ffdc4b3520c329ffb7c1ba834229ac963e2411c1ed9d6d0aff4c30d33e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fff7a6fa23bc8ee6b9f168178b3a04cfebf4d45b428538fd8883a0b872885178"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2a7d4f0d1aba089a5b653f3a1ffc21f40c2040d7275ef27ed03ff4c21722363e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca4905a934f5215493cb137da53c77095ab702411f445e5613dde48fa03ac54f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "97ab430a765cac1e804be3297aac1f0393296cb6fccc968ad8af06b18663f733"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9feff11af5366290010567f936aa283aeea1acf5d31299e863704ddfa5096116"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1472b0dd2b2c60f76035d9b3ab7996fd40780eb32d6a27af1b4f5a55108a051f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "05a767e448b1425a2b19b467077ea1a78b116827a509ff75cd84d44a8f4fdd51"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9dd7d173260020f2561d371e39770fefe4b9db1d4fd4a3aaf9e13323ceb5e31e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "54eff454ccb74523547934d5c6773c1747235e687e6254fbba10ec53ca17b6b5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1990e7a0aa37336164405fdc3713cff25ccd444c24bcd6252b01207ae4925451"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "70d00e040be1a6cd5044ae0827081a51d9d27c812a2cebe3aa895981f5c67772"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3e83cb943849b6715471fdf8d45a255619cb513d59f14e5a7d40f6778f678fd9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "de27c06b3385b1edf3e5c7ac6b3bb8698445f101ec745dedb336e433f36d172e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "61c71f4a31e583349db78b3da51e45d8bd9fad6b68404857ad05ead252112aeb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca6499b2cbac3406f309271bc01426cf7000063c4b1f6f8716f54654e623272f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "71d852f4a0ce1df40c0c645324d774eba1503040273659659b497b7e2d22e349"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3d0425fbcb7735ad4671b65f237cc998428fbd317b146f8b6a50af9ecf270ae7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b83f041cfa7a4929a39b88aac3599a19eeba15789e416b5793e3b6f1d8cff662"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6205c6e2319330c74c5bbe944ddae1d7b833e8e293d3ae7628bed46d9138ee44"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "5827e44110e0295efddc9c7818caabb3516e8f899202c9f1820baca06933f4c7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "08b7c080123b78b5f056f5bd67d6f64e557474b5e3504e33aab33397c5dd645d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/chromium__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "36aa490b0ec214fff14effd8eb2aca6f8e4d122a35be1d7068d307ec27a76883"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "922e9bdb28ce57e821caad8d7d6a5264667aa37bab866febbb1ab0b60efcf184"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7fc04feef82c96d586966151e9623eeb17c4c4fc919aa8eb1b82180445d36e7c"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "351eb1d791797221d2210f2e6a5c5d3f696f4b564099d7f6dbcc112c9efeecad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f64482b76e626e9b9e0b0a77041bf0a07c19bf139fd8882e5ea973f18480af3d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d074c6213d5d9b30e056fca4c5a1d4f43a77ad21aae5b062215f3c35becf74c1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2fdce7025c2b60eafa94f715dc6c6fa96b21da993301926f70905ae38ef9aaca"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "790d41789caf60f6a528f147778039961bf8707d36e7a2d7ae53bdd1c907a255"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b37c2c137cc7a17fc599220823bbc424447b77660689f270786376c986d33e19"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "698b0930ac44d3e798d764f8b3027a0b4895b97bd801abdf43abf1788904ef72"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "17dd6d3421d63dd98e62ae22efff277a9979fb428942a41c45bec101a1061905"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f0d67568a3a665f1cb79d576a4158f6753f53a4d4be9dfc1e67bc35a8004a1d5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c384f28ef6018ad4df75c3b115050ebf81b95b8d7f4ea22de23fd3bdf25bd944"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f64482b76e626e9b9e0b0a77041bf0a07c19bf139fd8882e5ea973f18480af3d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d074c6213d5d9b30e056fca4c5a1d4f43a77ad21aae5b062215f3c35becf74c1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2fdce7025c2b60eafa94f715dc6c6fa96b21da993301926f70905ae38ef9aaca"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f01a1d2af80858b813dd7eeef38a6f5cbe18b97e7ee250bba3265d20a3053887"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fc7a6f9ab61b281b6a637cd4f9a4fafb1d5f0819e32ea891febb9368c261aa3f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3e1947a0153dbf0fdf0ade2f4958816f404c1de38774a34f8ce09f8dc2d75537"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "57148992b0803e2294a803faae890c0e02f726d3866c027f8c3dbb3100bbbad3"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9005b3b75599df86bb61361222b482ad0671b41a343dca6af847ab0e90963055"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7c1b22ba83700bd92a7a3c61020007c985dbf4b03fd92ea00ff9b6ab131a640a"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "cbbf17768836979a5fa2284fd68db9edc0e61e5dda708170ab1b9aa4b8354a1e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0f5bc64a262f39dbae1c973aaf37d2ef61295ba644604dc7623313a3aed3140"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ef146fd57c2bb3a6a50bd53431c27b6024dd8707426c60a325dafff1ea06c69f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "8218171147e9ff79b9837a44841100d7c7c56ffc4773c25ca470c444f8090019"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "23f7b27402024dc8763f545a640b6a4bf87b1f86836a23df418b980f39bb0f65"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "38fe380d586a44472b42512f9327bd3bd0cbfc394f2b36ba0205b0025690b521"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "03dd23caa1dfcc79c09c46649667b6b82d7dca26cf2124ec90d451017fbb45ce"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "929f432800a9577782350a28c34fb77cc61feb919756e47f16cf05c7f359c9cb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7d0de39b6d15db9c01af6af0f5604703981fdee34522b46cea4856418b44819b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "cbbf17768836979a5fa2284fd68db9edc0e61e5dda708170ab1b9aa4b8354a1e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0f5bc64a262f39dbae1c973aaf37d2ef61295ba644604dc7623313a3aed3140"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ef146fd57c2bb3a6a50bd53431c27b6024dd8707426c60a325dafff1ea06c69f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "561162e194cf89d74431dec11e4b7ba1bafffee77fed2141c67cd268440068ee"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6f70696a8d6fab545bd00086c8fe1d1a9c8c6fcc058535f63b5de40c1205a151"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/firefox__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "78d766c9d150b6c0d52965d0321b2c702133e38ac2c5f5c9d87a4e6e8687aed5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/manifest.json",
+          "status": "??",
+          "type": "file",
+          "sha256": "4df82a65fd2380cf27475c9e7adf95715956f59affb64a8235de37508690fbf5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "be288973486eb873d5c87784b696227ec3cc377384048fce2696937b4d7a4625"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f1ec2039a5dc55bca862fc7064ab11b47b7bb74f84b15c83f1f5392fe101395d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "92148fabebf27c95bd6ccd3e60a0c7ff10a7cdb73ea57658ca52f4f2565daa32"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f27729597e999e99d4f4ac2dd1d1db350002547980a8cbb688eb6c7a1ebea994"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "93d4cd70bd6949a46220c9aa21461e7a8a5e9612fd7927cb177b3b51612f8e4d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7799a247b42fdb8855cd3227550f93ebc42fd83b16d60129efed991a1e29cdba"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "aaa610777f69fca9664c0a2ac4a9ad17c2f0ba62aa3caa2273bfd6207e909475"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fd944ec2bd571952d0c1334d7bad57bce32169c238ef6f2b351029f8c210aba5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "187ac088503f157ecae46a89b176b86125b89cc7f7639f09b12acdadd6bd0d7f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0442e7e8ce089aa2481a4c2a1b7d00c86bda4654d68c39c707b0c6b829d0281e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0fa99dc76dd9e330cdf025564b914ae06c49236f92da198e9f26a719c3a8b4d7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "4ef1ce9a9ef204169f94b5ff8da9657e9f802478710c10eb9bef7b266224a252"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "25ddf40c0d39157feba65a81cdf77e3d6bc6bec34b341e90b375a8b937ebfd3b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "88468f6e19317223c6f7638624f9633126244c8ef11cf5e1066fdf0e30ed806e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9708d8492600b0f700ec55ef6e5ab3c13ac3cc1bdbf10c7e241d91a738015fa9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2c7a78864b72c29dedf6acbe8d35334dcc52152d48618f7068b8370a11a3870c"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f00c6d7886f15e9c8560b038f23a3c9024401a83967cfd718849885384be44c3"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "92235846c56b58e6b21b34107efb305b9dbdd97c73dd5fe455f7df489ceae000"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "04bd6c4c3074eaa4d7f7eaf5ae27fc5be7a993226607cd43c58e7874007df8d6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "524d88b7cacdf98a7cdae3e849de80b763e24b33e13b0d0f3cf7fd70e7c6c90b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f78684a9d4efac01ed9b6630769921d200eee2a5ebbb7b9bd098122aa1fcf463"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "097b0d78d2438231598e944f076f431aec0708a5e0cff201b275264836cbabd5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e01661167c95763c8c40e4d411ca466ac8f194fe93626aee3b84fb3f81781032"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c8c2dac1867cfd26cd265fc73852072044977b51f22db29bbe70c4b065d4b958"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "4f1ace23ea1dc62fee3093632b8a7c0b1dde2fafc2c5a23f7ff774a947ae36e0"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "44e063b154616d121f9f8c97cb60c8f9dce9c3433b9d72be4bdfc360c7d689bf"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "57c6a2a81d0e05bf0a10334bf29eaf466efaf554cc24c7e9a806703b0706e613"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "a84185574ffef075c4e5a2bca4328d67e677082347aa87efeba7c4762b42fa02"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "68e9bf7c792d012dbb45ee5ba92a7cabcb6464fa03dcf960d8133aff2289060b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0cde5f4a8676ee0e2db46422e6480bf72770cd0c5d8e10521d54488febbaba68"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "097b0d78d2438231598e944f076f431aec0708a5e0cff201b275264836cbabd5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e01661167c95763c8c40e4d411ca466ac8f194fe93626aee3b84fb3f81781032"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c8c2dac1867cfd26cd265fc73852072044977b51f22db29bbe70c4b065d4b958"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "189760af6fd0800789ff04a69294c05fd3c11a9257ab5f7925f85e56870ca5c5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d0dbaea5ed1b07badd015f0556b541f470b679e38f58299920aaa9b484b2c131"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T191945Z/webkit__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "a5b5a6d2120e7d7390506e40d189e12f42d8b76a46d865427ed7772bcf9f1328"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e7a3ece6a2eaef77cd61ee771f9c9f51904b1a7d30b31c3f36308f0f5dfc1b0f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d5edf9ffdc4b3520c329ffb7c1ba834229ac963e2411c1ed9d6d0aff4c30d33e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fff7a6fa23bc8ee6b9f168178b3a04cfebf4d45b428538fd8883a0b872885178"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2a7d4f0d1aba089a5b653f3a1ffc21f40c2040d7275ef27ed03ff4c21722363e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca4905a934f5215493cb137da53c77095ab702411f445e5613dde48fa03ac54f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "97ab430a765cac1e804be3297aac1f0393296cb6fccc968ad8af06b18663f733"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9feff11af5366290010567f936aa283aeea1acf5d31299e863704ddfa5096116"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1472b0dd2b2c60f76035d9b3ab7996fd40780eb32d6a27af1b4f5a55108a051f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "05a767e448b1425a2b19b467077ea1a78b116827a509ff75cd84d44a8f4fdd51"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9dd7d173260020f2561d371e39770fefe4b9db1d4fd4a3aaf9e13323ceb5e31e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "54eff454ccb74523547934d5c6773c1747235e687e6254fbba10ec53ca17b6b5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1990e7a0aa37336164405fdc3713cff25ccd444c24bcd6252b01207ae4925451"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "70d00e040be1a6cd5044ae0827081a51d9d27c812a2cebe3aa895981f5c67772"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3e83cb943849b6715471fdf8d45a255619cb513d59f14e5a7d40f6778f678fd9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "de27c06b3385b1edf3e5c7ac6b3bb8698445f101ec745dedb336e433f36d172e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "61c71f4a31e583349db78b3da51e45d8bd9fad6b68404857ad05ead252112aeb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca6499b2cbac3406f309271bc01426cf7000063c4b1f6f8716f54654e623272f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "71d852f4a0ce1df40c0c645324d774eba1503040273659659b497b7e2d22e349"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3d0425fbcb7735ad4671b65f237cc998428fbd317b146f8b6a50af9ecf270ae7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b83f041cfa7a4929a39b88aac3599a19eeba15789e416b5793e3b6f1d8cff662"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6205c6e2319330c74c5bbe944ddae1d7b833e8e293d3ae7628bed46d9138ee44"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "5827e44110e0295efddc9c7818caabb3516e8f899202c9f1820baca06933f4c7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "08b7c080123b78b5f056f5bd67d6f64e557474b5e3504e33aab33397c5dd645d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/chromium__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "36aa490b0ec214fff14effd8eb2aca6f8e4d122a35be1d7068d307ec27a76883"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "922e9bdb28ce57e821caad8d7d6a5264667aa37bab866febbb1ab0b60efcf184"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7fc04feef82c96d586966151e9623eeb17c4c4fc919aa8eb1b82180445d36e7c"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "351eb1d791797221d2210f2e6a5c5d3f696f4b564099d7f6dbcc112c9efeecad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f64482b76e626e9b9e0b0a77041bf0a07c19bf139fd8882e5ea973f18480af3d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d074c6213d5d9b30e056fca4c5a1d4f43a77ad21aae5b062215f3c35becf74c1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2fdce7025c2b60eafa94f715dc6c6fa96b21da993301926f70905ae38ef9aaca"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "790d41789caf60f6a528f147778039961bf8707d36e7a2d7ae53bdd1c907a255"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b37c2c137cc7a17fc599220823bbc424447b77660689f270786376c986d33e19"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "698b0930ac44d3e798d764f8b3027a0b4895b97bd801abdf43abf1788904ef72"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "17dd6d3421d63dd98e62ae22efff277a9979fb428942a41c45bec101a1061905"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f0d67568a3a665f1cb79d576a4158f6753f53a4d4be9dfc1e67bc35a8004a1d5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c384f28ef6018ad4df75c3b115050ebf81b95b8d7f4ea22de23fd3bdf25bd944"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f64482b76e626e9b9e0b0a77041bf0a07c19bf139fd8882e5ea973f18480af3d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d074c6213d5d9b30e056fca4c5a1d4f43a77ad21aae5b062215f3c35becf74c1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2fdce7025c2b60eafa94f715dc6c6fa96b21da993301926f70905ae38ef9aaca"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f01a1d2af80858b813dd7eeef38a6f5cbe18b97e7ee250bba3265d20a3053887"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fc7a6f9ab61b281b6a637cd4f9a4fafb1d5f0819e32ea891febb9368c261aa3f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3e1947a0153dbf0fdf0ade2f4958816f404c1de38774a34f8ce09f8dc2d75537"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "57148992b0803e2294a803faae890c0e02f726d3866c027f8c3dbb3100bbbad3"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9005b3b75599df86bb61361222b482ad0671b41a343dca6af847ab0e90963055"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7c1b22ba83700bd92a7a3c61020007c985dbf4b03fd92ea00ff9b6ab131a640a"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "cbbf17768836979a5fa2284fd68db9edc0e61e5dda708170ab1b9aa4b8354a1e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0f5bc64a262f39dbae1c973aaf37d2ef61295ba644604dc7623313a3aed3140"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ef146fd57c2bb3a6a50bd53431c27b6024dd8707426c60a325dafff1ea06c69f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "8218171147e9ff79b9837a44841100d7c7c56ffc4773c25ca470c444f8090019"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "23f7b27402024dc8763f545a640b6a4bf87b1f86836a23df418b980f39bb0f65"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "38fe380d586a44472b42512f9327bd3bd0cbfc394f2b36ba0205b0025690b521"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "03dd23caa1dfcc79c09c46649667b6b82d7dca26cf2124ec90d451017fbb45ce"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "929f432800a9577782350a28c34fb77cc61feb919756e47f16cf05c7f359c9cb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7d0de39b6d15db9c01af6af0f5604703981fdee34522b46cea4856418b44819b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "cbbf17768836979a5fa2284fd68db9edc0e61e5dda708170ab1b9aa4b8354a1e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0f5bc64a262f39dbae1c973aaf37d2ef61295ba644604dc7623313a3aed3140"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ef146fd57c2bb3a6a50bd53431c27b6024dd8707426c60a325dafff1ea06c69f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "561162e194cf89d74431dec11e4b7ba1bafffee77fed2141c67cd268440068ee"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6f70696a8d6fab545bd00086c8fe1d1a9c8c6fcc058535f63b5de40c1205a151"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T195711Z/firefox__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "78d766c9d150b6c0d52965d0321b2c702133e38ac2c5f5c9d87a4e6e8687aed5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T203906Z/CAPTURE-FAILURE.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "9033ea408003aee01b68a75afcc86dc4738d4f86638e61d53e52f9ac1ecaea71"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/VALIDATION-FAILURE.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "efb3d2d870732d3b1d4e14b4679b366e59cb1b00d8f7276e309cf0b85a5f1fd5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e7a3ece6a2eaef77cd61ee771f9c9f51904b1a7d30b31c3f36308f0f5dfc1b0f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d5edf9ffdc4b3520c329ffb7c1ba834229ac963e2411c1ed9d6d0aff4c30d33e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "fff7a6fa23bc8ee6b9f168178b3a04cfebf4d45b428538fd8883a0b872885178"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2a7d4f0d1aba089a5b653f3a1ffc21f40c2040d7275ef27ed03ff4c21722363e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca4905a934f5215493cb137da53c77095ab702411f445e5613dde48fa03ac54f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "97ab430a765cac1e804be3297aac1f0393296cb6fccc968ad8af06b18663f733"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9feff11af5366290010567f936aa283aeea1acf5d31299e863704ddfa5096116"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1472b0dd2b2c60f76035d9b3ab7996fd40780eb32d6a27af1b4f5a55108a051f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "05a767e448b1425a2b19b467077ea1a78b116827a509ff75cd84d44a8f4fdd51"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e0df15be0ba7bf4ab0b0c3c38fbae711b65f24fab6200f40b41e2fbfe0e50b9d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "eb133b3916768bfcfc8251f9ed4f3b059dfed6a4a0620c255589e61a6bd40d82"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1f3e1e0d052dfed945555ab88a9eab8a07a129df9a28d093499ae35e4e66c4ad"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9dd7d173260020f2561d371e39770fefe4b9db1d4fd4a3aaf9e13323ceb5e31e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "54eff454ccb74523547934d5c6773c1747235e687e6254fbba10ec53ca17b6b5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1990e7a0aa37336164405fdc3713cff25ccd444c24bcd6252b01207ae4925451"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "70d00e040be1a6cd5044ae0827081a51d9d27c812a2cebe3aa895981f5c67772"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3e83cb943849b6715471fdf8d45a255619cb513d59f14e5a7d40f6778f678fd9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "de27c06b3385b1edf3e5c7ac6b3bb8698445f101ec745dedb336e433f36d172e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "61c71f4a31e583349db78b3da51e45d8bd9fad6b68404857ad05ead252112aeb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ca6499b2cbac3406f309271bc01426cf7000063c4b1f6f8716f54654e623272f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "71d852f4a0ce1df40c0c645324d774eba1503040273659659b497b7e2d22e349"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "3d0425fbcb7735ad4671b65f237cc998428fbd317b146f8b6a50af9ecf270ae7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b83f041cfa7a4929a39b88aac3599a19eeba15789e416b5793e3b6f1d8cff662"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6205c6e2319330c74c5bbe944ddae1d7b833e8e293d3ae7628bed46d9138ee44"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "6cc99cf8d4f836a869e1d35fca6082253c96392b972c0300c08694219f113fd6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b3cafe252aa94f9e9da5b37f50ca06aab26a719c3c99af03bc980fcf3b834ac"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "533f5333d06d30e251d4bbbc4b5fe26a4e25f98e074703adc6e210dcc256bc69"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "5827e44110e0295efddc9c7818caabb3516e8f899202c9f1820baca06933f4c7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "08b7c080123b78b5f056f5bd67d6f64e557474b5e3504e33aab33397c5dd645d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/chromium__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "36aa490b0ec214fff14effd8eb2aca6f8e4d122a35be1d7068d307ec27a76883"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "8404bb43abc30b9e865283032f4545ce490756d9aa54ff6af1470905575f32f8"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "128bd8ec5773a8c36ec5421962413f06acfeba0a57c3071b542bf8ac2b1e6e2b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9c767439e7bae79580ee93ca578894994697f5cd398a9267c0aa0d21754edeb1"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "80d74c91b0477c3fd6fd4c6e3824e7bad5dc4d5c19debb496f46b42ec38bf3a8"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "97a1c553958f29cc6fc15a06861058d12f49dc4ff8bc9dc716559db54f28b524"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "8911cbfea9996a575343816f9f0fa426054945e81fd7c00578cca612a52ea4df"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "44a367384dc5a655116b0f1be4b221946704c48d5dcde49bd6b35bde1a23a396"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e581b8bd3f080bdb12654344b63f05bbe65beb86644eff0316d3912f6bcd8d46"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "42ff41fc101b8e1bd0156e5c1e31496ccc28ec7694ea63721efaff6f87b805f5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "11c86c9ef6ae21f03df505a0d6de393dc74b62ec292707bdf78f1960f564f2fb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9cb80b9f2af3a35f64870157ed6f31a64048bbc9731970428ee5ef79dc1546e9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ced661053d2f7c9cea343ec08bbf0fa793af7bcdac3a864753abc511e43e54ce"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "80d74c91b0477c3fd6fd4c6e3824e7bad5dc4d5c19debb496f46b42ec38bf3a8"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "97a1c553958f29cc6fc15a06861058d12f49dc4ff8bc9dc716559db54f28b524"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "8911cbfea9996a575343816f9f0fa426054945e81fd7c00578cca612a52ea4df"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b5248d7e00eeb4eebc4622dfe3bedbe1fa6e93db137c7d457c4162208b4798cf"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "9b6ced15df723336b97a5ecf40af0033b6ee76cfd749e4e255eedb3bf5b53408"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ac0647208c51b8ffe33c871ed794dd0895dbba7f8b55c6fc8fa8a76f7f39ee5e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ea6e632897904d2463518e8b647c3283e9703bb239492902564da5ed4bccc6e2"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "78a1d46b8e2ceb0a3d15608d15978b7124b100407e9afe6b7b82552d8334a680"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "825a7c31f8fb3937ff3388e4ac16e01673a0b22dfc4b5b533c70f0b38aead38f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "42f7dddf17c9a5f8e9e84420fc099759cafddca2dc5ccdb8753079fd6e5c5c4b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "30d8c3b02d4bdd25ce753ef0ff93657d27139c41f630d0388d7ac09be0d8a31b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "441539ec5b202a62cd9e3bf0b83b181f35405476aa86017c5059cbf002eb7cc9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "cd64f992688356d9fd33c04271990dacb97e15f41f9c93b4e81e61c726dde262"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "dde7dfa12f1b48791fb2e7cb814ae150c439fc2852cf752188dedb6c41261fd0"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "18a74a5e63567dae12d9e559f03d3ea4c7f478e0ac5452c664fa97fe0df7677b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b7ee62cd6ac5bd9d3db9a08609a848561bdf2328a6494c3cf5d1bd8423b3cc3f"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "776299fde980d01ec0b7f84e0ea333d7f753a7914a6dc6601e8dd0c8aead4d40"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "1a4cdb4cd020ef1af9dabbc2749479e37968b81cadc80ca476a6008c8374cedf"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "42f7dddf17c9a5f8e9e84420fc099759cafddca2dc5ccdb8753079fd6e5c5c4b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "30d8c3b02d4bdd25ce753ef0ff93657d27139c41f630d0388d7ac09be0d8a31b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "441539ec5b202a62cd9e3bf0b83b181f35405476aa86017c5059cbf002eb7cc9"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "b550322df5e5bf759a43f15f7f62b6ee2abbf60ebee0c6d232a40ab550cd7fb3"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0d79a2bae5e6324fc4b850b9928f08dce47b0ea7876a7120d149e0d292d896c7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/firefox__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "31e8fdab9304c0464be9c346b11f483a5f32759563592502f72e379c90135fdb"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/manifest.json",
+          "status": "??",
+          "type": "file",
+          "sha256": "35fb1488774cf631e47814144f11348bb268cddeb84076f046d559f12365a019"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "5a3be2e6712ef9379653466c4bd7e678dd9a3fc1453cbdba29eef8526816b627"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "ac96baa3b5a6aca7c726f1f2071f4e650b69f7f8f57c1340f94ce2e55680a93c"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2c3f83acb3ea5d4098fd5e035ca3ba20d8698f2ae2907b1d94b04ad642e22399"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f27729597e999e99d4f4ac2dd1d1db350002547980a8cbb688eb6c7a1ebea994"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "93d4cd70bd6949a46220c9aa21461e7a8a5e9612fd7927cb177b3b51612f8e4d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__16__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7799a247b42fdb8855cd3227550f93ebc42fd83b16d60129efed991a1e29cdba"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "196351cd48e791d3cbe3239468fd308063f9bf0f804f7b3250b10696909c6c9b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "375ae27fa9fb2d916c139088e77ed296552372af981845d386362ac039a17a66"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c0c676b5a48888e24d59999ea1c904dd68c3fd69d8e708e2fff10fec10980719"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0442e7e8ce089aa2481a4c2a1b7d00c86bda4654d68c39c707b0c6b829d0281e"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0fa99dc76dd9e330cdf025564b914ae06c49236f92da198e9f26a719c3a8b4d7"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__24__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "4ef1ce9a9ef204169f94b5ff8da9657e9f802478710c10eb9bef7b266224a252"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__1x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f27729597e999e99d4f4ac2dd1d1db350002547980a8cbb688eb6c7a1ebea994"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__1x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "93d4cd70bd6949a46220c9aa21461e7a8a5e9612fd7927cb177b3b51612f8e4d"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__1x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "7799a247b42fdb8855cd3227550f93ebc42fd83b16d60129efed991a1e29cdba"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__2x__black.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "2c7a78864b72c29dedf6acbe8d35334dcc52152d48618f7068b8370a11a3870c"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__2x__chrome.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f00c6d7886f15e9c8560b038f23a3c9024401a83967cfd718849885384be44c3"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__dark__32__2x__purple.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "92235846c56b58e6b21b34107efb305b9dbdd97c73dd5fe455f7df489ceae000"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "04bd6c4c3074eaa4d7f7eaf5ae27fc5be7a993226607cd43c58e7874007df8d6"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "524d88b7cacdf98a7cdae3e849de80b763e24b33e13b0d0f3cf7fd70e7c6c90b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "f78684a9d4efac01ed9b6630769921d200eee2a5ebbb7b9bd098122aa1fcf463"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "097b0d78d2438231598e944f076f431aec0708a5e0cff201b275264836cbabd5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e01661167c95763c8c40e4d411ca466ac8f194fe93626aee3b84fb3f81781032"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__16__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c8c2dac1867cfd26cd265fc73852072044977b51f22db29bbe70c4b065d4b958"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "4f1ace23ea1dc62fee3093632b8a7c0b1dde2fafc2c5a23f7ff774a947ae36e0"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "44e063b154616d121f9f8c97cb60c8f9dce9c3433b9d72be4bdfc360c7d689bf"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "57c6a2a81d0e05bf0a10334bf29eaf466efaf554cc24c7e9a806703b0706e613"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "a84185574ffef075c4e5a2bca4328d67e677082347aa87efeba7c4762b42fa02"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "68e9bf7c792d012dbb45ee5ba92a7cabcb6464fa03dcf960d8133aff2289060b"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__24__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "0cde5f4a8676ee0e2db46422e6480bf72770cd0c5d8e10521d54488febbaba68"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__1x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "097b0d78d2438231598e944f076f431aec0708a5e0cff201b275264836cbabd5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__1x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "e01661167c95763c8c40e4d411ca466ac8f194fe93626aee3b84fb3f81781032"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__1x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "c8c2dac1867cfd26cd265fc73852072044977b51f22db29bbe70c4b065d4b958"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__2x__offwhite.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "189760af6fd0800789ff04a69294c05fd3c11a9257ab5f7925f85e56870ca5c5"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__2x__tab-grey.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "d0dbaea5ed1b07badd015f0556b541f470b679e38f58299920aaa9b484b2c131"
+        },
+        {
+          "path": ".planning/research/brand-v2-adoption/failed-favicon-catalog-evidence/favicon-f0c204d-20261116T204838Z/webkit__light__32__2x__white.png",
+          "status": "??",
+          "type": "file",
+          "sha256": "a5b5a6d2120e7d7390506e40d189e12f42d8b76a46d865427ed7772bcf9f1328"
+        },
+        {
+          "path": ".planning/todos/completed/183-unsubscribe-inline-brand-css.md",
+          "status": "??",
+          "type": "file",
+          "sha256": "ff01ded0bdc9c8c2562631dfa1731cf9182b75bb92eb3990f6bf8093dee72248"
+        },
+        {
+          "path": ".planning/todos/pending/183-unsubscribe-inline-brand-css.md",
+          "status": " D",
+          "type": "missing",
+          "sha256": null
+        },
+        {
+          "path": "Makefile",
+          "status": " M",
+          "type": "file",
+          "sha256": "618538f75e6bdf798e6151ccbb7a22642c733e58cb13f41e0f0cb4eefe112bfe"
+        },
+        {
+          "path": "lib/mailglass/compliance/unsubscribe_html/state.html.heex",
+          "status": " M",
+          "type": "file",
+          "sha256": "c70cae7cf79029e14afa90f0194a296a95f0ccd1ae46ffa488f09d1789b06ec0"
+        },
+        {
+          "path": "lib/mailglass/operator/replay_targets.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "66588c11766d75f7338b2d1ac7b31968d6666297b81b3e91be76200aae3c9ef7"
+        },
+        {
+          "path": "mailglass_admin/assets/css/app.css",
+          "status": " M",
+          "type": "file",
+          "sha256": "b5a852bfb70e9aa1a7e03d28e7789e1a4c606fa64017dd0ffe4685adffecc3c7"
+        },
+        {
+          "path": "mailglass_admin/docs/api_stability.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "7c30b611403bc0a8ddfec240e557a9a0005103791b00eec5dfa3be7c8ebb63de"
+        },
+        {
+          "path": "mailglass_admin/e2e/axe-baseline.spec.js",
+          "status": " M",
+          "type": "file",
+          "sha256": "a16b3d14c10a7e88551be7943d14027cb56d0cc6fb633df11d38bda8242bcf57"
+        },
+        {
+          "path": "mailglass_admin/e2e/phase169-journey.spec.js",
+          "status": " M",
+          "type": "file",
+          "sha256": "73fad2d0047b7a8f0bcb05511ecabf7a081c6af41f0eaf28a3c91f6a1997ee2c"
+        },
+        {
+          "path": "mailglass_admin/e2e/structural.spec.js",
+          "status": " M",
+          "type": "file",
+          "sha256": "e58a807a0e0bb05389810e8a92432e95de89cb8f777f0a792a19a4da7eb92573"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/components.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "cd8af707450d521bd205e0dd99c2a1c1b4f04eda0c0999ec0bbfc35d3020f30b"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/gallery_live.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "3c16b40373f547aab92b2aac9af7650f04a0c5a10c3032f72d224a23fa50c581"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "0f43b9aff4e0aa55874ea3665db5ea3f98754d8fb4b1735a5dcde41b7916f7f6"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "728a016491666b55d3197010072dc62921ce78a8e1ff28c474eb8295b8074118"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "2a5703172c25072d89985daefcfc7496414c805ba50d24fb557bd35cc157042d"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "c77a711d394f8c06ada9500e4a67718e0afd60b708154ac57747338d5048e964"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator/support_cards.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "0146b93be80e7503e1dad53c84b49da67038bcbc13fd1083e1b54a9c02dc3b4a"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "a7e966b3206317469b72e675706ca7d6eb09396fb0f58b71238b4564cba7af8c"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator/timeline.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "04d5c1a5c116386e1dd7659a2cca31bdc219cf4f4a18a6d661c44ecb01194fb2"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "4f709cdb010323b9ccdff84baff49a0d5202d19ee4475880cafde8090ecfbe26"
+        },
+        {
+          "path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "e1b033107ec4d588dc417e3170d63417267c8e166d9a15fccfa1cdfb88c8a585"
+        },
+        {
+          "path": "mailglass_admin/priv/static/app.css",
+          "status": " M",
+          "type": "file",
+          "sha256": "6021738074f81d9dd634e4d9b8928796fac90c26f8e36a371d91c985f00b84c9"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/components_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "b1663c2b051de3cbeb9e0eba7460d6e0e9e9aefcc5c7432b04db3f51b123ee86"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/contrast_contract_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "108e26e9057391964c6d6264ebaf2d40b5956fe6fe1db445409e33bc5d79c4f9"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/group_nesting_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "840fefd38c84eca0ac1daf79600656565042098a7be3ef30a2a3e78423dbf90b"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/operator_live_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "a4cf8d378fb2140c611d2fd962719c1fc62949f32294a015342ffd16cf0085cd"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/phase182_review_words_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "ea847ec6880d6758cf6bb6d01a79d85948cd34c070321a9a7ee3b33f714c1250"
+        },
+        {
+          "path": "mailglass_admin/test/mailglass_admin/root_theme_ownership_contract_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "ad7c3e0d07e460a2e4c0ac3da21d51dab20a6af931e98786fd04d01a8e06de60"
+        },
+        {
+          "path": "mailglass_inbound/README.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "e974abfa92e58a96d1ee568255044d2d2310acd9892be9904b4b9415f12b5d06"
+        },
+        {
+          "path": "mailglass_inbound/docs/api_stability.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "09f859cc0ca0f598d93f92f99ee1847765e71b19392cd3df8beee3b54e2fab9e"
+        },
+        {
+          "path": "mailglass_inbound/docs/inbound-install.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "151d9b4852ebb9f100e9bd95a7de899fba1c21a6027a8337f52a1c9ac9373bd3"
+        },
+        {
+          "path": "mailglass_inbound/docs/inbound-routing-debug.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "da42d1d0dabd0d3615c31a47e3e8a7ef591573e11dda59c8bf0278abd596dacb"
+        },
+        {
+          "path": "mailglass_inbound/docs/inbound-ses.md",
+          "status": " M",
+          "type": "file",
+          "sha256": "db42ea9a91457c1f98f222b1361871095fbeceef88be07ff772f8ac3a0f17b87"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/config.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "ea685ff635d0b096ce7151078b896e8eccb61797f1d5cf4ac5f0ded6f9867c84"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/fixtures.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "71f01059fcfaf274f99d336c2569464bfcd0a2ad83bc26c60c13a70b3892eea2"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/internal/doctor.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "046e9637cd73202cd22c4033b8d5d58376400005508bd61d671caf72ac99b99d"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/mailbox_case.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "ca4d0d80904549d45e17b00454dbe8f46da7ff213e8b09d05d6971a2ea0d0f6b"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/optional_deps.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "9a6eee00d4f063ce47c3a9d304a5fcdabca643250c8ccbf48df2732b2a40d382"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/prune/worker.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "d687e34dfbd5916bbf79f5bb9dbed7c16975d93eb5b1214690b17d18dd5d409d"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/rate_limiter/table_owner.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "12dd7cd54311c8b904181d57c637a5027da655e92c80c031726dad59c37648af"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/router.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "b663be669e5589dffb68139fa2ddce292e12c19d7d131ed9623259081d140b89"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/telemetry.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "e8ab6baf3a83d7bb64b387b938f0e496da9fcbca751dbb16d9b43b4ed25641ea"
+        },
+        {
+          "path": "mailglass_inbound/lib/mailglass_inbound/test/ingress.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "dd5274ca685f42e4706d9d004eda183da0a83f86f46a5ee417c951bd8c367b6a"
+        },
+        {
+          "path": "mailglass_inbound/lib/mix/tasks/mailglass.inbound.replay.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "6430e9a655cbf9197d11d8b26be4bd95f0d52c84e7146916b8908fff0c9d31e7"
+        },
+        {
+          "path": "mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "df18a76c9af83fffdef6d35748090c8427d89723f20147e68874e1c06c103ee0"
+        },
+        {
+          "path": "reference/demo_app/assets/e2e/demo.spec.js",
+          "status": " M",
+          "type": "file",
+          "sha256": "e587a80343cc658ada43429dd1f7cc7af519decca21b7be94717d00c0d451551"
+        },
+        {
+          "path": "reference/demo_app/lib/mailglass_demo/catalog_seed.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "e106543c3b6a1c628da2517eff8dcc995d6fe5b826a75ed9c3ef6b64eb324591"
+        },
+        {
+          "path": "reference/demo_app/lib/mailglass_demo/demo_data.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "b237cc28a94d1ecb9bc6a4a17487cfc5a19a601654e8a8233cdca5a700db80aa"
+        },
+        {
+          "path": "reference/demo_app/storybook/foundations.story.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "45bed5291341c5d3118de97331e514fd9b10c2ee4b084a15ec2f3e77802b682f"
+        },
+        {
+          "path": "reference/demo_app/storybook/primitives/nav_link.story.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "f1de185e73abe923a34fbfafa0b48cf197c9ff810b637070398a2ccc991a28e4"
+        },
+        {
+          "path": "reference/demo_app/storybook/primitives/nav_pill.story.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "be604e035c600eab7c885b526e594a7b5c644c96d98f6ec5462d2ef7131f3817"
+        },
+        {
+          "path": "reference/demo_app/test/mailglass_demo/demo_data_reset_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "80b48de1d4430911b89196528f3db46044adbf978ca16a8481e559730e43ff55"
+        },
+        {
+          "path": "reference/persona_spec/quick_view_scenarios.ex",
+          "status": " M",
+          "type": "file",
+          "sha256": "ba76859952f197224c9d111c00d23313832d2e0ebc0c99f11471e12f32bd2bf9"
+        },
+        {
+          "path": "reference/persona_spec/quick_view_scenarios.json",
+          "status": " M",
+          "type": "file",
+          "sha256": "d24a62c24e45ea030f29a61adadb16732a0495184ddc938b042728d724fc2ff0"
+        },
+        {
+          "path": "scripts/verify_brand_docs.sh",
+          "status": " M",
+          "type": "file",
+          "sha256": "186bde8290c57039cd5b95bafc33a9c38fbec2ce8d6f91881487b0d8e0a193ae"
+        },
+        {
+          "path": "test/mailglass/compliance/unsubscribe_controller_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "d9c49efbe82e3520a63f44e2d1aa41f0daafc33f150f43173551d62642a1e212"
+        },
+        {
+          "path": "test/mailglass/docs_contract_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "b4721701e0fbd2f1a7207bdcfc457530cf326846d3e4adb752cf25ecce258e67"
+        },
+        {
+          "path": "test/mailglass/operator/replay_targets_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "79788b92d2d3645c54a3dba08b8472d0db00a189b8e31fdd705058ffe15bbf01"
+        },
+        {
+          "path": "test/scripts/phase_164_repository_truth_test.exs",
+          "status": " M",
+          "type": "file",
+          "sha256": "b4604f08acf09b1d00451caaad43572f5eb2efe6a889fea7f7a63b628d90203b"
+        }
+      ]
+    },
+    "binding_failure": "The dirty owner worktree includes uncommitted Admin source and other user WIP; this local HEAD is not a clean detached candidate containing and identifying that current work."
+  },
+  "hosted_gates": {
+    "checked_sha": "826962d6dc3d477c0fcc6bf67ff234f7e53d1fd3",
+    "github_actions_total_runs": 0,
+    "combined_commit_statuses": [],
+    "runs_query": "https://api.github.com/repos/szTheory/mailglass/actions/runs?head_sha=826962d6dc3d477c0fcc6bf67ff234f7e53d1fd3&per_page=100",
+    "queried_at": "2026-11-18T00:43:43Z"
+  },
+  "cost_gate": {
+    "status": "missing",
+    "reason": "No hosted run exists for the checked SHA, and no exact-candidate cost record is present in local planning evidence."
+  },
+  "preview": {
+    "server_started": false,
+    "database_seeded": false,
+    "browser_launched": false,
+    "attempt_consumed": false,
+    "reason": "Precondition failed before any resource launch."
+  },
+  "protected_paths": {
+    "runtime_baseline_taken": false,
+    "runtime_comparison_needed": false,
+    "reason": "Read-only preflight stopped before a candidate or runtime existed; no protected path was written."
+  },
+  "blocking_conditions": [
+    "No frozen candidate binds the current dirty Admin worktree.",
+    "The local HEAD has zero GitHub Actions runs and zero commit statuses; an exact-candidate cost disposition is absent.",
+    "Plan 182-07 explicitly forbids push or hosted CI solely to manufacture its eligibility gates."
+  ],
+  "recommended_next_action": "Owner decision: amend the existing 182-07 plan to permit a narrowly scoped clean candidate freeze and hosted/cost gates for that exact SHA. If approved and those gates pass, use the single conditional isolated preview allowance in the approved plan. Until then, preserve the gap.",
+  "preserved_stops": [
+    "No favicon catalog capture, producer, capture alias, before/after catalog driver, or full regression gate.",
+    "No server, database seed, browser, package install, push, or hosted CI run."
+  ]
+}
