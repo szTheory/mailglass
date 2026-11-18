@@ -45,7 +45,7 @@
 
 **Milestone goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
 
-**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Baseline cap:** 5 phases, 20 plans or fewer (the original per-phase budgets below sum to 19), one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans for Phases 179, 182 and 183, permitting 24 total plans. On 2026-11-18 the owner authorized a Phase 184 closure plan, increasing the cap to 25; after its read-only preflight stopped before Mix, the owner authorized exactly one additional recovery plan, increasing the cap to 26. No further expansion is authorized; see `.planning/research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md`.
+**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Baseline cap:** 5 phases, 20 plans or fewer (the original per-phase budgets below sum to 19), one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans for Phases 179, 182 and 183, permitting 24 total plans. On 2026-11-18 the owner authorized Phase 184 plans 184-01 and 184-02, increasing the cap to 26. After plan 184-02's candidate-absent verifier failure, the owner authorized plan 184-03 solely to fix and verify that synthetic local lifecycle, increasing the cap to 27. No further expansion or real candidate route is authorized; see `.planning/research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md`.
 
 **Verification:** D-52 zero human UAT. Every success criterion below is machine-observable. Owner hand-off is limited to ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement, and sign-off on CLAUDE.md/PRODUCT.md edits.
 
@@ -245,11 +245,11 @@ Plans:
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
 | 182. Admin Words and Layout, One Job First | 6/7 | Blocked before current browser evidence; Phase 184 owns revised scope | — |
 | 183. Docs, Packaging and Launch Prep | 4/4 | Plans complete; same-output browser truth open | — |
-| 184. Close Admin and docs browser evidence gaps | 0/2 | Plan 184-01 blocked before Mix; plan 184-02 authorized for one recovery route | — |
+| 184. Close Admin and docs browser evidence gaps | 0/3 | Plans 184-01/02 blocked; plan 184-03 authorized for synthetic candidate-absent verifier repair only | — |
 
 ### Phase 184: Close Admin and docs browser evidence gaps
 
-**Goal:** Repair the observed v2.11 exact-candidate CI failures, then close the current Admin journey/reviewer and same-output docs browser evidence gaps using existing pinned dependencies and browser images. Phase 184-01 stopped before Mix; the owner authorized plan 184-02 for one fresh exact-SHA candidate route after the evidence verifier, complete baselines, and candidate-owned read-only dependency boundary pass. Preserve the prior Phase 182-07 stop; no retry of plan 184-01, further route, rerun, over-budget CI, favicon capture, publication, release, merge, or archive is authorized.
+**Goal:** Repair the observed v2.11 exact-candidate CI failures, then close the current Admin journey/reviewer and same-output docs browser evidence gaps using existing pinned dependencies and browser images. Phase 184-01 stopped before Mix. Plan 184-02's final synthetic verification failed after candidate removal because the verifier accessed candidate dependency roots after cleanup; its route is consumed and no real dependency snapshot or product/hosted effect occurred. The owner authorized plan 184-03 solely to repair and verify that candidate-absent path with synthetic local fixtures; it does not authorize another real candidate route. Preserve the prior Phase 182-07 and favicon stops; no further route, hosted run, preview, over-budget CI, publication, release, merge, archive, or plan expansion is authorized.
 **Requirements**: BRADM-01, BRADM-07, BRDOC-02
 **Depends on:** Phases 182 and 183; uses the exact a295e9a candidate and its retained verification receipts as the starting boundary
 **Success Criteria** (what must be TRUE):
@@ -259,8 +259,9 @@ Plans:
   4. One exact-SHA hosted dispatch passes required CI/browser jobs, expected/executed test counts, and a complete formal cost receipt within +5 minutes wall and +10 runner minutes. Any missing receipt, failed job, count mismatch, or budget overage stops before preview.
   5. Only after those gates pass, one isolated candidate-owned preview produces the current 375px light/dark Admin journey, served CSS/JS identity proof, and calibrated independent reviews; all task-owned resources are removed exactly.
   6. Phase 182 and 183 verification records and the milestone audit reflect only observed evidence. Existing favicon capture/provenance inputs and owner work remain unchanged.
-**Plans**: 0/2 plans complete (plan 184-01 blocked before Mix; plan 184-02 authorized; milestone total capped at 26).
+**Plans**: 0/3 plans complete (plans 184-01/02 blocked; plan 184-03 authorized for a synthetic verifier repair only; milestone total capped at 27).
 
 Plans:
 - [ ] 184-01-PLAN.md — Repair candidate gate seams, preflight pinned browsers, then use one bounded exact-SHA hosted/cost gate and conditional evidence route (blocked before Mix; do not retry)
-- [ ] 184-02-PLAN.md — Rebuild the evidence verifier and complete baselines, prove a no-install candidate dependency snapshot, then repair gates and use one bounded exact-SHA route (BRADM-01, BRADM-07, BRDOC-02)
+- [ ] 184-02-PLAN.md — Rebuild the evidence verifier and complete baselines, prove a no-install candidate dependency snapshot, then repair gates and use one bounded exact-SHA route (BRADM-01, BRADM-07, BRDOC-02; blocked at synthetic post-removal verification, no real snapshot or hosted effect)
+- [ ] 184-03-PLAN.md — Fix and verify candidate-absent `verify-all` with synthetic local fixtures only (no new candidate route or external effects)

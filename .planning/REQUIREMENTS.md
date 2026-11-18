@@ -3,7 +3,7 @@
 **Defined:** 2026-11-13
 **Core Value:** Email you can see, audit, and trust before it ships.
 **Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13)
-**Stop line:** No new data capture or backend features. Baseline cap: 5 phases, 20 plans or fewer, one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183; this bounded audit remediation can reach 24 plans. See [BRPOL-04-PIN-DECISION.md](research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md).
+**Stop line:** No new data capture or backend features. Baseline cap: 5 phases, 20 plans or fewer, one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, reaching 24 plans. On 2026-11-18 the owner authorized Phase 184 plans 184-01 and 184-02, raising the hard total to 26. After plan 184-02's candidate-absent verifier failure, the owner authorized plan 184-03 solely to fix and verify that synthetic local lifecycle, raising the cap to 27. No further plan expansion or real candidate route is authorized. See [BRPOL-04-PIN-DECISION.md](research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md) and Phase 184 in [ROADMAP.md](ROADMAP.md).
 
 ## v1 Requirements
 
@@ -32,18 +32,18 @@
 
 ### Admin Words and Layout (BRADM)
 
-- [x] **BRADM-01**: An operator can search by email, find the delivery under Needs attention, and read a timeline with a verdict, "sent is not delivered", and a next step, through the real LiveView in light, dark and 375px.
-- [x] **BRADM-02**: Every time shown in the admin states its zone, and every status is a pane mark plus a word.
-- [x] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
-- [x] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
-- [x] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
-- [x] **BRADM-06**: Cause sentences appear only where `reject_reason` or the suppression reason exists, with a fixed honest fallback otherwise; "next try at…", "will retry", and cause text with a nil reason are never rendered, enforced by a contract test.
-- [x] **BRADM-07**: A separate agent reviews each scenario against the book with a rejection gate, and evidence is stored at unique paths with the served SHA recorded after a server restart.
+- [ ] **BRADM-01**: An operator can search by email, find the delivery under Needs attention, and read a timeline with a verdict, "sent is not delivered", and a next step, through the real LiveView in light, dark and 375px.
+- [ ] **BRADM-02**: Every time shown in the admin states its zone, and every status is a pane mark plus a word.
+- [ ] **BRADM-03**: The Deliveries screen is labeled "Activity" in screen text only, with `deliveries_path` unchanged.
+- [ ] **BRADM-04**: "Admin" replaces "Operator" and "Account" replaces "Tenant" in on-screen copy; modules and public names stay.
+- [ ] **BRADM-05**: The orphan-events count reads "N provider reports match no email", and the mailer shows its plain name with an accessible tooltip.
+- [ ] **BRADM-06**: Cause sentences appear only where `reject_reason` or the suppression reason exists, with a fixed honest fallback otherwise; "next try at…", "will retry", and cause text with a nil reason are never rendered, enforced by a contract test.
+- [ ] **BRADM-07**: A separate agent reviews each scenario against the book with a rejection gate, and evidence is stored at unique paths with the served SHA recorded after a server restart.
 
 ### Docs, Packaging, Launch Prep (BRDOC)
 
 - [x] **BRDOC-01**: README headers use separate light and dark lockup images selected correctly by GitHub, Hex.pm and HexDocs, with absolute `raw.githubusercontent.com` URLs pinned to the immutable asset commit SHA. An offline contract verifies the refs and image bytes against the brand pin.
-- [x] **BRDOC-02**: ExDoc CSS (code colors only, no OS dark-media query) and the "m" logo are set in all three `mix.exs`, verified by a real `mix docs` build per package.
+- [ ] **BRDOC-02**: ExDoc CSS (code colors only, no OS dark-media query) and the "m" logo are set in all three `mix.exs`, verified by a real `mix docs` build per package. Exact-candidate package builds and output contracts pass; same-output browser assertions remain open pending Phase 184.
 - [x] **BRDOC-03**: `design-system.md` and the `.impeccable` config exist, and CLAUDE.md/PRODUCT.md updates are drafted for owner sign-off.
 - [x] **BRDOC-04**: A lowercase-name lint passes, the Hex file allowlist is updated, and `mix mailglass.publish.check` passes.
 - [x] **BRDOC-05**: Favicon legibility is checked at 16, 24 and 32 px in three browsers, and a social card/avatar manual-upload checklist is written.
@@ -69,7 +69,7 @@
 
 ## Traceability
 
-Updated during roadmap creation (2026-11-13).
+Updated during roadmap creation and v2.11 closure authorization (2026-11-18).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -87,15 +87,15 @@ Updated during roadmap creation (2026-11-13).
 | BRTOK-04 | Phase 181 | Complete |
 | BRTOK-05 | Phase 181 | Complete |
 | BRTOK-06 | Phase 181 | Complete |
-| BRADM-01 | Phase 182 | Complete |
-| BRADM-02 | Phase 182 | Complete |
-| BRADM-03 | Phase 182 | Complete |
-| BRADM-04 | Phase 182 | Complete |
-| BRADM-05 | Phase 182 | Complete |
-| BRADM-06 | Phase 182 | Complete |
-| BRADM-07 | Phase 182 | Complete |
+| BRADM-01 | Phase 182; closure Phase 184 | Partial — current candidate journey not observed |
+| BRADM-02 | Phase 182; closure Phase 184 | Partial — Phase 182 verification remains open |
+| BRADM-03 | Phase 182; closure Phase 184 | Partial — Phase 182 verification remains open |
+| BRADM-04 | Phase 182; closure Phase 184 | Partial — Phase 182 verification remains open |
+| BRADM-05 | Phase 182; closure Phase 184 | Partial — Phase 182 verification remains open |
+| BRADM-06 | Phase 182; closure Phase 184 | Partial — Phase 182 verification remains open |
+| BRADM-07 | Phase 182; closure Phase 184 | Partial — current independent review not observed |
 | BRDOC-01 | Phase 183 | Complete |
-| BRDOC-02 | Phase 183 | Complete |
+| BRDOC-02 | Phase 183; closure Phase 184 | Partial — Phase 184-01 stopped at the host read-only preflight; Phase 184-02 failed its synthetic post-removal verifier before any real snapshot or Mix run; same-output browser assertion remains open |
 | BRDOC-03 | Phase 183 | Complete |
 | BRDOC-04 | Phase 183 | Complete |
 | BRDOC-05 | Phase 183 | Complete |
@@ -106,8 +106,8 @@ Updated during roadmap creation (2026-11-13).
 - Mapped to phases: 27
 - Unmapped: 0
 
-**Per phase:** Phase 179: 5 (BRPOL-01..05) · Phase 180: 3 (BRPIPE-01..03) · Phase 181: 6 (BRTOK-01..06) · Phase 182: 7 (BRADM-01..07) · Phase 183: 6 (BRDOC-01..06)
+**Per phase:** Phase 179: 5 (BRPOL-01..05) · Phase 180: 3 (BRPIPE-01..03) · Phase 181: 6 (BRTOK-01..06) · Phase 182: 7 (BRADM-01..07) · Phase 183: 6 (BRDOC-01..06) · Phase 184: closure evidence for BRADM-01/07 and BRDOC-02 (no new requirement IDs)
 
 ---
 *Requirements defined: 2026-11-13*
-*Traceability mapped: 2026-11-13 (roadmap v2.11, Phases 179-183)*
+*Traceability updated: 2026-11-18 (roadmap v2.11, Phases 179-184)*
