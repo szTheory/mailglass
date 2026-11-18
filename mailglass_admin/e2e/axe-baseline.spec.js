@@ -31,7 +31,9 @@ const baseURL =
   process.env.OPERATOR_BASE_URL ||
   `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
-const SURFACES = ["deliveries", "inbound", "preview"];
+// Run the smaller, unmodalized preview cells before the six overlay-heavy scans.
+// The previous CI run could not create pages for the final three cells after those scans.
+const SURFACES = ["preview", "deliveries", "inbound"];
 const THEMES = ["light", "dark", "system"];
 
 // The two scrim-backed surfaces whose [role=dialog] overlay violations fold
@@ -239,31 +241,43 @@ const measured = {};
 
 test.describe("axe WCAG 2.2 AA baseline producer (RATCHET-03)", () => {
   for (const surface of SURFACES) {
-    for (const theme of THEMES) {
-      test(`scan ${surface} / ${theme}`, async ({ page }) => {
-        // A full-page axe-core analysis (plus overlay open on the scrim-backed
-        // surfaces) can occasionally brush against the 30s per-test default under
-        // CI/Docker load — the preview surface is the heaviest. Mark these scans
-        // slow (3x timeout) so a slow-but-correct scan does not flake the gate.
-        test.slow();
-        const cell = await scanSurface(page, surface, theme);
-        // Shape assertion — every cell is { total: number, rules: object }.
-        expect(typeof cell.total, `${surface}.${theme} total`).toBe("number");
-        expect(typeof cell.rules, `${surface}.${theme} rules`).toBe("object");
-        // Fail closed (WR-04): the two scrim-backed surfaces MUST have opened
-        // their overlay so the D-03 fold actually measured the overlay's
-        // violations. An overlay-free scan under-counts and must never be
-        // promoted. (openOverlay also throws on failure; this is the recorded,
-        // assertable backstop.)
-        if (OVERLAY_REQUIRED_SURFACES.has(surface)) {
-          expect(
-            cell.overlay_opened,
-            `${surface}.${theme} must scan with its [role=dialog] overlay open`
-          ).toBe(true);
-        }
-        measured[surface] = measured[surface] || {};
-        measured[surface][theme] = cell;
+    const registerThemeScans = () => {
+      for (const theme of THEMES) {
+        test(`scan ${surface} / ${theme}`, async ({ page }) => {
+          // A full-page axe-core analysis (plus overlay open on the scrim-backed
+          // surfaces) can occasionally brush against the 30s per-test default under
+          // CI/Docker load — the preview surface is the heaviest. Mark these scans
+          // slow (3x timeout) so a slow-but-correct scan does not flake the gate.
+          test.slow();
+          const cell = await scanSurface(page, surface, theme);
+          // Shape assertion — every cell is { total: number, rules: object }.
+          expect(typeof cell.total, `${surface}.${theme} total`).toBe("number");
+          expect(typeof cell.rules, `${surface}.${theme} rules`).toBe("object");
+          // Fail closed (WR-04): the two scrim-backed surfaces MUST have opened
+          // their overlay so the D-03 fold actually measured the overlay's
+          // violations. An overlay-free scan under-counts and must never be
+          // promoted. (openOverlay also throws on failure; this is the recorded,
+          // assertable backstop.)
+          if (OVERLAY_REQUIRED_SURFACES.has(surface)) {
+            expect(
+              cell.overlay_opened,
+              `${surface}.${theme} must scan with its [role=dialog] overlay open`
+            ).toBe(true);
+          }
+          measured[surface] = measured[surface] || {};
+          measured[surface][theme] = cell;
+        });
+      }
+    };
+
+    if (surface === "preview") {
+      test.describe("preview target creation", () => {
+        // Do not spend another 90-second attempt on the three affected cells.
+        test.describe.configure({ retries: 0 });
+        registerThemeScans();
       });
+    } else {
+      registerThemeScans();
     }
   }
 

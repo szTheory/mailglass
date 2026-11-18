@@ -1,0 +1,27 @@
+{
+  "schema_version": "phase182-07-candidate-expected-counts.v1",
+  "inventory": {
+    "command": "playwright test --config=playwright.config.cjs --workers=1 --list",
+    "total_tests": 356,
+    "files": 19,
+    "expected_skipped": 1,
+    "expected_passed": 355
+  },
+  "units": {
+    "operator": "Playwright end-of-run summary lines of the exact candidate Operator Browser Gate log; passed = candidate --list total minus the one established guarded skip",
+    "demo": "phase174 cost receipt expected_counts per condition (demo + hooks + fidelity + axe = total), retained unchanged from the pinned baseline"
+  },
+  "operator": {
+    "passed": 355,
+    "skipped": 1,
+    "failed": 0,
+    "flaky": 0
+  },
+  "demo": {
+    "demo": 111,
+    "hooks": 6,
+    "fidelity": 26,
+    "axe": 26,
+    "total": 169
+  }
+}

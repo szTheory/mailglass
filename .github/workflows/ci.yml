@@ -759,6 +759,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Fetch pinned README artwork commit
+        env:
+          BRAND_DOCS_ASSET_COMMIT: 7781b4b1ceeca940e5f892530b1cf05430b54d7c
+        run: |
+          git fetch --no-tags --depth=1 origin "$BRAND_DOCS_ASSET_COMMIT"
+          git cat-file -e "${BRAND_DOCS_ASSET_COMMIT}:brandbook/v2/mailglass-lockup-light.svg"
+          git cat-file -e "${BRAND_DOCS_ASSET_COMMIT}:brandbook/v2/mailglass-lockup-dark.svg"
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:

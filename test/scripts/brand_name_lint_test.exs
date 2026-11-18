@@ -58,7 +58,9 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
   end
 
   test "detects accessible labels and HTML attributes while preserving API references" do
-    html = ~s|<button aria-label="Mailglass sections">Open <code>Mailglass&#46;Runtime</code></button>|
+    html =
+      ~s|<button aria-label="Mailglass sections">Open <code>Mailglass&#46;Runtime</code></button>|
+
     assert [%{match: "Mailglass", line: 1}] = findings(html, :heex, "fixture.heex")
   end
 
@@ -166,5 +168,4 @@ defmodule Mailglass.Scripts.BrandNameLintTest do
 
     assert Enum.any?(missing, fn {surface, _min} -> surface == :guides end)
   end
-
 end
