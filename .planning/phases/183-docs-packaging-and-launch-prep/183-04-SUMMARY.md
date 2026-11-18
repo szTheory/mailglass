@@ -71,7 +71,7 @@ status: complete
 
 ## Performance
 
-- **Duration:** Approximately 21 minutes, including source preflight, implementation and focused verification.
+- **Duration:** Approximately 38 minutes total: roughly 21 minutes for the original execution, plus the follow-up temporary-directory hardening and report refresh.
 - **Started:** Approximately 2026-11-17T23:45:00Z.
 - **Completed:** 2026-11-18T00:22:36Z.
 - **Tasks:** 2.
