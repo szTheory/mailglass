@@ -37,7 +37,7 @@
 - ✅ **v2.8 Truthful Repo** — Phases 166-167 (shipped 2026-09-19) — [archive](milestones/v2.8-ROADMAP.md)
 - ✅ **v2.9 Operator, Preview & Email UI Refinement** — Phases 168-173, 173.1 (shipped 2026-10-26) — [archive](milestones/v2.9-ROADMAP.md)
 - ✅ **v2.10 UI Repairs & Faithful Storybook** — Phases 174–178 (shipped 2026-11-02) — [archive](milestones/v2.10-ROADMAP.md)
-- 🚧 **v2.11 Brand v2.0 Adoption** — Phases 179-183 (in progress, opened 2026-11-13)
+- 🚧 **v2.11 Brand v2.0 Adoption** — Phases 179-184 (in progress, opened 2026-11-13)
 
 ## Phases
 
@@ -45,17 +45,18 @@
 
 **Milestone goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
 
-**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Baseline cap:** 5 phases, 20 plans or fewer (the original per-phase budgets below sum to 19), one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, permitting at most 24 total plans; see `.planning/research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md`.
+**Stop line:** No new data capture or backend features. Anything the book shows that the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) is filed as INSIGHT-01..03, not built. **Baseline cap:** 5 phases, 20 plans or fewer (the original per-phase budgets below sum to 19), one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans for Phases 179, 182 and 183, permitting 24 total plans. On 2026-11-18 the owner authorized a Phase 184 closure plan, increasing the cap to 25; after its read-only preflight stopped before Mix, the owner authorized exactly one additional recovery plan, increasing the cap to 26. No further expansion is authorized; see `.planning/research/brand-v2-adoption/BRPOL-04-PIN-DECISION.md`.
 
 **Verification:** D-52 zero human UAT. Every success criterion below is machine-observable. Owner hand-off is limited to ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement, and sign-off on CLAUDE.md/PRODUCT.md edits.
 
-**Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183).
+**Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (owner-approved 2026-11-13; proposal P1-P5 map to Phases 179-183); Phase 184 is the owner-authorized closure scope for residual exact-candidate browser evidence.
 
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (gap verification passed 2026-11-17)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
-- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; candidate route is authorized; five lock-only resolver/security refreshes and local checks are complete; no runtime until exact-SHA CI/cost gates pass)
-- [x] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (gap verification passed 2026-11-18)
+- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (both authorized candidate routes failed hosted gates; current journey/review evidence remains open for the new Phase 184 closure scope)
+- [ ] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (historical favicon provenance gap is closed; exact-candidate generated-output contracts pass, while the same-output browser assertion remains open)
+- [ ] **Phase 184: Close Admin and docs browser evidence gaps** - Repair observed candidate gates, then produce one exact-SHA passing CI/cost result, a current Admin journey/review, and same-output docs browser evidence using existing pinned components only
 
 <details>
 <summary>✅ v2.10 UI Repairs & Faithful Storybook (Phases 174–178) — SHIPPED 2026-11-02</summary>
@@ -174,7 +175,7 @@ Plans:
   4. A cause sentence appears only when `reject_reason` or the suppression reason exists; otherwise a fixed honest fallback appears. A contract test proves that "next try at…", "will retry" and cause text with a nil reason never render.
   5. A separate review agent judges each scenario against the book and the Phase 180 before-catalog, and its rejection gate passes. Evidence is stored at unique paths with the served SHA recorded after a server restart.
 **Hand-off from Phase 179**: the operator Deliveries projection carries only `status`, `last_event_type` and `delivery_confirmed`, so on that row a bounce followed by an open reads Sent. Before showing a `StatusMap.delivery_class/1` verdict, add `bounced_at` and `terminal` to `Mailglass.Operator.Deliveries.delivery_projection/1` (additive core change), or show the limitation on screen.
-**Plans**: 6/7 plans complete (the sixth original plan brought the milestone to 18 against its 20-plan baseline; one owner-authorized gap-closure plan remains.)
+**Plans**: 6/7 plans complete. Plan 182-07 remains blocked after its two authorized candidate routes; Phase 184 owns the newly authorized follow-up without changing that stop.
 
 Plans:
 **Wave 1**
@@ -211,7 +212,7 @@ Plans:
   4. The lowercase-name lint passes. The Hex file allowlist includes the shipped brand assets (fonts, OFL texts, logo) and nothing more, and `mix mailglass.publish.check` passes for every package.
   5. Automated favicon captures at 16, 24 and 32 px exist for Chromium, Firefox and WebKit. A social card/avatar manual-upload checklist with full URLs is written. The announcement and any ™ text are blocked unless the Phase 179 search result clears them, while the code rollout itself is not gated.
 **Plans**: 4/4 plans complete
-**Original plan budget**: 2 (three original plans were completed). After the audit, the owner authorized up to three scoped gap-closure plans, one each in Phases 179, 182 and 183. The bounded exception permits at most 24 total plans; no further plan expansion is authorized.
+**Original plan budget**: 2 (three original plans were completed). The owner authorized up to three scoped gap-closure plans for Phases 179, 182 and 183, then two Phase 184 closure plans on 2026-11-18 (the second after the first stopped before Mix). The bounded exception permits at most 26 total plans; no further plan expansion is authorized.
 
 Plans:
 - [x] 183-03-PLAN.md
@@ -235,12 +236,31 @@ Plans:
 
 ## Progress
 
-**Execution order:** 179 → 180 → 181 → 182 → 183 (one open PR at a time)
+**Execution order:** 179 → 180 → 181 → 182 → 183 → 184 (one open PR at a time)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 179. Compatibility Policy, Status Map and Brand Pin | 5/5 | Complete    | 2026-11-17 |
 | 180. Reproducible Admin Bundle and Before-Catalog | 4/4 | Complete    | 2026-11-14 |
 | 181. Brand v2 Tokens, Fonts and Logo | 4/4 | Complete    | 2026-11-15 |
-| 182. Admin Words and Layout, One Job First | 6/7 | Blocked before current browser evidence | — |
-| 183. Docs, Packaging and Launch Prep | 4/4 | Complete    | 2026-11-18 |
+| 182. Admin Words and Layout, One Job First | 6/7 | Blocked before current browser evidence; Phase 184 owns revised scope | — |
+| 183. Docs, Packaging and Launch Prep | 4/4 | Plans complete; same-output browser truth open | — |
+| 184. Close Admin and docs browser evidence gaps | 0/2 | Plan 184-01 blocked before Mix; plan 184-02 authorized for one recovery route | — |
+
+### Phase 184: Close Admin and docs browser evidence gaps
+
+**Goal:** Repair the observed v2.11 exact-candidate CI failures, then close the current Admin journey/reviewer and same-output docs browser evidence gaps using existing pinned dependencies and browser images. Phase 184-01 stopped before Mix; the owner authorized plan 184-02 for one fresh exact-SHA candidate route after the evidence verifier, complete baselines, and candidate-owned read-only dependency boundary pass. Preserve the prior Phase 182-07 stop; no retry of plan 184-01, further route, rerun, over-budget CI, favicon capture, publication, release, merge, or archive is authorized.
+**Requirements**: BRADM-01, BRADM-07, BRDOC-02
+**Depends on:** Phases 182 and 183; uses the exact a295e9a candidate and its retained verification receipts as the starting boundary
+**Success Criteria** (what must be TRUE):
+  1. The candidate passes a whole-checkout formatter check and targeted docs fixture/Credo preflights; the Demo Admin Playwright runtime meets its declared Node requirement without adding a dependency.
+  2. The Operator Browser Gate’s selector matches the rendered accessible name after LiveView readiness, and the preview Axe page-creation failure has a bounded local diagnosis and passing zero-retry preflight without weakening accessibility assertions.
+  3. The same generated docs output used by `verify_brand_docs.sh` passes the existing theme/layout browser contract in the already available Playwright 1.65.1 image; no image pull, package install, or replacement browser is allowed.
+  4. One exact-SHA hosted dispatch passes required CI/browser jobs, expected/executed test counts, and a complete formal cost receipt within +5 minutes wall and +10 runner minutes. Any missing receipt, failed job, count mismatch, or budget overage stops before preview.
+  5. Only after those gates pass, one isolated candidate-owned preview produces the current 375px light/dark Admin journey, served CSS/JS identity proof, and calibrated independent reviews; all task-owned resources are removed exactly.
+  6. Phase 182 and 183 verification records and the milestone audit reflect only observed evidence. Existing favicon capture/provenance inputs and owner work remain unchanged.
+**Plans**: 0/2 plans complete (plan 184-01 blocked before Mix; plan 184-02 authorized; milestone total capped at 26).
+
+Plans:
+- [ ] 184-01-PLAN.md — Repair candidate gate seams, preflight pinned browsers, then use one bounded exact-SHA hosted/cost gate and conditional evidence route (blocked before Mix; do not retry)
+- [ ] 184-02-PLAN.md — Rebuild the evidence verifier and complete baselines, prove a no-install candidate dependency snapshot, then repair gates and use one bounded exact-SHA route (BRADM-01, BRADM-07, BRDOC-02)

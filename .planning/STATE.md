@@ -2,19 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.11
 milestone_name: Brand v2.0 Adoption
-current_phase: 182
-status: in_progress
-stopped_at: Phase 182 plan 07 candidate gate — two scoped commits verified; final planning commit and pre-push checks remain
-last_updated: "2026-11-18T03:31:15Z"
+current_phase: 184
+current_phase_name: Close Admin and docs browser evidence gaps
+status: blocked
+last_updated: "2026-11-18T16:32:03.815Z"
 last_activity: 2026-11-18
-last_activity_desc: Exact-path lock and verifier commits pass path review; final planning commit is pending
-state_head: 546db4b27271aa03d5b518435507c4973bc75010
+last_activity_desc: Phase 184-01 stopped before Mix when sandbox-exec could not apply the shared-dependency read-only boundary; no push or dispatch occurred, and post-cleanup verify-all was unavailable because its helper and complete baseline snapshots were absent
+state_head: bf082017e3b4e58de34fdb80274be526e2f7aac2
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 24
-  completed_plans: 23
-  percent: 96
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 26
+  completed_plans: 24
+  percent: 50
+stopped_at: Phase 184 plan 01 local read-only docs-build preflight failed before Mix; hosted route withheld
 ---
 
 # Project State
@@ -24,27 +25,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 182 plan 07 candidate gating. Phases 179, 180, 181 and 183 pass fresh verification. The owner authorized a clean v2.11 review branch and one exact-SHA hosted/cost sequence. The five lock-only resolver/security updates and dependency-free verifier are committed locally with exact path sets; clean workspace lock checks and Hex audit passed. Independent reviews pass the verifier, including baseline/count pinning, exact candidate job/artifact/log identity, single-dispatch and remote-main checks. The final planning commit is pending; no review branch has been pushed and no preview has started.
+**Current focus:** Phase 182-07 remains blocked after candidate a295e9a's one follow-up hosted run failed required gates. Phase 182 still lacks the current served journey and independent review. Phase 183's same-output browser assertion remains unverified. Phase 184-01 stopped before source repair because the host could not apply the required read-only boundary to shared dependencies; no candidate source commit, push, dispatch, CI run, preview, or review occurred. Its planned post-cleanup `verify-all` was not run because the helper and complete owner/protected baseline snapshots are absent; only direct launcher-receipt hashes were rechecked. Do not retry the local browser route under this plan. Preserve the +5 wall/+10 runner ceilings, no-install browser policy, favicon capture stop, and owner WIP.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: 182
-Plan: 07 — current mobile journey evidence
-Status: Lock prerequisite and verifier locally committed; final planning commit remains; dispatch one manual `CI` workflow only after exact-path commits, privacy and release-hygiene gates pass. No preview has started.
-Last activity: 2026-11-18 — two exact-path commits verified; Phase 182 browser work remains gated
+Phase: 184 (Close Admin and docs browser evidence gaps) — READY TO EXECUTE
+Plan: 01 — candidate gate repair and bounded evidence route (blocked)
+Status: The first local read-only docs-build preflight failed before Mix. No source edits or commits were made; push, dispatch, and preview were withheld. The planned post-cleanup `verify-all` did not run because its helper and complete baseline snapshots are absent. Phase 182 plan 07 remains blocked and unchanged. A new closure plan would exceed the current 25-plan cap; the owner must decide whether to authorize it and a candidate-owned read-only boundary.
+Last activity: 2026-11-18 — Phase 184-01 local preflight blocked before Mix; evidence and audit records updated
 
-Progress: [█████████░] 96%
+Progress: [█████░░░░░] 50%
 
 ## v2.11 Roadmap Shape
 
 - **Goal:** the repo's identity (words, colors, type, logo, docs assets, admin screens) matches the owner-approved brand v2.0.1 archive (zip sha256 `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56`), and every identity claim is true or tested.
-- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, 5 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, 4) → 181 Tokens, fonts, logo (BRTOK-01..06, 4) → 182 Admin words and layout, one job first (BRADM-01..07, 7) → 183 Docs, packaging, launch prep (BRDOC-01..06, 4). The bounded audit remediation has 24 plans across the same five phases.
+- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, 5 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, 4) → 181 Tokens, fonts, logo (BRTOK-01..06, 4) → 182 Admin words and layout, one job first (BRADM-01..07, 7) → 183 Docs, packaging, launch prep (BRDOC-01..06, 4) → 184 bounded Admin/docs evidence closure (one gap plan).
 - **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
 - **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
-- **Cap and WIP:** The baseline was 5 phases and 20 plans or fewer, with one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, allowing at most 24 plans. No further expansion is authorized.
-- **Audit status:** Phases 179, 180, 181 and 183 verifications pass. Phase 182 remains gaps_found for BRADM-01/07 current journey and reviewer evidence. The earlier blocked preflight is retained at .planning/phases/182-admin-words-and-layout-one-job-first/182-07-EVIDENCE.json. On 2026-11-18 the owner authorized a scoped review branch and one exact-SHA `workflow_dispatch` CI/cost gate sequence, with no PR creation. No preview starts unless the exact hosted and strict cost gates pass. Milestone closure remains downstream of a fresh passing Phase 182 verification and milestone audit.
+- **Cap and WIP:** The baseline was 5 phases and 20 plans or fewer, with one open PR at a time. The owner approved three scoped gap plans through 24 plans, then explicitly authorized one Phase 184 closure plan and one additional candidate route on 2026-11-18. The hard cap is now 25 total plans. Preserve owner WIP and do not stage, stash, reset, format, or overwrite it.
+- **Audit status:** Phases 179–181 pass; Phases 182 and 183 are gaps_found. Candidate a295e9a run 44261984013 failed Format Check, Mix Task Tests, Core Deterministic Suite, Credo, Demo Browser Evidence, Operator Browser Gate and CI Green. Docs generated-output checks passed; its local browser assertion failed at Chromium host launch. The diagnostic runner delta was +7.30 minutes, but no formal cost disposition exists because required jobs failed and the Demo artifact omitted `phase174/cost.json`. Phase 184 owns one new exact-SHA attempt; no retry/rerun and no preview unless exact hosted and cost gates pass. Milestone closure remains downstream of fresh passing phase verifications and a passing milestone audit.
 - **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
 - **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
 
@@ -853,7 +854,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-11-18T03:31:15Z
-Stopped at: Phase 182 plan 07 final planning commit and pre-push checks; owner route authorization is recorded, no preview started
+Historical checkpoint superseded: the final planning commit was pushed and the sole candidate route ran on 2026-11-18; current outcome is recorded under Operator Next Steps.
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -875,10 +876,7 @@ Resume file: None
 
 ## Operator Next Steps — 2026-11-18
 
-- The owner authorized the scoped Phase 182-07 candidate route. The lock refresh (`32dba23e`) and verifier (`546db4b2`) commits are local and each contains only its approved paths. Complete the final planning commit, verify the owner-WIP baseline, then run the local ref and privacy/release checks before pushing only `gsd/v2.11-phase182-admin-evidence`. Dispatch one manual `CI` run at that ref. The verifier pins the v2.10 baseline/count inputs, exact Operator job log and Demo artifact, one exact-SHA dispatch, and unchanged `origin/main`. Require exact-SHA `CI Green` and the strict cost disposition before the single preview. The next actor is the current executor; no owner action is pending.
-
-### Active gate
-
-- The candidate is not yet frozen or hosted. Before push, the executor must confirm `origin/main` remains at the approved base, verify the exact committed range and privacy/release-hygiene checks, and prove that every pre-existing owner-WIP path and digest still matches the recorded baseline. Any mismatch stops before push and preserves the Phase 182 gap. Do not create a PR, rerun favicon capture or its alias, merge, release, publish or deploy. Archive/tag only after a fresh passing Phase 182 verification and milestone audit.
+- Candidate b5a3c48 was pushed once to `gsd/v2.11-phase182-admin-evidence`; run 44233067082 was its single approved attempt. CI Green, Demo Browser Evidence, Operator Browser Gate, and the core docs output contract failed. The Demo artifact lacks `phase174/cost.json`; there is no formal cost disposition, and runner time exceeded the +10-minute cap by 14.68 minutes. No preview or PR occurred; `origin/main` remains at the approved base.
+- **Next actor: owner.** The Phase 182-07 plan excludes implementation changes, and its one-dispatch authority is consumed. Approve a revised scope before local repairs or another candidate. Recommended route: fix deterministic failures, run cheap checks before focused tests, diagnose browser failures without retries, then authorize at most one new exact-SHA dispatch under the existing +5-minute wall / +10-minute added-runner caps with no overage. Preview only if all exact-SHA hosted and cost gates pass. Preserve the favicon capture stop, one-open-PR limit, and all owner WIP.
 
 - The unchanged default root mix test finished with 7 failures out of 2,448; baseline attribution is unknown, and it was not rerun after the owner chose preserve-and-continue. First-failure details are in `183-03-SUMMARY.md`.

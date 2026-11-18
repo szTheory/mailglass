@@ -5,7 +5,7 @@
 **Files/seams analyzed:** 12 likely source seams  
 **Analogs found:** 12 / 12 (two checks have only a partial analog)
 
-The Phase 184 context names the work areas but does not give a definitive edit list, and there is no `184-RESEARCH.md` yet. Rows below map the likely implementation seams from the context; they do not imply every listed analog needs modification. Every analog was verified with `git ls-files` in the specified candidate checkout.
+The original Phase 184 context named the work areas but did not give a definitive edit list; this pattern map was written before the first research note. Rows below map likely implementation seams and do not imply every listed analog needs modification. Every analog was verified with `git ls-files` in the specified candidate checkout.
 
 ## File Classification
 
@@ -222,6 +222,8 @@ Pin the Playwright image to the installed package version, inspect for local ava
 |---|---|---|
 | Active Demo Node runtime-version check | `scripts/assert_gating_toolchain.sh:27-51`; `reference/demo_app/assets/scripts/check-demo-browser-deps.cjs:8-37` | No tracked file compares the actual Node process version to the supported Demo runtime. The dependency checker only verifies `engines.node` metadata. |
 | Docs same-output container execution | `scripts/verify_brand_docs.sh` + `scripts/gsd-regression-gate.sh` | Each half exists, but the current docs script runs the browser locally and the current container runner does not mount a generated docs output root. Preserve one output root while composing them. |
+| Phase 184 route verifier and full owner/protected baselines | `scripts/phase178_cost_disposition.cjs` + existing browser evidence manifests | No general read-only route verifier or complete per-path owner/protected baseline exists. Implement with Node built-ins and fixture-only `node:test`; never infer missing preimages from aggregate hashes. |
+| Candidate-owned Mix dependency snapshots | Four project `deps/` roots plus explicit `MIX_DEPS_PATH`/`MIX_BUILD_PATH` pairs in `184-01-PLAN.md` | The old plan references shared owner deps; no tested isolated snapshot contract exists. Use candidate-owned copies only after hash, path-containment, link, and read-only checks pass. |
 
 ## Metadata
 

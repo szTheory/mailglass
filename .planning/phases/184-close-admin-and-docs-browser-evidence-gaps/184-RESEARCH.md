@@ -2,7 +2,7 @@
 
 **Researched:** 2026-11-18
 **Candidate base:** `a295e9a950e14d7ce3ec9456f31fbda864933580`
-**Scope:** One authorized gap-closure plan and one exact-SHA candidate route.
+**Scope:** Original 184-01 route plus the owner-authorized 184-02 recovery addendum below.
 
 ## Findings
 
@@ -44,9 +44,38 @@ Primary source: [Playwright v1.65 release notes](https://playwright.dev/docs/rel
 4. Extend the docs verification script to run the browser contract in the already installed Playwright image against the exact generated output root, then clean the owned output.
 5. Run only one exact-SHA hosted dispatch after local preflight. Enforce all CI, count, cost and resource gates before any preview.
 
-## Not authorized
+## Original plan 184-01 boundary
 
-No new npm dependency, browser/package/image install, image pull, workflow retry/rerun, second candidate dispatch, third preview, favicon recapture, new product behavior, merge, release, deploy, tag, archive, or owner-worktree cleanup.
+Plan 184-01 allowed one candidate route and is now blocked before Mix. It did not authorize an alternate boundary or retry. No npm/browser/image installation, image pull, favicon recapture, new product behavior, merge, release, deploy, tag, archive, or owner-worktree cleanup was authorized by that plan.
+
+## Recovery addendum for plan 184-02 — 2026-11-18
+
+### Evidence verifier and baselines
+
+- The retained 184-01 directory contains only source identity plus the docs-build log, PID, and exit receipts. Those three receipt hashes recheck, but the per-path owner/protected manifests and `184-01-route.cjs` helper do not exist. Do not claim a full 184-01 `verify-all` pass or reconstruct missing preimages from aggregate hashes.
+- Before any Mix/source/browser action, create a Node-built-in-only route helper with deterministic `node:test` fixtures. It must verify a complete retained route manifest and authenticated candidate source; its verify modes must be read-only and fail closed on missing/tampered inputs, ambiguous attempt markers, or absent cleanup receipts.
+- Capture sorted path/type/mode/symlink-target/content-hash manifests for owner WIP, dependencies/modules/browser roots, catalogs, favicon inputs, seeds, protected Phase 182-07 files, and all allowed report targets. Keep owner file contents and secrets out of evidence; retain only the path metadata and hashes necessary for deterministic comparison. Record report-target preimages separately. Capture source commit/tree identity and an authenticated source bundle or equivalent before candidate cleanup.
+
+### Candidate-owned dependency snapshot
+
+- The four owner dependency trees total approximately 133 MiB / 9,260 files, reside on the same APFS data volume as `/private/tmp`, and the read-only inventory found no symlinks or multiply linked files. About 309 GiB was free during this read-only check. No snapshot was created or tested.
+- The host has the required Elixir `1.18.4-otp-27` / Erlang OTP `27.3.4.13` runtime when explicitly selected. The exact pinned Elixir/OTP Docker image is absent locally; the standard toolchain Compose target uses shared resources and is unsuitable as-is.
+- A candidate-owned `cp -c` snapshot of each dependency tree is plausible and may fall back to a regular copy. It is not proven until the plan's disposable clone preflight and hash/path checks pass. Never use hard links or symlinks into owner caches. Before Mix, compare lockfiles, full inventories, modes and hashes; enforce candidate dependency snapshots read-only and write all build output under candidate-owned `_build` paths. No `mix deps.get`, package install, image build/pull, permission escalation, or fallback to shared owner deps. Any boundary failure stops before Mix and source repair.
+
+### Hosted and preview gates
+
+- CI policy classifies Demo Browser Evidence and Operator Browser Gate as advisory relative to the `CI Green` aggregate. Plan 184-02 must require those two lanes separately as phase gates rather than describe them as constituents of `CI Green`.
+- Freeze the Operator inventory at 356 cases across 19 files: 355 pass, one named guarded skip, zero failed/flaky. Demo expects 169 cases in each cold and warm condition: 111 demo + 6 hooks + 26 fidelity + 26 Axe. Do not reuse the obsolete 310-pass Operator count.
+- Require the `phase178-cost-disposition.v1` receipt bound to the full SHA and hashes of its seven inputs (baseline run/jobs, dispatch run/jobs, Operator log, Demo cost, and candidate `expected.json`). Baseline run: `40414024714`; absolute limits: 1,541 seconds wall time and 110.68333333333334 runner minutes. Both budget flags must pass; count-mismatch flags must be false. Missing/failed jobs, mismatched counts, missing receipt, or overage stops before preview.
+- A preview remains conditional on the one exact-SHA push/dispatch and all separate phase gates plus the formal cost receipt. Preserve zero retries, unchanged +5/+10 ceilings, one isolated preview, two independent reviews, owner-demo resources, favicon stop, and Phase 182-07 stop.
+
+## Updated recommended implementation order
+
+1. Build and fixture-test the verifier; retain complete owner/protected/report-target baselines and authenticated candidate source before any effect.
+2. Prove a disposable candidate-owned dependency snapshot is independent, hash-equal, read-only and within candidate roots; confirm explicit runtime and candidate build paths. Stop before Mix if any check fails.
+3. Repair only the identified candidate seams, run cheap formatter/fixture/Credo/runtime/count preflights first, then one zero-retry docs/browser diagnostic route.
+4. Push one exact candidate and dispatch once. Require CI Green plus the separate Demo and Operator gates, exact counts, formal cost receipt and existing timing ceilings.
+5. Run one isolated preview and two independent reviews only after all gates pass; clean only task-owned resources and verify retained evidence without rerunning tests or CI.
 
 ---
 

@@ -1,7 +1,7 @@
 # Phase 184: Close Admin and docs browser evidence gaps - Context
 
 **Gathered:** 2026-11-18
-**Status:** Ready for planning
+**Status:** Recovery scope authorized; ready for planning
 
 <domain>
 ## Phase Boundary
@@ -29,6 +29,14 @@ Close the observed v2.11 candidate gate failures and the remaining current Admin
 ### Protected inputs and discretion
 - **D-10:** Preserve the stop against favicon recapture while its source-hash mismatch remains unresolved. Do not alias a different producer or alter protected source bytes to force a pass.
 - **D-11:** No new product behavior, data capture, backend capability, dependency, or broad workflow redesign is in this phase.
+
+### Recovery scope after the Phase 184-01 preflight stop
+- **D-12:** The owner authorizes exactly one additional gap-closure plan, `184-02`, raising the v2.11 plan cap from 25 to 26. No further plan expansion is authorized.
+- **D-13:** Plan 184-01 stays blocked and immutable; do not retry its failed command or switch its execution boundary. Plan 184-02 may prepare one fresh exact-SHA candidate route from `a295e9a950e14d7ce3ec9456f31fbda864933580`, with at most one branch push, one matching `workflow_dispatch`, and one conditional preview only after every hosted/count/cost gate passes. No retries, reruns, second route, over-budget CI, or third-party publication.
+- **D-14:** Before any source edit or Mix/browser action in plan 184-02, implement and fixture-test a Node-built-in-only evidence helper and capture complete pre-edit owner/protected per-path baselines plus separately hashed report-target preimages. The helper must fail closed on missing/tampered inputs, re-compute hashes from retained manifests, and bind source identity to retained Git content. The 184-01 digest-only assertions remain historical claims; do not retrofit them into a successful `verify-all` result.
+- **D-15:** Use an isolated candidate clone and candidate-owned dependency snapshots for all four Mix projects. The existing owner dependency trees total about 133 MiB and are on the same APFS volume as `/private/tmp`; `cp -c` is a candidate snapshot option, not yet validated. Before Mix, verify byte-identical locks, exact file/mode/content inventories, no symlink or hard-link escape into owner trees, candidate-root containment, and read-only candidate dependency snapshots. Set the approved Elixir/OTP versions explicitly and keep every build path candidate-owned. Do not run `mix deps.get`, install packages, pull/build images, use shared owner deps after startup, or escalate permissions. If snapshot creation, read-only enforcement, inventory, or path checks fail, stop before Mix and all hosted work.
+- **D-16:** Distinguish `CI Green`'s policy-required jobs from the separate advisory Demo Browser Evidence and Operator Browser Gate workflows; Phase 184-02 still requires both browser workflows to pass independently. Freeze the 356-case Operator inventory (355 pass, one named guarded skip, zero failures/flaky) and the Demo 169-case cold and warm counts (111 demo, 6 hooks, 26 fidelity, 26 Axe). Require the formal `phase178-cost-disposition.v1` receipt with seven input hashes, baseline run `40414024714`, wall time at most 1,541 seconds and runner time at most 110.68333333333334 minutes; both budget flags must pass and count-mismatch flags must be false. Missing or failing gates stop before preview.
+- **D-17:** Keep the Phase 182-07 stop, favicon source-hash/capture stop, owner WIP, and owner-demo services unchanged throughout plan 184-02.
 
 ### The agent's Discretion
 Choose the smallest implementation that satisfies these boundaries, follows existing repository patterns, and preserves provenance. Keep source edits and execution in the isolated checkout; planning/evidence updates must be scoped to Phase 184 and related v2.11 audit artifacts.
