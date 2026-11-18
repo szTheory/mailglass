@@ -2,6 +2,43 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
   @moduledoc false
 
   @schema "mailglass.favicon_catalog.v1"
+  @accepted_catalog_id "favicon-299c1aa-20261116T231912Z"
+  @accepted_manifest_sha256 "ef614ecee58a440887d1bfbede7f777d31f97ab37b61acf82c4e7d0d6c204e11"
+  @accepted_producer_path "mailglass_admin/e2e/favicon-capture.cjs"
+  @accepted_producer_sha256 "bff05d778648d4d900c9e977e89227ea3290ede9490e1e7fd5de28bdda7f6ee3"
+  @accepted_producer_bytes 16_209
+  @accepted_producer_git_blob "63176497feeb85722af6a78bfb9b90c77739f376"
+  @provenance_record_path "mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.json"
+  @provenance_snapshot_path "mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.cjs"
+  @provenance_record_max_bytes 16_384
+  @accepted_provenance_record %{
+    "schema" => "mailglass.favicon_producer_provenance.v1",
+    "catalogId" => @accepted_catalog_id,
+    "manifestSha256" => @accepted_manifest_sha256,
+    "producerPath" => @accepted_producer_path,
+    "snapshotPath" => @provenance_snapshot_path,
+    "producerSha256" => @accepted_producer_sha256,
+    "producerBytes" => @accepted_producer_bytes,
+    "producerCommit" => "ad4af34352e1d64af6fc7415306151adcb61b9e7",
+    "producerTree" => "5658acb44e0907ec302a3a889ea39c349fe21552",
+    "producerGitBlob" => @accepted_producer_git_blob,
+    "producerCommittedAt" => "2026-11-16T14:56:55-05:00",
+    "ancestryCheckedAtRevision" => "48c3b310830d44a80f5ef5beb4895f23d37f42bc",
+    "brandSourceRevision" => "677b9d300e0da01abb199076b301bae36447d2da",
+    "brandArchiveSha256" => "3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56",
+    "faviconSha256" => "299c1aaa2dfc772bf375de0d51ef4dae0b442969684cc4d393887b87f3f037a5",
+    "evidence" =>
+      "The snapshot bytes reproduce the recorded SHA-256 and Git blob. The producer commit is an ancestor of the checked execution revision and its commit time precedes the manifest start time. This authenticates source-byte provenance only; it does not independently attest to the historical browser process or establish new browser or Safari observations.",
+    "commands" => [
+      "git cat-file -e 'ad4af34352e1d64af6fc7415306151adcb61b9e7^{commit}'",
+      "git rev-parse 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs'",
+      "git rev-parse 'ad4af34352e1d64af6fc7415306151adcb61b9e7^{tree}'",
+      "git merge-base --is-ancestor ad4af34352e1d64af6fc7415306151adcb61b9e7 48c3b310830d44a80f5ef5beb4895f23d37f42bc",
+      "git show -s --format='%cI' ad4af34352e1d64af6fc7415306151adcb61b9e7",
+      "git show 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs' | shasum -a 256",
+      "git show 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs' | wc -c"
+    ]
+  }
   @repo_root Path.expand("../../..", __DIR__)
   @engines ~w(chromium firefox webkit)
   @schemes ~w(light dark)
@@ -50,9 +87,14 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
         case read_regular_file(Path.join(dir, "manifest.json")) do
           {:ok, bytes} ->
             case Jason.decode(bytes) do
-              {:ok, manifest} when is_map(manifest) -> validate_manifest(dir, repo_root, manifest)
-              {:ok, _} -> ["#{id}: manifest must be an object"]
-              {:error, reason} -> ["#{id}: manifest is unreadable (#{inspect(reason)})"]
+              {:ok, manifest} when is_map(manifest) ->
+                validate_manifest(dir, repo_root, manifest, sha256(bytes))
+
+              {:ok, _} ->
+                ["#{id}: manifest must be an object"]
+
+              {:error, reason} ->
+                ["#{id}: manifest is unreadable (#{inspect(reason)})"]
             end
 
           {:error, reason} ->
@@ -155,7 +197,7 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
     shape_failures(mask, width, height, size, dpr)
   end
 
-  defp validate_manifest(dir, repo_root, manifest) do
+  defp validate_manifest(dir, repo_root, manifest, manifest_sha256) do
     id = Path.basename(dir)
 
     schema_failures =
@@ -184,7 +226,7 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
           "#{id}: resource limits differ from the plan"
         )
 
-    source_failures = source_bindings(manifest, repo_root, id)
+    source_failures = source_bindings(manifest, repo_root, id, manifest_sha256)
     engine_failures = engine_bindings(manifest, id)
     matrix_failures = matrix_bindings(manifest, id)
     diag_failures = diagnostics_failures(manifest, id)
@@ -200,7 +242,7 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
       capture_failures ++ pixel_failures ++ file_failures
   end
 
-  defp source_bindings(manifest, repo_root, id) do
+  defp source_bindings(manifest, repo_root, id, manifest_sha256) do
     source = manifest["source"]
     served = manifest["served"]
     producer = manifest["producer"]
@@ -230,7 +272,7 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
       ) ++
       compare_file(repo_root, source, "#{id} source") ++
       compare_file(repo_root, served, "#{id} served") ++
-      compare_file(repo_root, producer, "#{id} producer") ++
+      producer_failures(producer, repo_root, id, manifest_sha256) ++
       case read_json(Path.join(repo_root, "brandbook/brand.pin.json")) do
         {:ok, %{"shipped" => shipped}} when is_list(shipped) ->
           source_path = if is_map(source), do: source["path"], else: nil
@@ -250,6 +292,115 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
         _ ->
           ["#{id}: brand pin cannot be read"]
       end
+  end
+
+  defp producer_failures(producer, repo_root, id, manifest_sha256) do
+    if id == @accepted_catalog_id and manifest_sha256 == @accepted_manifest_sha256 do
+      historical_producer_failures(producer, repo_root, id)
+    else
+      compare_file(repo_root, producer, "#{id} producer")
+    end
+  end
+
+  defp historical_producer_failures(producer, repo_root, id) do
+    check(
+      is_map(producer) and producer["path"] == @accepted_producer_path and
+        producer["sha256"] == @accepted_producer_sha256,
+      "#{id}: historical producer provenance manifest binding is invalid"
+    ) ++ validate_historical_producer_evidence(repo_root, id)
+  end
+
+  defp validate_historical_producer_evidence(repo_root, id) do
+    case read_fixed_repo_file(
+           repo_root,
+           @provenance_record_path,
+           @provenance_record_max_bytes
+         ) do
+      {:ok, record_bytes} ->
+        case Jason.decode(record_bytes) do
+          {:ok, record} when is_map(record) ->
+            if record == @accepted_provenance_record do
+              validate_historical_producer_snapshot(repo_root, id)
+            else
+              ["#{id}: historical producer provenance record is invalid"]
+            end
+
+          _ ->
+            ["#{id}: historical producer provenance record is invalid"]
+        end
+
+      {:error, reason} ->
+        [
+          "#{id}: historical producer provenance record cannot be read safely (#{inspect(reason)})"
+        ]
+    end
+  end
+
+  defp validate_historical_producer_snapshot(repo_root, id) do
+    case read_fixed_repo_file(
+           repo_root,
+           @provenance_snapshot_path,
+           @accepted_producer_bytes,
+           @accepted_producer_bytes
+         ) do
+      {:ok, bytes} ->
+        check(
+          sha256(bytes) == @accepted_producer_sha256 and
+            git_blob_sha1(bytes) == @accepted_producer_git_blob,
+          "#{id}: historical producer snapshot does not match reviewed source bytes"
+        )
+
+      {:error, reason} ->
+        ["#{id}: historical producer snapshot cannot be read safely (#{inspect(reason)})"]
+    end
+  end
+
+  defp read_fixed_repo_file(repo_root, relative_path, max_bytes, exact_bytes \\ nil) do
+    parts = Path.split(relative_path)
+    directories = Enum.drop(parts, -1)
+    filename = List.last(parts)
+
+    with :ok <- real_directory(repo_root),
+         {:ok, parent} <- real_directory_chain(repo_root, directories),
+         path = Path.join(parent, filename),
+         {:ok, %File.Stat{type: :regular, size: size}} <- File.lstat(path),
+         :ok <- bounded_file_size(size, max_bytes, exact_bytes),
+         {:ok, bytes} <- File.read(path),
+         true <- byte_size(bytes) == size do
+      {:ok, bytes}
+    else
+      {:ok, _stat} -> {:error, :not_regular_file}
+      false -> {:error, :file_changed_while_reading}
+      {:error, reason} -> {:error, reason}
+      _ -> {:error, :unsafe_fixture_path}
+    end
+  end
+
+  defp real_directory_chain(path, []), do: {:ok, path}
+
+  defp real_directory_chain(path, [component | rest]) do
+    child = Path.join(path, component)
+
+    case real_directory(child) do
+      :ok -> real_directory_chain(child, rest)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp real_directory(path) do
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :directory}} -> :ok
+      {:ok, _stat} -> {:error, :not_real_directory}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp bounded_file_size(size, max_bytes, exact_bytes) do
+    cond do
+      size > max_bytes -> {:error, :file_too_large}
+      is_integer(exact_bytes) and size != exact_bytes -> {:error, :unexpected_file_size}
+      true -> :ok
+    end
   end
 
   defp engine_bindings(%{"engines" => engines}, id) when is_list(engines) do
@@ -853,6 +1004,11 @@ defmodule MailglassAdmin.TestSupport.FaviconCatalog do
   defp check(nil, message), do: [message]
 
   defp sha256(bytes), do: Base.encode16(:crypto.hash(:sha256, bytes), case: :lower)
+
+  defp git_blob_sha1(bytes) do
+    header = "blob #{byte_size(bytes)}" <> <<0>>
+    Base.encode16(:crypto.hash(:sha, header <> bytes), case: :lower)
+  end
 
   defp png_header_failures(file, bytes, capture) do
     case png_ihdr(bytes) do
