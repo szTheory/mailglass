@@ -54,7 +54,7 @@
 - [x] **Phase 179: Compatibility Policy, Status Map and Brand Pin** - One tested source of truth for which names stay, what each status says, and which book is canonical (gap verification passed 2026-11-17)
 - [x] **Phase 180: Reproducible Admin Bundle and Before-Catalog** - CI regenerates and diffs the admin bundle, `<html>` alone owns the theme, and current screens are captured before any swap (completed 2026-11-14)
 - [x] **Phase 181: Brand v2 Tokens, Fonts and Logo** - The admin wears brand v2 colors, type and mark in light and dark, contrast-verified, with host email defaults untouched (completed 2026-11-15)
-- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; plan 182-07 is blocked before runtime on exact-candidate hosted/cost gates)
+- [ ] **Phase 182: Admin Words and Layout, One Job First** - The password-reset investigation reads truthfully in brand v2 words end to end, then those words roll out across every screen (implementation completed 2026-11-15; candidate route is authorized; five lock-only resolver/security refreshes and local checks are complete; no runtime until exact-SHA CI/cost gates pass)
 - [x] **Phase 183: Docs, Packaging and Launch Prep** - README, HexDocs, Hex package contents and favicon carry the owner-approved brand; announcement and any trademark claim wait on the search result (gap verification passed 2026-11-18)
 
 <details>
@@ -196,7 +196,7 @@ Plans:
 - [x] 182-06-PLAN.md — JourneySeed and after-mode capture, advisory browser journey, two-judge calibrated review gate, committed after-catalog bound in the admin lane (BRADM-07; BRADM-01 advisory)
 
 **Wave 7** *(after Phase 183-04 provenance closure)*
-- [ ] 182-07-PLAN.md — Provenance-gated current mobile journey, served-SHA binding and independent review (blocked before runtime: no frozen candidate or exact-SHA hosted/cost proof; current plan forbids manufacturing those gates)
+- [ ] 182-07-PLAN.md — Freeze the scoped v2.11 review candidate with lock-only CI/security refresh, pass exact-SHA `CI Green` and strict cost gates, then run the provenance-gated current mobile journey and independent review (local lock/audit checks pass; pre-push review in progress; no PR, preview or capture)
 **Plan budget**: about 5
 **UI hint**: yes
 

@@ -4,11 +4,11 @@ milestone: v2.11
 milestone_name: Brand v2.0 Adoption
 current_phase: 182
 status: in_progress
-stopped_at: Phase 182 plan 07 preflight — exact candidate hosted/cost gates missing; no runtime started
-last_updated: "2026-11-18T01:00:27Z"
+stopped_at: Phase 182 plan 07 candidate gate — two scoped commits verified; final planning commit and pre-push checks remain
+last_updated: "2026-11-18T03:31:15Z"
 last_activity: 2026-11-18
-last_activity_desc: Phase 183 passed; Phase 182 current-evidence preflight blocked before preview
-state_head: 826962d6dc3d477c0fcc6bf67ff234f7e53d1fd3
+last_activity_desc: Exact-path lock and verifier commits pass path review; final planning commit is pending
+state_head: 546db4b27271aa03d5b518435507c4973bc75010
 progress:
   total_phases: 5
   completed_phases: 4
@@ -24,7 +24,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.11 milestone audit. Phases 179, 180, 181 and 183 pass fresh verification. Phase 182's current browser evidence remains open: its plan preflight found no frozen candidate, exact-SHA hosted status or cost disposition, and the plan forbids pushing or running hosted CI to manufacture those gates.
+**Current focus:** Phase 182 plan 07 candidate gating. Phases 179, 180, 181 and 183 pass fresh verification. The owner authorized a clean v2.11 review branch and one exact-SHA hosted/cost sequence. The five lock-only resolver/security updates and dependency-free verifier are committed locally with exact path sets; clean workspace lock checks and Hex audit passed. Independent reviews pass the verifier, including baseline/count pinning, exact candidate job/artifact/log identity, single-dispatch and remote-main checks. The final planning commit is pending; no review branch has been pushed and no preview has started.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
@@ -32,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-11-17)
 
 Phase: 182
 Plan: 07 — current mobile journey evidence
-Status: Preflight blocked before runtime; preserve the existing plan and wait for an owner decision before expanding candidate/hosted-gate scope
-Last activity: 2026-11-18 — Phase 183 passed; Phase 182 preview not started
+Status: Lock prerequisite and verifier locally committed; final planning commit remains; dispatch one manual `CI` workflow only after exact-path commits, privacy and release-hygiene gates pass. No preview has started.
+Last activity: 2026-11-18 — two exact-path commits verified; Phase 182 browser work remains gated
 
 Progress: [█████████░] 96%
 
@@ -44,7 +44,7 @@ Progress: [█████████░] 96%
 - **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
 - **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
 - **Cap and WIP:** The baseline was 5 phases and 20 plans or fewer, with one open PR at a time. On 2026-11-17 the owner authorized up to three scoped gap-closure plans, one each for Phases 179, 182 and 183, allowing at most 24 plans. No further expansion is authorized.
-- **Audit status:** Phases 179, 180, 181 and 183 verifications pass. Phase 182 remains gaps_found for BRADM-01/07 current journey and reviewer evidence. Its 182-07 preflight is recorded at .planning/phases/182-admin-words-and-layout-one-job-first/182-07-EVIDENCE.json; the current plan forbids push/hosted CI to create the exact-candidate gates it requires. No preview allowance was consumed. No archive or tag is authorized by this state update.
+- **Audit status:** Phases 179, 180, 181 and 183 verifications pass. Phase 182 remains gaps_found for BRADM-01/07 current journey and reviewer evidence. The earlier blocked preflight is retained at .planning/phases/182-admin-words-and-layout-one-job-first/182-07-EVIDENCE.json. On 2026-11-18 the owner authorized a scoped review branch and one exact-SHA `workflow_dispatch` CI/cost gate sequence, with no PR creation. No preview starts unless the exact hosted and strict cost gates pass. Milestone closure remains downstream of a fresh passing Phase 182 verification and milestone audit.
 - **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
 - **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
 
@@ -852,8 +852,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-18T01:00:27Z
-Stopped at: Phase 182 plan 07 preflight is blocked before runtime; owner decision is needed to amend its candidate/hosted-gate boundary
+Last session: 2026-11-18T03:31:15Z
+Stopped at: Phase 182 plan 07 final planning commit and pre-push checks; owner route authorization is recorded, no preview started
 Resume file: None
 
 ## Historical operator next steps — superseded 2026-11-02
@@ -873,12 +873,12 @@ Resume file: None
 - Cycle 08 is stopped on the required Inbound Test failure at architecture_port_test.exs:48: records.ex now uses the shared Mailglass.Clock, but its architecture allowlist admits only Mailglass.Tenancy. Both schema advisory suites failed the same assertion. CI Demo Browser Evidence passed. The candidate is at the remote target and PR head; the PR body still describes Cycle 07 because the approved body edit was withheld at the failure gate. Do not retry Cycle 08. Add the clock to the architecture allowlist, validate locally, then create a new candidate and obtain fresh exact-SHA approval. Cost remains unmeasured; no preview launched; Plans 23–24 and UIQ-06/07/08 remain blocked/open.
 - Cycle 09 candidate 5ad5329a6d0f17da0edce3af6b4a987bc3219023 adds the shared clock to the inbound architecture-port allowlist and passed its local checks. Plan 36 used one fast-forward push, one PR body update, and one dispatch; all eight attempt-1 workflows passed. Exact-SHA browser and count evidence passed. The source-bound cost record supports the measured overage only for this preapproved owner-review cycle. PR #317 remains draft and `main` is unchanged. Plan 37 used the separately approved attempt 2; Buildx could not write activity metadata and the preview never became healthy. Candidate teardown and owner-demo comparison passed, and evidence copies are hash-verified. Do not relaunch under Plan 37. UIQ-08 remains open and Plan 24 is blocked; a successor plan should set `BUILDX_CONFIG` under a unique `/private/tmp` directory and verify the `desktop-linux` builder identity before any new launch ([Docker docs](https://docs.docker.com/build/building/variables/#buildx_config)). Cycle 08 remains byte-identical.
 
-## Operator Next Steps
+## Operator Next Steps — 2026-11-18
 
-- Decide whether to amend the existing Phase 182-07 plan to authorize a clean, task-scoped candidate and its hosted/cost gates. The current plan forbids push/CI to manufacture eligibility. If amended and gates pass, use the existing one-time isolated preview allowance; otherwise preserve the BRADM-01/07 gap. Do not rerun favicon capture or its alias.
+- The owner authorized the scoped Phase 182-07 candidate route. The lock refresh (`32dba23e`) and verifier (`546db4b2`) commits are local and each contains only its approved paths. Complete the final planning commit, verify the owner-WIP baseline, then run the local ref and privacy/release checks before pushing only `gsd/v2.11-phase182-admin-evidence`. Dispatch one manual `CI` run at that ref. The verifier pins the v2.10 baseline/count inputs, exact Operator job log and Demo artifact, one exact-SHA dispatch, and unchanged `origin/main`. Require exact-SHA `CI Green` and the strict cost disposition before the single preview. The next actor is the current executor; no owner action is pending.
 
-### Blockers
+### Active gate
 
-- Phase 182-07 is blocked before launch: the current worktree is dirty and no frozen Admin candidate binds it; the checked local base SHA has no hosted workflow/statuses or exact-candidate cost record. Its plan explicitly prohibits creating those gates by pushing or dispatching CI.
+- The candidate is not yet frozen or hosted. Before push, the executor must confirm `origin/main` remains at the approved base, verify the exact committed range and privacy/release-hygiene checks, and prove that every pre-existing owner-WIP path and digest still matches the recorded baseline. Any mismatch stops before push and preserves the Phase 182 gap. Do not create a PR, rerun favicon capture or its alias, merge, release, publish or deploy. Archive/tag only after a fresh passing Phase 182 verification and milestone audit.
 
 - The unchanged default root mix test finished with 7 failures out of 2,448; baseline attribution is unknown, and it was not rerun after the owner chose preserve-and-continue. First-failure details are in `183-03-SUMMARY.md`.
