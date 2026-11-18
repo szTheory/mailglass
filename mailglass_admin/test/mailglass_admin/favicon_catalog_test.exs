@@ -5,6 +5,13 @@ defmodule MailglassAdmin.FaviconCatalogTest do
 
   @repo_root Path.expand("../../..", __DIR__)
   @catalog_root Path.join(@repo_root, ".planning/research/brand-v2-adoption/favicon-catalog")
+  @accepted_catalog_id "favicon-299c1aa-20261116T231912Z"
+  @catalog_relative_root ".planning/research/brand-v2-adoption/favicon-catalog"
+  @provenance_relative_dir "mailglass_admin/test/fixtures/favicon_provenance"
+  @provenance_record_name "accepted-producer.json"
+  @provenance_snapshot_name "accepted-producer.cjs"
+  @producer_relative_path "mailglass_admin/e2e/favicon-capture.cjs"
+  @historical_producer_sha256 "bff05d778648d4d900c9e977e89227ea3290ede9490e1e7fd5de28bdda7f6ee3"
   @png_signature <<137, 80, 78, 71, 13, 10, 26, 10>>
 
   test "pinned source media has valid hashes, PNG dimensions and bounded social-card size" do
@@ -105,6 +112,151 @@ defmodule MailglassAdmin.FaviconCatalogTest do
       assert FaviconCatalog.validate_catalog(dir, @repo_root) == [],
              "invalid #{Path.basename(dir)}: #{inspect(FaviconCatalog.validate_catalog(dir, @repo_root))}"
     end
+  end
+
+  test "accepted historical producer validates from a Git-free source archive" do
+    {root, catalog} = git_free_accepted_repo()
+
+    refute File.exists?(Path.join(root, ".git"))
+    assert FaviconCatalog.validate_catalog(catalog, root) == []
+  end
+
+  test "historical provenance files are bounded, regular files with authenticated bytes" do
+    {root, catalog} = git_free_accepted_repo()
+    record_path = provenance_path(root, @provenance_record_name)
+    snapshot_path = provenance_path(root, @provenance_snapshot_name)
+    record_bytes = File.read!(record_path)
+    snapshot_bytes = File.read!(snapshot_path)
+
+    File.rm!(record_path)
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    File.write!(record_path, "{")
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    File.write!(record_path, String.duplicate(" ", 16_385))
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    File.write!(record_path, record_bytes)
+
+    File.rm!(snapshot_path)
+    assert_provenance_invalid(catalog, root, "historical producer snapshot")
+    File.write!(snapshot_path, <<0, snapshot_bytes::binary-size(byte_size(snapshot_bytes) - 1)>>)
+    assert_provenance_invalid(catalog, root, "historical producer snapshot")
+    File.write!(snapshot_path, snapshot_bytes <> "x")
+    assert_provenance_invalid(catalog, root, "historical producer snapshot")
+    File.write!(snapshot_path, snapshot_bytes)
+
+    outside_record =
+      Path.join(
+        System.tmp_dir!(),
+        "favicon-provenance-record-#{System.unique_integer([:positive])}"
+      )
+
+    File.write!(outside_record, record_bytes)
+    File.rm!(record_path)
+    File.ln_s!(outside_record, record_path)
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    File.rm!(record_path)
+    File.write!(record_path, record_bytes)
+    File.rm!(outside_record)
+
+    outside_snapshot =
+      Path.join(
+        System.tmp_dir!(),
+        "favicon-provenance-snapshot-#{System.unique_integer([:positive])}"
+      )
+
+    File.write!(outside_snapshot, snapshot_bytes)
+    File.rm!(snapshot_path)
+    File.ln_s!(outside_snapshot, snapshot_path)
+    assert_provenance_invalid(catalog, root, "historical producer snapshot")
+    File.rm!(snapshot_path)
+    File.write!(snapshot_path, snapshot_bytes)
+    File.rm!(outside_snapshot)
+  end
+
+  test "historical provenance record fields cannot self-authorize substitutions" do
+    {root, catalog} = git_free_accepted_repo()
+    record_path = provenance_path(root, @provenance_record_name)
+    original = record_path |> File.read!() |> Jason.decode!()
+
+    for key <- Map.keys(original) do
+      changed = Map.update!(original, key, &substitute_provenance_value/1)
+      File.write!(record_path, Jason.encode!(changed))
+      assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    end
+
+    File.write!(record_path, Jason.encode!(Map.put(original, "unknown", true)))
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+    File.write!(record_path, Jason.encode!(Map.delete(original, "producerGitBlob")))
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+
+    File.write!(
+      record_path,
+      Jason.encode!(Map.put(original, "commands", %{"unexpected" => true}))
+    )
+
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+  end
+
+  test "a fixture parent symlink cannot supply historical provenance" do
+    {root, catalog} = git_free_accepted_repo()
+    fixture_dir = Path.join(root, @provenance_relative_dir)
+    moved_dir = fixture_dir <> "-moved"
+
+    external_dir =
+      Path.join(
+        System.tmp_dir!(),
+        "favicon-provenance-dir-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(external_dir) end)
+    File.cp_r!(fixture_dir, external_dir)
+    File.rename!(fixture_dir, moved_dir)
+    File.ln_s!(external_dir, fixture_dir)
+
+    assert_provenance_invalid(catalog, root, "historical producer provenance record")
+  end
+
+  test "historical selection uses raw manifest bytes and future catalogs require the current producer" do
+    {root, accepted_catalog} = git_free_accepted_repo()
+    accepted_manifest_path = Path.join(accepted_catalog, "manifest.json")
+    accepted_manifest_bytes = File.read!(accepted_manifest_path)
+
+    assert FaviconCatalog.validate_catalog(accepted_catalog, root) == []
+    File.write!(accepted_manifest_path, accepted_manifest_bytes <> " ")
+    assert_invalid_at(accepted_catalog, root, "producer: SHA-256 differs from current file")
+    File.write!(accepted_manifest_path, accepted_manifest_bytes)
+
+    synthetic_catalog =
+      Path.join(Path.dirname(accepted_catalog), "favicon-synthetic-current-producer")
+
+    copy_catalog_dir(accepted_catalog, synthetic_catalog)
+    synthetic_manifest_path = Path.join(synthetic_catalog, "manifest.json")
+    synthetic_manifest = synthetic_manifest_path |> File.read!() |> Jason.decode!()
+    producer_path = Path.join(root, @producer_relative_path)
+    current_producer_bytes = File.read!(producer_path)
+
+    synthetic_manifest =
+      Map.put(synthetic_manifest, "catalogId", Path.basename(synthetic_catalog))
+
+    synthetic_manifest =
+      put_in(synthetic_manifest, ["producer", "sha256"], sha256(current_producer_bytes))
+
+    File.write!(synthetic_manifest_path, Jason.encode!(synthetic_manifest, pretty: true) <> "\n")
+    File.rm_rf!(Path.join(root, @provenance_relative_dir))
+
+    refute File.exists?(Path.join(root, ".git"))
+    assert FaviconCatalog.validate_catalog(synthetic_catalog, root) == []
+
+    File.write!(producer_path, current_producer_bytes <> "\n")
+    assert_invalid_at(synthetic_catalog, root, "producer: SHA-256 differs from current file")
+
+    synthetic_manifest = read_manifest(synthetic_catalog)
+
+    synthetic_manifest =
+      put_in(synthetic_manifest, ["producer", "sha256"], @historical_producer_sha256)
+
+    File.write!(synthetic_manifest_path, Jason.encode!(synthetic_manifest, pretty: true) <> "\n")
+    assert_invalid_at(synthetic_catalog, root, "producer: SHA-256 differs from current file")
   end
 
   test "thin, pale and merged-blob mark mutants fail the raster shape contract" do
@@ -295,6 +447,72 @@ defmodule MailglassAdmin.FaviconCatalogTest do
     File.mkdir_p!(path)
     path
   end
+
+  defp git_free_accepted_repo do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "favicon-provenance-contract-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir_p!(root)
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    source_catalog = Path.join(@catalog_root, @accepted_catalog_id)
+    catalog = Path.join([root, @catalog_relative_root, @accepted_catalog_id])
+    File.mkdir_p!(catalog)
+    copy_catalog_dir(source_catalog, catalog)
+
+    for relative <- [
+          "brandbook/brand.pin.json",
+          "brandbook/v2/favicon.svg",
+          "mailglass_admin/priv/static/favicon.svg",
+          @producer_relative_path
+        ] do
+      copy_repo_file(root, relative)
+    end
+
+    fixture_dir = Path.join(root, @provenance_relative_dir)
+    File.mkdir_p!(fixture_dir)
+
+    for name <- [@provenance_record_name, @provenance_snapshot_name] do
+      File.cp!(provenance_path(@repo_root, name), Path.join(fixture_dir, name))
+    end
+
+    {root, catalog}
+  end
+
+  defp copy_repo_file(root, relative) do
+    destination = Path.join(root, relative)
+    File.mkdir_p!(Path.dirname(destination))
+    File.cp!(Path.join(@repo_root, relative), destination)
+  end
+
+  defp copy_catalog_dir(source, destination) do
+    File.mkdir_p!(destination)
+
+    for name <- File.ls!(source) do
+      File.cp!(Path.join(source, name), Path.join(destination, name))
+    end
+  end
+
+  defp provenance_path(root, name), do: Path.join([root, @provenance_relative_dir, name])
+
+  defp assert_provenance_invalid(catalog, root, message) do
+    failures = FaviconCatalog.validate_catalog(catalog, root)
+    assert Enum.any?(failures, &String.contains?(&1, message)), inspect(failures)
+  end
+
+  defp assert_invalid_at(catalog, root, message) do
+    failures = FaviconCatalog.validate_catalog(catalog, root)
+    assert Enum.any?(failures, &String.contains?(&1, message)), inspect(failures)
+  end
+
+  defp substitute_provenance_value(value) when is_binary(value), do: value <> "-substituted"
+  defp substitute_provenance_value(value) when is_integer(value), do: value + 1
+  defp substitute_provenance_value(value) when is_list(value), do: value ++ ["substituted"]
+
+  defp sha256(bytes), do: Base.encode16(:crypto.hash(:sha256, bytes), case: :lower)
 
   defp catalog_manifest(dir, file, image) do
     pin = @repo_root |> Path.join("brandbook/brand.pin.json") |> File.read!() |> Jason.decode!()
