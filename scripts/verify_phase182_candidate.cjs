@@ -55,6 +55,28 @@ const ROUTE_COMMITS = [
       ".planning/ROADMAP.md",
       ".planning/v2.11-MILESTONE-AUDIT.md"
     ]
+  },
+  {
+    subject: "test(ci): repair v2.11 candidate gates",
+    files: [
+      ".github/workflows/ci.yml",
+      ".planning/phases/182-admin-words-and-layout-one-job-first/182-07-CANDIDATE-EXPECTED-COUNTS.json",
+      ".planning/phases/182-admin-words-and-layout-one-job-first/182-07-PLAN.md",
+      "mailglass_admin/e2e/axe-baseline.spec.js",
+      "mailglass_admin/e2e/phase177-account.spec.js",
+      "reference/demo_app/assets/e2e/delivery-investigation.spec.js",
+      "scripts/brand_docs_check.exs",
+      "test/reference_host/public_seams_contract_test.exs",
+      "test/scripts/brand_name_lint_test.exs",
+      "test/scripts/brand_trademark_gate_test.exs"
+    ]
+  },
+  {
+    subject: "chore(ci): validate scoped v2.11 repair route",
+    files: [
+      ".planning/phases/182-admin-words-and-layout-one-job-first/182-07-PLAN.md",
+      "scripts/verify_phase182_candidate.cjs"
+    ]
   }
 ];
 const COST_JOBS = [
