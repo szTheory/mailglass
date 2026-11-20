@@ -1,15 +1,24 @@
 "use strict";
 
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
 const path = require("node:path");
+const { createHash, randomUUID } = require("node:crypto");
 const test = require("node:test");
 const {
   APPROVED_PATCH_RELATIVE,
   APPROVED_PATCH_SHA256,
   OWNER,
   checksumObservedHex,
+  validateRetainedRegistryReceipt,
+  validateTerminalCustody,
+  terminalizeBlockedEvidence,
+  markRoot,
+  removeOwned,
+  resolvePatchAtRoot,
   resolveApprovedPatch,
+  assertStageAllowed,
+  testedCommands,
   validateRegistryReceipt,
 } = require("./184-11-route.cjs");
 
@@ -53,6 +62,7 @@ function row(overrides = {}) {
 
 function receipt(records = [row()], overrides = {}) {
   return {
+    mode: "probe",
     schema: 5,
     repoUrl: "https://repo.hex.pm",
     effectiveRepoUrl: "https://repo.hex.pm",
@@ -61,6 +71,9 @@ function receipt(records = [row()], overrides = {}) {
     records,
     ...overrides,
   };
+}
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 test("resolves only the approved patch from the canonical checkout when cwd is foreign", () => {
@@ -75,7 +88,7 @@ test("rejects missing, symlinked, alternate-root, and changed patch inputs", () 
   const root = "/fixture/canonical-repo";
   const target = path.join(root, APPROVED_PATCH_RELATIVE);
   const raw = Buffer.from("synthetic bytes at the selected read boundary");
-  const resolveAt = (io) => resolveApprovedPatch({ canonicalRoot: root, io });
+  const resolveAt = (io) => resolvePatchAtRoot(root, io);
 
   assert.throws(() => resolveAt(fakeFs({ target, raw, kind: "missing" })), /missing/i);
   assert.throws(() => resolveAt(fakeFs({ target, raw, kind: "symlink", realPath: "/fixture/elsewhere/patch" })), /symlink|regular/i);
@@ -98,8 +111,8 @@ test("rejects mutations, ASCII hex, bad lengths, and noncanonical lock encodings
   outerMutation[31] ^= 1;
   assert.throws(() => checksumObservedHex(inner, innerMutation), /checksum/i);
   assert.throws(() => checksumObservedHex(outer, outerMutation), /checksum/i);
-  assert.throws(() => checksumObservedHex(inner, Buffer.from(inner, "ascii")), /32 bytes/i);
-  assert.throws(() => checksumObservedHex(inner, Buffer.alloc(31)), /32 bytes/i);
+  assert.throws(() => checksumObservedHex(inner, Buffer.from(inner, "ascii")), /32 raw bytes/i);
+  assert.throws(() => checksumObservedHex(inner, Buffer.alloc(31)), /32 raw bytes/i);
   assert.throws(() => checksumObservedHex(inner.toUpperCase(), Buffer.from(inner, "hex")), /canonical/i);
   assert.throws(() => checksumObservedHex("gg".repeat(32), Buffer.alloc(32)), /canonical/i);
 });
@@ -148,4 +161,81 @@ test("rejects release, checksum, dependency, and checksum-shape mismatches", () 
   for (const actual of [wrongVersion, wrongInner, wrongOuter, wrongDependencies, asciiBytes, badLength]) {
     assert.throws(() => validateRegistryReceipt(receipt([actual]), [expected], "/disposable/hex/cache.bin"));
   }
+});
+
+test("read-only verifier reparses a retained raw receipt for all 124 lock records", () => {
+  const expectedRows = Array.from({ length: 124 }, (_, index) => ({
+    name: `fixture_${String(index).padStart(3, "0")}`,
+    version: "1.0.0",
+    inner: sha256(`inner-${index}`),
+    outer: sha256(`outer-${index}`),
+    dependencies: [],
+  }));
+  const cachePath = "/private/tmp/phase184-11/cache/hex/cache.bin";
+  const b64 = (value) => Buffer.from(value).toString("base64");
+  const lines = [
+    ["META", "5", b64("https://repo.hex.pm"), b64("https://repo.hex.pm"), b64(cachePath), "true", "124"].join("\t"),
+    ...expectedRows.map((item) => ["REC", item.name, item.version, b64(Buffer.from(item.inner, "hex")),
+      b64(Buffer.from(item.outer, "hex")), ""].join("\t")),
+    "PASS",
+  ];
+  const stdout = Buffer.from(`${lines.join("\n")}\n`);
+  const retained = {
+    schema: "phase184-11-registry-receipt.v1",
+    recordsChecked: expectedRows.length,
+    recordsSha256: sha256(JSON.stringify(expectedRows)),
+    receipt: { mode: "probe", cachePath, stdoutBase64: stdout.toString("base64"), stdoutSha256: sha256(stdout) },
+  };
+  const checked = validateRetainedRegistryReceipt(retained, expectedRows, cachePath);
+  assert.equal(checked.checked.recordsChecked, 124);
+  assert.equal(checked.receipt.offline, true);
+  assert.throws(() => validateRetainedRegistryReceipt({ ...retained,
+    receipt: { ...retained.receipt, stdoutSha256: "0".repeat(64) } }, expectedRows, cachePath), /checksum/i);
+});
+
+test("blocked terminal finalizer binds one custody marker to marker-last cleanup", (t) => {
+  const root = mkdtempSync("/private/tmp/mailglass-184-11-terminal-fixture-");
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const ownedRoot = path.join(root, "owned-root");
+  const ownerNonce = randomUUID();
+  markRoot(ownedRoot, ownerNonce);
+  writeFileSync(path.join(ownedRoot, "owned-output.json"), "owned fixture\n");
+  const removed = removeOwned(ownedRoot, ownerNonce);
+  assert.equal(removed.at(-1), ".route-owner.json");
+  assert.equal(existsSync(ownedRoot), false);
+
+  const preimagePath = path.join(root, "terminal-preimage.json");
+  const evidencePath = path.join(root, "evidence.json");
+  const ledger = [];
+  const evidence = { status: "blocked", allocated: false, route: { nonce: randomUUID() }, custody: {} };
+  const finalized = terminalizeBlockedEvidence(evidence, {
+    preimagePath,
+    saveEvidence(value) { writeFileSync(evidencePath, JSON.stringify(value)); },
+    appendTerminal(row) { ledger.push({ sequence: ledger.length + 1, ...row }); },
+    ledgerDigest() { return sha256(JSON.stringify(ledger)); },
+  });
+  assert.equal(finalized.terminal.status, "blocked");
+  assert.equal(finalized.terminal.preimageSha256, sha256(readFileSync(preimagePath)));
+  assert.equal(finalized.custody.sha256, sha256(JSON.stringify(ledger)));
+  assert.equal(validateTerminalCustody(finalized, ledger), true);
+  assert.throws(() => assertStageAllowed(finalized, "start-local"), /blocked route/i);
+  assert.throws(() => validateTerminalCustody(finalized, []), /terminal blocked disposition/i);
+  assert.throws(() => terminalizeBlockedEvidence(finalized, {
+    preimagePath: path.join(root, "again.json"), saveEvidence() {}, appendTerminal() {}, ledgerDigest() { return ""; },
+  }), /fresh blocked/i);
+});
+
+test("selects only the next route stage and blocks all downstream effects after a stop", () => {
+  assert.equal(assertStageAllowed({ status: "fresh", attempts: [] }, "cache-preflight"), true);
+  assert.throws(() => assertStageAllowed({ status: "fresh", attempts: [] }, "start-local"), /not selected/);
+  assert.equal(assertStageAllowed({ status: "preallocation-review", attempts: [] }, "start-local"), true);
+  assert.equal(assertStageAllowed({ status: "local-passed", attempts: [] }, "run-hosted"), true);
+  assert.equal(assertStageAllowed({ status: "hosted-passed", attempts: [] }, "run-preview"), true);
+  for (const status of ["blocked", "terminal"]) {
+    for (const stage of ["cache-preflight", "start-local", "run-hosted", "run-preview"]) {
+      assert.throws(() => assertStageAllowed({ status, attempts: [] }, stage), /blocked route/);
+    }
+  }
+  assert.deepEqual(testedCommands().browserContainer.slice(0, 5),
+    ["docker", "run", "--pull=never", "--network=none", "--read-only"]);
 });
