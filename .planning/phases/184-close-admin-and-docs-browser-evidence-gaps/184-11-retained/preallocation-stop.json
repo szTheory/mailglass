@@ -1,0 +1,12 @@
+{
+  "schema": "phase184-11-preallocation-stop.v1",
+  "firstStop": {
+    "gate": "registry-schema-record-and-checksum-proof",
+    "reason": "Hex inspect failed (1): ** (ArgumentError) dependency metadata mismatch cc_precompiler@0.1.11\n    nofile:4: Phase184RegistryProbe.need/2\n    nofile:37: anonymous fn/2 in Phase184RegistryProbe.verify/3\n    (elixir 1.18.4) lib/enum.ex:1714: Enum.\"-map/2-lists^map/1-1-\"/2\n    (elixir 1.18.4) lib/enum.ex:1714: Enum.\"-map/2-lists^map/1-1-\"/2\n    nofile:70: Phase184RegistryProbe.main/0\n    nofile:80: (file)\n    (stdlib 6.2.2.3) erl_eval.erl:919: :erl_eval.do_apply/7\n",
+    "at": "2026-11-20T05:29:58.836Z"
+  },
+  "cachePreflightReserved": true,
+  "candidateRootAbsent": true,
+  "preflightRootAbsent": true,
+  "scratchRootAbsent": true
+}
