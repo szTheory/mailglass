@@ -166,9 +166,46 @@ function normalizeRequirementTerms(requirements, runtime = {}) {
   return lines;
 }
 function compareDependencyRequirements(expectedDependencies, observedDependencies) {
-  need(equal(normalizeDependencies(expectedDependencies), normalizeDependencies(observedDependencies)),
-    "registry dependency requirement mismatch");
-  return [];
+  const decode = (items) => normalizeDependencies(items).map(decodeDependency);
+  const expected = decode(expectedDependencies), observed = decode(observedDependencies);
+  const group = (items) => {
+    const result = new Map();
+    for (const item of items) {
+      const key = JSON.stringify([item.repo, item.packageName, item.app, item.optional]);
+      if (!result.has(key)) result.set(key, { repo: item.repo, packageName: item.packageName,
+        app: item.app, optional: item.optional, requirements: [] });
+      result.get(key).requirements.push(item.requirement);
+    }
+    return result;
+  };
+  const expectedGroups = group(expected), observedGroups = group(observed);
+  need(expectedGroups.size === observedGroups.size && [...expectedGroups.keys()].every((key) => observedGroups.has(key)),
+    "registry dependency tuple metadata mismatch");
+  const keys = sorted(expectedGroups.keys());
+  for (const key of keys) need(expectedGroups.get(key).requirements.length === observedGroups.get(key).requirements.length,
+    "registry dependency tuple multiplicity mismatch");
+  const allRequirements = keys.flatMap((key) => [
+    ...expectedGroups.get(key).requirements,
+    ...observedGroups.get(key).requirements,
+  ]);
+  const normalized = normalizeRequirementTerms(allRequirements);
+  let offset = 0;
+  return keys.map((key) => {
+    const expectedGroup = expectedGroups.get(key), observedGroup = observedGroups.get(key);
+    const expectedTerms = normalized.slice(offset, offset + expectedGroup.requirements.length);
+    offset += expectedGroup.requirements.length;
+    const observedTerms = normalized.slice(offset, offset + observedGroup.requirements.length);
+    offset += observedGroup.requirements.length;
+    need(equal(sorted(expectedTerms), sorted(observedTerms)),
+      `registry dependency requirement mismatch ${expectedGroup.packageName}`);
+    return {
+      repo: expectedGroup.repo, package: expectedGroup.packageName, app: expectedGroup.app,
+      optional: expectedGroup.optional === "true",
+      expected: expectedGroup.requirements,
+      observed: observedGroup.requirements,
+      normalizedTermsBase64: sorted(expectedTerms),
+    };
+  });
 }
 function validateRegistryReceipt(receipt, expectedRows, expectedCachePath) {
   need(receipt && receipt.schema === 5, "registry schema is not 5");
@@ -603,7 +640,14 @@ defmodule Phase184RegistryProbe do
       other -> raise ArgumentError, "unexpected Hex dependency parser result: #{inspect(other)}"
     end
   end
-  def dependency_rows_equal?(actual, expected), do: Enum.sort(actual) === Enum.sort(expected)
+  def normalized_dependency_rows(rows) do
+    rows
+    |> Enum.group_by(fn {repo, package, app, _requirement, optional} -> {repo, package, app, optional} end,
+      fn {_repo, _package, _app, requirement, _optional} -> normalize_requirement(requirement) end)
+    |> Map.new(fn {metadata, requirements} -> {metadata, Enum.sort(requirements)} end)
+  end
+  def dependency_rows_equal?(actual, expected),
+    do: normalized_dependency_rows(actual) === normalized_dependency_rows(expected)
   def raw_checksum(tid, kind, package, version, expected) do
     need(is_binary(expected) and Regex.match?(~r/\A[a-f0-9]{64}\z/, expected),
       "lock checksum is not canonical lowercase 64-character hex")
@@ -1690,6 +1734,64 @@ function finalizeBlocked() {
   });
   return verifyTerminal(e);
 }
+function recordCandidateFreeStop() {
+  need(!exists(ROUTE) && !exists(PREFLIGHT) && !exists(SCRATCH) && !exists(EVIDENCE) && !exists(CUSTODY),
+    "candidate-free stop cannot claim occupied route roots or markers");
+  const owner = ownerBaseline();
+  const nonce = randomUUID();
+  const gate = "candidate-free-fixtures-and-selftest-report";
+  const firstStop = {
+    gate,
+    reason: "The final candidate-free fixture/selftest command yielded only the TAP header at the 10-second tool boundary. Its final reporter result was not captured; read-only process reconciliation was unavailable, so the route stopped without rerunning it or invoking cache-preflight.",
+    at: now(),
+    command: "node --test --test-reporter=tap --test-name-pattern='Hex 2.6.0|Hex requirement equality' 184-12-route.test.cjs && node 184-12-route.cjs selftest",
+    observedOutput: "TAP version 13; no final TAP plan or selftest receipt was captured.",
+    reconciliation: [
+      "No 184-12 cache-preflight or candidate command was invoked.",
+      "The route, preflight, and scratch roots remain absent.",
+      "ps was denied by the execution environment; pgrep reported that it could not get the process list.",
+    ],
+  };
+  appendCustody({ kind: "route", label: "route-start", status: "reserved", nonce,
+    approvedPatch: PATCH_RELATIVE, source: BASE }, true);
+  const stopReceipt = writeRetained("preallocation-stop.json", {
+    schema: "phase184-12-preallocation-stop.v1",
+    firstStop,
+    cachePreflightReserved: false,
+    candidateRootAbsent: true,
+    preflightRootAbsent: true,
+    scratchRootAbsent: true,
+    cacheRead: false,
+    candidateAllocation: false,
+    push: false,
+    dispatch: false,
+    preview: false,
+  });
+  const evidence = {
+    schema: "phase184-12-evidence.v1", root: ROUTE, status: "blocked", allocated: false, attempts: [],
+    createdAt: now(), route: { nonce, branch: BRANCH, candidateRoot: ROUTE, preflightRoot: PREFLIGHT, scratchRoot: SCRATCH },
+    source: { commit: BASE, tree: TREE, patchPath: PATCH_RELATIVE, patchHash: PATCH_HASH },
+    planSha256: digest(PLAN),
+    routeControllerSha256: digest(path.join(__dirname, "184-12-route.cjs")),
+    routeTestsSha256: digest(path.join(__dirname, "184-12-route.test.cjs")),
+    tddEvidenceSha256: digest(TDD_RECORD),
+    firstStop,
+    effectCounters: { cachePreflight: 0, candidateAllocation: 0, push: 0, dispatch: 0, preview: 0 },
+    cachePreflight: { status: "blocked", attempted: false, reason: "withheld before first invocation" },
+    owner,
+    retained: [stopReceipt],
+    custody: { path: path.relative(OWNER, CUSTODY), sha256: null },
+    cleanup: {
+      routeRootAbsent: !exists(ROUTE), preflightRootAbsent: !exists(PREFLIGHT), scratchRootAbsent: !exists(SCRATCH),
+      preflightCreated: false, scratchCreated: false, preflightRemoved: false, scratchRemoved: false,
+      ownerEqual: true, dockerMutation: false, ownedProcessesCreated: [],
+    },
+  };
+  appendCustody({ kind: "route", label: "preallocation-result", status: "blocked", nonce });
+  evidence.custody.sha256 = digest(CUSTODY);
+  save(evidence, EVIDENCE, true);
+  return finalizeBlocked();
+}
 async function captureCachePreflight() {
   need(!exists(ROUTE) && !exists(PREFLIGHT) && !exists(SCRATCH) && !exists(EVIDENCE) && !exists(CUSTODY),
     "preallocation paths or one-shot markers are occupied");
@@ -1884,6 +1986,7 @@ async function captureCachePreflight() {
 async function cli(argv) {
   const [name, stageName] = argv;
   if (name === "selftest" && argv.length === 1) return selftest();
+  if (name === "record-stop" && argv.length === 1) return recordCandidateFreeStop();
   if (name === "cache-preflight" && argv.length === 1) return captureCachePreflight();
   if (name === "start-local" && argv.length === 1) return startLocal();
   if (name === "finalize-blocked" && argv.length === 1) return finalizeBlocked();
