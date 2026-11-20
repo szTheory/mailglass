@@ -1,0 +1,3 @@
+{"plan":"184-12","sequence":1,"at":"2026-11-20T09:26:06.326Z","kind":"route","label":"route-start","status":"reserved","nonce":"6e4c5ad3-a642-49e1-bdb5-99f560b06761","approvedPatch":".planning/phases/184-close-admin-and-docs-browser-evidence-gaps/184-07-CANDIDATE.patch","source":"a295e9a950e14d7ce3ec9456f31fbda864933580"}
+{"plan":"184-12","sequence":2,"at":"2026-11-20T09:26:06.348Z","kind":"route","label":"preallocation-result","status":"blocked","nonce":"6e4c5ad3-a642-49e1-bdb5-99f560b06761"}
+{"plan":"184-12","sequence":3,"at":"2026-11-20T09:26:07.113Z","kind":"route-terminal","status":"blocked","nonce":"6e4c5ad3-a642-49e1-bdb5-99f560b06761","preimageSha256":"5308d33c53b7151c212aa1b94383803e2bfd18854a0ef434aa6c02358bea7174"}
