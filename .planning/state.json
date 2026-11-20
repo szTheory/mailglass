@@ -21,18 +21,23 @@
     {
       "number": "182",
       "name": "Admin Words and Layout, One Job First",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "number": "183",
       "name": "Docs, Packaging and Launch Prep",
-      "status": "complete"
+      "status": "pending"
+    },
+    {
+      "number": "184",
+      "name": "Close Admin and docs browser evidence gaps",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-new-milestone",
-    "label": "Start a new milestone",
-    "reason": "All phases complete — start a new milestone"
+    "command": "$gsd-plan-phase 182 --gaps",
+    "label": "Plan fresh Phase 182 gap route",
+    "reason": "182-08 stopped before cache inspection on a wrong patch path. Preserve it; D-30 permits up to two additional fresh plans, each with a new one-shot route."
   },
-  "updated_at": "2026-11-17T15:32:22.097Z"
+  "updated_at": "2026-11-20T04:23:18Z"
 }
