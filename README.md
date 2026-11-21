@@ -65,9 +65,9 @@ your app receives mail:
 # mix.exs
 def deps do
   [
-    {:mailglass, "~> 2.7"},
-    {:mailglass_admin, "~> 2.7"},
-    {:mailglass_inbound, "~> 2.4"}
+    {:mailglass, "~> 2.8"},
+    {:mailglass_admin, "~> 2.8"},
+    {:mailglass_inbound, "~> 2.5"}
   ]
 end
 ```
