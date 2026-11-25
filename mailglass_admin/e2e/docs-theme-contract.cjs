@@ -196,7 +196,7 @@ function outputPathsFor(packages, outputRoot) {
     const docs = outputRoot
       ? path.resolve(outputRoot, packageName)
       : packageDirs[packageName].docs;
-    return [packageName, { docs, readmePath: path.join(docs, "README.html") }];
+    return [packageName, { docs, readmePath: path.join(docs, "readme.html") }];
   }));
 }
 
@@ -208,7 +208,7 @@ function validateOutputPaths(outputPaths) {
     } catch (_error) {
       isFile = false;
     }
-    assert.ok(isFile, `${packageName} docs output is missing README.html: ${output.readmePath}`);
+    assert.ok(isFile, `${packageName} docs output is missing readme.html: ${output.readmePath}`);
   }
   return outputPaths;
 }

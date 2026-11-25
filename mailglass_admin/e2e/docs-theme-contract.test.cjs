@@ -18,7 +18,7 @@ test("explicit output root maps all three packages without falling back to check
   assert.equal(options.outputRoot, path.resolve(outputRoot));
   for (const packageName of options.packages) {
     assert.equal(outputs[packageName].docs, path.join(path.resolve(outputRoot), packageName));
-    assert.equal(outputs[packageName].readmePath, path.join(path.resolve(outputRoot), packageName, "README.html"));
+    assert.equal(outputs[packageName].readmePath, path.join(path.resolve(outputRoot), packageName, "readme.html"));
   }
 });
 
@@ -26,12 +26,12 @@ test("missing package output is rejected with its name and README path", (t) => 
   const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-docs-contract-"));
   t.after(() => fs.rmSync(outputRoot, { recursive: true, force: true }));
   fs.mkdirSync(path.join(outputRoot, "core"), { recursive: true });
-  fs.writeFileSync(path.join(outputRoot, "core", "README.html"), "<html></html>");
+  fs.writeFileSync(path.join(outputRoot, "core", "readme.html"), "<html></html>");
 
   const options = parseCliArgs(["--all", "--output-root", outputRoot]);
   const outputs = outputPathsFor(options.packages, options.outputRoot);
 
-  assert.throws(() => validateOutputPaths(outputs), /admin docs output is missing README\.html/);
+  assert.throws(() => validateOutputPaths(outputs), /admin docs output is missing readme\.html/);
 });
 
 test("CLI rejects a missing README before attempting to launch Chromium", (t) => {
@@ -44,7 +44,7 @@ test("CLI rejects a missing README before attempting to launch Chromium", (t) =>
   });
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /core docs output is missing README\.html/);
+  assert.match(result.stderr, /core docs output is missing readme\.html/);
   assert.doesNotMatch(result.stderr, /browserType\.launch|chrome-headless/);
 });
 

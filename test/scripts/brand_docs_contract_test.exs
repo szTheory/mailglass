@@ -86,9 +86,9 @@ defmodule Mailglass.Scripts.BrandDocsContractTest do
     image_tags = Regex.scan(~r/<img\b[^>]*>/i, readme) |> List.flatten() |> Enum.join("\n")
 
     File.write!(
-      Path.join(docs, "README.html"),
-      "<html><head><link rel=\"stylesheet\" href=\"assets/code-colors.css\"></head>" <>
-        "<body><script defer src=\"assets/theme-mark.js\"></script><h1>mailglass</h1>#{image_tags}</body></html>"
+      Path.join(docs, "readme.html"),
+      ~s(<html><head><link rel="stylesheet" href="assets/code-colors.css"></head>) <>
+        ~s(<body><script defer src="assets/theme-mark.js"></script><h1>mailglass</h1>#{image_tags}</body></html>)
     )
   end
 
