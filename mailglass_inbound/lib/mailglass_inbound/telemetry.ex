@@ -95,7 +95,7 @@ defmodule MailglassInbound.Telemetry do
   end
 
   @doc """
-  Wrap `MailglassInbound.Router.Matcher.match/2` in a
+  Wrap MailglassInbound.Router.Matcher.match/2 in a
   `[:mailglass_inbound, :route, :match, *]` span.
 
   Stop metadata SHOULD include `:mailbox` + `:candidate_count` on a match, or
@@ -110,7 +110,7 @@ defmodule MailglassInbound.Telemetry do
   end
 
   @doc """
-  Wrap the `repo.transact` in `MailglassInbound.Ingress.Persist.persist/2` in a
+  Wrap the `repo.transact` in MailglassInbound.Ingress.Persist.persist/2 in a
   `[:mailglass_inbound, :persist, :record, *]` span.
 
   Stop metadata SHOULD include `:provider`, `:tenant_id`, `:operation`
@@ -125,7 +125,7 @@ defmodule MailglassInbound.Telemetry do
   end
 
   @doc """
-  Wrap the body of `MailglassInbound.Execution.execute/2` in a
+  Wrap the body of MailglassInbound.Execution.execute/2 in a
   `[:mailglass_inbound, :execution, :run, *]` span.
 
   This is the single synchronous sync point both the Oban and Task.Supervisor

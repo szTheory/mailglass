@@ -57,7 +57,7 @@ defmodule Mailglass.StabilityContractTest do
       end
     end
 
-    test "Mailglass root delegates are annotated" do
+    test "mailglass root delegates are annotated" do
       assert_module_since(Mailglass, "0.1.0")
 
       for {name, arity} <- [

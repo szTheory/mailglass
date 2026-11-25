@@ -3,7 +3,7 @@ defmodule Mailglass.Installer.Doctor do
   Static webhook-wiring check for the host app's endpoint.
 
   Reads `endpoint.ex` off disk (via `File.read!`) and checks whether the
-  Mailglass `CachingBodyReader` body reader is wired. No app boot, no runtime
+  mailglass `CachingBodyReader` body reader is wired. No app boot, no runtime
   reflection — the scan runs inside the install-fixture harness in CI.
 
   ## Exit-code mapping (three-state)
@@ -92,7 +92,7 @@ defmodule Mailglass.Installer.Doctor do
       title: "Webhook body reader is NOT wired",
       observed:
         "#{endpoint_path} is missing `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`. " <>
-          "Without it, an unmanaged Plug.Parsers will consume the raw request body before Mailglass can verify " <>
+          "Without it, an unmanaged Plug.Parsers will consume the raw request body before mailglass can verify " <>
           "webhook signatures, causing every inbound webhook to silently return 401 in production.",
       remediation:
         "Run `mix mailglass.install` (or `mix mailglass.install --force` if there is an existing " <>

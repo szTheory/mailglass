@@ -1,0 +1,36 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Helios Trial
+      - text: helios-void
+      - link "Health":
+        - /url: /ops/mail?tenant_id=helios-void
+      - link "Deliveries":
+        - /url: /ops/mail?tenant_id=helios-void&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=helios-void
+      - text: Applies to Health, Deliveries and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=deliveries&return_tenant_id=helios-void
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: No deliveries in this time window
+  - heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+  - heading "No deliveries in this time window" [level=3]
+  - paragraph: No deliveries have been recorded for this Account during the selected time window.
+  - heading "Deliveries" [level=2]
+  - list:
+    - listitem: Delivery never arrived? Start here.
+    - listitem: Replay changed nothing? View the event timeline.
+    - listitem: Address keeps getting blocked? Review the Suppression list.

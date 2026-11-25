@@ -18,7 +18,7 @@ Adopters on any `~> 0.3` version of `mailglass` and `mailglass_admin` who:
 - want to migrate to the `~> 1.0` line
 - are willing to verify against a sandbox app before upgrading production
 
-If you have never published a Mailglass-backed app to production, the
+If you have never published a mailglass-backed app to production, the
 canonical [`upgrading-to-v1_0.md`](../guides/upgrading-to-v1_0.md) is
 sufficient — this companion exists for adopters who skipped one or more
 intermediate releases and want the bundle-shape view.

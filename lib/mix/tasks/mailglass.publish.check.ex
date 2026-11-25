@@ -51,6 +51,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   use Mix.Task
 
+  @admin_font_count 6
+
   @impl Mix.Task
   def run(argv) do
     {opts, rest, invalid} =
@@ -527,6 +529,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       ~r/^\.git/,
       ~r/^\.gsd/,
       ~r/^\.planning/,
+      ~r/^brandbook(?:\/|$)/,
+      ~r/^reference(?:\/|$)/,
+      ~r/^catalog(?:\/|$)/,
       ~r/^\.claude/,
       ~r/^\.elixir_ls/,
       ~r/^cover/,
@@ -535,7 +540,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       ~r/\.env/,
       ~r/\.DS_Store$/,
       ~r/\.beam$/,
-      ~r/\.dump$/
+      ~r/\.dump$/,
+      ~r/\.zip$/i,
+      ~r/\.(?:ttf|otf)$/i
     ]
   end
 
@@ -607,10 +614,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
             String.ends_with?(file.path, ".woff2")
         end)
 
-      if woff2_count < 1 do
+      if woff2_count != @admin_font_count do
         fail_step(
           "check required files",
-          "Delivery blocked: missing required file priv/static/fonts/*.woff2. Add to mix.exs :package :files OR rebuild assets (cd mailglass_admin/assets && bun run build) for priv/static/* targets."
+          "Delivery blocked: expected exactly #{@admin_font_count} files at priv/static/fonts/*.woff2, found #{woff2_count}. Add to mix.exs :package :files OR rebuild assets (cd mailglass_admin/assets && bun run build) for priv/static/* targets."
         )
       end
 
@@ -1406,7 +1413,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       |> Enum.map(fn entry ->
         present? =
           case entry do
-            "priv/static/fonts/*.woff2" -> woff2_count > 0
+            "priv/static/fonts/*.woff2" -> woff2_count == @admin_font_count
             path -> MapSet.member?(paths, path)
           end
 
@@ -1426,7 +1433,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp required_file_entries(:mailglass_admin) do
     required_file_entries(:mailglass) ++
-      ["priv/static/app.css", "priv/static/mailglass-logo.svg", "priv/static/fonts/*.woff2"]
+      [
+        "priv/static/app.css",
+        "priv/static/mailglass-logo.svg",
+        "priv/static/favicon.svg",
+        "priv/static/fonts/*.woff2",
+        "priv/static/fonts/OFL-FunnelDisplay.txt",
+        "priv/static/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+        "priv/static/fonts/OFL-AtkinsonHyperlegibleMono.txt"
+      ]
   end
 
   defp required_file_entries(:mailglass_inbound) do

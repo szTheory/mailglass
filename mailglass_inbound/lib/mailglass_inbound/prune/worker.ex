@@ -9,13 +9,13 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     The entire module is conditionally compiled behind
     `if Code.ensure_loaded?(Oban.Worker)`. When Oban is absent a stub is defined
-    exposing `available?/0 -> false`; `MailglassInbound.Application` emits a
+    exposing `available?/0 -> false`; MailglassInbound.Application emits a
     consolidated boot warning directing operators to run
     `mix mailglass.inbound.prune` from their own cron infrastructure.
 
     ## Never auto-registered
 
-    This worker is NOT auto-registered in `MailglassInbound.Application`.
+    This worker is NOT auto-registered in MailglassInbound.Application.
     Operators wire the cron in their own Oban config — the recommended cadence is
     `0 3 * * *` (3 AM UTC; documented in the operator guide). The
     `mix mailglass.inbound.prune` task runs the sweep synchronously whether or not

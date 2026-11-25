@@ -35,7 +35,7 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
   }
 
   describe "Phase 177 Account scope group on operator pages" do
-    test "Phase 177 Account header heads a group of Health, Deliveries and Inbound in each layout" do
+    test "Phase 177 Account header heads a group of Health, Activity and Inbound in each layout" do
       doc = render_shell(%{})
 
       for layout <- ["sidebar", "mobile"] do
@@ -60,7 +60,7 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
 
         assert group
                |> Floki.find(~s([data-testid="surface-nav-scope-items"] a))
-               |> link_labels() == ["Health", "Deliveries", "Inbound"]
+               |> link_labels() == ["Health", "Activity", "Inbound"]
       end
     end
 
@@ -89,11 +89,11 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
       end
     end
 
-    test "Phase 177 sidebar nav order is Health, Deliveries, Inbound, Preview" do
+    test "Phase 177 sidebar nav order is Health, Activity, Inbound, Preview" do
       doc = render_shell(%{tenant_options: [], selected_tenant_id: nil})
 
       labels = doc |> nav("sidebar") |> Floki.find("a") |> link_labels()
-      assert labels == ["Health", "Deliveries", "Inbound", "Preview"]
+      assert labels == ["Health", "Activity", "Inbound", "Preview"]
     end
 
     test "Phase 177 the topbar actions hold only the theme picker" do
@@ -137,7 +137,7 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
 
         assert group
                |> Floki.find(~s([data-testid="surface-nav-scope-items"] a))
-               |> link_labels() == ["Health", "Deliveries", "Inbound"]
+               |> link_labels() == ["Health", "Activity", "Inbound"]
 
         assert Floki.find(nav, ~s([data-testid="surface-nav-preview-block"])) != []
         assert Floki.find(nav, "details") == []
@@ -407,13 +407,13 @@ defmodule MailglassAdmin.Phase177AccountScopeTest do
 
     test "Phase 177 Account scope description is derived from the rendered items" do
       full = render_shell(%{})
-      assert description(full, "sidebar") == "Applies to Health, Deliveries and Inbound."
-      assert description(full, "mobile") == "Applies to Health, Deliveries and Inbound."
+      assert description(full, "sidebar") == "Applies to Health, Activity and Inbound."
+      assert description(full, "mobile") == "Applies to Health, Activity and Inbound."
 
       no_inbound = render_shell(%{inbound_available?: false})
 
       for layout <- ["sidebar", "mobile"] do
-        assert description(no_inbound, layout) == "Applies to Health and Deliveries."
+        assert description(no_inbound, layout) == "Applies to Health and Activity."
         refute description(no_inbound, layout) =~ "Inbound"
         refute nav(no_inbound, layout) |> text() =~ "Inbound"
       end

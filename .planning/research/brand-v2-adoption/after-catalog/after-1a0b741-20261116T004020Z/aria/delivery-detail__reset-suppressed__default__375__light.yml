@@ -1,0 +1,86 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Activity":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Activity and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - link "Back to Activity":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Reset your password" [level=2]
+  - text: Not sent
+  - paragraph: To pw-suppressed@northstar.example
+  - region "Not sent":
+    - heading "Not sent" [level=3]
+    - paragraph: "Not sent: nothing was sent. This address is on your suppression list."
+    - paragraph: "Reason: hard bounce."
+    - heading "Next step" [level=4]
+    - paragraph: Remove this address from the suppression list if it should receive email, then trigger the email from your app again.
+    - link "Go to the suppression card":
+      - /url: "#delivery-suppression"
+  - term: Mailer
+  - definition:
+    - button "Password reset"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.password_reset MailglassDemoWeb.Mailers.AccountMailer.password_reset
+  - term: Provider
+  - definition: UNKNOWN
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - button "Copy Nov 16, 2026, 12:28 AM UTC (copies the exact UTC value 2026-11-16 00:28:30.000000 UTC)":
+      - time: Nov 16, 2026, 12:28 AM UTC
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Latest event
+  - definition: Suppressed
+  - group: Technical details
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Suppressed"
+      - text: Sending to this recipient was blocked by a suppression rule.
+      - paragraph: mailglass • api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-6295-7777-b7fb-e22381731d55"': 01a1e1cc-6295-7777-b7fb-e22381731d55
+      - button "Copy Nov 16, 2026, 12:28 AM UTC (copies the exact UTC value 2026-11-16 00:28:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:28 AM UTC
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. Current Mailglass match
+  - term: Address or domain
+  - definition: pw-suppressed@northstar.example
+  - term: Scope
+  - definition: Address • Account-local
+  - term: Reason
+  - definition: Hard bounce
+  - term: Source
+  - definition: journey-seed
+  - term: Expiry date
+  - definition: Expiry date not recorded
+  - term: Removal policy
+  - definition: Mailglass allows removal of Hard bounce suppressions.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

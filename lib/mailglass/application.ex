@@ -1,5 +1,5 @@
 defmodule Mailglass.Application do
-  @moduledoc "Supervision tree for the Mailglass framework."
+  @moduledoc "Supervision tree for the mailglass framework."
   use Application
   require Logger
 

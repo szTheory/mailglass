@@ -1,0 +1,58 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- navigation "Mailglass sections":
+  - group "Scoped to an Account":
+    - paragraph: Scoped to an Account
+    - link "Health":
+      - /url: /ops/mail
+    - link "Deliveries":
+      - /url: /ops/mail?view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound
+  - link "Preview":
+    - /url: /dev/mail
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Preview" [level=1]
+  - paragraph:
+    - text: Renders the scenarios in each Mailable's
+    - code: preview_props/0
+    - text: . It doesn't read Deliveries or Inbound messages from any Account.
+  - status: Preview output is current.
+  - paragraph: Email preview
+  - group: Payment failed BillingMailer MailglassDemoWeb.Mailers.BillingMailer.payment_failed
+  - paragraph: Frame width
+  - group "Preview frame width in CSS pixels":
+    - button "375 CSS pixels": 375 px
+    - button "768 CSS pixels" [pressed]: 768 px
+    - button "1024 CSS pixels": 1024 px
+  - paragraph: Preview background
+  - button "Switch the preview backdrop to dark": Light
+  - button "Help for preview background"
+  - text: Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.
+  - status: "Preview backdrop: light"
+  - tablist "Preview format":
+    - tab "HTML" [selected]
+    - tab "Text"
+    - tab "Raw"
+    - tab "Headers"
+  - tabpanel "HTML":
+    - iframe
+  - text: Amount due
+  - textbox "Amount due": $248.00
+  - text: Card last4
+  - textbox "Card last4": "4242"
+  - text: Recipient
+  - textbox "Recipient": billing@northstar.example
+  - text: Retry at
+  - textbox "Retry at": 2026-06-02 09:00 ET
+  - text: Workspace
+  - textbox "Workspace": Northstar Logistics
+  - button "Restore defaults"

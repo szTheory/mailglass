@@ -23,9 +23,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
+  alias MailglassAdmin.Operator.MailerName
   alias MailglassAdmin.Operator.ResultsStatus
 
-  attr(:heading, :string, default: "Deliveries")
+  attr(:heading, :string, default: "Activity")
+  attr(:id_prefix, :string, default: nil)
   attr(:deliveries, :list, required: true)
   attr(:account_labels, :map, default: %{})
 
@@ -61,7 +63,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <Components.data_state
           kind={:stale}
           title={ResultsStatus.stale_title(@loaded_at)}
-          body="Mailglass couldn't re-read these results. Retry to check for updates."
+          body="mailglass couldn't re-read these results. Retry to check for updates."
         />
         <p
           :if={@loaded_at}
@@ -76,14 +78,14 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           data-testid="operator-retry-deliveries"
           class="btn btn-ghost min-h-11 mt-sm mx-auto block"
         >
-          Retry deliveries
+          Retry loading activity
         </button>
       </div>
       <%= cond do %>
         <% @data_state == :error -> %>
           <Components.data_state
             kind={:error}
-            title="Couldn't load deliveries for these filters"
+            title="Couldn't load activity for these filters"
             body="The read failed. Your filters are unchanged. Retry, or change a filter."
           />
           <button
@@ -92,7 +94,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             data-testid="operator-retry-deliveries"
             class="btn btn-ghost min-h-11 mt-sm mx-auto block"
           >
-            Retry deliveries
+            Retry loading activity
           </button>
         <% @data_state == :permission_denied -> %>
           <Components.data_state
@@ -103,7 +105,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% @deliveries == [] and @page_meta.total_count > 0 -> %>
           <Components.data_state
             kind={:empty}
-            title="No deliveries on this page"
+            title="No activity on this page"
             body="Move to an available page to inspect the current results."
           />
         <% @data_state == :empty or
@@ -111,8 +113,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           <%= if @filters_active? do %>
             <Components.data_state
               kind={:empty}
-              title="No deliveries"
-              body="No deliveries match the current filters."
+              title="No activity matches the current filters"
+              body="Change or clear a filter to see more."
               data-testid-override="operator-empty-filtered"
             />
             <div
@@ -130,8 +132,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           <% else %>
             <Components.data_state
               kind={:empty}
-              title="No deliveries in this time window"
-              body="No deliveries have been recorded for this Account during the selected time window."
+              title="No activity in this time window"
+              body="No emails have been recorded for this Account during the selected time window."
               data-testid-override="operator-empty-truly"
             />
             <div
@@ -178,7 +180,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     phx-keydown="select_delivery"
                     phx-key="Enter"
                     phx-value-id={delivery.id}
-                    phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                    phx-value-focus-return-id={row_id(@id_prefix, :desktop, delivery.id)}
                     tabindex="0"
                     class={[
                       "transition-colors",
@@ -187,11 +189,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   >
                     <td class="min-w-0 text-body text-base-content">
                       <button
-                        id={row_id(:desktop, delivery.id)}
+                        id={row_id(@id_prefix, :desktop, delivery.id)}
                         type="button"
                         phx-click="select_delivery"
                         phx-value-id={delivery.id}
-                        phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                        phx-value-focus-return-id={row_id(@id_prefix, :desktop, delivery.id)}
                         aria-label={"Open delivery for #{delivery.recipient}"}
                         aria-current={
                           if selected?(@selected_delivery, delivery), do: "true", else: "false"
@@ -207,14 +209,15 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                           class="min-w-0 w-full truncate text-label text-secondary"
                           title={subject(delivery)}
                         >{subject(delivery)}</span>
+                        <span
+                          :if={MailerName.plain_name(Map.get(delivery, :mailable))}
+                          data-testid="operator-delivery-mailer"
+                          class="min-w-0 w-full truncate text-label text-secondary"
+                        >{MailerName.plain_name(Map.get(delivery, :mailable))}</span>
                       </button>
                     </td>
                     <td class="text-body text-base-content">
-                      <Components.outcome_badge
-                        id={"delivery-outcome-table-#{delivery.id}"}
-                        status={Components.delivery_display_status(delivery)}
-                        context={:delivery}
-                      />
+                      <Components.delivery_badge row={delivery} size={:row} />
                       <p :if={different_event?(delivery)} class="text-label text-secondary">
                         Latest: {event_label(delivery.last_event_type)}
                       </p>
@@ -244,11 +247,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             <div data-testid="operator-deliveries-cards" class="operator-deliveries-cards">
               <ul
                 data-testid="operator-deliveries-list"
-                class="divide-y divide-base-300"
+                class="divide-y divide-base-300 tabular-nums"
               >
-                <li :for={delivery <- @deliveries} class="px-4 py-4">
+                <li :for={delivery <- @deliveries} class="px-4 py-4 space-y-sm">
                   <button
-                    id={row_id(:mobile, delivery.id)}
+                    id={row_id(@id_prefix, :mobile, delivery.id)}
                     data-testid="operator-delivery-row"
                     data-selected={
                       if selected?(@selected_delivery, delivery), do: "true", else: "false"
@@ -256,7 +259,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     type="button"
                     phx-click="select_delivery"
                     phx-value-id={delivery.id}
-                    phx-value-focus-return-id={row_id(:mobile, delivery.id)}
+                    phx-value-focus-return-id={row_id(@id_prefix, :mobile, delivery.id)}
                     aria-current={
                       if selected?(@selected_delivery, delivery), do: "true", else: "false"
                     }
@@ -277,13 +280,16 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     <p class="min-w-0 break-words text-label text-secondary" title={subject(delivery)}>
                       {subject(delivery)}
                     </p>
+                    <p
+                      :if={MailerName.plain_name(Map.get(delivery, :mailable))}
+                      data-testid="operator-delivery-mailer"
+                      class="min-w-0 break-words text-label text-secondary"
+                    >
+                      {MailerName.plain_name(Map.get(delivery, :mailable))}
+                    </p>
                   </button>
                   <div>
-                    <Components.outcome_badge
-                      id={"delivery-outcome-card-#{delivery.id}"}
-                      status={Components.delivery_display_status(delivery)}
-                      context={:delivery}
-                    />
+                    <Components.delivery_badge row={delivery} size={:row} />
                   </div>
 
                   <%!-- Keep the exact stable ID visible and copyable without hover. --%>
@@ -351,7 +357,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     <nav
       :if={Map.get(@page_meta, :total_pages, 0) > 1 or Map.get(@page_meta, :page, 1) > 1}
       data-testid="operator-pagination"
-      aria-label="Deliveries pagination"
+      aria-label="Activity pagination"
       class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
     >
       <.pagination_link
@@ -416,12 +422,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     """
   end
 
-  defp result_count_label(%{total_count: 1}), do: "1 delivery"
+  defp result_count_label(%{total_count: 1}), do: "1 email"
 
   defp result_count_label(%{total_count: count}) when is_integer(count),
-    do: "#{count} deliveries"
+    do: "#{count} emails"
 
-  defp result_count_label(_page_meta), do: "0 deliveries"
+  defp result_count_label(_page_meta), do: "0 emails"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false
@@ -432,8 +438,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   defp event_label(event) when is_atom(event),
     do: event |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
 
-  defp row_id(:desktop, id), do: "operator-delivery-desktop-#{id}"
-  defp row_id(:mobile, id), do: "operator-delivery-mobile-#{id}"
+  defp row_id(nil, :desktop, id), do: "operator-delivery-desktop-#{id}"
+  defp row_id(nil, :mobile, id), do: "operator-delivery-mobile-#{id}"
+  defp row_id(prefix, :desktop, id), do: "#{prefix}-operator-delivery-desktop-#{id}"
+  defp row_id(prefix, :mobile, id), do: "#{prefix}-operator-delivery-mobile-#{id}"
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"
@@ -449,8 +457,5 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     end
   end
 
-  defp different_event?(delivery) do
-    event = Map.get(delivery, :last_event_type)
-    not is_nil(event) and event != Components.delivery_display_status(delivery)
-  end
+  defp different_event?(delivery), do: Components.latest_event_differs?(delivery)
 end

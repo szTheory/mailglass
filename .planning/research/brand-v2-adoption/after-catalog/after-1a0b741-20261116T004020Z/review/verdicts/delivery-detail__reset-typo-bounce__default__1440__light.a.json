@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-typo-bounce__default__1440__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated field in the summary card and the timestamps on the two timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Failed\" [level=3]",
+      "screenshot_region": "Failed badge beside the subject and the red mark with the word Failed in the verdict block"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading, sidebar navigation and Account selector"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "\"Failed: the email did not get through.\"",
+      "screenshot_region": "top of the detail card, above the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "\"The provider reported: invalid address.\"",
+      "screenshot_region": "verdict block and the Bounced timeline card"
+    }
+  ],
+  "reasons": "The Failed verdict comes first, with a drawn mark, the word Failed, a plain sentence, the recorded cause (invalid address) and a concrete next step. Every time shows UTC. The page uses the product's words and makes no retry promise or invented cause."
+}

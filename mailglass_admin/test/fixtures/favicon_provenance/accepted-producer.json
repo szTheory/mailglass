@@ -1,0 +1,27 @@
+{
+  "schema": "mailglass.favicon_producer_provenance.v1",
+  "catalogId": "favicon-299c1aa-20261116T231912Z",
+  "manifestSha256": "ef614ecee58a440887d1bfbede7f777d31f97ab37b61acf82c4e7d0d6c204e11",
+  "producerPath": "mailglass_admin/e2e/favicon-capture.cjs",
+  "snapshotPath": "mailglass_admin/test/fixtures/favicon_provenance/accepted-producer.cjs",
+  "producerSha256": "bff05d778648d4d900c9e977e89227ea3290ede9490e1e7fd5de28bdda7f6ee3",
+  "producerBytes": 16209,
+  "producerCommit": "ad4af34352e1d64af6fc7415306151adcb61b9e7",
+  "producerTree": "5658acb44e0907ec302a3a889ea39c349fe21552",
+  "producerGitBlob": "63176497feeb85722af6a78bfb9b90c77739f376",
+  "producerCommittedAt": "2026-11-16T14:56:55-05:00",
+  "ancestryCheckedAtRevision": "48c3b310830d44a80f5ef5beb4895f23d37f42bc",
+  "brandSourceRevision": "677b9d300e0da01abb199076b301bae36447d2da",
+  "brandArchiveSha256": "3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56",
+  "faviconSha256": "299c1aaa2dfc772bf375de0d51ef4dae0b442969684cc4d393887b87f3f037a5",
+  "evidence": "The snapshot bytes reproduce the recorded SHA-256 and Git blob. The producer commit is an ancestor of the checked execution revision and its commit time precedes the manifest start time. This authenticates source-byte provenance only; it does not independently attest to the historical browser process or establish new browser or Safari observations.",
+  "commands": [
+    "git cat-file -e 'ad4af34352e1d64af6fc7415306151adcb61b9e7^{commit}'",
+    "git rev-parse 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs'",
+    "git rev-parse 'ad4af34352e1d64af6fc7415306151adcb61b9e7^{tree}'",
+    "git merge-base --is-ancestor ad4af34352e1d64af6fc7415306151adcb61b9e7 48c3b310830d44a80f5ef5beb4895f23d37f42bc",
+    "git show -s --format='%cI' ad4af34352e1d64af6fc7415306151adcb61b9e7",
+    "git show 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs' | shasum -a 256",
+    "git show 'ad4af34352e1d64af6fc7415306151adcb61b9e7:mailglass_admin/e2e/favicon-capture.cjs' | wc -c"
+  ]
+}

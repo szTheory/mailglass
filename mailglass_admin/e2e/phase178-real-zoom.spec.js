@@ -10,7 +10,7 @@ const {
 const { accountSwitcher, visibleByTestId } = require("./support/account.cjs");
 
 // Phase 178 (UIQ-06 / D-10): actual 200% Chromium tab zoom on the connected
-// Operator routes the milestone left to this phase. One persistent context is
+// Admin routes the milestone left to this phase. One persistent context is
 // shared by the serial cases because tab zoom is per origin and survives
 // same-origin navigation, so the extension is loaded and zoom applied once.
 // Every case re-measures its own receipt: the document width depends on the
@@ -103,7 +103,7 @@ test.describe.serial("Phase 178 real zoom", () => {
     const position = quickView.locator('[aria-live="polite"]');
     await expect(position).toHaveText(/^\s*1 of \d+\s*$/);
     const total = Number((await position.textContent()).trim().split(" of ")[1]);
-    expect(total, "the seeded Deliveries list has more than one row").toBeGreaterThan(1);
+    expect(total, "the seeded Activity list has more than one row").toBeGreaterThan(1);
 
     expect(await undersizedTargets(page, '[data-testid="operator-quick-view"]'), "Quick view targets stay 44x44").toEqual(
       []
@@ -274,9 +274,9 @@ test.describe.serial("Phase 178 real zoom", () => {
     }
   });
 
-  test("Phase 178 real zoom: filters on Deliveries and Inbound apply without overflow at 320 CSS px", async ({}, testInfo) => {
+  test("Phase 178 real zoom: filters on Activity and Inbound apply without overflow at 320 CSS px", async ({}, testInfo) => {
     const collections = {
-      Deliveries: {
+      Activity: {
         path: `/ops/mail?tenant_id=${tenantId}&view=deliveries`,
         form: "operator-filters",
         card: "operator-deliveries-list-card",

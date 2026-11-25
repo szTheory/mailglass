@@ -67,14 +67,14 @@ the stable router/auth/session/replay semantics referenced by this guide.
   window and appends `:reconciled` when a safe link becomes possible.
 - A reconcile run can leave rows `still unmatched` without that being a bug.
 
-### Mailglass can tell you this
+### mailglass can tell you this
 
 - Whether mailglass rendered and dispatched the message
 - Whether a matched provider webhook later arrived in the local ledger
 - Whether a replay was attempted and what local effect it had
 - Whether reconcile linked or left orphan rows unmatched
 
-### Mailglass cannot tell you this
+### mailglass cannot tell you this
 
 - Whether a mailbox provider placed the message in inbox, spam, or quarantine
 - Why a remote provider retried unless that reason is surfaced in the provider
@@ -105,13 +105,13 @@ the stable router/auth/session/replay semantics referenced by this guide.
   matching delivery was not yet linkable.
 - Reconcile does not re-verify signatures or refetch provider payloads.
 
-### Mailglass can tell you this
+### mailglass can tell you this
 
 - Whether signature verification succeeded or failed
 - Whether ingest completed, duplicated, or failed locally
 - Whether normalization mapped the provider event type
 
-### Mailglass cannot tell you this
+### mailglass cannot tell you this
 
 - The contents of provider payload fields that mailglass intentionally does not
   expose in telemetry examples
@@ -141,14 +141,14 @@ the stable router/auth/session/replay semantics referenced by this guide.
   fact set for each sweep: `scanned_count`, `linked_count`,
   `remaining_orphan_count`, and `status`.
 
-### Mailglass can tell you this
+### mailglass can tell you this
 
 - How many orphans were scanned in a sweep
 - How many were linked
 - How many remain unmatched after the sweep
 - The age of orphan events seen by the orphan emit
 
-### Mailglass cannot tell you this
+### mailglass cannot tell you this
 
 - That an unmatched orphan will definitely reconcile on the next run
 - That a reconcile sweep changed downstream provider state
@@ -179,13 +179,13 @@ the stable router/auth/session/replay semantics referenced by this guide.
 - If Oban is absent, schedule `mix mailglass.reconcile` yourself; mailglass
   does not require a separate dashboard or backend to do this.
 
-### Mailglass can tell you this
+### mailglass can tell you this
 
 - Which exact delivery and webhook row a replay targeted
 - Whether replay changed local durable state
 - Whether reconcile linked backlog rows in this run
 
-### Mailglass cannot tell you this
+### mailglass cannot tell you this
 
 - That replay fixed the customer's inbox placement
 - That reconcile means the provider retried, resent, or accepted a message

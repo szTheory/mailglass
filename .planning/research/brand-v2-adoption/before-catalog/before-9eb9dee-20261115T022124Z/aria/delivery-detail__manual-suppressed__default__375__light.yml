@@ -1,0 +1,79 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - link "Back to deliveries":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "INC-4421 is monitoring" [level=2]
+  - button "Suppressed"
+  - text: Sending to this recipient was blocked by a suppression rule.
+  - paragraph: To ops@northstar.example
+  - term: Provider
+  - definition: SENDGRID
+  - term: Stream
+  - definition: Operational
+  - term: Updated
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+      - time: Nov 15, 2026, 2:16 AM
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Delivery ID
+  - definition:
+    - 'button "Copy Delivery ID: 01a1dd02-8a57-734c-93a9-0e614a6eab57"': 01a1dd02-8a57-734c-93a9-0e614a6eab57
+  - term: Mailable
+  - definition:
+    - button "OperationsMailer.incident_update"
+    - text: MailglassDemoWeb.Mailers.OperationsMailer.incident_update
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Suppressed"
+      - text: Sending to this recipient was blocked by a suppression rule.
+      - paragraph: mailglass
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a57-7565-add4-7e0ec68aec0f"': 01a1dd02-8a57-7565-add4-7e0ec68aec0f
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+        - time: Nov 15, 2026, 2:16 AM
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. Current Mailglass match
+  - term: Address or domain
+  - definition: ops@northstar.example
+  - term: Scope
+  - definition: Address · Account-local
+  - term: Reason
+  - definition: Manual
+  - term: Source
+  - definition: support-case:1842
+  - term: Expiry date
+  - definition: Expiry date not recorded
+  - term: Removal policy
+  - definition: Mailglass allows removal of Manual suppressions.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

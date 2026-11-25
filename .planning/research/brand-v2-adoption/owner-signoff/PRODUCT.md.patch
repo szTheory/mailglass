@@ -1,0 +1,51 @@
+--- a/PRODUCT.md
++++ b/PRODUCT.md
+@@ -8,26 +8,26 @@
+ 
+ ## Users
+ 
+-- **Engineers and support/on-call operators are equal primary users of Mailglass Admin.** They investigate transactional email, explain failures or suppression, inspect inbound routing, and perform supported recovery. Routine tasks must be understandable without knowledge of internal modules, while precise identifiers and diagnostic evidence remain available to engineers.
+-- **Phoenix developers and email authors** integrate Mailglass, compose Mailables, preview scenarios, inspect rendered messages, and maintain the host application's email workflows.
+-- **Recipients of the host application's transactional messages** need to understand why a message arrived, read its content, and complete the intended action. Their needs and sender identity are distinct from those of an administrator using Mailglass.
++- **Engineers and support/on-call operators are equal primary users of the mailglass admin.** They investigate transactional email, explain failures or suppression, inspect inbound routing, and perform supported recovery. Routine tasks must be understandable without knowledge of internal modules, while precise identifiers and diagnostic evidence remain available to engineers.
++- **Phoenix developers and email authors** integrate mailglass, compose Mailables, preview scenarios, inspect rendered messages, and maintain the host application's email workflows.
++- **Recipients of the host application's transactional messages** need to understand why a message arrived, read its content, and complete the intended action. Their needs and sender identity are distinct from those of an administrator using mailglass.
+ 
+ ## Product Purpose
+ 
+-Mailglass gives Phoenix applications a reusable framework for composing, previewing, sending, observing, and receiving transactional email. It builds on Swoosh and supplies the surrounding components, delivery records, normalized events, suppression handling, and operator interfaces that application teams would otherwise assemble themselves.
++mailglass gives Phoenix applications a reusable framework for composing, previewing, sending, observing, and receiving transactional email. It builds on Swoosh and supplies the surrounding components, delivery records, normalized events, suppression handling, and operator interfaces that application teams would otherwise assemble themselves.
+ 
+ Success means an author can inspect a message before it ships, an operator can explain what is known about a delivery or received message and take an appropriate supported action, and a recipient can understand and use the resulting email. The outcome and any uncertainty should remain understandable afterward.
+ 
+ ## Positioning
+ 
+-Mailglass is an open-source Elixir/Phoenix library integrated into a host application. Its distinguishing combination is HEEx-native email composition, a preview using the delivery renderer, provider event normalization, tenant-scoped records, and an append-only event ledger exposed through mountable operator interfaces.
++mailglass is an open-source Elixir/Phoenix library integrated into a host application. Its distinguishing combination is HEEx-native email composition, a preview using the delivery renderer, provider event normalization, tenant-scoped records, and an append-only event ledger exposed through mountable operator interfaces.
+ 
+-Swoosh supplies the outbound transport abstraction. Providers supply delivery observations. Mailglass records and presents those facts without treating a local send attempt or an accepted command as proof of a downstream result. Marketing campaigns and multi-channel notifications are outside the product's established scope.
++Swoosh supplies the outbound transport abstraction. Providers supply delivery observations. mailglass records and presents those facts without treating a local send attempt or an accepted command as proof of a downstream result. Marketing campaigns and multi-channel notifications are outside the product's established scope.
+ 
+ ## Operating Context
+ 
+ - The repository contains `mailglass` for the core framework, `mailglass_admin` for development preview and production operator interfaces, and `mailglass_inbound` for receiving and routing email. The platform value describes the browser surfaces; the underlying product is an Elixir library.
+-- Host applications own their authentication, authorization policy, sessions, Repo, configuration, and route mounting. Admin access and sensitive action authorization are distinct checks. Mailglass does not supply a general login product.
++- Host applications own their authentication, authorization policy, sessions, Repo, configuration, and route mounting. Admin access and sensitive action authorization are distinct checks. mailglass does not supply a general login product.
+ - Developers define a **Mailable**, render a **Message**, and create a **Delivery** when sending. Provider observations become **Events**; policy records called **Suppressions** can block future sends. Received email is an **InboundMessage**, routed to a **Mailbox**.
+ - Operator work connects Email health, delivery investigation, suppression and webhook evidence, inbound routing history, and supported replay. Preserve relevant account, object, selection, and filter context between those tasks.
+ - Development preview offers mailable/scenario selection, editable inputs, HTML/Text/Raw/Headers inspection, device framing, and theme controls. It is mounted separately from the production operator surface.
+@@ -48,11 +48,11 @@
+ 
+ ## Brand Commitments
+ 
+-The product is **mailglass**, with the tagline **“Mail you can see through.”** The existing identity assets and brand reference live in `brandbook/`. The sealed-flap identity has a recorded maintainer decision; this product record does not replace that identity or establish a new visual system.
++The product is **mailglass**, with the tagline **“See your email before it ships. Trace it after.”** The current identity is the v2 two-pane typemark. Its source is `brandbook/v2/brand.json`; resolved colors, typography and spacing live in `brandbook/tokens.json` and `brandbook/tokens.css`, with a compact design contract in `DESIGN.md`. The sealed-flap mark, old tagline, navy-and-teal palette, Inter and IBM Plex Mono are retired v1 material.
+ 
+-The established voice is clear, exact, confident, warm, and technical without being intimidating: a thoughtful maintainer. Use concrete domain nouns and actions, specific errors, and useful recovery guidance. Avoid hype, filler, cutesy failures, and implementation narration in ordinary operator tasks. Existing voice references include `brandbook/brand-book.md` and `brandbook/copy/microcopy.md`.
++The established voice is clear, exact, confident, warm, and technical without being intimidating: a thoughtful maintainer. Use concrete domain nouns and actions, specific errors, and useful recovery guidance. Avoid hype, filler, cutesy failures, and implementation narration in ordinary operator tasks. The current voice reference is `brandbook/v2/brand.json`; copy examples remain in `brandbook/copy/microcopy.md`.
+ 
+-Mailglass's tool identity and a host application's sender identity have different roles. Recipient-facing examples should preserve the demonstrated sender's branding rather than imply every adopter sends Mailglass-branded email.
++mailglass's tool identity and a host application's sender identity have different roles. Recipient-facing examples should preserve the demonstrated sender's branding rather than imply every adopter sends mailglass-branded email.
+ 
+ ## Evidence on Hand
+ 

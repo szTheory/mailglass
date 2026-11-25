@@ -14,7 +14,6 @@ defmodule MailglassAdmin.AdminShellTest do
         rendered_to_string(~H"""
         <AdminShell.shell
           testid="example-shell"
-          theme_attr="mailglass-dark"
           sidebar_width_class="md:grid-cols-[20rem_1fr]"
           main_max_width_class="max-w-none"
         >
@@ -35,7 +34,7 @@ defmodule MailglassAdmin.AdminShellTest do
         """)
 
       assert html =~ ~s(data-testid="example-shell")
-      assert html =~ ~s(data-theme="mailglass-dark")
+      refute html =~ "data-theme"
       assert html =~ ~s(data-testid="admin-shell-topbar")
       assert html =~ ~s(aria-label="mailglass")
       refute html =~ ~s(class="text-label font-bold uppercase text-secondary")

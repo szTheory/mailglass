@@ -228,7 +228,7 @@ defmodule Mailglass.Deliverability.SPF do
         :pass,
         :record_valid,
         "SPF record structure looks healthy",
-        "A single well-formed SPF record with controlled lookup pressure is the safest DNS posture Mailglass can confirm.",
+        "A single well-formed SPF record with controlled lookup pressure is the safest DNS posture mailglass can confirm.",
         "Found one SPF record with terminal -all and #{facts.lookup_count} lookup-causing terms.",
         "No action required unless your sender inventory changes."
       )

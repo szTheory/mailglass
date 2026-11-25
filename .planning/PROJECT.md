@@ -10,9 +10,26 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.10 UI Repairs & Faithful Storybook completed and archived 2026-11-02.** All 31 requirements across Phases 174–178 were satisfied and all five phase verification reports passed. The milestone audit found no blockers: 15/15 integration paths and 7/7 end-to-end flows passed. The closeout is an override because 9 open deferred records were acknowledged; 34 earlier acknowledgements remain carried forward. See the archived audit and .planning/STATE.md for the disclosed follow-ups.
+**v2.11 Brand v2.0 Adoption completed all five phases on 2026-11-17 and is ready for milestone audit and archive.** Phase 183 passed goal-backward verification 20/20 and closed both UAT rows with automated evidence. The earlier root suite's seven failures remain recorded with baseline attribution unknown; the suite was not rerun. Phase 183 did not dispatch hosted CI or publish a package or announcement. The current trademark caution record continues to block public claims. See `.planning/STATE.md` and the v2.11 phase artifacts for the remaining evidence and boundaries.
 
-The core value remains **email you can see, audit, and trust before it ships**. This milestone improved operator and maintainer workflows without changing Mailglass's transactional-email focus. No next milestone has been approved; use $gsd-new-milestone to define its goals.
+The core value remains **email you can see, audit, and trust before it ships**. v2.11 aligned the repository's identity and adopter-facing surfaces with the pinned brand book without changing Mailglass's transactional-email focus. Next: `$gsd-complete-milestone v2.11` for the separate audit and archive; milestone completion does not authorize publication or announcement.
+
+## Current Milestone: v2.11 Brand v2.0 Adoption — all phases complete; closeout pending
+
+**Goal:** The repo's identity (words, colors, type, logo, docs assets, admin screens) matches brand book v2.0, and every identity claim is true or tested.
+
+**Target features:**
+- Compatibility policy (gloss, don't rename), an explicit status map, a brand pin (book zip sha256 `ed96bb25634ed158f4aeca40d97a892aef368fcc7528ba8cc5a55489b955f87b`), and a recorded trademark/register search.
+- A reproducible admin bundle with a drift gate CI actually runs, plus a before-catalog of current screens on realistic fixtures.
+- v2 tokens, a contrast-verified role map (39 colour roles and 2 logo roles per theme), bundled fonts and logo/favicon in one coordinated change. Core email defaults stay unchanged.
+- Admin words and layout proven end to end on one job ("a customer says the password reset never arrived"), then rolled out, with a separate-agent design review gate.
+- README, ExDoc, Hex packaging and launch-prep docs aligned with the book; announcement and any trademark claim gated on the search result.
+
+**Stop line:** no new data capture or backend features. Needs the product cannot truthfully show today (next-retry time, provider reason text, per-mailer rollups) are filed for a later insight milestone. Cap: 5 phases, 20 plans or fewer, one open PR at a time.
+
+**Scope source:** `.planning/research/brand-v2-adoption/MILESTONE-PROPOSAL.md` (approved by owner 2026-11-13, recommended defaults accepted).
+
+**Verification reaffirmation by the owner, 2026-11-17 (Phase 183):** Do not forward an agent-generated `human_needed` list without first reconciling every item against current-source tests, generated artifacts, browser/smoke tools, and authorized release boundaries. A missing machine check is engineering work. Prove unpublished candidates with local source/package/output contracts; keep live-service gaps honest and do not create a publish solely for UAT. Record automated closure and use the shared GSD predicate so resolved checks do not return in a later session. See [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default) and [AUTONOMOUS-PLAYBOOK.md](AUTONOMOUS-PLAYBOOK.md).
 
 ## Completed Milestone: v2.10 UI Repairs & Faithful Storybook
 
@@ -252,7 +269,7 @@ All 31 v2.10 requirements are validated in the archived [requirements record](mi
 
 ## Next Milestone Goals
 
-No next milestone has been approved. Start with $gsd-new-milestone to review adopter needs and define the next scope. Preserve the convergence posture: default to maintenance, release hygiene, and docs accuracy unless concrete adopter pull or a contract gap justifies new capability. The broader whole-job and conditional-consolidation envelopes remain proposals, not admitted work.
+v2.11 Brand v2.0 Adoption is the active milestone (see Current Milestone above). After it, the queue in `.planning/ROLLING-ROADMAP.md` applies: delivery-absence signal (SEED-008), then Fractal Storybook depth (SEED-009). Preserve the convergence posture: broader feature work needs concrete adopter pull or a contract gap.
 
 ## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
@@ -1220,7 +1237,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-11-02 after the v2.10 milestone closeout review.*
+*Last updated: 2026-11-17 after Phase 183 completion.*
+<!-- prior footer: 2026-11-02 after the v2.10 milestone closeout review. -->
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->

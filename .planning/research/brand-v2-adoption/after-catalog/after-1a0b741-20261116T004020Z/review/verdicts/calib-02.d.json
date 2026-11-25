@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-02",
+  "judge": "d",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field in the summary card and the timestamps in the event timeline"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "status badge under the subject heading"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading, plus the \"Mailable\" label in the detail card"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": false,
+      "evidence_quote": "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "summary card under the status badge"
+    }
+  ],
+  "reasons": "The status badge shows only \"Bounced\", which is not one of the five status words. Every time (\"Nov 15, 2026, 2:04 AM\" and the timeline times) is shown without a time zone. The page uses \"Deliveries\" and \"Mailable\" where the product words are Activity and Mailer or email. It also gives no plain verdict or concrete next step: it only tells the reader to open the delivery they are already viewing."
+}

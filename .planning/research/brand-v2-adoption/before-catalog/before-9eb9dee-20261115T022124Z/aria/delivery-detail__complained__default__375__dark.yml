@@ -1,0 +1,80 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - link "Back to deliveries":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Northstar Logistics email usage reached 85%" [level=2]
+  - button "Complained"
+  - text: The provider reported a spam complaint for this message.
+  - paragraph: To complained@northstar.example
+  - term: Provider
+  - definition: SENDGRID
+  - term: Stream
+  - definition: Operational
+  - term: Updated
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+      - time: Nov 14, 2026, 11:59 PM
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Delivery ID
+  - definition:
+    - 'button "Copy Delivery ID: 01a1dd02-8a60-7d68-9aff-a6ca83d36bc4"': 01a1dd02-8a60-7d68-9aff-a6ca83d36bc4
+  - term: Mailable
+  - definition:
+    - button "OperationsMailer.usage_alert"
+    - text: MailglassDemoWeb.Mailers.OperationsMailer.usage_alert
+  - term: Provider message ID
+  - definition:
+    - 'button "Copy Provider message ID: sg-demo-badge-complained-001"': sg-demo-badge-complained-001
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Delivered"
+      - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+      - paragraph: sendgrid · webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a61-7882-bd0d-c393e42c9490"': 01a1dd02-8a61-7882-bd0d-c393e42c9490
+      - 'button "Copy timestamp as UTC: 2026-11-14 23:58:33.000000 UTC"':
+        - time: Nov 14, 2026, 11:58 PM
+    - listitem:
+      - button "Complained"
+      - text: The provider reported a spam complaint for this message.
+      - paragraph: sendgrid
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a62-79be-8fb6-604f7499d3eb"': 01a1dd02-8a62-79be-8fb6-604f7499d3eb
+      - 'button "Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+        - time: Nov 14, 2026, 11:59 PM
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows still lack one exact webhook identity.
+  - group: Account diagnostics

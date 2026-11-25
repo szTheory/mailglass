@@ -1,7 +1,7 @@
-# Mailglass Webhooks Guide
+# mailglass Webhooks Guide
 
-This guide walks through mounting Mailglass webhook ingest in your
-Phoenix app. Mailglass ships first-party verifiers for Postmark (Basic
+This guide walks through mounting mailglass webhook ingest in your
+Phoenix app. mailglass ships first-party verifiers for Postmark (Basic
 Auth), SendGrid (ECDSA P-256), and Mailgun (HMAC-SHA256 over the JSON
 body's `signature.timestamp <> signature.token`). SES (RSA-signed SNS)
 and Resend (Svix-style HMAC) are also shipped providers behind the same
@@ -117,7 +117,7 @@ config :mailglass, :mailgun,
 ```
 
 Mailgun signs the `"signature"` object embedded in the JSON payload.
-Mailglass verifies `signature.timestamp <> signature.token` with your
+mailglass verifies `signature.timestamp <> signature.token` with your
 `MAILGUN_WEBHOOK_SIGNING_KEY`, then reads the normalized event from the
 payload's `"event-data"` object.
 
@@ -129,7 +129,7 @@ without looking like a forged request.
 ### Amazon SES (via SNS)
 
 AWS SES delivers webhook events through Amazon SNS HTTP subscriptions. SNS sends
-`text/plain` POST requests signed with an RSA certificate. Mailglass verifies the
+`text/plain` POST requests signed with an RSA certificate. mailglass verifies the
 RSA signature, caches the X.509 certificate in ETS to avoid per-request network calls,
 and automatically confirms SNS subscription handshakes.
 
@@ -162,7 +162,7 @@ and automatically confirms SNS subscription handshakes.
    - For SES event publishing (full event lifecycle including open/click):
      SES → Configuration → Configuration sets → Event destinations → Add destination → SNS
 
-Mailglass automatically handles the SNS `SubscriptionConfirmation` handshake after
+mailglass automatically handles the SNS `SubscriptionConfirmation` handshake after
 your endpoint is reachable. No manual confirmation step is required.
 
 > **Duplicate events:** SES feedback notifications and SES event publishing can both
@@ -206,12 +206,12 @@ config :mailglass, :resend,
   timestamp_tolerance_seconds: 300
 ```
 
-The secret must look like `whsec_...`. Mailglass verifies the Svix headers
+The secret must look like `whsec_...`. mailglass verifies the Svix headers
 `svix-id`, `svix-timestamp`, and `svix-signature` against the exact raw request
 body, so `Mailglass.Webhook.CachingBodyReader` is required at the endpoint
 boundary before JSON parsing happens.
 
-Resend currently normalizes these event types into the public Mailglass event
+Resend currently normalizes these event types into the public mailglass event
 taxonomy:
 
 | Resend event | Normalized type |
@@ -224,7 +224,7 @@ taxonomy:
 
 ## 2. Multi-tenant patterns
 
-Mailglass resolves the tenant AFTER the signature verifies ("verify-first,
+mailglass resolves the tenant AFTER the signature verifies ("verify-first,
 tenant-second"). Three resolver shapes ship:
 
 ### Strategy A — Single-tenant (default — zero config)
@@ -316,7 +316,7 @@ For the canonical support workflow, read
 there keeps provider lifecycle facts, replay facts, and reconcile facts
 separate. This section is the webhook-specific telemetry reference.
 
-Mailglass emits six webhook events. All metadata complies with the
+mailglass emits six webhook events. All metadata complies with the
 telemetry PII policy — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
 `:headers`, `:body`, `:to`, `:from`, `:subject`, `:recipient`,
 `:email` ever appears.
@@ -366,7 +366,7 @@ own 2 s statement timeout (see §7) bounds ingest latency.
 
 ### Auto-suppression behavior
 
-Mailglass v0.3 projects suppressions automatically after a verified
+mailglass v0.3 projects suppressions automatically after a verified
 webhook event is matched to a delivery:
 
 - `:complained` -> address-wide suppression
@@ -399,7 +399,7 @@ If you need to rebuild suppression state from the event ledger, run
 
 ## Complaint suppressions are permanent
 
-Mailglass treats complaint suppressions as durable compliance blocks.
+mailglass treats complaint suppressions as durable compliance blocks.
 You can delete source delivery rows or retained webhook payload data to
 meet retention or erasure policy, but the complaint suppression row
 itself remains in place to prevent future sends to that recipient.
@@ -470,7 +470,7 @@ CronJob:
 0 4 * * *    cd /app && mix mailglass.webhooks.prune
 ```
 
-Mailglass emits a single `Logger.warning` at app boot when `Oban` is
+mailglass emits a single `Logger.warning` at app boot when `Oban` is
 not loaded, pointing adopters here. `mix mailglass.reconcile` still
 performs the orphan sweep in Oban-less installs and reports:
 
@@ -558,7 +558,7 @@ change between minor versions).
 
 ## 9. Testing your integration
 
-Mailglass ships a test case template and fixture helpers:
+mailglass ships a test case template and fixture helpers:
 
 ```elixir
 defmodule MyAppWeb.WebhookIntegrationTest do

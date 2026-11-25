@@ -104,7 +104,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, @base_path)
 
       assert html =~ "Choose an Account"
-      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Select an Account to see its activity."
       assert html =~ "Choose Account"
       assert html =~ "alpha-inbound"
       assert html =~ "beta-inbound"
@@ -148,7 +148,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
       assert html =~ "Choose an Account"
-      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Select an Account to see its activity."
 
       assert html =~ "other-tenant"
       assert clear_filters_count(html) == 0
@@ -1652,7 +1652,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      assert html =~ "Replay blocked: this action is not authorized for this admin account."
       # No run appended to the foreign record — the tenant gate fired BEFORE replay/2.
       assert run_count(foreign.id) == before_count
     end
@@ -1674,7 +1674,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       render_click(view, "open_replay", %{})
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      assert html =~ "Replay blocked: this action is not authorized for this admin account."
       assert html =~ ~s(data-testid="inbound-replay-feedback")
       assert html =~ ~s(data-testid="inbound-replay-modal")
       assert Floki.find(Floki.parse_document!(html), "#inbound-replay-review-again") != []
@@ -2052,7 +2052,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="data-state-stale")
       assert html =~ "Showing earlier results; refresh failed"
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       refute html =~ ~s(data-testid="inbound-stale-loaded-at")
       refute html =~ "14:32"
     end
@@ -2249,7 +2249,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       denied_html = render_click(view3, "confirm_replay", %{})
 
       assert denied_html =~
-               "Replay blocked: this action is not authorized for the current operator."
+               "Replay blocked: this action is not authorized for this admin account."
 
       refute_banned(denied_html)
     end
@@ -3438,7 +3438,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert has_element?(view, "[data-testid='inbound-stale-results']")
       assert html =~ "Showing results from "
       assert html =~ " UTC; refresh failed"
-      assert html =~ "Mailglass couldn&#39;t re-read these results. Retry to check for updates."
+      assert html =~ "mailglass couldn&#39;t re-read these results. Retry to check for updates."
       assert has_element?(view, "[data-testid='inbound-stale-loaded-at']", "Results loaded")
       assert has_element?(view, "[data-testid='inbound-retry-messages']", "Retry messages")
       assert html =~ "stale-one@example.com"
@@ -3454,7 +3454,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       refute has_element?(view, "[data-testid='inbound-result-count']")
       refute has_element?(view, "[data-testid='inbound-read-unavailable']")
-      assert status_text(view) =~ ~r/^Showing results from \d\d:\d\d UTC; refresh failed$/
+
+      assert status_text(view) =~
+               ~r/^Showing results from [A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M UTC; refresh failed$/
 
       # The stale panel sits above the retained rows, not instead of them.
       assert_in_order(html, [
@@ -3492,7 +3494,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="inbound-stale-results")
-      assert html =~ "Showing results from 14:32 UTC; refresh failed"
+      assert html =~ "Showing results from Oct 28, 2026, 2:32 PM UTC; refresh failed"
       assert html =~ ~s(data-testid="inbound-stale-loaded-at")
       assert html =~ ~s(phx-click="retry_inbound")
       assert html =~ "kept@example.com"

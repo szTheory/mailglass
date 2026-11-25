@@ -1,0 +1,305 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Northstar Logistics
+      - text: northstar
+      - link "Health":
+        - /url: /ops/mail?tenant_id=northstar
+      - link "Deliveries":
+        - /url: /ops/mail?tenant_id=northstar&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=northstar
+      - text: Applies to Health, Deliveries and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - group "Filters":
+    - text: Filters Search
+    - button "Help for Search"
+    - text: Find deliveries by recipient email address or subject.
+    - textbox "Search":
+      - /placeholder: Subject or recipient
+    - text: Time window
+    - button "Help for Time window"
+    - text: Show deliveries with activity during this period.
+    - combobox "Time window":
+      - option "Last 24 hours"
+      - option "Last 7 days" [selected]
+      - option "Last 30 days"
+    - text: Latest recorded event
+    - button "Help for Latest recorded event"
+    - text: Filter by the latest event recorded for each delivery.
+    - combobox "Latest recorded event":
+      - option "Any status" [selected]
+      - option "Queued"
+      - option "Sent"
+      - option "Rejected"
+      - option "Failed"
+      - option "Bounced"
+      - option "Deferred"
+      - option "Delivered"
+      - option "Autoresponded"
+      - option "Opened"
+      - option "Clicked"
+      - option "Complained"
+      - option "Unsubscribed"
+      - option "Subscribed"
+      - option "Unknown"
+      - option "Dispatched"
+      - option "Suppressed"
+    - text: Provider
+    - button "Help for Provider"
+    - text: Filter by the sending provider recorded for this account.
+    - combobox "Provider":
+      - option "Any provider" [selected]
+      - option "Postmark"
+      - option "SendGrid"
+  - button "Clear filters"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "8"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results.
+    - paragraph: "9"
+    - paragraph: Needs attention
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "3"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Deliveries 20 deliveries" [level=2]: Deliveries (20)
+    - region "Delivery records":
+      - table:
+        - rowgroup:
+          - row "Recipient / Subject Outcome Provider Updated":
+            - columnheader "Recipient / Subject"
+            - columnheader "Outcome"
+            - columnheader "Provider"
+            - columnheader "Updated"
+        - rowgroup:
+          - 'row "Open delivery for ops@northstar.example Suppressed Sending to this recipient was blocked by a suppression rule. SENDGRID Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+            - cell "Open delivery for ops@northstar.example":
+              - button "Open delivery for ops@northstar.example": ops@northstar.example INC-4421 is monitoring
+            - cell "Suppressed Sending to this recipient was blocked by a suppression rule.":
+              - button "Suppressed"
+              - text: Sending to this recipient was blocked by a suppression rule.
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:16 AM
+          - 'row "Open delivery for ops@northstar.example Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. SENDGRID Copy timestamp as UTC: 2026-11-15 02:13:33.000000 UTC"':
+            - cell "Open delivery for ops@northstar.example":
+              - button "Open delivery for ops@northstar.example": ops@northstar.example Northstar Logistics email usage reached 85%
+            - cell "Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.":
+              - button "Bounced"
+              - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:13:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:13:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:13 AM
+          - 'row "Open delivery for finance@northstar.example Dispatched This message was handed to the provider. Delivery to the recipient has not been confirmed. Latest: Sent POSTMARK Copy timestamp as UTC: 2026-11-15 02:12:35.000000 UTC"':
+            - cell "Open delivery for finance@northstar.example":
+              - button "Open delivery for finance@northstar.example": finance@northstar.example Northstar Logistics onboarding checklist
+            - 'cell "Dispatched This message was handed to the provider. Delivery to the recipient has not been confirmed. Latest: Sent"':
+              - button "Dispatched"
+              - text: This message was handed to the provider. Delivery to the recipient has not been confirmed.
+              - paragraph: "Latest: Sent"
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:12:35.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:12:35.000000 UTC"':
+                - time: Nov 15, 2026, 2:12 AM
+          - 'row "Open delivery for dispatch@northstar.example Failed Sending failed before a successful handoff to the provider. Open the delivery to inspect the error. UNKNOWN Copy timestamp as UTC: 2026-11-15 02:07:35.000000 UTC"':
+            - cell "Open delivery for dispatch@northstar.example":
+              - button "Open delivery for dispatch@northstar.example": dispatch@northstar.example Northstar Logistics weekly shipment digest
+            - cell "Failed Sending failed before a successful handoff to the provider. Open the delivery to inspect the error.":
+              - button "Failed"
+              - text: Sending failed before a successful handoff to the provider. Open the delivery to inspect the error.
+            - cell "UNKNOWN"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:07:35.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:07:35.000000 UTC"':
+                - time: Nov 15, 2026, 2:07 AM
+          - 'row "Open delivery for alex.rivera@northstar.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. POSTMARK Copy timestamp as UTC: 2026-11-15 02:05:33.000000 UTC"':
+            - cell "Open delivery for alex.rivera@northstar.example":
+              - button "Open delivery for alex.rivera@northstar.example": alex.rivera@northstar.example Your Northstar Logistics sign-in link
+            - cell "Delivered The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.":
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:05:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:05:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:05 AM
+          - 'row "Open delivery for maya.okafor@northstr.example Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. POSTMARK Copy timestamp as UTC: 2026-11-15 02:04:35.000000 UTC"':
+            - cell "Open delivery for maya.okafor@northstr.example":
+              - button "Open delivery for maya.okafor@northstr.example": maya.okafor@northstr.example Welcome to Northstar Logistics, Maya
+            - cell "Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.":
+              - button "Bounced"
+              - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:04:35.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:04:35.000000 UTC"':
+                - time: Nov 15, 2026, 2:04 AM
+          - 'row "Open delivery for mira.chen@northstar.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. POSTMARK Copy timestamp as UTC: 2026-11-15 02:03:33.000000 UTC"':
+            - cell "Open delivery for mira.chen@northstar.example":
+              - button "Open delivery for mira.chen@northstar.example": mira.chen@northstar.example Sam Rivera invited you to Northstar Logistics
+            - cell "Delivered The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.":
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:03:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:03:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:03 AM
+          - 'row "Open delivery for billing@northstar.example Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. POSTMARK Copy timestamp as UTC: 2026-11-15 02:01:33.000000 UTC"':
+            - cell "Open delivery for billing@northstar.example":
+              - button "Open delivery for billing@northstar.example": billing@northstar.example Payment action needed for Northstar Logistics
+            - cell "Bounced The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.":
+              - button "Bounced"
+              - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:01:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:01:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:01 AM
+          - 'row "Open delivery for zoë.müller@northstar.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. POSTMARK Copy timestamp as UTC: 2026-11-15 01:51:35.000000 UTC"':
+            - cell "Open delivery for zoë.müller@northstar.example":
+              - button "Open delivery for zoë.müller@northstar.example": zoë.müller@northstar.example Your Northstar Logistics workspace is ready
+            - cell "Delivered The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.":
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 01:51:35.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 01:51:35.000000 UTC"':
+                - time: Nov 15, 2026, 1:51 AM
+          - 'row "Open delivery for billing@northstar.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. POSTMARK Copy timestamp as UTC: 2026-11-15 01:37:33.000000 UTC"':
+            - cell "Open delivery for billing@northstar.example":
+              - button "Open delivery for billing@northstar.example": billing@northstar.example Receipt INV-2026-0601 for Northstar Logistics
+            - cell "Delivered The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.":
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 01:37:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 01:37:33.000000 UTC"':
+                - time: Nov 15, 2026, 1:37 AM
+          - 'row "Open delivery for queued@northstar.example Queued This message is waiting to be sent to the provider. POSTMARK Copy timestamp as UTC: 2026-11-15 00:08:33.000000 UTC"':
+            - cell "Open delivery for queued@northstar.example":
+              - button "Open delivery for queued@northstar.example": queued@northstar.example Sam Rivera invited you to Northstar Logistics
+            - cell "Queued This message is waiting to be sent to the provider.":
+              - button "Queued"
+              - text: This message is waiting to be sent to the provider.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 00:08:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 00:08:33.000000 UTC"':
+                - time: Nov 15, 2026, 12:08 AM
+          - 'row "Open delivery for rejected@northstar.example Rejected The provider rejected this message. Open the delivery to inspect the recorded reason. POSTMARK Copy timestamp as UTC: 2026-11-15 00:07:33.000000 UTC"':
+            - cell "Open delivery for rejected@northstar.example":
+              - button "Open delivery for rejected@northstar.example": rejected@northstar.example Sam Rivera invited you to Northstar Logistics
+            - cell "Rejected The provider rejected this message. Open the delivery to inspect the recorded reason.":
+              - button "Rejected"
+              - text: The provider rejected this message. Open the delivery to inspect the recorded reason.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 00:07:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 00:07:33.000000 UTC"':
+                - time: Nov 15, 2026, 12:07 AM
+          - 'row "Open delivery for deferred@northstar.example Deferred The provider reported a temporary delivery delay. Delivery has not been confirmed. SENDGRID Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+            - cell "Open delivery for deferred@northstar.example":
+              - button "Open delivery for deferred@northstar.example": deferred@northstar.example Sam Rivera invited you to Northstar Logistics
+            - cell "Deferred The provider reported a temporary delivery delay. Delivery has not been confirmed.":
+              - button "Deferred"
+              - text: The provider reported a temporary delivery delay. Delivery has not been confirmed.
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 00:05:33.000000 UTC"':
+                - time: Nov 15, 2026, 12:05 AM
+          - 'row "Open delivery for opened@northstar.example Opened The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal. POSTMARK Copy timestamp as UTC: 2026-11-15 00:03:33.000000 UTC"':
+            - cell "Open delivery for opened@northstar.example":
+              - button "Open delivery for opened@northstar.example": opened@northstar.example Receipt INV-2026-0601 for Northstar Logistics
+            - cell "Opened The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal.":
+              - button "Opened"
+              - text: The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 00:03:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 00:03:33.000000 UTC"':
+                - time: Nov 15, 2026, 12:03 AM
+          - 'row "Open delivery for clicked@northstar.example Clicked The provider recorded a link click. Security scanners or other automated activity can trigger this signal. POSTMARK Copy timestamp as UTC: 2026-11-15 00:01:33.000000 UTC"':
+            - cell "Open delivery for clicked@northstar.example":
+              - button "Open delivery for clicked@northstar.example": clicked@northstar.example Receipt INV-2026-0601 for Northstar Logistics
+            - cell "Clicked The provider recorded a link click. Security scanners or other automated activity can trigger this signal.":
+              - button "Clicked"
+              - text: The provider recorded a link click. Security scanners or other automated activity can trigger this signal.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 00:01:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 00:01:33.000000 UTC"':
+                - time: Nov 15, 2026, 12:01 AM
+          - 'row "Open delivery for complained@northstar.example Complained The provider reported a spam complaint for this message. SENDGRID Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+            - cell "Open delivery for complained@northstar.example":
+              - button "Open delivery for complained@northstar.example": complained@northstar.example Northstar Logistics email usage reached 85%
+            - cell "Complained The provider reported a spam complaint for this message.":
+              - button "Complained"
+              - text: The provider reported a spam complaint for this message.
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-14 23:59:33.000000 UTC"':
+                - time: Nov 14, 2026, 11:59 PM
+          - 'row "Open delivery for unsubscribed@northstar.example Unsubscribed The provider recorded an unsubscribe for this recipient. SENDGRID Copy timestamp as UTC: 2026-11-14 23:57:33.000000 UTC"':
+            - cell "Open delivery for unsubscribed@northstar.example":
+              - button "Open delivery for unsubscribed@northstar.example": unsubscribed@northstar.example Northstar Logistics email usage reached 85%
+            - cell "Unsubscribed The provider recorded an unsubscribe for this recipient.":
+              - button "Unsubscribed"
+              - text: The provider recorded an unsubscribe for this recipient.
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-14 23:57:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-14 23:57:33.000000 UTC"':
+                - time: Nov 14, 2026, 11:57 PM
+          - 'row "Open delivery for subscribed@northstar.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. Latest: Subscribed SENDGRID Copy timestamp as UTC: 2026-11-14 23:55:33.000000 UTC"':
+            - cell "Open delivery for subscribed@northstar.example":
+              - button "Open delivery for subscribed@northstar.example": subscribed@northstar.example Northstar Logistics email usage reached 85%
+            - 'cell "Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. Latest: Subscribed"':
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+              - paragraph: "Latest: Subscribed"
+            - cell "SENDGRID"
+            - 'cell "Copy timestamp as UTC: 2026-11-14 23:55:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-14 23:55:33.000000 UTC"':
+                - time: Nov 14, 2026, 11:55 PM
+          - 'row "Open delivery for unknown@northstar.example Dispatched This message was handed to the provider. Delivery to the recipient has not been confirmed. Latest: Unknown POSTMARK Copy timestamp as UTC: 2026-11-14 23:53:33.000000 UTC"':
+            - cell "Open delivery for unknown@northstar.example":
+              - button "Open delivery for unknown@northstar.example": unknown@northstar.example Sam Rivera invited you to Northstar Logistics
+            - 'cell "Dispatched This message was handed to the provider. Delivery to the recipient has not been confirmed. Latest: Unknown"':
+              - button "Dispatched"
+              - text: This message was handed to the provider. Delivery to the recipient has not been confirmed.
+              - paragraph: "Latest: Unknown"
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-14 23:53:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-14 23:53:33.000000 UTC"':
+                - time: Nov 14, 2026, 11:53 PM
+          - 'row "Open delivery for operations.billing.notifications.enterprise.accounts@northstar-stress.example Delivered The provider reported that the recipient''s mail server accepted this message. This does not confirm it reached the inbox or was read. POSTMARK Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+            - cell "Open delivery for operations.billing.notifications.enterprise.accounts@northstar-stress.example":
+              - button "Open delivery for operations.billing.notifications.enterprise.accounts@northstar-stress.example": operations.billing.notifications.enterprise.accounts@northstar-stress.example Sam Rivera invited you to Northstar Logistics
+            - cell "Delivered The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.":
+              - button "Delivered"
+              - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+                - time: Nov 14, 2026, 11:51 PM

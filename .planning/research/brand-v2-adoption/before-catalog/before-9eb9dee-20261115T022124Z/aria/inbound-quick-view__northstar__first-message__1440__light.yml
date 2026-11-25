@@ -1,0 +1,204 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - text: System
+    - radio "Light" [checked]
+    - text: Light
+    - radio "Dark"
+    - text: Dark
+- complementary:
+  - navigation "Mailglass sections":
+    - group "Account":
+      - group: Account Northstar Logistics
+      - text: northstar
+      - link "Health":
+        - /url: /ops/mail?tenant_id=northstar
+      - link "Deliveries":
+        - /url: /ops/mail?tenant_id=northstar&view=deliveries
+      - link "Inbound":
+        - /url: /ops/mail/inbound?tenant_id=northstar
+      - text: Applies to Health, Deliveries and Inbound.
+    - link "Preview":
+      - /url: /dev/mail?return_surface=inbound&return_tenant_id=northstar
+    - paragraph: Not tied to an Account
+- main:
+  - heading "Inbound records" [level=1]
+  - paragraph: Follow each received message through routing and mailbox processing.
+  - status: 6 messages match
+  - group "Filters":
+    - text: Filters Search
+    - button "Help for Search"
+    - text: Find by subject, recipient, or provider message id.
+    - textbox "Search":
+      - /placeholder: Subject or recipient
+    - text: Time window
+    - button "Help for Time window"
+    - text: Limit results to recently received messages.
+    - combobox "Time window":
+      - option "Last 24 hours"
+      - option "Last 7 days" [selected]
+      - option "Last 30 days"
+    - text: Mailbox outcome
+    - button "Help for Mailbox outcome"
+    - text: Filter by the latest fresh mailbox outcome, including unrouted messages and no change. The summary is hidden while this filter is applied.
+    - combobox "Mailbox outcome":
+      - option "Any outcome" [selected]
+      - option "Unrouted"
+      - option "Accepted"
+      - option "Ignored"
+      - option "No change"
+      - option "Rejected"
+      - option "Bounced"
+      - option "Failed"
+    - text: Provider
+    - button "Help for Provider"
+    - text: Filter by the inbound provider recorded for this account.
+    - combobox "Provider":
+      - option "Any provider" [selected]
+      - option "Mailgun"
+      - option "Postmark"
+  - button "Clear filters"
+  - article:
+    - paragraph:
+      - text: Accepted
+      - button "Help for Accepted"
+      - text: Messages whose latest fresh run was accepted by a mailbox.
+    - paragraph: "1"
+    - paragraph: All clear
+  - article:
+    - paragraph:
+      - text: Unrouted
+      - button "Help for Unrouted"
+      - text: No mailbox routing rule matched these messages. Open a message to inspect the routes that were checked.
+    - paragraph: "1"
+    - paragraph: All clear
+  - article:
+    - paragraph:
+      - text: Failed
+      - button "Help for Failed"
+      - text: Mailbox processing ended in failure. Open a message to inspect the recorded error.
+    - paragraph: "1"
+    - paragraph: All clear
+  - complementary:
+    - heading "Received messages 6 messages" [level=2]: Received messages (6)
+    - region "Inbound records":
+      - table:
+        - rowgroup:
+          - row "Recipient / Subject Outcome Mailbox Provider Received":
+            - columnheader "Recipient / Subject"
+            - columnheader "Outcome"
+            - columnheader "Mailbox"
+            - columnheader "Provider"
+            - columnheader "Received"
+        - rowgroup:
+          - 'row "Open inbound message 01a1dd02-8a78-7820-b86f-8bbc7937c73b Unrouted No routing rule matched, so this message was not sent to a mailbox. Unrouted None of the routing rules matched this email, so it wasn''t sent to a mailbox. Open the message to see which rules were checked. POSTMARK Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a78-7820-b86f-8bbc7937c73b":
+              - button "Open inbound message 01a1dd02-8a78-7820-b86f-8bbc7937c73b": unknown@demo.mailglass.local Unrouted vendor notice
+            - cell "Unrouted No routing rule matched, so this message was not sent to a mailbox.":
+              - button "Unrouted"
+              - text: No routing rule matched, so this message was not sent to a mailbox.
+            - cell "Unrouted None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.":
+              - button "Unrouted"
+              - text: None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:16 AM
+          - 'row "Open inbound message 01a1dd02-8a76-7c56-8de2-fc85f30615d3 Rejected The mailbox rejected this message. Open it to inspect the recorded reason. SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox POSTMARK Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a76-7c56-8de2-fc85f30615d3":
+              - button "Open inbound message 01a1dd02-8a76-7c56-8de2-fc85f30615d3": support@demo.mailglass.local [spam] Buy follower bundles now
+            - cell "Rejected The mailbox rejected this message. Open it to inspect the recorded reason.":
+              - button "Rejected"
+              - text: The mailbox rejected this message. Open it to inspect the recorded reason.
+            - cell "SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox":
+              - button "SupportMailbox"
+              - text: MailglassDemoWeb.Inbound.SupportMailbox
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:16 AM
+          - 'row "Open inbound message 01a1dd02-8a75-70f5-ba67-e8683cb80dbb Bounced The mailbox returned a bounce result for this message. Open it to inspect the recorded reason. SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox MAILGUN Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a75-70f5-ba67-e8683cb80dbb":
+              - button "Open inbound message 01a1dd02-8a75-70f5-ba67-e8683cb80dbb": billing@demo.mailglass.local [billing] Refund request for INV-2026-0602
+            - cell "Bounced The mailbox returned a bounce result for this message. Open it to inspect the recorded reason.":
+              - button "Bounced"
+              - text: The mailbox returned a bounce result for this message. Open it to inspect the recorded reason.
+            - cell "SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox":
+              - button "SupportMailbox"
+              - text: MailglassDemoWeb.Inbound.SupportMailbox
+            - cell "MAILGUN"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:16 AM
+          - 'row "Open inbound message 01a1dd02-8a6b-7bef-88a3-b6d253d4a18c Accepted A mailbox processed and accepted this message. SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox MAILGUN Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a6b-7bef-88a3-b6d253d4a18c":
+              - button "Open inbound message 01a1dd02-8a6b-7bef-88a3-b6d253d4a18c": support@demo.mailglass.local [support] Invite email did not arrive
+            - cell "Accepted A mailbox processed and accepted this message.":
+              - button "Accepted"
+              - text: A mailbox processed and accepted this message.
+            - cell "SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox":
+              - button "SupportMailbox"
+              - text: MailglassDemoWeb.Inbound.SupportMailbox
+            - cell "MAILGUN"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+                - time: Nov 15, 2026, 2:16 AM
+          - 'row "Open inbound message 01a1dd02-8a78-72a5-b273-a91d7e93e9cd Ignored The mailbox deliberately skipped this message without rejecting it. SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox POSTMARK Copy timestamp as UTC: 2026-11-15 01:51:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a78-72a5-b273-a91d7e93e9cd":
+              - button "Open inbound message 01a1dd02-8a78-72a5-b273-a91d7e93e9cd": "support@demo.mailglass.local RE: Your request has been noted"
+            - cell "Ignored The mailbox deliberately skipped this message without rejecting it.":
+              - button "Ignored"
+              - text: The mailbox deliberately skipped this message without rejecting it.
+            - cell "SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox":
+              - button "SupportMailbox"
+              - text: MailglassDemoWeb.Inbound.SupportMailbox
+            - cell "POSTMARK"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 01:51:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 01:51:33.000000 UTC"':
+                - time: Nov 15, 2026, 1:51 AM
+          - 'row "Open inbound message 01a1dd02-8a79-72de-bc9c-b6382483059a Failed Mailbox processing failed. Open the message to inspect the error. SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox MAILGUN Copy timestamp as UTC: 2026-11-15 01:46:33.000000 UTC"':
+            - cell "Open inbound message 01a1dd02-8a79-72de-bc9c-b6382483059a":
+              - button "Open inbound message 01a1dd02-8a79-72de-bc9c-b6382483059a": "support@demo.mailglass.local Delivery integration incident: customer notification payload could not be processed for the Northstar Logistics production workspace after the vendor changed its notification format"
+            - cell "Failed Mailbox processing failed. Open the message to inspect the error.":
+              - button "Failed"
+              - text: Mailbox processing failed. Open the message to inspect the error.
+            - cell "SupportMailbox MailglassDemoWeb.Inbound.SupportMailbox":
+              - button "SupportMailbox"
+              - text: MailglassDemoWeb.Inbound.SupportMailbox
+            - cell "MAILGUN"
+            - 'cell "Copy timestamp as UTC: 2026-11-15 01:46:33.000000 UTC"':
+              - 'button "Copy timestamp as UTC: 2026-11-15 01:46:33.000000 UTC"':
+                - time: Nov 15, 2026, 1:46 AM
+  - dialog "Quick view":
+    - heading "Quick view" [level=2]
+    - button "Previous inbound record" [disabled]
+    - text: 1 of 6
+    - link "Next inbound record":
+      - /url: /ops/mail/inbound?inbound_id=01a1dd02-8a76-7c56-8de2-fc85f30615d3&tenant_id=northstar&window_hours=168
+    - link "Close quick view":
+      - /url: /ops/mail/inbound?tenant_id=northstar&window_hours=168
+    - paragraph: Subject
+    - heading "Unrouted vendor notice" [level=3]
+    - button "Unrouted"
+    - text: No routing rule matched, so this message was not sent to a mailbox.
+    - paragraph: Delivered to unknown@demo.mailglass.local
+    - paragraph:
+      - text: Received
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:16:33.000000 UTC"':
+        - time: Nov 15, 2026, 2:16 AM
+    - term: Provider
+    - definition: POSTMARK
+    - term: Mailbox
+    - definition:
+      - button "Unrouted"
+      - text: None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.
+    - term: Account
+    - definition: Northstar Logistics
+    - term: Record ID
+    - definition:
+      - 'button "Copy Record ID: 01a1dd02-8a78-7820-b86f-8bbc7937c73b"': 01a1dd02-8a78-7820-b86f-8bbc7937c73b
+    - heading "Replay" [level=3]
+    - paragraph: No mailbox matched this message when it was received, so there is no recorded Mailbox to replay.
+    - link "Open full detail":
+      - /url: /ops/mail/inbound?full=1&inbound_id=01a1dd02-8a78-7820-b86f-8bbc7937c73b&tenant_id=northstar&window_hours=168

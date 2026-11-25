@@ -81,7 +81,7 @@
       category: :liveness
     },
     %{
-      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:205",
+      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:218",
       kind: :sleep,
       owner: "core",
       reason: "token TTL boundary",
@@ -89,7 +89,7 @@
       category: :ttl
     },
     %{
-      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:362",
+      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:375",
       kind: :sleep,
       owner: "core",
       reason: "token TTL boundary",
@@ -151,14 +151,6 @@
       reason: "fake adapter supervisor liveness",
       expires_on: ~D[2026-12-31],
       category: :liveness
-    },
-    %{
-      source: "test/mailglass/docs_contract_test.exs:807",
-      kind: :skip,
-      owner: "core",
-      reason: "documented compatibility fixture",
-      expires_on: ~D[2026-12-31],
-      category: :fixture
     },
     %{
       source: "test/mailglass/tenancy_test.exs:154",

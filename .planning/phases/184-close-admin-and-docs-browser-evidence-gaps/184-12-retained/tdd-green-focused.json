@@ -1,0 +1,10 @@
+{
+  "schema": "phase184-12-focused-green.v1",
+  "command": "node --test --test-reporter=tap --test-name-pattern='Hex 2.6.0 registry and retained readback accept the recorded equivalent lock requirement' .planning/phases/184-close-admin-and-docs-browser-evidence-gaps/184-12-route.test.cjs",
+  "exitCode": 0,
+  "targetTest": "Hex 2.6.0 registry and retained readback accept the recorded equivalent lock requirement",
+  "targetFile": ".planning/phases/184-close-admin-and-docs-browser-evidence-gaps/184-12-route.test.cjs",
+  "output": "TAP version 13\n# Subtest: Hex 2.6.0 registry and retained readback accept the recorded equivalent lock requirement\nok 1 - Hex 2.6.0 registry and retained readback accept the recorded equivalent lock requirement\n  ---\n  duration_ms: 5081.075833\n  type: 'test'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 5314.953375\n",
+  "semanticAssessment": "A focused green run passed after the semantic comparator implementation. It exercised the production Elixir comparator fixture and retained raw receipt replay. The target test was later strengthened to construct the retained proof independently; the final combined fixture/selftest command for that strengthened source yielded only its TAP header and remains unverified.",
+  "sourceBinding": "The test source hash was not captured at the time of this focused run; do not treat this receipt as proof that the final combined candidate-free suite passed."
+}

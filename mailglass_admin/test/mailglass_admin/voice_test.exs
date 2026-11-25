@@ -72,7 +72,7 @@ defmodule MailglassAdmin.VoiceTest do
         |> String.trim()
 
       assert subtitle ==
-               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Deliveries or Inbound messages from any Account."
+               "Renders the scenarios in each Mailable's preview_props/0. It doesn't read Activity or Inbound messages from any Account."
 
       refute subtitle =~ ~r/\b(sample|demo|fake)\b/i
       refute subtitle =~ ~r/\blive\b/i
@@ -151,9 +151,9 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "Delivery never arrived? Start here.",
              "LD-11: orientation tip must use domain noun Delivery (not Email)"
 
-      # Spot-check: deliveries heading confirming operator surface renders correctly.
-      assert html =~ "Deliveries",
-             "Operator surface must render the deliveries heading on initial mount"
+      # Spot-check: Activity heading confirming the admin surface renders correctly.
+      assert html =~ "Activity",
+             "Admin surface must render the Activity heading on initial mount"
     end
   end
 
@@ -302,7 +302,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "Choose an Account"
 
       assert html =~
-               "Select an Account to see scoped operator data."
+               "Select an Account to see its activity."
 
       assert html =~ "Account maps to"
       assert html =~ "tenant_id"

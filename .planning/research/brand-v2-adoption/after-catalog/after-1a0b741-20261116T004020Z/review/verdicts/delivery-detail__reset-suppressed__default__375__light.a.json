@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-suppressed__default__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:28 AM UTC",
+      "screenshot_region": "Updated value and event timeline card timestamp"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Not sent\" [level=3]",
+      "screenshot_region": "status badge and verdict block under the subject"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Remove this address from the suppression list if it should receive email, then trigger the email from your app again.",
+      "screenshot_region": "Next step section of the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading and subtitle"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Not sent: nothing was sent. This address is on your suppression list.",
+      "screenshot_region": "verdict block near the top, above the details and timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "Reason: hard bounce.",
+      "screenshot_region": "verdict block and Current suppression card"
+    }
+  ],
+  "reasons": "The verdict (Not sent mark and word, one sentence, a recorded reason and a next step) is the first thing under the subject at 375 px. Both times end in UTC. The page uses the product's words and makes no claim about delivery, retries or a next try time. The Reason line matches the recorded suppression reason, Hard bounce."
+}

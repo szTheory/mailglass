@@ -1,0 +1,83 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Activity":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Activity and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - link "Back to Activity":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Reset your password" [level=2]
+  - text: Failed
+  - paragraph: To pw-typo-bounce@northstar.example
+  - region "Failed":
+    - heading "Failed" [level=3]
+    - paragraph: "Failed: the email did not get through."
+    - paragraph: "The provider reported: invalid address."
+    - heading "Next step" [level=4]
+    - paragraph: Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.
+  - term: Mailer
+  - definition:
+    - button "Password reset"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.password_reset MailglassDemoWeb.Mailers.AccountMailer.password_reset
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - button "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+      - time: Nov 16, 2026, 12:05 AM UTC
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Latest event
+  - definition: Bounced
+  - group: Technical details
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This email was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: postmark • api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-628b-7244-9b95-f37ce9950981"': 01a1e1cc-628b-7244-9b95-f37ce9950981
+      - button "Copy Nov 16, 2026, 12:04 AM UTC (copies the exact UTC value 2026-11-16 00:04:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:04 AM UTC
+    - listitem:
+      - button "Bounced"
+      - text: The provider reported that this email could not be delivered. Full detail shows the reason when the provider sent one.
+      - paragraph: postmark • webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-628c-7d64-97c7-e3d18ad21d66"': 01a1e1cc-628c-7d64-97c7-e3d18ad21d66
+      - paragraph: "Reason: Invalid"
+      - button "Copy Nov 16, 2026, 12:05 AM UTC (copies the exact UTC value 2026-11-16 00:05:30.000000 UTC)":
+        - time: Nov 16, 2026, 12:05 AM UTC
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

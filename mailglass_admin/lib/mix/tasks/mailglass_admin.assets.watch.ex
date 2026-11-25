@@ -13,8 +13,8 @@ defmodule Mix.Tasks.MailglassAdmin.Assets.Watch do
       mix mailglass_admin.assets.watch
 
   Intended for maintainer dev loops only — production builds go through
-  `mix mailglass_admin.assets.build` which minifies and is the CI gate
-  target (`git diff --exit-code priv/static/`).
+  `mix mailglass_admin.assets.build`, which minifies. Its `--check` mode is
+  the CI drift gate.
   """
 
   use Mix.Task

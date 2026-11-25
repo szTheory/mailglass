@@ -12,12 +12,12 @@ const EVIDENCE_DIR = resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR
 const FIDELITY_PATH = path.join(EVIDENCE_DIR, "fidelity.json");
 const BASE_URL = process.env.DEMO_BASE_URL || `http://127.0.0.1:${process.env.PORT || "4015"}`;
 const FONT_FILES = [
-  "inter-400.woff2",
-  "inter-700.woff2",
-  "inter-tight-400.woff2",
-  "inter-tight-700.woff2",
-  "ibm-plex-mono-400.woff2",
-  "ibm-plex-mono-700.woff2"
+  "a-display-600.woff2",
+  "ui-400.woff2",
+  "ui-600.woff2",
+  "ui-400i.woff2",
+  "a-mono-400.woff2",
+  "a-mono-600.woff2"
 ];
 const VIEWPORT_WIDTHS = [320, 375, 768, 1280, 1440];
 const STORY_CASES = [
@@ -496,21 +496,22 @@ test.describe("Phase174 fonts", () => {
         const fontProbe = await root.evaluate(async root => {
           const document = root.ownerDocument;
           const definitions = [
-            { role: "ui", family: "Inter", weight: 400, tag: "p" },
-            { role: "ui", family: "Inter", weight: 700, tag: "p" },
-            { role: "display", family: "Inter Tight", weight: 400, tag: "h3" },
-            { role: "display", family: "Inter Tight", weight: 700, tag: "h3" },
-            { role: "code", family: "IBM Plex Mono", weight: 400, tag: "code" },
-            { role: "code", family: "IBM Plex Mono", weight: 700, tag: "code" }
+            { role: "display", family: "Funnel Display", weight: 600, style: "normal", tag: "h3" },
+            { role: "ui", family: "Atkinson Hyperlegible Next", weight: 400, style: "normal", tag: "p" },
+            { role: "ui", family: "Atkinson Hyperlegible Next", weight: 600, style: "normal", tag: "p" },
+            { role: "ui", family: "Atkinson Hyperlegible Next", weight: 400, style: "italic", tag: "p" },
+            { role: "code", family: "Atkinson Hyperlegible Mono", weight: 400, style: "normal", tag: "code" },
+            { role: "code", family: "Atkinson Hyperlegible Mono", weight: 600, style: "normal", tag: "code" }
           ];
           const probe = document.createElement("div");
           probe.dataset.fidelityFontProbe = "true";
           probe.style.cssText = "position:fixed;left:-10000px;top:0;display:block;visibility:visible";
           const elements = definitions.map((definition, index) => {
             const element = document.createElement(definition.tag);
-            element.dataset.fidelityFontRole = `${definition.role}-${definition.weight}`;
+            element.dataset.fidelityFontRole = `${definition.role}-${definition.weight}-${definition.style}`;
             element.textContent = `Receipt sample ${index} 0123456789`;
             element.style.fontWeight = String(definition.weight);
+            element.style.fontStyle = definition.style;
             probe.append(element);
             return element;
           });
@@ -518,7 +519,7 @@ test.describe("Phase174 fonts", () => {
           await Promise.all(
             definitions.map((definition, index) =>
               document.fonts.load(
-                `${definition.weight} 16px "${definition.family}"`,
+                `${definition.style} ${definition.weight} 16px "${definition.family}"`,
                 elements[index].textContent
               )
             )
@@ -527,11 +528,12 @@ test.describe("Phase174 fonts", () => {
             const face = [...document.fonts].find(candidate =>
               candidate.family.replace(/["']/g, "") === definition.family &&
               candidate.weight === String(definition.weight) &&
-              candidate.style === "normal"
+              candidate.style === definition.style
             );
             return {
               family: definition.family,
               weight: definition.weight,
+              style: definition.style,
               status: face?.status || "missing"
             };
           });
@@ -566,19 +568,19 @@ test.describe("Phase174 fonts", () => {
         });
 
         for (const [role, family] of [
-          ["ui", "Inter"],
-          ["display", "Inter Tight"],
-          ["code", "IBM Plex Mono"]
+          ["ui", "Atkinson Hyperlegible Next"],
+          ["display", "Funnel Display"],
+          ["code", "Atkinson Hyperlegible Mono"]
         ]) {
           expectRoleFamily(fontProbe.roles[role], family);
           expectRoleFamily(fontProbe.sandboxRoles[role], family);
         }
         expect(fontProbe.roles.ui.weight).toBe("400");
-        expect(fontProbe.roles.display.weight).toBe("700");
+        expect(fontProbe.roles.display.weight).toBe("600");
         expect(fontProbe.roles.code.weight).toBe("400");
         expect(fontProbe.faceStatus).toHaveLength(6);
         for (const face of fontProbe.faceStatus) {
-          expect(face.status, `${face.family} ${face.weight} face loaded`).toBe("loaded");
+          expect(face.status, `${face.family} ${face.weight} ${face.style} face loaded`).toBe("loaded");
         }
 
         const cssUrl = await adminCssUrl(page);
@@ -615,13 +617,14 @@ test.describe("Phase174 fonts", () => {
             bytes: servedBytes.byteLength,
             sha256: sha256(servedBytes),
             loadedFace: fontProbe.faceStatus.find(face => {
-              const family = filename.startsWith("inter-tight")
-                ? "Inter Tight"
-                : filename.startsWith("ibm-plex-mono")
-                  ? "IBM Plex Mono"
-                  : "Inter";
-              const weight = Number(filename.match(/-(400|700)\.woff2$/)?.[1]);
-              return face.family === family && face.weight === weight;
+              const family = filename.startsWith("a-display-")
+                ? "Funnel Display"
+                : filename.startsWith("a-mono-")
+                  ? "Atkinson Hyperlegible Mono"
+                  : "Atkinson Hyperlegible Next";
+              const weight = Number(filename.match(/-(400|600)i?\.woff2$/)?.[1]);
+              const style = /i\.woff2$/.test(filename) ? "italic" : "normal";
+              return face.family === family && face.weight === weight && face.style === style;
             })?.status
           });
         }
@@ -724,7 +727,7 @@ test.describe("Phase174 widths", () => {
         await expect(root).toHaveAttribute("data-theme-preference", "system");
         await expect(root).toHaveAttribute("data-theme-os", scenario.theme);
         await expect(root).toHaveAttribute("data-theme", scenario.theme === "dark" ? "mailglass-dark" : "mailglass-light");
-        const expectedBase100 = scenario.theme === "dark" ? "#0d1b2a" : "#f8fbfd";
+        const expectedBase100 = scenario.theme === "dark" ? "#1d1713" : "#f6f1e8";
         await expect.poll(() =>
           root.evaluate(element => getComputedStyle(element).getPropertyValue("--color-base-100").trim())
         ).toBe(expectedBase100);
@@ -1058,13 +1061,14 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
     const fontProbe = await root.evaluate(async element => {
       const document = element.ownerDocument;
       const definitions = [
-        ["Inter", 400], ["Inter", 700], ["Inter Tight", 400],
-        ["Inter Tight", 700], ["IBM Plex Mono", 400], ["IBM Plex Mono", 700]
+        ["Funnel Display", 600, "normal"], ["Atkinson Hyperlegible Next", 400, "normal"],
+        ["Atkinson Hyperlegible Next", 600, "normal"], ["Atkinson Hyperlegible Next", 400, "italic"],
+        ["Atkinson Hyperlegible Mono", 400, "normal"], ["Atkinson Hyperlegible Mono", 600, "normal"]
       ];
-      await Promise.all(definitions.map(([family, weight]) => document.fonts.load(`${weight} 16px "${family}"`, "Mailglass 012345")));
-      const faces = definitions.map(([family, weight]) => {
-        const face = [...document.fonts].find(item => item.family.replace(/["']/g, "") === family && item.weight === String(weight));
-        return { family, weight, status: face?.status || "missing" };
+      await Promise.all(definitions.map(([family, weight, style]) => document.fonts.load(`${style} ${weight} 16px "${family}"`, "Mailglass 012345")));
+      const faces = definitions.map(([family, weight, style]) => {
+        const face = [...document.fonts].find(item => item.family.replace(/["']/g, "") === family && item.weight === String(weight) && item.style === style);
+        return { family, weight, style, status: face?.status || "missing" };
       });
       const style = node => {
         const computed = document.defaultView.getComputedStyle(node);
@@ -1084,12 +1088,12 @@ test("Phase 175 fidelity: current Delivery story, connected focus, assets, theme
         }
       };
     });
-    for (const face of fontProbe.faces) expect(face.status, `${face.family} ${face.weight} face loads`).toBe("loaded");
-    for (const [role, family] of [["ui", "Inter"], ["display", "Inter Tight"], ["code", "IBM Plex Mono"]]) {
+    for (const face of fontProbe.faces) expect(face.status, `${face.family} ${face.weight} ${face.style} face loads`).toBe("loaded");
+    for (const [role, family] of [["ui", "Atkinson Hyperlegible Next"], ["display", "Funnel Display"], ["code", "Atkinson Hyperlegible Mono"]]) {
       expectRoleFamily(fontProbe.roles[role], family);
     }
     expect(fontProbe.roles.ui.weight).toBe("400");
-    expect(fontProbe.roles.display.weight).toBe("700");
+    expect(fontProbe.roles.display.weight).toBe("600");
     expect(fontProbe.roles.code.weight).toBe("400");
     const fontReceipts = [];
     for (const filename of FONT_FILES) {

@@ -3,14 +3,15 @@ const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
 const { accountSwitcher, accountOption } = require("./support/account.cjs");
+const { openInTheme } = require("./support/theme.cjs");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
 const denyRevealTenantId = "deny-reveal";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
-// Glass #277B96 in RGB form — the accent color that must only appear on allowlisted elements
-const ACCENT_LIGHT_RGB = "rgb(39, 123, 150)";
+// Deep Glass #0A6488 in RGB form — the accent color that must only appear on allowlisted elements
+const ACCENT_LIGHT_RGB = "rgb(10, 100, 136)";
 
 // Selectors whose elements are permitted to carry the accent color (design-system.md:112-121)
 const ACCENT_ALLOWLIST = [
@@ -52,7 +53,7 @@ async function openOperator(page) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
   // operator-deliveries-list-card is the <aside> wrapper — always visible regardless of breakpoint.
   // (operator-deliveries-list is the <ul> inside md:hidden and is hidden on desktop — Phase 113 DATA-01)
@@ -450,21 +451,55 @@ function primitiveCell(page, component, state) {
   return page.getByTestId(`gallery-${component}-${state}`);
 }
 
-function primitiveWrapper(page, component, state, theme) {
-  const cell = primitiveCell(page, component, state);
-  if (theme === "system") return page.getByTestId(`gallery-${component}-${state}-system`);
-  return cell.locator(`[data-theme="mailglass-${theme}"]`).first();
+// Phase 180 (BRPIPE-02): <html> is the only theme owner, so the gallery renders ONE
+// specimen per state, in the page's own theme. The light/dark/system matrix is a
+// per-theme page load (cookie + emulated OS + goto), never three wrappers in one page.
+function primitiveWrapper(page, component, state) {
+  return page.getByTestId(`gallery-${component}-${state}-system`);
 }
 
-async function assertPrimitiveThemeWrappers(page, component, state) {
-  const light = primitiveWrapper(page, component, state, "light");
-  const dark = primitiveWrapper(page, component, state, "dark");
-  const system = primitiveWrapper(page, component, state, "system");
+// The cell holds exactly one visible specimen and nothing inside it re-declares the
+// theme (a nested owner would repaint its own token set).
+async function assertPrimitiveSpecimen(page, component, state) {
+  const specimen = primitiveWrapper(page, component, state);
+  await expect(specimen, `${component}/${state} specimen`).toBeVisible();
+  await expect(specimen, `${component}/${state} is the only specimen in its cell`).toHaveCount(1);
+  await expect(
+    primitiveCell(page, component, state).locator("[data-theme]"),
+    `${component}/${state}: no element inside the cell carries a theme attribute`
+  ).toHaveCount(0);
+}
 
-  await expect(light, `${component}/${state} light wrapper`).toBeVisible();
-  await expect(dark, `${component}/${state} dark wrapper`).toBeVisible();
-  await expect(system, `${component}/${state} system wrapper`).toBeVisible();
-  await expectNoDataTheme(system, `${component}/${state} system wrapper`);
+// `theme` is "light" | "dark" for an explicit choice, or null for System. Only <html>
+// may carry the attribute: System leaves it unset, and no shell, pane or specimen
+// wrapper carries one in either case.
+async function expectRootTheme(page, theme, label = "page") {
+  const html = page.locator("html");
+  if (theme === null) {
+    await expect(html, `${label}: System leaves <html> without a theme attribute`).not.toHaveAttribute("data-theme");
+  } else {
+    await expect(html, `${label}: <html> owns the ${theme} theme`).toHaveAttribute("data-theme", `mailglass-${theme}`);
+  }
+  await expect(
+    page.locator("[data-theme]"),
+    `${label}: only <html> carries a theme attribute`
+  ).toHaveCount(theme === null ? 0 : 1);
+}
+
+const GALLERY_THEMES = ["light", "dark", "system"];
+
+// Per-theme gallery page load. System is "no cookie" with the OS emulated dark, so a
+// pass proves System follows the OS rather than defaulting to light.
+const GALLERY_THEME_MODES = {
+  light: { cookie: "light", os: "light" },
+  dark: { cookie: "dark", os: "light" },
+  system: { cookie: null, os: "dark" }
+};
+
+async function openGalleryInTheme(page, theme) {
+  await openInTheme(page, "/dev/mail/gallery", GALLERY_THEME_MODES[theme]);
+  await expect(page.getByRole("heading", { name: "Component Gallery", level: 1 })).toBeVisible();
+  await expectRootTheme(page, theme === "system" ? null : theme, `gallery ${theme}`);
 }
 
 function primitiveTarget(wrapper, component) {
@@ -844,7 +879,7 @@ async function openOperatorReplayModalThemed(page, theme) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/mail?${query}`);
   await expect(
-    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+    page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
   ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
@@ -944,7 +979,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("ARIA roles/states", () => {
 
-    test("Operator: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
+    test("Admin: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
       await openOperator(page);
 
       // The desktop table row is not an ARIA selectable widget (a plain table, not a
@@ -982,7 +1017,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("touch targets >= 44px", () => {
 
-    test("Operator: primary CTA button (btn-primary) height >= 44px at 390px viewport", async ({ page }) => {
+    test("Admin: primary CTA button (btn-primary) height >= 44px at 390px viewport", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openOperator(page);
 
@@ -1009,7 +1044,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
     });
 
-    test("Operator: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
+    test("Admin: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openOperator(page);
 
@@ -1029,7 +1064,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await assertTouchTarget(navLink, "inbound first nav link");
     });
 
-    test("Operator replay modal, nav, preview theme controls, and preview summary controls meet target-size floor", async ({
+    test("Admin replay modal, nav, preview theme controls, and preview summary controls meet target-size floor", async ({
       page
     }) => {
       await page.setViewportSize({ width: 390, height: 844 });
@@ -1101,14 +1136,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   });
 
   // =========================================================================
-  // FACT 3 — font-weight in {400, 700} (Type pillar)
-  // Gate: fail-on-any-violation (400 body, 700 bold — no intermediate weights)
+  // FACT 3 — font-weight in {400, 600} (Type pillar)
+  // Gate: fail-on-any-violation (400 body, 600 bold — font-bold resolves to the 600 face)
   // Pitfall: do NOT assert on text-xl elements (known advisory TYPE violations per Phase 94)
-  // Pitfall: do NOT assert 500/600 absent — font fallbacks may normalize intermediate weights
+  // Pitfall: do NOT assert 500 absent — font fallbacks may normalize intermediate weights
   // =========================================================================
-  test.describe("font-weight in {400, 700}", () => {
+  test.describe("font-weight in {400, 600}", () => {
 
-    test("Operator: body text is 400, first h1 heading is 700", async ({ page }) => {
+    test("Admin: body text is 400, first h1 heading is 600", async ({ page }) => {
       await openOperator(page);
 
       const bodyWeight = await page.locator("body").evaluate(
@@ -1119,10 +1154,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const h1Weight = await page.getByRole("heading", { level: 1 }).first().evaluate(
         el => getComputedStyle(el).fontWeight
       );
-      expect(h1Weight).toBe("700");
+      expect(h1Weight).toBe("600");
     });
 
-    test("Inbound: body text is 400, first heading is 700", async ({ page }) => {
+    test("Inbound: body text is 400, first heading is 600", async ({ page }) => {
       await openInbound(page);
 
       const bodyWeight = await page.locator("body").evaluate(
@@ -1133,7 +1168,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const headingWeight = await page.getByRole("heading").first().evaluate(
         el => getComputedStyle(el).fontWeight
       );
-      expect(headingWeight).toBe("700");
+      expect(headingWeight).toBe("600");
     });
 
     test("Preview: body text is 400", async ({ page }) => {
@@ -1153,12 +1188,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("operator state coverage and responsive grid", () => {
 
-    test("Operator: deliveries page exposes exactly one h1", async ({ page }) => {
+    test("Admin: Activity page exposes exactly one h1", async ({ page }) => {
       await openOperator(page);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     });
 
-    test("Operator: per-state delivery cells are reachable by URL", async ({ page }) => {
+    test("Admin: per-state delivery cells are reachable by URL", async ({ page }) => {
       await openOperator(page);
 
       // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
@@ -1183,11 +1218,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=suppressed`);
       const suppressedRow = page.getByTestId("operator-delivery-row").first();
+      // Since 182-02 the row badge reads the class word, with the recorded event beside it:
+      // a suppressed send is "Not sent" (the not_sent class mark), "Latest: Suppressed".
       await expect(suppressedRow).toContainText("Suppressed");
-      await expect(suppressedRow.locator(".badge-warning")).toContainText("Suppressed");
+      await expect(suppressedRow.locator('[data-mg-status="not_sent"]').first()).toContainText("Not sent");
+      await expect(suppressedRow).toContainText("Latest: Suppressed");
     });
 
-    test("Operator: list is full-width single-column at 320/768/1440; selecting opens the Quick view overlay", async ({ page }) => {
+    test("Admin: list is full-width single-column at 320/768/1440; selecting opens the Quick view overlay", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
 
@@ -1381,7 +1419,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await page.setViewportSize(viewport);
           const query = `tenant_id=${tenantId}${theme.query ? `&${theme.query}` : ""}`;
           await openInbound(page, query);
-          await expect(page.locator(`[data-theme="${theme.expectedTheme}"]`).first()).toBeVisible();
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme.expectedTheme);
 
           await assertTextContrastAA(page.getByTestId("inbound-overview"), `${theme.name} ${viewport.width} inbound-overview`);
 
@@ -1490,7 +1528,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   test.describe("replay modal overlay stacking", () => {
 
-    test("Operator and Inbound replay modal panels are top hit-test targets above their scrims", async ({
+    test("Admin and Inbound replay modal panels are top hit-test targets above their scrims", async ({
       page
     }) => {
       const operatorModal = await openOperatorReplayModal(page);
@@ -1504,22 +1542,23 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   test.describe("preview state coverage, responsive theme matrix, and contrast", () => {
 
-    test("Preview: explicit light and dark index and scenario themes apply to shell", async ({ page }) => {
+    test("Preview: explicit light and dark index and scenario themes apply to shell", { tag: "@smoke180" }, async ({ page }) => {
+      // <html> owns the theme; the shell (and every other element) carries no attribute.
       await openPreviewIndex(page, "theme=light");
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-light");
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expectRootTheme(page, "light", "preview index theme=light");
+      await expectNoDataTheme(page.getByTestId("preview-shell"), "preview index light shell");
 
       await openPreviewIndex(page, "theme=dark");
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectRootTheme(page, "dark", "preview index theme=dark");
+      await expectNoDataTheme(page.getByTestId("preview-shell"), "preview index dark shell");
 
       await openPreviewScenario(page, "theme=light");
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-light");
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expectRootTheme(page, "light", "preview scenario theme=light");
+      await expectNoDataTheme(page.getByTestId("preview-shell"), "preview scenario light shell");
 
       await openPreviewScenario(page, "theme=dark");
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectRootTheme(page, "dark", "preview scenario theme=dark");
+      await expectNoDataTheme(page.getByTestId("preview-shell"), "preview scenario dark shell");
     });
 
     test("Preview: system/default root emits no explicit data-theme under light and dark OS schemes", async ({ page }) => {
@@ -1665,30 +1704,34 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     });
 
-    test("Preview: admin chrome and preview frame toggles are independent", async ({ page }) => {
+    test("Preview: admin chrome and preview frame toggles are independent", { tag: "@smoke180" }, async ({ page }) => {
       await openPreviewScenario(page, "theme=light");
       await expect(page.getByTestId("preview-mailables-picker")).toHaveAttribute("data-picker-variant", "menu");
       await expect(page.getByTestId("preview-email-menu-trigger")).toBeVisible();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expectRootTheme(page, "light", "admin chrome before the frame toggle");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "light");
-      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-light");
+      await expectNoDataTheme(page.getByTestId("preview-pane"), "preview pane before the frame toggle");
+      await expect(page.getByTestId("preview-frame-backdrop")).toHaveCSS("color-scheme", "light");
 
       await page.getByTestId("preview-frame-theme-toggle").click();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      // The frame control diverges from the admin theme: <html> stays light, only the
+      // backdrop wrapper's color-scheme flips, and the pane never gets a theme attribute.
+      await expectRootTheme(page, "light", "admin chrome after the frame toggle");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
-      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectNoDataTheme(page.getByTestId("preview-pane"), "preview pane after the frame toggle");
+      await expect(page.getByTestId("preview-frame-backdrop")).toHaveCSS("color-scheme", "dark");
 
       // Admin chrome theming is now the canonical tri-state theme_picker — pick
       // the "dark" radio segment. Phase 112 moved admin-chrome theming to the
       // mount-path-aware ThemeController: the choice persists via the
       // `mailglass_admin_theme_v2` preference cookie and redirects to a theme-stripped
       // return_to that carries frame=dark (D-05), so the preview backdrop survives
-      // the chrome remount. The applied theme is asserted via the shell's
+      // the chrome remount. The applied theme is asserted via the root <html>
       // data-theme attribute below, which is the authoritative signal.
       await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectRootTheme(page, "dark", "admin chrome after the dark radio");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
-      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectNoDataTheme(page.getByTestId("preview-pane"), "preview pane after the dark radio");
     });
 
     test("Phase 171 framing: CSS-pixel width and browser backdrop survive Admin theme remount", async ({ page }) => {
@@ -1721,11 +1764,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await limitationHelp.click();
       await expect(limitation).toBeVisible();
       await page.getByTestId("preview-frame-theme-toggle").click();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expectRootTheme(page, "light", "framing after the backdrop toggle");
       await expect(previewPane).toHaveAttribute("data-preview-frame-theme", "dark");
 
       await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectRootTheme(page, "dark", "framing after the dark radio");
       await expect(page.getByTestId("preview-pane").locator("iframe")).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
       await expect(page.getByRole("group", { name: "Preview frame width in CSS pixels" })
@@ -1802,11 +1845,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.screenshot({ path: path.join(captureDir, "phase171-390-light.png"), fullPage: true });
       await page.emulateMedia({ colorScheme: "dark" });
       await page.getByRole("radio", { name: "System", exact: true }).click();
-      await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme");
+      await expectRootTheme(page, null, "preview System at 390");
       await page.screenshot({ path: path.join(captureDir, "phase171-390-system-dark.png"), fullPage: true });
       await page.setViewportSize({ width: 1024, height: 900 });
       await page.getByRole("radio", { name: "Dark", exact: true }).click();
-      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expectRootTheme(page, "dark", "preview Dark at 1024");
       const identityBox = await identity.boundingBox();
       expect(identityBox, "selected identity has a rendered box at 1024 CSS px").not.toBeNull();
       expect(identityBox.width, "selected identity does not collapse beside frame controls")
@@ -2181,7 +2224,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         for (const viewport of viewports) {
           await page.setViewportSize(viewport);
           await openPreviewScenario(page, theme.query);
-          await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", theme.expectedTheme);
+          await expectRootTheme(page, theme.name, `${theme.name} ${viewport.width} preview`);
           await assertTextContrastAA(page.getByTestId("preview-shell"), `${theme.name} ${viewport.width} preview-shell`);
 
           await assertTextContrastAA(page.getByTestId("preview-mailables-picker"), `${theme.name} ${viewport.width} preview-mailables`);
@@ -2207,7 +2250,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("reduced-motion suppresses animation", () => {
 
-    test("Operator: primary content area visible and stable under reduced-motion", async ({ page }) => {
+    test("Admin: primary content area visible and stable under reduced-motion", async ({ page }) => {
       // emulateMedia MUST precede page navigation
       await page.emulateMedia({ reducedMotion: "reduce" });
       await openOperator(page);
@@ -2234,7 +2277,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     // zero. app.css:292-300 uses 0.01ms !important (not 0ms), so assert ≤ 0.05
     // (50ms) — never === 0. emulateMedia MUST precede navigation (done above
     // per the FACT 4 pattern — each test fixture runs emulateMedia first).
-    test("Operator: motion-reveal computed duration effectively zero under reduced-motion", async ({ page }) => {
+    test("Admin: motion-reveal computed duration effectively zero under reduced-motion", async ({ page }) => {
       // emulateMedia MUST precede page navigation
       await page.emulateMedia({ reducedMotion: "reduce" });
       await openOperator(page);
@@ -2269,7 +2312,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("visible focus rings", () => {
 
-    test("Operator: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
+    test("Admin: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
       await openOperator(page);
 
       const link = page.getByRole("link").first();
@@ -2319,7 +2362,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("accent color only on allowlisted elements", () => {
 
-    test("Operator: non-allowlisted elements do not carry the accent color", async ({ page }) => {
+    test("Admin: non-allowlisted elements do not carry the accent color", async ({ page }) => {
       await openOperator(page);
 
       // Check a curated set of non-allowlisted structural elements
@@ -2405,7 +2448,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("enter/exit asymmetry", () => {
 
-    test("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
+    test("Admin: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
       await openOperator(page);
 
       // Select the first delivery by clicking the first row (resolves across table and card presentations).
@@ -2428,7 +2471,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   // GALLERY SURFACE — Phase 97
   // The gallery at /dev/mail/gallery is a dev-only LiveView with stable
-  // data-testid="gallery-{component}-{state}" cells and twin data-theme wrappers.
+  // data-testid="gallery-{component}-{state}" cells, one specimen per state in the page's theme.
   // GAP-05 closed by Phase 97 plan 08 (RATCHET-GAP-REGISTER.md).
   // =========================================================================
   test.describe("gallery surface — Phase 97", () => {
@@ -2460,10 +2503,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     });
 
     test("gallery twin-theme wrappers present per cell", async ({ page }) => {
-      await openGallery(page);
-      const cell = page.getByTestId("gallery-status_badge-delivered");
-      await expect(cell.locator('[data-theme="mailglass-light"]')).toBeVisible();
-      await expect(cell.locator('[data-theme="mailglass-dark"]')).toBeVisible();
+      // Phase 180: the twin light/dark wrappers are gone. A cell holds ONE specimen in the
+      // page's theme, and loading the gallery once per theme proves both explicit themes.
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
+        const cell = page.getByTestId("gallery-status_badge-delivered");
+        await expect(cell).toBeVisible();
+        await expect(cell.locator("[data-theme]"), `${theme}: no nested theme wrapper in the cell`).toHaveCount(0);
+        await expect(page.getByTestId("gallery-status_badge-delivered-system")).toHaveCount(1);
+      }
     });
 
     test("gallery renders routing_trace and evidence_card inbound specimens", async ({ page }) => {
@@ -2486,53 +2534,53 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Viewport × theme × state matrix; ran 25.7s of the default 30s on CI before
       // the v2.9 polish and now exceeds it. Same budget as the other matrix proofs.
       test.setTimeout(60_000);
-      await openGallery(page);
-      await expect(page.locator('[data-testid^="gallery-flash-"] .toast')).toHaveCount(0);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
+        await expect(page.locator('[data-testid^="gallery-flash-"] .toast')).toHaveCount(0);
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
-        for (const state of [
-          "text-empty",
-          "select-filled",
-          "invalid",
-          "disabled",
-          "readonly-text",
-          "readonly-select-display"
-        ]) {
-          const cell = primitiveCell(page, "filter_field", state);
-          await expect(cell, `gallery filter_field/${state} cell at ${viewport.width}`).toBeVisible();
-          await assertPrimitiveThemeWrappers(page, "filter_field", state);
-        }
+          for (const state of [
+            "text-empty",
+            "select-filled",
+            "invalid",
+            "disabled",
+            "readonly-text",
+            "readonly-select-display"
+          ]) {
+            const cell = primitiveCell(page, "filter_field", state);
+            await expect(cell, `gallery filter_field/${state} cell at ${viewport.width}`).toBeVisible();
+            await assertPrimitiveSpecimen(page, "filter_field", state);
+          }
 
-        for (const theme of ["light", "dark", "system"]) {
-          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "text-empty", theme), {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "text-empty"), {
             label: "Provider",
             controlSelector: "input[type='text']",
             helpText: "Filter by provider key, for example postmark."
           });
 
-          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "select-filled", theme), {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "select-filled"), {
             label: "Status",
             controlSelector: "select",
             helpText: "Filter by delivery status."
           });
 
-          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "invalid", theme), {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "invalid"), {
             label: "Status",
             controlSelector: "select",
             helpText: "Filter by delivery status.",
             errorText: "Latest recorded event was not applied. Choose a listed event."
           });
 
-          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "disabled", theme), {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "disabled"), {
             label: "Provider",
             controlSelector: "input[type='text']",
             helpText: "Filter by provider key, for example postmark.",
             disabled: true
           });
 
-          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "readonly-text", theme), {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "readonly-text"), {
             label: "Provider",
             controlSelector: "input[type='text']",
             helpText: "Filter by provider key, for example postmark.",
@@ -2540,7 +2588,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           });
 
           await assertFilterFieldContract(
-            primitiveWrapper(page, "filter_field", "readonly-select-display", theme),
+            primitiveWrapper(page, "filter_field", "readonly-select-display"),
             {
               label: "Status",
               controlSelector: "div[role='textbox']",
@@ -2549,7 +2597,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             }
           );
 
-          const section = primitiveWrapper(page, "filter_section", "section", theme);
+          const section = primitiveWrapper(page, "filter_section", "section");
           await expect(section.locator("fieldset"), `gallery filter_section/${theme}`).toBeVisible();
           await expect(section.locator("legend"), `gallery filter_section/${theme} legend`).toContainText(
             "FILTERS",
@@ -2559,15 +2607,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             .toBeVisible();
 
           await expect(
-            primitiveWrapper(page, "filters_form", "empty", theme),
+            primitiveWrapper(page, "filters_form", "empty"),
             `gallery filters_form empty ${theme}`
           ).toBeVisible();
           await expect(
-            primitiveWrapper(page, "filters_form", "filled", theme),
+            primitiveWrapper(page, "filters_form", "filled"),
             `gallery filters_form filled ${theme}`
           ).toBeVisible();
 
-          const invalidWrapper = primitiveWrapper(page, "filters_form", "invalid", theme);
+          const invalidWrapper = primitiveWrapper(page, "filters_form", "invalid");
           await expect(invalidWrapper, `gallery filters_form invalid ${theme}`).toBeVisible();
           await expect(invalidWrapper).toContainText("Latest recorded event was not applied. Choose a listed event.");
           await expect(invalidWrapper).toContainText("Action needed");
@@ -2581,7 +2629,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       const operatorFilters = page.getByTestId("operator-filters");
       const operatorProvider = operatorFilters.getByLabel("Provider", { exact: true }).first();
-      // Provider is now a <select> populated from Deliveries.list_providers/2 — pick the
+      // Provider is now a <select> populated from the provider list read — pick the
       // first real option (index 1, past the "All providers" placeholder) instead of fill().
       await operatorProvider.selectOption({ index: 1 });
       // The select auto-applies; measure focus across a settled patch.
@@ -2623,7 +2671,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default${themed}`);
         await expect(page.getByTestId("preview-shell")).toBeVisible();
 
-        const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
+        // The preview HTML is inside a sandboxed srcdoc iframe. axe-core/playwright's
+        // partial-frame mode can stall while collecting that frame; legacy mode
+        // runs the same tagged audit in the active document without creating a
+        // second page in the browser context.
+        const results = await new AxeBuilder({ page })
+          .setLegacyMode()
+          .exclude('iframe[title^="Email HTML preview"]')
+          .withTags(WCAG_22_AA_TAGS)
+          .analyze();
         const measured = {};
         for (const violation of results.violations) {
           measured[violation.id] = (measured[violation.id] || 0) + violation.nodes.length;
@@ -2828,7 +2884,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("app shell structural proof — Phase 112", () => {
 
-    test("Preview Operator and Inbound use the shared admin topbar", async ({ page }) => {
+    test("Preview, Admin and Inbound use the shared admin topbar", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
 
       await openPreviewScenario(page, "theme=dark");
@@ -2837,16 +2893,26 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByRole("heading", { name: "Preview", exact: true })).toBeVisible();
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
 
+      // The document title follows the screen (182-04): the Activity screen reads
+      // "mailglass — Activity" and the Health overview, the Admin landing, reads
+      // "mailglass — Admin". Both are positive assertions, so a title that regresses to
+      // the retired shell word fails here instead of passing a count-0 check.
       await openOperator(page);
       await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
-      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
-      await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Activity", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Activity/);
+      await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+      await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Admin/);
+      await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
 
       await openInbound(page, `tenant_id=${tenantId}`);
       await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
-      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
       await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
+      await expect(page).toHaveTitle(/Inbound/);
       await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
     });
 
@@ -2881,7 +2947,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       const activeDesktop = page
         .locator('a[aria-current="page"]')
-        .filter({ hasText: "Deliveries" })
+        .filter({ hasText: "Activity" })
         .first();
       await expect(activeDesktop).toBeVisible();
       await expect(activeDesktop).toHaveClass(/mg-nav-current/);
@@ -2900,7 +2966,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
     test("multi-tenant selector preserves surface state and inbound pagination uses real boundaries", async ({
       page
-    }) => {
+    }, testInfo) => {
       await page.setViewportSize({ width: 320, height: 844 });
       await page.context().clearCookies();
       const resetResponse = await page.request.get("/ops/browser-reset");
@@ -2911,12 +2977,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
 
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
-      const reviewArtifacts = path.resolve(
-        __dirname,
-        "../../.planning/milestones/v2.9-phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
-      );
-      fs.mkdirSync(reviewArtifacts, { recursive: true });
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-chooser-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-chooser-320.png"), fullPage: true });
       const firstChoice = page.locator(
         '[data-testid="tenant-selector-account-option"][data-account-id="browser-tenant"]'
       );
@@ -2926,7 +2987,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const accountList = page.getByRole("list", { name: "Available Accounts" });
       await expect(accountList.getByRole("listitem")).toHaveCount(2);
       await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-options-320.png"), fullPage: true });
       await expect(
         accountOption(page, "browser-tenant")
       ).toBeVisible();
@@ -2937,7 +2998,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await firstChoice.click();
       await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);
       await expect(page).toHaveURL(/tenant_id=browser-tenant/);
-      await page.screenshot({ path: path.join(reviewArtifacts, "selected-account-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("selected-account-320.png"), fullPage: true });
       await page.setViewportSize({ width: 390, height: 844 });
 
       const activeMobile = page
@@ -2950,10 +3011,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.setViewportSize({ width: 1440, height: 900 });
       await accountSwitcher(page).click();
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
-      // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
+      // With per_page 20 (parity with Activity) the 9-record demo dataset fits on one
       // page, so no pagination chrome renders — the honest single-page state. The
       // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).
       await expect(page.getByTestId("inbound-pagination")).toHaveCount(0);
@@ -2964,7 +3025,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   // PRIMITIVE STRUCTURAL MATRIX — Phase 110
   // Named primitives are proved against rendered, compiled CSS output across
-  // exact 320/768/1280 widths and light/dark/system gallery wrappers.
+  // exact 320/768/1280 widths and light/dark/system gallery page loads.
   // =========================================================================
   test.describe("primitive gallery structural proof — Phase 110", () => {
 
@@ -2976,60 +3037,60 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Keep the global default unchanged and bound only this named matrix.
       test.setTimeout(60_000);
 
-      await openGallery(page);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
 
-      const source = require("fs").readFileSync("lib/mailglass_admin/gallery_live.ex", "utf8");
+        const source = require("fs").readFileSync("lib/mailglass_admin/gallery_live.ex", "utf8");
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
-        for (const [component, states] of Object.entries(PRIMITIVE_STATES)) {
-          for (const state of states) {
-            const cell = primitiveCell(page, component, state);
-            await expect(cell, `${component}/${state} cell at ${viewport.width}`).toBeVisible();
-            await assertPrimitiveThemeWrappers(page, component, state);
+          for (const [component, states] of Object.entries(PRIMITIVE_STATES)) {
+            for (const state of states) {
+              const cell = primitiveCell(page, component, state);
+              await expect(cell, `${component}/${state} cell at ${viewport.width}`).toBeVisible();
+              await assertPrimitiveSpecimen(page, component, state);
 
-            for (const theme of ["light", "dark", "system"]) {
-              const wrapper = primitiveWrapper(page, component, state, theme);
+              const wrapper = primitiveWrapper(page, component, state);
               await assertTextContrastAA(
                 wrapper,
                 `${theme} ${viewport.width} ${component}/${state}`
               );
             }
           }
-        }
 
-        await expect(primitiveCell(page, "stat_card", "loading"), `stat_card loading ${viewport.width}`).toBeVisible();
+          await expect(primitiveCell(page, "stat_card", "loading"), `stat_card loading ${viewport.width}`).toBeVisible();
 
-        for (const component of LOADING_NOT_APPLICABLE_PRIMITIVES) {
-          await expect(
-            primitiveCell(page, component, "loading"),
-            `${component} loading intentionally absent at ${viewport.width}`
-          ).toHaveCount(0);
-          expect(source, `${component} source records loading non-applicability`).toContain(
-            `loading not applicable: ${component}`
-          );
+          for (const component of LOADING_NOT_APPLICABLE_PRIMITIVES) {
+            await expect(
+              primitiveCell(page, component, "loading"),
+              `${component} loading intentionally absent at ${viewport.width}`
+            ).toHaveCount(0);
+            expect(source, `${component} source records loading non-applicability`).toContain(
+              `loading not applicable: ${component}`
+            );
+          }
         }
       }
     });
 
-    test("theme_picker keeps native three-radio semantics without pressed-button state", async ({
+    test("theme_picker keeps native three-radio semantics without pressed-button state", { tag: "@smoke180" }, async ({
       page
     }) => {
-      await openGallery(page);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
 
-      const selectedStates = [
-        ["system-selected", "system"],
-        ["light-selected", "light"],
-        ["dark-selected", "dark"]
-      ];
+        const selectedStates = [
+          ["system-selected", "system"],
+          ["light-selected", "light"],
+          ["dark-selected", "dark"]
+        ];
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
-        for (const [state, selected] of selectedStates) {
-          for (const theme of ["light", "dark", "system"]) {
-            const wrapper = primitiveWrapper(page, "theme_picker", state, theme);
+          for (const [state, selected] of selectedStates) {
+            const wrapper = primitiveWrapper(page, "theme_picker", state);
             await assertThemePickerSemantics(
               wrapper,
               selected,
@@ -3052,49 +3113,49 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // default unchanged and bound only this named matrix.
       test.setTimeout(60_000);
 
-      await openGallery(page);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
-        for (const theme of ["light", "dark", "system"]) {
-          const navLinkActive = primitiveWrapper(page, "nav_link", "active", theme).locator("a").first();
-          const navPillActive = primitiveWrapper(page, "nav_pill", "active", theme).locator("a").first();
+          const navLinkActive = primitiveWrapper(page, "nav_link", "active").locator("a").first();
+          const navPillActive = primitiveWrapper(page, "nav_pill", "active").locator("a").first();
           await assertTouchTarget(navLinkActive, `${theme} ${viewport.width} nav_link target`);
           await assertTouchTarget(navPillActive, `${theme} ${viewport.width} nav_pill target`);
           await assertNonTextContrastAA(navLinkActive, `${theme} ${viewport.width} nav_link active cue`);
 
-          for (const option of await themeOptionLabels(primitiveWrapper(page, "theme_picker", "system-selected", theme)).all()) {
+          for (const option of await themeOptionLabels(primitiveWrapper(page, "theme_picker", "system-selected")).all()) {
             await assertTouchTarget(option, `${theme} ${viewport.width} theme_picker option target`);
           }
 
           await assertHoverReady(
-            primitiveWrapper(page, "nav_link", "hover-ready", theme).locator("a"),
+            primitiveWrapper(page, "nav_link", "hover-ready").locator("a"),
             `${theme} ${viewport.width} nav_link hover`
           );
           await assertHoverReady(
-            primitiveWrapper(page, "nav_pill", "hover-ready", theme).locator("a"),
+            primitiveWrapper(page, "nav_pill", "hover-ready").locator("a"),
             `${theme} ${viewport.width} nav_pill hover`
           );
           await assertHoverReady(
-            themeOptionLabels(primitiveWrapper(page, "theme_picker", "hover-ready", theme)).first(),
+            themeOptionLabels(primitiveWrapper(page, "theme_picker", "hover-ready")).first(),
             `${theme} ${viewport.width} theme_picker hover`
           );
 
           await assertFocusAppearanceAndNotObscured(
             page,
-            primitiveWrapper(page, "nav_link", "focus-visible", theme).locator("a"),
+            primitiveWrapper(page, "nav_link", "focus-visible").locator("a"),
             `${theme} ${viewport.width} nav_link focus ring`
           );
           await assertFocusAppearanceAndNotObscured(
             page,
-            primitiveWrapper(page, "nav_pill", "focus-visible", theme).locator("a"),
+            primitiveWrapper(page, "nav_pill", "focus-visible").locator("a"),
             `${theme} ${viewport.width} nav_pill focus ring`
           );
           {
             // The native radio is sr-only; the focus ring renders on the
             // visible segment label. Focus the input, measure the label.
-            const themePickerFocus = primitiveWrapper(page, "theme_picker", "focus-visible", theme);
+            const themePickerFocus = primitiveWrapper(page, "theme_picker", "focus-visible");
             await assertFocusAppearanceAndNotObscured(
               page,
               themePickerFocus.locator('input[type="radio"]').first(),
@@ -3104,17 +3165,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           }
 
           await assertProgrammaticDisabled(
-            primitiveWrapper(page, "nav_link", "disabled", theme).locator("[role='link']"),
+            primitiveWrapper(page, "nav_link", "disabled").locator("[role='link']"),
             navLinkActive,
             `${theme} ${viewport.width} nav_link disabled`
           );
           await assertProgrammaticDisabled(
-            primitiveWrapper(page, "nav_pill", "disabled", theme).locator("[role='link']"),
+            primitiveWrapper(page, "nav_pill", "disabled").locator("[role='link']"),
             navPillActive,
             `${theme} ${viewport.width} nav_pill disabled`
           );
 
-          const disabledPicker = primitiveWrapper(page, "theme_picker", "disabled", theme);
+          const disabledPicker = primitiveWrapper(page, "theme_picker", "disabled");
           await expect(disabledPicker.locator("fieldset")).toHaveAttribute("disabled", "");
           await expect(disabledPicker.locator('input[type="radio"]').first()).toBeDisabled();
         }
@@ -3129,68 +3190,68 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // default unchanged and bound only this named matrix.
       test.setTimeout(60_000);
 
-      await openGallery(page);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
-        for (const theme of ["light", "dark", "system"]) {
           for (const state of ["neutral", "info", "success", "warning", "error", "empty", "loading", "unavailable", "long-label", "long-value"]) {
-            const wrapper = primitiveWrapper(page, "stat_card", state, theme);
+            const wrapper = primitiveWrapper(page, "stat_card", state);
             await assertStatCardShape(wrapper, `${theme} ${viewport.width} stat_card/${state}`);
             await assertTextContrastAA(wrapper.locator("article"), `${theme} ${viewport.width} stat_card/${state}`);
           }
 
-          const loadingCard = primitiveWrapper(page, "stat_card", "loading", theme).locator("article");
+          const loadingCard = primitiveWrapper(page, "stat_card", "loading").locator("article");
           await expect(loadingCard, `${theme} ${viewport.width} loading aria-busy`).toHaveAttribute("aria-busy", "true");
           await expect(loadingCard.getByText("Loading", { exact: true })).toBeVisible();
 
           // Long labels and values stay in the document flow; title hover is not
           // the only way to recover complete content.
-          const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first().locator("span").first();
-          await expect(longLabel).toContainText("Deliveries requiring operator review");
+          const longLabel = primitiveWrapper(page, "stat_card", "long-label").locator("article p").first().locator("span").first();
+          await expect(longLabel).toContainText("Activity that needs attention");
           await expect(longLabel).not.toHaveAttribute("title");
 
-          const longValue = primitiveWrapper(page, "stat_card", "long-value", theme).locator("article p").nth(1);
+          const longValue = primitiveWrapper(page, "stat_card", "long-value").locator("article p").nth(1);
           await expect(longValue).toContainText(/trace_01JXWIDEVALUE/);
           await expect(longValue).not.toHaveAttribute("title");
-        }
 
-        await assertNoElementHorizontalOverflow(
-          primitiveCell(page, "stat_card", "long-value"),
-          `gallery stat_card ${viewport.width}`
-        );
+          await assertNoElementHorizontalOverflow(
+            primitiveCell(page, "stat_card", "long-value"),
+            `gallery stat_card ${viewport.width}`
+          );
+        }
       }
     });
 
-    test("meaningful primitive icons have adjacent visible text or accessible names", async ({
+    test("meaningful primitive icons have adjacent visible text or accessible names", { tag: "@smoke180" }, async ({
       page
     }) => {
-      await openGallery(page);
+      for (const theme of GALLERY_THEMES) {
+        await openGalleryInTheme(page, theme);
 
-      for (const viewport of PRIMITIVE_VIEWPORTS) {
-        await page.setViewportSize(viewport);
-
-        for (const theme of ["light", "dark", "system"]) {
-          await expect(
-            primitiveWrapper(page, "nav_link", "active", theme).locator('[class*="hero-"]')
-          ).toBeVisible();
-          await expect(
-            primitiveWrapper(page, "nav_link", "active", theme).getByText("Deliveries", { exact: true })
-          ).toBeVisible();
+        for (const viewport of PRIMITIVE_VIEWPORTS) {
+          await page.setViewportSize(viewport);
 
           await expect(
-            primitiveWrapper(page, "tenant_chip", "with-tenant", theme).locator('[class*="hero-"]')
+            primitiveWrapper(page, "nav_link", "active").locator('[class*="hero-"]')
           ).toBeVisible();
           await expect(
-            primitiveWrapper(page, "tenant_chip", "with-tenant", theme).getByText("acme-corp", { exact: true })
+            primitiveWrapper(page, "nav_link", "active").getByText("Activity", { exact: true })
           ).toBeVisible();
 
           await expect(
-            primitiveWrapper(page, "stat_card", "warning", theme).locator('[class*="hero-"]')
+            primitiveWrapper(page, "tenant_chip", "with-tenant").locator('[class*="hero-"]')
           ).toBeVisible();
           await expect(
-            primitiveWrapper(page, "stat_card", "warning", theme)
+            primitiveWrapper(page, "tenant_chip", "with-tenant").getByText("acme-corp", { exact: true })
+          ).toBeVisible();
+
+          await expect(
+            primitiveWrapper(page, "stat_card", "warning").locator('[class*="hero-"]')
+          ).toBeVisible();
+          await expect(
+            primitiveWrapper(page, "stat_card", "warning")
               .locator("article p")
               .nth(2)
               .getByText("Needs attention", { exact: true })
@@ -3392,7 +3453,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("gallery certifies deliveries_list and records_list table+cards and long-value stress specimens (DATA-01/05)", async ({ page }) => {
       await openGallery(page);
 
-      // Deliveries list specimens
+      // Activity list specimens
       await expect(page.getByTestId("gallery-deliveries_list-table-populated")).toBeVisible();
       await expect(page.getByTestId("gallery-deliveries_list-data-state-error")).toBeVisible();
       await expect(page.getByTestId("gallery-deliveries_list-long-value-stress")).toBeVisible();
@@ -3437,8 +3498,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("Group: composed-group geometry — Phase 114", () => {
     // Each composed specimen is rendered once per theme wrapper (light/dark/system),
-    // so the inner `gallery-composed-*` testid is non-unique on the page. Scope each
-    // measurement to the cell's LIGHT theme wrapper to address a single instance.
+    // so the inner `gallery-composed-*` testid was non-unique on the page. The gallery now
+    // renders one specimen per state (Phase 180), so the cell holds exactly one instance;
+    // the measurement runs against a light-theme page load.
     // [cellTestId (component_state, underscored), innerTestId (hyphenated)]
     const GROUP_SPECIMENS = [
       ["gallery-composed_support_triage-operator-detail", "gallery-composed-support-triage"],
@@ -3458,15 +3520,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await page.setViewportSize({ width: vp, height: 900 });
           // Re-settle the gallery heading at each width BEFORE measuring (flake
           // containment — measure only after the LiveView has painted).
-          await openGallery(page);
+          await openGalleryInTheme(page, "light");
 
-          // Scope to the LIGHT theme wrapper of this cell so the inner composed
-          // testid resolves to exactly one specimen instance.
-          const region = page
-            .getByTestId(cellTestId)
-            .locator(`[data-theme="mailglass-light"]`)
-            .first()
-            .getByTestId(innerTestId);
+          // The cell holds one specimen, so the inner composed testid resolves to
+          // exactly one instance.
+          const region = page.getByTestId(cellTestId).getByTestId(innerTestId);
           await expect(region, `${innerTestId} region @${vp}`).toBeVisible();
 
           // DIRECT SIBLINGS ONLY — never a descendant sweep (D-08).
@@ -3768,7 +3826,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         const modal = await openOperatorReplayModalThemed(page, theme);
 
         const before = await page.evaluate(() => window.scrollY);
-        // Operator scrim carries mg-overscroll-contain + overflow-y-auto; the
+        // Admin scrim carries mg-overscroll-contain + overflow-y-auto; the
         // panel sits inside it. Scroll the contain container to its very end.
         await modal.evaluate(el => {
           const scroller = el.closest(".mg-overscroll-contain") || el;
@@ -4036,7 +4094,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Explicit dark — establish the passing regions.
       await page.emulateMedia({ colorScheme: "dark" });
       await openInbound(page, `tenant_id=${tenantId}&theme=dark`);
-      await expect(page.locator('[data-theme="mailglass-dark"]').first()).toBeVisible();
+      await expectRootTheme(page, "dark", "A16 explicit dark");
       await assertTextContrastAA(page.getByTestId("inbound-overview"), "A16 dark inbound-overview");
 
       // System theme (no ?theme= param) under prefers-color-scheme:dark must resolve

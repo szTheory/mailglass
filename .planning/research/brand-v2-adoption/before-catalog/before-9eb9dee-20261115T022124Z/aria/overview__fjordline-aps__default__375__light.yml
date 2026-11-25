@@ -1,0 +1,46 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Fjordline A/S
+    - text: fjordline-aps
+    - link "Health":
+      - /url: /ops/mail?tenant_id=fjordline-aps
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=fjordline-aps
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=overview&return_tenant_id=fjordline-aps
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Email health" [level=1]
+  - paragraph: Find email issues and inspect the records behind them.
+  - group "Health check period and freshness":
+    - paragraph: Last 7 days
+    - button "Help for observation period"
+    - text: Activity and recorded issues for this account during this period.
+    - paragraph:
+      - text: Last checked
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:21:38.242479 UTC"':
+        - time: Nov 15, 2026, 2:21 AM
+    - button "Refresh health"
+  - heading "No issues found" [level=2]
+  - paragraph: No recorded problems in this period.
+  - region "Recent activity":
+    - heading "Recent activity" [level=2]
+    - text: Outbound
+    - button "Help for outbound activity"
+    - text: Deliveries with a recorded event in this period, including pending and failed deliveries. Activity alone does not confirm successful delivery.
+    - link "1 delivery updated":
+      - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries&window_hours=168
+    - text: Inbound
+    - button "Help for inbound activity"
+    - text: Messages received in this period, across all mailbox outcomes.
+    - link "0 messages received":
+      - /url: /ops/mail/inbound?tenant_id=fjordline-aps&window_hours=168

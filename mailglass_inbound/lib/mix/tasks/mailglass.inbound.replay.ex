@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
   resolves to nothing rather than replaying across the boundary. `--record-id` and
   `--since <iso8601>` further narrow the set WITHIN that tenant (AND-combinable).
   Matching records are iterated through the shipped single-record
-  `MailglassInbound.Internal.Replay.replay/2`, which appends an `ExecutionRun` with
+  MailglassInbound.Internal.Replay.replay/2, which appends an `ExecutionRun` with
   `source: :replay` (append-only — no UPDATE).
 
   ## Usage

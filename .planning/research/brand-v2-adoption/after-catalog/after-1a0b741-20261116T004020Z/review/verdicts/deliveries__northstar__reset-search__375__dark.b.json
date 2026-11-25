@@ -1,0 +1,39 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__375__dark",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated time in the row card"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed ID",
+      "screenshot_region": "red Failed badge with a drawn mark in the row card"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\": pw-typo-bounce@northstar.example",
+      "screenshot_region": "search field above the Activity list, with the matching row visible without long scrolling"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading and Account selector"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "paragraph: Bounced",
+      "screenshot_region": "Latest event line in the row card"
+    }
+  ],
+  "reasons": "The searched address shows one row, near the top of the phone view and below the search field. The row has a drawn mark and the word Failed, and its time ends in UTC. The product's own words are used (Activity, Account, Provider), and Bounced appears only as the latest event, which is allowed. The row names no invented cause and promises no retry."
+}

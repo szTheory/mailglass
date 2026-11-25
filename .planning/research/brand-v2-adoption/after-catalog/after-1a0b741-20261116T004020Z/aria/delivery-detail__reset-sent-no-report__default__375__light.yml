@@ -1,0 +1,71 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Activity":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Activity and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Activity" [level=1]
+  - paragraph: Every email your app sent, one row per delivery.
+  - status: 26 emails match
+  - link "Back to Activity":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Reset your password" [level=2]
+  - text: Sent
+  - paragraph: To pw-sent-no-report@northstar.example
+  - region "Sent":
+    - heading "Sent" [level=3]
+    - paragraph: Sent with Postmark. Mailglass has recorded no delivery report for this email.
+    - paragraph: "Sent is not delivered: your app handed the email to the provider, and the receiving server has not reported accepting it."
+    - heading "Next step" [level=4]
+    - paragraph: Check this address on the suppression list below. Then look up the email in Postmark’s logs, and ask the customer to check spam. Delivery reports reach mailglass only if the provider’s webhook is set up.
+  - term: Mailer
+  - definition:
+    - button "Password reset"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.password_reset MailglassDemoWeb.Mailers.AccountMailer.password_reset
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - button "Copy Nov 15, 2026, 11:58 PM UTC (copies the exact UTC value 2026-11-15 23:58:30.000000 UTC)":
+      - time: Nov 15, 2026, 11:58 PM UTC
+  - term: Account
+  - definition: Northstar Logistics
+  - group: Technical details
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This email was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: postmark • api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1e1cc-628a-7c2c-973a-0887197932aa"': 01a1e1cc-628a-7c2c-973a-0887197932aa
+      - button "Copy Nov 15, 2026, 11:58 PM UTC (copies the exact UTC value 2026-11-15 23:58:30.000000 UTC)":
+        - time: Nov 15, 2026, 11:58 PM UTC
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

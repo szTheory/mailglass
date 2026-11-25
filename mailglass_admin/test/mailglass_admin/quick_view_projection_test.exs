@@ -569,7 +569,7 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
       html = account_scope_html(scenario)
       assert html =~ ~s(data-testid="operator-account-context"), "#{id} control"
       assert html =~ ~s(data-testid="surface-nav-scope-group"), "#{id} scope group"
-      assert html =~ "Applies to Health, Deliveries and Inbound.", "#{id} scope description"
+      assert html =~ "Applies to Health, Activity and Inbound.", "#{id} scope description"
 
       for needle <- needles,
           do: assert(html =~ needle, "#{id}: should contain #{inspect(needle)}")
@@ -590,6 +590,11 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   test "Phase 177 retained Preview chrome scenarios show a plain return and never an Account" do
     valid = preview_chrome_html(QuickViewScenarios.preview_chrome(:valid_return))
     assert valid =~ ~s(data-testid="preview-return-link")
+    # The retained manifest supplies this label as data (`return_label` in
+    # reference/persona_spec/quick_view_scenarios.json, which the Phase 174 and 175
+    # evidence digests bind), so it reads what the manifest recorded. The production label
+    # is pinned by `Preview.ReturnContext.back_label/1` in return_context_test.exs and by
+    # the Phase 182 words contract.
     assert valid =~ "Back to Deliveries"
     assert valid =~ ~s(data-testid="preview-scope-label")
     assert valid =~ "Not tied to an Account"

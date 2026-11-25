@@ -1,0 +1,86 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light" [checked]
+    - radio "Dark"
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Fjordline A/S
+    - text: fjordline-aps
+    - link "Health":
+      - /url: /ops/mail?tenant_id=fjordline-aps
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=fjordline-aps
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=fjordline-aps
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 1 delivery matches
+  - button "Filters"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "1"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results.
+    - paragraph: "0"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "0"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Deliveries 1 delivery" [level=2]: Deliveries (1)
+    - list:
+      - listitem:
+        - button "bjorn.hansen@fjordline-aps.example Welcome to Fjordline A/S":
+          - paragraph: bjorn.hansen@fjordline-aps.example
+          - paragraph: Welcome to Fjordline A/S
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a7a-7c43-9426-4f47059f9312
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:21:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:21 AM
+  - dialog "Quick view":
+    - heading "Quick view" [level=2]
+    - text: Previous delivery unavailable 1 of 1 Next delivery unavailable
+    - link "Close quick view":
+      - /url: /ops/mail?tenant_id=fjordline-aps&view=deliveries&window_hours=168
+    - paragraph: Subject
+    - heading "Welcome to Fjordline A/S" [level=3]
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+    - paragraph: To bjorn.hansen@fjordline-aps.example
+    - paragraph:
+      - text: Updated
+      - 'button "Copy timestamp as UTC: 2026-11-15 02:21:33.000000 UTC"':
+        - time: Nov 15, 2026, 2:21 AM
+    - term: Account
+    - definition: Fjordline A/S
+    - term: Provider
+    - definition: POSTMARK
+    - term: Delivery ID
+    - definition:
+      - 'button "Copy Delivery ID: 01a1dd02-8a7a-7c43-9426-4f47059f9312"': 01a1dd02-8a7a-7c43-9426-4f47059f9312
+    - heading "Webhook replay" [level=2]
+    - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+    - link "Open full detail":
+      - /url: /ops/mail?delivery_id=01a1dd02-8a7a-7c43-9426-4f47059f9312&full=1&tenant_id=fjordline-aps&window_hours=168

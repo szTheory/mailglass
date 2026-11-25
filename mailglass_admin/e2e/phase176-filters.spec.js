@@ -22,7 +22,7 @@ async function openBrowserTenant(page, { scenario, subject, tenant = tenantId, r
 }
 
 test.describe("Phase 176 direct filters", () => {
-  test("Phase 176 tracer: Deliveries select applies without Apply", async ({ page }) => {
+  test("Phase 176 tracer: Activity select applies without Apply", async ({ page }) => {
     await openBrowserTenant(page);
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
@@ -241,7 +241,7 @@ test.describe("Phase 176 direct filters", () => {
     await expect(search).toHaveValue("abc");
   });
 
-  test("Phase 176 Deliveries failed read shows error and Retry", async ({ page }) => {
+  test("Phase 176 Activity failed read shows error and Retry", async ({ page }) => {
     await openBrowserTenant(page);
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
@@ -262,7 +262,7 @@ test.describe("Phase 176 direct filters", () => {
     await page.waitForURL(url => new URL(url).searchParams.get("event") === "suppressed");
 
     const card = page.getByTestId("operator-deliveries-list-card");
-    await expect(card).toContainText("Couldn't load deliveries for these filters");
+    await expect(card).toContainText("Couldn't load activity for these filters");
     await expect(card).toContainText("The read failed. Your filters are unchanged. Retry, or change a filter.");
     await expect(page.getByTestId("operator-result-count")).toHaveCount(0);
     await expect(page.getByTestId("operator-empty-filtered")).toHaveCount(0);
@@ -289,7 +289,7 @@ test.describe("Phase 176 direct filters", () => {
 
 const collections = {
   deliveries: {
-    name: "Deliveries",
+    name: "Activity",
     path: `/ops/mail?tenant_id=${tenantId}&view=deliveries`,
     form: "operator-filters",
     card: "operator-deliveries-list-card",
@@ -360,7 +360,7 @@ async function collectAxeFindings(page) {
 
 // "No new violations": the neutral page of the same collection and theme sets the
 // baseline (it carries the pre-existing Phase 113 aria-selected-on-button defect on
-// the Deliveries row buttons, logged in deferred-items.md); every state must add
+// the Activity row buttons, logged in deferred-items.md); every state must add
 // nothing to it.
 async function expectNoNewAxeViolations(page, label, baseline) {
   const findings = await collectAxeFindings(page);
@@ -485,14 +485,14 @@ test.describe("Phase 176 connected", () => {
     test(`Phase 176 connected: ${c.name} status region settles to a count, an empty or an error text`, async ({ page }) => {
       await openCollection(page, key);
       const status = page.getByTestId(c.status);
-      const noun = key === "deliveries" ? "deliver(y|ies)" : "message(s)?";
+      const noun = key === "deliveries" ? "email(s)?" : "message(s)?";
       await expect(status).toHaveAttribute("role", "status");
       await expect(status).toHaveText(new RegExp(`^\\s*\\d+ ${noun} (matches|match)\\s*$`));
 
       await openCollection(page, key, { query: "&search=zzzz-no-such-row" });
       await expect(page.getByTestId(c.status)).toHaveText(
         key === "deliveries"
-          ? "No deliveries match the current filters"
+          ? "No emails match the current filters"
           : "No messages match the current filters"
       );
     });
@@ -560,7 +560,7 @@ test.describe("Phase 176 connected", () => {
     expect((await historyLength(page)) - before, "one select entry plus one search entry").toBe(2);
   });
 
-  test("Phase 176 connected: a commit from page 2 lands on page 1 on Deliveries", async ({ page }) => {
+  test("Phase 176 connected: a commit from page 2 lands on page 1 on Activity", async ({ page }) => {
     await openCollection(page, "deliveries", { scenario: "phase169-exact", query: "&page=2" });
     await expect(page.getByTestId("operator-pagination")).toContainText("Page 2 of");
 
@@ -659,7 +659,7 @@ test.describe("Phase 176 connected", () => {
 
 test.describe("Phase 176 connected axe states", () => {
   for (const theme of ["light", "dark"]) {
-    test(`Phase 176 connected: Deliveries invalid draft, invalid URL and failed read pass axe (${theme})`, async ({ page }) => {
+    test(`Phase 176 connected: Activity invalid draft, invalid URL and failed read pass axe (${theme})`, async ({ page }) => {
       test.setTimeout(90_000);
 
       await openCollection(page, "deliveries", { query: `&theme=${theme}` });
@@ -667,14 +667,14 @@ test.describe("Phase 176 connected axe states", () => {
       const baseline = new Set(await collectAxeFindings(page));
       await injectInvalidWindowDraft(page, "operator-filters");
       await expect(page.getByTestId("filters-draft-pending-note")).toBeVisible();
-      await expectNoNewAxeViolations(page, `Deliveries invalid draft (${theme})`, baseline);
+      await expectNoNewAxeViolations(page, `Activity invalid draft (${theme})`, baseline);
 
       await openCollection(page, "deliveries", { query: `&event=bogus&theme=${theme}` });
       await expectTheme(page, theme);
       await expect(page.getByTestId("filters-url-invalid-note")).toContainText(
         "Showing results without the Latest recorded event filter."
       );
-      await expectNoNewAxeViolations(page, `Deliveries invalid URL (${theme})`, baseline);
+      await expectNoNewAxeViolations(page, `Activity invalid URL (${theme})`, baseline);
 
       await openCollection(page, "deliveries", { query: `&theme=${theme}` });
       await armKnownReadFailure(page, "deliveries");
@@ -682,7 +682,7 @@ test.describe("Phase 176 connected axe states", () => {
       await page.waitForURL(url => new URL(url).searchParams.get("event") === "suppressed");
       await expect(page.getByTestId("operator-retry-deliveries")).toBeVisible();
       await expectTheme(page, theme);
-      await expectNoNewAxeViolations(page, `Deliveries failed read (${theme})`, baseline);
+      await expectNoNewAxeViolations(page, `Activity failed read (${theme})`, baseline);
     });
 
     test(`Phase 176 connected: Inbound invalid draft, invalid URL and failed read pass axe (${theme})`, async ({ page }) => {
@@ -750,7 +750,7 @@ test.describe("Phase 176 connected axe states", () => {
 // Phase 176 gap closure (plan 176-13). The mobile Filters toggle must switch a
 // class, never write an inline display style: after a close at a narrow width the
 // panel has to be visible again once the viewport reaches the md breakpoint.
-// One test per collection so a Deliveries failure never hides the Inbound control.
+// One test per collection so an Activity failure never hides the Inbound control.
 // -----------------------------------------------------------------------------
 
 test.describe("Phase 176 gap closure", () => {

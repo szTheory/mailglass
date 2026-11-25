@@ -2,7 +2,7 @@ defmodule Mailglass.Repo do
   @moduledoc """
   Thin facade over the host-configured `Ecto.Repo`.
 
-  Mailglass does not own a Repo — the host application does. Every context
+  mailglass does not own a Repo — the host application does. Every context
   module that needs Postgres routes through this facade, which resolves the
   real Repo through the validated `Mailglass.Config` runtime façade.
 

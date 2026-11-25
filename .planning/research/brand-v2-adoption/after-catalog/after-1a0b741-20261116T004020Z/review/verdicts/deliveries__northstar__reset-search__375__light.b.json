@@ -1,0 +1,33 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__375__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated time in the result row at the bottom"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "text: Failed ID",
+      "screenshot_region": "status badge in the result row, a red drawn mark with the word Failed"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\": pw-typo-bounce@northstar.example",
+      "screenshot_region": "search field above the list, then the single result row with its status"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "page heading and Account selector"
+    }
+  ],
+  "reasons": "The search box sits above the list. The one matching row shows the address, subject, a drawn Failed mark with its word, the latest event Bounced and the provider, so a phone user can see the reset email and its status without scrolling far. The Updated time ends in UTC. The page uses the product's words (Activity, Account, provider) and makes no claim about a cause or a retry."
+}

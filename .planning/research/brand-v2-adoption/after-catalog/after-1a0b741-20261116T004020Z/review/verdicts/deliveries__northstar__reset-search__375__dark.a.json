@@ -1,0 +1,39 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__375__dark",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated time in the single result row, with UTC on the second line"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "text: Failed ID",
+      "screenshot_region": "Red status badge with a drawn mark and the word Failed in the result row"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "Page heading and the Account selector at the top"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\": pw-typo-bounce@northstar.example",
+      "screenshot_region": "Search field above the list, and the result row with its Failed badge in the first screen height"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "paragraph: Bounced",
+      "screenshot_region": "Latest event line in the result row"
+    }
+  ],
+  "reasons": "The search box comes before the list. The single matching row shows the address, subject, a Failed mark with its word, the latest event \"Bounced\", the provider, and a time with its UTC zone, so the support person can see the reset email and its status. The page uses the product's words (Activity, Account) and makes no retry promise or invented cause."
+}

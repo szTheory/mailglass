@@ -550,6 +550,11 @@ defmodule Mailglass.DocsContractTest do
                "Hard refreshes and direct deep links should stay styled. If they do not, run the admin asset browser proof and treat it as a regression."
 
       assert design_system =~ "resolved and proven in v2.1 Phase 139"
+
+      assert design_system =~
+               "brandbook/v2/brand.json and brandbook/tokens.json define identity and voice"
+
+      assert design_system =~ "brandbook/status-marks.json"
       assert design_system =~ "stylesheet responses, font responses"
       assert design_system =~ "token-backed computed styling"
       assert design_system =~ "admin asset hard load"
@@ -578,6 +583,16 @@ defmodule Mailglass.DocsContractTest do
         refute backlog =~ phrase,
                "admin-relative-asset-url-styling.md still contains stale asset wording: #{phrase}"
       end
+    end
+
+    test "packaged Admin design guide links to the repository-only social checklist" do
+      design_system = File.read!("mailglass_admin/docs/design-system.md")
+
+      assert design_system =~
+               "[repository-only social upload checklist](https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md)"
+
+      refute design_system =~
+               "are documented in `.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md`"
     end
 
     test "learning-path is registered in both mix.exs docs lists" do
@@ -772,6 +787,7 @@ defmodule Mailglass.DocsContractTest do
       compatibility = File.read!("guides/compatibility-and-deprecations.md")
       upgrade = File.read!("guides/upgrading-to-v1_0.md")
       testing = File.read!("guides/testing.md")
+      incident = File.read!("guides/operator-incident-support.md")
       trust_doc = File.read!("mailglass_admin/docs/operator-trust.md")
       docs_check = File.read!("lib/mix/tasks/mailglass.docs.check.ex")
 
@@ -788,6 +804,9 @@ defmodule Mailglass.DocsContractTest do
       assert trust_doc =~ "## Stable seams"
       assert trust_doc =~ "new work"
       assert docs_check =~ "\"guides/testing.md\""
+      assert docs_check =~ "\"guides/operator-incident-support.md\""
+      assert docs_check =~ "mailglass can tell you this"
+      assert incident =~ "mailglass cannot tell you this"
       assert docs_check =~ "\"mailglass_admin/docs/operator-trust.md\""
     end
 
@@ -804,18 +823,24 @@ defmodule Mailglass.DocsContractTest do
                "sibling constraint"
     end
 
-    @tag :skip
     test "phase 38 prepublish proof bundle captures package, docs, and sibling release truth" do
-      # SKIPPED: the original Phase 38 prepublish-proof artifact at
-      # `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md`
-      # was archived in commit 8e80600 ("chore: archive phase directories from
-      # completed milestones"). Phase 044.5 (v1.0/v1.1 release ceremony)
-      # produces an equivalent artifact at
-      # `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`
-      # but its section structure differs from Phase 38's, so a 1:1 assertion
-      # rewrite is out of scope for this CI-triage commit. Phase 51 closeout
-      # should re-pin these assertions to the v1.0/1.1 release-record format.
-      :ok
+      proof =
+        File.read!(
+          ".planning/milestones/v1.0-phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md"
+        )
+
+      for heading <- [
+            "## Tarball/package truth",
+            "## HexDocs input truth",
+            "## Sibling release truth",
+            "## Release rehearsal evidence"
+          ] do
+        assert proof =~ heading
+      end
+
+      assert proof =~ ".release-please-manifest.json"
+      assert proof =~ "mailglass_admin_publish_pin"
+      assert proof =~ "mix docs --warnings-as-errors"
     end
 
     @tag :phase_164_lifecycle_contract

@@ -11,6 +11,13 @@ defmodule MailglassDemo.QuickViewScenarios do
   scenarios (production `DetailHeader` and `EvidenceCard` assigns only).
   """
 
+  # The admin test build compiles this shared fixture source with the boundary
+  # compiler enabled. Classify it as test support there, while keeping the demo
+  # build independent of the boundary compiler.
+  if Code.ensure_loaded?(Boundary) do
+    use Boundary, top_level?: true, check: [in: false, out: false]
+  end
+
   @manifest_path Path.expand("quick_view_scenarios.json", __DIR__)
   @external_resource @manifest_path
   @manifest @manifest_path |> File.read!() |> Jason.decode!()

@@ -12,11 +12,11 @@ Refresh both snapshots with:
 <!-- GOLDEN_FRESH_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:a682f43cb08d9c29c18265dc945a40b475df445d84eb3283b786dfb1fafbd85a
+- .mailglass.toml sha256:39a7f65183ef0fc9ade2386963ee3de10cc6887b46c5978b11770971c9ae7788
 - config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
-- lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
+- lib/example/mail_context.ex sha256:ed86e5c9d81d77a90cab8648e156fa303f90d114daf8d2d368134ca50a8694f0
 - lib/example_web/components/layouts/mailglass.html.heex sha256:9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87
 - lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83
@@ -38,7 +38,7 @@ last_run_at = "<LAST_RUN_AT>"
 "config/runtime.exs" = "56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
-"lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
+"lib/example/mail_context.ex" = "ed86e5c9d81d77a90cab8648e156fa303f90d114daf8d2d368134ca50a8694f0"
 "lib/example_web/components/layouts/mailglass.html.heex" = "9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87"
 "lib/example_web/endpoint.ex" = "c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f"
 "lib/example_web/router.ex" = "4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83"
@@ -86,7 +86,7 @@ end
 @@ lib/example/mail_context.ex
 defmodule Example.MailContext do
   @moduledoc """
-  Mailglass integration boundary for this host app.
+  mailglass integration boundary for this host app.
   """
 end
 
@@ -171,11 +171,11 @@ end
 <!-- GOLDEN_NO_ADMIN_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:ffc9d37b84b8e81fc819d6b0b9a7ba9a4be4b78ec50842b2755869d9219c3889
+- .mailglass.toml sha256:e7128ee5baf5434b63faf440b606b76d880126e438a6f97c1919c7b6f728a978
 - config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
-- lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
+- lib/example/mail_context.ex sha256:ed86e5c9d81d77a90cab8648e156fa303f90d114daf8d2d368134ca50a8694f0
 - lib/example_web/components/layouts/mailglass.html.heex sha256:9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87
 - lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675
@@ -197,7 +197,7 @@ last_run_at = "<LAST_RUN_AT>"
 "config/runtime.exs" = "56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
-"lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
+"lib/example/mail_context.ex" = "ed86e5c9d81d77a90cab8648e156fa303f90d114daf8d2d368134ca50a8694f0"
 "lib/example_web/components/layouts/mailglass.html.heex" = "9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87"
 "lib/example_web/endpoint.ex" = "c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f"
 "lib/example_web/router.ex" = "c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675"
@@ -245,7 +245,7 @@ end
 @@ lib/example/mail_context.ex
 defmodule Example.MailContext do
   @moduledoc """
-  Mailglass integration boundary for this host app.
+  mailglass integration boundary for this host app.
   """
 end
 

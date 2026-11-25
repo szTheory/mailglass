@@ -1,0 +1,955 @@
+- heading "Component Gallery" [level=1]
+- heading "icon" [level=2]
+- paragraph: icon — rest
+- heading "logo" [level=2]
+- paragraph: logo — rest
+- img "mailglass"
+- heading "flash" [level=2]
+- paragraph: flash — error-kind
+- alert:
+  - text: "Delivery blocked: recipient is on the suppression list"
+  - button "Dismiss error message"
+- paragraph: flash — info-kind
+- status:
+  - text: "Reloaded: WelcomeMailer.ex"
+  - button "Dismiss information message"
+- paragraph: flash — success-kind
+- status:
+  - text: "Webhook replayed: event recorded in the ledger"
+  - button "Dismiss success message"
+- paragraph: flash — warning-kind
+- status:
+  - text: Draft only — Mailable has no preview_props/0 defined
+  - button "Dismiss warning message"
+- paragraph: flash — long-error-copy
+- alert:
+  - text: Delivery status could not be refreshed because the provider response exceeded the available inspection window. Refresh the page to try again, then contact your Mailglass host administrator if the same recorded failure remains unavailable. unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-unbroken-recovery-evidence-
+  - button "Dismiss error message"
+- heading "timestamp" [level=2]
+- paragraph: timestamp — unavailable
+- text: Unavailable
+- paragraph: timestamp — recorded
+- 'button "Copy timestamp as UTC: 2026-10-07 20:06:18 UTC"':
+  - time: Oct 7, 2026, 8:06 PM
+- heading "badge" [level=2]
+- paragraph: badge — warning
+- text: Error
+- paragraph: badge — stub
+- text: —
+- heading "status_badge" [level=2]
+- paragraph: status_badge — dispatched
+- text: Dispatched
+- paragraph: status_badge — queued
+- text: Queued
+- paragraph: status_badge — sent
+- text: Sent
+- paragraph: status_badge — delivered
+- text: Delivered
+- paragraph: status_badge — deferred
+- text: Deferred
+- paragraph: status_badge — bounced
+- text: Bounced
+- paragraph: status_badge — failed
+- text: Failed
+- paragraph: status_badge — rejected
+- text: Rejected
+- paragraph: status_badge — complained
+- text: Complained
+- paragraph: status_badge — unsubscribed
+- text: Unsubscribed
+- paragraph: status_badge — opened
+- text: Opened
+- paragraph: status_badge — clicked
+- text: Clicked
+- paragraph: status_badge — autoresponded
+- text: Auto-replied
+- paragraph: status_badge — unknown
+- text: Unknown
+- paragraph: status_badge — accepted
+- text: Accepted
+- paragraph: status_badge — no_match
+- text: Unrouted
+- paragraph: status_badge — ignore
+- text: Ignored
+- paragraph: status_badge — failed_ingest
+- text: Ingest failed
+- paragraph: status_badge — webhook_replay_requested
+- text: Replay requested
+- paragraph: status_badge — webhook_replay_succeeded
+- text: Replay succeeded
+- paragraph: status_badge — webhook_replay_failed
+- text: Replay failed
+- paragraph: status_badge — reconciled
+- text: Reconciled
+- paragraph: status_badge — phantom-nil
+- text: Unknown
+- heading "nav_link" [level=2]
+- paragraph: nav_link — active
+- link "Deliveries":
+  - /url: "#"
+- paragraph: nav_link — inactive
+- link "Deliveries":
+  - /url: "#"
+- paragraph: nav_link — hover-ready
+- link "Inbound":
+  - /url: "#"
+- paragraph: nav_link — focus-visible
+- link "Preview":
+  - /url: "#"
+- paragraph: nav_link — disabled
+- link "Analytics unavailable" [disabled]
+- heading "nav_pill" [level=2]
+- paragraph: nav_pill — active
+- link "All":
+  - /url: "#"
+- paragraph: nav_pill — inactive
+- link "All":
+  - /url: "#"
+- paragraph: nav_pill — hover-ready
+- link "Bounced":
+  - /url: "#"
+- paragraph: nav_pill — focus-visible
+- link "Deferred":
+  - /url: "#"
+- paragraph: nav_pill — disabled
+- link "Archived" [disabled]
+- paragraph: nav_pill — long-label
+- link "Needs attention before retry window closes":
+  - /url: "#"
+- heading "tenant_chip" [level=2]
+- paragraph: tenant_chip — with-tenant
+- text: acme-corp
+- paragraph: tenant_chip — no-tenant
+- text: No account selected
+- paragraph: tenant_chip — long-tenant
+- text: tenant_01JXWIDEVALUE000000000000000000000000000000000000
+- paragraph: tenant_chip — non-ascii-tenant
+- text: Muenchen-Tokyo-テナント
+- heading "theme_picker" [level=2]
+- paragraph: theme_picker — system-selected
+- group "Appearance":
+  - radio "System" [checked]
+  - text: System
+  - radio "Light"
+  - text: Light
+  - radio "Dark"
+  - text: Dark
+- paragraph: theme_picker — light-selected
+- group "Appearance":
+  - radio "System"
+  - text: System
+  - radio "Light" [checked]
+  - text: Light
+  - radio "Dark"
+  - text: Dark
+- paragraph: theme_picker — dark-selected
+- group "Appearance":
+  - radio "System"
+  - text: System
+  - radio "Light"
+  - text: Light
+  - radio "Dark" [checked]
+  - text: Dark
+- paragraph: theme_picker — hover-ready
+- group "Appearance":
+  - radio "System" [checked]
+  - text: System
+  - radio "Light"
+  - text: Light
+  - radio "Dark"
+  - text: Dark
+- paragraph: theme_picker — focus-visible
+- group "Appearance":
+  - radio "System"
+  - text: System
+  - radio "Light" [checked]
+  - text: Light
+  - radio "Dark"
+  - text: Dark
+- paragraph: theme_picker — disabled
+- group "Appearance":
+  - radio "System" [checked] [disabled]
+  - text: System
+  - radio "Light" [disabled]
+  - text: Light
+  - radio "Dark" [disabled]
+  - text: Dark
+- heading "stat_card" [level=2]
+- paragraph: stat_card — neutral
+- article:
+  - paragraph: All clear
+  - paragraph: "0"
+  - paragraph: All clear
+- paragraph: stat_card — info
+- article:
+  - paragraph: Queued
+  - paragraph: "12"
+  - paragraph: Info
+- paragraph: stat_card — success
+- article:
+  - paragraph: Delivered
+  - paragraph: 98%
+  - paragraph: Healthy
+- paragraph: stat_card — warning
+- article:
+  - paragraph: Needs attention
+  - paragraph: "3"
+  - paragraph: Needs attention
+- paragraph: stat_card — error
+- article:
+  - paragraph: Failed
+  - paragraph: "2"
+  - paragraph: Problem
+- paragraph: stat_card — empty
+- article:
+  - paragraph: Events
+  - paragraph: No data yet
+  - paragraph: All clear
+- paragraph: stat_card — loading
+- article:
+  - paragraph: Delivery rate
+  - paragraph: Loading
+  - paragraph: Info
+- paragraph: stat_card — unavailable
+- article:
+  - paragraph: Provider health
+  - paragraph: Unavailable
+  - paragraph: Problem
+- paragraph: stat_card — long-label
+- article:
+  - paragraph: Deliveries requiring operator review before the retry window closes
+  - paragraph: "42"
+  - paragraph: Healthy
+- paragraph: stat_card — long-value
+- article:
+  - paragraph: Trace ID
+  - paragraph: trace_01JXWIDEVALUE000000000000000000000000000000000000
+  - paragraph: Needs attention
+- heading "orientation_strip" [level=2]
+- paragraph: orientation_strip — deliveries
+- heading "Deliveries" [level=2]
+- list:
+  - listitem: Delivery never arrived? Start here.
+  - listitem: Replay changed nothing? View the event timeline.
+  - listitem: Address keeps getting blocked? Review the Suppression list.
+- paragraph: orientation_strip — inbound
+- heading "Inbound" [level=2]
+- list:
+  - listitem: InboundMessage didn't route as expected? Inspect the routing trace.
+  - listitem: No mailbox matched? Check the no-match record.
+  - listitem: Failed ingest? Review the provider signature log.
+- paragraph: orientation_strip — preview
+- heading "Preview" [level=2]
+- list:
+  - listitem: No mailables found? Define a mailable module in your app.
+  - listitem: Mailable not showing? Ensure it's compiled.
+  - listitem: Preview not rendering? Check your template syntax.
+- heading "deliveries_list" [level=2]
+- paragraph: deliveries_list — populated-unselected
+- heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+- list:
+  - listitem:
+    - button "j*@e******.com Subject not recorded":
+      - paragraph: j*@e******.com
+      - paragraph: Subject not recorded
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+    - paragraph: del_01JXABCDEF
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: POSTMARK
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM
+  - listitem:
+    - button "a*@m****.io Subject not recorded":
+      - paragraph: a*@m****.io
+      - paragraph: Subject not recorded
+    - button "Bounced"
+    - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+    - paragraph: del_01JXGHIJKL
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: SENDGRID
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 11:45:00 UTC"':
+      - time: Jun 14, 2026, 11:45 AM
+- paragraph: deliveries_list — populated-selected
+- heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+- list:
+  - listitem:
+    - button "j*@e******.com Subject not recorded":
+      - paragraph: j*@e******.com
+      - paragraph: Subject not recorded
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+    - paragraph: del_01JXABCDEF
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: POSTMARK
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM
+  - listitem:
+    - button "a*@m****.io Subject not recorded":
+      - paragraph: a*@m****.io
+      - paragraph: Subject not recorded
+    - button "Bounced"
+    - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+    - paragraph: del_01JXGHIJKL
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: SENDGRID
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 11:45:00 UTC"':
+      - time: Jun 14, 2026, 11:45 AM
+- paragraph: deliveries_list — empty
+- heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+- heading "No deliveries in this time window" [level=3]
+- paragraph: No deliveries have been recorded for this Account during the selected time window.
+- paragraph: deliveries_list — table-populated
+- heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+- list:
+  - listitem:
+    - button "j*@e******.com Subject not recorded":
+      - paragraph: j*@e******.com
+      - paragraph: Subject not recorded
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+    - paragraph: del_01JXABCDEF
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: POSTMARK
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM
+  - listitem:
+    - button "a*@m****.io Subject not recorded":
+      - paragraph: a*@m****.io
+      - paragraph: Subject not recorded
+    - button "Bounced"
+    - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+    - paragraph: del_01JXGHIJKL
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: SENDGRID
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 11:45:00 UTC"':
+      - time: Jun 14, 2026, 11:45 AM
+- paragraph: deliveries_list — data-state-error
+- heading "Deliveries" [level=2]
+- heading "Couldn't load deliveries for these filters" [level=3]
+- paragraph: The read failed. Your filters are unchanged. Retry, or change a filter.
+- button "Retry deliveries"
+- paragraph: deliveries_list — long-value-stress
+- heading "Deliveries 0 deliveries" [level=2]: Deliveries (0)
+- list:
+  - listitem:
+    - button "b*****@enterprise-example-company-name.co.uk Subject not recorded":
+      - paragraph: b*****@enterprise-example-company-name.co.uk
+      - paragraph: Subject not recorded
+    - button "Deferred"
+    - text: The provider reported a temporary delivery delay. Delivery has not been confirmed. ID
+    - paragraph: del_01JXWIDEVALUE000000000000000000000000000000000000
+    - text: Account
+    - paragraph: tenant_01JXWIDEVALUE000000000000000000000000
+    - text: Provider
+    - paragraph: POSTMARK-ENTERPRISE-RELAY
+    - text: Updated
+    - 'button "Copy timestamp as UTC: 2026-06-14 23:59:59 UTC"':
+      - time: Jun 14, 2026, 11:59 PM
+- heading "detail_header" [level=2]
+- paragraph: detail_header — shown
+- heading "j*@e******.com" [level=2]
+- button "Delivered"
+- text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+- paragraph: Subject not recorded
+- term: Provider
+- definition: POSTMARK
+- term: Stream
+- definition: Transactional
+- term: Updated
+- definition:
+  - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+    - time: Jun 14, 2026, 12:00 PM
+- term: Account
+- definition: acme-corp
+- term: Delivery ID
+- definition:
+  - 'button "Copy Delivery ID: del_01JXABCDEF"': del_01JXABCDEF
+- term: Mailable
+- definition:
+  - button "MyApp.WelcomeMailer"
+  - text: MyApp.WelcomeMailer
+- term: Provider message ID
+- definition:
+  - 'button "Copy Provider message ID: msg_abc123"': msg_abc123
+- heading "filter_field" [level=2]
+- paragraph: filter_field — text-empty
+- text: Provider
+- textbox "Provider":
+  - /placeholder: postmark
+- paragraph: Filter by provider key, for example postmark.
+- paragraph: filter_field — select-filled
+- text: Status
+- combobox "Status":
+  - option "Any status"
+  - option "Delivered" [selected]
+  - option "Bounced"
+- paragraph: Filter by delivery status.
+- paragraph: filter_field — invalid
+- text: Status
+- combobox "Status":
+  - option "Any status" [selected]
+  - option "Delivered"
+  - option "Bounced"
+- paragraph: Filter by delivery status.
+- alert: "Action needed: Latest recorded event was not applied. Choose a listed event."
+- paragraph: filter_field — disabled
+- text: Provider
+- textbox "Provider" [disabled]: postmark
+- paragraph: Filter by provider key, for example postmark.
+- paragraph: filter_field — readonly-text
+- text: Provider
+- textbox "Provider": postmark
+- paragraph: Filter by provider key, for example postmark.
+- paragraph: filter_field — readonly-select-display
+- text: Status
+- textbox
+- paragraph: Filter by delivery status.
+- heading "filter_section" [level=2]
+- paragraph: filter_section — section
+- group "Filters":
+  - text: Filters
+  - paragraph: Group related controls under one legend.
+  - paragraph: The legend stays visible, and the grouped fields below inherit the shared form contract.
+- heading "filters_form" [level=2]
+- paragraph: filters_form — empty
+- group "Filters":
+  - text: Filters Search
+  - button "Help for Search"
+  - text: Find deliveries by recipient email address or subject.
+  - textbox "Search":
+    - /placeholder: Subject or recipient
+  - text: Time window
+  - button "Help for Time window"
+  - text: Show deliveries with activity during this period.
+  - combobox "Time window":
+    - option "Last 24 hours" [selected]
+    - option "Last 7 days"
+  - text: Latest recorded event
+  - button "Help for Latest recorded event"
+  - text: Filter by the latest event recorded for each delivery.
+  - combobox "Latest recorded event":
+    - option "Any status" [selected]
+    - option "Delivered"
+    - option "Bounced"
+  - text: Provider
+  - button "Help for Provider"
+  - text: Filter by the sending provider recorded for this account.
+  - combobox "Provider":
+    - option "Any provider" [selected]
+- paragraph: filters_form — filled
+- group "Filters":
+  - text: Filters Search
+  - button "Help for Search"
+  - text: Find deliveries by recipient email address or subject.
+  - textbox "Search":
+    - /placeholder: Subject or recipient
+  - text: Time window
+  - button "Help for Time window"
+  - text: Show deliveries with activity during this period.
+  - combobox "Time window":
+    - option "Last 24 hours"
+    - option "Last 7 days" [selected]
+  - text: Latest recorded event
+  - button "Help for Latest recorded event"
+  - text: Filter by the latest event recorded for each delivery.
+  - combobox "Latest recorded event":
+    - option "Any status" [selected]
+    - option "Delivered"
+    - option "Bounced"
+  - text: Provider
+  - button "Help for Provider"
+  - text: Filter by the sending provider recorded for this account.
+  - combobox "Provider":
+    - option "Any provider" [selected]
+- paragraph: filters_form — invalid
+- group "Filters":
+  - text: Filters Search
+  - button "Help for Search"
+  - text: Find deliveries by recipient email address or subject.
+  - textbox "Search":
+    - /placeholder: Subject or recipient
+  - text: Time window
+  - button "Help for Time window"
+  - text: Show deliveries with activity during this period.
+  - combobox "Time window":
+    - option "Last 24 hours"
+    - option "Last 7 days" [selected]
+  - text: Latest recorded event
+  - button "Help for Latest recorded event"
+  - text: Filter by the latest event recorded for each delivery.
+  - combobox "Latest recorded event":
+    - option "Any status"
+    - option "Delivered" [selected]
+    - option "Bounced"
+  - alert: "Action needed: Latest recorded event was not applied. Choose a listed event."
+  - text: Provider
+  - button "Help for Provider"
+  - text: Filter by the sending provider recorded for this account.
+  - combobox "Provider":
+    - option "Any provider" [selected]
+- heading "support_cards" [level=2]
+- paragraph: support_cards — tier1-shown
+- heading "Support cards" [level=3]
+- paragraph: Account-scoped facts from the current support window.
+- text: Read-only
+- article:
+  - text: "3"
+  - paragraph: Failed webhook attempts in the selected Account window.
+  - paragraph: "Example webhook event: evt_abc123"
+  - button "View failures"
+- article:
+  - heading "Reconciliation audit facts" [level=4]
+  - paragraph: Recorded reconciliation facts for this Account support window.
+  - term: Reconciled Events
+  - definition: "0"
+  - term: Still unmatched
+  - definition: "0"
+- text: "No unmatched Events in this window Active suppressions: 2"
+- paragraph: support_cards — tier1-hidden
+- heading "Support cards" [level=3]
+- paragraph: Account-scoped facts from the current support window.
+- text: Read-only
+- article:
+  - heading "Reconciliation audit facts" [level=4]
+  - paragraph: Recorded reconciliation facts for this Account support window.
+  - term: Reconciled Events
+  - definition: "0"
+  - term: Still unmatched
+  - definition: "0"
+- text: "No failed webhook attempts in this window No unmatched Events in this window Active suppressions: 0"
+- heading "suppression_card" [level=2]
+- paragraph: suppression_card — present
+- heading "Current suppression" [level=3]
+- button "Help for suppression scope"
+- text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. Current Mailglass match
+- term: Address or domain
+- definition: blocked@example.test
+- term: Scope
+- definition: Address · Account-local
+- term: Reason
+- definition: Manual
+- term: Source
+- definition: provider:postmark
+- term: Expiry date
+- definition: Expiry date not recorded
+- term: Removal policy
+- definition: Mailglass allows removal of Manual suppressions.
+- button "Refresh suppression"
+- paragraph: suppression_card — absent
+- heading "Current suppression" [level=3]
+- button "Help for suppression scope"
+- text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+- paragraph: No current Mailglass suppression matches this delivery.
+- button "Refresh suppression"
+- heading "timeline" [level=2]
+- paragraph: timeline — populated
+- heading "Event timeline" [level=3]
+- text: Chronological order
+- list:
+  - listitem:
+    - button "Queued"
+    - text: This message is waiting to be sent to the provider.
+    - paragraph: Source unavailable
+    - term: Event ID
+    - definition:
+      - 'button "Copy Event ID: evt_01JXABC"': evt_01JXABC
+    - 'button "Copy timestamp as UTC: 2026-06-14 11:59:00 UTC"':
+      - time: Jun 14, 2026, 11:59 AM
+  - listitem:
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+    - paragraph: Source unavailable
+    - term: Event ID
+    - definition:
+      - 'button "Copy Event ID: evt_01JXDEF"': evt_01JXDEF
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM
+- paragraph: timeline — highlighted-event
+- heading "Event timeline" [level=3]
+- text: Chronological order
+- list:
+  - listitem:
+    - button "Queued"
+    - text: This message is waiting to be sent to the provider.
+    - paragraph: Source unavailable
+    - term: Event ID
+    - definition:
+      - 'button "Copy Event ID: evt_01JXABC"': evt_01JXABC
+    - 'button "Copy timestamp as UTC: 2026-06-14 11:59:00 UTC"':
+      - time: Jun 14, 2026, 11:59 AM
+  - listitem:
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+    - paragraph: Source unavailable
+    - term: Event ID
+    - definition:
+      - 'button "Copy Event ID: evt_01JXDEF"': evt_01JXDEF
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM
+- paragraph: timeline — empty
+- heading "Event timeline" [level=3]
+- text: Chronological order
+- paragraph: No events are recorded for this Delivery.
+- heading "replay_modal" [level=2]
+- paragraph: replay_modal — closed
+- heading "routing_trace" [level=2]
+- paragraph: routing_trace — empty
+- group: Current router simulation How current route rules compare
+- paragraph: routing_trace — all-passing
+- group: Current router simulation How current route rules compare
+- paragraph: routing_trace — first-failing
+- group: Current router simulation How current route rules compare
+- heading "evidence_card" [level=2]
+- paragraph: evidence_card — no-evidence
+- heading "Raw provider source" [level=3]
+- paragraph: No raw provider source was stored for this message.
+- paragraph: evidence_card — redacted
+- heading "Raw provider source" [level=3]
+- paragraph: May contain personal information.
+- button "Reveal raw source"
+- term: Provider
+- definition: SENDGRID
+- term: Received
+- definition: Unavailable
+- term: Payload size
+- definition: 40 bytes
+- term: Header count
+- definition: Unavailable
+- term: Provider authentication
+- definition: Unavailable
+- status: Raw source hidden.
+- paragraph: evidence_card — revealed
+- heading "Raw provider source" [level=3]
+- paragraph: May contain personal information.
+- button "Hide raw source" [expanded]
+- term: Provider
+- definition: SENDGRID
+- term: Received
+- definition: Unavailable
+- term: Payload size
+- definition: 99 bytes
+- term: Header count
+- definition: Unavailable
+- term: Provider authentication
+- definition: Unavailable
+- text: "Received: from mail.sendgrid.net From: sender@example.com To: recipient@example.com Body here."
+- status: Raw source revealed. It may contain personal information.
+- paragraph: evidence_card — denied
+- heading "Raw provider source" [level=3]
+- paragraph: May contain personal information.
+- button "Reveal raw source"
+- term: Provider
+- definition: SENDGRID
+- term: Received
+- definition: Unavailable
+- term: Payload size
+- definition: 40 bytes
+- term: Header count
+- definition: Unavailable
+- term: Provider authentication
+- definition: Unavailable
+- status: You don't have permission to reveal raw source.
+- heading "device_frame" [level=2]
+- paragraph: device_frame — inactive-btn
+- group "Preview frame width in CSS pixels":
+  - button "375 CSS pixels": 375 px
+  - button "768 CSS pixels" [pressed]: 768 px
+  - button "1024 CSS pixels": 1024 px
+- heading "tabs" [level=2]
+- paragraph: tabs — inactive-tab
+- tablist "Preview format":
+  - tab "HTML"
+  - tab "Text" [selected]
+  - tab "Raw"
+  - tab "Headers"
+- tabpanel "Text": Plain text preview of the Mailable.
+- heading "sidebar" [level=2]
+- paragraph: sidebar — mailable-collapsed
+- paragraph: Email previews
+- heading "Choose an email" [level=2]
+- text: 2 emails
+- list:
+  - listitem:
+    - text: MyApp WelcomeMailer
+    - list:
+      - listitem:
+        - link "default":
+          - /url: /MyApp.WelcomeMailer/default?width=768
+  - listitem:
+    - text: MyApp PasswordResetMailer
+    - list:
+      - listitem:
+        - link "reset":
+          - /url: /MyApp.PasswordResetMailer/reset?width=768
+- paragraph: sidebar — mailable-expanded
+- paragraph: Email previews
+- heading "Choose an email" [level=2]
+- text: 3 emails
+- list:
+  - listitem:
+    - text: MyApp WelcomeMailer
+    - list:
+      - listitem:
+        - link "default":
+          - /url: /MyApp.WelcomeMailer/default?width=768
+      - listitem:
+        - link "with-name":
+          - /url: /MyApp.WelcomeMailer/with-name?width=768
+  - listitem:
+    - text: MyApp PasswordResetMailer
+    - list:
+      - listitem:
+        - link "reset":
+          - /url: /MyApp.PasswordResetMailer/reset?width=768
+- paragraph: sidebar — scenario-active
+- paragraph: Email previews
+- heading "Choose an email" [level=2]
+- text: 3 emails
+- list:
+  - listitem:
+    - text: MyApp WelcomeMailer
+    - list:
+      - listitem:
+        - link "default":
+          - /url: /MyApp.WelcomeMailer/default?width=768
+      - listitem:
+        - link "with-name":
+          - /url: /MyApp.WelcomeMailer/with-name?width=768
+  - listitem:
+    - text: MyApp PasswordResetMailer
+    - list:
+      - listitem:
+        - link "reset":
+          - /url: /MyApp.PasswordResetMailer/reset?width=768
+- heading "data_state" [level=2]
+- paragraph: data_state — empty
+- heading "No deliveries" [level=3]
+- paragraph: No deliveries have been recorded yet.
+- paragraph: data_state — error
+- heading "Delivery data unavailable" [level=3]
+- paragraph: Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+- paragraph: data_state — permission-denied
+- heading "Access restricted" [level=3]
+- paragraph: You do not have access to this account's mail operations. Ask an administrator to grant access.
+- paragraph: data_state — stale
+- heading "Data may be out of date" [level=3]
+- paragraph: This view may be out of date. Refresh to check for updates.
+- heading "records_list" [level=2]
+- paragraph: records_list — table-populated
+- text: (0)
+- list:
+  - listitem:
+    - button "Recipient support@northstar.example Subject not recorded":
+      - text: Recipient
+      - paragraph: support@northstar.example
+      - paragraph: Subject not recorded
+    - button "Accepted"
+    - text: A mailbox processed and accepted this message. ID
+    - paragraph: inb_01JXABCDEF
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: SENDGRID
+    - text: Mailbox
+    - paragraph:
+      - button "SupportMailbox"
+      - text: MyApp.SupportMailbox
+    - text: Received
+    - paragraph:
+      - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+        - time: Jun 14, 2026, 12:00 PM
+  - listitem:
+    - button "Recipient billing@northstar.example Subject not recorded":
+      - text: Recipient
+      - paragraph: billing@northstar.example
+      - paragraph: Subject not recorded
+    - button "Unrouted"
+    - text: No routing rule matched, so this message was not sent to a mailbox. ID
+    - paragraph: inb_01JXGHIJKL
+    - text: Account
+    - paragraph: acme-corp
+    - text: Provider
+    - paragraph: POSTMARK
+    - text: Mailbox
+    - paragraph:
+      - button "Unrouted"
+      - text: None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.
+    - text: Received
+    - paragraph:
+      - 'button "Copy timestamp as UTC: 2026-06-14 11:45:00 UTC"':
+        - time: Jun 14, 2026, 11:45 AM
+- paragraph: records_list — data-state-error
+- heading "Record data unavailable" [level=3]
+- paragraph: Record data could not be loaded. Refresh the page or adjust the filters, then try again.
+- paragraph: records_list — long-value-stress
+- text: (0)
+- list:
+  - listitem:
+    - button "Recipient very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com Subject not recorded":
+      - text: Recipient
+      - paragraph: very.long.local.part.with.many.dotted.segments.that.never.breaks@mail-gateway.subdomain.example.com
+      - paragraph: Subject not recorded
+    - button "Accepted"
+    - text: A mailbox processed and accepted this message. ID
+    - paragraph: inb_01JXWIDEVALUE000000000000000000000000000000000000
+    - text: Account
+    - paragraph: tenant_01JXWIDEVALUE000000000000000000000000
+    - text: Provider
+    - paragraph: SENDGRID-ENTERPRISE-RELAY
+    - text: Mailbox
+    - paragraph:
+      - button "HandlesAllIncomingMessages"
+      - text: MyApp.VeryLongSupportMailbox.HandlesAllIncomingMessages
+    - text: Received
+    - paragraph:
+      - 'button "Copy timestamp as UTC: 2026-06-14 23:59:59 UTC"':
+        - time: Jun 14, 2026, 11:59 PM
+- heading "composed_support_triage" [level=2]
+- paragraph: composed_support_triage — operator-detail
+- heading "j*@e******.com" [level=2]
+- button "Delivered"
+- text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+- paragraph: Subject not recorded
+- term: Provider
+- definition: POSTMARK
+- term: Stream
+- definition: Transactional
+- term: Updated
+- definition:
+  - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+    - time: Jun 14, 2026, 12:00 PM
+- term: Account
+- definition: acme-corp
+- term: Delivery ID
+- definition:
+  - 'button "Copy Delivery ID: del_01JXABCDEF"': del_01JXABCDEF
+- term: Mailable
+- definition:
+  - button "MyApp.WelcomeMailer"
+  - text: MyApp.WelcomeMailer
+- term: Provider message ID
+- definition:
+  - 'button "Copy Provider message ID: msg_abc123"': msg_abc123
+- heading "Event timeline" [level=3]
+- text: Chronological order
+- paragraph: No events are recorded for this Delivery.
+- heading "Current suppression" [level=3]
+- button "Help for suppression scope"
+- text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+- paragraph: No current Mailglass suppression matches this delivery.
+- button "Refresh suppression"
+- heading "Support cards" [level=3]
+- paragraph: Account-scoped facts from the current support window.
+- text: Read-only
+- article:
+  - heading "Reconciliation audit facts" [level=4]
+  - paragraph: Recorded reconciliation facts for this Account support window.
+  - term: Reconciled Events
+  - definition: "0"
+  - term: Still unmatched
+  - definition: "0"
+- text: "No failed webhook attempts in this window No unmatched Events in this window Active suppressions: 0"
+- heading "Webhook replay" [level=2]
+- paragraph: Replay is unavailable. Replay target resolution is unavailable for this delivery.
+- heading "composed_routing_evidence" [level=2]
+- paragraph: composed_routing_evidence — inbound-routing
+- group: Current router simulation How current route rules compare
+- heading "Raw provider source" [level=3]
+- paragraph: No raw provider source was stored for this message.
+- heading "composed_detail_timeline" [level=2]
+- paragraph: composed_detail_timeline — inbound-detail
+- paragraph: Subject
+- heading "Hello" [level=2]
+- button "Accepted"
+- text: A mailbox processed and accepted this message.
+- paragraph: Delivered to support@northstar.example
+- term: From
+- definition:
+  - list:
+    - listitem:
+      - text: Alex Rivera
+      - 'button "Copy From address: alex.rivera@example.com"': alex.rivera@example.com
+- term: To
+- definition:
+  - list:
+    - listitem:
+      - text: Northstar Support
+      - 'button "Copy To address: support@northstar.example"': support@northstar.example
+    - listitem:
+      - 'button "Copy To address: billing@northstar.example"': billing@northstar.example
+    - listitem:
+      - 'button "Copy To address: ops@northstar.example"': ops@northstar.example
+- term: Cc
+- definition:
+  - list:
+    - listitem:
+      - text: Team Lead
+      - 'button "Copy Cc address: team.lead@example.com"': team.lead@example.com
+- term: Delivered to
+- definition:
+  - 'button "Copy Delivered to address: support@northstar.example"': support@northstar.example
+  - paragraph: SMTP envelope recipient (RCPT TO), used for routing.
+- term: Provider
+- definition: MAILGUN
+- term: Received
+- definition:
+  - 'button "Copy timestamp as UTC: 2026-05-24 10:00:00 UTC"':
+    - time: May 24, 2026, 10:00 AM
+- term: Mailbox
+- definition:
+  - button "SupportMailbox"
+  - text: MyApp.SupportMailbox
+- term: Account
+- definition: tenant-a
+- term: Record ID
+- definition:
+  - 'button "Copy Record ID: rec-1"': rec-1
+- heading "Replay" [level=3]
+- paragraph: Run this stored message through its recorded mailbox again. Review the replay before starting it.
+- button "Review inbound replay"
+- heading "Execution timeline" [level=3]
+- button "Refresh history"
+- paragraph: No execution runs have been recorded for this message yet.
+- heading "fjordline_stress" [level=2]
+- paragraph: fjordline_stress — fjordline-non-ascii-names
+- paragraph: fjordline-aps from[].name (non-ASCII)
+- paragraph: Bjørn Hansen
+- paragraph: 山田太郎
+- paragraph: fjordline_stress — fjordline-long-id
+- paragraph: fjordline-aps delivery ID (long ULID-class)
+- paragraph: del_01JXW9ZQKB3V1N4P2RMT7FHCG
+- paragraph: fjordline_stress — fjordline-long-mailable
+- paragraph: fjordline-aps Mailable module name (long)
+- paragraph: Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName
+- paragraph: fjordline_stress — fjordline-nil-reject
+- heading "Event timeline" [level=3]
+- text: Chronological order
+- list:
+  - listitem:
+    - button "Delivered"
+    - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+    - paragraph: Source unavailable
+    - term: Event ID
+    - definition:
+      - 'button "Copy Event ID: evt_01JXFJD"': evt_01JXFJD
+    - 'button "Copy timestamp as UTC: 2026-06-14 12:00:00 UTC"':
+      - time: Jun 14, 2026, 12:00 PM

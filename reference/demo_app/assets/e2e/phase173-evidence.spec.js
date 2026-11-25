@@ -338,8 +338,8 @@ test("empty account stays isolated and explains the absence of deliveries", asyn
   await applyTheme(page, theme);
   await page.goto(`/demo/login?return_to=${encodeURIComponent("/ops/mail?tenant_id=helios-void&view=deliveries")}`);
   await page.goto("/ops/mail?tenant_id=helios-void&view=deliveries");
-  await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Deliveries");
-  await expect(page.getByRole("heading", { name: "No deliveries in this time window", exact: true })).toBeVisible();
+  await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Activity");
+  await expect(page.getByRole("heading", { name: "No activity in this time window", exact: true })).toBeVisible();
   await expect(page.getByTestId("operator-delivery-row")).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Internal Server Error");
   await recordCapture({

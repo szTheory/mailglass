@@ -7,8 +7,8 @@ defmodule MailglassAdmin.Components do
     * `icon/1` — Heroicon via the vendored `heroicons.js` Tailwind plugin
       (Phoenix 1.8 installer convention). Classes matching the pattern
       `hero-<name>` are resolved at build time into inline SVG.
-    * `logo/1` — sealed-flap mailglass lockup rendered inline so it inherits
-      admin chrome color; the stable `logo.svg` route remains served from
+    * `logo/1` — brand v2 mailglass typemark rendered inline so it follows the
+      active admin theme; the stable `logo.svg` route remains served from
       `priv/static/mailglass-logo.svg` via `MailglassAdmin.Controllers.Assets`.
     * `flash/1` — toast-style flash message for LiveReload + success
       notifications. Brand-voice: no "Oops!", no "Uh oh!"; specific and
@@ -53,98 +53,217 @@ defmodule MailglassAdmin.Components do
   attr(:class, :any, default: nil)
 
   @doc """
-  Renders the sealed-flap mailglass lockup inline for theme-aware color.
+  Renders the brand v2 mailglass typemark inline.
 
-  The public `logo.svg` route remains served by
-  `MailglassAdmin.Controllers.Assets` at `<mount>/logo.svg`; the admin UI
-  renders inline so the currentColor paths inherit `text-base-content` in
-  light and dark chrome.
+  The mark is the two-pane `m` followed by the lettering, drawn as four outlined
+  paths copied byte for byte from the pinned lockup in `brandbook/v2`. The
+  lettering takes `currentColor`, so it inherits the page text role. The two
+  panes carry `.mg-logo-glass` and the overlap carries `.mg-logo-overlap`; those
+  rules read the `--mg-logo-glass` and `--mg-logo-overlap` roles from the active
+  theme block on the page root. The logo therefore follows the theme the admin
+  chose, including an explicit dark theme on a light OS, and never depends on
+  the operating-system scheme.
+
+  Do not render the logo as an `<img>`: the brand book forbids inverting the
+  light file on a dark ground. The public `logo.svg` route is served by
+  `MailglassAdmin.Controllers.Assets` at `<mount>/logo.svg` and is the pinned
+  light file, for embeds that cannot read the theme tokens.
   """
   @doc since: "0.1.0"
   def logo(assigns) do
     ~H"""
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="-12 -16 973 212"
-      width="973"
-      height="212"
+      viewBox="34.0 -840.0 5323.8 1092.0"
+      width="1000"
+      height="205"
       role="img"
       aria-label="mailglass"
       class={@class}
     >
-      <g>
-        <path
-          data-part="mark"
-          fill="currentColor"
-          fill-rule="evenodd"
-          d="M 0 44 L 140 44 L 140 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z M 70 104 A 36 36 0 1 1 70 176 A 36 36 0 1 1 70 104 Z"
-        />
-      </g>
-      <g transform="translate(180 0)">
-        <g transform="translate(0 0)">
-          <path
-            data-glyph="m"
-            fill="currentColor"
-            d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"
-          />
-        </g>
-        <g transform="translate(154 0)">
-          <path
-            data-glyph="a"
-            fill="currentColor"
-            d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"
-          />
-        </g>
-        <g transform="translate(257 0)">
-          <path
-            data-glyph="i"
-            fill="currentColor"
-            d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"
-          />
-        </g>
-        <g transform="translate(310 0)">
-          <path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z" />
-        </g>
-        <g transform="translate(360 0)">
-          <path
-            data-glyph="g"
-            fill="currentColor"
-            d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"
-          />
-        </g>
-        <g transform="translate(465 0)">
-          <path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z" />
-        </g>
-        <g transform="translate(515 0)">
-          <path
-            data-glyph="a"
-            fill="currentColor"
-            d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"
-          />
-        </g>
-        <g transform="translate(615 0)">
-          <path
-            data-glyph="s"
-            fill="currentColor"
-            d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"
-          />
-        </g>
-        <g transform="translate(705 0)">
-          <path
-            data-glyph="s"
-            fill="currentColor"
-            d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"
-          />
-        </g>
-      </g>
+      <path
+        fill="currentColor"
+        d="M2787.7 252Q2655.7 252 2573.2 198.2Q2490.8 144.5 2475.6 49H2633.1Q2658 132.1 2783.4 132.1Q2866.5 132.1 2910.6 93.7Q2954.8 55.2 2954.8 -16.3V-101.8H2949.8Q2923.7 -52.1 2874.9 -26Q2826.1 0 2758.4 0Q2673.6 0 2610.9 -37.5Q2548.2 -75 2513.9 -143.8Q2479.6 -212.6 2479.6 -306Q2479.6 -446.4 2556.5 -529.2Q2633.4 -612 2767.7 -612Q2842.2 -612 2895.3 -583.9Q2948.4 -555.7 2979.7 -503.9H3021.7V-600H3174.6V-451.1H3100.1V-13.6Q3100.1 112.9 3018.9 182.5Q2937.6 252 2787.7 252ZM3742.8 11Q3637.9 11 3578.4 -40.1Q3518.9 -91.2 3518.9 -174.9Q3518.9 -262.7 3579.7 -310.6Q3640.4 -358.6 3754.2 -358.6H3936.6V-382.9Q3936.6 -492.9 3808.8 -492.9Q3700.5 -492.9 3677.8 -415.3H3529.2Q3547.5 -511.1 3619.7 -561.6Q3692 -612 3809.4 -612Q3940.6 -612 4009.8 -552.3Q4079.1 -492.6 4079.1 -378.9V-148.9H4149.6V0H3996.7V-96.1H3954.7Q3923.7 -45.2 3871.1 -17.1Q3818.6 11 3742.8 11ZM1430.8 11Q1325.9 11 1266.4 -40.1Q1206.9 -91.2 1206.9 -174.9Q1206.9 -262.7 1267.7 -310.6Q1328.4 -358.6 1442.2 -358.6H1624.6V-382.9Q1624.6 -492.9 1496.8 -492.9Q1388.5 -492.9 1365.8 -415.3H1217.2Q1235.5 -511.1 1307.7 -561.6Q1380 -612 1497.4 -612Q1628.6 -612 1697.8 -552.3Q1767.1 -492.6 1767.1 -378.9V-148.9H1837.6V0H1684.7V-96.1H1642.7Q1611.7 -45.2 1559.1 -17.1Q1506.6 11 1430.8 11ZM4496.3 12Q4366.3 12 4291.4 -42.5Q4216.4 -96.9 4210 -194.7H4354.7Q4362.3 -147.7 4398.1 -125.2Q4433.8 -102.7 4502.3 -102.7Q4616.8 -102.7 4616.8 -169.5Q4616.8 -196.7 4599.4 -212.1Q4582.1 -227.4 4541.3 -235L4408.5 -260.2Q4232.7 -293.9 4232.7 -426Q4232.7 -511.3 4299.8 -561.6Q4366.9 -612 4484.5 -612Q4603.3 -612 4672.8 -560.3Q4742.2 -508.7 4749.8 -415.3H4605.8Q4595.4 -459.8 4564.7 -480.4Q4533.9 -501 4476.8 -501Q4426.3 -501 4399.1 -485.1Q4372 -469.3 4372 -438.3Q4372 -415.3 4389.1 -401Q4406.2 -386.7 4442.7 -379.8L4577.6 -353.9Q4669.7 -336.1 4712.7 -294.3Q4755.8 -252.4 4755.8 -181.4Q4755.8 -90.1 4688.8 -39.1Q4621.8 12 4496.3 12ZM5098.3 12Q4968.3 12 4893.4 -42.5Q4818.4 -96.9 4812 -194.7H4956.7Q4964.3 -147.7 5000.1 -125.2Q5035.8 -102.7 5104.3 -102.7Q5218.8 -102.7 5218.8 -169.5Q5218.8 -196.7 5201.4 -212.1Q5184.1 -227.4 5143.3 -235L5010.5 -260.2Q4834.7 -293.9 4834.7 -426Q4834.7 -511.3 4901.8 -561.6Q4968.9 -612 5086.5 -612Q5205.3 -612 5274.8 -560.3Q5344.2 -508.7 5351.8 -415.3H5207.8Q5197.4 -459.8 5166.7 -480.4Q5135.9 -501 5078.8 -501Q5028.3 -501 5001.1 -485.1Q4974 -469.3 4974 -438.3Q4974 -415.3 4991.1 -401Q5008.2 -386.7 5044.7 -379.8L5179.6 -353.9Q5271.7 -336.1 5314.7 -294.3Q5357.8 -252.4 5357.8 -181.4Q5357.8 -90.1 5290.8 -39.1Q5223.8 12 5098.3 12ZM2226.7 0V-840H2375.7V0ZM3271.7 0V-840H3420.7V0ZM2795.1 -129.7Q2867.1 -129.7 2909.1 -170.1Q2951.1 -210.6 2951.1 -279.6V-333.7Q2951.1 -402.1 2908.8 -442.2Q2866.4 -482.3 2795.1 -482.3Q2716.4 -482.3 2672.5 -435.9Q2628.6 -389.4 2628.6 -305.4Q2628.6 -221.4 2672.5 -175.5Q2716.4 -129.7 2795.1 -129.7ZM1940.7 0V-600H2089.7V0ZM3764.6 -103.7Q3813.7 -103.7 3852.6 -122.2Q3891.6 -140.7 3914.1 -172.3Q3936.6 -203.9 3936.6 -242.6V-257.2H3761.8Q3660.7 -257.2 3660.7 -181.9Q3660.7 -145.2 3688.4 -124.4Q3716.1 -103.7 3764.6 -103.7ZM1452.6 -103.7Q1501.7 -103.7 1540.6 -122.2Q1579.6 -140.7 1602.1 -172.3Q1624.6 -203.9 1624.6 -242.6V-257.2H1449.8Q1348.7 -257.2 1348.7 -181.9Q1348.7 -145.2 1376.4 -124.4Q1404.1 -103.7 1452.6 -103.7ZM2015.3 -666.2Q1980.4 -666.2 1955.9 -690.6Q1931.3 -715 1931.3 -749.9Q1931.3 -784.8 1955.8 -809.3Q1980.2 -833.8 2015.1 -833.8Q2049.9 -833.8 2074.5 -809.4Q2099 -785 2099 -750.1Q2099 -715.2 2074.6 -690.7Q2050.2 -666.2 2015.3 -666.2Z"
+      />
+      <path
+        class="mg-logo-glass"
+        d="M337 -462C251.9 -462 183 -393.1 183 -308V0H34V-308C34 -475.3 169.7 -611 337 -611C428.2 -611 510 -570.7 565.5 -507C519.1 -453.8 491 -384.2 491 -308C491 -393.1 422.1 -462 337 -462Z"
+      />
+      <path
+        class="mg-logo-glass"
+        d="M1097 -308V0H948V-308C948 -393.1 879.1 -462 794 -462C708.9 -462 640 -393.1 640 -308C640 -384.2 611.9 -453.8 565.5 -507C621 -570.7 702.8 -611 794 -611C961.3 -611 1097 -475.3 1097 -308Z"
+      />
+      <path
+        class="mg-logo-overlap"
+        d="M640 -308V0H491V-308C491 -384.2 519.1 -453.8 565.5 -507C611.9 -453.8 640 -384.2 640 -308Z"
+      />
     </svg>
     """
   end
+
+  # Delivery-status pane marks (Phase 182, D-10): five portrait panes, one per delivery
+  # class, drawn from the brand book's `svg.stm` fragments. The geometry below is copied
+  # literally from the pinned status-marks data in the repository's brand directory, the
+  # same way the logo paths above are copied byte for byte: the Hex package ships `lib`,
+  # `priv/static` and `docs` only, so lib code must not read repo files outside the
+  # package. The pinned data stays the truth, and phase182_status_marks_test.exs fails
+  # when this data and the pinned data differ.
+  #
+  # Colours are the book's `--mk-<role>` roles, bound to admin tokens by
+  # `@status_mark_roles`, and are painted with attributes, so the marks add no CSS class
+  # and the compiled bundle does not change.
+  @status_mark_shapes %{
+    sent: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "ink",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{"d" => "M6 60H94V114H6Z", "fill" => "ink", "tag" => "path"}
+    ],
+    delivered: [
+      %{"fill" => "ok", "height" => 120, "tag" => "rect", "width" => 100},
+      %{
+        "d" => "M24 62L43 82L77 38",
+        "fill" => "none",
+        "stroke" => "surf",
+        "stroke_width" => 13,
+        "tag" => "path"
+      }
+    ],
+    delayed: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "warn",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{
+        "d" => "M50 24V62L72 78",
+        "fill" => "none",
+        "stroke" => "warn",
+        "stroke_width" => 12,
+        "tag" => "path"
+      }
+    ],
+    failed: [
+      %{"fill" => "bad", "height" => 120, "tag" => "rect", "width" => 100},
+      %{
+        "d" => "M60 0L40 48L62 68L44 120",
+        "fill" => "none",
+        "stroke" => "surf",
+        "stroke_width" => 12,
+        "tag" => "path"
+      }
+    ],
+    not_sent: [
+      %{
+        "fill" => "none",
+        "height" => 108,
+        "stroke" => "mute",
+        "stroke_width" => 12,
+        "tag" => "rect",
+        "width" => 88,
+        "x" => 6,
+        "y" => 6
+      },
+      %{"d" => "M0 120L100 0", "stroke" => "mute", "stroke_width" => 12, "tag" => "path"}
+    ]
+  }
+
+  @status_mark_roles %{
+    "bad" => "error-text",
+    "ink" => "text",
+    "mute" => "text-muted",
+    "ok" => "success-text",
+    "surf" => "surface",
+    "warn" => "warning-text"
+  }
+
+  # Row marks are 20 px tall and detail marks 44 px; the panes are 100:120, so the widths
+  # are 17 and 37. The book never draws a mark under 14 px.
+  @status_mark_sizes %{row: {17, 20}, detail: {37, 44}}
+
+  @doc false
+  def status_mark_shapes, do: @status_mark_shapes
+
+  @doc false
+  def status_mark_roles, do: @status_mark_roles
+
+  attr(:class, :atom, values: [:sent, :delivered, :delayed, :failed, :not_sent], required: true)
+  attr(:size, :atom, values: [:row, :detail], default: :row)
+
+  @doc """
+  Renders one delivery-status pane mark as an inline SVG.
+
+  The mark is decoration. The status word beside it is the accessible name, so the
+  SVG is `aria-hidden` and carries no `aria-label` and no `title`: status meaning
+  never lives in a mark's colour or in an attribute alone. The five marks differ in
+  shape (half-filled frame, filled with a check, frame with a clock hand, filled with
+  a crack, struck-through frame), so they stay distinct in greyscale. Use it through
+  the status badge, beside its word.
+  """
+  @doc since: "2.8.0"
+  def status_mark(assigns) do
+    {width, height} = Map.fetch!(@status_mark_sizes, assigns.size)
+
+    assigns =
+      assigns
+      |> assign(:width, width)
+      |> assign(:height, height)
+      |> assign(:shapes, Map.fetch!(@status_mark_shapes, assigns.class))
+
+    ~H"""
+    <svg
+      width={@width}
+      height={@height}
+      viewBox="0 0 100 120"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <%= for shape <- @shapes do %>
+        <rect
+          :if={shape["tag"] == "rect"}
+          x={shape["x"]}
+          y={shape["y"]}
+          width={shape["width"]}
+          height={shape["height"]}
+          fill={status_mark_paint(shape["fill"])}
+          stroke={status_mark_paint(shape["stroke"])}
+          stroke-width={shape["stroke_width"]}
+        />
+        <path
+          :if={shape["tag"] == "path"}
+          d={shape["d"]}
+          fill={status_mark_paint(shape["fill"])}
+          stroke={status_mark_paint(shape["stroke"])}
+          stroke-width={shape["stroke_width"]}
+        />
+      <% end %>
+    </svg>
+    """
+  end
+
+  defp status_mark_paint(nil), do: nil
+  defp status_mark_paint("none"), do: "none"
+
+  defp status_mark_paint(role),
+    do: "var(--mg-color-#{Map.fetch!(@status_mark_roles, role)})"
 
   attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
   attr(:flash_key, :atom, default: nil)
   attr(:message, :string, required: true)
   attr(:placement, :atom, values: [:toast, :inline], default: :toast)
+  attr(:id_prefix, :string, default: nil)
 
   @doc """
   Renders a brand-voice flash message in a daisyUI toast wrapper.
@@ -160,7 +279,7 @@ defmodule MailglassAdmin.Components do
 
     ~H"""
     <div
-      id={"flash-#{@kind}"}
+      id={prefixed_id(@id_prefix, "flash-#{@kind}")}
       class={
         if @placement == :toast,
           do: "toast toast-top toast-end mg-toast mg-layer-toast"
@@ -190,6 +309,9 @@ defmodule MailglassAdmin.Components do
   defp flash_kind_label(:success), do: "success"
   defp flash_kind_label(:warning), do: "warning"
   defp flash_kind_label(:error), do: "error"
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp alert_class(:info), do: "alert-info"
   defp alert_class(:success), do: "alert-success"
@@ -558,6 +680,11 @@ defmodule MailglassAdmin.Components do
   attr(:context, :atom, required: true)
   attr(:id, :string, required: true)
 
+  attr(:delivery_row, :map,
+    default: nil,
+    doc: "an operator delivery row; with `context: :delivery` it draws the class badge"
+  )
+
   attr(:heading_tag, :string, values: ["h2", "h3"], default: "h2")
 
   def message_identity(assigns) do
@@ -571,7 +698,16 @@ defmodule MailglassAdmin.Components do
         >
           {if @subject == "", do: "(No subject)", else: @subject || @recipient || "Message"}
         </.dynamic_tag>
-        <.outcome_badge id={@id} status={@status} context={@context} />
+        <.delivery_badge
+          :if={@context == :delivery and not is_nil(@delivery_row)}
+          row={@delivery_row}
+        />
+        <.outcome_badge
+          :if={@context != :delivery or is_nil(@delivery_row)}
+          id={@id}
+          status={@status}
+          context={@context}
+        />
       </div>
       <p :if={not is_nil(@subject)} class="text-body text-secondary [overflow-wrap:anywhere]">
         {recipient_label(@context)}
@@ -722,7 +858,7 @@ defmodule MailglassAdmin.Components do
       case full_name do
         "Unrouted" ->
           {full_name,
-           "None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.",
+           "None of the routing rules matched this inbound email, so it wasn't sent to a mailbox. Open the email to see which rules were checked.",
            false}
 
         "No execution recorded" ->
@@ -732,9 +868,9 @@ defmodule MailglassAdmin.Components do
           {"Not recorded",
            if(Map.get(assigns.record, :outcome) == :failed,
              do:
-               "Processing failed, but no mailbox name was saved for this attempt. Open the message to inspect the error.",
+               "Processing failed, but no mailbox name was saved for this attempt. Open the email to inspect the error.",
              else:
-               "No mailbox name was saved for this processing attempt. Open the message to inspect its processing history."
+               "No mailbox name was saved for this processing attempt. Open the email to inspect its processing history."
            ), false}
 
         mailbox ->
@@ -927,7 +1063,12 @@ defmodule MailglassAdmin.Components do
   attr(:id, :string, default: nil)
   attr(:name, :string, default: nil)
   attr(:value, :any, default: nil)
-  attr(:type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text)
+
+  attr(:type, :atom,
+    values: [:text, :search, :number, :select, :textarea, :checkbox],
+    default: :text
+  )
+
   attr(:label, :string, required: true)
   attr(:help, :string, default: nil)
   attr(:help_display, :atom, values: [:inline, :tooltip], default: :inline)
@@ -972,7 +1113,7 @@ defmodule MailglassAdmin.Components do
       </div>
 
       <input
-        :if={@type in [:text, :number] and !@display_readonly?}
+        :if={@type in [:text, :search, :number] and !@display_readonly?}
         id={@control_id}
         name={@control_name}
         type={Atom.to_string(@type)}
@@ -1285,7 +1426,7 @@ defmodule MailglassAdmin.Components do
     end
   end
 
-  defp native_readonly?(type, true) when type in [:text, :number, :textarea], do: true
+  defp native_readonly?(type, true) when type in [:text, :search, :number, :textarea], do: true
   defp native_readonly?(_type, _readonly), do: false
 
   defp display_readonly?(type, true) when type in [:select, :checkbox], do: true
@@ -1391,6 +1532,22 @@ defmodule MailglassAdmin.Components do
 
   attr(:size, :atom, values: [:sm, :md], default: :sm)
 
+  attr(:context, :atom,
+    values: [:delivery, :inbound, nil],
+    default: nil,
+    doc:
+      "`:delivery` shows the pane mark for the four atoms whose label is a class word; " <>
+        "`:inbound` and nil never do"
+  )
+
+  attr(:delivery_class, :atom,
+    values: [nil, :sent, :delivered, :delayed, :failed, :not_sent],
+    default: nil,
+    doc: "a delivery class computed by the caller; renders the pane mark and `word`"
+  )
+
+  attr(:word, :string, default: nil, doc: "the class word shown beside the mark")
+
   @doc """
   Unified delivery, inbound, and timeline status badge. Renders an outline Heroicon
   (decorative, aria-hidden) and a text label inside a daisyUI badge container.
@@ -1398,13 +1555,232 @@ defmodule MailglassAdmin.Components do
   The base badge class is always emitted by this component — call sites must NOT
   prepend 'badge' or 'badge badge-sm'. Use size: :sm (default) for list rows;
   size: :md for detail headers.
+
+  This is the only place a delivery-status pane mark is drawn beside a word. With
+  `delivery_class` set, or with `context: :delivery` and one of `:sent`, `:queued`,
+  `:delivered`, `:failed` (the atoms whose label is a class word), the badge shows the
+  pane mark and the word, wrapped in `data-mg-status`. Every other atom, and every
+  inbound or context-free badge, keeps its Heroicon and word. The mark is decoration:
+  the word is the accessible name.
   """
   @doc since: "1.5.0"
   def status_badge(assigns) do
+    assigns = assign(assigns, :mark, mark_branch(assigns))
+
     ~H"""
-    <span class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}>
+    <span
+      :if={@mark}
+      data-mg-status={@mark.class}
+      class={["badge badge-outline text-label whitespace-nowrap", size_class(@size)]}
+      style={"color: var(--mg-color-#{@mark.role})"}
+    >
+      <.status_mark class={@mark.class} size={mark_size(@size)} />{@mark.word}
+    </span>
+    <span
+      :if={!@mark}
+      data-mg-context={@context == :inbound && "inbound"}
+      class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}
+    >
       <span class={[status_icon(@status), "w-3 h-3"]} aria-hidden="true"></span>{status_label(@status)}
     </span>
+    """
+  end
+
+  # The atoms whose Copy label is a class word. Only with an explicit :delivery context:
+  # an inbound :failed is a mailbox outcome and keeps its Heroicon.
+  @mark_atoms [:sent, :queued, :delivered, :failed]
+
+  # Word colour per class, from the brand roles. The mark paints with the same roles, so
+  # a word keeps the book 4.5:1 pair on the surface.
+  @status_word_roles %{
+    sent: "text",
+    delivered: "success-text",
+    delayed: "warning-text",
+    failed: "error-text",
+    not_sent: "text-muted"
+  }
+
+  defp mark_branch(%{delivery_class: class, word: word}) when not is_nil(class) do
+    %{class: class, word: word, role: Map.fetch!(@status_word_roles, class)}
+  end
+
+  defp mark_branch(%{context: :delivery, status: status}) when status in @mark_atoms do
+    class = MailglassAdmin.StatusMap.classify(status)
+    %{class: class, word: status_label(status), role: Map.fetch!(@status_word_roles, class)}
+  end
+
+  defp mark_branch(_assigns), do: nil
+
+  defp mark_size(:sm), do: :row
+  defp mark_size(:md), do: :detail
+
+  attr(:row, :map, required: true, doc: "one operator delivery row from the list or get_delivery")
+  attr(:size, :atom, values: [:row, :detail], default: :row)
+
+  @doc """
+  The status badge for one operator delivery row: the pane mark and the class word.
+
+  A thin wrapper: it picks the class and the word from MailglassAdmin.Copy and calls
+  `status_badge/1`, which draws the mark. A row without the `:bounced_at` key comes from
+  a core that predates the lifecycle fields, so it gets the Unknown badge and never a
+  confident class word.
+  """
+  @doc since: "2.8.0"
+  def delivery_badge(assigns) do
+    ~H"""
+    <%= if Map.has_key?(@row, :bounced_at) do %>
+      <.status_badge
+        status={class_status(MailglassAdmin.StatusMap.delivery_class(@row))}
+        delivery_class={MailglassAdmin.StatusMap.delivery_class(@row)}
+        word={MailglassAdmin.Copy.delivery_class_word(@row)}
+        context={:delivery}
+        size={badge_size(@size)}
+      />
+    <% else %>
+      <.status_badge status={:unknown} size={badge_size(@size)} />
+    <% end %>
+    """
+  end
+
+  # The status atom a class stands for. status_badge reads it only for its required
+  # attribute: with a delivery class set, the class and word decide the render.
+  defp class_status(:sent), do: :sent
+  defp class_status(:delivered), do: :delivered
+  defp class_status(:delayed), do: :deferred
+  defp class_status(:failed), do: :failed
+  defp class_status(:not_sent), do: :suppressed
+
+  defp badge_size(:row), do: :sm
+  defp badge_size(:detail), do: :md
+
+  @doc """
+  True when the row's latest recorded event has a word of its own, one that is not the
+  class word already shown by the badge. A row that predates the lifecycle fields has
+  no class word, so its latest event is always worth showing.
+  """
+  @doc since: "2.8.0"
+  def latest_event_differs?(row) do
+    case Map.get(row, :last_event_type) do
+      nil ->
+        false
+
+      event ->
+        not Map.has_key?(row, :bounced_at) or
+          status_label(event) != MailglassAdmin.Copy.delivery_class_word(row)
+    end
+  end
+
+  attr(:verdict, :map,
+    required: true,
+    doc: "the map from MailglassAdmin.Copy.delivery_verdict/2"
+  )
+
+  attr(:form, :atom, values: [:full, :line], default: :full)
+  attr(:id, :string, required: true)
+
+  @doc """
+  Renders one delivery verdict. The verdict is computed once, in MailglassAdmin.Copy;
+  this component only draws it, so a row, the Quick view and Full detail cannot disagree.
+
+  The full form leads with the pane mark and the class word, then the sentence, the
+  recorded cause when there is one, the rule line, the notes and the next step. The
+  line form (Quick view) is the mark, the word, the sentence and the rule line: it has
+  no event history, so it never shows a cause or a next step. A verdict with no class
+  shows only its sentence.
+  """
+  @doc since: "2.8.0"
+  def delivery_verdict(%{verdict: %{class: :undetermined}} = assigns) do
+    ~H"""
+    <section id={@id} data-testid="delivery-verdict" data-verdict-class="undetermined">
+      <p class="text-body text-secondary">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+    </section>
+    """
+  end
+
+  def delivery_verdict(%{form: :line} = assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-testid="delivery-verdict-line"
+      data-verdict-class={@verdict.class}
+      class="min-w-0 space-y-xs"
+    >
+      <p class="flex min-w-0 items-center gap-sm text-body font-bold text-base-content">
+        <.status_mark class={@verdict.class} size={:row} /><span>{@verdict.word}</span>
+      </p>
+      <p class="text-body text-base-content [overflow-wrap:anywhere]">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+      <p :if={@verdict.rule} class="text-label text-secondary [overflow-wrap:anywhere]">
+        {@verdict.rule}
+      </p>
+    </section>
+    """
+  end
+
+  def delivery_verdict(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-testid="delivery-verdict"
+      data-verdict-class={@verdict.class}
+      aria-labelledby={@id <> "-word"}
+      class="min-w-0 space-y-sm"
+    >
+      <div class="flex min-w-0 items-center gap-sm">
+        <.status_mark class={@verdict.class} size={:detail} />
+        <h3 id={@id <> "-word"} class="text-heading font-bold text-base-content">
+          {@verdict.word}
+        </h3>
+      </div>
+      <p class="text-body text-base-content [overflow-wrap:anywhere]">
+        <.verdict_segment :for={segment <- @verdict.sentence} segment={segment} />
+      </p>
+      <p
+        :if={@verdict.cause}
+        data-testid="delivery-verdict-cause"
+        class="text-body text-base-content [overflow-wrap:anywhere]"
+      >
+        {@verdict.cause}
+      </p>
+      <p :if={@verdict.rule} class="text-body font-bold text-base-content [overflow-wrap:anywhere]">
+        {@verdict.rule}
+      </p>
+      <p :for={note <- @verdict.notes} class="text-body text-secondary [overflow-wrap:anywhere]">
+        {note}
+      </p>
+      <div :if={@verdict.next_step} class="min-w-0 space-y-xs">
+        <h4 class="text-label font-bold text-secondary">Next step</h4>
+        <p class="text-body text-base-content [overflow-wrap:anywhere]">{@verdict.next_step}</p>
+        <a
+          :if={@verdict.next_link}
+          href={@verdict.next_link.href}
+          class="mg-focus-ring inline-flex min-h-11 items-center text-body font-bold text-primary underline"
+        >
+          {@verdict.next_link.label}
+        </a>
+      </div>
+    </section>
+    """
+  end
+
+  # A sentence is plain text and zoned timestamps, so every time on a verdict goes
+  # through the same timestamp component as the rest of the screen.
+  attr(:segment, :any, required: true)
+
+  defp verdict_segment(%{segment: {:time, at}} = assigns) do
+    assigns = assign(assigns, :at, at)
+
+    ~H"""
+    <.timestamp at={@at} />
+    """
+  end
+
+  defp verdict_segment(assigns) do
+    ~H"""
+    {@segment}
     """
   end
 
@@ -1420,7 +1796,9 @@ defmodule MailglassAdmin.Components do
       trigger_text={status_label(@status)}
       text={outcome_help(@context, @status)}
     >
-      <:trigger_content><.status_badge status={@status} size={:sm} /></:trigger_content>
+      <:trigger_content>
+        <.status_badge status={@status} size={:sm} context={@context} />
+      </:trigger_content>
     </.field_help>
     """
   end
@@ -1428,39 +1806,39 @@ defmodule MailglassAdmin.Components do
   @doc false
   def outcome_description(context, status), do: outcome_help(context, status)
 
-  defp outcome_help(:inbound, :accepted), do: "A mailbox processed and accepted this message."
+  defp outcome_help(:inbound, :accepted),
+    do: "A mailbox processed and accepted this inbound email."
 
   defp outcome_help(:inbound, :no_match),
-    do: "No routing rule matched, so this message was not sent to a mailbox."
+    do: "No routing rule matched, so this inbound email was not sent to a mailbox."
 
   defp outcome_help(:inbound, :ignore),
-    do: "The mailbox deliberately skipped this message without rejecting it."
+    do: "The mailbox deliberately skipped this inbound email without rejecting it."
 
   defp outcome_help(:inbound, :no_change),
-    do: "The mailbox processed this message without changing its state."
+    do: "The mailbox processed this inbound email without changing its state."
 
   defp outcome_help(:inbound, :rejected),
-    do: "The mailbox rejected this message. Open it to inspect the recorded reason."
+    do: "The mailbox rejected this inbound email. Open it to inspect the recorded reason."
 
   defp outcome_help(:inbound, :bounced),
     do:
-      "The mailbox returned a bounce result for this message. Open it to inspect the recorded reason."
+      "The mailbox returned a bounce result for this inbound email. Open it to inspect the recorded reason."
 
   defp outcome_help(:inbound, :failed),
-    do: "Mailbox processing failed. Open the message to inspect the error."
+    do: "Inbound email processing failed. Open the email to inspect the error."
 
   defp outcome_help(:inbound, :missing_history),
-    do: "No mailbox processing attempt is recorded for this message."
+    do: "No mailbox processing attempt is recorded for this inbound email."
 
-  defp outcome_help(:delivery, :queued), do: "This message is waiting to be sent to the provider."
+  defp outcome_help(:delivery, :queued), do: "This email is waiting to be sent to the provider."
 
   defp outcome_help(:delivery, :dispatched),
-    do:
-      "This message was handed to the provider. Delivery to the recipient has not been confirmed."
+    do: "This email was handed to the provider. Delivery to the recipient has not been confirmed."
 
   defp outcome_help(:delivery, :delivered),
     do:
-      "The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read."
+      "The provider reported that the recipient's mail server accepted this email. This does not confirm it reached the inbox or was read."
 
   defp outcome_help(:delivery, :opened),
     do:
@@ -1470,16 +1848,21 @@ defmodule MailglassAdmin.Components do
     do:
       "The provider recorded a link click. Security scanners or other automated activity can trigger this signal."
 
+  # No text below promises a reason or an error: the reason is shown on Full detail only
+  # when the provider sent one. This help is context-free, keyed on the event type alone,
+  # and a :failed event is either a send-time failure or a provider-reported one (Mailgun
+  # "failed", SES "Rendering Failure"), so it cannot say which. Only the verdict reads the
+  # row, so only the verdict may say the handoff failed.
   defp outcome_help(:delivery, :failed),
-    do:
-      "Sending failed before a successful handoff to the provider. Open the delivery to inspect the error."
+    do: "The email did not get through: sending failed, or the provider reported a failure."
 
   defp outcome_help(:delivery, :bounced),
     do:
-      "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason."
+      "The provider reported that this email could not be delivered. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :rejected),
-    do: "The provider rejected this message. Open the delivery to inspect the recorded reason."
+    do:
+      "The provider rejected this email. Full detail shows the reason when the provider sent one."
 
   defp outcome_help(:delivery, :deferred),
     do: "The provider reported a temporary delivery delay. Delivery has not been confirmed."
@@ -1488,16 +1871,19 @@ defmodule MailglassAdmin.Components do
     do: "Sending to this recipient was blocked by a suppression rule."
 
   defp outcome_help(:delivery, :complained),
-    do: "The provider reported a spam complaint for this message."
+    do: "The provider reported a spam complaint for this email."
 
   defp outcome_help(:delivery, :unsubscribed),
     do: "The provider recorded an unsubscribe for this recipient."
 
   defp outcome_help(:delivery, :autoresponded),
     do:
-      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the message."
+      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the email."
 
-  defp outcome_help(_, _), do: "Open the message to inspect its recorded processing history."
+  # A delivery status with no clause above names an email, never a "message" (the brand words).
+  defp outcome_help(:delivery, _), do: "Open the email to inspect its recorded history."
+
+  defp outcome_help(_, _), do: "Open the email to inspect its recorded processing history."
 
   # Downstream outcome events that supersede the dispatch snapshot — when one of these
   # is the delivery's latest event, it IS the status the operator should see.
@@ -1550,9 +1936,17 @@ defmodule MailglassAdmin.Components do
   )
 
   @doc """
-  Renders a machine-readable <time> in the browser's local timezone. When copyable,
-  the timestamp itself is a keyboard-accessible control that copies the exact UTC
-  value and announces the result. `nil` renders an unavailable sentinel.
+  Renders a machine-readable <time> that always shows its zone. The server renders
+  the absolute time in a compact form with its zone (`Nov 15, 2026, 2:05 PM UTC`),
+  and the browser rewrites it to the viewer's local time while keeping a zone token
+  (`... 9:05 AM EST`). The exact UTC value, to the microsecond, stays in `data-utc`,
+  the tooltip and the copy value. When copyable, the timestamp itself is a
+  keyboard-accessible control that copies the exact UTC value and announces the
+  result. Below the `sm` breakpoint the zone sits on its own line under the time.
+  `nil` renders the word `Unavailable` and no `<time>` element.
+
+  The visible text is the accessible name: no `title` and no `aria-label` replaces
+  it (WCAG 2.5.3 Label in Name), and the copy control's name contains that text.
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
@@ -1561,40 +1955,50 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  # The date-time text span ends in a space, and the zone is the span after it. The space
+  # is real text, not formatter whitespace between tags, so a reader that drops
+  # whitespace-only nodes (Floki, a plain-text extractor) still sees "2:05 PM UTC" and
+  # never "2:05 PMUTC". A browser collapses it at the line end below `sm`, where the
+  # zone is a block under the time, and keeps it from `sm` up, where the zone is inline.
   def timestamp(assigns) do
+    {when_text, zone} = display_parts(assigns.at)
+
+    assigns =
+      assigns
+      |> assign(:exact, exact_utc(assigns.at))
+      |> assign(:when_text, when_text)
+      |> assign(:zone, zone)
+      |> assign(:display, display_time(assigns.at))
+
     ~H"""
     <span :if={@copyable} class="mg-field-help inline-flex max-w-full">
       <button
         type="button"
         data-timestamp-copy="true"
-        data-copy-value={utc_string(@at)}
-        aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
+        data-copy-value={@exact}
+        aria-label={"Copy #{@display} (copies the exact UTC value #{@exact})"}
         class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
       >
         <time
           datetime={DateTime.to_iso8601(@at)}
           data-local-time="true"
-          data-utc={utc_string(@at)}
+          data-utc={@exact}
           class="tabular-nums"
-        >
-          {utc_string(@at)}
-        </time>
+        ><span data-time-text>{@when_text <> " "}</span>
+        <span data-time-zone class="block sm:inline">{@zone}</span></time>
       </button>
       <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
-        {utc_string(@at)} · Click to copy
+        {@exact} • Click to copy
       </span>
     </span>
     <time
       :if={!@copyable}
       datetime={DateTime.to_iso8601(@at)}
       data-local-time="true"
-      data-utc={utc_string(@at)}
-      title={utc_string(@at)}
-      aria-label={"Recorded at #{utc_string(@at)}"}
+      data-utc={@exact}
       class={["tabular-nums", @class]}
-    >
-      {utc_string(@at)}
-    </time>
+    ><span data-time-text>{@when_text <> " "}</span>
+    <span data-time-zone class="block sm:inline">{@zone}</span></time>
     """
   end
 
@@ -1613,7 +2017,6 @@ defmodule MailglassAdmin.Components do
       data-copy-value={@value}
       data-copy-toast={@label <> " copied."}
       aria-label={"Copy #{@label}: #{@value}"}
-      title="Click to copy"
       class="mg-timestamp-copy-trigger mg-focus-ring mono max-w-full break-all text-left text-label text-secondary"
     >
       {@value}
@@ -1641,9 +2044,24 @@ defmodule MailglassAdmin.Components do
   end
 
   @doc false
-  def timestamp_value(%DateTime{} = at), do: utc_string(at)
+  def timestamp_value(%DateTime{} = at), do: exact_utc(at)
 
-  defp utc_string(%DateTime{} = at) do
+  @doc false
+  # The compact visible form with its zone, e.g. "Nov 15, 2026, 2:05 PM UTC". The one
+  # place a display time is formatted; every screen reaches it through `timestamp/1`.
+  # The exact value, to the microsecond, comes from `exact_utc/1`.
+  def display_time(%DateTime{} = at) do
+    {when_text, zone} = display_parts(at)
+    when_text <> " " <> zone
+  end
+
+  # The date-time text and its zone, the two parts `timestamp/1` draws. The zone is part of
+  # the formatter, never a literal in the template, so a formatter that loses it shows in
+  # every time on every screen.
+  defp display_parts(%DateTime{} = at),
+    do: {Calendar.strftime(at, "%b %-d, %Y, %-I:%M %p"), "UTC"}
+
+  defp exact_utc(%DateTime{} = at) do
     base = Calendar.strftime(at, "%Y-%m-%d %H:%M:%S")
     {microseconds, precision} = at.microsecond
 
@@ -1661,92 +2079,9 @@ defmodule MailglassAdmin.Components do
   defp size_class(:sm), do: "badge-sm"
   defp size_class(:md), do: "badge-md"
 
-  defp status_class(:dispatched), do: "badge-primary"
-  defp status_class(:queued), do: "badge-primary"
-  defp status_class(:sent), do: "badge-primary"
-  defp status_class(:delivered), do: "badge-success"
-  defp status_class(:deferred), do: "badge-warning"
-  defp status_class(:bounced), do: "badge-error"
-  defp status_class(:failed), do: "badge-error"
-  defp status_class(:rejected), do: "badge-error"
-  defp status_class(:complained), do: "badge-error"
-  defp status_class(:unsubscribed), do: "badge-warning"
-  defp status_class(:opened), do: "badge-success"
-  defp status_class(:clicked), do: "badge-success"
-  defp status_class(:autoresponded), do: "badge-outline"
-  defp status_class(:unknown), do: "badge-outline"
-  defp status_class(:accepted), do: "badge-success"
-  defp status_class(:no_match), do: "badge-warning"
-  defp status_class(:ignore), do: "badge-outline"
-  defp status_class(:no_change), do: "badge-outline"
-  defp status_class(:missing_history), do: "badge-outline"
-  defp status_class(:failed_ingest), do: "badge-error"
-  defp status_class(:webhook_replay_requested), do: "badge-outline"
-  defp status_class(:webhook_replay_succeeded), do: "badge-success"
-  defp status_class(:webhook_replay_failed), do: "badge-error"
-  defp status_class(:reconciled), do: "badge-warning"
-  defp status_class(:suppressed), do: "badge-warning"
-
-  # Fallback for unrecognized atoms and nil — render neutral outline per UI-SPEC Conflict 1
-  defp status_class(_status), do: "badge-outline"
-
-  defp status_icon(:dispatched), do: "hero-paper-airplane"
-  defp status_icon(:queued), do: "hero-arrow-path"
-  defp status_icon(:sent), do: "hero-paper-airplane"
-  defp status_icon(:delivered), do: "hero-check-circle"
-  defp status_icon(:deferred), do: "hero-exclamation-triangle"
-  defp status_icon(:bounced), do: "hero-x-circle"
-  defp status_icon(:failed), do: "hero-x-circle"
-  defp status_icon(:rejected), do: "hero-x-circle"
-  defp status_icon(:complained), do: "hero-exclamation-circle"
-  defp status_icon(:unsubscribed), do: "hero-bell-slash"
-  defp status_icon(:opened), do: "hero-envelope-open"
-  defp status_icon(:clicked), do: "hero-hand-thumb-up"
-  defp status_icon(:autoresponded), do: "hero-arrow-uturn-left"
-  defp status_icon(:unknown), do: "hero-question-mark-circle"
-  defp status_icon(:accepted), do: "hero-check-circle"
-  defp status_icon(:no_match), do: "hero-exclamation-triangle"
-  defp status_icon(:ignore), do: "hero-minus-circle"
-  defp status_icon(:no_change), do: "hero-minus-circle"
-  defp status_icon(:missing_history), do: "hero-question-mark-circle"
-  defp status_icon(:failed_ingest), do: "hero-exclamation-circle"
-  defp status_icon(:webhook_replay_requested), do: "hero-arrow-path"
-  defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
-  defp status_icon(:webhook_replay_failed), do: "hero-x-circle"
-  defp status_icon(:reconciled), do: "hero-exclamation-triangle"
-  defp status_icon(:suppressed), do: "hero-minus-circle"
-
-  # Fallback for unrecognized atoms and nil — render question mark per UI-SPEC Conflict 1
-  defp status_icon(_status), do: "hero-question-mark-circle"
-
-  defp status_label(:dispatched), do: "Dispatched"
-  defp status_label(:queued), do: "Queued"
-  defp status_label(:sent), do: "Sent"
-  defp status_label(:delivered), do: "Delivered"
-  defp status_label(:deferred), do: "Deferred"
-  defp status_label(:bounced), do: "Bounced"
-  defp status_label(:failed), do: "Failed"
-  defp status_label(:rejected), do: "Rejected"
-  defp status_label(:complained), do: "Complained"
-  defp status_label(:unsubscribed), do: "Unsubscribed"
-  defp status_label(:opened), do: "Opened"
-  defp status_label(:clicked), do: "Clicked"
-  defp status_label(:autoresponded), do: "Auto-replied"
-  defp status_label(:unknown), do: "Unknown"
-  defp status_label(:accepted), do: "Accepted"
-  defp status_label(:no_match), do: "Unrouted"
-  defp status_label(:ignore), do: "Ignored"
-  defp status_label(:no_change), do: "No change"
-  defp status_label(:missing_history), do: "No history"
-  defp status_label(:failed_ingest), do: "Ingest failed"
-  defp status_label(:webhook_replay_requested), do: "Replay requested"
-  defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"
-  defp status_label(:webhook_replay_failed), do: "Replay failed"
-  defp status_label(:reconciled), do: "Reconciled"
-  defp status_label(:suppressed), do: "Suppressed"
-
-  # Fallback for unrecognized atoms and nil — render "Unknown" per UI-SPEC Conflict 1
-  defp status_label(_status), do: "Unknown"
+  defp status_class(status), do: MailglassAdmin.Copy.status_class_or_unknown(status)
+  defp status_icon(status), do: MailglassAdmin.Copy.status_icon_or_unknown(status)
+  defp status_label(status), do: MailglassAdmin.Copy.status_label_or_unknown(status)
 
   @doc """
   Masks a recipient email for operator display (PII minimization).

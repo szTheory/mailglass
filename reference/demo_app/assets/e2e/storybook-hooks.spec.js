@@ -313,8 +313,8 @@ test.describe("Phase174 hooks", () => {
     const storybookVersion = mixVersion(path.resolve(__dirname, "../../mix.lock"), "phoenix_storybook");
     const demoPlaywright = npmVersion(path.resolve(__dirname, "../package-lock.json"), "playwright");
     const adminPlaywright = npmVersion(path.resolve(__dirname, "../../../../mailglass_admin/package-lock.json"), "playwright");
-    expect(demoLiveView).toBe("1.1.33");
-    expect(adminLiveView).toBe("1.2.13");
+    expect(demoLiveView).toBe("1.1.34");
+    expect(adminLiveView).toBe("1.2.15");
     expect(storybookVersion).toBe("1.2.0");
 
     const demoCases = [];

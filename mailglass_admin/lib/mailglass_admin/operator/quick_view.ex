@@ -19,6 +19,7 @@ defmodule MailglassAdmin.Operator.QuickView do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
   alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.ReplayAction
   alias Phoenix.LiveView.JS
@@ -121,21 +122,21 @@ defmodule MailglassAdmin.Operator.QuickView do
                 subject={Map.get(@delivery, :subject)}
                 recipient={@delivery.recipient}
                 status={Components.delivery_display_status(@delivery)}
+                delivery_row={@delivery}
                 context={:delivery}
                 id="delivery-quick-outcome"
+              />
+              <Components.delivery_verdict
+                form={:line}
+                id="delivery-quick-verdict"
+                verdict={
+                  Copy.delivery_verdict(@delivery, %{events: :not_loaded, suppression: :not_loaded})
+                }
               />
               <p class="text-label text-secondary">
                 Updated <Components.timestamp at={@delivery.last_event_at} />
               </p>
-              <p
-                :if={
-                  @delivery.last_event_type not in [
-                    nil,
-                    Components.delivery_display_status(@delivery)
-                  ]
-                }
-                class="text-label text-secondary"
-              >
+              <p :if={Components.latest_event_differs?(@delivery)} class="text-label text-secondary">
                 Latest event: {event_label(@delivery.last_event_type)}
               </p>
 
@@ -179,7 +180,7 @@ defmodule MailglassAdmin.Operator.QuickView do
             data-testid="operator-quick-view-full"
             class="mg-focus-ring btn btn-primary min-h-11 px-md"
           >
-            Open full detail <span aria-hidden="true" class="ml-xs">→</span>
+            Open full detail <Components.icon name="hero-arrow-right" class="ml-xs h-4 w-4" />
           </.link>
         </div>
 
@@ -235,15 +236,14 @@ defmodule MailglassAdmin.Operator.QuickView do
   defp provider_label(value), do: String.upcase(value)
 
   defp detail_error_copy(:invalid_id),
-    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+    do: "This delivery link is invalid. Return to Activity and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to Activity to continue."
 
   defp detail_error_copy(:unavailable),
-    do: "Delivery details are temporarily unavailable. Try again or return to deliveries."
+    do: "Delivery details are temporarily unavailable. Try again or return to Activity."
 
   defp detail_error_copy(_),
-    do: "Delivery details are unavailable. Return to deliveries to continue."
+    do: "Delivery details are unavailable. Return to Activity to continue."
 end

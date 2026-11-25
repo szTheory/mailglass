@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" role="img" aria-labelledby="mg-fable-favicon-title mg-fable-favicon-desc">
-  <title id="mg-fable-favicon-title">mailglass</title>
-  <desc id="mg-fable-favicon-desc">The mailglass mark redrawn for a 16-unit grid: pane, lit fold, and seal of light, sized to stay legible in a browser tab.</desc>
-  <style>
-    .mg-fable-favicon-pane { fill: #0D1B2A; }
-    @media (prefers-color-scheme: dark) {
-      .mg-fable-favicon-pane { fill: #EAF6FB; }
-    }
-  </style>
-  <path class="mg-fable-favicon-pane" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/>
-  <path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img"><title>mailglass</title><style>.g{fill:#1895C2}.l{fill:#0A6488}@media (prefers-color-scheme:dark){.g{fill:#46B6E8}.l{fill:#A8E4F7}}</style><path class="g" d="M9.98 12.2C7.74 12.2 5.92 13.84 5.92 15.93V24.05H2V15.93C2.2 11.9 5.8 8.04 9.98 7.95C12.38 7.95 14.54 9.01 16 10.69C14.78 12.09 14.04 13.93 14.04 15.93C14.04 13.84 12.22 12.2 9.98 12.2Z"/><path class="g" d="M30 15.93V24.05H26.08V15.93C26.08 13.84 24.26 12.2 22.02 12.2C19.78 12.2 17.96 13.84 17.96 15.93C17.96 13.93 17.22 12.09 16 10.69C17.46 9.01 19.62 7.95 22.02 7.95C26.2 8.04 29.8 11.9 30 15.93Z"/><path class="l" d="M17.96 15.93V24.05H14.04V15.93C14.04 13.93 14.78 12.09 16 10.69C17.22 12.09 17.96 13.93 17.96 15.93Z"/></svg>

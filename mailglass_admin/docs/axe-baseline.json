@@ -66,46 +66,34 @@
     }
   },
   "current": {
-    "run_id": "axe-2026-06-21T15-53-05-411Z",
+    "run_id": "axe-2026-11-15T17-11-33-992Z",
     "violations": {
       "deliveries": {
         "light": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         },
         "dark": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         },
         "system": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         }
       },
       "inbound": {
         "light": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         },
         "dark": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         },
         "system": {
-          "total": 1,
-          "rules": {
-            "scrollable-region-focusable": 1
-          }
+          "total": 0,
+          "rules": {}
         }
       },
       "preview": {

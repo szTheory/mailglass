@@ -1,0 +1,45 @@
+{
+  "scenario_id": "calib-08",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated field and event timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "status badge beside subject and verdict block with red mark and the word Failed"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step block in the verdict card"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block and detail terms (Mailer, Provider, Account)"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "top of the page under the subject, above the details and the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block and Bounced timeline card"
+    }
+  ],
+  "reasons": "The verdict (Failed mark and word, one plain sentence, a recorded cause, and a next step) sits near the top of the phone view, above the details and the raw events. Every time shows UTC, and the status uses an allowed word with a drawn mark. The page uses the product's words, names a cause the provider recorded, and makes no retry promise."
+}

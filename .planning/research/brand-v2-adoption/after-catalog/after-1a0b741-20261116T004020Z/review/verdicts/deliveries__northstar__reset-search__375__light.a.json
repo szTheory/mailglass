@@ -1,0 +1,33 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated time at the bottom of the row"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed ID",
+      "screenshot_region": "status badge on the row, red mark plus the word Failed"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading and intro, Account selector, Activity nav"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "pw-typo-bounce@northstar.example Reset your password Password reset",
+      "screenshot_region": "search box above the list, then the result row with status badge near the top"
+    }
+  ],
+  "reasons": "The search box comes before the list. The single matching row shows the password reset email with a Failed mark and word and a UTC time. The product's own terms are used, and the Bounced entry sits under Latest event, where event names are allowed. The page makes no unsupported claims."
+}

@@ -48,7 +48,9 @@ defmodule MailglassAdmin.ComponentsTest do
         context: :inbound
       )
 
-    assert failed =~ "Mailbox processing failed"
+    assert failed =~ "Inbound email processing failed"
+    assert failed =~ "Open the email to inspect the error"
+    refute failed =~ "message"
   end
 
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
@@ -59,25 +61,92 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Dispatched"
     end
 
-    test "queued renders badge-primary + arrow-path icon" do
+    # Phase 182 (D-10): in a delivery context the four atoms whose label is a class word
+    # draw the pane mark instead of the Heroicon. Without the context the badge is
+    # unchanged, which is what keeps an inbound :failed on hero-x-circle.
+    test "queued in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :queued,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "sent", "Queued")
+      refute html =~ "hero-arrow-path"
+    end
+
+    test "queued without a delivery context keeps badge-primary + arrow-path icon" do
       html = render_component(&Components.status_badge/1, status: :queued, size: :sm)
       assert html =~ "badge-primary"
       assert html =~ "hero-arrow-path"
       assert html =~ "Queued"
+      refute html =~ "data-mg-status"
     end
 
-    test "sent renders badge-primary + paper-airplane icon" do
+    test "sent in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1, status: :sent, size: :sm, context: :delivery)
+
+      assert_class_badge(html, "sent", "Sent")
+      refute html =~ "hero-paper-airplane"
+    end
+
+    test "class badges honor compact and detail sizes for both badge and mark" do
+      compact =
+        render_component(&Components.status_badge/1,
+          status: :sent,
+          size: :sm,
+          context: :delivery
+        )
+
+      detail =
+        render_component(&Components.status_badge/1,
+          status: :sent,
+          size: :md,
+          context: :delivery
+        )
+
+      assert [compact_badge] = Floki.parse_fragment!(compact) |> Floki.find("[data-mg-status]")
+      assert [detail_badge] = Floki.parse_fragment!(detail) |> Floki.find("[data-mg-status]")
+      assert "badge-sm" in (compact_badge |> Floki.attribute("class") |> hd() |> String.split())
+      assert "badge-md" in (detail_badge |> Floki.attribute("class") |> hd() |> String.split())
+
+      assert [compact_mark] = Floki.find(compact_badge, "svg")
+      assert Floki.attribute(compact_mark, "width") == ["17"]
+      assert Floki.attribute(compact_mark, "height") == ["20"]
+
+      assert [detail_mark] = Floki.find(detail_badge, "svg")
+      assert Floki.attribute(detail_mark, "width") == ["37"]
+      assert Floki.attribute(detail_mark, "height") == ["44"]
+    end
+
+    test "sent without a delivery context keeps badge-primary + paper-airplane icon" do
       html = render_component(&Components.status_badge/1, status: :sent, size: :sm)
       assert html =~ "badge-primary"
       assert html =~ "hero-paper-airplane"
       assert html =~ "Sent"
+      refute html =~ "data-mg-status"
     end
 
-    test "delivered renders badge-success + check-circle icon" do
+    test "delivered in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :delivered,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "delivered", "Delivered")
+      refute html =~ "hero-check-circle"
+    end
+
+    test "delivered without a delivery context keeps badge-success + check-circle icon" do
       html = render_component(&Components.status_badge/1, status: :delivered, size: :sm)
       assert html =~ "badge-success"
       assert html =~ "hero-check-circle"
       assert html =~ "Delivered"
+      refute html =~ "data-mg-status"
     end
 
     test "deferred renders badge-warning + exclamation-triangle icon" do
@@ -94,11 +163,60 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Bounced"
     end
 
-    test "failed renders badge-error + x-circle icon" do
+    test "failed in a delivery context renders the pane mark and the word" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :failed,
+          size: :sm,
+          context: :delivery
+        )
+
+      assert_class_badge(html, "failed", "Failed")
+      refute html =~ "hero-x-circle"
+    end
+
+    test "failed without a delivery context keeps badge-error + x-circle icon" do
       html = render_component(&Components.status_badge/1, status: :failed, size: :sm)
       assert html =~ "badge-error"
       assert html =~ "hero-x-circle"
       assert html =~ "Failed"
+      refute html =~ "data-mg-status"
+    end
+
+    test "an inbound failed outcome keeps its Heroicon and is marked inbound" do
+      html =
+        render_component(&Components.status_badge/1,
+          status: :failed,
+          size: :sm,
+          context: :inbound
+        )
+
+      assert html =~ "hero-x-circle"
+      assert html =~ ~s(data-mg-context="inbound")
+      refute html =~ "data-mg-status"
+      refute html =~ "<svg"
+    end
+
+    test "outcome_badge forwards its context to the status badge" do
+      inbound =
+        render_component(&Components.outcome_badge/1,
+          id: "ob-inbound",
+          status: :failed,
+          context: :inbound
+        )
+
+      assert inbound =~ "hero-x-circle"
+      assert inbound =~ ~s(data-mg-context="inbound")
+      refute inbound =~ "data-mg-status"
+
+      delivery =
+        render_component(&Components.outcome_badge/1,
+          id: "ob-delivery",
+          status: :delivered,
+          context: :delivery
+        )
+
+      assert_class_badge(delivery, "delivered", "Delivered")
     end
 
     test "rejected renders badge-error + x-circle icon" do
@@ -326,20 +444,35 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  # One class badge: a single `[data-mg-status]` element whose only visible text is the
+  # word, holding exactly one aria-hidden mark, with no label or title on the mark.
+  defp assert_class_badge(html, class, word) do
+    assert [badge] = html |> Floki.parse_fragment!() |> Floki.find("[data-mg-status]")
+    assert Floki.attribute(badge, "data-mg-status") == [class]
+    assert badge |> Floki.text() |> String.trim() == word
+    assert [svg] = Floki.find(badge, "svg")
+    assert Floki.attribute(svg, "aria-hidden") == ["true"]
+    assert Floki.attribute(svg, "aria-label") == []
+    assert Floki.attribute(svg, "title") == []
+  end
+
   describe "G-168-6 rendered downstream Delivery status" do
     @tag :g_168_6
     test "a :delivered event is shown in both list layouts, detail, and Quick view" do
       assert_rendered_delivery_status(:delivered, "Delivered")
     end
 
+    # The badge shows the delivery class (Phase 182, D-01). A bounce reads Failed; an
+    # open with no failure behind it leaves the class at Sent, and the open itself is the
+    # latest event beside it.
     @tag :g_168_6
-    test "a :bounced event is shown in both list layouts, detail, and Quick view" do
-      assert_rendered_delivery_status(:bounced, "Bounced")
+    test "a :bounced event reads Failed in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:bounced, "Failed")
     end
 
     @tag :g_168_6
-    test "an :opened event is shown in both list layouts, detail, and Quick view" do
-      assert_rendered_delivery_status(:opened, "Opened")
+    test "an :opened event reads Sent in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:opened, "Sent")
     end
   end
 
@@ -583,7 +716,10 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Account 東京"
       assert html =~ "webhook-event-東京"
       assert html =~ "POSTMARK"
-      assert html =~ "may add Events or update Deliveries and suppressions across this Account"
+
+      assert html =~
+               "may add Events or update delivery records and suppressions across this Account"
+
       refute html =~ "Recorded Mailbox"
       refute html =~ "redeliver through the provider"
       [confirm] = Floki.find(Floki.parse_document!(html), "#operator-replay-confirm")
@@ -617,31 +753,63 @@ defmodule MailglassAdmin.ComponentsTest do
 
     {"button", attrs, _children} = button
     names = attrs |> Enum.map(&elem(&1, 0)) |> Enum.sort()
-    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "title", "type"]
+    # No `title`: the accessible name is the aria-label, which contains the visible text
+    # (WCAG 2.5.3), and no hover string carries meaning (D-09).
+    assert names == ["aria-label", "class", "data-copy-toast", "data-copy-value", "type"]
   end
 
   describe "timestamp/1" do
-    test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
+    # The text a reader sees: tooltip removed, whitespace collapsed.
+    defp time_text(html) do
+      html
+      |> Floki.parse_fragment!()
+      |> Floki.find("time")
+      |> Floki.text()
+      |> String.replace(~r/\s+/, " ")
+      |> String.trim()
+    end
+
+    test "a UTC datetime shows a compact zoned time and keeps the exact value for copying" do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
-      # No-JavaScript fallback remains visible and the exact machine value is copied.
-      assert html =~ "2026-06-14 14:32:05.000000 UTC"
+      # The visible form is compact and ends in its zone; seconds and microseconds are not shown.
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
+      refute time_text(html) =~ "14:32:05"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
       assert html =~ "data-local-time"
+      # The exact value stays in the data attributes, the copy value and the tooltip.
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
-      assert html =~ "2026-06-14 14:32:05.000000 UTC · Click to copy"
+      assert html =~ "2026-06-14 14:32:05.000000 UTC • Click to copy"
       assert html =~ "mg-field-help-tooltip"
-      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
+      # The control's name contains its visible text (WCAG 2.5.3) and names the exact copy.
+      assert html =~
+               ~s|aria-label="Copy Jun 14, 2026, 2:32 PM UTC (copies the exact UTC value 2026-06-14 14:32:05.000000 UTC)"|
+
+      # No title attribute carries the time (D-09).
+      refute html =~ "title="
       assert html =~ "<time"
       assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"
       refute html =~ "data-local-time-supplement"
       assert html =~ "tabular-nums"
       refute html =~ "mono"
+    end
+
+    test "the zone is its own span: a line of its own below sm, inline from sm (D-08)" do
+      html =
+        render_component(&Components.timestamp/1, at: ~U[2026-06-14 14:32:05Z], copyable: false)
+
+      [time] = Floki.find(Floki.parse_fragment!(html), "time")
+
+      assert [text] = Floki.find(time, "[data-time-text]")
+      # The trailing space is real text, so a whitespace-dropping reader never sees "PMUTC".
+      assert Floki.text(text) == "Jun 14, 2026, 2:32 PM "
+      assert [zone] = Floki.find(time, "[data-time-zone]")
+      assert Floki.text(zone) == "UTC"
+      assert Floki.attribute(zone, "class") == ["block sm:inline"]
     end
 
     test "a non-copyable timestamp stays a semantic time value without a nested control" do
@@ -652,13 +820,28 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "block"
       refute html =~ "data-timestamp-copy"
       refute html =~ "<button"
+      # Its visible text is its name: no title and no aria-label replace it (D-09).
+      refute html =~ "title="
+      refute html =~ "aria-label"
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
     end
 
-    test "a precise UTC datetime preserves fractional seconds for visible and copied values" do
+    test "display_time/1 is compact, 12-hour, unpadded and ends in UTC" do
+      assert Components.display_time(~U[2026-11-15 14:05:09.123456Z]) ==
+               "Nov 15, 2026, 2:05 PM UTC"
+
+      assert Components.display_time(~U[2026-01-02 00:05:00Z]) == "Jan 2, 2026, 12:05 AM UTC"
+      assert Components.display_time(~U[2026-01-02 12:00:00Z]) == "Jan 2, 2026, 12:00 PM UTC"
+      assert Components.display_time(~U[2026-12-31 23:59:59Z]) == "Dec 31, 2026, 11:59 PM UTC"
+    end
+
+    test "a precise UTC datetime shows a compact time but copies its fractional seconds" do
       at = ~U[2026-06-14 14:32:05.123400Z]
       html = render_component(&Components.timestamp/1, at: at)
 
-      assert html =~ "2026-06-14 14:32:05.123400 UTC"
+      assert time_text(html) == "Jun 14, 2026, 2:32 PM UTC"
+      assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.123400 UTC")
+      assert html =~ ~s(data-utc="2026-06-14 14:32:05.123400 UTC")
       assert Components.timestamp_value(at) == "2026-06-14 14:32:05.123400 UTC"
     end
 
@@ -1481,14 +1664,32 @@ defmodule MailglassAdmin.ComponentsTest do
           "window_hours" => "168"
         })
 
-      html =
-        render_component(&OperatorFiltersForm.fields/1,
+      # The email search leads the form and lives outside the collapsible panel, so it is
+      # its own wrapper; the other filters follow in the panel.
+      search_html = render_component(&OperatorFiltersForm.search_field/1, form: form)
+
+      other_html =
+        render_component(&OperatorFiltersForm.other_fields/1,
           form: form,
           event_values: [:dispatched, :delivered],
           provider_options: [{"Postmark", "postmark"}, {"SendGrid", "sendgrid"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"event" => "Status was not applied. Choose a listed status."}
         )
+
+      html = search_html <> other_html
+
+      assert_all(search_html, [
+        ~s(<label for="filters_search"),
+        "Email address",
+        ~s(id="filters_search"),
+        ~s(name="filters[search]"),
+        ~s(type="search"),
+        ~s(phx-hook="FilterSearchSync"),
+        "Also matches subjects."
+      ])
+
+      refute search_html =~ "<fieldset"
 
       assert_all(html, [
         "<fieldset",
@@ -1521,7 +1722,14 @@ defmodule MailglassAdmin.ComponentsTest do
         "Last 7 days"
       ])
 
-      assert field_order(html, ["Search", "Time window", "Latest recorded event", "Provider"])
+      assert field_order(html, [
+               "Email address",
+               "Time window",
+               "Latest recorded event",
+               "Provider"
+             ])
+
+      refute other_html =~ ~s(name="filters[search]")
       refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end

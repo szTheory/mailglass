@@ -417,3 +417,123 @@ jobs:
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --seed 0
+
+  favicon_raster_advisory:
+    name: Favicon Raster Re-render Advisory
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Detect favicon producer inputs
+        id: paths
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$BASE_SHA"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            base="$BEFORE_SHA"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$base" "$HEAD_SHA" -- \
+            brandbook/v2/favicon.svg \
+            mailglass_admin/priv/static/favicon.svg \
+            mailglass_admin/e2e/favicon-capture.cjs \
+            mailglass_admin/package.json \
+            mailglass_admin/package-lock.json \
+            mailglass_admin/mix.exs \
+            mailglass_admin/mix.lock \
+            mailglass_admin/test/support/favicon_catalog.ex \
+            mailglass_admin/test/mailglass_admin/favicon_catalog_test.exs \
+            .github/workflows/advisory-matrix.yml | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Node
+        if: steps.paths.outputs.changed == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Install locked browser tooling
+        if: steps.paths.outputs.changed == 'true'
+        run: npm ci --prefix mailglass_admin
+      - name: Install browser engines
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: mailglass_admin
+        run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
+      - name: Prepare isolated favicon source checkout
+        id: favicon-source
+        if: steps.paths.outputs.changed == 'true'
+        run: |
+          source_root="$(mktemp -d "$RUNNER_TEMP/mailglass-favicon-source.XXXXXX")"
+          echo "root=$source_root" >> "$GITHUB_OUTPUT"
+          git archive "$GITHUB_SHA" | tar -x -C "$source_root"
+      - name: Set up Elixir for independent catalog validation
+        if: steps.paths.outputs.changed == 'true'
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.3.4.15"
+      - name: Install Admin validator dependencies
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: mailglass_admin
+        run: mix deps.get
+      - name: Re-render favicon matrix
+        id: favicon-capture
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: ${{ steps.favicon-source.outputs.root }}
+        env:
+          NODE_PATH: ${{ github.workspace }}/mailglass_admin/node_modules
+        run: |
+          catalog_root=".planning/research/brand-v2-adoption/favicon-catalog"
+          if [ -d "$catalog_root" ]; then
+            mv "$catalog_root" "${catalog_root}.source"
+          fi
+          mkdir -p "$catalog_root"
+          node mailglass_admin/e2e/favicon-capture.cjs --capture
+          catalog_dir="$(find "$PWD/$catalog_root" -mindepth 1 -maxdepth 1 -type d -name 'favicon-*' -print -quit)"
+          test -n "$catalog_dir"
+          echo "catalog_dir=$catalog_dir" >> "$GITHUB_OUTPUT"
+      - name: Validate captured catalog independently
+        if: steps.paths.outputs.changed == 'true'
+        working-directory: mailglass_admin
+        env:
+          MAILGLASS_FAVICON_CATALOG_DIR: ${{ steps.favicon-capture.outputs.catalog_dir }}
+        run: |
+          mix run --no-start -e '
+            Code.require_file("test/support/favicon_catalog.ex")
+            repo_root = Path.expand("..", File.cwd!())
+            catalog_dir = System.fetch_env!("MAILGLASS_FAVICON_CATALOG_DIR")
+            failures = MailglassAdmin.TestSupport.FaviconCatalog.validate_catalog(catalog_dir, repo_root)
+            if failures == [] do
+              IO.puts("independent favicon catalog validation passed")
+            else
+              Enum.each(failures, &IO.puts(:stderr, &1))
+              System.halt(1)
+            end
+          '
+      - name: Remove ephemeral favicon source checkout
+        if: always() && steps.favicon-source.outputs.root != ''
+        env:
+          FAVICON_SOURCE_ROOT: ${{ steps.favicon-source.outputs.root }}
+        run: |
+          case "$FAVICON_SOURCE_ROOT" in
+            "$RUNNER_TEMP"/mailglass-favicon-source.*) rm -rf -- "$FAVICON_SOURCE_ROOT" ;;
+            *) echo "Refusing to clean unexpected favicon source path: $FAVICON_SOURCE_ROOT" >&2; exit 1 ;;
+          esac

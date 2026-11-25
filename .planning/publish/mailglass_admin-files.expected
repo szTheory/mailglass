@@ -18,6 +18,7 @@ lib/mailglass_admin/auth.ex
 lib/mailglass_admin/components.ex
 lib/mailglass_admin/controllers/assets.ex
 lib/mailglass_admin/controllers/theme_controller.ex
+lib/mailglass_admin/copy.ex
 lib/mailglass_admin/gallery_live.ex
 lib/mailglass_admin/inbound/address_list.ex
 lib/mailglass_admin/inbound/destructive_action.ex
@@ -44,7 +45,9 @@ lib/mailglass_admin/operator/detail_header.ex
 lib/mailglass_admin/operator/filter_commit.ex
 lib/mailglass_admin/operator/filters_form.ex
 lib/mailglass_admin/operator/health_overview.ex
+lib/mailglass_admin/operator/mailer_name.ex
 lib/mailglass_admin/operator/mount.ex
+lib/mailglass_admin/operator/orphan_count.ex
 lib/mailglass_admin/operator/quick_view.ex
 lib/mailglass_admin/operator/repair_state.ex
 lib/mailglass_admin/operator/replay_action.ex
@@ -69,6 +72,7 @@ lib/mailglass_admin/preview/tabs.ex
 lib/mailglass_admin/preview_live.ex
 lib/mailglass_admin/pub_sub/topics.ex
 lib/mailglass_admin/router.ex
+lib/mailglass_admin/status_map.ex
 lib/mailglass_admin/surface_nav.ex
 lib/mailglass_admin/theme.ex
 lib/mix/tasks/mailglass_admin.assets.build.ex
@@ -77,11 +81,14 @@ lib/mix/tasks/mailglass_admin.daisyui.update.ex
 mix.exs
 priv/static/app.css
 priv/static/favicon.svg
-priv/static/fonts/ibm-plex-mono-400.woff2
-priv/static/fonts/ibm-plex-mono-700.woff2
-priv/static/fonts/inter-400.woff2
-priv/static/fonts/inter-700.woff2
-priv/static/fonts/inter-tight-400.woff2
-priv/static/fonts/inter-tight-700.woff2
+priv/static/fonts/OFL-AtkinsonHyperlegibleMono.txt
+priv/static/fonts/OFL-AtkinsonHyperlegibleNext.txt
+priv/static/fonts/OFL-FunnelDisplay.txt
+priv/static/fonts/a-display-600.woff2
+priv/static/fonts/a-mono-400.woff2
+priv/static/fonts/a-mono-600.woff2
+priv/static/fonts/ui-400.woff2
+priv/static/fonts/ui-400i.woff2
+priv/static/fonts/ui-600.woff2
 priv/static/hooks.js
 priv/static/mailglass-logo.svg

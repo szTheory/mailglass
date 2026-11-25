@@ -1,0 +1,45 @@
+{
+  "scenario_id": "calib-08",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated field and both event timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "status badge beside the subject and the verdict block with its drawn mark"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading, Account selector and detail fields"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "top of the detail card, directly under the subject and recipient, above the timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "verdict block and Bounced timeline card"
+    }
+  ],
+  "reasons": "The verdict comes first on the phone screen: a Failed mark and word, the plain sentence \"Failed: the email did not get through.\", and a concrete next step. Every time shows UTC. The cause, an invalid address, is attributed to the provider's report and matches the recorded Bounced event, with no retry promise or retry time. The page uses the product's words (Account, Mailer, Provider)."
+}

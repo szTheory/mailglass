@@ -1501,7 +1501,7 @@
             "testid": "operator-health-deliveries-bounced",
             "count": 7,
             "label": "Bounced deliveries",
-            "help": "The provider reported that these messages could not be delivered.",
+            "help": "The provider reported that these emails could not be delivered.",
             "surface": "deliveries",
             "path": "/ops/mail?event=bounced&tenant_id=fjordline-aps&view=deliveries&window_hours=168",
             "stale": false

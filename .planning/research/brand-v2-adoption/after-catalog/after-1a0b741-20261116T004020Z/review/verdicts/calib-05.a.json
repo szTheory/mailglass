@@ -1,0 +1,39 @@
+{
+  "scenario_id": "calib-05",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field in the header card and the timestamps on the timeline cards"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "red badge next to the subject heading"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": false,
+      "evidence_quote": "Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "Text under the subject heading, with no next step"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading and the Mailable label in the header card"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "top card, where the verdict should be"
+    }
+  ],
+  "reasons": "Every time is shown without a time zone, for example \"Nov 15, 2026, 2:04 AM\". The status badge reads \"Bounced\", which is not one of the five status words. The page is titled \"Deliveries\" and uses the label \"Mailable\" instead of Activity and Mailer. The detail page also has no plain verdict sentence and no next step. It tells the reader to open the delivery they are already viewing."
+}

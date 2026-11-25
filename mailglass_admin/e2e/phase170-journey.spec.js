@@ -199,7 +199,7 @@ test.describe("Phase 170 connected", () => {
 
     await page.getByTestId("inbound-replay-confirm").click();
     await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
-      "Replay blocked: this action is not authorized for the current operator."
+      "Replay blocked: this action is not authorized for this admin account."
     );
     const modal = page.getByTestId("inbound-replay-modal");
     await expect(modal).toBeVisible();

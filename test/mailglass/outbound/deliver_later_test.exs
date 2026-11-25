@@ -185,7 +185,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert reloaded.adapter_ref == "route_a"
     end
 
-    test "queued raw adapter overrides fail when Mailglass cannot persist them safely" do
+    test "queued raw adapter overrides fail when mailglass cannot persist them safely" do
       msg = build_message("unsafe-override-#{unique_id()}@example.com")
 
       assert {:error, %Mailglass.SendError{} = err} =

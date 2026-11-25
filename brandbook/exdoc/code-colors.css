@@ -1,0 +1,22 @@
+/* Syntax token colors only. ExDoc retains its native body, links, layout and Lato face. */
+.makeup .k,
+.makeup .kc,
+.makeup .kd,
+.makeup .kn,
+.makeup .kp,
+.makeup .kr,
+.makeup .kt,
+.makeup .nt {
+  color: #0a6488;
+}
+
+.dark .makeup .k,
+.dark .makeup .kc,
+.dark .makeup .kd,
+.dark .makeup .kn,
+.dark .makeup .kp,
+.dark .makeup .kr,
+.dark .makeup .kt,
+.dark .makeup .nt {
+  color: #46b6e8;
+}

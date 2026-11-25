@@ -1,0 +1,27 @@
+{
+  "scenario_id": "calib-03",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:16 AM",
+      "screenshot_region": "Updated column, first row"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Dispatched\"",
+      "screenshot_region": "Outcome column, third row (Dispatched badge); Suppressed and Bounced badges in rows 1, 2, 6 and 8"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading and left navigation"
+    }
+  ],
+  "reasons": "The visible Updated times (for example \"Nov 15, 2026, 2:16 AM\") show no time zone. The zone appears only in the hidden copy-button label, not in the visible text. The Outcome column uses \"Suppressed\", \"Bounced\" and \"Dispatched\" as status words instead of Not sent, Failed and Sent. The list is titled \"Deliveries\" instead of \"Activity\"."
+}

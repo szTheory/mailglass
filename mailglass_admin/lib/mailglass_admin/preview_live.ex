@@ -315,7 +315,6 @@ defmodule MailglassAdmin.PreviewLive do
     ~H"""
     <AdminShell.shell
       testid="preview-shell"
-      theme_attr={admin_theme_attr(@admin_chrome_theme)}
       sidebar_width_class="md:grid-cols-[15rem_1fr]"
       main_max_width_class="max-w-none"
     >
@@ -356,7 +355,7 @@ defmodule MailglassAdmin.PreviewLive do
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          Renders the scenarios in each Mailable's <code class="mono">preview_props/0</code>. It doesn't read Deliveries or Inbound messages from any Account.
+          Renders the scenarios in each Mailable's <code class="mono">preview_props/0</code>. It doesn't read Activity or Inbound messages from any Account.
         </p>
       </:page_header>
 
@@ -736,8 +735,6 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   defp parse_device_width_param(_), do: 768
-
-  defp admin_theme_attr(theme), do: MailglassAdmin.Theme.data_theme(theme)
 
   # Map the persisted chrome theme (:dark | :light | nil) onto the theme_picker's
   # closed :system | :light | :dark selection. nil means no explicit override,

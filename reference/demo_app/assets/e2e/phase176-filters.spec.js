@@ -61,7 +61,7 @@ test.describe("Phase 176 direct filters on the demo client", () => {
 
 const connectedCollections = [
   {
-    name: "Deliveries",
+    name: "Activity",
     target: "/ops/mail?tenant_id=northstar&view=deliveries",
     select: "#filters_event",
     value: "failed",

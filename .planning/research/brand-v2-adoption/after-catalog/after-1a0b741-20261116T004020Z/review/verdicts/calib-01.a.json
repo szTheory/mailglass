@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-01",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field in the summary card and the timestamps in the event timeline"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "red status badge under the subject heading"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading, the Deliveries tab, and the Mailable label"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": false,
+      "evidence_quote": "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "summary card at the top, where the verdict should be"
+    }
+  ],
+  "reasons": "Times such as \"Nov 15, 2026, 2:04 AM\" show no visible time zone. The UTC zone appears only in the copy-button label, not in the text on screen. The delivery status badge reads \"Bounced\", which is an event word and not one of the five status words (Sent, Delivered, Delayed, Failed, Not sent). The page also uses \"Deliveries\" and \"Mailable\" where the product words are Activity and Mailer. The top card has no clear verdict sentence and no concrete next step. It only says to open the delivery, which the support person is already viewing."
+}

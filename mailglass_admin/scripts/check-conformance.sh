@@ -276,9 +276,10 @@ if grep -rEn 'text-(sm|xs|xl|2xl|3xl)\b|text-base($|[^-])' "$LIB" --include="*.e
   errors=$((errors + 1))
 fi
 
-# BOLD-GATE: faux-bold tokens font-medium and font-semibold.
-# Only weights 400 and 700 are loaded; font-medium (500) and font-semibold (600) trigger
-# browser synthesis. Use font-bold or the default weight only.
+# BOLD-GATE: the extra weight spellings font-medium and font-semibold.
+# Only weights 400 and 600 are loaded and font-bold maps to the 600 face (--font-weight-bold),
+# so bold keeps one spelling: font-medium (500) has no face and font-semibold would duplicate
+# font-bold. Use font-bold or the default weight only.
 if grep -rE 'font-(medium|semibold)' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: BOLD-GATE — faux-bold token found (use font-bold or default only)" >&2
   errors=$((errors + 1))

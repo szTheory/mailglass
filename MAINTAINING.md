@@ -1,6 +1,6 @@
-# Maintaining Mailglass
+# Maintaining mailglass
 
-This document covers the release flow and maintenance protocols for Mailglass.
+This document covers the release flow and maintenance protocols for mailglass.
 
 ## Current protected release and recovery path
 
@@ -415,10 +415,10 @@ Provider-live checks and ecosystem canaries remain advisory unless a specific
 release claim explicitly depends on them.
 
 The 24-row table above covers `ci.yml` only. The separate `advisory-matrix.yml`
-workflow carries seven more lanes, enumerated leg-by-leg in the next section.
+workflow carries eight more lanes, enumerated leg-by-leg in the next section.
 None of them is a member of `ci_green.needs`, so **none gates a merge** — but
-"gates nothing at all" is no longer the whole story: two of the seven are the
-declared publish-gating pair for HARNESS-04. None of the seven carries a runtime
+"gates nothing at all" is no longer the whole story: two of the eight are the
+declared publish-gating pair for HARNESS-04. None of the eight carries a runtime
 matrix suffix, because each interpolates every matrix axis into its own `name:`;
 the carve-out in point 2 above explains why, and why exact-equality matching is
 safe for them.
@@ -428,9 +428,9 @@ safe for them.
 ## Advisory Matrix Lanes
 
 `.github/workflows/advisory-matrix.yml` runs on push to `main`, pull requests to
-`main`, a nightly cron (`21 4 * * *`), and `workflow_dispatch`. Its four jobs
-expand to **seven runtime lanes**, one per `strategy.matrix.include:` row. This
-table is the classification statement for those seven; the § "Required Checks"
+`main`, a nightly cron (`21 4 * * *`), and `workflow_dispatch`. Its five jobs
+expand to **eight runtime lanes**, one per `strategy.matrix.include:` row. This
+table is the classification statement for those eight; the § "Required Checks"
 table above covers `ci.yml` and nothing else. Keeping them under separate
 headings is structural, not stylistic — `lane_classification_drift_test.exs`
 bounds each table's parser by its own top-level heading and asserts an exact row
@@ -444,7 +444,7 @@ from the workflow source, and the drift test asserts it set-equals
 `Mailglass.CILanes.advisory_matrix_gating_lanes/0` ∪
 `advisory_matrix_advisory_lanes/0`.
 
-**Two of these seven gate a Hex publish; the other five gate nothing.** As of
+**Two of these eight gate a Hex publish; the other six gate nothing.** As of
 Phase 143 plan 13, `gate-ci-green` reads `advisory-matrix.yml` as well as
 `ci.yml`, and the two Elixir 1.18 / OTP 27 `Core Full Suite` legs block a
 publish when they are red, cancelled, skipped, or absent. Their rows therefore
@@ -452,7 +452,7 @@ read `publish-gating` / `keep-with-reason`, which is the honest current state �
 they were `advisory` / `promote` while the promotion was only a recommendation.
 The verdict, its evidence, and its accepted costs are recorded in
 `.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`. The remaining
-five rows stay `advisory`: classified, enumerated, warned on, never blocking.
+Six rows stay `advisory`: classified, enumerated, warned on, never blocking.
 
 **Gating the two floor legs is wider than the lane name reads.** They are steps
 of the `core_full_suite` job, which also runs `mix deps.get` and
@@ -469,6 +469,7 @@ next-toolchain legs run none of them.
 | `provider_compatibility_advisory` | `Provider Compatibility Advisory (Elixir 1.18 / OTP 27)` | advisory | keep-with-reason | `mix verify.provider_compatibility`. Advisory by the fake-adapter-is-the-gate DNA: real-provider surface checks inform, they do not block. |
 | `mailglass_inbound_dual_schema_advisory` | `Inbound Full Suite Advisory (schema public)` | advisory | keep-with-reason | Not gated despite being green (D-20): it pins `--seed 0` specifically to dodge the known phase-45 property-test pool flake, and a lane whose green depends on a seed chosen to avoid a known nondeterminism is not trustworthy enough to gate a publish. Revisit when the pin is removed. |
 | `mailglass_inbound_dual_schema_advisory` | `Inbound Full Suite Advisory (schema mailglass)` | advisory | keep-with-reason | Second schema axis of the inbound suite (D-13 / INB-03). Same `--seed 0` reasoning as the row above. |
+| `favicon_raster_advisory` | `Favicon Raster Re-render Advisory` | advisory | keep-with-reason | Path-filtered, headless re-render of pinned favicon artwork and capture inputs; it does not gate a merge or publish and performs no upload. |
 
 Note that `job id` repeats across rows here and display names do not: one job
 expands to one runtime lane per matrix row. That is the opposite of the
@@ -480,7 +481,7 @@ editing any one of the three without the others fails CI.
 
 ## Bus Factor & Continuity
 
-Mailglass remains single-maintainer. A green gate alone does not authorize
+mailglass remains single-maintainer. A green gate alone does not authorize
 release or publish progress. Every current release continues to require the
 protected exact-candidate dispatch and fresh exact repository-admin
 authorization described at the start of this document.
@@ -574,7 +575,7 @@ written to be kept, not aspired to.
 
 A missed cycle does not lose signal: the next `mix hex.audit`/`mix deps.audit`
 run re-surfaces every outstanding advisory from scratch, so nothing is
-silently dropped, only delayed. Mailglass is single-maintainer (see "Bus
+silently dropped, only delayed. mailglass is single-maintainer (see "Bus
 Factor & Continuity" above), so concurrent-maintainer triage races are out of
 scope for this cadence — that is an already-documented posture, not a new gap
 this section invents.
@@ -613,7 +614,7 @@ executable named above.
 
 ### Historical v0.1/v0.5 bus-factor rationale
 
-Mailglass was single-maintainer at v0.1. The release pipeline was intentionally
+mailglass was single-maintainer at v0.1. The release pipeline was intentionally
 hands-free after the repo-proved gates passed: `gate-ci-green` checked the
 release SHA and the `hex-publish` environment had no required reviewers. This
 was documented rather than presented as a stronger human approval control than
@@ -689,7 +690,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    - **Core Full Suite is a publish gate (HARNESS-04).** `gate-ci-green` reads
      `advisory-matrix.yml` as well as `ci.yml`. The two Elixir 1.18 / OTP 27
      `Core Full Suite` legs block the publish when either is red, cancelled,
-     skipped, or absent. The other five advisory-matrix lanes only warn.
+     skipped, or absent. The other six advisory-matrix lanes only warn.
      - **The gate DISPATCHES the run; it does not look one up.** A release-please
        bot-merged release SHA has zero `advisory-matrix.yml` runs — GitHub raises
        no workflow for a `GITHUB_TOKEN` event, and that workflow has no `release:`

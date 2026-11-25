@@ -9,6 +9,7 @@ defmodule MailglassAdmin.Operator.Timeline do
   alias MailglassAdmin.Operator.RepairState
 
   attr(:timeline_events, :list, required: true)
+  attr(:id_prefix, :string, default: nil)
   attr(:highlight_event_id, :string, default: nil)
   attr(:read_state, :atom, default: :ready)
   attr(:selected_event, :map, default: nil)
@@ -96,7 +97,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                               :autoresponded
                             ]
                           }
-                          id={"delivery-event-outcome-#{event.id}"}
+                          id={prefixed_id(@id_prefix, "delivery-event-outcome-#{event.id}")}
                           label={event_label(event.type)}
                           trigger_text={event_label(event.type)}
                           trigger_class="font-bold text-base-content"
@@ -142,7 +143,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                       <Components.technical_details
                         collapsible={not is_nil(provider_reference(event))}
                         divider?={false}
-                        id={"delivery-event-technical-#{event.id}"}
+                        id={prefixed_id(@id_prefix, "delivery-event-technical-#{event.id}")}
                       >
                         <div>
                           <dt class="text-label font-bold text-secondary">Event ID</dt>
@@ -167,7 +168,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                     <div class="min-w-0 text-label text-secondary">
                       <Components.timestamp at={event.occurred_at} />
                       <p :if={Map.get(event, :provider_occurred_at)} class="mt-xs break-words">
-                        Provider occurrence time: {Map.get(event, :provider_occurred_at)}
+                        <.provider_time value={Map.get(event, :provider_occurred_at)} />
                       </p>
                       <p :if={is_nil(event.occurred_at)} class="break-words">Unavailable</p>
                     </div>
@@ -216,10 +217,10 @@ defmodule MailglassAdmin.Operator.Timeline do
             <Components.timestamp at={@selected_event.event.occurred_at} />
             <p :if={is_nil(@selected_event.event.occurred_at)} class="break-words">Unavailable</p>
             <p
-              :if={provider_time(@selected_event.event)}
+              :if={provider_time_value(@selected_event.event)}
               class="break-words text-label text-secondary"
             >
-              Provider occurrence time: {provider_time(@selected_event.event)}
+              <.provider_time value={provider_time_value(@selected_event.event)} />
             </p>
           </div>
         <% else %>
@@ -241,6 +242,9 @@ defmodule MailglassAdmin.Operator.Timeline do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp event_label(:autoresponded), do: "Auto-replied"
 
@@ -293,14 +297,47 @@ defmodule MailglassAdmin.Operator.Timeline do
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Source unavailable"
-      values -> Enum.join(values, " · ")
+      values -> Enum.join(values, " • ")
     end
   end
 
-  defp provider_time(event) do
+  defp provider_time_value(event) do
     metadata = Map.get(event, :metadata, %{}) || %{}
     Map.get(metadata, "provider_occurred_at") || Map.get(metadata, :provider_occurred_at)
   end
+
+  # The provider's own time of the event. A value that parses as an ISO 8601 datetime
+  # goes through `Components.timestamp/1` like every other time, so it shows its zone.
+  # A value that does not parse is shown as the provider's raw text, labelled as such,
+  # and is never styled or placed as if it were a time mailglass understood. Rendered
+  # through HEEx, so a hostile string is escaped.
+  attr(:value, :any, required: true)
+
+  defp provider_time(assigns) do
+    assigns = assign(assigns, :parsed, parse_provider_time(assigns.value))
+
+    ~H"""
+    <%= if @parsed do %>
+      Provider time: <Components.timestamp at={@parsed} copyable={false} />
+    <% else %>
+      <span data-raw-provider-time>Provider time, as reported: {raw_provider_time(@value)}</span>
+    <% end %>
+    """
+  end
+
+  defp parse_provider_time(%DateTime{} = at), do: at
+
+  defp parse_provider_time(value) when is_binary(value) do
+    case DateTime.from_iso8601(value) do
+      {:ok, at, _offset} -> at
+      {:error, _reason} -> nil
+    end
+  end
+
+  defp parse_provider_time(_value), do: nil
+
+  defp raw_provider_time(value) when is_binary(value), do: value
+  defp raw_provider_time(value), do: inspect(value)
 
   defp provider_reference(event) do
     metadata = Map.get(event, :metadata, %{}) || %{}
@@ -308,15 +345,15 @@ defmodule MailglassAdmin.Operator.Timeline do
   end
 
   defp replay_metadata_summary(:webhook_replay_requested, _metadata),
-    do: "Replay audit · requested"
+    do: "Replay audit • requested"
 
-  defp replay_metadata_summary(:webhook_replay_failed, _metadata), do: "Replay audit · failed"
+  defp replay_metadata_summary(:webhook_replay_failed, _metadata), do: "Replay audit • failed"
 
   defp replay_metadata_summary(:webhook_replay_succeeded, metadata) do
     case Map.get(metadata, "outcome") || Map.get(metadata, :outcome) do
-      "replayed" -> "Replay audit · completed · new work"
-      "noop" -> "Replay audit · completed · no change"
-      _ -> "Replay audit · completed"
+      "replayed" -> "Replay audit • completed • new work"
+      "noop" -> "Replay audit • completed • no change"
+      _ -> "Replay audit • completed"
     end
   end
 

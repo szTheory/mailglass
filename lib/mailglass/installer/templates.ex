@@ -13,14 +13,14 @@ defmodule Mailglass.Installer.Templates do
     """
     defmodule #{app_module}.MailContext do
       @moduledoc \"\"\"
-      Mailglass integration boundary for this host app.
+      mailglass integration boundary for this host app.
       \"\"\"
     end
     """
   end
 
   @doc """
-  Returns the snippet inserted into `router.ex` for the Mailglass admin surface.
+  Returns the snippet inserted into `router.ex` for the mailglass admin surface.
   """
   @spec router_mount_snippet(keyword()) :: String.t()
   def router_mount_snippet(opts \\ []) do
@@ -43,7 +43,7 @@ defmodule Mailglass.Installer.Templates do
   end
 
   @doc """
-  Returns the snippet inserted into `router.ex` for the Mailglass webhook surface.
+  Returns the snippet inserted into `router.ex` for the mailglass webhook surface.
   """
   @spec webhook_mount_snippet(keyword()) :: String.t()
   def webhook_mount_snippet(_opts \\ []) do
@@ -130,7 +130,7 @@ defmodule Mailglass.Installer.Templates do
   Returns the managed block body inserted into `runtime.exs`.
 
   Sets Swoosh's `:api_client` to `false`, matching mailglass's own
-  `config/config.exs` and `mailglass_admin/config/config.exs`. Mailglass
+  `config/config.exs` and `mailglass_admin/config/config.exs`. mailglass
   does not pin a specific HTTP client at the package level: API-based
   Swoosh adapters (Postmark, SendGrid, Mailgun, SES, Resend) require an
   HTTP client, but the choice belongs to the adopter. With

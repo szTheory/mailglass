@@ -46,7 +46,7 @@ test.describe("demo outbound replay", () => {
     const events = page.getByTestId("operator-timeline-event");
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
     await expect(events.first()).toBeVisible();
-    const succeeded = events.filter({ hasText: "Replay audit · completed" });
+    const succeeded = events.filter({ hasText: "Replay audit • completed" });
     const before = await succeeded.count();
 
     await page.getByTestId("operator-replay-open").click();

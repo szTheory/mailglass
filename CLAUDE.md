@@ -119,6 +119,8 @@ For any gray-area decision:
 3. **Escalate only genuinely strategic forks.** Ask the user ONLY when research leaves no clear winner AND the call is one a staff/architect engineer would personally want: ship-or-don't, license, vendor/framework lock-in that's expensive to reverse, brand/visual identity, or a public-API shape where the *project's own goals* (not ecosystem norms) decide and it could plausibly go either way. A strong idiomatic precedent settles it → research-and-lock, do not ask (even for irreversible public-API shape — see the `%InboundMessage{} :signals` precedent).
 4. **Reversibility test before asking:** if it can be added/changed later without rip-out, just pick the recommended option. When in doubt, lean toward NOT asking — "one-shot a perfect set of recommendations." A wrong call is cheaper than breaking the user's flow; they can redirect mid-execution.
 
+The fan-out lenses, the "copy beats a new dependency" rule, cheap-checks-first and the CI/release speed-win rule are in **`.planning/AUTONOMOUS-PLAYBOOK.md`** — read it in every discuss, verify, CI and release step, including `/gsd-autonomous` runs.
+
 Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `vendor_philosophy: opinionated` → `minimal_decisive`), in `.planning/config.json` `preferences.vendor_philosophy`, and in the user memory `feedback_research_driven_recommendations.md`. Persist multi-pass research under `.planning/research/` so it isn't regenerated.
 
 ## Commit & Branch Conventions

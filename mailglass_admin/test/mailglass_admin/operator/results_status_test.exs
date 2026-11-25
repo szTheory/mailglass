@@ -15,19 +15,19 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
     })
   end
 
-  describe "Phase 176 ResultsStatus.text/1 for Deliveries" do
+  describe "Phase 176 ResultsStatus.text/1 for Activity" do
     test "Phase 176 settled states announce one specific sentence each" do
-      assert text(:deliveries, :ready, 24, true) == "24 deliveries match"
-      assert text(:deliveries, :ready, 24, false) == "24 deliveries match"
-      assert text(:deliveries, :ready, 1, false) == "1 delivery matches"
-      assert text(:deliveries, :ready, 0, true) == "No deliveries match the current filters"
-      assert text(:deliveries, :ready, 0, false) == "No deliveries in this time window"
-      assert text(:deliveries, :error, nil, true) == "Couldn't load deliveries"
+      assert text(:deliveries, :ready, 24, true) == "24 emails match"
+      assert text(:deliveries, :ready, 24, false) == "24 emails match"
+      assert text(:deliveries, :ready, 1, false) == "1 email matches"
+      assert text(:deliveries, :ready, 0, true) == "No emails match the current filters"
+      assert text(:deliveries, :ready, 0, false) == "No activity in this time window"
+      assert text(:deliveries, :error, nil, true) == "Couldn't load activity"
     end
 
     test "Phase 176 stale announces the title with the load time" do
       assert text(:deliveries, :stale, 24, true, ~U[2026-10-28 14:05:09Z]) ==
-               "Showing results from 14:05 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 2:05 PM UTC; refresh failed"
 
       assert text(:deliveries, :stale, 24, true) ==
                "Showing earlier results; refresh failed"
@@ -43,7 +43,7 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
       assert text(:inbound, :error, nil, false) == "Couldn't load inbound messages"
 
       assert text(:inbound, :stale, 3, true, ~U[2026-10-28 09:01:00Z]) ==
-               "Showing results from 09:01 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 9:01 AM UTC; refresh failed"
     end
   end
 
@@ -52,7 +52,7 @@ defmodule MailglassAdmin.Operator.ResultsStatusTest do
       assert ResultsStatus.stale_title(nil) == "Showing earlier results; refresh failed"
 
       assert ResultsStatus.stale_title(~U[2026-10-28 14:05:09Z]) ==
-               "Showing results from 14:05 UTC; refresh failed"
+               "Showing results from Oct 28, 2026, 2:05 PM UTC; refresh failed"
     end
   end
 end

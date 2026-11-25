@@ -29,8 +29,8 @@ defmodule Mailglass.OperatorIncidentSupportGuideTest do
     test "includes honesty notes and current telemetry vocabulary" do
       guide = File.read!(@guide_path)
 
-      assert guide =~ "Mailglass can tell you this"
-      assert guide =~ "Mailglass cannot tell you this"
+      assert guide =~ "mailglass can tell you this"
+      assert guide =~ "mailglass cannot tell you this"
       assert guide =~ "[:mailglass, :webhook, :ingest"
       assert guide =~ "[:mailglass, :outbound, :dispatch"
 

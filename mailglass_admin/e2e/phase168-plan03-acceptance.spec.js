@@ -17,8 +17,22 @@ async function surfaceBackground(page, testId) {
   return page.getByTestId(testId).evaluate(element => getComputedStyle(element).backgroundColor);
 }
 
+// Phase 180 (BRPIPE-02): `<html>` is the only element that carries the theme
+// attribute. `theme` is "light" | "dark" for an explicit choice, or null for System
+// (no attribute at all). Counting every [data-theme] element proves no shell,
+// pane or wrapper re-declares the token set.
+async function expectRootTheme(page, theme) {
+  const html = page.locator("html");
+  if (theme === null) {
+    await expect(html).not.toHaveAttribute("data-theme");
+  } else {
+    await expect(html).toHaveAttribute("data-theme", `mailglass-${theme}`);
+  }
+  await expect(page.locator("[data-theme]")).toHaveCount(theme === null ? 0 : 1);
+}
+
 test.describe("Plan 168-03 rendered acceptance", () => {
-  test("System follows emulated OS changes while remaining selected across navigation and reload", async ({ page }) => {
+  test("System follows emulated OS changes while remaining selected across navigation and reload", { tag: "@smoke180" }, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.emulateMedia({ colorScheme: "light" });
     await loginOperator(page);
@@ -26,23 +40,24 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     const operatorShell = page.getByTestId("operator-shell");
     const systemChoice = page.getByRole("radio", { name: "System", exact: true });
     await expect(systemChoice).toBeChecked();
-    await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null);
+    await expect(operatorShell).not.toHaveAttribute("data-theme");
     const lightBackground = await surfaceBackground(page, "operator-shell");
 
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => surfaceBackground(page, "operator-shell")).not.toBe(lightBackground);
     const darkBackground = await surfaceBackground(page, "operator-shell");
     await expect(systemChoice).toBeChecked();
-    await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null);
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expect(operatorShell).toHaveAttribute("data-theme", "mailglass-dark");
+    await expectRootTheme(page, "dark");
     const explicitDarkBackground = await surfaceBackground(page, "operator-shell");
     await page.emulateMedia({ colorScheme: "light" });
     await expect.poll(() => surfaceBackground(page, "operator-shell")).toBe(explicitDarkBackground);
 
     await page.getByRole("radio", { name: "Light", exact: true }).click();
-    await expect(operatorShell).toHaveAttribute("data-theme", "mailglass-light");
+    await expectRootTheme(page, "light");
     const explicitLightBackground = await surfaceBackground(page, "operator-shell");
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => surfaceBackground(page, "operator-shell")).toBe(explicitLightBackground);
@@ -51,14 +66,15 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     );
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
-    await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null);
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
     await expect.poll(() => surfaceBackground(page, "operator-shell")).toBe(darkBackground);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
     const previewShell = page.getByTestId("preview-shell");
     await expect(previewShell).toBeVisible();
-    await expect(previewShell).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null);
+    await expect(previewShell).not.toHaveAttribute("data-theme");
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
     await page.reload();
     await expect(page.getByTestId("preview-shell")).toBeVisible();
@@ -108,10 +124,11 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     const recordedTime = recordedCell.locator("time");
     await expect(recordedTime).toHaveAttribute("datetime", "2026-10-07T20:06:18Z");
     await expect(recordedTime).toHaveAttribute("data-utc", "2026-10-07 20:06:18 UTC");
-    await expect(recordedTime).toHaveAttribute("aria-label", /^Recorded at .+ local time$/);
+    await expect(recordedTime).not.toHaveAttribute("aria-label", /.*/);
     const recordedCopy = recordedCell.locator("button[data-timestamp-copy]");
     await expect(recordedCopy).toHaveAttribute("data-copy-value", "2026-10-07 20:06:18 UTC");
-    await expect(recordedCopy).toHaveAttribute("aria-label", "Copy timestamp as UTC: 2026-10-07 20:06:18 UTC");
+    // Once the localizer runs, the control's name contains the visible local text.
+    await expect(recordedCopy).toHaveAttribute("aria-label", /^Copy .+ \(copies the exact UTC value 2026-10-07 20:06:18 UTC\)$/);
 
     const loadingCell = page.getByTestId("gallery-stat_card-loading-system");
     await expect(loadingCell).toContainText("Loading");

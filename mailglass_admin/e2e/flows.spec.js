@@ -17,7 +17,7 @@ const {
 // Proves the 5-path taxonomy (happy / error / boundary / edge / advanced) per
 // surface at the 320px floor with the {system} theme axis, plus the overlay
 // interaction subset and the light/dark/system contrast spot-check. Drives the
-// three live surfaces (Operator /ops/mail, Inbound /ops/mail/inbound, Preview
+// three live surfaces (Admin /ops/mail, Inbound /ops/mail/inbound, Preview
 // /dev/mail) by SEEDED URL — ZERO new fixtures (D-02). Assertions only:
 // getComputedStyle / boundingBox / scrollWidth-clientWidth / elementFromPoint /
 // data-theme / getAnimations — NEVER any pixel-diff / screenshot assertion (D-03).
@@ -251,6 +251,23 @@ async function openPreviewScenario(page, query = "theme=light") {
   await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
 }
 
+// Phase 180 (BRPIPE-02): <html> is the only element that carries the theme attribute.
+// `theme` is "light" | "dark" for an explicit choice, or null for System (no attribute).
+// Counting every [data-theme] element proves no shell, pane or wrapper re-declares the
+// token set.
+async function expectRootTheme(page, theme, label = "page") {
+  const html = page.locator("html");
+  if (theme === null) {
+    await expect(html, `${label}: System leaves <html> without a theme attribute`).not.toHaveAttribute("data-theme");
+  } else {
+    await expect(html, `${label}: <html> owns the ${theme} theme`).toHaveAttribute("data-theme", `mailglass-${theme}`);
+  }
+  await expect(
+    page.locator("[data-theme]"),
+    `${label}: only <html> carries a theme attribute`
+  ).toHaveCount(theme === null ? 0 : 1);
+}
+
 async function openPreviewError(page, query = "theme=light") {
   await page.context().clearCookies();
   await page.goto(`/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__${query ? "?" + query : ""}`);
@@ -275,6 +292,20 @@ async function selectDeliveryFull(page, row) {
   await expect(page.getByTestId("operator-quick-view")).toBeVisible();
   await page.getByTestId("operator-quick-view-full").click();
   await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+}
+
+// Technical details is a collapsed native disclosure since 182-02: the verdict leads and the
+// identifiers sit one tap below it. Open it (after the socket connects, which would drop a
+// client-set `open`) before reading a Delivery ID or a provider message ID.
+async function openTechnicalDetails(page) {
+  const technical = page.locator("#delivery-detail-technical");
+  await expect(technical).toBeVisible();
+  await page.locator("[data-phx-main].phx-connected").waitFor();
+  if (!(await technical.evaluate(element => element.open))) {
+    await technical.locator("summary").click();
+  }
+  await expect(technical).toHaveJSProperty("open", true);
+  return technical;
 }
 
 async function selectInboundFull(page, row) {
@@ -579,7 +610,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   // -------------------------------- OPERATOR --------------------------------
 
-  test("Operator happy: select row -> detail timeline; single dominant CTA survives 320/system", async ({ page }) => {
+  test("Admin happy: select row -> detail timeline; single dominant CTA survives 320/system", async ({ page }) => {
     await openOperator(page);
     await assertSingleH1(page, "operator happy");
     await assertNoRootOverflow(page, "operator happy");
@@ -597,7 +628,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
         .first()
     );
 
-    // The single obvious top action for Operator: the replay CTA (the one
+    // The single obvious top action for Admin: the replay CTA (the one
     // dominant action in the detail). It must be visible and be the dominant
     // action button at 320px. Live copy is "Review webhook replay" (btn-primary).
     const replayCta = page.getByTestId("operator-replay-open");
@@ -609,7 +640,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoRootOverflow(page, "operator happy detail");
   });
 
-  test("Operator error: delivery_id=does-not-exist -> detail error", async ({ page }) => {
+  test("Admin error: delivery_id=does-not-exist -> detail error", async ({ page }) => {
     // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
     // the error inside it (operator-quick-view-error), the list still behind it.
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
@@ -622,7 +653,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator error master-detail");
   });
 
-  test("Operator boundary: filtered-empty -> empty + reset", async ({ page }) => {
+  test("Admin boundary: filtered-empty -> empty + reset", async ({ page }) => {
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&event=queued`);
     const filteredEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
     await expect(filteredEmpty).toBeVisible();
@@ -632,7 +663,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator boundary master-detail");
   });
 
-  test("Operator edge: long/non-ASCII tenant truncates without overflow at 320", async ({ page }) => {
+  test("Admin edge: long/non-ASCII tenant truncates without overflow at 320", async ({ page }) => {
     // Edge path: a long/non-ASCII tenant id stresses the mono ID cells. The
     // suppressed-status seeded view exposes the truncating ID cells; assert no
     // overflow at the 320 floor on root and master-detail.
@@ -646,7 +677,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     );
   });
 
-  test("Operator advanced: replay modal -> panel above scrim, Escape closes", async ({ page }) => {
+  test("Admin advanced: replay modal -> panel above scrim, Escape closes", async ({ page }) => {
     const modal = await openOperatorReplayModal(page);
     await assertPanelAboveScrim(modal, "operator advanced replay-modal");
     await assertSingleH1(page, "operator advanced");
@@ -822,13 +853,15 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     expect(scenarioRowGap, "Preview scenario list row gap").toBe("4px");
   });
 
-  test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
+  test("Preview advanced: frame theme differs from admin theme without overflow at 320", { tag: "@smoke180" }, async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+    await expectRootTheme(page, "light", "preview advanced before the frame toggle");
     await page.getByTestId("preview-frame-theme-toggle").click();
     await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
-    // Frame theme diverges from admin theme — admin chrome stays light.
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+    // Frame theme diverges from admin theme: <html> (the only theme owner) stays light and
+    // only the backdrop wrapper's color-scheme flips.
+    await expectRootTheme(page, "light", "preview advanced after the frame toggle");
+    await expect(page.getByTestId("preview-frame-backdrop")).toHaveCSS("color-scheme", "dark");
     await assertSingleH1(page, "preview advanced");
     await assertNoRootOverflow(page, "preview advanced");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview advanced shell");
@@ -849,31 +882,34 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(page.getByTestId("preview-admin-theme-toggle")).toHaveCount(0);
   });
 
-  test("Preview a11y: backdrop toggle reflects aria-pressed + announces via aria-live", async ({ page }) => {
+  test("Preview a11y: backdrop toggle reflects aria-pressed + announces via aria-live", { tag: "@smoke180" }, async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
     const backdrop = page.getByTestId("preview-frame-theme-toggle");
     const status = page.getByTestId("preview-backdrop-status");
     const pane = page.getByTestId("preview-pane");
-    const beforeBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
+    // The toggle repaints the email stage (the backdrop wrapper), not the whole pane:
+    // read the before/after background there.
+    const stage = page.getByTestId("preview-frame-backdrop");
+    const beforeBg = await stage.evaluate(el => getComputedStyle(el).backgroundColor);
     // Pre-click: backdrop off (light), aria-pressed=false, announce says light.
     await expect(backdrop).toHaveAttribute("aria-pressed", "false");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
     await expect(status).toHaveText("Preview backdrop: light");
-    await expect(pane).toHaveAttribute("data-theme", "mailglass-light");
+    await expect(pane, "the pane carries no theme attribute").not.toHaveAttribute("data-theme");
     // Toggle: aria-pressed flips true and the aria-live region announces dark.
     await backdrop.click();
     await expect(backdrop).toHaveAttribute("aria-pressed", "true");
     await expect(status).toHaveText("Preview backdrop: dark");
     await expect(pane).toHaveAttribute("data-preview-frame-theme", "dark");
-    await expect(pane).toHaveAttribute("data-theme", "mailglass-dark");
-    const afterBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
+    await expect(pane, "the pane still carries no theme attribute").not.toHaveAttribute("data-theme");
+    const afterBg = await stage.evaluate(el => getComputedStyle(el).backgroundColor);
     expect(afterBg).not.toBe(beforeBg);
   });
 
 });
 
-test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
+test("Phase 168 Delivery Mailer wrapping", async ({ page }) => {
   const mailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
   fs.mkdirSync(gapClosureArtifacts, { recursive: true });
   await page.setViewportSize({ width: 720, height: 900 });
@@ -894,11 +930,14 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
   const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
   await selectDeliveryFull(page, row);
-  // Technical details are always expanded since Phase 175 (no disclosure summary).
-  await expect(page.locator("#delivery-detail-technical")).toBeVisible();
-  const mailableElement = page.locator("#delivery-detail-mailable-trigger");
-  await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
-  await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
+  // Technical details is a collapsed disclosure since 182-02; open it to read the identifiers.
+  await openTechnicalDetails(page);
+  // The Mailer row (182-04): the plain name is the help trigger, the stored identity is
+  // printed in full below it (mono, wrapping) and also held by the hidden description.
+  await expect(page.locator("#delivery-detail-mailer-trigger")).toHaveText("Transactional email with very long module name");
+  const mailableElement = page.getByTestId("operator-detail-mailer-identity");
+  await expect(mailableElement).toHaveText(mailable);
+  await expect(page.locator("#delivery-detail-mailer")).toHaveText(mailable);
 
   for (const width of [320, 390, 720, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -922,12 +961,12 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
           )
       };
     });
-    expect(geometry.overflowWrap, `Mailable wrapping at ${width}px`).toBe("anywhere");
-    expect(geometry.left, `Mailable left edge at ${width}px`).toBeGreaterThanOrEqual(0);
-    expect(geometry.right, `Mailable right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(geometry.overflowWrap, `Mailer identity wrapping at ${width}px`).toMatch(/^(anywhere|break-word)$/);
+    expect(geometry.left, `Mailer identity left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(geometry.right, `Mailer identity right edge at ${width}px`).toBeLessThanOrEqual(width);
     expect(
       geometry.scrollWidth - geometry.clientWidth,
-      `Mailable element overflow at ${width}px`
+      `Mailer identity element overflow at ${width}px`
     ).toBeLessThanOrEqual(1);
     expect(
       geometry.documentScrollWidth,
@@ -975,10 +1014,11 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
     const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-    // Technical details are always expanded since Phase 175 (no disclosure summary).
-    await expect(zoomPage.locator("#delivery-detail-technical")).toBeVisible();
-    const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
-    await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
+    // Technical details is a collapsed disclosure since 182-02; open it to read the identifiers.
+    await openTechnicalDetails(zoomPage);
+    const zoomedMailable = zoomPage.getByTestId("operator-detail-mailer-identity");
+    await expect(zoomPage.locator("#delivery-detail-mailer")).toHaveText(expectedMailable);
+    await expect(zoomPage.locator("#delivery-detail-mailer-trigger")).toHaveText("Transactional email with very long module name");
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
 
     const serviceWorker =
@@ -1015,7 +1055,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
     const detail = zoomPage.getByTestId("operator-detail-header");
     await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID", expectedDeliveryId, 720);
-    await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailer identity", expectedMailable, 720);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -1041,7 +1081,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     await assertZoomReadableValue(recordedTimestamp, "Recorded timestamp", expectedRecordedTimestamp, 720);
     const providerEventId = timelineEvent.locator("p.mono").filter({ hasText: /^Provider Event ID:/ });
     await expect(providerEventId, "the selected fixture event has no provider event ID").toHaveCount(0);
-    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider occurrence time:/ });
+    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider time/ });
     await expect(providerTimestamp, "the selected fixture event has no provider occurrence timestamp")
       .toHaveCount(0);
 
@@ -1064,17 +1104,17 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       zoomGeometry.devicePixelRatio / initialDevicePixelRatio,
       "200% browser zoom doubles devicePixelRatio"
     ).toBe(2);
-    expect(zoomGeometry.overflowWrap, "Mailable wraps under actual 200% browser zoom").toBe("anywhere");
-    expect(zoomGeometry.left, "zoomed Mailable left edge").toBeGreaterThanOrEqual(0);
-    expect(zoomGeometry.right, "zoomed Mailable right edge")
+    expect(zoomGeometry.overflowWrap, "Mailer identity wraps under actual 200% browser zoom").toMatch(/^(anywhere|break-word)$/);
+    expect(zoomGeometry.left, "zoomed Mailer identity left edge").toBeGreaterThanOrEqual(0);
+    expect(zoomGeometry.right, "zoomed Mailer identity right edge")
       .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
-    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailable element overflow")
+    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailer identity element overflow")
       .toBeLessThanOrEqual(1);
     expect(zoomGeometry.documentScrollWidth, "zoomed document overflow")
       .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
 
     const description = zoomPage.getByText(
-      "Trace each delivery through its event history.",
+      "Every email your app sent, one row per delivery.",
       { exact: true }
     );
 
@@ -1094,7 +1134,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
     }
     await assertZoomReadableValue(detail.getByRole("button", { name: `Copy Delivery ID: ${expectedDeliveryId}`, exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
-    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
+    await assertZoomReadableValue(zoomedMailable, "Mailer identity at 320 CSS px", expectedMailable, 320);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -1116,8 +1156,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     );
     await assertZoomReadableValue(
       description,
-      "Delivery explanation at 320 CSS px",
-      "Trace each delivery through its event history.",
+      "Activity gloss at 320 CSS px",
+      "Every email your app sent, one row per delivery.",
       320
     );
     const narrowDocumentWidth = await zoomPage.evaluate(() => document.documentElement.scrollWidth);
@@ -1191,7 +1231,7 @@ test.describe("flows: overlay interaction subset at 320 (FLOW-02/03)", () => {
     await page.setViewportSize(FLOW_VIEWPORT);
   });
 
-  test("Operator replay modal: panel above scrim, Escape closes, background scrollY unchanged", async ({ page }) => {
+  test("Admin replay modal: panel above scrim, Escape closes, background scrollY unchanged", async ({ page }) => {
     const modal = await openOperatorReplayModal(page);
     await assertPanelAboveScrim(modal, "operator overlay-subset");
 
@@ -1248,7 +1288,7 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
   });
 
   for (const theme of THEMES) {
-    test(`Operator happy path passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
+    test(`Admin happy path passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
       const query = `tenant_id=${tenantId}&view=deliveries${theme.query ? `&${theme.query}` : ""}`;
       await openOperator(page, query);
 
@@ -1262,7 +1302,7 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
       await assertTextContrastAA(page.getByTestId("operator-deliveries-list-card"), `operator ${theme.name} list-card`);
     });
 
-    test(`Operator overlay (replay modal) passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
+    test(`Admin overlay (replay modal) passes AA contrast in ${theme.name} at 320`, async ({ page }) => {
       // Open the operator surface in the target theme, then the replay modal.
       const query = `tenant_id=${tenantId}&view=deliveries${theme.query ? `&${theme.query}` : ""}`;
       await openOperator(page, query);
@@ -1296,9 +1336,9 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
 // actually re-theme the admin shell. Guards two regressions at once: (1) the
 // sr-only radio that swallowed clicks (overlay must keep the input the click
 // target), and (2) the shell deriving theme from URL params only, so the
-// cookie-persisting redirect left .mg-admin-root unthemed. The shell always
-// stamps an explicit data-theme, so assert on .mg-admin-root (the admin theme
-// root), not the host <html>.
+// cookie-persisting redirect left the page unthemed. Phase 180: <html> is the
+// only theme owner (the shell no longer stamps its own data-theme), so assert on
+// <html> and that nothing else carries the attribute.
 // =============================================================================
 
 test.describe("flows: operator theme picker applies the theme on click (FLOW-03)", () => {
@@ -1307,24 +1347,24 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await page.setViewportSize(FLOW_VIEWPORT);
   });
 
-  test("clicking Dark / Light / System re-themes the admin shell and updates selection", async ({ page }) => {
+  test("clicking Dark / Light / System re-themes the admin shell and updates selection", { tag: "@smoke180" }, async ({ page }) => {
     await openOperator(page);
-    const root = page.locator(".mg-admin-root").first();
 
-    // Default (system): shell inherits prefers-color-scheme; system radio is selected.
-    await expect(root).not.toHaveAttribute("data-theme", /mailglass-/);
+    // Default (system): <html> carries no theme and the page follows prefers-color-scheme;
+    // the system radio is selected.
+    await expectRootTheme(page, null, "default System");
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expect(root, "Dark click themes the shell").toHaveAttribute("data-theme", "mailglass-dark");
+    await expectRootTheme(page, "dark", "Dark click themes <html>");
     await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "Light", exact: true }).click();
-    await expect(root, "Light click themes the shell").toHaveAttribute("data-theme", "mailglass-light");
+    await expectRootTheme(page, "light", "Light click themes <html>");
     await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
-    await expect(root, "System click returns to inherited theme").not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System click returns to inherited theme");
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
   });
 
@@ -1333,19 +1373,22 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries`);
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expectRootTheme(page, "dark", "Activity after the Dark click");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
-    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("preview-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Preview");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Health", exact: true }).click();
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Health");
     await expect(page).not.toHaveURL(/[?&]theme=/);
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Inbound", exact: true }).click();
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "Inbound");
     await expect(page).not.toHaveURL(/[?&]theme=/);
   });
 
@@ -1369,15 +1412,17 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     ]);
 
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByTestId("operator-shell")).toBeVisible();
+    await expectRootTheme(page, "dark", "stale legacy dark cookie on Activity");
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
-    await expect(page.getByTestId("operator-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System on Activity");
 
     await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
+    await expect(page.getByTestId("preview-shell")).toBeVisible();
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
-    await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expectRootTheme(page, null, "System on Preview");
     await expect(page).not.toHaveURL(/[?&]theme=/);
   });
 
@@ -1466,7 +1511,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   });
 
-  test("Operator replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
+  test("Admin replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -1678,16 +1723,16 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(selectedDeliveryId).toBeTruthy();
     await expect(page.getByTestId("operator-detail-column")).toBeVisible();
 
-    const technical = page.locator("#delivery-detail-technical");
-    await expect(technical).toBeVisible();
-    expect(await technical.evaluate(element => element.tagName)).toBe("DIV");
+    // A native disclosure since 182-02 (collapsed until opened); the identifiers live inside it.
+    const technical = await openTechnicalDetails(page);
+    expect(await technical.evaluate(element => element.tagName)).toBe("DETAILS");
     await expect(technical).toContainText(selectedDeliveryId);
 
     const suppression = page.getByTestId("operator-suppression-card");
     await expect(suppression).toBeVisible();
     await suppression.getByTestId("operator-suppression-refresh").click();
     await expect(suppression).toContainText(
-      /No current Mailglass suppression matches this delivery|Current Mailglass match|unavailable/i
+      /No current mailglass suppression matches this delivery|Current mailglass match|unavailable/i
     );
 
     await page.getByTestId("operator-replay-open").click();
@@ -1965,14 +2010,14 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       "Replay command completed with no newly normalized Events."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last replay: completed · 0 newly normalized Events"
+      "Last replay: completed • 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
   });
 
   test("Phase 175 Delivery layout U1/U2/U3/U5/U6: technical wrapping, reachable replay review and real zoom", async ({ page }) => {
     const expectedWidths = [320, 375, 768, 1280, 1440];
-    const expectedMailable = "Mailables.TransactionalEmailWithVeryLongModuleName";
+    const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
     const artifactDir = path.resolve(__dirname, "../test-results/phase175-layout");
     fs.mkdirSync(artifactDir, { recursive: true });
 
@@ -1992,11 +2037,12 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       const deliveryId = await row.getAttribute("phx-value-id");
       expect(deliveryId, "selected Delivery exposes its complete exact ID").toBeTruthy();
       await selectDeliveryFull(targetPage, row);
+      await openTechnicalDetails(targetPage);
       return { deliveryId, detail: targetPage.getByTestId("operator-detail-header") };
     };
 
     const { deliveryId, detail } = await openFjordlineDetail(page);
-    const mailable = page.locator("#delivery-detail-mailable-trigger");
+    const mailable = page.getByTestId("operator-detail-mailer-identity");
     const copyId = detail.getByRole("button", { name: `Copy Delivery ID: ${deliveryId}`, exact: true });
     const widthReceipts = [];
     for (const width of expectedWidths) {
@@ -2004,7 +2050,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect(detail).toBeVisible();
       await expect(detail).toContainText("fjordline-aps");
       await assertZoomReadableValue(copyId, `Delivery ID at ${width}px`, deliveryId, width);
-      await assertZoomReadableValue(mailable, `Mailable at ${width}px`, expectedMailable, width);
+      await assertZoomReadableValue(mailable, `Mailer identity at ${width}px`, expectedMailable, width);
       const geometry = await page.evaluate(() => ({
         viewportWidth: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -2088,8 +2134,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       });
       await assertZoomReadableValue(zoomId, "Delivery ID at real 200% zoom", selected.deliveryId, 320);
       await assertZoomReadableValue(
-        zoomPage.locator("#delivery-detail-mailable-trigger"),
-        "Mailable at real 200% zoom",
+        zoomPage.getByTestId("operator-detail-mailer-identity"),
+        "Mailer identity at real 200% zoom",
         expectedMailable,
         320
       );
@@ -2180,7 +2226,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     const originalUrl = page.url();
     const card = page.getByTestId("operator-suppression-card");
     const refresh = card.getByTestId("operator-suppression-refresh");
-    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("Current mailglass match");
     await expect(card).toContainText("operator review · Ångström");
     await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
     await expect(refresh).toHaveClass(/btn-ghost/);
@@ -2222,7 +2268,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(changedResponse.ok()).toBeTruthy();
 
     await refresh.click();
-    await expect(card).toContainText("Current Mailglass match");
+    await expect(card).toContainText("Current mailglass match");
     await expect(card).toContainText("phase169-address-stream");
     await expect(card).toContainText("Complaint");
     await expect(card).not.toContainText("operator review · Ångström");
@@ -2257,7 +2303,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       refresh.evaluate(button => button.parentElement?.lastElementChild === button);
 
     await expect(card).toContainText("Removal policy");
-    await expect(card).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(card).toContainText("mailglass allows removal of Policy suppressions.");
     await expect(card.getByText("Expiry date not recorded", { exact: true })).toHaveCount(0);
     await expect(card.locator("time[data-local-time='true']")).toHaveCount(1);
     await expect(refresh).toHaveAttribute("phx-disable-with", "Refreshing suppression…");
@@ -2273,10 +2319,10 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     const originalUrl = page.url();
     await refresh.click();
-    await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+    await expect(card).toContainText("mailglass does not allow removal of Complaint suppressions.");
     await expect(card).toContainText("Expiry date not recorded");
     await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
-    await expect(card).toContainText("Address + stream · Account-local");
+    await expect(card).toContainText("Address + stream • Account-local");
     await expect(card).toContainText("phase169-address-stream");
     await expect(card.locator("time[data-local-time='true']")).toHaveCount(0);
     await expect(refresh).toBeVisible();
@@ -2340,7 +2386,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       expect(darkModalBackground).not.toBe(lightModalBackground);
       await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
       await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(lightModalBackground);
-      await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+      await expect(operatorShell).not.toHaveAttribute("data-theme");
+      await expectRootTheme(page, null, "replay modal under System");
       const motion = await modal.evaluate(element => ({
         animation: getComputedStyle(element).animationDuration,
         transition: getComputedStyle(element).transitionDuration
@@ -2527,7 +2574,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     page.on("websocket", socket => actualWebSockets.push(socket.url()));
     const lock = fs.readFileSync(path.resolve(__dirname, "../mix.lock"), "utf8");
     const liveViewVersion = lock.match(/^\s+"phoenix_live_view": \{:hex, :phoenix_live_view, "([^"]+)"/m)?.[1];
-    expect(liveViewVersion).toBe("1.2.13");
+    expect(liveViewVersion).toBe("1.2.15");
 
     const cases = [];
     await openOperator(page);

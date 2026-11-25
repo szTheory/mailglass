@@ -71,7 +71,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <Components.data_state
           kind={:stale}
           title={ResultsStatus.stale_title(@loaded_at)}
-          body="Mailglass couldn't re-read these results. Retry to check for updates."
+          body="mailglass couldn't re-read these results. Retry to check for updates."
         />
         <p
           :if={@loaded_at}
@@ -132,7 +132,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
             <Components.data_state
               kind={:empty}
               title="Choose an Account"
-              body="Select an Account to see scoped operator data."
+              body="Select an Account to see its inbound messages."
             />
             <div data-testid="inbound-empty-no-tenant" style="display:none" />
           <% else %>
@@ -285,7 +285,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           <div data-testid="inbound-records-cards" class="md:hidden">
             <ul
               data-testid="inbound-records-list"
-              class="divide-y divide-base-300"
+              class="divide-y divide-base-300 tabular-nums"
             >
               <li :for={record <- @records}>
                 <div class={[
@@ -471,7 +471,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   defp selected?(_selected_record, _record), do: false
 
   defp empty_body(:no_tenant),
-    do: "Select an Account to see scoped operator data."
+    do: "Select an Account to see its inbound messages."
 
   defp empty_body(:truly_empty),
     do: "No messages have been received yet."

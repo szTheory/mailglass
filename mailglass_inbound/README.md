@@ -1,6 +1,13 @@
-# MailglassInbound
+# mailglass
 
-`mailglass_inbound` is the inbound sibling package for Mailglass. This README
+<p align="center">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-light.svg#gh-light-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
+  <img src="https://raw.githubusercontent.com/szTheory/mailglass/7781b4b1ceeca940e5f892530b1cf05430b54d7c/brandbook/v2/mailglass-lockup-dark.svg#gh-dark-mode-only" alt="mailglass" width="580" style="max-width:100%;height:auto">
+</p>
+
+See your email before it ships. Trace it after.
+
+`mailglass_inbound` is the inbound sibling package for mailglass. This README
 is the canonical adoption lane for the shipped inbound slice: install the
 package manually, wire the endpoint/body-reader path explicitly, mount the
 provider plugs you need, choose the async execution mode you want, and verify
@@ -202,8 +209,7 @@ subordinate to this README path:
 - testing harness, process-local assertion behavior, and one-assertion-per-drive:
   [`docs/inbound-testing.md`](docs/inbound-testing.md)
 - compatibility and deprecation posture for stable versus internal/deferred
-  inbound surfaces:
-  [`../guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md)
+  inbound surfaces: [compatibility and deprecation policy](https://hexdocs.pm/mailglass/compatibility-and-deprecations.html)
 
 ## Provider Notes
 

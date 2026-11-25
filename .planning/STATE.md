@@ -1,42 +1,56 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.10
-milestone_name: UI Repairs & Faithful Storybook
-status: Awaiting next milestone
-stopped_at: milestone v2.10 closeout complete; awaiting next milestone
-last_updated: "2026-11-03T04:56:31Z"
-last_activity: 2026-11-03
-last_activity_desc: Milestone v2.10 completed and archived
-state_head: 2700133fc25b94012e14f14de11cefc0c597f568
+milestone: v2.11
+milestone_name: Brand v2.0 Adoption
+current_phase: 182
+current_phase_name: Admin Words and Layout, One Job First
+status: in_progress
+stopped_at: null
+last_updated: "2026-11-20T04:23:18Z"
+last_activity: 2026-11-20
+last_activity_desc: Phase 182-08 stopped before cache prefetch because its controller resolved the approved patch from the wrong phase directory; no candidate was allocated
+state_head: 5ae96395792dfc8800806f20eba1d088df5a671d
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 76
-  completed_plans: 76
-  percent: 100
-current_phase: 178
-current_phase_name: Preview Authoring and Milestone Review
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 35
+  completed_plans: 26
+  percent: 50
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-02)
+See: .planning/PROJECT.md (updated 2026-11-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.10 is archived; no next milestone has been approved
+**Current focus:** BRADM-01, BRADM-07 and BRDOC-02 remain open. Plan 182-08's candidate-free fixtures passed, but its single cache-preflight attempt stopped before reading the cache because the controller resolved the approved patch from the wrong phase directory. No candidate was allocated; preserve the terminal receipt and do not retry. D-30 authorizes up to two additional fresh gap-closure plans (three total), with at most one fresh route per plan and no retries. Preserve Phase 182-07's old routes and favicon stop, #325, owner WIP and demo services. No merge, release, deployment, publication, or tag. Archive only after every phase and integration gate passes.
 
 > The accumulated v2.7-era context below is historical. The v2.10 audit found no blockers; its non-blocking tech debt and nine newly acknowledged deferred records remain disclosed in this state file.
 
 ## Current Position
 
-Phase: Milestone v2.10 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-02 — Milestone v2.10 completed and archived
+Phase: 182 (Admin Words and Layout, One Job First) — IN PROGRESS
+Plan: 182-08 is terminally blocked before cache inspection because the controller looked for the approved patch under Phase 182 instead of Phase 184; preserve the attempt and do not retry it.
+Status: Candidate-free checksum fixtures and terminal replay passed. The real offline prefetch did not run; candidate and scratch roots are absent, and no Docker or GitHub effects occurred. D-30 permits up to two additional fresh gap plans; any new route requires a new plan, controller, namespace and one-shot receipt. BRADM-01, BRADM-07 and BRDOC-02 remain open; preserve #325, Phase 182-07's old routes, favicon, owner WIP and owner-demo services.
+Last activity: 2026-11-20 — Phase 182-08 stopped at its first patch-path check; see [182-08 summary](phases/182-admin-words-and-layout-one-job-first/182-08-SUMMARY.md)
 
-## Current handoff — 2026-11-02
+Progress: [█████░░░░░] 50%
+
+## v2.11 Roadmap Shape
+
+- **Goal:** the repo's identity (words, colors, type, logo, docs assets, admin screens) matches the owner-approved brand v2.0.1 archive (zip sha256 `3bd4369e0668f89c48bc0755ec3e06be2f1aacf07446dc568b2a248d4c9d0a56`), and every identity claim is true or tested.
+- **Phases:** 179 Policy/status map/pin (BRPOL-01..05, 5 plans) → 180 Reproducible bundle + before-catalog (BRPIPE-01..03, 4) → 181 Tokens, fonts, logo (BRTOK-01..06, 4) → 182 Admin words and layout, one job first (BRADM-01..07, 7) → 183 Docs, packaging, launch prep (BRDOC-01..06, 4) → 184 bounded Admin/docs evidence closure (plans 184-01/02/04/05/06/07/08/09 blocked or consumed; 184-03 verifier-only; 184-10 is the final authorized plan and stopped before route allocation).
+- **Stop line:** no new data capture or backend features. Next-retry time, provider reason text and per-mailer rollups are INSIGHT-01..03 for a later milestone. Never render "next try at…", "will retry", or cause text with a nil reason.
+- **Compatibility:** gloss, don't rename. `Mailglass.Operator.*`, `mailglass_operator_routes`, `:operator_access`, `tenant_id`, `:orphan_backlog`, telemetry names, the `Delivery.status` enum and `deliveries_path` stay. Core email defaults (`config.ex`, `theme.ex`, button colors, VML goldens) stay unchanged.
+- **Cap and WIP:** D-30 authorizes up to three fresh gap-closure plans across Phases 182–184, raising the cap to 37. Each route is one-shot; preserve #325 and the previously consumed candidate routes. Keep owner WIP; do not stage, stash, reset, format, or overwrite it.
+- **Audit status:** Phases 179–181 pass; Phases 182–184 remain `gaps_found`. #325's latest CI run is red on stale lock resolution and the idna security advisory. Plan 184-08 stopped before Docker after formatter and read-only Leex compilation gates; its route was cleaned. Plan 184-09 stopped at Core's offline resolver because the controller copied registry schema 3; its route was cleaned and not retried. Plan 184-10 stopped at `inner checksum mismatch bandit@1.15.0` before prefetch/allocation; the retained receipt cannot distinguish a validator encoding issue from a cache-record mismatch, and exact offline cache usability remains unverified.
+- **Verification:** D-52 zero human UAT. Owner hand-off only for ship/no-ship, vetoing a recommended default, the trademark/counsel call before any announcement or ™ claim, and CLAUDE.md/PRODUCT.md sign-off.
+- **Commit kinds:** admin `lib`/`priv/static` changes are `feat(admin):`; docs, README, brand files and `.planning` are `docs:`/`chore:`.
+
+
+## Handoff — 2026-11-02 (historical; superseded 2026-11-13 when v2.11 opened)
 
 - v2.10 is archived with 31/31 requirements, five passing phase verifications, 15/15 integration paths, and 7/7 end-to-end flows. Nine open deferred records were acknowledged at close; 34 prior acknowledgements remain carried forward.
 - **Next actor: owner.** No next milestone is approved. When the Mailglass brand book is ready, use `$gsd-new-milestone` to define the next scope.
@@ -153,7 +167,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 188
+- Total plans completed: 209
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -177,6 +191,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 176 | 15 | - | - |
 | 177 | 11 | - | - |
 | 178 | 41 | - | - |
+| 179 | 4 | - | - |
+| 180 | 4 | - | - |
+| 181 | 4 | - | - |
+| 182 | 6 | - | - |
+| 183 | 3 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -353,6 +372,26 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 178 P31 | not measured | 3 tasks | 11 files |
 | Phase 178 P32 | 40 min | 3 tasks | 8 files |
 | Phase 178 P37 | 9 | 3 tasks | 8 files |
+| Phase 179 P01 | 85min | 3 tasks | 9 files |
+| Phase 179 P03 | 24 min | 3 tasks | 8 files |
+| Phase 179 P04 | 17 min | 2 tasks | 4 files |
+| Phase 179 P02 | 10min | 2 tasks | 3 files |
+| Phase 180 P01 | 9 min | 3 tasks | 9 files |
+| Phase 180 P02 | 9 min | 3 tasks | 8 files |
+| Phase 180 P03 | 74min | 3 tasks | 8 files |
+| Phase 180 P04 | 30min | 3 tasks | 6 files |
+| Phase 181 P01 | 16 min | 3 tasks | 14 files |
+| Phase 181 P02 | 14 min | 3 tasks | 39 files |
+| Phase 181 P03 | 17min | 3 tasks | 24 files |
+| Phase 181 P04 | 26min | 3 tasks | 17 files |
+| Phase 182 P01 | 20 min | 3 tasks | 16 files |
+| Phase 182 P02 | 25 min | 3 tasks | 19 files |
+| Phase 182 P03 | 26 min | 2 tasks | 21 files |
+| Phase 182 P04 | 29 min | 3 tasks | 41 files |
+| Phase 182 P05 | 20 min | 3 tasks | 20 files |
+| Phase 182 P06 | 49 min | 3 tasks | 12 files |
+| Phase 183 P01 | 83m | 3 tasks | 98 files |
+| Phase 183 P03 | 28min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -367,6 +406,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - Phase 173.1 inserted after Phase 173: Address tech debt: demo auth + browser evidence (from v2.9-MILESTONE-AUDIT.md) (URGENT)
 
 ### Decisions
+
+- [Phase 183]: Machine-observable README, generated ExDoc, and favicon capture-order checks now close UAT automatically. Live GitHub and Hex.pm pages remain explicitly unobserved while the candidate is unpublished.
+- [Phase 183]: The corrected Docker-backed regression gate passed. Preserve the earlier root-suite result of seven failures with baseline attribution unknown; it was not rerun under the owner's preserve-and-continue choice.
 
 - v2.7 is evidence-first, bounded maintenance: no product/API/schema/UI work, dependency churn, CI-efficiency redesign, speculative architecture, or forced release.
 - Preserve and inventory workspace/release state before cleanup; reconcile immutable release facts before scheduled-control recovery; repair observed timeouts only at their narrow seams; complete documentation/artifact truth last.
@@ -692,6 +734,65 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 178]: Keep UIQ-08 open because local dependency installation and compilation do not establish a working owner preview.
 - [Phase 178]: Stop Cycle 07 after the required Support Contract Admin failure; do not dispatch, retry, rerun, or launch a preview.
 - [Phase 178]: Leave Cycle 07 cost unmeasured and preview-ineligible; Plans 23–24 and UIQ-08 remain blocked/open.
+- [Phase 179]: delivery_class/1 ships in Phase 179 over a map with a :status key, honouring delivered_at, bounced_at and terminal when present; the three-field operator row limitation (bounce then open reads Sent) is pinned by a named test and handed to Phase 182
+- [Phase 179]: MailglassAdmin.Copy keeps one sanctioned status_badge fallback (Unknown) because gallery_live renders a nil specimen; strict Copy and StatusMap readers raise for nil and :subscribed
+- [Phase 179]: Status atom universe is 26 (25 badge atoms plus :subscribed); Not sent is a pre-send block only and no library code writes Delivery.status :suppressed
+- [Phase 179]: Brand pin verifier is scripts/brand_pin.exs tested from core test/scripts (never under lib/mix/tasks); offline verify is merge-blocking, the TLS-verified online check is advisory
+- [Phase 179]: The /brand/ and /mailglass-brand/ ignore rules live in brandbook/.gitignore; the root .gitignore stays untouched because phase 164 audits every line of six ignore files
+- [Phase 179]: brand pin owned-dir listing walks with File.ls and lstat so hidden files and symlinks count as unlisted; no .gitattributes is added
+- [Phase 179]: [179-04] Trademark gate: allowed only when not blocked, before expires, and (clear with register_checked true, or a populated owner_override); the committed record stays caution with register_checked false — Research assumption A4 adopted; expiry applies to the override path too; a clear or register claim without register evidence is an invalid record, not a soft deny.
+- [Phase 179]: [179-04] owner_override must be mirrored by an identical acknowledged constant in the test, and agent-named by values are rejected even when acknowledged; owner-only authorship is a runbook review rule — A test cannot observe who authored a commit, so the control is the mirrored constant plus the agent-name rejection; the authorship rule is stated for reviewers in TRADEMARK-SEARCH.md.
+- [Phase 179]: 179-02: Brand v2 compat policy lives at repo-root docs/ (no tarball change); api_stability.md links it by absolute URL; policy test parses the table strictly, verifies by seven kinds, and adds a reverse check over Mailglass.Operator.*
+- [Phase 180]: 180-01: scan exclusion is @source not inline("prose") (inline form, not a path exclusion) — A path exclusion of copy.ex would drop four real classes (badge-primary, hero-bell-slash, hero-envelope-open, hero-hand-thumb-up); the inline form also covers any future file and leaves priv/static byte-identical.
+- [Phase 180]: 180-01: bundle drift compare lives in non-shipped dev/ MailglassAdmin.AssetsCheck; the shipped assets.build task delegates via Code.ensure_loaded? and apply/3 — Tailwind is an only: [:dev, :test] dep, so the shipped task must not reference it at compile time; the Hex publish allowlist stayed unchanged (mailglass.publish.check --allowlist-only exit 0).
+- [Phase 180]: 180-01: contract test asserts drift shape for the removed-prose case, not the literal 139137/136877/74051 sizes — Literal sizes would turn every legitimate token or copy change (Phase 181) into required-lane churn; the measured numbers are recorded in 180-01-SUMMARY.md instead.
+- [Phase 180]: 180-01: D-07 ordering deviation held - emulated linux/amd64 cmp identical now; real ubuntu-latest proof is the first support_contract_admin run on the phase PR (run ID still to be appended) — Same sha256-verified Tailwind 4.1.12 binary and CPU architecture as ubuntu-latest; the repo keeps one open PR at a time. Fallback if CI bytes differ: pin the check to the CI platform, never loosen the compare.
+- [Phase 180]: 180-02: delete every nested data-theme (D-11); html in layouts/root.html.heex is the sole theme owner, enforced by a required-lane static scan plus document counts (1 for light/dark, 0 for system)
+- [Phase 180]: 180-02: Preview frame toggle is a wrapper with color-scheme + background: Canvas around a light-pinned iframe, never a token set; visible change moves from whole panel to email stage
+- [Phase 180]: 180-02: gallery duplicate ids floored at 39 (182 before collapse), not asserted zero; remaining ids are component-owned and deferred (deferred-items.md item 3)
+- [Phase 180]: Browser theme matrices load the gallery once per theme (cookie + emulated OS + goto); System is no cookie with the OS emulated dark
+- [Phase 180]: Pinned e2e test titles and test.setTimeout bounds stay (timeout_evidence_ci_contract_test, bucket_a_coverage_test); theme loops moved inside existing tests
+- [Phase 180]: Preview axe cell test (structural.spec.js:2655) times out when axe scans a settled Preview page (script-disabled email iframe stall ~30s); recorded in deferred-items.md item 4, test not edited
+- [Phase 180]: 180-04: before-catalog bound to the repository by working-tree bytes (app.css sha256 + root layout blob), LIVE or a superseded.json naming the current bytes; no git objects, no ci.yml change (D-24 refined)
+- [Phase 180]: 180-04: delivered-no-open case mapped to pm-demo-invite-001 because the receipt row answers HTTP 400 on its non-UUID replay webhook_event_id (deferred-items.md item 6); DemoData untouched
+- [Phase 180]: 180-04: a discarded warm-up screenshot precedes every catalog capture so the double capture is byte-identical; seed runs on the in-harness fallback because exec mix run hits eaddrinuse
+- [Phase 181]: [Phase 181-01] Designed token values use one rounding rule, Contrast.composite/3 with Elixir round/1; tokens.json stores that output and token_parity_test recomputes it — A value that does not reproduce is a red test rather than a judgment call; the eleven designed values (link-hover, overlay, selected, eight *-bg tints) are two-book-hex composites
+- [Phase 181]: [Phase 181-01] Roles with no admin CSS consumer stay contrast-checked through role-level admin pairs, and a test proves app.css and lib never read them — The $description tag "unreferenced by admin CSS; contrast-checked as <pair id>" cannot rot: a later consumer turns the test red until the tag and pair are updated
+- [Phase 181]: 181-02: brand_pin extend verb is the only entry for new assets; it also refuses a pinned entry that no longer equals its zip member — BRTOK-03 no-hand-edit-of-the-pin prohibition then rests on extend, not on verify alone
+- [Phase 181]: 181-02: fonts embedded at compile time behind a closed allow-list (allowed_fonts/0); font-bold maps to the 600 face via --font-weight-bold; no font-synthesis-weight guard — All three families ship a 600 face, so font-bold at 600 never synthesizes; a retired name, an OFL text and a traversal are empty-body 404s
+- [Phase 181]: 181-02: tabular numerals via a time,td base rule plus the Tailwind tabular-nums utility on the two mobile email list containers — Covers every desktop row and mobile card row without redefining Tailwind's utility
+- [Phase 181]: GlyphScan returns one {line, text} pair per non-empty line for both :ex and :heex so every glyph finding names its exact line
+- [Phase 181]: U+000D in the gallery raw-MIME specimen is an exact reasoned allow-list entry, not a widening of the 170-code-point subset literal; the subset stays equal to the six woff2 cmaps and is bound to their sha256 values in brand.pin.json
+- [Phase 181]: Opacity-modified colour utilities in admin lib are keyed by utility string: seven composite rows (base-content and secondary over base-100 and base-200, both themes, >= 4.5) and three reasoned sub-3:1 edge exemptions whose carrying pair must exist; only a stale exemption is red
+- [Phase 181]: Label text takes the secondary role through a zero-specificity :where(.label) rule in @layer utilities (daisyUI draws .label at a 60% mix, 4.2:1 on Sand); a contract guards every daisyUI text colour that mixes with transparent
+- [Phase 181]: The axe producer scan is unchanged; a run that scanned a dialog mid fade-in was discarded and re-run, hardening is deferred (deferred-items.md item 3)
+- [Phase 182]: 182-01: operator outcome_groups lifecycle flags are true-or-nil (CASE WHEN ... THEN true END in group_by and select), never false, because StatusMap reads any non-nil value as a recorded fact — A false bounced_at would classify every group Failed; the DB-backed core test proves the producer never emits false
+- [Phase 182]: 182-01: pinned pane-mark geometry lives in brandbook/status-marks.json (outside pin-owned brandbook/v2); Components.status_mark/1 carries a literal copy and a required-lane test compares the two — brand_pin_test treats brandbook/v2 as owned and the Hex package ships lib, priv/static and docs only, so lib cannot read the repo file
+- [Phase 182]: 182-01: BRADM-01 and BRADM-02 stay open in REQUIREMENTS.md after plan 01 (shared-ID gate); summary counts a complained-only row under Awaiting confirmation, not Needs attention — Sibling plans 182-02..05 declare the same requirement IDs; delivery_class returns sent for a complaint with no delivery problem (D-07)
+- [Phase 182]: 182-02: suppression-reason parity with the core enum is held by phase182_cause_contract_test, not a compile-time check, because Mailglass.Suppression.Entry is not exported by the core boundary; reject-reason parity stays a compile-time raise — A newer core reason renders an unrecognised-reason sentence instead of crashing; the contract goes red in the required lane when the enums drift.
+- [Phase 182]: 182-02: delivery_badge is a thin wrapper over the status_badge mark branch, keyed on an explicit context: :delivery; inbound failed keeps hero-x-circle — An atom-only gate would turn an inbound mailbox failure into a delivery failure mark.
+- [Phase 182]: 182-02: a send-time failure reads 'Sending failed before a successful handoff to the provider.'; a provider bounce or rejection with a nil reason reads the fixed fallback; an unloaded or unreadable history shows neither — The fallback would be false when the history was simply not read (Quick view) and not literally true for a send-time failure (R1).
+- [Phase 182]: 182-03: a timestamp's copy control is named 'Copy <visible time> (copies the exact UTC value <exact>)' so it contains the visible text (WCAG 2.5.3) and the copied value (Phase 176 P10) — Server and localizer write the same two parts, and the plan's name without the exact value broke P10.
+- [Phase 182]: 182-03: the status grid persists 160 rows (last_event_type is NOT NULL); the 10 nil-last-event cells render in memory, 170 in all, computed from the live enums — A nil last_event_type cannot be stored, so the contract renders those rows through the components.
+- [Phase 182]: 182-03: the zone comes from display_parts/1 and the date-time span ends in a real space; <time> elements are pinned to Components.timestamp/1 by a source rule — A formatter that loses the zone must show on every screen, Floki drops whitespace-only nodes, and a render scan cannot see an unrendered component.
+- [Phase 182]: 182-03: a false lifecycle flag is guarded at the producer, not by the screen scan — The screen renders a false flag consistently as Failed, so only a read-model test sees it; proven by a core mutation (restored).
+- [Phase 182]: 182-04: the Activity gloss replaces the old subtitle, and the document title follows the screen (Activity on the list, Admin on the overview) — One line under the h1 keeps the verdict above the fold at 375px; a tab named Admin for every Operator view says nothing.
+- [Phase 182]: 182-04: words detectors refuse a match touching a word character or a hyphen; hover and screen-reader text count as words — An Account id such as browser-tenant is adopter data (418 false hits); help sentences are still sentences. A hyphenated word like tenant-scoped would escape, accepted.
+- [Phase 182]: 182-04: the Mailer trigger label is the plain name (WCAG 2.5.3), the identity is shown in full beside the tooltip, and the plain name never comes from a nil, blank or nameless value — Production stores the module only (C-9); a name is derived from the stored text on binaries, never an atom.
+- [Phase 182]: 182-04: a nil orphan count no longer draws the Tier-1 card (nil > 0 is true in Elixir); the Failed webhook attempts card has the same gate, deferred — A real defect found by planting a nil count; the sibling is out of scope and logged in deferred-items.md.
+- [Phase 182]: 182-05: the structural title assertion follows the screen: Activity on the Activity screen, Admin on the Health overview, Inbound on the Inbound list — 182-04 made the document title follow the screen, so one /Admin/ on the Activity screen would fail a correct product; the Admin assertion is mutation-proven (title reverted to Operator turns it red)
+- [Phase 182]: 182-05: advisory e2e drift that kept a spec from its word pins was fixed in the spec, not excused as pre-existing — collapsed Technical details (182-02), the second timestamp (182-03) and the Activity gloss were deliberate; every advisory lane the plan ran ended green (operator 135 and 137, demo 111, navigation test 9)
+- [Phase 182]: 182-05: lane runs rewrite tracked archived PNGs under .planning/milestones; restore with git checkout -- <paths> and never stage them — structural, phase169-journey and the demo evidence run overwrite v2.9 phase 168, 169 and 172 artifacts; logged in deferred-items.md
+- [Phase 182]: 182-06: a schema-invalid judge verdict is discarded and a fresh judge replaces it, never edited; the after-catalog review gate is the one gate rule (unverifiable rejects dropped, a lone reject stands unless a third judge passes, any known-bad pass is red)
+- [Phase 182]: 182-06: the after-catalog was judged in three iterations; rubric clarifications for locked decisions (Queued qualifier, event names) were made only with a recapture under a new id and fresh judges
+- [Phase 182]: 182-06: after-1a0b741-20261116T004020Z is bound to the current app.css and root layout; a later bundle or layout change must add its superseded.json in the same change
+- [Phase 183]: Owner authorized one fresh full favicon catalog capture pass after source-only WebKit diagnosis; no retry if that pass fails (2026-11-16).
+- [Phase 183]: Keep ExDoc 0.40.4, Lato, and its native class-driven theme; add only syntax color CSS and a small class-driven logo selector.
+- [Phase 183]: Keep the trademark announcement gate independent from package publication readiness; the caution record remains denied for announcement.
+- [Phase 183]: Preserve canonical CLAUDE.md and PRODUCT.md for owner review and do not introduce dependencies.
+- [Phase 183]: Keep real generated-output checks outside default root discovery and require an explicit output root.
+- [Phase 183]: Build each package once in the existing required docs job and reuse outputs for validation.
+- [Phase 183]: Preserve the Chromium launch failure as unverified behavior; no download or second attempt.
 
 ## Quick Tasks Completed
 
@@ -752,9 +853,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-11-02T22:40:00Z
-Stopped at: Owner browser verification required for Phases 176 and 177
-Resume file: .planning/.continue-here.md
+Last session: 2026-11-20T04:23:18Z
+
+Current checkpoint: Phase 182 plan 182-08 is terminally blocked before cache inspection. Its controller referenced the approved patch at the wrong relative path; the cache prefetch never ran. A fresh D-30 plan may correct this only with a new route namespace and no reuse of 182-08 receipts or effects. Old routes remain consumed; #325, the favicon stop, owner WIP and owner-demo services remain protected.
+Stopped at: Phase 182-08 preallocation gate
+Resume file: `.planning/phases/182-admin-words-and-layout-one-job-first/182-08-SUMMARY.md`
 
 ## Historical operator next steps — superseded 2026-11-02
 
@@ -773,6 +876,13 @@ Resume file: .planning/.continue-here.md
 - Cycle 08 is stopped on the required Inbound Test failure at architecture_port_test.exs:48: records.ex now uses the shared Mailglass.Clock, but its architecture allowlist admits only Mailglass.Tenancy. Both schema advisory suites failed the same assertion. CI Demo Browser Evidence passed. The candidate is at the remote target and PR head; the PR body still describes Cycle 07 because the approved body edit was withheld at the failure gate. Do not retry Cycle 08. Add the clock to the architecture allowlist, validate locally, then create a new candidate and obtain fresh exact-SHA approval. Cost remains unmeasured; no preview launched; Plans 23–24 and UIQ-06/07/08 remain blocked/open.
 - Cycle 09 candidate 5ad5329a6d0f17da0edce3af6b4a987bc3219023 adds the shared clock to the inbound architecture-port allowlist and passed its local checks. Plan 36 used one fast-forward push, one PR body update, and one dispatch; all eight attempt-1 workflows passed. Exact-SHA browser and count evidence passed. The source-bound cost record supports the measured overage only for this preapproved owner-review cycle. PR #317 remains draft and `main` is unchanged. Plan 37 used the separately approved attempt 2; Buildx could not write activity metadata and the preview never became healthy. Candidate teardown and owner-demo comparison passed, and evidence copies are hash-verified. Do not relaunch under Plan 37. UIQ-08 remains open and Plan 24 is blocked; a successor plan should set `BUILDX_CONFIG` under a unique `/private/tmp` directory and verify the `desktop-linux` builder identity before any new launch ([Docker docs](https://docs.docker.com/build/building/variables/#buildx_config)). Cycle 08 remains byte-identical.
 
-## Operator Next Steps
+## Operator Next Steps — 2026-11-18
 
-- Start the next milestone with $gsd-new-milestone
+- Candidate b5a3c48 was pushed once to `gsd/v2.11-phase182-admin-evidence`; run 44233067082 was its single approved attempt. CI Green, Demo Browser Evidence, Operator Browser Gate, and the core docs output contract failed. The Demo artifact lacks `phase174/cost.json`; there is no formal cost disposition, and runner time exceeded the +10-minute cap by 14.68 minutes. No preview or PR occurred; `origin/main` remains at the approved base.
+- **Next actor: owner.** The Phase 182-07 plan excludes implementation changes, and its one-dispatch authority is consumed. Approve a revised scope before local repairs or another candidate. Recommended route: fix deterministic failures, run cheap checks before focused tests, diagnose browser failures without retries, then authorize at most one new exact-SHA dispatch under the existing +5-minute wall / +10-minute added-runner caps with no overage. Preview only if all exact-SHA hosted and cost gates pass. Preserve the favicon capture stop, one-open-PR limit, and all owner WIP.
+
+- The unchanged default root mix test finished with 7 failures out of 2,448; baseline attribution is unknown, and it was not rerun after the owner chose preserve-and-continue. First-failure details are in `183-03-SUMMARY.md`.
+
+### Blockers
+
+- Phase 184-07 final integrated `verify_brand_docs.sh --browser` exited 134 without a final receipt. Its one-shot diagnostic was not retried. No candidate commit, hosted CI, preview, or review occurred; the 31-plan cap and route allowance are consumed. A new scoped plan/route needs owner authorization.

@@ -1,0 +1,151 @@
+{
+  "cases": {
+    "complained": {
+      "delivery_id": "01a1dd02-8a60-7d68-9aff-a6ca83d36bc4",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "sg-demo-badge-complained-001",
+      "recipient": "complained@northstar.example",
+      "reject_reason": null,
+      "scenario": "badge_complained",
+      "source": "demo_data",
+      "status": "sent"
+    },
+    "deferred-no-retry": {
+      "delivery_id": "01a1dd02-8a5c-700d-97ca-cc74bba7c25c",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "sg-demo-badge-deferred-001",
+      "recipient": "deferred@northstar.example",
+      "reject_reason": null,
+      "scenario": "badge_deferred",
+      "source": "demo_data",
+      "status": "sent"
+    },
+    "delivered-no-open": {
+      "delivery_id": "01a1dd02-8a35-732a-8b6e-2d74795dd811",
+      "last_error_present": false,
+      "metadata_keys": [
+        "journey",
+        "persona",
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-demo-invite-001",
+      "recipient": "mira.chen@northstar.example",
+      "reject_reason": null,
+      "scenario": "invite_admin",
+      "source": "demo_data",
+      "status": "sent"
+    },
+    "long-recipient": {
+      "delivery_id": "01a1dd02-8a68-7e4d-b023-7ecfdc1be9d8",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-demo-truncation-stress-001",
+      "recipient": "operations.billing.notifications.enterprise.accounts@northstar-stress.example",
+      "reject_reason": null,
+      "scenario": "truncation_stress",
+      "source": "demo_data",
+      "status": "sent"
+    },
+    "manual-suppressed": {
+      "delivery_id": "01a1dd02-8a57-734c-93a9-0e614a6eab57",
+      "last_error_present": false,
+      "metadata_keys": [
+        "incident",
+        "scenario",
+        "status",
+        "subject"
+      ],
+      "provider_message_id": null,
+      "recipient": "ops@northstar.example",
+      "reject_reason": null,
+      "scenario": "incident_update",
+      "source": "demo_data",
+      "status": "suppressed"
+    },
+    "nil-reason-bounce": {
+      "delivery_id": "01a1dd02-8a54-7afe-a80e-617ad5cb23db",
+      "last_error_present": false,
+      "metadata_keys": [
+        "invoice_id",
+        "retry_window",
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-demo-payment-failed-001",
+      "recipient": "billing@northstar.example",
+      "reject_reason": null,
+      "scenario": "payment_failed",
+      "source": "demo_data",
+      "status": "sent"
+    },
+    "send-failed": {
+      "delivery_id": "01a1dd02-9096-78b0-b0cc-bf7994b304f1",
+      "last_error_present": true,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": null,
+      "recipient": "dispatch@northstar.example",
+      "reject_reason": null,
+      "scenario": "catalog_send_failed",
+      "source": "catalog_seed",
+      "status": "failed"
+    },
+    "sent-no-report": {
+      "delivery_id": "01a1dd02-90f6-7dc2-a9a6-d9ca69327822",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-cat-sent-no-report-001",
+      "recipient": "finance@northstar.example",
+      "reject_reason": null,
+      "scenario": "catalog_sent_no_report",
+      "source": "catalog_seed",
+      "status": "sent"
+    },
+    "typo-bounce": {
+      "delivery_id": "01a1dd02-8fd2-76b6-afbf-7ae87e447855",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-cat-typo-bounce-001",
+      "recipient": "maya.okafor@northstr.example",
+      "reject_reason": "invalid",
+      "scenario": "catalog_typo_bounce",
+      "source": "catalog_seed",
+      "status": "sent"
+    },
+    "unicode-recipient": {
+      "delivery_id": "01a1dd02-90f9-72fb-9e94-cf163ce46490",
+      "last_error_present": false,
+      "metadata_keys": [
+        "scenario",
+        "subject"
+      ],
+      "provider_message_id": "pm-cat-unicode-recipient-001",
+      "recipient": "zoë.müller@northstar.example",
+      "reject_reason": null,
+      "scenario": "catalog_unicode_recipient",
+      "source": "catalog_seed",
+      "status": "sent"
+    }
+  },
+  "seed_anchor_utc": "2026-11-15T02:21:35Z"
+}

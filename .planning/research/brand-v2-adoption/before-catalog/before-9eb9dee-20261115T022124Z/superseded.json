@@ -1,0 +1,10 @@
+{
+  "schema": "mailglass.before_catalog.superseded.v1",
+  "catalog_id": "before-9eb9dee-20261115T022124Z",
+  "superseded_by": {
+    "bundle_sha256": "6021738074f81d9dd634e4d9b8928796fac90c26f8e36a371d91c985f00b84c9",
+    "root_layout_git_blob_sha": "c89fca348193f24ea614f0d48e8ff29187d7b519"
+  },
+  "superseded_in": "v2.11: enforce the secondary text role for input placeholders",
+  "reason": "The placeholder contrast fix regenerated the Admin CSS bundle; immutable catalog captures remain bound to their original bytes."
+}

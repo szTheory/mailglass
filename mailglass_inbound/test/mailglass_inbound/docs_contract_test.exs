@@ -551,7 +551,7 @@ defmodule MailglassInbound.DocsContractTest do
     assert readme =~ "subordinate to this README path"
     assert readme =~ "docs/inbound-operator.md"
     assert readme =~ "docs/inbound-testing.md"
-    assert readme =~ "../guides/compatibility-and-deprecations.md"
+    assert readme =~ "https://hexdocs.pm/mailglass/compatibility-and-deprecations.html"
 
     assert install =~ "canonical inbound adoption lane"
     assert install =~ "Follow this sequence only as an expansion of"
@@ -559,7 +559,7 @@ defmodule MailglassInbound.DocsContractTest do
     assert install =~ "single authority"
     assert install =~ "inbound-testing.md"
     assert install =~ "inbound-operator.md"
-    assert install =~ "../../guides/compatibility-and-deprecations.md"
+    assert install =~ "https://hexdocs.pm/mailglass/compatibility-and-deprecations.html"
 
     assert compatibility =~ "mailglass_inbound/docs/api_stability.md"
     assert compatibility =~ "stable/internal/deferred source"

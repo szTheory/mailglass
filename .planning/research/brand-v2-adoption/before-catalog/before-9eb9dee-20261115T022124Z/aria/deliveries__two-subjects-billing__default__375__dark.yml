@@ -1,0 +1,73 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 2 deliveries match
+  - button "Filters (1 applied)"
+  - article:
+    - paragraph:
+      - text: Delivered
+      - button "Help for Delivered"
+      - text: Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search.
+    - paragraph: "1"
+    - paragraph: Tracked
+  - article:
+    - paragraph:
+      - text: Needs attention
+      - button "Help for Needs attention"
+      - text: Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results.
+    - paragraph: "1"
+    - paragraph: Needs attention
+  - article:
+    - paragraph:
+      - text: Awaiting confirmation
+      - button "Help for Awaiting confirmation"
+      - text: Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results.
+    - paragraph: "0"
+    - paragraph: Tracked
+  - complementary:
+    - heading "Deliveries 2 deliveries" [level=2]: Deliveries (2)
+    - list:
+      - listitem:
+        - button "billing@northstar.example Payment action needed for Northstar Logistics":
+          - paragraph: billing@northstar.example
+          - paragraph: Payment action needed for Northstar Logistics
+        - button "Bounced"
+        - text: The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason. ID
+        - paragraph: 01a1dd02-8a54-7afe-a80e-617ad5cb23db
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 02:01:33.000000 UTC"':
+          - time: Nov 15, 2026, 2:01 AM
+      - listitem:
+        - button "billing@northstar.example Receipt INV-2026-0601 for Northstar Logistics":
+          - paragraph: billing@northstar.example
+          - paragraph: Receipt INV-2026-0601 for Northstar Logistics
+        - button "Delivered"
+        - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read. ID
+        - paragraph: 01a1dd02-8a51-75da-9518-b3ee16f25cc1
+        - text: Provider
+        - paragraph: POSTMARK
+        - text: Updated
+        - 'button "Copy timestamp as UTC: 2026-11-15 01:37:33.000000 UTC"':
+          - time: Nov 15, 2026, 1:37 AM

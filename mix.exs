@@ -25,7 +25,7 @@ defmodule Mailglass.MixProject do
       deps: deps(),
       aliases: aliases(),
       dialyzer: dialyzer(),
-      name: "Mailglass",
+      name: "mailglass",
       description: "Transactional email framework for Phoenix. Composes on Swoosh",
       source_url: @source_url,
       homepage_url: @source_url,
@@ -492,8 +492,15 @@ defmodule Mailglass.MixProject do
       homepage_url: @source_url,
       source_url: @source_url,
       source_ref: "v#{@version}",
-      logo: "brandbook/assets/logo-mark.svg",
-      favicon: "brandbook/assets/favicon.svg",
+      logo: Path.expand("brandbook/exdoc/mailglass-mark-light.svg", __DIR__),
+      favicon: Path.expand("brandbook/v2/favicon.svg", __DIR__),
+      assets: %{Path.expand("brandbook/exdoc", __DIR__) => "assets"},
+      before_closing_head_tag: fn _format ->
+        ~s(<link rel="stylesheet" href="assets/code-colors.css">)
+      end,
+      before_closing_body_tag: fn _format ->
+        ~s(<script defer src="assets/theme-mark.js"></script>)
+      end,
       skip_undefined_reference_warnings_on: [
         "README.md",
         "CONTRIBUTING.md",

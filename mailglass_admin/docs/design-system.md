@@ -1,14 +1,16 @@
-# mailglass_admin Design System
+# mailglass_admin design system
 
-This guide explains the current implementation mechanics for Mailglass Admin.
-brandbook/brand-book.md owns identity and voice; brandbook/tokens.css owns
-canonical brand values; assets/css/app.css maps those values to the semantic
-roles and utilities used by Admin. Keep examples here aligned with the shipped
-source CSS and committed bundle.
+This guide explains the implementation mechanics for `mailglass_admin`.
+brandbook/v2/brand.json and brandbook/tokens.json define identity and voice;
+brandbook/tokens.css mirrors the resolved token source; assets/css/app.css maps
+those values to the semantic roles and utilities used by Admin. The earlier
+brandbook/brand-book.md is retired v1 material. Keep examples aligned with the
+shipped source CSS and committed bundle.
 
-> Ownership: brand values live in the brandbook. Admin CSS owns their
-> implementation mapping. Components use the semantic roles and scales defined
-> by that mapping.
+> Ownership: `brandbook/v2/brand.json` defines identity and voice;
+> `brandbook/tokens.json` defines the resolved brand tokens and
+> `brandbook/tokens.css` mirrors them. Admin CSS owns the implementation
+> mapping. Components use the semantic roles and scales defined by that mapping.
 
 ---
 
@@ -17,10 +19,13 @@ source CSS and committed bundle.
 - **Tailwind v4 + daisyUI**, compiled by the standalone `tailwind` Hex binary —
   **zero Node toolchain**. Source: `assets/css/app.css`. Build:
   `mix mailglass_admin.assets.build`.
-- The minified bundle `priv/static/app.css` is **committed**. CI runs the build
-  then `git diff --exit-code priv/static/` — any edit to `app.css` or to HEEx
-  class usage must be followed by a rebuild + commit of the bundle in the same
-  change, or the gate fails.
+- The minified bundle `priv/static/app.css` is **committed**. The required CI
+  job runs `mix mailglass_admin.assets.build --check`, which rebuilds with the
+  pinned Tailwind to a temporary file and compares the bytes to the committed
+  bundle. Any edit to `app.css`, to class usage, to any text under `lib/`
+  (Tailwind scans it as plain text), or to `brandbook/tokens.css` must be
+  followed by a rebuild + commit of the bundle in the same change, or the gate
+  fails.
 - **No second CSS file, no `@apply`, no CSS-in-JS, no BEM.** Utilities + daisyUI
   semantic classes inline in HEEx. Stay on this path — do not introduce a
   competing styling system.
@@ -41,18 +46,37 @@ semantic tokens. Use the semantic names, never raw Tailwind palette
 
 | Semantic | Light | Dark | Use |
 |---|---|---|---|
-| base-100 | Paper #F8FBFD | Ink #0D1B2A | app/detail surface |
-| base-200 | White #FFFFFF | Ink-raised #152538 | raised surfaces |
-| base-300 | Mist-edge #C7DCE5 | Ink-edge #315069 | borders |
-| base-content | Ink #0D1B2A | Mist #EAF6FB | primary text |
-| primary / accent | Glass #277B96 | Ice #A6EAF2 | accent and focus emphasis |
-| secondary / neutral | Slate #5C6B7A | Mist-soft #B8CAD4 | secondary text |
-| success / warning / error | Pine / Amber / Crimson | Pine-bright / Amber-bright / Crimson-bright | status only |
+| base-100 | Sand #F6F1E8 | Roast #1D1713 | app/detail surface |
+| base-200 | White #FFFFFF | Roast Surface #2A211B | raised surfaces |
+| base-300 | Sand Line #DDD3C4 | Roast Line #43372E | borders |
+| base-content | Espresso #2A1D17 | Bone #F3EEEA | primary text |
+| primary / accent | Deep Glass #0A6488 | Bright Glass #6CC6F0 | accent and focus emphasis |
+| secondary / neutral | Muted Espresso #665850 | Muted Bone #B9ADA3 | secondary text |
+| success / warning / error | Delivered #1D6B3C / Delayed #855300 / Failed #B3261E | Delivered #7FCB9A / Delayed #E3B25C / Failed #F09A93 | status only |
 
-**Accent discipline (the 10% rule):** `primary`/Glass appears only on the
+**Accent discipline (the 10% rule):** `primary` / Deep Glass appears only on the
 selected-row border, the primary CTA, the active nav/timeline node, and focus
 emphasis. It is never the default border or badge color. Status tints use
 opacity (`bg-warning/10`), not new tokens.
+
+### Typography, status words and logo
+
+`brandbook/v2/brand.json` defines the three current font families. Use Funnel
+Display at 600 for headings and page titles; never use it for identifiers,
+addresses or code. Use Atkinson Hyperlegible Next at 400 or 600 for body and
+interface text. Use Atkinson Hyperlegible Mono for ids, addresses, headers,
+commands and code. The body, `font-display` and `font-mono` styles in
+`assets/css/app.css` map to those faces.
+
+`brandbook/status-marks.json` defines the status marks. Always pair each mark
+with one of the words Sent, Delivered, Delayed, Failed and Not sent. The color
+and shape support the word; neither replaces it.
+
+Use the theme-matched typemark without recoloring or inversion. Keep clear space
+equal to one quarter of the typemark height on every side, and keep the full
+typemark at least 96px wide on screen. Keep shapes and text outside its clear
+space, including the tagline. Use by others does not imply endorsement or
+certification.
 
 ### 2. Structure — `@theme` block + `:root` tokens (theme-independent)
 
@@ -61,27 +85,28 @@ Each `@theme` token is simultaneously a CSS variable and a Tailwind utility.
 | Scale | Tokens | Utilities |
 |---|---|---|
 | Spacing (4px grid) | `--spacing-xs…3xl` (4/8/16/24/32/48/64) | `p-md`, `gap-sm`, `px-lg`, … |
-| Type (400/700 only) | --text-label/body/heading/display (14/16/20/28px) | text-label, text-body, … |
+| Type (400/600 only) | --text-label/body/heading/display (14/16/20/28px) | text-label, text-body, … |
 | Elevation | `--shadow-flat/raised/overlay` | `shadow-overlay` (modals only) |
 | Easing | `--ease-out`, `--ease-in-out` | `ease-out` |
 | Motion (≤300ms) | `--duration-instant/fast/reveal/flash` | `duration-(--duration-fast)` |
 | Control size | `--size-control-sm/md/lg` (36/44/52) | maps to `min-h-9/11/13` |
 | Z-index | `--z-sticky/dropdown/overlay/modal/toast` (10/20/30/40/50) | `z-10`…`z-50` |
 
-**Type weights are exactly 400 and 700.** `font-medium` / `font-semibold`
-(500/600) are NOT loaded — the browser synthesizes a fake bold. Use `font-bold`
-or default; faux-bold is a conformance failure.
+**Type weights are exactly 400 and 600.** `font-bold` maps to the 600 face
+through `--font-weight-bold`; `font-medium` / `font-semibold` stay banned so
+bold has one spelling. Use `font-bold` or default; faux-bold is a conformance
+failure.
 
 **Elevation is borders-first.** Default surfaces are `border border-base-300`
 with no shadow (brand `--depth:0`, flat — no glassmorphism/bevels). Only
-modals/popovers use `shadow-overlay` (a faint Ink-tinted shadow). Never
+modals/popovers use the theme-specific `shadow-overlay` token. Never
 `shadow-2xl`/`-xl`/`-lg`.
 
 ## Motion vocabulary
 
-Brand metaphor "clarity through panes": content **arrives by becoming visible**
-(opacity) and settling a few px into place — never sliding across the screen,
-never bouncing. Six named motions, deliberately restrained.
+Motion is deliberately restrained: content arrives by becoming visible and
+settling a few px into place, never sliding across the screen or bouncing. The
+six named motions preserve that behavior.
 
 | Motion | Class / mechanism | Where |
 |---|---|---|
@@ -229,3 +254,9 @@ Desktop section navigation uses the brand accent on the current icon and a short
 underline beneath its bold label. Avoid combining an accent rail, filled tile,
 and bold text for one selection. Mobile tabs use a matching underline and no
 filled selection tile. Keep the 44px targets and visible keyboard focus.
+
+## Repository social preview
+
+The pinned social card is prepared for the mailglass repository only. Upload and read-back steps
+are documented in the [repository-only social upload checklist](https://github.com/szTheory/mailglass/blob/main/.planning/research/brand-v2-adoption/SOCIAL-UPLOAD-CHECKLIST.md);
+no upload is performed by this guide or the build.

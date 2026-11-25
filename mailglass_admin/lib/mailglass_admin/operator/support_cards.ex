@@ -3,7 +3,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   Read-only tenant-scoped support cues for the selected delivery context.
 
   Two-tier hierarchy per 74-UI-SPEC.md Support-Card Primary/Secondary Hierarchy Layout:
-  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, unmatched webhooks)
+  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, provider reports that match no email)
   - Tier 2: compact horizontal row for zero-state items and the always-informational suppression count
   """
 
@@ -11,6 +11,8 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   import MailglassAdmin.Components, only: [card: 1]
 
+  alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.OrphanCount
   alias MailglassAdmin.Operator.RepairState
 
   attr(:support_summary, :map, required: true)
@@ -97,7 +99,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div>
             <dt class="text-label uppercase font-bold">Recorded time</dt>
             <dd class="mt-xs break-all text-base-content">
-              {exact_recorded_at(@exact_support_evidence)}
+              <Components.timestamp at={exact_recorded_at(@exact_support_evidence)} />
             </dd>
           </div>
           <div :if={exact_status(@exact_support_evidence)}>
@@ -144,7 +146,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
       <%!-- Tier 1: non-zero/actionable counts — full card containers --%>
       <div class="flex flex-col gap-lg mt-md">
         <article
-          :if={@support_summary && @support_summary.failed_ingest.count > 0}
+          :if={(summary_count(@support_summary, :failed_ingest) || 0) > 0}
           class="rounded-box bg-base-100 p-lg border-l-4 border-error"
           data-testid="support-card-failed-ingest-tier1"
         >
@@ -192,18 +194,21 @@ defmodule MailglassAdmin.Operator.SupportCards do
         </article>
 
         <article
-          :if={@support_summary && @support_summary.orphan_backlog.count > 0}
+          :if={(summary_count(@support_summary, :orphan_backlog) || 0) > 0}
           class="rounded-box bg-base-100 p-lg border-l-4 border-warning"
           data-testid="support-card-orphan-backlog-tier1"
         >
-          <div class="text-display font-bold text-warning">
-            {@support_summary.orphan_backlog.count}
-          </div>
-          <p class="text-body text-secondary">Unmatched Events in the selected Account window.</p>
+          <p
+            class="text-heading font-bold text-warning"
+            data-testid="support-card-orphan-backlog-count"
+          >
+            {OrphanCount.label(@support_summary.orphan_backlog.count)}
+          </p>
+          <p class="text-body text-secondary">In the selected Account window.</p>
 
           <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Oldest unmatched Event example: {@support_summary.orphan_backlog.oldest.provider_event_id}
+              Oldest provider report: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
             <button
               type="button"
@@ -254,7 +259,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               </dd>
             </div>
             <div>
-              <dt class="text-label uppercase font-bold">Still unmatched</dt>
+              <dt class="text-label uppercase font-bold">Provider reports still matching no email</dt>
               <dd class="mt-xs text-base-content">
                 {count_or_unavailable(@support_summary.reconcile_facts.still_unmatched_count)}
               </dd>
@@ -323,18 +328,18 @@ defmodule MailglassAdmin.Operator.SupportCards do
           }
           aria-hidden="true"
         >
-          ·
+          •
         </span>
         <span :if={summary_count(@support_summary, :orphan_backlog) == 0}>
-          No unmatched Events in this window
+          {OrphanCount.label(0)} in this window
         </span>
         <span :if={summary_count(@support_summary, :failed_ingest) == nil}>
           Failed webhook attempts unavailable
         </span>
         <span :if={summary_count(@support_summary, :orphan_backlog) == nil}>
-          Unmatched Events unavailable
+          Provider reports that match no email are unavailable
         </span>
-        <span aria-hidden="true">·</span>
+        <span aria-hidden="true">•</span>
         <span data-testid="support-card-suppression-count">
           Active suppressions: {if @suppression_count, do: @suppression_count, else: "—"}
         </span>
@@ -381,13 +386,11 @@ defmodule MailglassAdmin.Operator.SupportCards do
   defp exact_provider_event_id(%{record: record}), do: record[:provider_event_id]
   defp exact_provider_event_id(_evidence), do: nil
 
-  defp exact_recorded_at(%{record: %{received_at: %DateTime{} = at}}),
-    do: DateTime.to_iso8601(at) <> " UTC"
-
-  defp exact_recorded_at(%{record: %{occurred_at: %DateTime{} = at}}),
-    do: DateTime.to_iso8601(at) <> " UTC"
-
-  defp exact_recorded_at(_evidence), do: "Unavailable"
+  # The recorded time of the exact record, or nil. `Components.timestamp/1` renders nil
+  # as "Unavailable", so a record with no time never shows a bare or invented time.
+  defp exact_recorded_at(%{record: %{received_at: %DateTime{} = at}}), do: at
+  defp exact_recorded_at(%{record: %{occurred_at: %DateTime{} = at}}), do: at
+  defp exact_recorded_at(_evidence), do: nil
 
   defp exact_event_relationship(%{
          reconciled_event_id: reconciliation_id,
@@ -416,7 +419,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   end
 
   defp replay_count_summary(counts) do
-    "failed #{counts.failed} · no change #{counts.noop} · new work #{counts.replayed}"
+    "failed #{counts.failed} • no change #{counts.noop} • new work #{counts.replayed}"
   end
 
   defp drilldown_banner(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
@@ -426,7 +429,10 @@ defmodule MailglassAdmin.Operator.SupportCards do
     do: "Showing exact Account Event"
 
   defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing a webhook processing failure"
-  defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched webhook evidence"
+
+  defp drilldown_banner(%{focus: :orphan_backlog}),
+    do: "Showing provider reports that match no email"
+
   defp drilldown_banner(%{focus: :replay_outcomes}), do: "Showing replay audit fact"
   defp drilldown_banner(%{focus: :reconcile_facts}), do: "Showing reconcile fact"
   defp drilldown_banner(_support_state), do: nil

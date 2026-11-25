@@ -5,7 +5,7 @@ defmodule MailglassInbound.Router do
 
   A router module declares ordered `route/2` entries and exposes the compiled
   routes through `__mailglass_inbound_routes__/0`. Runtime matching is handled
-  by `MailglassInbound.Router.Matcher`, which preserves top-to-bottom,
+  by MailglassInbound.Router.Matcher, which preserves top-to-bottom,
   first-match-wins semantics.
 
   This router intentionally keeps the public matcher surface narrow:

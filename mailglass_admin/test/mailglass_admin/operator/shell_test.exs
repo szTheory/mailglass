@@ -213,7 +213,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
         |> Enum.map(&Floki.text/1)
         |> Enum.map(&String.trim/1)
 
-      assert labels == ["Health", "Deliveries", "Inbound", "Preview"]
+      assert labels == ["Health", "Activity", "Inbound", "Preview"]
     end
   end
 
@@ -241,7 +241,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
       end)
     end
 
-    test "active={:deliveries} marks only Deliveries nav items aria-current=page" do
+    test "active={:deliveries} marks only Activity nav items aria-current=page" do
       assigns = %{}
 
       html =
@@ -252,7 +252,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
-          title="Deliveries"
+          title="Activity"
         >
           body
         </Shell.shell>
@@ -263,8 +263,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       # Sidebar nav_link + mobile nav_pill both flip on -> at least two.
       assert current != [], "expected at least one aria-current=page nav item"
 
-      assert Enum.all?(current, &(&1 =~ "Deliveries")),
-             "expected every aria-current nav item to be Deliveries, got: #{inspect(current)}"
+      assert Enum.all?(current, &(&1 =~ "Activity")),
+             "expected every aria-current nav item to be Activity, got: #{inspect(current)}"
 
       refute Enum.any?(current, &(&1 =~ "Inbound")),
              "Inbound must never carry aria-current when active is :deliveries, got: #{inspect(current)}"
@@ -281,7 +281,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
-          title="Deliveries"
+          title="Activity"
         >
           body
         </Shell.shell>
@@ -323,8 +323,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert Enum.all?(current, &(&1 =~ "Inbound")),
              "expected every aria-current nav item to be Inbound, got: #{inspect(current)}"
 
-      refute Enum.any?(current, &(&1 =~ "Deliveries")),
-             "Deliveries must never carry aria-current when active is :inbound, got: #{inspect(current)}"
+      refute Enum.any?(current, &(&1 =~ "Activity")),
+             "Activity must never carry aria-current when active is :inbound, got: #{inspect(current)}"
 
       refute Enum.any?(current, &(&1 =~ "Health")),
              "Health must never carry aria-current when active is :inbound, got: #{inspect(current)}"
@@ -354,8 +354,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert Enum.all?(current, &(&1 =~ "Health")),
              "expected every aria-current nav item to be Health, got: #{inspect(current)}"
 
-      refute Enum.any?(current, &(&1 =~ "Deliveries")),
-             "Deliveries must never carry aria-current when active is :overview, got: #{inspect(current)}"
+      refute Enum.any?(current, &(&1 =~ "Activity")),
+             "Activity must never carry aria-current when active is :overview, got: #{inspect(current)}"
 
       refute Enum.any?(current, &(&1 =~ "Inbound")),
              "Inbound must never carry aria-current when active is :overview, got: #{inspect(current)}"
@@ -373,7 +373,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={false}
-          title="Deliveries"
+          title="Activity"
         >
           body
         </Shell.shell>
@@ -437,7 +437,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
           inbound_path="/operator/inbound"
           inbound_available?={true}
           theme_choice={:light}
-          title="Deliveries"
+          title="Activity"
         >
           body
         </Shell.shell>

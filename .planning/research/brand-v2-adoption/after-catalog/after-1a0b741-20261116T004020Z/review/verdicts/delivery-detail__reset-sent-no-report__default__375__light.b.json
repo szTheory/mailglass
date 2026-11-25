@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-sent-no-report__default__375__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 15, 2026, 11:58 PM UTC",
+      "screenshot_region": "Updated field and event timeline card timestamp"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Sent with Postmark. Mailglass has recorded no delivery report for this email.",
+      "screenshot_region": "status badge beside the subject and the verdict block heading"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check this address on the suppression list below. Then look up the email in Postmark’s logs, and ask the customer to check spam.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "page heading area and the Account selector and sections nav"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Sent is not delivered: your app handed the email to the provider, and the receiving server has not reported accepting it.",
+      "screenshot_region": "top of the detail card, above the evidence and the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "This email was handed to the provider. Delivery to the recipient has not been confirmed.",
+      "screenshot_region": "verdict block and Sent card in the event timeline"
+    }
+  ],
+  "reasons": "The verdict is near the top of the phone screen. It shows a Sent mark and the word Sent, and says plainly that sent is not delivered. It gives a concrete next step. Every time shown carries UTC, the product's words are used, and the page makes no retry promise and invents no cause."
+}

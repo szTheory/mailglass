@@ -1,0 +1,272 @@
+{
+  "catalog": {
+    "cases": {
+      "complained": {
+        "delivery_id": "01a1e1cc-5ea5-788e-b710-201667933e26",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "sg-demo-badge-complained-001",
+        "recipient": "complained@northstar.example",
+        "reject_reason": null,
+        "scenario": "badge_complained",
+        "source": "demo_data",
+        "status": "sent"
+      },
+      "deferred-no-retry": {
+        "delivery_id": "01a1e1cc-5ea3-74a7-b368-c71e98c37cee",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "sg-demo-badge-deferred-001",
+        "recipient": "deferred@northstar.example",
+        "reject_reason": null,
+        "scenario": "badge_deferred",
+        "source": "demo_data",
+        "status": "sent"
+      },
+      "delivered-no-open": {
+        "delivery_id": "01a1e1cc-5e9b-7f78-9684-68f170442cfe",
+        "last_error_present": false,
+        "metadata_keys": [
+          "journey",
+          "persona",
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-demo-invite-001",
+        "recipient": "mira.chen@northstar.example",
+        "reject_reason": null,
+        "scenario": "invite_admin",
+        "source": "demo_data",
+        "status": "sent"
+      },
+      "long-recipient": {
+        "delivery_id": "01a1e1cc-5ea8-737b-b77d-7e78e7c18c25",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-demo-truncation-stress-001",
+        "recipient": "operations.billing.notifications.enterprise.accounts@northstar-stress.example",
+        "reject_reason": null,
+        "scenario": "truncation_stress",
+        "source": "demo_data",
+        "status": "sent"
+      },
+      "manual-suppressed": {
+        "delivery_id": "01a1e1cc-5ea1-7d3e-9bae-2c4d850e9497",
+        "last_error_present": false,
+        "metadata_keys": [
+          "incident",
+          "scenario",
+          "status",
+          "subject"
+        ],
+        "provider_message_id": null,
+        "recipient": "ops@northstar.example",
+        "reject_reason": null,
+        "scenario": "incident_update",
+        "source": "demo_data",
+        "status": "suppressed"
+      },
+      "nil-reason-bounce": {
+        "delivery_id": "01a1e1cc-5e9f-7be7-9a83-df8f44919201",
+        "last_error_present": false,
+        "metadata_keys": [
+          "invoice_id",
+          "retry_window",
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-demo-payment-failed-001",
+        "recipient": "billing@northstar.example",
+        "reject_reason": null,
+        "scenario": "payment_failed",
+        "source": "demo_data",
+        "status": "sent"
+      },
+      "send-failed": {
+        "delivery_id": "01a1e1cc-6275-7994-ab68-d2f9234a2393",
+        "last_error_present": true,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": null,
+        "recipient": "dispatch@northstar.example",
+        "reject_reason": null,
+        "scenario": "catalog_send_failed",
+        "source": "catalog_seed",
+        "status": "failed"
+      },
+      "sent-no-report": {
+        "delivery_id": "01a1e1cc-6279-7bd3-a920-7abb1fcc1d55",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-cat-sent-no-report-001",
+        "recipient": "finance@northstar.example",
+        "reject_reason": null,
+        "scenario": "catalog_sent_no_report",
+        "source": "catalog_seed",
+        "status": "sent"
+      },
+      "typo-bounce": {
+        "delivery_id": "01a1e1cc-625d-72a5-ad58-ba98662d3bab",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-cat-typo-bounce-001",
+        "recipient": "maya.okafor@northstr.example",
+        "reject_reason": "invalid",
+        "scenario": "catalog_typo_bounce",
+        "source": "catalog_seed",
+        "status": "sent"
+      },
+      "unicode-recipient": {
+        "delivery_id": "01a1e1cc-627a-7e45-8bee-2a24a6caee0d",
+        "last_error_present": false,
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-cat-unicode-recipient-001",
+        "recipient": "zoë.müller@northstar.example",
+        "reject_reason": null,
+        "scenario": "catalog_unicode_recipient",
+        "source": "catalog_seed",
+        "status": "sent"
+      }
+    },
+    "seed_anchor_utc": "2026-11-16T00:40:30Z"
+  },
+  "journey": {
+    "cases": {
+      "pw-bounce-then-open": {
+        "bounce_reject_reason": "bounced",
+        "bounced": true,
+        "delivery_id": "01a1e1cc-628e-70b4-85ad-095ed05afeba",
+        "last_error_present": false,
+        "last_event_type": "opened",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-jrn-pw-bounce-then-open-001",
+        "recipient": "pw-bounce-then-open@northstar.example",
+        "scenario": "journey_pw_bounce_then_open",
+        "source": "journey_seed",
+        "status": "sent",
+        "suppressed": false,
+        "suppression_reason": null,
+        "terminal": true
+      },
+      "pw-deferred": {
+        "bounce_reject_reason": null,
+        "bounced": false,
+        "delivery_id": "01a1e1cc-6293-7888-a925-5755967ddaa6",
+        "last_error_present": false,
+        "last_event_type": "deferred",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-jrn-pw-deferred-001",
+        "recipient": "pw-deferred@northstar.example",
+        "scenario": "journey_pw_deferred",
+        "source": "journey_seed",
+        "status": "sent",
+        "suppressed": false,
+        "suppression_reason": null,
+        "terminal": false
+      },
+      "pw-nil-reason-bounce": {
+        "bounce_reject_reason": null,
+        "bounced": true,
+        "delivery_id": "01a1e1cc-6291-7035-8a53-6903da5a847e",
+        "last_error_present": false,
+        "last_event_type": "bounced",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-jrn-pw-nil-reason-bounce-001",
+        "recipient": "pw-nil-reason-bounce@northstar.example",
+        "scenario": "journey_pw_nil_reason_bounce",
+        "source": "journey_seed",
+        "status": "sent",
+        "suppressed": false,
+        "suppression_reason": null,
+        "terminal": true
+      },
+      "pw-sent-no-report": {
+        "bounce_reject_reason": null,
+        "bounced": false,
+        "delivery_id": "01a1e1cc-628a-71a3-875b-76266c852646",
+        "last_error_present": false,
+        "last_event_type": "sent",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-jrn-pw-sent-no-report-001",
+        "recipient": "pw-sent-no-report@northstar.example",
+        "scenario": "journey_pw_sent_no_report",
+        "source": "journey_seed",
+        "status": "sent",
+        "suppressed": false,
+        "suppression_reason": null,
+        "terminal": false
+      },
+      "pw-suppressed": {
+        "bounce_reject_reason": null,
+        "bounced": false,
+        "delivery_id": "01a1e1cc-6294-7dcf-9378-0b95a4665f40",
+        "last_error_present": false,
+        "last_event_type": "suppressed",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": null,
+        "recipient": "pw-suppressed@northstar.example",
+        "scenario": "journey_pw_suppressed",
+        "source": "journey_seed",
+        "status": "suppressed",
+        "suppressed": true,
+        "suppression_reason": "hard_bounce",
+        "terminal": true
+      },
+      "pw-typo-bounce": {
+        "bounce_reject_reason": "invalid",
+        "bounced": true,
+        "delivery_id": "01a1e1cc-628b-79ed-99a5-563efc91e751",
+        "last_error_present": false,
+        "last_event_type": "bounced",
+        "metadata_keys": [
+          "scenario",
+          "subject"
+        ],
+        "provider_message_id": "pm-jrn-pw-typo-bounce-001",
+        "recipient": "pw-typo-bounce@northstar.example",
+        "scenario": "journey_pw_typo_bounce",
+        "source": "journey_seed",
+        "status": "sent",
+        "suppressed": false,
+        "suppression_reason": null,
+        "terminal": true
+      }
+    },
+    "seed_anchor_utc": "2026-11-16T00:40:30Z"
+  }
+}

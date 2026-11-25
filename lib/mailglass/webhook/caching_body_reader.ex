@@ -11,7 +11,7 @@ defmodule Mailglass.Webhook.CachingBodyReader do
 
   ## Footgun: `Plug.Parsers.MULTIPART` does NOT honor `:body_reader`
 
-  Plug issue #884. Mailglass providers POST JSON, so this is
+  Plug issue #884. mailglass providers POST JSON, so this is
   irrelevant for the library — but adopters adding `:multipart` to
   the same parsers config will silently bypass this reader.
   Documented in `guides/webhooks.md`.
@@ -20,7 +20,7 @@ defmodule Mailglass.Webhook.CachingBodyReader do
 
   Bytes land in `conn.private[:raw_body]`. The `conn.private` map is
   library-reserved (off the adopter `assigns` contract), matching
-  `LatticeStripe.Webhook.CacheBodyReader` convention. Mailglass
+  `LatticeStripe.Webhook.CacheBodyReader` convention. mailglass
   diverges from accrue's `conn.assigns` cons-list per CONTEXT 
   — `private` is the right boundary for library-reserved data.
 

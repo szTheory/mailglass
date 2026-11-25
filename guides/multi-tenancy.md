@@ -1,6 +1,6 @@
 # Multi-Tenancy
 
-Mailglass stores `tenant_id` on deliveries, events, and suppressions from day one. Phase 26 adds runtime per-tenant outbound adapter resolution without changing the zero-config single-tenant path.
+mailglass stores `tenant_id` on deliveries, events, and suppressions from day one. Phase 26 adds runtime per-tenant outbound adapter resolution without changing the zero-config single-tenant path.
 
 ## Single-tenant default
 
@@ -42,7 +42,7 @@ config :mailglass,
   ]
 ```
 
-Each registry entry is just the same adapter shape Mailglass already understands: `AdapterModule` or `{AdapterModule, opts}`.
+Each registry entry is just the same adapter shape mailglass already understands: `AdapterModule` or `{AdapterModule, opts}`.
 
 ## Tenancy callback
 
@@ -79,7 +79,7 @@ The callback contract stays narrow on purpose:
 - `:default` keeps the global `config :mailglass, adapter` path
 - missing callbacks behave the same as `:default`
 
-Broken callback output or unknown refs fail loudly. Mailglass does not silently fall back to the default adapter when tenant-specific routing is misconfigured.
+Broken callback output or unknown refs fail loudly. mailglass does not silently fall back to the default adapter when tenant-specific routing is misconfigured.
 
 ## Common routing patterns
 
@@ -127,4 +127,4 @@ config :mailglass, adapters: [
 - `Mailglass.deliver_later/2` and `Mailglass.deliver_many/2` persist `delivery.adapter_ref` before the job is enqueued.
 - Worker dispatch resolves credentials from runtime config at execution time, but it does not rerun tenant routing. That keeps retries on the same named route even if your tenancy callback would choose something different later.
 
-Queued paths should use `adapter_ref` overrides, not raw `adapter` tuples. Mailglass will reject queued raw adapter overrides that cannot be persisted safely without storing secrets.
+Queued paths should use `adapter_ref` overrides, not raw `adapter` tuples. mailglass will reject queued raw adapter overrides that cannot be persisted safely without storing secrets.

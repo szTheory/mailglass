@@ -37,7 +37,7 @@ Route 1 (SupportMailbox)
   subject_header  FAILED  expected "Support" got "Re: Billing Question"
 ```
 
-The routing-trace data is produced by `MailglassInbound.Router.Matcher.explain/2`, which
+The routing-trace data is produced by MailglassInbound.Router.Matcher.explain/2, which
 evaluates each clause of each route against the stored `InboundMessage` and returns a
 per-clause verdict list. The LiveView renders those verdicts.
 

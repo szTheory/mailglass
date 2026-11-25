@@ -1,0 +1,33 @@
+{
+  "scenario_id": "calib-01",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "reject",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": false,
+      "evidence_quote": "time: Nov 15, 2026, 2:04 AM",
+      "screenshot_region": "Updated field in the summary card and timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": false,
+      "evidence_quote": "button \"Bounced\"",
+      "screenshot_region": "status badge under the subject heading"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": false,
+      "evidence_quote": "heading \"Deliveries\" [level=1]",
+      "screenshot_region": "page heading and the Mailable label in the summary card"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": false,
+      "evidence_quote": "Open the delivery to inspect the bounce reason.",
+      "screenshot_region": "verdict text under the Bounced badge"
+    }
+  ],
+  "reasons": "The times (\"Nov 15, 2026, 2:04 AM\") show no time zone, which breaks R-TIME-1. The delivery's status badge says \"Bounced\", an event word, instead of one of the five status words such as Failed, which breaks R-STATUS-1. The page also uses \"Deliveries\" and \"Mailable\" instead of Activity and Mailer, which breaks R-WORDS-1. The verdict sentence tells the reader to open the delivery they are already viewing and gives no real next step, which breaks R-VOICE-1."
+}

@@ -6,7 +6,7 @@ defmodule Mailglass.OptionalDeps.OpenTelemetry do
   `opentelemetry_telemetry` bridge auto-connects any
   `[:mailglass, _, _, _, :start | :stop]` telemetry pair to OTel spans via
   the `:telemetry_span_context` metadata that `:telemetry.span/3` injects.
-  Mailglass does **not** ship an `attach_otel/0` helper — that would duplicate
+  mailglass does **not** ship an `attach_otel/0` helper — that would duplicate
   a third-party contract and create cross-SDK maintenance burden.
 
   This gateway exists only for future internal gating (e.g. so Config can

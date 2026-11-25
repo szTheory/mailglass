@@ -1,134 +1,127 @@
 defmodule MailglassAdmin.AccessibilityTest do
   @moduledoc """
-  RED-by-default coverage for PREV-05 WCAG AA contrast ratios per
-  05-UI-SPEC §Accessibility (lines 519-543) — the canonical brand-book
-  §7.3 hex pairings with their verified ratios.
+  WCAG contrast anchors for the brand v2.0 tokens (PREV-05, BRTOK-02, BRTOK-05).
 
-  No implementation work is needed beyond landing the brand palette —
-  these assertions are math on literal hex values, so they go GREEN as
-  soon as the build compiles. Keeping the tests in the RED suite anchors
-  the contrast contract against future palette drift.
+  Role hexes are read from `brandbook/tokens.json` through
+  `MailglassAdmin.TestSupport.Contrast` (WCAG 2.2, sRGB threshold 0.04045), so
+  there is no hex literal for a role in this file. The full pair inventory,
+  coverage guards and `never` rules live in `contrast_contract_test.exs`; this
+  file keeps the headline pairs and pins the values that are intentionally
+  below 3:1 (decorative dividers) so nobody "fixes" them upward.
   """
 
   use ExUnit.Case, async: true
 
+  alias MailglassAdmin.TestSupport.Contrast
+
+  @tokens_path Path.expand("../../../brandbook/tokens.json", __DIR__)
+
+  setup_all do
+    {:ok, resolved: @tokens_path |> File.read!() |> Jason.decode!() |> Contrast.resolve_tokens()}
+  end
+
   describe "canonical contrast pairs" do
-    test "Ink on Paper — 15.9:1 (AA + AAA)" do
-      assert contrast_ratio("#0D1B2A", "#F8FBFD") >= 15.0
+    test "text on the page background passes AAA in both themes", ctx do
+      for tier <- ["light", "dark"] do
+        assert ratio(ctx, tier, "text", "background") >= 7.0
+      end
     end
 
-    test "Slate on Paper — 5.1:1 (AA body text)" do
-      assert contrast_ratio("#5C6B7A", "#F8FBFD") >= 4.5
+    test "text on a card surface passes AAA in both themes", ctx do
+      for tier <- ["light", "dark"] do
+        assert ratio(ctx, tier, "text", "surface") >= 7.0
+        assert ratio(ctx, tier, "text", "surface-raised") >= 7.0
+      end
     end
 
-    test "Paper on Glass — 4.8:1 (AA large text / UI component)" do
-      assert contrast_ratio("#F8FBFD", "#277B96") >= 4.5
+    test "secondary text passes AA on the page and on a card in both themes", ctx do
+      for tier <- ["light", "dark"], ground <- ["background", "surface", "surface-raised"] do
+        assert ratio(ctx, tier, "text-muted", ground) >= 4.5,
+               "text-muted on #{ground} (#{tier}) must clear AA"
+      end
     end
 
-    test "Mist on Ink — 15.1:1 (AA + AAA, sidebar on dark)" do
-      assert contrast_ratio("#EAF6FB", "#0D1B2A") >= 15.0
+    test "link and accent text pass AA on the page and on a card in both themes", ctx do
+      for tier <- ["light", "dark"],
+          fg <- ["link", "accent-text"],
+          ground <- ["background", "surface"] do
+        assert ratio(ctx, tier, fg, ground) >= 4.5, "#{fg} on #{ground} (#{tier}) must clear AA"
+      end
     end
 
-    test "Signal Amber on Paper — 4.6:1 (AA body text)" do
-      assert contrast_ratio("#A95F10", "#F8FBFD") >= 4.5
+    test "the primary button label passes AA in both themes", ctx do
+      # --color-primary-content is the page background in light and text-inverse in dark.
+      assert ratio(ctx, "light", "background", "accent") >= 4.5
+      assert ratio(ctx, "dark", "text-inverse", "accent") >= 4.5
     end
 
-    test "Error Crimson on Paper — 6.1:1 (AA + AAA)" do
-      assert contrast_ratio("#B42318", "#F8FBFD") >= 4.5
-    end
-
-    test "Success Pine on Paper — 9.2:1 (AA + AAA)" do
-      assert contrast_ratio("#166534", "#F8FBFD") >= 4.5
-    end
-  end
-
-  describe "borderline pair (documents typography restriction)" do
-    test "Glass on Paper is the borderline AA-body case (canonical ratio 4.63, rounded 4.8 in UI-SPEC)" do
-      # Canonical WCAG 2.1 math: contrast_ratio("#277B96", "#F8FBFD") ≈ 4.63,
-      # which narrowly clears the 4.5:1 AA-body threshold. 05-UI-SPEC line 528
-      # rounds this to 4.8 and line 534 documents it as the borderline case:
-      # passes AA for UI components (3:1) + large/bold text (3:1) and barely
-      # passes for small body text, so the UI-SPEC RESTRICTS Glass to button
-      # labels / links / large display text as a typography discipline rather
-      # than a contrast-math failure.
-      #
-      # This test pins the ratio near the UI-SPEC's documented 4.63-4.8 band
-      # to catch palette drift — raising Glass lightness or darkening Paper
-      # would push the ratio either well above 5.0 (tone drift) or below 4.5
-      # (accessibility regression).
-      ratio = contrast_ratio("#277B96", "#F8FBFD")
-
-      assert ratio >= 4.5,
-             "Glass on Paper ratio #{ratio} must clear the AA-body floor (4.5:1); palette drift suspected"
-
-      assert ratio < 5.0,
-             "Glass on Paper ratio #{ratio} unexpectedly exceeds 5.0 — palette may have drifted lighter"
+    test "every solid status fill carries a label that passes AA", ctx do
+      for tier <- ["light", "dark"], status <- ~w(success warning error info) do
+        assert ratio(ctx, tier, "#{status}-on-solid", "#{status}-solid") >= 4.5,
+               "#{status}-on-solid on #{status}-solid (#{tier}) must clear AA"
+      end
     end
   end
 
-  describe "dark-mode token fixes (TOKEN-03)" do
-    test "dark muted text #B8CAD4 on Ink #0D1B2A passes AA (≥4.5:1)" do
-      # --mg-color-text-muted in dark theme; was #5C6B7A (3.18:1 — FAILED AA)
-      assert contrast_ratio("#B8CAD4", "#0D1B2A") >= 4.5
+  describe "logo glass is artwork only" do
+    test "glass clears 3:1 on the light page but never 4.5:1, so it is never text", ctx do
+      light = ratio(ctx, "light", "logo-glass", "background")
+
+      assert light >= 3.0, "logo glass on the light page is #{light}; artwork needs 3:1"
+
+      assert light < 4.5,
+             "logo glass on the light page is #{light}; if it reached 4.5 the book's never-for-text rule would need revisiting"
     end
 
-    test "dark error #E29089 on Ink #0D1B2A passes AA (≥4.5:1)" do
-      # --mg-color-error-solid in dark theme; was off-palette #D47368
-      assert contrast_ratio("#E29089", "#0D1B2A") >= 4.5
+    test "glass on the dark page clears 3:1", ctx do
+      assert ratio(ctx, "dark", "logo-glass", "background") >= 3.0
+    end
+  end
+
+  describe "dark-mode text (TOKEN-03)" do
+    test "muted and status text pass AA on the dark surface and on a raised surface", ctx do
+      for fg <- ~w(text-muted success-text warning-text error-text info-text),
+          ground <- ["surface", "surface-raised"] do
+        assert ratio(ctx, "dark", fg, ground) >= 4.5, "dark #{fg} on #{ground} must clear AA"
+      end
     end
 
-    test "dark primary-content Ink #0D1B2A on Ice #A6EAF2 passes AA (≥4.5:1)" do
-      # --color-primary-content in dark; already passes at 12.98:1 — pinned against regression
-      assert contrast_ratio("#0D1B2A", "#A6EAF2") >= 4.5
+    test "dark status text passes AA on the page background", ctx do
+      for fg <- ~w(success-text warning-text error-text info-text) do
+        assert ratio(ctx, "dark", fg, "background") >= 4.5
+      end
     end
   end
 
   describe "border role is intentionally sub-3:1 (WCAG 1.4.11 decorative exemption)" do
-    # Brand classifies base-300 as decorative hairlines/dividers only.
-    # WCAG 1.4.11 (Non-text Contrast) only requires 3:1 for CONTROL BOUNDARIES.
-    # Input borders use --color-input (border-input var, independent of base-300).
-    # These assertions are intentionally <3.0 — do NOT raise the value to "fix" them.
-    test "light border #C7DCE5 on Paper #F8FBFD is sub-3:1 (decorative hairline)" do
+    # The brand classifies base-300 (the `border` role, Sand Line / Roast Line) as a
+    # decorative divider. WCAG 1.4.11 (Non-text Contrast) only requires 3:1 for CONTROL
+    # BOUNDARIES, and those use border-input, which contrast_contract_test holds at
+    # 3:1. These assertions are intentionally below 3.0 — do NOT raise the value to "fix"
+    # them.
+    test "light border on the page background is sub-3:1 (decorative hairline)", ctx do
       # Do NOT raise this value — WCAG 1.4.11 exempts decorative dividers.
-      assert contrast_ratio("#C7DCE5", "#F8FBFD") < 3.0
+      assert ratio(ctx, "light", "border", "background") < 3.0
     end
 
-    test "dark border #315069 on Ink #0D1B2A is sub-3:1 (decorative hairline)" do
+    test "dark border on the page background is sub-3:1 (decorative hairline)", ctx do
       # Do NOT raise this value — WCAG 1.4.11 exempts decorative dividers.
-      assert contrast_ratio("#315069", "#0D1B2A") < 3.0
+      assert ratio(ctx, "dark", "border", "background") < 3.0
+    end
+
+    test "the control border is not the divider: border-input stays at or above 3:1", ctx do
+      for tier <- ["light", "dark"] do
+        assert ratio(ctx, tier, "border-input", "background") >= 3.0
+      end
     end
   end
 
-  # WCAG 2.1 contrast ratio = (lighter + 0.05) / (darker + 0.05)
-  # with relative luminance L = 0.2126*R + 0.7152*G + 0.0722*B after
-  # sRGB gamma expansion.
-  defp contrast_ratio("#" <> _ = hex_a, "#" <> _ = hex_b) do
-    l_a = luminance(hex_a)
-    l_b = luminance(hex_b)
-    lighter = max(l_a, l_b)
-    darker = min(l_a, l_b)
-
-    (lighter + 0.05) / (darker + 0.05)
+  defp ratio(%{resolved: resolved}, tier, fg_role, bg_role) do
+    Contrast.ratio(role_hex(resolved, tier, fg_role), role_hex(resolved, tier, bg_role))
   end
 
-  defp luminance("#" <> hex) do
-    {r, g, b} = parse_hex(hex)
-    rl = linearize(r)
-    gl = linearize(g)
-    bl = linearize(b)
+  defp role_hex(resolved, tier, "logo-" <> rest),
+    do: Map.fetch!(resolved, {tier, "--mg-logo-" <> rest})
 
-    0.2126 * rl + 0.7152 * gl + 0.0722 * bl
-  end
-
-  defp parse_hex(<<r1, r2, g1, g2, b1, b2>>) do
-    {hex_pair(r1, r2), hex_pair(g1, g2), hex_pair(b1, b2)}
-  end
-
-  defp hex_pair(a, b) do
-    {int, ""} = Integer.parse(<<a, b>>, 16)
-    int / 255.0
-  end
-
-  defp linearize(c) when c <= 0.03928, do: c / 12.92
-  defp linearize(c), do: :math.pow((c + 0.055) / 1.055, 2.4)
+  defp role_hex(resolved, tier, role), do: Map.fetch!(resolved, {tier, "--mg-color-" <> role})
 end

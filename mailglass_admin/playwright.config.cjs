@@ -30,32 +30,39 @@ module.exports = defineConfig({
     baseURL,
     trace: process.env.CI ? "retain-on-failure" : "on-first-retry"
   },
-  webServer: {
-    command: 'MIX_ENV=test mix run --no-halt -e "MailglassAdmin.TestSupport.OperatorBrowserServer.run!()"',
-    cwd: __dirname,
-    env: {
-      ...process.env,
-      MIX_ENV: "test",
-      BROWSER_SERVER_PORT: port,
-      ...(process.env.CI
-        ? {
-            MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH:
-              process.env.MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH ||
-              "test-results/operator-browser-server.ndjson"
-          }
-        : {})
-    },
-    url: `${baseURL}${browserReadyPath}`,
-    // CI-cold start runs `mix run` which compiles every transitive dep in
-    // test env (incl. Phoenix, LiveView, mailglass core, mailglass_admin)
-    // plus runs all 5 mailglass core migrations (citext extension, append-
-    // only events trigger, suppression store, etc.) before the endpoint
-    // binds to `port`. 120s was tight; 300s gives a comfortable margin
-    // without masking real hangs. stdout/stderr from `mix run` is surfaced
-    // by OperatorBrowserServer.run!/0 step-prints so any stall is visible.
-    timeout: 300_000,
-    reuseExistingServer: !process.env.CI,
-    stdout: "pipe",
-    stderr: "pipe"
-  }
+  // The Docker fallback starts the Elixir server on the host and relays its
+  // loopback port into the browser container, so Playwright must not start a
+  // second server inside the container.
+  ...(process.env.OPERATOR_BROWSER_EXTERNAL_SERVER === "1"
+    ? {}
+    : {
+        webServer: {
+          command: 'MIX_ENV=test mix run --no-halt -e "MailglassAdmin.TestSupport.OperatorBrowserServer.run!()"',
+          cwd: __dirname,
+          env: {
+            ...process.env,
+            MIX_ENV: "test",
+            BROWSER_SERVER_PORT: port,
+            ...(process.env.CI
+              ? {
+                  MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH:
+                    process.env.MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH ||
+                    "test-results/operator-browser-server.ndjson"
+                }
+              : {})
+          },
+          url: `${baseURL}${browserReadyPath}`,
+          // CI-cold start runs `mix run` which compiles every transitive dep in
+          // test env (incl. Phoenix, LiveView, mailglass core, mailglass_admin)
+          // plus runs all 5 mailglass core migrations (citext extension, append-
+          // only events trigger, suppression store, etc.) before the endpoint
+          // binds to `port`. 120s was tight; 300s gives a comfortable margin
+          // without masking real hangs. stdout/stderr from `mix run` is surfaced
+          // by OperatorBrowserServer.run!/0 step-prints so any stall is visible.
+          timeout: 300_000,
+          reuseExistingServer: !process.env.CI,
+          stdout: "pipe",
+          stderr: "pipe"
+        }
+      })
 });

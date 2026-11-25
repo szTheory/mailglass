@@ -10,9 +10,9 @@ Classify mail by why the recipient receives it, not by the template's tone.
 |---|---|---|
 | `:transactional` | magic links, verification, receipts, payment failures, security alerts, account deletion | No unsubscribe header. Never use for engagement mail. |
 | `:operational` | study reminders, return nudges, progress digests, CEFR milestones, curriculum updates requested by the learner | Always provide the complete RFC 8058 header pair. |
-| `:bulk` | waitlist announcements, new-language promotion, campaigns sent to a broad opted-in audience | Mailglass injects its stream-level RFC 8058 headers automatically. |
+| `:bulk` | waitlist announcements, new-language promotion, campaigns sent to a broad opted-in audience | mailglass injects its stream-level RFC 8058 headers automatically. |
 
-Mailglass's built-in unsubscribe suppression is scoped to the originating address and stream. An operational or bulk unsubscribe therefore does not suppress a transactional magic link. Hard bounces and complaints are intentionally address-wide and can block transactional delivery. Do not bypass that safety rule: the product must provide verified email replacement and an account-recovery path that does not depend on sending to the suppressed address.
+mailglass's built-in unsubscribe suppression is scoped to the originating address and stream. An operational or bulk unsubscribe therefore does not suppress a transactional magic link. Hard bounces and complaints are intentionally address-wide and can block transactional delivery. Do not bypass that safety rule: the product must provide verified email replacement and an account-recovery path that does not depend on sending to the suppressed address.
 
 An operational mailable opts into one-click unsubscribe by supplying both headers together:
 
@@ -35,7 +35,7 @@ end
 
 See [Generated plaintext](authoring-mailables.md#generated-plaintext) for how rendered Mailables get their text body from HTML.
 
-Generate `unsubscribe_url` in the host or preference service from an opaque, signed recipient reference. Its POST action must be idempotent and disable only the represented notification category. Do not put an email address in the token or URL. Chimeway owns notification-key/channel preferences, quiet hours, caps, scheduling, digests, and fallback; Mailglass transports the headers and records delivery evidence. The built-in Mailglass stream-level endpoint remains the safe default when category-specific preferences are not needed.
+Generate `unsubscribe_url` in the host or preference service from an opaque, signed recipient reference. Its POST action must be idempotent and disable only the represented notification category. Do not put an email address in the token or URL. Chimeway owns notification-key/channel preferences, quiet hours, caps, scheduling, digests, and fallback; mailglass transports the headers and records delivery evidence. The built-in mailglass stream-level endpoint remains the safe default when category-specific preferences are not needed.
 
 ## Keep one tenant and two sending identities
 
@@ -77,7 +77,7 @@ config :mailglass, :rate_limit,
   ]
 ```
 
-Treat that value as a conservative launch setting, not a universal guarantee. Reduce volume automatically on sustained deferrals and adjust from provider reputation evidence. Transactional messages bypass Mailglass rate limits by design; authentication abuse throttling belongs in Sigra or the host.
+Treat that value as a conservative launch setting, not a universal guarantee. Reduce volume automatically on sustained deferrals and adjust from provider reputation evidence. Transactional messages bypass mailglass rate limits by design; authentication abuse throttling belongs in Sigra or the host.
 
 Run `mix mail.doctor` before launch and after DNS changes. It proves DNS facts, not inbox placement. Follow [Google's sender guidance](https://support.google.com/mail/answer/81126?hl=en) to authenticate mail, increase volume gradually, send consistently, and begin with engaged recipients.
 
@@ -103,15 +103,15 @@ Attach to the durable provider-feedback event:
 
 The event is emitted once after a new durable provider or compliance fact is committed. Status is one of `:sent`, `:delivered`, `:bounced`, `:complained`, `:deferred`, `:rejected`, `:opened`, `:clicked`, or `:unsubscribed`. Metadata contains only `tenant_id`, `delivery_id`, `provider`, `stream`, `mailable`, and `status`; it never contains an address, subject, header, URL, token, or body.
 
-At launch volume, alert on every complaint. A percentage over tens or hundreds of recipients is too noisy to be a useful control. Add rate-based alerts only after the denominator becomes stable. The Mailglass ledger remains the audit source of truth; telemetry and PubSub are operational signals.
+At launch volume, alert on every complaint. A percentage over tens or hundreds of recipients is too noisy to be a useful control. Add rate-based alerts only after the denominator becomes stable. The mailglass ledger remains the audit source of truth; telemetry and PubSub are operational signals.
 
 Keep open tracking disabled. [Apple Mail Privacy Protection](https://support.apple.com/en-nz/guide/iphone/iphf084865c7/26/ios/26) means an open is not reliable evidence of a human reading a message. Never drive suppression, re-engagement, curriculum decisions, or product analytics from opens. Click tracking may be used for non-authentication mail when justified; authentication links must not be rewritten or tracked.
 
-## Compose with the family instead of expanding Mailglass
+## Compose with the family instead of expanding mailglass
 
 | Concern | Owner |
 |---|---|
-| Message render, send, normalized provider evidence, suppression | Mailglass |
+| Message render, send, normalized provider evidence, suppression | mailglass |
 | Preference categories, quiet hours, caps, scheduling, digesting, channel fallback | Chimeway |
 | Authentication tokens, sessions, passkeys, TOTP, prescan-safe consumption | Sigra/host |
 | Subscription state, dunning, Stripe webhook workflows | Accrue |
@@ -120,7 +120,7 @@ Keep open tracking disabled. [Apple Mail Privacy Protection](https://support.app
 | Mobile notification-open evidence | `crosswake_chimeway` |
 | Mobile route activation after an ordinary HTTPS link opens | Crosswake |
 
-Do not create `crosswake_mailglass`. Mailglass links are normal host-generated HTTPS URLs. Crosswake activates the corresponding route after the operating system opens one; Chimeway already owns notification-open evidence, and Sigra owns authentication returns. A Mailglass companion would add three-way coupling without introducing a stable capability.
+Do not create `crosswake_mailglass`. mailglass links are normal host-generated HTTPS URLs. Crosswake activates the corresponding route after the operating system opens one; Chimeway already owns notification-open evidence, and Sigra owns authentication returns. A mailglass companion would add three-way coupling without introducing a stable capability.
 
 Reconsider that boundary only after two independent adopters implement the same provider-neutral, versioned, signed email-to-route-intent adapter and demonstrate why it cannot live in the host, Chimeway, or Crosswake activation layer.
 
@@ -136,7 +136,7 @@ Before the first paid subscription:
 6. Production inbound processing uses Oban. The Task supervisor fallback is not durable enough for a production support mailbox.
 7. A background check or alert consumes durable provider status and suppression evidence; launch does not depend on an admin or operator UI.
 
-## Evidence that justifies more Mailglass
+## Evidence that justifies more mailglass
 
 - Add declarative stream routing only after two adopters independently duplicate or misconfigure the resolver pattern.
 - Add automated warmup support only after planned engagement volume exceeds roughly 500 messages per day or sustained provider deferrals appear.

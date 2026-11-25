@@ -1,0 +1,24 @@
+{
+  "schema": "phase184-12-preallocation-stop.v1",
+  "firstStop": {
+    "gate": "candidate-free-fixtures-and-selftest-report",
+    "reason": "The final candidate-free fixture/selftest command yielded only the TAP header at the 10-second tool boundary. Its final reporter result was not captured; read-only process reconciliation was unavailable, so the route stopped without rerunning it or invoking cache-preflight.",
+    "at": "2026-11-20T09:26:06.324Z",
+    "command": "node --test --test-reporter=tap --test-name-pattern='Hex 2.6.0|Hex requirement equality' 184-12-route.test.cjs && node 184-12-route.cjs selftest",
+    "observedOutput": "TAP version 13; no final TAP plan or selftest receipt was captured.",
+    "reconciliation": [
+      "No 184-12 cache-preflight or candidate command was invoked.",
+      "The route, preflight, and scratch roots remain absent.",
+      "ps was denied by the execution environment; pgrep reported that it could not get the process list."
+    ]
+  },
+  "cachePreflightReserved": false,
+  "candidateRootAbsent": true,
+  "preflightRootAbsent": true,
+  "scratchRootAbsent": true,
+  "cacheRead": false,
+  "candidateAllocation": false,
+  "push": false,
+  "dispatch": false,
+  "preview": false
+}

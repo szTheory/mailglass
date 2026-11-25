@@ -345,18 +345,18 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
 
   @stale_notices %{
     failed_ingest:
-      "Webhook processing wasn't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+      "Webhook processing wasn't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     orphan_backlog:
-      "Unmatched events weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+      "Provider reports that match no email weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     delivery_activity:
-      "Outbound activity and delivery results weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC.",
+      "Outbound activity and delivery results weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC.",
     inbound_activity:
-      "Inbound activity and processing results weren't refreshed. Showing results from 2026-10-28 12:00:00 UTC."
+      "Inbound activity and processing results weren't refreshed. Showing results from Oct 28, 2026, 12:00 PM UTC."
   }
 
   @unavailable_notices %{
     failed_ingest: "Webhook processing couldn't be loaded.",
-    orphan_backlog: "Unmatched events couldn't be loaded.",
+    orphan_backlog: "Provider reports that match no email couldn't be loaded.",
     delivery_activity: "Outbound activity and delivery results couldn't be loaded.",
     inbound_activity: "Inbound activity and processing results couldn't be loaded."
   }
@@ -403,7 +403,7 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
     assert [_] = find(tree, testid("operator-health-outbound-activity"))
 
     linked = tree |> Floki.text() |> String.replace(~r/\s+/, " ")
-    assert linked =~ "0 deliveries updated"
+    assert linked =~ "0 emails updated"
     assert linked =~ "0 messages received"
   end
 
@@ -471,6 +471,8 @@ defmodule MailglassAdmin.Operator.HealthOverviewTest do
 
     assert guide =~ "period and the last-checked timestamp are both observation basis"
     assert guide =~ "with Refresh adjacent to the timestamp"
+    assert guide =~ "brandbook/status-marks.json"
+    assert guide =~ "Sent, Delivered, Delayed, Failed and Not sent"
     assert guide =~ "No activity shows a neutral “No mail activity in this period”."
 
     refute guide =~ "stays separate"

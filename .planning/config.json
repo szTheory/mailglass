@@ -63,21 +63,21 @@
   "granularity": "standard",
   "model_profile_overrides": {
     "codex": {
-      "opus": "gpt-6.1-sol",
+      "opus": "gpt-6.2-sol",
       "sonnet": "gpt-6-luna",
       "haiku": "gpt-6-luna"
     },
     "claude": {
-      "opus": "claude-opus-5-5",
-      "sonnet": "claude-sonnet-5-5",
-      "haiku": "claude-haiku-5-5"
+      "opus": "sonnet",
+      "sonnet": "sonnet",
+      "haiku": "haiku"
     }
   },
   "runtime": "claude",
   "effort": {
     "routing_tier_defaults": {
       "light": "xhigh",
-      "standard": "high",
+      "standard": "medium",
       "heavy": "high"
     }
   }

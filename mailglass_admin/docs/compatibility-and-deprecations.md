@@ -4,7 +4,7 @@ This page exists so `mailglass_admin` HexDocs can surface the `1.x`
 compatibility policy without duplicating the policy text inside the admin
 package.
 
-The canonical guide lives in the repo-root Mailglass docs:
+The canonical guide lives in the repo-root mailglass docs:
 
 - [`guides/compatibility-and-deprecations.md`](../../guides/compatibility-and-deprecations.md)
 

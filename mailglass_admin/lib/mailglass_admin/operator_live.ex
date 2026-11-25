@@ -41,6 +41,7 @@ defmodule MailglassAdmin.OperatorLive do
   }
 
   alias MailglassAdmin.Operator.Tenants, as: TenantSelector
+  alias MailglassAdmin.StatusMap
   alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
   alias Phoenix.LiveView.JS
 
@@ -131,10 +132,17 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_errors, %{})
       |> assign(:filter_error_source, nil)
       |> assign(:filter_url_invalid, %{})
-      |> assign(:page_title, "mailglass — Operator")
+      |> assign(:page_title, "mailglass — Admin")
 
     {:ok, socket}
   end
+
+  # The document title names the screen the h1 names, so a tab reads Activity on the
+  # Activity screen (D-11). The overview keeps the product-level Admin title.
+  defp sync_page_title(socket), do: assign(socket, :page_title, page_title(socket.assigns.view))
+
+  defp page_title(:deliveries), do: "mailglass — Activity"
+  defp page_title(_view), do: "mailglass — Admin"
 
   # Persisted theme cookie value, surfaced into the LiveView via the router's
   # operator session callback (`__operator_session__` → "admin_chrome_theme_cookie").
@@ -204,10 +212,10 @@ defmodule MailglassAdmin.OperatorLive do
 
       cond do
         tenant_state == :auto_select ->
-          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+          {:noreply, clear_surface_state(socket) |> close_replay_modal() |> sync_page_title()}
 
         tenant_state in [:select_required, :none] ->
-          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+          {:noreply, clear_surface_state(socket) |> close_replay_modal() |> sync_page_title()}
 
         view == "deliveries" or not is_nil(delivery_id) ->
           {:noreply,
@@ -218,13 +226,15 @@ defmodule MailglassAdmin.OperatorLive do
              full?,
              support_focus?(support_state)
            )
-           |> close_replay_modal()}
+           |> close_replay_modal()
+           |> sync_page_title()}
 
         true ->
           {:noreply,
            socket
            |> assign_overview_state(filter_params)
-           |> close_replay_modal()}
+           |> close_replay_modal()
+           |> sync_page_title()}
       end
     end
   end
@@ -726,7 +736,7 @@ defmodule MailglassAdmin.OperatorLive do
       tenant_state={@tenant_state}
       account_labels={@account_labels}
       page_uri={@page_uri}
-      title={if @view == :overview, do: "Email health", else: "Deliveries"}
+      title={if @view == :overview, do: "Email health", else: "Activity"}
       subtitle={page_subtitle(@view)}
       flash={@flash}
     >
@@ -771,13 +781,13 @@ defmodule MailglassAdmin.OperatorLive do
               >
                 <div class="text-body font-bold text-base-content">Choose an Account</div>
                 <div class="text-body text-secondary">
-                  Select an Account to see scoped operator data. Mailglass keeps that account boundary
+                  Select an Account to see its activity. mailglass keeps that account boundary
                   in the URL as <code class="mono">tenant_id</code> so refreshes and shared links stay
                   scoped.
                 </div>
                 <div>
                   <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
-                    Go to Deliveries
+                    Go to Activity
                   </.link>
                 </div>
               </div>
@@ -834,7 +844,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-detail-back"
                     class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                   >
-                    <span aria-hidden="true" class="mr-xs">←</span> Back to deliveries
+                    <Components.icon name="hero-arrow-left" class="mr-xs h-4 w-4" /> Back to Activity
                   </.link>
 
                   <%= cond do %>
@@ -867,6 +877,10 @@ defmodule MailglassAdmin.OperatorLive do
                         <DetailHeader.detail_header
                           delivery={@selected_delivery}
                           account_labels={@account_labels}
+                          timeline_events={@timeline_events}
+                          timeline_state={@timeline_state}
+                          suppression_state={@suppression_state}
+                          suppression_read_state={@suppression_read_state}
                         />
                         <%!-- Event timeline leads: it is the record-specific "what happened"
                             evidence the operator came to read. Suppression state (also
@@ -920,55 +934,63 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-filters"
                   class="border-b border-base-300 pb-md"
                 >
-                  <%!-- The class (shared with Inbound, already in the committed bundle) keeps the
-                      desktop breakpoint working after a mobile close; no inline display is written. --%>
-                  <button
-                    type="button"
-                    phx-click={
-                      JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
-                      |> JS.toggle_attribute({"aria-expanded", "true", "false"})
-                    }
-                    data-testid="operator-filters-toggle"
-                    aria-controls="operator-filter-panel"
-                    aria-expanded="false"
-                    class="btn btn-ghost !h-11 min-h-11 md:hidden"
+                  <%!-- One form: the email search leads at every width, then the toggle and the
+                      collapsible panel. The toggle class (shared with Inbound, already in the
+                      committed bundle) keeps the desktop breakpoint working after a mobile close;
+                      no inline display is written. --%>
+                  <.form
+                    for={@filter_form}
+                    id="operator-filters"
+                    phx-change="validate_filters"
+                    phx-submit="apply_filters"
+                    phx-auto-recover="recover_filters"
+                    class="grid gap-md"
                   >
-                    Filters
-                    <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
-                      ({applied_filter_count(@filter_params)} applied)
-                    </span>
-                    <Components.icon name="hero-chevron-down" class="h-4 w-4" />
-                  </button>
+                    <FiltersForm.search_field
+                      form={@filter_form}
+                      committed_search={@filter_params["search"] || ""}
+                    />
 
-                  <div id="operator-filter-panel" class="hidden md:block">
-                    <.form
-                      for={@filter_form}
-                      id="operator-filters"
-                      phx-change="validate_filters"
-                      phx-submit="apply_filters"
-                      phx-auto-recover="recover_filters"
-                      class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
+                    <button
+                      type="button"
+                      phx-click={
+                        JS.toggle_class("mg-inbound-filters-open", to: "#operator-filter-panel")
+                        |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                      }
+                      data-testid="operator-filters-toggle"
+                      aria-controls="operator-filter-panel"
+                      aria-expanded="false"
+                      class="btn btn-ghost !h-11 min-h-11 md:hidden"
                     >
-                      <FiltersForm.fields
-                        form={@filter_form}
-                        provider_options={@provider_options}
-                        event_values={@event_values}
-                        window_options={@window_options}
-                        errors={@filter_errors}
-                        committed_search={@filter_params["search"] || ""}
-                      />
+                      Filters
+                      <span :if={applied_filter_count(@filter_params) > 0} class="font-normal">
+                        ({applied_filter_count(@filter_params)} applied)
+                      </span>
+                      <Components.icon name="hero-chevron-down" class="h-4 w-4" />
+                    </button>
 
-                      <div class="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          phx-click="clear_filters"
-                          class="btn btn-ghost min-h-11 px-md"
-                        >
-                          Clear filters
-                        </button>
+                    <div id="operator-filter-panel" class="hidden md:block">
+                      <div class="grid gap-md xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+                        <FiltersForm.other_fields
+                          form={@filter_form}
+                          provider_options={@provider_options}
+                          event_values={@event_values}
+                          window_options={@window_options}
+                          errors={@filter_errors}
+                        />
+
+                        <div class="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            phx-click="clear_filters"
+                            class="btn btn-ghost min-h-11 px-md"
+                          >
+                            Clear filters
+                          </button>
+                        </div>
                       </div>
-                    </.form>
-                  </div>
+                    </div>
+                  </.form>
 
                   <%!-- Outside the collapsible panel so the label stays visible when the mobile
                       panel is closed. Not live-announced: the invalid field already is (D-12/D-13).
@@ -1001,27 +1023,37 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-delivery-summary"
                   class="mt-md border-b border-base-300 pb-md"
                 >
-                  <div class="mg-delivery-summary-counts">
-                    <Components.stat_card
-                      :for={{key, label, count, help} <- delivery_summary(@deliveries_page_meta)}
-                      id={"delivery-summary-#{key}"}
-                      label={label}
-                      value={count}
-                      severity={if key == :attention and count > 0, do: :warning, else: :neutral}
-                      severity_label={
-                        if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
-                      }
-                      compact
-                    >
-                      <:label_help>
-                        <Components.field_help
-                          id={"delivery-summary-#{key}-help"}
+                  <%= case delivery_summary(@deliveries_page_meta) do %>
+                    <% {:undetermined, sentence} -> %>
+                      <p
+                        data-testid="operator-delivery-summary-undetermined"
+                        class="text-body text-secondary"
+                      >
+                        {sentence}
+                      </p>
+                    <% cards -> %>
+                      <div class="mg-delivery-summary-counts">
+                        <Components.stat_card
+                          :for={{key, label, count, help} <- cards}
+                          id={"delivery-summary-#{key}"}
                           label={label}
-                          text={help}
-                        />
-                      </:label_help>
-                    </Components.stat_card>
-                  </div>
+                          value={count}
+                          severity={if key == :attention and count > 0, do: :warning, else: :neutral}
+                          severity_label={
+                            if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
+                          }
+                          compact
+                        >
+                          <:label_help>
+                            <Components.field_help
+                              id={"delivery-summary-#{key}-help"}
+                              label={label}
+                              text={help}
+                            />
+                          </:label_help>
+                        </Components.stat_card>
+                      </div>
+                  <% end %>
                 </section>
 
                 <section data-testid="operator-master-detail" class="mt-6">
@@ -1599,18 +1631,17 @@ defmodule MailglassAdmin.OperatorLive do
   defp detail_error_for(_delivery_id, _selected_delivery), do: nil
 
   defp detail_error_copy(:invalid_id),
-    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+    do: "This delivery link is invalid. Return to Activity and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to Activity to continue."
 
   defp detail_error_copy(:unavailable),
     do:
-      "Delivery details are temporarily unavailable. Retry the scoped read or return to deliveries."
+      "Delivery details are temporarily unavailable. Retry the scoped read or return to Activity."
 
   defp detail_error_copy(_),
-    do: "Delivery details are unavailable. Return to deliveries to continue."
+    do: "Delivery details are unavailable. Return to Activity to continue."
 
   defp load_replay_targets(_filter_params, nil, _read_fault), do: nil
 
@@ -2734,48 +2765,53 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(nil), do: nil
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
-  defp delivery_summary(page_meta) do
-    counts =
-      Enum.reduce(Map.get(page_meta, :outcome_groups, []), %{}, fn group, counts ->
-        bucket =
-          case Components.delivery_display_status(group) do
-            status when status in [:delivered, :opened, :clicked] ->
-              :delivered
+  @undetermined_summary MailglassAdmin.Copy.undetermined_sentence()
 
-            status
-            when status in [
-                   :failed,
-                   :bounced,
-                   :rejected,
-                   :complained,
-                   :suppressed,
-                   :unsubscribed,
-                   :deferred
-                 ] ->
-              :attention
+  # The three summary buckets, counted by delivery class. When a group lacks the
+  # lifecycle keys (an older core that returns the three-field shape), the class
+  # cannot be read honestly, so the summary says so instead of printing counts.
+  @doc false
+  @spec delivery_summary(map()) ::
+          {:undetermined, String.t()}
+          | [{atom(), String.t(), non_neg_integer(), String.t()}]
+  def delivery_summary(page_meta) do
+    groups = Map.get(page_meta, :outcome_groups, [])
 
-            _ ->
-              :awaiting
-          end
+    if Enum.any?(groups, &(not Map.has_key?(&1, :bounced_at))) do
+      {:undetermined, @undetermined_summary}
+    else
+      counts =
+        Enum.reduce(groups, %{}, fn group, counts ->
+          # One rule for the summary and the row marks: bucket by the delivery
+          # class, which reads the lifecycle fields the outcome groups carry.
+          bucket =
+            case StatusMap.delivery_class(group) do
+              :delivered -> :delivered
+              class when class in [:failed, :delayed, :not_sent] -> :attention
+              :sent -> :awaiting
+            end
 
-        Map.update(counts, bucket, group.count, &(&1 + group.count))
-      end)
+          Map.update(counts, bucket, group.count, &(&1 + group.count))
+        end)
 
-    [
-      {:delivered, "Delivered", Map.get(counts, :delivered, 0),
-       "Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search."},
-      {:attention, "Needs attention", Map.get(counts, :attention, 0),
-       "Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results."},
-      {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
-       "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
-    ]
+      [
+        {:delivered, "Delivered", Map.get(counts, :delivered, 0),
+         "Emails with a delivery report from the receiving server. Counts include all results for the applied provider, time window, and search."},
+        {:attention, "Needs attention", Map.get(counts, :attention, 0),
+         "Emails that failed, were delayed, or were not sent because the address is suppressed. Open a delivery to see what was recorded. Counts include all matching results."},
+        {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
+         "Emails are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
+      ]
+    end
   end
 
   defp page_subtitle(:overview),
     do: "Find email issues and inspect the records behind them."
 
+  # The gloss under the Activity h1: the old word stays findable, and the screen says what
+  # one row is (D-11). Activity is the screen's name; a row is still a delivery.
   defp page_subtitle(:deliveries),
-    do: "Trace each delivery through its event history."
+    do: "Every email your app sent, one row per delivery."
 
   defp health_metric_count(nil, _metric), do: nil
 
@@ -2829,9 +2865,9 @@ defmodule MailglassAdmin.OperatorLive do
     webhook_issues =
       [
         {:failed_ingest, "Failed webhook attempts",
-         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed emails.",
          "operator-overview-health-failures"},
-        {:orphan_backlog, "Unmatched events",
+        {:orphan_backlog, "Provider reports that match no email",
          "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
          "operator-overview-health-orphans"}
       ]
@@ -2851,21 +2887,34 @@ defmodule MailglassAdmin.OperatorLive do
 
     delivery_issues =
       [
-        {:failed, "Failed deliveries",
-         "Sending failed before a successful handoff to the provider."},
-        {:bounced, "Bounced deliveries",
-         "The provider reported that these messages could not be delivered."},
-        {:rejected, "Rejected deliveries", "The provider rejected these messages."},
-        {:deferred, "Delayed deliveries",
+        {:failed, "Failed emails",
+         "These emails did not get through: sending failed, or the provider reported a failure."},
+        {:bounced, "Bounced emails",
+         "The provider reported that these emails could not be delivered."},
+        {:rejected, "Rejected emails", "The provider rejected these emails."},
+        {:deferred, "Delayed emails",
          "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
       ]
       |> Enum.map(fn {event, label, help} ->
-        matching = Enum.filter(groups, &(Components.delivery_display_status(&1) == event))
+        matching = Enum.filter(groups, &(health_delivery_card(&1) == event))
         count = Enum.reduce(matching, 0, &(&1.count + &2))
-        # Older records can have a failure status without a matching latest event.
-        # Keep the problem visible; don't send that subset to an empty event filter.
+
+        # The Activity event filter matches the latest recorded event alone, so it is used
+        # only when it opens exactly the emails this card counts. Two things make it not so.
+        # Older records can have a failure status without a matching latest event: keep the
+        # problem visible, and don't send that subset to an empty event filter. And an
+        # email with the same latest event can be counted by another card or by none: a
+        # confirmed delivery followed by a later deferral reads Delivered, so an event
+        # filter on "deferred" would open it under the Delayed card.
+        exact_filter? =
+          Enum.all?(matching, &(&1.last_event_type == event)) and
+            not Enum.any?(
+              groups,
+              &(&1.last_event_type == event and health_delivery_card(&1) != event)
+            )
+
         destination =
-          if Enum.all?(matching, &(&1.last_event_type == event)),
+          if exact_filter?,
             do: Map.put(params, "event", Atom.to_string(event)),
             else: params
 
@@ -2884,9 +2933,9 @@ defmodule MailglassAdmin.OperatorLive do
       if Map.has_key?(states, :inbound_activity) do
         [
           {:failed, "Failed inbound processing",
-           "Mailbox processing ended in failure when these messages were received. Open a message to inspect its error and any later recovery attempts."},
+           "Mailbox processing ended in failure when these inbound emails were received. Open an email to inspect its error and any later recovery attempts."},
           {:no_match, "Unrouted inbound messages",
-           "No mailbox routing rule matched these messages when they were received."}
+           "No mailbox routing rule matched these inbound emails when they were received."}
         ]
         |> Enum.map(fn {outcome, label, help} ->
           %{
@@ -2905,6 +2954,26 @@ defmodule MailglassAdmin.OperatorLive do
 
     (delivery_issues ++ inbound_issues ++ webhook_issues)
     |> Enum.filter(&(is_integer(&1.count) and &1.count > 0))
+  end
+
+  # The Health delivery card an outcome group counts under, or nil when it is not a
+  # problem. The delivery class decides whether it is one, the same rule the Activity
+  # summary and the row marks use, so a bounce followed by an open still counts and a
+  # confirmed delivery followed by a deferral does not. The card only names how it
+  # failed: the latest failure event, else the durable bounce, else a plain failure.
+  defp health_delivery_card(group) do
+    case StatusMap.delivery_class(group) do
+      :failed -> health_failure_card(group)
+      :delayed -> :deferred
+      _other -> nil
+    end
+  end
+
+  defp health_failure_card(group) do
+    case Map.get(group, :last_event_type) do
+      event when event in [:bounced, :rejected, :failed] -> event
+      _other -> if Map.get(group, :bounced_at), do: :bounced, else: :failed
+    end
   end
 
   defp support_evidence_path(base_path, filter_params, dark_chrome, :orphan_backlog, summary) do
@@ -2947,7 +3016,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_title(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do: "Exact Account webhook"
 
-  defp support_focus_title(%{focus: :orphan_backlog}), do: "Unmatched webhook evidence"
+  defp support_focus_title(%{focus: :orphan_backlog}), do: "Provider reports that match no email"
   defp support_focus_title(%{focus: :failed_ingest}), do: "Failure evidence"
   defp support_focus_title(%{focus: :replay_outcomes}), do: "Replay evidence"
   defp support_focus_title(%{focus: :reconcile_facts}), do: "Reconcile evidence"
@@ -2955,7 +3024,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
     do:
-      "The requested Account Event is retained below. Its current Delivery relationship may mean it is no longer part of the unmatched population."
+      "The requested Account Event is retained below. Its current Delivery relationship may mean it is no longer one of the provider reports that match no email."
 
   defp support_focus_body(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do:
@@ -2963,16 +3032,17 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :orphan_backlog}),
     do:
-      "Review provider webhooks Mailglass received but has not linked to a delivery. These can arrive before the send record is visible, or with provider identifiers that need reconciliation."
+      "Review provider webhooks mailglass received but has not linked to a delivery. These can arrive before the send record is visible, or with provider identifiers that need reconciliation."
 
   defp support_focus_body(%{focus: :failed_ingest}),
-    do: "Review provider events Mailglass could not process in the current support window."
+    do: "Review provider events mailglass could not process in the current support window."
 
   defp support_focus_body(%{focus: :replay_outcomes}),
     do: "Review the latest replay outcome and its recorded audit trail."
 
   defp support_focus_body(%{focus: :reconcile_facts}),
-    do: "Review reconciliation facts that explain how unmatched provider events were linked."
+    do:
+      "Review reconciliation facts that explain how provider reports that matched no email were linked."
 
   defp support_focus_body(_support_state),
     do: "Review account-scoped support facts from the current support window."

@@ -1,6 +1,6 @@
 # RFC 8058 Unsubscribe
 
-This guide is the adopter contract for Mailglass one-click unsubscribe. It covers the config, router mount, read-only generator, built-in GET page, POST replay behavior, DKIM follow-up, and a safe `secret_key_base` rotation playbook.
+This guide is the adopter contract for mailglass one-click unsubscribe. It covers the config, router mount, read-only generator, built-in GET page, POST replay behavior, DKIM follow-up, and a safe `secret_key_base` rotation playbook.
 
 ## 1) Configure the compliance endpoint
 
@@ -19,8 +19,8 @@ config :mailglass, :compliance,
 
 Key points:
 
-- `endpoint` is optional. When omitted, Mailglass falls back to `Mailglass.Tracking.endpoint/0`.
-- `host` must be the public unsubscribe origin. Mailglass rejects local, private, path-bearing, and malformed hosts.
+- `endpoint` is optional. When omitted, mailglass falls back to `Mailglass.Tracking.endpoint/0`.
+- `host` must be the public unsubscribe origin. mailglass rejects local, private, path-bearing, and malformed hosts.
 - `mount_path` is the canonical absolute path prefix used in generated links.
 - `previous_secrets` is the rotation escape hatch for old `secret_key_base` values.
 - `redirect` affects GET only. POST one-click requests always return HTTP 200 with an empty body.
@@ -61,7 +61,7 @@ The task prints config, router, preflight, UAT, and DKIM instructions. It copies
 
 ## 4) Understand GET vs POST behavior
 
-Mailglass ships one controller for both mailbox-provider POSTs and user-visible browser GETs:
+mailglass ships one controller for both mailbox-provider POSTs and user-visible browser GETs:
 
 - A valid `GET /mailglass/unsubscribe/:token` renders an informational page by default. Visiting it does not unsubscribe the recipient; the page directs them to their mail app's unsubscribe control when available, or to contact the sender using the message details.
 - If `redirect` is configured, GET redirects to that path instead of rendering the library page.
@@ -96,7 +96,7 @@ defmodule MyApp.MailLifecycle do
 end
 ```
 
-Do not use the lifecycle hook for post-commit fan-out. Mailglass keeps broadcast work outside the transaction.
+Do not use the lifecycle hook for post-commit fan-out. mailglass keeps broadcast work outside the transaction.
 
 ## 6) Rotate `secret_key_base` without breaking in-flight links
 
@@ -153,4 +153,4 @@ The deterministic built-in GET states and POST replay behavior have automated co
 
 ### POST created multiple unsubscribe rows
 
-That is a bug. Mailglass is designed to converge replayed POSTs onto the same durable `:unsubscribed` event. Re-run the POST replay check and inspect event idempotency before rollout.
+That is a bug. mailglass is designed to converge replayed POSTs onto the same durable `:unsubscribed` event. Re-run the POST replay check and inspect event idempotency before rollout.

@@ -130,7 +130,7 @@ defmodule Mailglass.Operator.SuppressionsTest do
              )
     end
 
-    test "expired matching entries are not shown as a current Mailglass match" do
+    test "expired matching entries are not shown as a current mailglass match" do
       insert_entry(%{
         tenant_id: "tenant-a",
         address: "expired@example.com",

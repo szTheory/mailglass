@@ -1,0 +1,80 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Northstar Logistics
+    - text: northstar
+    - link "Health":
+      - /url: /ops/mail?tenant_id=northstar
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=northstar&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=northstar
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=deliveries&return_tenant_id=northstar
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Deliveries" [level=1]
+  - paragraph: Trace each delivery through its event history.
+  - status: 20 deliveries match
+  - link "Back to deliveries":
+    - /url: /ops/mail?tenant_id=northstar&view=deliveries&window_hours=168
+  - paragraph: Subject
+  - heading "Sam Rivera invited you to Northstar Logistics" [level=2]
+  - button "Delivered"
+  - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+  - paragraph: To operations.billing.notifications.enterprise.accounts@northstar-stress.example
+  - term: Provider
+  - definition: POSTMARK
+  - term: Stream
+  - definition: Transactional
+  - term: Updated
+  - definition:
+    - 'button "Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+      - time: Nov 14, 2026, 11:51 PM
+  - term: Account
+  - definition: Northstar Logistics
+  - term: Delivery ID
+  - definition:
+    - 'button "Copy Delivery ID: 01a1dd02-8a68-7e4d-b023-7ecfdc1be9d8"': 01a1dd02-8a68-7e4d-b023-7ecfdc1be9d8
+  - term: Mailable
+  - definition:
+    - button "AccountMailer.invite_admin"
+    - text: MailglassDemoWeb.Mailers.AccountMailer.invite_admin
+  - term: Provider message ID
+  - definition:
+    - 'button "Copy Provider message ID: pm-demo-truncation-stress-001"': pm-demo-truncation-stress-001
+  - heading "Event timeline" [level=3]
+  - text: Chronological order
+  - list:
+    - listitem:
+      - button "Sent"
+      - text: This message was handed to the provider. Delivery to the recipient has not been confirmed.
+      - paragraph: postmark · api
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a68-72fa-ad7f-606e79841d7c"': 01a1dd02-8a68-72fa-ad7f-606e79841d7c
+      - 'button "Copy timestamp as UTC: 2026-11-14 23:50:33.000000 UTC"':
+        - time: Nov 14, 2026, 11:50 PM
+    - listitem:
+      - button "Delivered"
+      - text: The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read.
+      - paragraph: postmark · webhook
+      - term: Event ID
+      - definition:
+        - 'button "Copy Event ID: 01a1dd02-8a68-70ba-bafb-6f346ce158d7"': 01a1dd02-8a68-70ba-bafb-6f346ce158d7
+      - 'button "Copy timestamp as UTC: 2026-11-14 23:51:33.000000 UTC"':
+        - time: Nov 14, 2026, 11:51 PM
+  - heading "Current suppression" [level=3]
+  - button "Help for suppression scope"
+  - text: This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams. No current Mailglass match
+  - paragraph: No current Mailglass suppression matches this delivery.
+  - button "Refresh suppression"
+  - heading "Webhook replay" [level=2]
+  - paragraph: Replay is unavailable. Historical rows without exact webhook linkage cannot be replayed safely.
+  - group: Account diagnostics

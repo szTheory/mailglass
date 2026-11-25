@@ -110,7 +110,7 @@ defmodule MailglassInbound.Config do
   `Mailglass.ConfigError` with `type: :invalid` if `:schema` is not a valid
   unquoted Postgres identifier.
 
-  Inbound's own `MailglassInbound.Application.start/2` now calls this at boot to
+  Inbound's own MailglassInbound.Application.start/2 now calls this at boot to
   warm the `:schema` `:persistent_term` cache and fail fast on a bad identifier.
   Only `:schema` is cached — the on-demand `retention/0` / `rate_limit/0` reads
   stay on the uncached `validated/0` path and are unaffected.

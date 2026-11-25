@@ -1,0 +1,32 @@
+- banner:
+  - img "mailglass"
+  - group "Appearance":
+    - radio "System"
+    - radio "Light"
+    - radio "Dark" [checked]
+- navigation "Mailglass sections":
+  - group "Account":
+    - group: Account Helios Trial
+    - text: helios-void
+    - link "Health":
+      - /url: /ops/mail?tenant_id=helios-void
+    - link "Deliveries":
+      - /url: /ops/mail?tenant_id=helios-void&view=deliveries
+    - link "Inbound":
+      - /url: /ops/mail/inbound?tenant_id=helios-void
+    - text: Applies to Health, Deliveries and Inbound.
+  - link "Preview":
+    - /url: /dev/mail?return_surface=inbound&return_tenant_id=helios-void
+  - paragraph: Not tied to an Account
+- main:
+  - heading "Inbound records" [level=1]
+  - paragraph: Follow each received message through routing and mailbox processing.
+  - status: No messages have been received yet
+  - text: (0)
+  - heading "No messages" [level=3]
+  - paragraph: No messages have been received yet.
+  - heading "Inbound" [level=2]
+  - list:
+    - listitem: InboundMessage didn't route as expected? Inspect the routing trace.
+    - listitem: No mailbox matched? Check the no-match record.
+    - listitem: Failed ingest? Review the provider signature log.

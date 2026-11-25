@@ -80,6 +80,28 @@ defmodule MailglassAdmin.GroupNestingTest do
       # section (raised card, bg-base-200) -> inset (bg-base-100) = depth 2, no deeper.
       assert max_elevation_depth(html) == 2
     end
+
+    test "failed webhook card stays hidden when its count is unavailable" do
+      html =
+        render_component(&populated_support_cards/1, %{
+          support_summary: %{
+            failed_ingest: %{count: nil, latest: nil},
+            orphan_backlog: %{count: 0, oldest: nil},
+            replay_outcomes: %{counts: %{failed: 0, noop: 0, replayed: 0}, latest: nil},
+            reconcile_facts: %{
+              reconciled_count: 0,
+              still_unmatched_count: 0,
+              latest_reconciled: nil
+            }
+          },
+          support_state: %{focused_card: nil, drilldown_banner: nil},
+          suppression_count: 0
+        })
+
+      {:ok, doc} = Floki.parse_fragment(html)
+      assert Floki.find(doc, ~s([data-testid="support-card-failed-ingest-tier1"])) == []
+      assert Floki.text(doc) =~ "Failed webhook attempts unavailable"
+    end
   end
 
   # Wraps `support_cards` in the `data-region` shell the depth helper scopes to,

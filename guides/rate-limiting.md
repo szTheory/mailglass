@@ -1,6 +1,6 @@
 # Rate Limiting
 
-Mailglass includes a multi-bucket rate limiter designed to protect your sender reputation and satisfy ISP throughput requirements (RATE-01).
+mailglass includes a multi-bucket rate limiter designed to protect your sender reputation and satisfy ISP throughput requirements (RATE-01).
 
 ## The Three Buckets
 
@@ -47,7 +47,7 @@ config :mailglass, :rate_limit,
 
 Messages sent via the `:transactional` stream **always bypass all rate limits**. 
 
-Password resets, magic links, and verification emails must not be throttled because a marketing campaign or bulk broadcast saturated the rate limit buckets. This is a core invariant of Mailglass and is not tunable.
+Password resets, magic links, and verification emails must not be throttled because a marketing campaign or bulk broadcast saturated the rate limit buckets. This is a core invariant of mailglass and is not tunable.
 
 ## Handling RateLimitError
 

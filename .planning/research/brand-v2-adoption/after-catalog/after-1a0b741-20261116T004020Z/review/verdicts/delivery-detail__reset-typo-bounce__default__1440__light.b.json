@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-typo-bounce__default__1440__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated field and the two timeline card timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Failed\" [level=3]",
+      "screenshot_region": "Failed badge beside the subject and the verdict block with the red mark and the word Failed"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step under the verdict"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "definition: Northstar Logistics",
+      "screenshot_region": "Account, Provider and Mailer labels in the detail grid, and the Activity heading"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "paragraph: \"Failed: the email did not get through.\"",
+      "screenshot_region": "Top card: verdict above the timeline and the raw events"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "paragraph: \"The provider reported: invalid address.\"",
+      "screenshot_region": "Verdict block and the Bounced timeline card showing Reason: Invalid"
+    }
+  ],
+  "reasons": "The verdict comes first: a Failed mark and word, a plain sentence, the recorded cause (the provider reported an invalid address) and a concrete next step. Every time shows UTC, the product terms are correct, and the page promises no retry and gives no retry time. The cause shown matches a recorded bounce reason, so no cause is invented."
+}

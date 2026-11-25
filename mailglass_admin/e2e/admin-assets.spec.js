@@ -5,21 +5,27 @@ const baseURL =
   process.env.OPERATOR_BASE_URL ||
   `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
+// Brand v2 surface roles: Sand page, White surface, Sunken Sand (sunken and selected
+// are the same value in the light theme); Roast page, Roast Surface, the overlay, the
+// sunken code ground and the selected row in the dark theme.
 const tokenBackgrounds = {
   light: new Set([
-    "rgb(248, 251, 253)",
+    "rgb(246, 241, 232)",
     "rgb(255, 255, 255)",
-    "rgb(234, 246, 251)",
-    "rgb(221, 242, 247)"
+    "rgb(236, 229, 216)"
   ]),
   dark: new Set([
-    "rgb(13, 27, 42)",
-    "rgb(21, 37, 56)",
-    "rgb(31, 48, 73)",
-    "rgb(10, 21, 33)",
-    "rgb(27, 62, 85)"
+    "rgb(29, 23, 19)",
+    "rgb(42, 33, 27)",
+    "rgb(54, 45, 39)",
+    "rgb(20, 16, 13)",
+    "rgb(50, 53, 53)"
   ])
 };
+
+// The regular UI face of the retired v1 set. The route must answer 404 with an empty
+// body: only the six brand v2 faces are on the compile-time allow-list.
+const RETIRED_FONT_PROBE = "inter-400.woff2";
 
 const routeCases = [
   {
@@ -98,10 +104,10 @@ const routeCases = [
     mountRoot: "/ops/mail",
     access: "operator",
     colorTheme: "light",
-    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
+    anchor: page => page.getByRole("heading", { name: "Activity", exact: true, level: 1 }),
     ready: async page => {
       await expect(
-        page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+        page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
       ).toBeVisible();
     }
   },
@@ -146,10 +152,10 @@ const routeCases = [
     mountRoot: "/secure/console",
     access: "operator",
     colorTheme: "light",
-    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
+    anchor: page => page.getByRole("heading", { name: "Activity", exact: true, level: 1 }),
     ready: async page => {
       await expect(
-        page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+        page.getByRole("heading", { name: "Activity", exact: true, level: 1 })
       ).toBeVisible();
     }
   },
@@ -286,12 +292,18 @@ async function assertTokenBackedStyles(page, routeCase) {
   await page.evaluate(() => document.fonts.ready.then(() => true));
 
   const fontChecks = await page.evaluate(() => ({
-    interBody: document.fonts.check("400 14px Inter"),
-    interHeading: document.fonts.check("700 20px 'Inter Tight'")
+    atkinsonBody: document.fonts.check("400 14px 'Atkinson Hyperlegible Next'"),
+    funnelHeading: document.fonts.check("600 20px 'Funnel Display'")
   }));
 
-  expect(fontChecks.interBody, `${routeCase.name} Inter body font is available`).toBeTruthy();
-  expect(fontChecks.interHeading, `${routeCase.name} Inter Tight heading font is available`).toBeTruthy();
+  expect(
+    fontChecks.atkinsonBody,
+    `${routeCase.name} Atkinson Hyperlegible Next body font is available`
+  ).toBeTruthy();
+  expect(
+    fontChecks.funnelHeading,
+    `${routeCase.name} Funnel Display heading font is available`
+  ).toBeTruthy();
 
   if (routeCase.expectedRootTheme === "mailglass-dark") {
     await expect(
@@ -310,7 +322,9 @@ async function assertTokenBackedStyles(page, routeCase) {
     };
   });
 
-  expect(bodyStyle.fontFamily, `${routeCase.name} body font family`).toContain("Inter");
+  expect(bodyStyle.fontFamily, `${routeCase.name} body font family`).toContain(
+    "Atkinson Hyperlegible Next"
+  );
   expect(bodyStyle.fontWeight, `${routeCase.name} body font weight`).toBe("400");
 
   const headingStyle = await page.getByRole("heading").first().evaluate(el => {
@@ -321,8 +335,10 @@ async function assertTokenBackedStyles(page, routeCase) {
     };
   });
 
-  expect(headingStyle.fontFamily, `${routeCase.name} heading font family`).toContain("Inter Tight");
-  expect(headingStyle.fontWeight, `${routeCase.name} heading font weight`).toBe("700");
+  expect(headingStyle.fontFamily, `${routeCase.name} heading font family`).toContain(
+    "Funnel Display"
+  );
+  expect(headingStyle.fontWeight, `${routeCase.name} heading font weight`).toBe("600");
 
   const rootBackgroundColor = await page.locator("html").evaluate(el => {
     return getComputedStyle(el).backgroundColor;
@@ -364,4 +380,15 @@ test.describe("admin asset hard loads", () => {
       await assertDirectAssetLoad(page, routeCase);
     });
   }
+
+  test("admin asset hard load: the retired regular UI font file is not served", async ({
+    page
+  }) => {
+    await page.context().clearCookies();
+
+    const response = await page.request.get(absoluteURL(`/dev/mail/fonts/${RETIRED_FONT_PROBE}`));
+
+    expect(response.status(), "a retired font name is outside the allow-list").toBe(404);
+    expect(await response.text(), "a rejected font name has an empty body").toBe("");
+  });
 });

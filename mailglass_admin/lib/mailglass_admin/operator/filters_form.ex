@@ -8,13 +8,38 @@ defmodule MailglassAdmin.Operator.FiltersForm do
   alias MailglassAdmin.Components
 
   attr(:form, Phoenix.HTML.Form, required: true)
+  attr(:committed_search, :string, default: "")
+
+  @doc """
+  The email search, the first control on the Activity screen at every width. It sits
+  above the collapsible filter panel, inside the same form, so the operator can type the
+  customer's address before opening any filter.
+  """
+  def search_field(assigns) do
+    ~H"""
+    <Components.filter_field
+      field={@form[:search]}
+      type={:search}
+      label="Email address"
+      help="Also matches subjects."
+      placeholder="Subject or recipient"
+      autocomplete="off"
+      enterkeyhint="search"
+      data-committed={@committed_search}
+      phx-debounce="300"
+      phx-hook="FilterSearchSync"
+    />
+    """
+  end
+
+  attr(:form, Phoenix.HTML.Form, required: true)
   attr(:provider_options, :list, default: [])
   attr(:event_values, :list, required: true)
   attr(:window_options, :list, required: true)
   attr(:errors, :map, default: %{})
-  attr(:committed_search, :string, default: "")
 
-  def fields(assigns) do
+  @doc "The remaining filters: time window, latest event and provider."
+  def other_fields(assigns) do
     ~H"""
     <Components.filter_section
       title="Filters"
@@ -22,23 +47,10 @@ defmodule MailglassAdmin.Operator.FiltersForm do
       columns={4}
     >
       <Components.filter_field
-        field={@form[:search]}
-        label="Search"
-        help="Find deliveries by recipient email address or subject."
-        help_display={:tooltip}
-        placeholder="Subject or recipient"
-        autocomplete="off"
-        enterkeyhint="search"
-        data-committed={@committed_search}
-        phx-debounce="300"
-        phx-hook="FilterSearchSync"
-      />
-
-      <Components.filter_field
         field={@form[:window_hours]}
         type={:select}
         label="Time window"
-        help="Show deliveries with activity during this period."
+        help="Show emails with activity during this period."
         help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
         options={window_options(@window_options, @form[:window_hours].value)}

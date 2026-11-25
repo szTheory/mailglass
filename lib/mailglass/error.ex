@@ -2,7 +2,7 @@ defmodule Mailglass.Error do
   @moduledoc """
   Namespace and behaviour for the mailglass error hierarchy.
 
-  Mailglass ships eight sibling `defexception` modules, each with a closed
+  mailglass ships eight sibling `defexception` modules, each with a closed
   `:type` atom set that acts as a sub-kind discriminator. There is no parent
   struct — "hierarchy" here means the shared behaviour contract plus the
   convention that every error struct lives directly under `Mailglass.*`.

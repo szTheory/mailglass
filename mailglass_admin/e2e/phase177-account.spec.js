@@ -42,9 +42,9 @@ test.describe("Phase 177 Account scope", () => {
     await expect(group.getByTestId("operator-account-switcher")).toBeVisible();
     await expect(accountLabel(page)).toBeVisible();
 
-    // The group's links are exactly Health, Deliveries and Inbound, in order.
+    // The group's links are exactly Health, Activity and Inbound, in order.
     const scoped = group.getByTestId("surface-nav-scope-items").getByRole("link");
-    await expect(scoped).toHaveText(["Health", "Deliveries", "Inbound"]);
+    await expect(scoped).toHaveText(["Health", "Activity", "Inbound"]);
 
     // Preview is outside the group, below it, with its caption.
     const preview = visibleByTestId(page, "surface-nav-preview-block");
@@ -249,7 +249,7 @@ test.describe("Phase 177 Account scope", () => {
     expect(healthNav.map((stop) => stop.testid || stop.label)).toEqual([
       "operator-account-switcher",
       "Health",
-      "Deliveries",
+      "Activity",
       "Inbound",
       "Preview"
     ]);
@@ -269,7 +269,7 @@ test.describe("Phase 177 Account scope", () => {
     expect(previewNav.map((stop) => stop.testid || stop.label)).toEqual([
       "preview-return-link",
       "Health",
-      "Deliveries",
+      "Activity",
       "Inbound",
       "Preview"
     ]);
@@ -358,7 +358,7 @@ test.describe("Phase 177 Account scope", () => {
   test("Phase 177 scope group axe", async ({ page }, testInfo) => {
     // Both navigation copies are included on purpose: axe checks duplicate
     // ids across them, and it skips the copy CSS hides.
-    const include = 'nav[aria-label="Mailglass sections"]';
+    const include = 'nav[aria-label="mailglass sections"]';
     const receipts = [];
 
     async function scan(label) {
@@ -395,6 +395,7 @@ test.describe("Phase 177 Account scope", () => {
         await page.setViewportSize({ width, height: 900 });
         await openHealth(page, accountId);
         await page.goto(`/ops/mail?tenant_id=${accountId}&theme=${theme}`);
+        await expect(page.locator("[data-phx-main].phx-connected")).toHaveCount(1);
         await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
         await scan(`health ${theme} ${width}`);
 

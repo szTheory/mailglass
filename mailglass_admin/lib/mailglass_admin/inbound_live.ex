@@ -5,7 +5,7 @@ defmodule MailglassAdmin.InboundLive do
 
   Sibling of `MailglassAdmin.OperatorLive` (clone, not a refactor). The
   screen keeps filter and selection state in URL params so refresh, back/forward
-  navigation, and copied links preserve the current operator context.
+  navigation, and copied links preserve the selected Account and filters.
 
   All inbound data access crosses a runtime `apply/3` edge through
   `MailglassAdmin.OptionalDeps.MailglassInbound`. This module never
@@ -386,7 +386,7 @@ defmodule MailglassAdmin.InboundLive do
          put_flash(
            socket,
            :error,
-           "Replay blocked: this action is not authorized for the current operator."
+           "Replay blocked: this action is not authorized for this admin account."
          )}
 
       {:error, _reason} ->
@@ -413,7 +413,7 @@ defmodule MailglassAdmin.InboundLive do
          replay_dialog_feedback(
            socket,
            :error,
-           "Replay blocked: this action is not authorized for the current operator. Review the selected record again."
+           "Replay blocked: this action is not authorized for this admin account. Review the selected record again."
          )}
 
       {:error, reason} ->
@@ -483,7 +483,7 @@ defmodule MailglassAdmin.InboundLive do
          replay_feedback(
            socket,
            :error,
-           "Replay blocked: this action is not authorized for the current operator."
+           "Replay blocked: this action is not authorized for this admin account."
          )}
 
       %{replay_modal_open?: false, replay_consumed_review_id: consumed}
@@ -1217,7 +1217,7 @@ defmodule MailglassAdmin.InboundLive do
         replay_dialog_feedback(
           socket,
           :error,
-          "Replay blocked: this action is not authorized for the current operator. Review the selected record again."
+          "Replay blocked: this action is not authorized for this admin account. Review the selected record again."
         )
 
       {:error, {:auth, message}} ->

@@ -15,7 +15,7 @@ defmodule MailglassAdmin.Inbound.DestructiveAction do
   alias MailglassAdmin.Auth
   alias Phoenix.LiveView.Socket
 
-  @default_denial "Replay blocked: this action is not authorized for the current operator."
+  @default_denial "Replay blocked: this action is not authorized for this admin account."
 
   @spec authorize(Socket.t(), module() | nil, map()) ::
           {:ok, Socket.t()} | {:error, {:auth, String.t()}}

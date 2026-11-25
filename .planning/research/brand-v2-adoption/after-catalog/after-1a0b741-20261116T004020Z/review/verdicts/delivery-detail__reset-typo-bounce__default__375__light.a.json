@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-typo-bounce__default__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated value and the two event timeline timestamps, each with UTC under the time"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "Subject row badge and verdict block with the drawn Failed mark and the word Failed"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Next step paragraph in the verdict block"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "Every email your app sent, one row per delivery.",
+      "screenshot_region": "Page heading Activity, Account selector and the Mailer, Provider and Account labels"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "Top of the detail card: verdict with mark, word, sentence and next step sits above the evidence and the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: invalid address.",
+      "screenshot_region": "Verdict block and Bounced event card, where the cause matches the recorded reason; no retry is promised"
+    }
+  ],
+  "reasons": "The Failed verdict, with a drawn mark and the word Failed, a plain sentence and a concrete next step, sits at the top of the phone view. Every time shows UTC. The product's words are used. The stated cause (invalid address) matches the recorded bounce reason, and no retry or retry time is promised."
+}

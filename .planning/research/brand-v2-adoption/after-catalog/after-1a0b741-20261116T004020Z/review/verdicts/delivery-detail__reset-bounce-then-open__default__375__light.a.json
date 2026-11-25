@@ -1,0 +1,39 @@
+{
+  "scenario_id": "delivery-detail__reset-bounce-then-open__default__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:12 AM UTC",
+      "screenshot_region": "Updated value and the three event timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "Failed: the email did not get through.",
+      "screenshot_region": "Status badge beside the subject and the verdict block"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Check the address for a typo. See whether it is on the suppression list. Correct it in your app, then trigger the email again.",
+      "screenshot_region": "Verdict block near the top, above the details and the event timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "Open and click reports are not delivery reports.",
+      "screenshot_region": "Verdict block, below the Failed sentence"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "The provider reported: bounced.",
+      "screenshot_region": "Verdict block text and next step"
+    }
+  ],
+  "reasons": "The verdict sits at the top of the phone page with a drawn Failed mark, the word Failed, one plain sentence and a next step. The later Opened event is shown only as an event and the page says open reports are not delivery reports, so the bounce never reads as delivered. Every time shows UTC, no retry is promised, and the page uses the product's own words."
+}

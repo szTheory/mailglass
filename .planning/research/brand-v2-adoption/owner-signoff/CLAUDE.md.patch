@@ -1,0 +1,45 @@
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -24,7 +24,7 @@
+ - Sibling pins are **no longer exact**. Since v1.15 Phase 125 the packages carry `~>` and the Release Please linked-versions plugin locks the minor at release time, so a core bump no longer drags a paired inbound release. Any doc describing a `{:mailglass, "== <core>"}` re-pin dance is stale.
+ - The old 1.5.1 recovery playbook (bot-merged release SHA gets no `ci.yml` run, so `gate-ci-green` blocks) is **obsolete** — `publish-hex.yml`'s `ensure-live-ci-runs` job handles it upstream.
+ 
+-Brand: Phase 91 of v1.10 adopted the maintainer-approved sealed-flap brand as canonical `brandbook/` (light+dark token system, self-contained HTML book); binding brand constraints live in `.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`.
++Brand: Brand v2.0 is the current identity. Its pinned source is `brandbook/v2/brand.json`, with resolved values in `brandbook/tokens.json` and `brandbook/tokens.css`; compact tooling guidance lives in `DESIGN.md`. The old HTML book and sealed-flap references are historical v1 material.
+ 
+ ## Where to Look
+ 
+@@ -65,16 +65,20 @@
+ 
+ - Errors are specific and composed: "Delivery blocked: recipient is on the suppression list" — never "Oops!"
+ - Documentation prefers the direct word: "preview" not "experience the full rendering lifecycle."
+-- Visual palette: **Ink** #0D1B2A, **Glass** #277B96, **Ice** #A6EAF2, **Mist** #EAF6FB, **Paper** #F8FBFD, **Slate** #5C6B7A.
+-- Typography: Inter (UI/body), Inter Tight (display), IBM Plex Mono (code).
+-- Mobile-first responsive admin UI. NO glassmorphism, bevels, lens flares, or "literal broken glass" visuals despite the name.
++- Visual palette: light Sand #F6F1E8, White #FFFFFF, Espresso #2A1D17, Deep Glass #0A6488, Sand Line #DDD3C4 and Muted Espresso #665850; dark Roast #1D1713, Roast Surface #2A211B, Bone #F3EEEA, Bright Glass #6CC6F0, Roast Line #43372E and Muted Bone #B9ADA3.
++- Typography: Funnel Display SemiBold (600) for headings and page titles; Atkinson Hyperlegible Next (400/600) for body and interface text; Atkinson Hyperlegible Mono (400/600) for identifiers, addresses, headers and code.
++- Write the product name as `mailglass` in prose, even at the start of a sentence; `Mailglass` is reserved for Elixir module names. The tagline is “See your email before it ships. Trace it after.”
++- A delivery status is always written as a word. Its mark and color support the word; they never replace it.
++- Mobile-first responsive admin UI. No glassmorphism, bevels, lens flares, or literal broken-glass visuals.
+ 
+-Source of truth: `brandbook/brand-book.md`.
++Source of truth: `brandbook/v2/brand.json`, `brandbook/tokens.json`, `brandbook/tokens.css` and `DESIGN.md`. `brandbook/brand-book.md` is retired v1 material.
+ 
+ ## Domain Language (use these names, not synonyms)
+ 
+ Borrowed verbatim from battle-tested libraries (ActionMailer, ActionMailbox, Anymail, Laravel Mailable). Source: `prompts/mailer-domain-language-deep-research.md`.
+ 
++These seven nouns remain the code and API vocabulary. Operator screens use the plain-language terms in `brandbook/v2/brand.json` `voice.terms`, such as “email” and “delivery timeline.”
++
+ The seven irreducible nouns: **Mailable** (source-level definition), **Message** (rendered email), **Delivery** (recipient/provider-specific send record), **Event** (observed fact, past tense), **InboundMessage** (received email pre-routing), **Mailbox** (inbound handler), **Suppression** (policy record blocking future sends).
+ 
+ Anymail event taxonomy verbatim: `:queued, :sent, :rejected, :failed, :bounced, :deferred, :delivered, :autoresponded, :opened, :clicked, :complained, :unsubscribed, :subscribed, :unknown` with `reject_reason ∈ :invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`.
+@@ -137,7 +141,7 @@
+ 3. Don't put PII in telemetry metadata.
+ 4. Don't call `Swoosh.Mailer.deliver/1` directly inside mailglass library code (use `Mailglass.Outbound.*`).
+ 5. Don't recover from webhook signature failures — `Mailglass.SignatureError` raises with no recovery path.
+-6. Don't write to `mailglass_admin/priv/static/` without committing the rebuilt bundle (CI runs `git diff --exit-code`).
++6. Don't write to `mailglass_admin/priv/static/` without committing the rebuilt bundle; verify it with `mix mailglass_admin.assets.build --check`.
+ 7. Don't pattern-match errors by message string. Match the struct.
+ 8. Don't use `name: __MODULE__` to register singletons in library code.
+ 9. Don't enable open/click tracking by default. Don't enable it on auth-carrying messages, ever.

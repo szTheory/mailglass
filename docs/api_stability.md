@@ -5,6 +5,8 @@ This document is the canonical `v2.x` stability inventory for the core
 
 For compatibility, deprecation, support-matrix, and upgrade-horizon policy, use
 [`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
+Brand v2 words on screens and in docs are glosses; the public names they gloss
+are listed in the [brand v2 compatibility policy](https://github.com/szTheory/mailglass/blob/main/docs/brand-v2-compatibility.md).
 This file stays inventory-shaped on purpose.
 
 It answers two distinct questions:
@@ -81,6 +83,8 @@ them requires a major-version change.
   packages: `Mailglass.Operator.Deliveries`,
   `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`,
   `Mailglass.Operator.Timeline`, and `Mailglass.Operator.Suppressions`.
+  Operator read-model maps may gain keys in a minor release; match on the
+  keys you use, not the whole map.
 - Stable Mix tasks: `mix mailglass.install`, `mix mailglass.gen.migration`,
   `mix mailglass.reconcile`,
   `mix mail.doctor`, `mix mailglass.publish.check`,
@@ -516,7 +520,7 @@ Anymail taxonomy atoms:
 - `:subscribed`
 - `:unknown`
 
-Mailglass-internal atoms:
+mailglass-internal atoms:
 
 - `:dispatched`
 - `:suppressed`

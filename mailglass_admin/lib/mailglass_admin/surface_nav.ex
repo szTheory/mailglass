@@ -2,7 +2,7 @@ defmodule MailglassAdmin.SurfaceNav do
   @moduledoc false
 
   # One `nav` landmark holding, in DOM order: the optional Preview Back link,
-  # the Account scope group (header + Health, Deliveries, Inbound), and the
+  # the Account scope group (header + Health, Activity, Inbound), and the
   # Preview link below a divider. The group is the thing the Account control
   # scopes, so Preview (which reads no Account data) sits outside it (D-09).
 
@@ -12,7 +12,7 @@ defmodule MailglassAdmin.SurfaceNav do
 
   @scoped_items [
     %{key: :overview, label: "Health", icon: "hero-check-circle"},
-    %{key: :deliveries, label: "Deliveries", icon: "hero-paper-airplane"},
+    %{key: :deliveries, label: "Activity", icon: "hero-paper-airplane"},
     %{key: :inbound, label: "Inbound", icon: "hero-inbox-arrow-down"}
   ]
 
@@ -55,7 +55,7 @@ defmodule MailglassAdmin.SurfaceNav do
     ~H"""
     <nav
       class={nav_class(@layout)}
-      aria-label="Mailglass sections"
+      aria-label="mailglass sections"
       data-testid={"surface-nav-#{@layout}"}
     >
       <.link
@@ -159,7 +159,7 @@ defmodule MailglassAdmin.SurfaceNav do
     end)
   end
 
-  # "Applies to Health, Deliveries and Inbound." derived from what is rendered,
+  # "Applies to Health, Activity and Inbound." derived from what is rendered,
   # so it never names an absent Inbound (D-13).
   defp description(items) do
     labels = Enum.map(items, & &1.label)

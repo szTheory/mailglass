@@ -1,6 +1,6 @@
 defmodule Mailglass.Deliverability.Resolver do
   @moduledoc """
-  Mailglass-owned DNS resolver seam for deliverability checks.
+  mailglass-owned DNS resolver seam for deliverability checks.
 
   The default implementation uses OTP `:inet_res` and normalizes DNS answers
   into binaries and maps only. Callers never receive raw charlists or

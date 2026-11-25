@@ -1,0 +1,1122 @@
+{
+  "about": "mailglass brand data, version 2.0.1. Every rule in the brand book as structured data; American English. This edition defines no logo animation and no sound.",
+  "name": "mailglass",
+  "version": "2.0.1",
+  "date": "November 16, 2026",
+  "revisions": [
+    {
+      "version": "2.0.1",
+      "date": "November 16, 2026",
+      "changes": "This patch refines only the favicon’s upper curves for small raster sizes; it preserves the two-pane silhouette, overlap, colors, stems and openings."
+    },
+    {
+      "version": "2.0",
+      "date": "November 13, 2026",
+      "changes": "This edition replaces the earlier brand book. The m is now two overlapping panes of glass, in azure, set in espresso on sand. Retires the sealed-flap mark, the navy and teal colors, Inter and IBM Plex Mono. Adds the five delivery statuses as panes of glass, light as the default theme with a complete dark theme, and code colors for ExDoc and the applications."
+    }
+  ],
+  "idea": {
+    "line": "The m is two panes of glass laid over each other. Where they overlap, you see through both.",
+    "explanation": [
+      "The name is the promise: you see your email through glass before it ships, and you look through glass at what happened to it after. Two looks at the same email, one before and one after.",
+      "The m in the logo is two panes of glass laid over each other. The first pane is the preview, your email as it will arrive. The second is the record, what happened to it once it left. Where the two overlap, at the middle stem, you are looking at one email through both, and that is where the glass shows its depth.",
+      "The shapes are plain: two arches that share a stem. On a dark ground the overlap is lighter than the panes: the glass is lit from behind, so where the sheets overlap it glows instead of going dark. The brand avoids eyes and magnifiers, which suggest watching the people who receive your email, and it avoids envelopes."
+    ]
+  },
+  "tagline": "See your email before it ships. Trace it after.",
+  "descriptor": "Transactional email for Phoenix, with a preview and a delivery timeline for every email.",
+  "positioning": "Transactional email for Phoenix, with a preview and a delivery timeline. Check your email before it ships, then find out what happened to it.",
+  "job": "Help me know that the email my app sends looks right, and find out what happened when a customer says it never arrived.",
+  "audience": [
+    {
+      "who": "Phoenix developers",
+      "job": "Send a password reset from my Phoenix app, see it before it ships, and know what happened to it later.",
+      "need": "Add `{:mailglass, \"~> 2.7\"}`, write the email as a normal component, see it in the preview as your app will send it, and send it through the provider you already use."
+    },
+    {
+      "who": "Support and admin staff",
+      "job": "A customer says the password reset never arrived. Find that email and see what happened to it.",
+      "need": "Search by the customer’s email address or the subject, read each email’s status and time, and know what to do next: wait, fix the address, or take the address off the suppression list."
+    },
+    {
+      "who": "Maintainers and contributors",
+      "job": "Keep the README, the docs, the admin and the preview looking like one project.",
+      "need": "A book that says what is mailglass’s brand and what stays the host app’s, with the files to use and the rules for code colors and docs."
+    }
+  ],
+  "values": [
+    {
+      "value": "Plain",
+      "meaning": "Name what the person is looking at: the email, the address, the provider, the time. Not “mailable”, “dispatch” or “event ledger”. Write “Sent with Postmark”, not “Dispatched”."
+    },
+    {
+      "value": "Exact",
+      "meaning": "Show the real address, subject, time and time zone, and name the provider. “Delivered at 2:07 PM UTC”, not “a few minutes ago”."
+    },
+    {
+      "value": "Honest",
+      "meaning": "Say only what mailglass knows. Sent is not delivered, and delivered means the receiving server took the email. It never means the person opened it or that it reached the inbox."
+    },
+    {
+      "value": "Calm",
+      "meaning": "People open the admin because an email is missing. Say what happened, to which email, and what to do next."
+    },
+    {
+      "value": "Yours",
+      "meaning": "The email belongs to the host app. mailglass’s name and logo never appear in a host app’s email to its customers, except in a footer if the host chooses."
+    }
+  ],
+  "rules": [
+    "The name is mailglass: one word, all lowercase, even at the start of a sentence. In Elixir module names it is `Mailglass`.",
+    "The typemark is the logo. Put no shape behind it, and keep the tagline and the descriptor outside it.",
+    "A delivery status is always written as a word. The status mark and its color support the word; they do not replace it."
+  ],
+  "presence": {
+    "head": "Full brand on mailglass’s own pages. A quiet guest in your app.",
+    "tiers": [
+      [
+        "mailglass’s own",
+        "README, Hex page, docs site, social card",
+        "People deciding whether to use it.",
+        "The typemark, the glass colors, both themes, code colors, the tagline and descriptor."
+      ],
+      [
+        "Inside the host app",
+        "The admin and the preview, at a path the host app chooses",
+        "Support staff and developers of the host app.",
+        "The typemark in the top row, the status marks and words, and the type. A host app may replace the typemark with its own name and logo."
+      ],
+      [
+        "In other people’s writing",
+        "Blog posts, talks, newsletters, other READMEs",
+        "People writing about mailglass.",
+        "The typemark, unchanged, under the rules in this book. Nothing added."
+      ]
+    ],
+    "note": "The host app’s customers never see mailglass: the emails keep the host app’s design and From address. If the host app chooses, a footer may say the email was sent with mailglass, in plain text."
+  },
+  "logo": {
+    "mark": "The word mailglass in Funnel Display SemiBold, outlined from the font, with its first letter, the m, redrawn as two arches laid over each other. Each arch is one pane of glass: two legs and a round top. They share the middle stem, and where they overlap the glass is deeper. Stems, openings and overlap are the same everywhere the m is drawn.",
+    "wordmark": "mailglass, one word, all lowercase, in Funnel Display SemiBold with the tracking tightened a little (minus 10 thousandths of an em), outlined so no live text is needed. The typemark is the word with the drawn m; there is no separate symbol beside it.",
+    "together": "The typemark is the logo. Do not rearrange it, redraw the m, split the two panes apart, or tint one pane differently from the other.",
+    "mono": "One color is the same drawing in a single color: the overlap drops out, so the m reads as one plain arched m. Espresso on light, Bone on dark. Nothing else is redrawn.",
+    "small": "The m alone is the symbol, for avatars, app icons and stickers. The favicon uses an optical correction to its upper arches for small raster sizes. At 16 px, the inner crown is slightly fuller and the outer crown tighter; the 2 px stems and 4 px openings stay on the pixel grid. At 32 px, the corresponding stem and opening widths are 4 px and 8 px. At 16 px the overlap is a hairline and the m reads as a plain arched m; that is expected. Below 16 px, do not use the mark.",
+    "clear": "Keep clear space on every side equal to a quarter of the typemark’s height, measured from the outermost edge of the typemark. Nothing enters it: no text, edge or other logo.",
+    "minNote": "On screen, the typemark is never narrower than 96 px and the m never narrower than 16 px. In print, the typemark is never narrower than 25 mm.",
+    "theme": "The logo has a version for each theme. On light, the word is Espresso, the panes are Glass and the overlap is Deep Glass, which is darker. On dark, the word is Bone, the panes are Glass Light and the overlap is Lit Glass, which is lighter. Use the version made for the background; do not make one by inverting the colors of the other.",
+    "background": "No shape behind it: the typemark sits directly on the page background. The one exception is the avatar, a 512 px square with the m on Sand or Roast, because social sites need an opaque square. A photograph or screenshot behind the logo needs a calm area at least as wide as the typemark plus its clear space.",
+    "color": "The m is never yellow, gold, orange or red, and never sits on red. Two equal arches side by side are also the golden arches of a famous fast-food brand; the azure glass, the lit overlap and the word beside it are what keep this a different mark. Do not use a pair of arches as a pattern, a bullet or a shape elsewhere.",
+    "retired": "The earlier mark is retired: the m as two arched windows with a pane of glass in only one of them. It needed a paragraph to explain, and its single filled window read as a doorway.",
+    "minimumSizes": [
+      {
+        "version": "Typemark",
+        "screen": "96 px wide",
+        "print": "25 mm wide"
+      },
+      {
+        "version": "The m, drawn for its size",
+        "screen": "16 px wide",
+        "print": "Not specified"
+      }
+    ],
+    "misuse": [
+      "Don’t stretch, squeeze or rotate the typemark.",
+      "Don’t recolor the glass or the word, or make the m yellow, gold or red.",
+      "Don’t put a tile, badge or any other shape behind the typemark.",
+      "Don’t add the tagline, the descriptor or any text to the typemark.",
+      "Don’t strike a line through the word, or add an envelope or an arrow.",
+      "Don’t use the dark drawing on a light page, or the light drawing on a dark one."
+    ],
+    "onPhotography": {
+      "head": "On screenshots and photographs",
+      "rules": [
+        "Place the typemark on a calm area at least as wide as the typemark and its clear space.",
+        "Use the light drawing on a light area and the dark drawing on a dark one. If neither reads well, move the logo.",
+        "Do not put a shape or a shadow behind it to make it read."
+      ]
+    },
+    "useByOthers": [
+      "Hex packages, blogs, newsletters and conference sites may use the typemark unchanged to refer to mailglass.",
+      "Do not use it to suggest that mailglass endorses or certifies another product.",
+      "Do not alter the logo, or build a new logo from the m or its panes."
+    ],
+    "clearSpace": "one quarter of the typemark height on every side, measured from the outermost ink"
+  },
+  "color": {
+    "defaultTheme": "light",
+    "light": [
+      {
+        "name": "Sand",
+        "hex": "#F6F1E8",
+        "role": "The default background, in the book, the docs and the admin.",
+        "sharePercent": 62
+      },
+      {
+        "name": "White",
+        "hex": "#FFFFFF",
+        "role": "Cards, the email in the preview, and the table surface.",
+        "sharePercent": 22
+      },
+      {
+        "name": "Espresso",
+        "hex": "#2A1D17",
+        "role": "Text and the word in the logo on light.",
+        "sharePercent": 9
+      },
+      {
+        "name": "Deep Glass",
+        "hex": "#0A6488",
+        "role": "Links, the focus ring, the current tab and the one main button per screen. In the logo it is where the two panes overlap.",
+        "sharePercent": 4
+      },
+      {
+        "name": "Sand Line",
+        "hex": "#DDD3C4",
+        "role": "Dividing lines. Never the only edge of a control.",
+        "sharePercent": 3
+      }
+    ],
+    "dark": [
+      {
+        "name": "Roast",
+        "hex": "#1D1713",
+        "role": "The dark background.",
+        "sharePercent": 62
+      },
+      {
+        "name": "Roast Surface",
+        "hex": "#2A211B",
+        "role": "Cards and table surfaces on Roast.",
+        "sharePercent": 22
+      },
+      {
+        "name": "Bone",
+        "hex": "#F3EEEA",
+        "role": "Text and the word in the logo on dark.",
+        "sharePercent": 9
+      },
+      {
+        "name": "Bright Glass",
+        "hex": "#6CC6F0",
+        "role": "Links, the focus ring, the current tab and the one main button per screen.",
+        "sharePercent": 4
+      },
+      {
+        "name": "Roast Line",
+        "hex": "#43372E",
+        "role": "Dividing lines on dark.",
+        "sharePercent": 3
+      }
+    ],
+    "logo": {
+      "name": "Glass",
+      "hex": "#1895C2",
+      "onDark": "#46B6E8",
+      "overlapLight": "#0A6488",
+      "overlapDark": "#A8E4F7",
+      "role": "The two panes of the m, on light. On dark the glass is Glass Light, #46B6E8. Never for text, links or controls: Deep Glass and Bright Glass do that work."
+    },
+    "secondary": [
+      {
+        "name": "Muted Espresso",
+        "hex": "#665850",
+        "role": "Secondary text on Sand and White."
+      },
+      {
+        "name": "Muted Bone",
+        "hex": "#B9ADA3",
+        "role": "Secondary text on Roast and Roast Surface, dark."
+      },
+      {
+        "name": "Sunken Sand",
+        "hex": "#ECE5D8",
+        "role": "The ground of a table header and a selected row, on light."
+      },
+      {
+        "name": "Control Edge",
+        "hex": "#857569",
+        "role": "The border of an input or a button on light (3.9:1 on Sand). Dark uses #8B7D72."
+      }
+    ],
+    "status": [
+      {
+        "word": "Sent",
+        "mark": "sent",
+        "textLight": "#2A1D17",
+        "textDark": "#F3EEEA",
+        "meaning": "Your app handed the email to the provider, such as Postmark. Not the same as delivered. The product’s event name is accepted."
+      },
+      {
+        "word": "Delivered",
+        "mark": "delivered",
+        "textLight": "#1D6B3C",
+        "textDark": "#7FCB9A",
+        "meaning": "The receiving server took the email. This does not mean the person opened it or that it reached the inbox."
+      },
+      {
+        "word": "Delayed",
+        "mark": "delayed",
+        "textLight": "#855300",
+        "textDark": "#E3B25C",
+        "meaning": "The receiving server said to try again later. The provider will retry. The product’s event name is deferred."
+      },
+      {
+        "word": "Failed",
+        "mark": "failed",
+        "textLight": "#B3261E",
+        "textDark": "#F09A93",
+        "meaning": "The email did not get through and will not be retried."
+      },
+      {
+        "word": "Not sent",
+        "mark": "notsent",
+        "textLight": "#665850",
+        "textDark": "#B9ADA3",
+        "meaning": "Held back: the address is on your suppression list, so nothing was sent. The product’s event name is suppressed."
+      }
+    ],
+    "statusRule": "A delivery status is always written as a word. The status mark and its color support the word; they do not replace it.",
+    "contrastPairs": [
+      {
+        "id": "body",
+        "role": "Body text",
+        "use": "README, docs, the admin and this book.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#2A1D17",
+          "ground": "#F6F1E8",
+          "contrast": 14.51,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#F3EEEA",
+          "ground": "#1D1713",
+          "contrast": 15.39,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "descriptor",
+        "role": "Descriptor and secondary text",
+        "use": "The words “Transactional email for Phoenix” beside the logo, and metadata under a title.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#665850",
+          "ground": "#F6F1E8",
+          "contrast": 6.07,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#B9ADA3",
+          "ground": "#1D1713",
+          "contrast": 8.08,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "caption",
+        "role": "Caption and table metadata",
+        "use": "Captions, times and column heads on a card or table.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#665850",
+          "ground": "#FFFFFF",
+          "contrast": 6.83,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#B9ADA3",
+          "ground": "#2A211B",
+          "contrast": 7.19,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "application-copy",
+        "role": "Copy inside an application",
+        "use": "Text on a card in the admin, the README or a slide.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#2A1D17",
+          "ground": "#FFFFFF",
+          "contrast": 16.32,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#F3EEEA",
+          "ground": "#2A211B",
+          "contrast": 13.69,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "link",
+        "role": "Link, focus ring and current tab",
+        "use": "Links in running text, the 2 px focus ring and the underline of the current tab.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#0A6488",
+          "ground": "#FFFFFF",
+          "contrast": 6.58,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#6CC6F0",
+          "ground": "#2A211B",
+          "contrast": 8.24,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "focus",
+        "role": "Focus ring on the page",
+        "use": "The 2 px ring on a focused control, against the page.",
+        "minimum": 3,
+        "light": {
+          "text": "#0A6488",
+          "ground": "#F6F1E8",
+          "contrast": 5.85,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#6CC6F0",
+          "ground": "#1D1713",
+          "contrast": 9.27,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "artwork",
+        "role": "Logo glass",
+        "use": "The glass of the m against the page, read as a shape, not as text.",
+        "minimum": 3,
+        "light": {
+          "text": "#1895C2",
+          "ground": "#F6F1E8",
+          "contrast": 3.05,
+          "use": "Large text and graphics only"
+        },
+        "dark": {
+          "text": "#46B6E8",
+          "ground": "#1D1713",
+          "contrast": 7.7,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-sent",
+        "role": "Status word: Sent",
+        "use": "The word “Sent” in a table row or a delivery timeline.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#2A1D17",
+          "ground": "#FFFFFF",
+          "contrast": 16.32,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#F3EEEA",
+          "ground": "#2A211B",
+          "contrast": 13.69,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-delivered",
+        "role": "Status word: Delivered",
+        "use": "The word “Delivered”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#1D6B3C",
+          "ground": "#FFFFFF",
+          "contrast": 6.52,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#7FCB9A",
+          "ground": "#2A211B",
+          "contrast": 8.19,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-delayed",
+        "role": "Status word: Delayed",
+        "use": "The word “Delayed”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#855300",
+          "ground": "#FFFFFF",
+          "contrast": 6.49,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#E3B25C",
+          "ground": "#2A211B",
+          "contrast": 8.1,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-failed",
+        "role": "Status word: Failed",
+        "use": "The word “Failed”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#B3261E",
+          "ground": "#FFFFFF",
+          "contrast": 6.54,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#F09A93",
+          "ground": "#2A211B",
+          "contrast": 7.32,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-notsent",
+        "role": "Status word: Not sent",
+        "use": "The words “Not sent”, in Muted Espresso.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#665850",
+          "ground": "#FFFFFF",
+          "contrast": 6.83,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#B9ADA3",
+          "ground": "#2A211B",
+          "contrast": 7.19,
+          "use": "Any text size (AAA)"
+        }
+      }
+    ],
+    "never": [
+      {
+        "color": "Glass",
+        "notFor": "text of any size on Sand or White"
+      },
+      {
+        "color": "Sand Line",
+        "notFor": "the only boundary of a control (use Control Edge)"
+      },
+      {
+        "color": "Deep Glass",
+        "notFor": "text on Roast (use Bright Glass)"
+      },
+      {
+        "color": "a status color",
+        "notFor": "the only way to tell a status: the word and the mark carry it"
+      }
+    ],
+    "notes": "Ratios are WCAG 2.2 contrast, computed from the hex values. A pair that passes here says nothing about a whole product built with it. Glass on Sand is 3.0:1: enough for a shape, not for text. Sand Line and Roast Line only divide space and are never used for text.",
+    "print": "Not specified: proof against a physical swatch; no CMYK or Pantone values are given."
+  },
+  "type": {
+    "display": {
+      "family": "Funnel Display",
+      "weights": "SemiBold (600) for the wordmark, page titles and headlines.",
+      "css": "'Funnel Display', 'Arial Narrow', system-ui, sans-serif",
+      "use": "The wordmark, headlines in books, slides and social cards, and page titles in docs and the admin. Never for ids, addresses or code.",
+      "why": "The wordmark is outlined from this typeface, so headlines set in it match the logo. Wide, low-contrast and a little friendly, it looks unlike the other Elixir libraries. Its l and I are nearly the same, which is why it never sets an id."
+    },
+    "text": {
+      "family": "Atkinson Hyperlegible Next",
+      "weights": "Regular (400), SemiBold (600) and Regular italic.",
+      "css": "'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "use": "Body text, the admin, tables, buttons and labels.",
+      "why": "Made so that letters are hard to mistake for each other, which matters when a support person copies an address from a screen. It holds up at 13 px in a dense list."
+    },
+    "mono": {
+      "family": "Atkinson Hyperlegible Mono",
+      "weights": "Regular (400) and SemiBold (600).",
+      "css": "'Atkinson Hyperlegible Mono', ui-monospace, 'SF Mono', Consolas, monospace",
+      "use": "Anything copied or compared: ids, email addresses in a detail view, message headers, commands and code. Ligatures are off, so Elixir’s `|>` and `->` stay as typed.",
+      "why": "Every character is distinct: the zero is slashed, the l and I differ. Slashed zeros are part of the face; in an id, that is the point."
+    },
+    "license": "All three families are SIL Open Font License 1.1, from Google Fonts. The license texts are in the assets fonts folder. None of the three has the arrow characters (U+2190 to U+2193): write “to” or draw the arrow.",
+    "hierarchy": [
+      {
+        "role": "Display",
+        "face": "Funnel Display",
+        "weight": 600,
+        "sizePx": 56,
+        "lineHeight": 1.05,
+        "tracking": "-0.015em",
+        "sample": "See your email before it ships.",
+        "use": "Covers, slides and social cards. One line, two at most."
+      },
+      {
+        "role": "Heading",
+        "face": "Funnel Display",
+        "weight": 600,
+        "sizePx": 28,
+        "lineHeight": 1.2,
+        "tracking": "-0.01em",
+        "sample": "Email never arrived? Start here.",
+        "use": "Page titles and section heads in docs and the admin."
+      },
+      {
+        "role": "Body",
+        "face": "Atkinson Hyperlegible Next",
+        "weight": 400,
+        "sizePx": 16,
+        "lineHeight": 1.55,
+        "tracking": "0",
+        "sample": "Sent is not delivered. Delivered means the receiving server took the email.",
+        "use": "README, docs and paragraphs in the admin. 62 to 72 characters a line."
+      },
+      {
+        "role": "Dense text",
+        "face": "Atkinson Hyperlegible Next",
+        "weight": 400,
+        "sizePx": 13,
+        "lineHeight": 1.4,
+        "tracking": "0",
+        "sample": "2:07 PM UTC",
+        "use": "Lists of emails in the admin. Always with tabular numerals."
+      },
+      {
+        "role": "Label",
+        "face": "Atkinson Hyperlegible Next",
+        "weight": 600,
+        "sizePx": 12,
+        "lineHeight": 1.2,
+        "tracking": "0.02em",
+        "sample": "Selected email",
+        "use": "Column heads and small labels. Sentence case, never capitals."
+      },
+      {
+        "role": "Code and ids",
+        "face": "Atkinson Hyperlegible Mono",
+        "weight": 400,
+        "sizePx": 13,
+        "lineHeight": 1.5,
+        "tracking": "0",
+        "sample": "dlv_01HZX4K7Q2",
+        "use": "Ids, addresses in a detail view, headers, commands. Clicking an id copies it."
+      }
+    ],
+    "rules": [
+      "Figures in a column use tabular numerals (`font-variant-numeric: tabular-nums`) so digits stack.",
+      "Every id, header name and command is set in Atkinson Hyperlegible Mono, so it can be compared by eye. Funnel Display never sets one.",
+      "Clicking an id copies it and shows a short “Copied to clipboard” message. The id itself never moves or changes.",
+      "Headlines are sentence case, and no type is lighter than 400 or smaller than 12 px.",
+      "Code ligatures are off (`font-variant-ligatures: none`), so `|>` and `->` stay as typed."
+    ]
+  },
+  "voice": {
+    "summary": "A calm maintainer who has chased the same missing email before: says what happened, to which email, and what to do next.",
+    "tone": [
+      {
+        "channel": "The admin: errors and empty states",
+        "plainToLively0to4": 0,
+        "example": "No emails match these filters. Try a wider date range or clear a filter."
+      },
+      {
+        "channel": "Docs and README",
+        "plainToLively0to4": 1,
+        "example": "Preview the email before you send it."
+      },
+      {
+        "channel": "Release notes",
+        "plainToLively0to4": 1,
+        "example": "The preview now shows the email at 375, 768 and 1024 px wide."
+      },
+      {
+        "channel": "Talks and social posts",
+        "plainToLively0to4": 2,
+        "example": "Somebody asked where their password reset went. Here is how to find out."
+      }
+    ],
+    "toneNote": "The voice never changes; the tone shifts with where the words appear. mailglass stays plain everywhere and gets only a little looser in a talk or a post. It is never loose where an email has gone missing, because people open the admin when they need an answer.",
+    "thisNotThat": [
+      {
+        "say": "Email never arrived? Start here.",
+        "notThis": "Troubleshoot delivery anomalies."
+      },
+      {
+        "say": "Sent with Postmark. The receiving server has not confirmed it yet.",
+        "notThis": "Your email was sent successfully."
+      },
+      {
+        "say": "Delivered: the receiving server took the email. It may not be in the inbox.",
+        "notThis": "Delivered to the inbox."
+      },
+      {
+        "say": "Not sent: the address is on your suppression list.",
+        "notThis": "Oops! Something went wrong."
+      },
+      {
+        "say": "Delayed: the receiving server said to try again later. Next try at 2:12 PM UTC.",
+        "notThis": "Your message is in limbo."
+      },
+      {
+        "say": "Preview the email before you send it.",
+        "notThis": "Preview your messages with our powerful renderer."
+      },
+      {
+        "say": "Remove this address from the suppression list.",
+        "notThis": "Unblock recipient."
+      },
+      {
+        "say": "3 provider reports match no email.",
+        "notThis": "You have 3 orphans."
+      }
+    ],
+    "inclusive": [
+      "Write for support staff who don’t read code. Name the address, the subject and the provider before any id.",
+      "Say what they can do next. Every empty and error state ends with a next step.",
+      "Spell out the time zone. Write “2:07 PM UTC”, never a bare time. In a narrow column the zone sits under the time."
+    ],
+    "name": {
+      "rule": "mailglass, one word, all lowercase, everywhere, including the start of a sentence (reword the sentence if it reads badly). Elixir module names force `Mailglass`; in code, packages and commands it is `mailglass`, `:mailglass` and `mix mailglass.install`.",
+      "never": [
+        {
+          "form": "Mailglass, MailGlass",
+          "why": "one word, all lowercase (modules excepted)"
+        },
+        {
+          "form": "Mail Glass, mail glass",
+          "why": "one word"
+        },
+        {
+          "form": "MAILGLASS",
+          "why": "except as a label in a code comment"
+        },
+        {
+          "form": "the mailglass platform",
+          "why": "mailglass is a library"
+        }
+      ],
+      "descriptor": "Call it “transactional email for Phoenix”. Say “email”, and “mailer” for the module that builds one kind of email. Call the record mailglass keeps for each email its “delivery timeline”."
+    },
+    "terms": [
+      {
+        "term": "Email",
+        "meaning": "One message your app sends, such as a password reset. `Mailable` is only its name in code.",
+        "avoid": "mailable, message (in screens)"
+      },
+      {
+        "term": "Mailer",
+        "meaning": "The module in your app that builds one kind of email.",
+        "avoid": "mailable"
+      },
+      {
+        "term": "Provider",
+        "meaning": "The service that takes your email and sends it on, such as Postmark, SES, SendGrid or Mailgun. Name it when you can.",
+        "avoid": "vendor, ESP, adapter"
+      },
+      {
+        "term": "Sent",
+        "meaning": "Your app handed the email to the provider. Not the same as delivered. The event name in code is accepted.",
+        "avoid": "dispatched, accepted"
+      },
+      {
+        "term": "Delivered",
+        "meaning": "The receiving server took the email. It never means the person opened it or that it reached the inbox.",
+        "avoid": "received, inboxed"
+      },
+      {
+        "term": "Delayed",
+        "meaning": "The receiving server said to try again later, and the provider will retry. The event name in code is deferred.",
+        "avoid": "deferred, soft bounce, stuck"
+      },
+      {
+        "term": "Failed",
+        "meaning": "The email did not get through and will not be retried. Providers call this a bounce.",
+        "avoid": "undeliverable, dead"
+      },
+      {
+        "term": "Not sent",
+        "meaning": "Held back: the address is on your suppression list. The event name in code is suppressed.",
+        "avoid": "suppressed, blocked, blacklisted"
+      },
+      {
+        "term": "Suppression list",
+        "meaning": "Addresses mailglass will not send to, for example after a hard bounce (a permanent failure) or a spam complaint.",
+        "avoid": "blocklist, blacklist"
+      },
+      {
+        "term": "Delivery timeline",
+        "meaning": "One email’s statuses in order, each with its time, from sent to the provider’s most recent report.",
+        "avoid": "trail, event ledger, history"
+      },
+      {
+        "term": "Unmatched events",
+        "meaning": "Reports from a provider that match no email mailglass sent. This is mailglass’s own term; on screen, say it in words: “3 provider reports match no email.”",
+        "avoid": "orphans, orphan backlog"
+      },
+      {
+        "term": "Inbound email",
+        "meaning": "Email your app receives. An inbound handler processes it.",
+        "avoid": "mailbox (in prose)"
+      },
+      {
+        "term": "Preview",
+        "meaning": "An email rendered as it will be sent, by the same renderer.",
+        "avoid": "mock, simulation"
+      },
+      {
+        "term": "Host app",
+        "meaning": "The Phoenix app that uses mailglass.",
+        "avoid": "parent app, consumer"
+      }
+    ],
+    "termsNote": "These are only the words the brand depends on; the product docs define the rest. In prose, Mix, ExDoc, HexDocs, LiveView, HEEx, Oban, Ecto and Swoosh are written as proper names, and `mix` appears only as a command."
+  },
+  "messaging": {
+    "pitch": "mailglass is transactional email for Phoenix. See your email before it ships, in a preview of what your app will send. Then trace it after: every email has a delivery timeline, so when one goes missing you can see what happened to it.",
+    "pillars": [
+      [
+        "See it before it ships.",
+        "Preview the email at phone, tablet or desktop width, as your app will send it."
+      ],
+      [
+        "Trace it after.",
+        "Every email has a delivery timeline: each status and when it happened, so you can see where a missing email stopped."
+      ],
+      [
+        "Your brand, not ours.",
+        "Keep your email provider, your design and your From address. mailglass stays in your admin, out of your customers’ inbox."
+      ]
+    ],
+    "tagline": "Sentence case, with both periods. It sits beside the logo, never in it. The descriptor “Transactional email for Phoenix, with a preview and a delivery timeline for every email.” goes under it wherever the line stands alone.",
+    "boilerplate": [
+      [
+        "One line: Hex, GitHub and package listings",
+        "Transactional email for Phoenix, with a preview and a delivery timeline for every email."
+      ],
+      [
+        "Short: README opening, talk bios",
+        "mailglass is an open-source library for transactional email in Phoenix apps. It works with Swoosh, the email library new Phoenix apps include by default, and adds two things: a preview of each email as your app will send it, and a delivery timeline for every email."
+      ],
+      [
+        "Do not say",
+        "Guaranteed delivery, inbox placement, open or click tracking, compliant, bulletproof, powerful, seamless, “mail you can see through”. mailglass records what providers report; whether an email reached the inbox is not something it knows."
+      ]
+    ]
+  },
+  "imagery": {
+    "guidance": "mailglass’s pictures show the product at work, with its real words: a rendered email in the preview, one email’s delivery timeline, the Activity list and a command. They need no stock photography.",
+    "show": [
+      {
+        "subject": "A rendered email",
+        "detail": "In the preview pane at a real width, with the host app’s own design, never mailglass’s."
+      },
+      {
+        "subject": "One email’s delivery timeline",
+        "detail": "Each step as a word with its time and one plain sentence."
+      },
+      {
+        "subject": "A status mark with its word",
+        "detail": "The pane of glass and the word, always together."
+      },
+      {
+        "subject": "A command",
+        "detail": "A real command with its flags, in Atkinson Hyperlegible Mono on the code background."
+      }
+    ],
+    "never": [
+      "Envelopes and paper planes",
+      "The @ symbol",
+      "Eyes and magnifiers",
+      "Padlocks and shields",
+      "Frosted glass and blur",
+      "Cracked or broken glass as decoration",
+      "Stock people at laptops",
+      "Glowing data and network clouds"
+    ],
+    "why": "mailglass helps people see their own email and find what happened to it. Do not use pictures that suggest mailglass watches the people who receive email, guards email or is broken. It does none of those. The one crack in the brand is the Failed status mark, and it always has its word.",
+    "note": "The product pictures in this book are drawings of the layout this book proposes, with invented data. They are not screenshots of the current product."
+  },
+  "code": {
+    "ground": {
+      "light": "#EFE9DD",
+      "dark": "#14100D"
+    },
+    "roles": [
+      {
+        "role": "Text",
+        "light": "#2A1D17",
+        "dark": "#F3EEEA",
+        "colors": "Names and punctuation."
+      },
+      {
+        "role": "Comment",
+        "light": "#6F6157",
+        "dark": "#A59A90",
+        "colors": "Comments, quiet."
+      },
+      {
+        "role": "Keyword",
+        "light": "#0A6488",
+        "dark": "#6CC6F0",
+        "colors": "def, do, end, fn, SELECT, in the glass blue of the links."
+      },
+      {
+        "role": "String",
+        "light": "#8A4B1D",
+        "dark": "#E0A878",
+        "colors": "Strings, in a quiet brown that is not a status color."
+      },
+      {
+        "role": "Atom",
+        "light": "#2F6B6B",
+        "dark": "#7FCFCF",
+        "colors": "Atoms and keys."
+      },
+      {
+        "role": "Number",
+        "light": "#5C6B1E",
+        "dark": "#B7C972",
+        "colors": "Numbers."
+      },
+      {
+        "role": "Function",
+        "light": "#3F4F9E",
+        "dark": "#9DB1F0",
+        "colors": "Function names where they are called or defined."
+      },
+      {
+        "role": "Module",
+        "light": "#4A5C7A",
+        "dark": "#A9B8D6",
+        "colors": "Module names, such as `Mailglass.Message`."
+      }
+    ],
+    "rules": [
+      "No code color is the same as a status color. Code has no delivered green or failed red, so nothing in code looks like a status.",
+      "Syntax colors are for code blocks only. Inline code in a sentence is plain Atkinson Hyperlegible Mono on a light chip, in every medium.",
+      "ExDoc and HexDocs color their own code. The stylesheet in the assets docs folder sets these colors on ExDoc’s token classes. It has not been run in a real ExDoc build.",
+      "GitHub highlights the code in a README itself, and mailglass does not control those colors.",
+      "Show code that matches the current release, not pseudo-code."
+    ]
+  },
+  "graphicElements": {
+    "head": "Two graphic elements: the status mark and the glass frame.",
+    "intro": "mailglass has two graphic elements, both made of glass. They are not interface components: buttons, tabs and inputs are drawn by the product.",
+    "items": [
+      [
+        "The status mark",
+        "One pane of glass in the state an email is in, always with its word beside it. Sent is a frame half full. Delivered is filled with a check. Delayed is a frame with a clock hand. Failed is filled with a crack. Not sent is a frame struck through. Shape separates the five without color: frame or fill, then the glyph. In a list row it is 20 px tall, in a detail view 44 px, and never under 14 px."
+      ],
+      [
+        "The glass frame",
+        "A 2 px Espresso line (Bone on dark) around the preview pane, like the frame of a window around the rendered email. It frames a rendered email only. The email inside keeps its own design and colors."
+      ]
+    ],
+    "never": "The status mark is never the only carrier of a status, never decorates a page, and never appears without its word. The glass frame never wraps text that isn’t an email. The arch belongs to the logo alone."
+  },
+  "legal": [
+    "mailglass is released under the MIT license. The logo and this brand book are covered by the same license unless the repository says otherwise.",
+    "No trademark registration is claimed in this book, and none was searched. Use ™, not ®, only if the maintainers decide to claim the name.",
+    "Fonts are SIL Open Font License 1.1; their license texts ship in the assets folder."
+  ],
+  "contact": [
+    "Questions about the brand and requests to use it: the mailglass maintainers, through the project’s issue tracker.",
+    "Approval: the maintainers approve any use that changes the logo or colors; unchanged use under these rules needs no approval."
+  ],
+  "notNeeded": [
+    {
+      "item": "Mascot",
+      "why": "Considered, not proposed. A library trusted for being exact and calm gains nothing from a character."
+    },
+    {
+      "item": "Patterns and textures",
+      "why": "The status mark is the only graphic device. A pattern would compete with a dense list, where the words are the picture."
+    },
+    {
+      "item": "Stock photography",
+      "why": "There is no honest photograph of “what happened to an email”. Real product pictures say it better."
+    },
+    {
+      "item": "A second typeface for the logo",
+      "why": "The wordmark and the headlines are both set in Funnel Display, so no other display face is needed."
+    },
+    {
+      "item": "Brand-colored tables",
+      "why": "In a dense list the words should carry the color. Rows stay on White or Roast Surface; the status mark carries the only hue."
+    },
+    {
+      "item": "Logo animation and sound",
+      "why": "Not defined in this edition. The brand has no motion or sound rules yet; see To review."
+    }
+  ],
+  "toReview": [
+    {
+      "choice": "The name is written in lowercase.",
+      "detail": "This book writes `mailglass` everywhere, including the start of a sentence, and `Mailglass` only where an Elixir module name needs it. The README and PRODUCT.md capitalize it in prose; they would need to follow."
+    },
+    {
+      "choice": "The lead line is “See your email before it ships. Trace it after.”",
+      "detail": "It replaces “Mail you can see through.”, which two test readers took as leaky or as a privacy risk. The product’s PRODUCT.md brand line is superseded by this one."
+    },
+    {
+      "choice": "Two arches look like the McDonald’s sign.",
+      "detail": "Two equal arches side by side are that company’s mark. The azure glass, the overlap and the word are what separate them, and the rules say never yellow, gold or red. A famous mark is protected beyond its own industry, so a trademark and look-alike search is listed as not done: it is the maintainers’ or counsel’s call."
+    },
+    {
+      "choice": "The statuses use plain words, not the providers’ words.",
+      "detail": "Sent, Delivered, Delayed, Failed and Not sent replace accepted, delivered, deferred, failed and suppressed on screen. The event names stay in code and the key terms page maps them. The product’s status chips would need to follow."
+    },
+    {
+      "choice": "The admin’s main screen is called Activity.",
+      "detail": "Postmark and SendGrid call it Activity; the product calls it Deliveries. This is the maintainers’ call, so it is listed, not decided. The same goes for “Admin” rather than “Operator”."
+    },
+    {
+      "choice": "“Delivery timeline” is the product’s own word; “unmatched events” reads as jargon.",
+      "detail": "The admin’s code already calls one email’s steps its timeline, and this book now says “delivery timeline” everywhere. “Unmatched events” is the product’s term for provider reports that match no email; on screen the book says it in words. The preview’s sidebar says “Mailers”; the maintainers may want to match it."
+    },
+    {
+      "choice": "The glass is a little deeper on Sand than first drawn.",
+      "detail": "Glass on Sand is 3.0:1 so the m passes the graphics minimum; the azure moved from #1FA3D1 to #1895C2 for that."
+    },
+    {
+      "choice": "The favicon is the m, and at 16 px its overlap is a hairline.",
+      "detail": "Stems land on the pixel grid at 16 and 32 px. At 24 px and below the m can also read as two n’s. No person has looked at it at those sizes."
+    },
+    {
+      "choice": "Provider events are not mapped, and the ExDoc stylesheet is not verified.",
+      "detail": "The book gives the five statuses, not which Postmark, SES, SendGrid or Mailgun event becomes which; the maintainers own that table. The stylesheet was written from ExDoc’s class names, not run in a build."
+    },
+    {
+      "choice": "An opaque avatar exists, and there is no motion or sound yet.",
+      "detail": "The 512 px avatar is the one logo file with a solid square, because social sites need one. The logo has no animation and the brand no sound; neither is needed to use this identity."
+    }
+  ],
+  "notChecked": "The name was kept and not cleared: a few lookups (Hex, npm, PyPI, crates, RubyGems, app stores and DNS) found no conflict, and no trademark register was searched. The logo was checked on test sheets and one blind read, not with people at 16 to 24 px, and no trademark or look-alike search was run for an arched m, including against the McDonald’s sign. The tagline was tested on two small reader tests, not on real developers. Code samples follow the README and were not run, and the ExDoc stylesheet was not run in an ExDoc build. Contrast is computed for the pairs listed here, not for a whole product. Print color was not proofed. The glass azure is 15 to 19 from light blues in two other brand books by the same maker, which is nearer than the rule of thumb of 20.",
+  "retired": [
+    "The sealed-flap mark, the half-filled circle and the loose pane and seal vocabulary.",
+    "The m as two arched windows with a pane of glass in only one of them, and the window as the favicon.",
+    "Plum, lilac and orchid, the purple and pink that did not read as glass.",
+    "The status words Accepted, Deferred and Suppressed on screen (the event names stay in code).",
+    "“Mail you can see through.” as the lead line, and “Email, made visible.”",
+    "The navy and teal colors, Inter and IBM Plex Mono.",
+    "The word “Operator” beside the logo.",
+    "The tagline inside a logo."
+  ],
+  "fonts": {
+    "source": {
+      "repo": "https://github.com/google/fonts",
+      "commit": "b78877b777ed3a18a1b431b0df7d8ee3f84c2e5f"
+    },
+    "files": [
+      {
+        "path": "ofl/funneldisplay/FunnelDisplay[wght].ttf",
+        "sha256": "b4151c9c4b7b07eb74320096b4ff4156cca8821f5adfab34af9fd9a2d6c1179d",
+        "file": "FunnelDisplay[wght].ttf"
+      },
+      {
+        "path": "ofl/funneldisplay/OFL.txt",
+        "sha256": "a32303f6ea3542927121212a9e4f3fe3548741e6d448d9dc6f29e97cf50102e6",
+        "file": "OFL-FunnelDisplay.txt"
+      },
+      {
+        "path": "ofl/atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf",
+        "sha256": "5a455d1cfa099b601ab70751bb9673e8fe1854dc4500c80e1a220d0d75e31745",
+        "file": "AtkinsonHyperlegibleNext[wght].ttf"
+      },
+      {
+        "path": "ofl/atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext-Italic[wght].ttf",
+        "sha256": "ce9cffed32742ad2d9238c561a93220385e5934cdc02b8eb4097a50efa957dc6",
+        "file": "AtkinsonHyperlegibleNext-Italic[wght].ttf"
+      },
+      {
+        "path": "ofl/atkinsonhyperlegiblenext/OFL.txt",
+        "sha256": "aca6a428580965d2297d1b718042dd427c2a9443ece3b0d02d758e161e0c4030",
+        "file": "OFL-AtkinsonHyperlegibleNext.txt"
+      },
+      {
+        "path": "ofl/atkinsonhyperlegiblemono/AtkinsonHyperlegibleMono[wght].ttf",
+        "sha256": "5ce8b1698d1ded7dff2178c1a3ad159470085a58ea239e8b2cb88f4fb4a6f646",
+        "file": "AtkinsonHyperlegibleMono[wght].ttf"
+      },
+      {
+        "path": "ofl/atkinsonhyperlegiblemono/OFL.txt",
+        "sha256": "1ebb31cf7393164f20d10c1d48406cddb5314feff8465531cf1e4ba37e9dd740",
+        "file": "OFL-AtkinsonHyperlegibleMono.txt"
+      }
+    ]
+  },
+  "files": [
+    {
+      "need": "Logo on a light background",
+      "files": [
+        "assets/logo/mailglass-lockup-light.svg",
+        "assets/logo/mailglass-mark-light.svg",
+        "assets/logo/mailglass-lockup-light-2048.png"
+      ]
+    },
+    {
+      "need": "Logo on a dark background",
+      "files": [
+        "assets/logo/mailglass-lockup-dark.svg",
+        "assets/logo/mailglass-mark-dark.svg",
+        "assets/logo/mailglass-lockup-dark-2048.png"
+      ]
+    },
+    {
+      "need": "One color: print and single-color jobs",
+      "files": [
+        "assets/logo/mailglass-lockup-mono-ink.svg",
+        "assets/logo/mailglass-lockup-mono-bone.svg",
+        "assets/logo/mailglass-mark-mono-ink.svg",
+        "assets/logo/mailglass-mark-mono-bone.svg"
+      ]
+    },
+    {
+      "need": "Favicon (the m, drawn for 16 and 32 px)",
+      "files": [
+        "assets/icon/favicon.svg",
+        "assets/icon/favicon.ico",
+        "assets/icon/favicon-32-light.png",
+        "assets/icon/favicon-16-light.png"
+      ]
+    },
+    {
+      "need": "Avatar (a 512 px square, the one logo with a plate)",
+      "files": [
+        "assets/avatar/mailglass-avatar-light.svg",
+        "assets/avatar/mailglass-avatar-dark.svg",
+        "assets/avatar/mailglass-avatar-512-light.png",
+        "assets/avatar/mailglass-avatar-512-dark.png"
+      ]
+    },
+    {
+      "need": "README header",
+      "files": [
+        "assets/readme/mailglass-header-light.svg",
+        "assets/readme/mailglass-header-dark.svg",
+        "assets/readme/header-snippet.html"
+      ]
+    },
+    {
+      "need": "Link preview and social card",
+      "files": [
+        "assets/social/mailglass-social-card-1280x640.png"
+      ]
+    },
+    {
+      "need": "Docs: code colors for ExDoc",
+      "files": [
+        "assets/docs/mailglass-exdoc.css"
+      ]
+    },
+    {
+      "need": "Fonts",
+      "files": [
+        "assets/fonts/web/fonts.css",
+        "assets/fonts/variable/FunnelDisplay[wght].ttf",
+        "assets/fonts/variable/AtkinsonHyperlegibleNext[wght].ttf",
+        "assets/fonts/variable/AtkinsonHyperlegibleMono[wght].ttf",
+        "assets/fonts/OFL-FunnelDisplay.txt",
+        "assets/fonts/OFL-AtkinsonHyperlegibleNext.txt",
+        "assets/fonts/OFL-AtkinsonHyperlegibleMono.txt"
+      ]
+    }
+  ]
+}

@@ -52,8 +52,8 @@ const FIDELITY_SOURCE_FILES = [
   "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
   "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex",
   ...[
-    "inter-400.woff2", "inter-700.woff2", "inter-tight-400.woff2",
-    "inter-tight-700.woff2", "ibm-plex-mono-400.woff2", "ibm-plex-mono-700.woff2"
+    "a-display-600.woff2", "ui-400.woff2", "ui-600.woff2",
+    "ui-400i.woff2", "a-mono-400.woff2", "a-mono-600.woff2"
   ].map(file => `mailglass_admin/priv/static/fonts/${file}`)
 ];
 const FIDELITY_CASE_IDS = [

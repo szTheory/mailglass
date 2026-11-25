@@ -6,9 +6,11 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Copy
 
   attr(:suppression_state, :map, default: nil)
   attr(:read_state, :atom, default: :ready)
+  attr(:id_prefix, :string, default: nil)
 
   def suppression_card(assigns) do
     assigns =
@@ -20,6 +22,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
     ~H"""
     <Components.card
+      id={prefixed_id(@id_prefix, "delivery-suppression")}
       padding={:lg}
       data-testid="operator-suppression-card"
       data-group-card="operator-suppression-card"
@@ -28,9 +31,9 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
         <div class="flex flex-wrap items-center gap-xs">
           <h3 class="text-body font-bold text-base-content">Current suppression</h3>
           <Components.field_help
-            id="delivery-suppression-scope"
+            id={prefixed_id(@id_prefix, "delivery-suppression-scope")}
             label="suppression scope"
-            text="This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
+            text="This shows one current mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
           />
         </div>
         <span class="badge badge-outline">{headline(@suppression_state, @read_state)}</span>
@@ -68,7 +71,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
           </div>
           <div>
             <dt class="text-label font-bold text-secondary">Reason</dt>
-            <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :reason)}</dd>
+            <dd class="mt-xs text-body text-base-content">{reason_value(@suppression_state)}</dd>
           </div>
           <div>
             <dt class="text-label font-bold text-secondary">Source</dt>
@@ -100,7 +103,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       <% else %>
         <%= if @read_state == :ready do %>
           <p class="text-body text-secondary" data-testid="operator-suppression-empty">
-            No current Mailglass suppression matches this delivery.
+            No current mailglass suppression matches this delivery.
           </p>
         <% end %>
       <% end %>
@@ -110,7 +113,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
         phx-click="retry_suppression"
         phx-disable-with="Refreshing suppression…"
         phx-hook="SuppressionRefreshFocus"
-        id="operator-suppression-refresh-action"
+        id={prefixed_id(@id_prefix, "operator-suppression-refresh-action")}
         class="btn btn-ghost mt-md min-h-11"
         data-testid="operator-suppression-refresh"
       >
@@ -126,9 +129,17 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   defp headline(_state, :unavailable), do: "Unavailable"
 
   defp headline(state, _read_state) when is_map(state) and map_size(state) > 0,
-    do: "Current Mailglass match"
+    do: "Current mailglass match"
 
-  defp headline(_, _read_state), do: "No current Mailglass match"
+  defp headline(_, _read_state), do: "No current mailglass match"
+
+  # A suppression with no recorded reason reads the fixed sentence, never "Unavailable":
+  # the entry exists, it just carries no reason.
+  defp reason_value(state) do
+    if Map.get(state, :reason) == nil,
+      do: Copy.fallback_reason(),
+      else: value(state, :reason)
+  end
 
   defp value(state, key) do
     case Map.get(state, key) do
@@ -138,19 +149,22 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
     end
   end
 
-  defp scope_label(:address), do: "Address · Account-local"
-  defp scope_label(:domain), do: "Domain · Account-local"
-  defp scope_label(:address_stream), do: "Address + stream · Account-local"
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
+
+  defp scope_label(:address), do: "Address • Account-local"
+  defp scope_label(:domain), do: "Domain • Account-local"
+  defp scope_label(:address_stream), do: "Address + stream • Account-local"
   defp scope_label(_), do: "Unavailable"
 
   defp removal_copy(%{removal_policy: :blocked, reason: reason})
        when reason in [:complaint, :unsubscribe] do
-    "Mailglass does not allow removal of #{label(reason)} suppressions."
+    "mailglass does not allow removal of #{label(reason)} suppressions."
   end
 
   defp removal_copy(%{removal_policy: :supported, reason: reason})
        when reason in [:hard_bounce, :manual, :policy, :invalid_recipient] do
-    "Mailglass allows removal of #{label(reason)} suppressions."
+    "mailglass allows removal of #{label(reason)} suppressions."
   end
 
   defp removal_copy(_), do: "Removal policy not recorded."

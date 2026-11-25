@@ -454,13 +454,17 @@ defmodule MailglassDemo.DemoData do
     event!(receipt, :webhook_replay_succeeded, minutes_ago(121), %{
       "provider" => "postmark",
       "outcome" => "replayed",
-      "webhook_event_id" => "demo-replay-wh-001"
+      "webhook_event_id" => receipt_webhook.id,
+      "webhook_provider_event_id" => receipt_webhook.provider_event_id,
+      "message_id" => receipt.provider_message_id
     })
 
     event!(receipt, :webhook_replay_succeeded, minutes_ago(122), %{
       "provider" => "postmark",
       "outcome" => "noop",
-      "webhook_event_id" => "demo-replay-wh-002"
+      "webhook_event_id" => receipt_webhook.id,
+      "webhook_provider_event_id" => receipt_webhook.provider_event_id,
+      "message_id" => receipt.provider_message_id
     })
 
     event!(usage_alert, :webhook_replay_failed, minutes_ago(123), %{

@@ -159,7 +159,7 @@ defmodule Mailglass.CILanes do
   # The strings are RUNTIME names: `advisory-matrix.yml`'s jobs interpolate every
   # matrix axis into their `name:`, so GitHub reports them fully substituted with no
   # appended suffix, one per `strategy.matrix.include:` row.
-  # `Mailglass.CIYaml.expanded_matrix_job_names/1` reproduces exactly these seven.
+  # `Mailglass.CIYaml.expanded_matrix_job_names/1` reproduces exactly these eight.
   #
   # DO NOT fold either bucket into `all_classified_lanes/0`. That accessor is bound
   # by set equality to `ci.yml`'s 24 jobs, and three assertions in
@@ -213,7 +213,8 @@ defmodule Mailglass.CILanes do
     "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)",
     "Provider Compatibility Advisory (Elixir 1.18 / OTP 27)",
     "Inbound Full Suite Advisory (schema public)",
-    "Inbound Full Suite Advisory (schema mailglass)"
+    "Inbound Full Suite Advisory (schema mailglass)",
+    "Favicon Raster Re-render Advisory"
   ]
 
   @doc """

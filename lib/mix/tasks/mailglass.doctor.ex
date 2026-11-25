@@ -55,12 +55,12 @@ defmodule Mix.Tasks.Mailglass.Doctor do
   # (otherwise exit 2 becomes unreachable).
   defp validate_cli!(_opts, rest, invalid) do
     if rest != [] do
-      Mix.raise("Mailglass doctor blocked: unexpected positional arguments #{Enum.join(rest, " ")}")
+      Mix.raise("mailglass doctor blocked: unexpected positional arguments #{Enum.join(rest, " ")}")
     end
 
     if invalid != [] do
       invalid_flags = invalid |> Enum.map(fn {key, _value} -> "--#{key}" end) |> Enum.join(", ")
-      Mix.raise("Mailglass doctor blocked: unknown option(s) #{invalid_flags}")
+      Mix.raise("mailglass doctor blocked: unknown option(s) #{invalid_flags}")
     end
 
     :ok

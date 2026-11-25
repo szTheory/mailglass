@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { openInTheme } = require("./support/theme.cjs");
 
 // =============================================================================
 // Phase 116 RATCHET-02 — Gallery matrix overflow gate.
@@ -11,28 +12,32 @@ const { test, expect } = require("@playwright/test");
 // stable `data-testid="gallery-{component}-{state}"` cells that already exist
 // (D-09) — it NEVER generates specimens programmatically (the 324-cell
 // cartesian explosion the research warns against is avoided by resizing the
-// page, not by multiplying specimen rows). Each cell carries three theme
-// wrappers per the gallery contract:
-//   - light:  [data-theme="mailglass-light"]
-//   - dark:   [data-theme="mailglass-dark"]
-//   - system: testid `gallery-{component}-{state}-system` with NO data-theme
-//             (system = absence of an explicit theme).
+// page, not by multiplying specimen rows).
+//
+// Phase 180 (BRPIPE-02): `<html>` is the only theme owner, so each cell renders
+// ONE specimen wrapper, `data-testid="gallery-{component}-{state}-system"`, in the
+// theme the page is in. The light/dark/system matrix is therefore driven by
+// loading the gallery once per theme (cookie + emulated OS + goto), not by three
+// wrappers in one page:
+//   - light:  cookie "light",            OS light  -> <html data-theme="mailglass-light">
+//   - dark:   cookie "dark",             OS light  -> <html data-theme="mailglass-dark">
+//   - system: no cookie,                 OS dark   -> <html> has no data-theme
+//             (system = absence of an explicit theme; OS dark proves it follows the OS)
 //
 // The matrix axes (UI-SPEC "Breakpoints" + "RATCHET-02"):
 //   widths: 320, 390, 768, 1440
-//   themes: light, dark, system
-// At every cell every theme wrapper must satisfy scrollWidth <= clientWidth + 1
-// (no horizontal overflow), and at 320px every specimen renders fully inside its
-// own theme wrapper without internal clipping.
+//   themes: light, dark, system  (outer loop: one page load per theme)
+// At every cell the specimen wrapper must satisfy scrollWidth <= clientWidth + 1
+// (no horizontal overflow), at 320px every specimen renders fully inside its own
+// wrapper without internal clipping, and no element inside the cell carries a
+// theme attribute (a nested owner would re-declare the token set).
 //
 // Scope note (D-04 / STATE.md [110/113]): the overflow invariant is PER-SPECIMEN
-// (each theme wrapper's content fits the wrapper). The gallery SHELL itself is a
+// (each specimen wrapper's content fits the wrapper). The gallery SHELL itself is a
 // wide multi-section audit grid that can scroll horizontally below ~768px — a
 // pre-existing layout property, not a specimen defect, and out of scope for this
-// fixtures plan. The gallery render template was adjusted in 116-04 so the three
-// theme wrappers STACK full-width below md (they previously shared a 3-column
-// flex row that squeezed card specimens to ~88px and forced inner overflow);
-// that fix is what makes the per-specimen invariant hold at 320/390.
+// fixtures plan. The gallery render template stacks the specimen full-width below
+// xl (116-04); that is what makes the per-specimen invariant hold at 320/390.
 // Screenshot-free / no pixel diff — pure runtime DOM geometry.
 // =============================================================================
 
@@ -68,16 +73,42 @@ const STRESS_CELLS = [
   "gallery-stat_card-long-value"
 ];
 
-async function openGallery(page) {
-  await page.goto("/dev/mail/gallery");
+// Per-theme page load (D-12). `system` is "no cookie" with the OS emulated dark, so a
+// pass proves System follows the OS rather than defaulting to light.
+const THEME_MODES = {
+  light: { cookie: "light", os: "light" },
+  dark: { cookie: "dark", os: "light" },
+  system: { cookie: null, os: "dark" }
+};
+
+async function openGalleryInTheme(page, theme) {
+  await openInTheme(page, "/dev/mail/gallery", THEME_MODES[theme]);
   await expect(page.getByRole("heading", { name: "Component Gallery", level: 1 })).toBeVisible();
+  const html = page.locator("html");
+  if (theme === "system") {
+    await expect(html, "system gallery: <html> carries no theme attribute").not.toHaveAttribute(
+      "data-theme",
+      /mailglass-/
+    );
+  } else {
+    await expect(html, `${theme} gallery: <html> carries the theme`).toHaveAttribute(
+      "data-theme",
+      `mailglass-${theme}`
+    );
+  }
 }
 
-// For a `system` theme the gallery exposes the wrapper under a dedicated testid
-// with NO data-theme; light/dark are nested data-theme wrappers inside the cell.
-function themeWrapper(page, cellTestId, theme) {
-  if (theme === "system") return page.getByTestId(`${cellTestId}-system`);
-  return page.getByTestId(cellTestId).locator(`[data-theme="mailglass-${theme}"]`).first();
+// The single specimen wrapper of a cell: one per state, in the page's theme.
+function specimen(page, cellTestId) {
+  return page.getByTestId(`${cellTestId}-system`);
+}
+
+// No element inside the cell may carry a theme attribute: only <html> owns it.
+async function assertNoNestedThemeOwner(page, cellTestId, label) {
+  await expect(
+    page.getByTestId(cellTestId).locator("[data-theme]"),
+    `${label}: no element inside the cell carries data-theme`
+  ).toHaveCount(0);
 }
 
 // scrollWidth > clientWidth means the element's content overflows it
@@ -123,12 +154,12 @@ async function assertNotClippedAt320(locator, label) {
 }
 
 // The Phase-114 composed-group specimens hardcode an INNER per-wrapper testid
-// (`gallery-composed-support-triage`, hyphenated) that renders once inside each
-// of the three theme wrappers — so that testid resolves to 3 elements and has
-// no `-system`/`data-theme` sub-structure. The CANONICAL outer cell for those
-// specimens is the atom+state form (`gallery-composed_support_triage-...`,
-// underscored) which this sweep covers normally. Exclude the hyphenated inner
-// composed testids so discovery yields exactly one outer cell per specimen.
+// (`gallery-composed-support-triage`, hyphenated) that renders once inside the
+// specimen wrapper and has no `-system`/`data-theme` sub-structure. The CANONICAL
+// outer cell for those specimens is the atom+state form
+// (`gallery-composed_support_triage-...`, underscored) which this sweep covers
+// normally. Exclude the hyphenated inner composed testids so discovery yields
+// exactly one outer cell per specimen.
 const COMPOSED_INNER_TESTIDS = new Set([
   "gallery-composed-support-triage",
   "gallery-composed-routing-evidence",
@@ -139,7 +170,7 @@ const COMPOSED_INNER_TESTIDS = new Set([
 // We read the rendered testids rather than hardcoding a list so the resize
 // loop automatically covers every existing specimen — including the new
 // fjordline stress cells — without the spec ever enumerating a cartesian grid.
-// The `-system` sub-wrappers and the composed inner testids are excluded so
+// The `-system` specimen wrappers and the composed inner testids are excluded so
 // each canonical cell is visited exactly once.
 async function discoverGalleryCells(page) {
   const ids = await page.locator("[data-testid^='gallery-']").evaluateAll(nodes =>
@@ -151,17 +182,16 @@ async function discoverGalleryCells(page) {
   return Array.from(new Set(ids)).filter(id => !COMPOSED_INNER_TESTIDS.has(id));
 }
 
-// Widths below xl render the three theme wrappers STACKED full-width, so every
-// specimen gets the whole cell width — the overflow invariant is enforced for
-// ALL cells here. At/above xl the wrappers share a 3-column row (~400px each):
-// a set of intrinsically-wide card/SVG specimens (the logo SVG, the theme_picker
-// fieldset, routing_trace/tabs/suppression/composed cards) cannot fit three to a
-// row and overflow their narrow column. That is a pre-existing gallery-SHELL
-// layout property (STATE.md [110/113]), not a specimen defect, and is out of
-// scope for this fixtures plan — those cells are allowlisted at xl+ so the gate
-// stays honest (it still fails closed if a NEW specimen overflows at xl+, and it
-// enforces every cell strictly at the 320/390 mobile floors the RATCHET-02
-// "must not clip at 320" contract targets).
+// Widths below xl render the specimen STACKED full-width, so every specimen gets
+// the whole cell width — the overflow invariant is enforced for ALL cells here.
+// At/above xl the specimen is a flex item in a row (`xl:flex-1`): a set of
+// intrinsically-wide card/SVG specimens (the logo SVG, the theme_picker
+// fieldset, routing_trace/tabs/suppression/composed cards) overflow their column.
+// That is a pre-existing gallery-SHELL layout property (STATE.md [110/113]), not
+// a specimen defect, and is out of scope for this fixtures plan — those cells are
+// allowlisted at xl+ so the gate stays honest (it still fails closed if a NEW
+// specimen overflows at xl+, and it enforces every cell strictly at the 320/390
+// mobile floors the RATCHET-02 "must not clip at 320" contract targets).
 const WIDE_SHELL_OVERFLOW_ALLOWLIST = new Set([
   "gallery-logo-rest",
   "gallery-theme_picker-system-selected",
@@ -183,46 +213,47 @@ const WIDE_SHELL_OVERFLOW_ALLOWLIST = new Set([
 const MOBILE_FLOOR_WIDTHS = new Set([320, 390]);
 
 test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
-  test("every gallery specimen renders without horizontal overflow across 320/390/768/1440 × light/dark/system", async ({
-    page
-  }) => {
-    // Phase 163 exact-owner repair: the complete 117-cell matrix exhausted the
-    // 30,000ms config default locally, then the first protected recurrence
-    // exhausted its test-local bounds at 60,002/60,047ms and then
-    // 120,004/120,064ms while readiness stayed healthy. Keep the global
-    // default unchanged; this one complete matrix body gets a finite ~2x
-    // latest protected measurement.
-    test.setTimeout(240_000);
-    await openGallery(page);
+  // The theme is the OUTER loop: one gallery page load per theme (D-12), then the
+  // width loop over every cell. 117 cells x 4 widths per theme.
+  for (const theme of MATRIX_THEMES) {
+    test(`every gallery specimen renders without horizontal overflow across 320/390/768/1440 in ${theme}`, async ({
+      page
+    }) => {
+      // Phase 163 exact-owner repair: the complete 117-cell matrix exhausted the
+      // 30,000ms config default locally, then the first protected recurrence
+      // exhausted its test-local bounds at 60,002/60,047ms and then
+      // 120,004/120,064ms while readiness stayed healthy. Keep the global
+      // default unchanged; each complete per-theme matrix body gets a finite
+      // bound (one theme is a third of the former single-body matrix).
+      test.setTimeout(240_000);
+      await openGalleryInTheme(page, theme);
 
-    const cells = await discoverGalleryCells(page);
-    // Sanity: the gallery must expose a substantial specimen set (guards against
-    // a selector regression silently turning this into a vacuous pass), and it
-    // must include the fjordline persona mirror added in plan 116-04.
-    expect(cells.length, "gallery exposes specimen cells").toBeGreaterThan(50);
-    for (const stress of STRESS_CELLS) {
-      expect(cells, `gallery includes stress cell ${stress}`).toContain(stress);
-    }
-    console.log(`[gallery-matrix] stage=matrix_discovered cells=${cells.length}`);
+      const cells = await discoverGalleryCells(page);
+      // Sanity: the gallery must expose a substantial specimen set (guards against
+      // a selector regression silently turning this into a vacuous pass), and it
+      // must include the fjordline persona mirror added in plan 116-04.
+      expect(cells.length, "gallery exposes specimen cells").toBeGreaterThan(50);
+      for (const stress of STRESS_CELLS) {
+        expect(cells, `gallery includes stress cell ${stress}`).toContain(stress);
+      }
+      console.log(`[gallery-matrix] stage=matrix_discovered theme=${theme} cells=${cells.length}`);
 
-    for (const width of MATRIX_WIDTHS) {
-      await page.setViewportSize({ width, height: MATRIX_HEIGHT });
-      const isMobileFloor = MOBILE_FLOOR_WIDTHS.has(width);
+      for (const width of MATRIX_WIDTHS) {
+        await page.setViewportSize({ width, height: MATRIX_HEIGHT });
+        const isMobileFloor = MOBILE_FLOOR_WIDTHS.has(width);
 
-      for (const cellTestId of cells) {
-        // Visibility is checked for EVERY cell at EVERY width — the resize loop
-        // genuinely exercises the whole matrix at every viewport.
-        const cell = page.getByTestId(cellTestId);
-        await expect(cell, `${cellTestId} cell @${width}`).toBeVisible();
+        for (const cellTestId of cells) {
+          // Visibility is checked for EVERY cell at EVERY width — the resize loop
+          // genuinely exercises the whole matrix at every viewport.
+          const cell = page.getByTestId(cellTestId);
+          await expect(cell, `${cellTestId} cell ${theme} @${width}`).toBeVisible();
 
-        // Overflow is enforced for every cell at the mobile floors; at md+ the
-        // wide-shell allowlist (pre-existing card/SVG specimens) is exempt, but
-        // any non-allowlisted cell — including every 116-04 stress specimen —
-        // still fails closed on overflow.
-        const enforceOverflow = isMobileFloor || !WIDE_SHELL_OVERFLOW_ALLOWLIST.has(cellTestId);
-
-        for (const theme of MATRIX_THEMES) {
-          const wrapper = themeWrapper(page, cellTestId, theme);
+          // Overflow is enforced for every cell at the mobile floors; at md+ the
+          // wide-shell allowlist (pre-existing card/SVG specimens) is exempt, but
+          // any non-allowlisted cell — including every 116-04 stress specimen —
+          // still fails closed on overflow.
+          const enforceOverflow = isMobileFloor || !WIDE_SHELL_OVERFLOW_ALLOWLIST.has(cellTestId);
+          const wrapper = specimen(page, cellTestId);
 
           if (enforceOverflow) {
             await assertNoHorizontalOverflow(wrapper, `${cellTestId} ${theme} @${width}`);
@@ -233,34 +264,51 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
           }
         }
       }
-    }
-  });
+    });
 
-  test("fjordline persona + pre-existing stress specimens never overflow at any width × theme", async ({
-    page
-  }) => {
-    await openGallery(page);
+    test(`fjordline persona + pre-existing stress specimens never overflow at any width in ${theme}`, async ({
+      page
+    }) => {
+      await openGalleryInTheme(page, theme);
 
-    for (const width of MATRIX_WIDTHS) {
-      await page.setViewportSize({ width, height: MATRIX_HEIGHT });
+      for (const width of MATRIX_WIDTHS) {
+        await page.setViewportSize({ width, height: MATRIX_HEIGHT });
 
-      for (const cellTestId of STRESS_CELLS) {
-        const cell = page.getByTestId(cellTestId);
-        await expect(cell, `${cellTestId} stress cell @${width}`).toBeVisible();
+        for (const cellTestId of STRESS_CELLS) {
+          const cell = page.getByTestId(cellTestId);
+          await expect(cell, `${cellTestId} stress cell ${theme} @${width}`).toBeVisible();
 
-        for (const theme of MATRIX_THEMES) {
-          const wrapper = themeWrapper(page, cellTestId, theme);
+          const wrapper = specimen(page, cellTestId);
           await assertNoHorizontalOverflow(wrapper, `${cellTestId} ${theme} @${width}`);
-          // The system wrapper is the absence-of-explicit-theme contract: it
-          // must exist with NO data-theme attribute (system = inherited).
-          if (theme === "system") {
-            expect(
-              await wrapper.getAttribute("data-theme"),
-              `${cellTestId} system wrapper has no data-theme @${width}`
-            ).toBeNull();
-          }
+          // `<html>` is the only theme owner: nothing inside the cell may carry a
+          // theme attribute (a nested owner would re-declare the token set).
+          await assertNoNestedThemeOwner(page, cellTestId, `${cellTestId} ${theme} @${width}`);
         }
       }
-    }
-  });
+    });
+  }
+
+  // @smoke180: one component (stat_card) at 1440 in each of the three themes. The
+  // full matrices above run at the phase gate.
+  for (const theme of MATRIX_THEMES) {
+    test(`stat_card specimens at 1440 in ${theme} keep one specimen, no overflow, no nested theme`, { tag: "@smoke180" }, async ({
+      page
+    }) => {
+      await openGalleryInTheme(page, theme);
+      await page.setViewportSize({ width: 1440, height: MATRIX_HEIGHT });
+
+      const cells = (await discoverGalleryCells(page)).filter(id => id.startsWith("gallery-stat_card-"));
+      expect(cells.length, "stat_card exposes several states").toBeGreaterThan(3);
+
+      for (const cellTestId of cells) {
+        await expect(page.getByTestId(cellTestId), `${cellTestId} cell ${theme} @1440`).toBeVisible();
+        await expect(
+          page.getByTestId(`${cellTestId}-system`),
+          `${cellTestId} renders exactly one specimen wrapper`
+        ).toHaveCount(1);
+        await assertNoHorizontalOverflow(specimen(page, cellTestId), `${cellTestId} ${theme} @1440`);
+        await assertNoNestedThemeOwner(page, cellTestId, `${cellTestId} ${theme} @1440`);
+      }
+    });
+  }
 });

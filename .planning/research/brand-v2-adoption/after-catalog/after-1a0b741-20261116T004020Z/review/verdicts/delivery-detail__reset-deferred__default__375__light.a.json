@@ -1,0 +1,45 @@
+{
+  "scenario_id": "delivery-detail__reset-deferred__default__375__light",
+  "judge": "a",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:22 AM UTC",
+      "screenshot_region": "Updated field and the two event timeline timestamps"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Delayed\" [level=3]",
+      "screenshot_region": "status badge under the subject and the verdict block with the clock mark"
+    },
+    {
+      "id": "R-VOICE-1",
+      "ok": true,
+      "evidence_quote": "Nothing to do yet. Check this page again later, or see the retry schedule in Postmark’s logs.",
+      "screenshot_region": "verdict block, Next step"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "text: Delayed",
+      "screenshot_region": "status badge; 'Deferred' appears only as Latest event and timeline card title, which are allowed event names"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "Delayed: the receiving server asked to try again later. No final result is recorded yet.",
+      "screenshot_region": "verdict block near the top of the detail page, above the evidence and timeline"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "The provider reported a temporary delivery delay. Delivery has not been confirmed.",
+      "screenshot_region": "Deferred timeline card and verdict sentence"
+    }
+  ],
+  "reasons": "Every time shows UTC. The Delayed status has a clock mark and the word, and the verdict with its next step sits near the top on the 375 px screen. The wording is calm and plain. It does not promise a retry or give a next-try time, and it only points to Postmark's logs. The word 'Deferred' appears only as an event name, which is allowed."
+}

@@ -1,38 +1,43 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.10 — UI Repairs & Faithful Storybook",
+  "milestone": "v2.11 — Brand v2.0 Adoption",
   "phases": [
     {
-      "number": "174",
-      "name": "Faithful Storybook and Quiet Quick Views",
+      "number": "179",
+      "name": "Compatibility Policy, Status Map and Brand Pin",
       "status": "complete"
     },
     {
-      "number": "175",
-      "name": "Delivery Investigation and Safe Replay",
+      "number": "180",
+      "name": "Reproducible Admin Bundle and Before-Catalog",
       "status": "complete"
     },
     {
-      "number": "176",
-      "name": "Direct Filters and Useful Inbound Evidence",
-      "status": "in_progress"
-    },
-    {
-      "number": "177",
-      "name": "Readable Health and Coherent Account Navigation",
+      "number": "181",
+      "name": "Brand v2 Tokens, Fonts and Logo",
       "status": "complete"
     },
     {
-      "number": "178",
-      "name": "Preview Authoring and Milestone Review",
-      "status": "complete"
+      "number": "182",
+      "name": "Admin Words and Layout, One Job First",
+      "status": "pending"
+    },
+    {
+      "number": "183",
+      "name": "Docs, Packaging and Launch Prep",
+      "status": "pending"
+    },
+    {
+      "number": "184",
+      "name": "Close Admin and docs browser evidence gaps",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "$gsd-plan-phase 182 --gaps",
+    "label": "Plan fresh Phase 182 gap route",
+    "reason": "182-08 stopped before cache inspection on a wrong patch path. Preserve it; D-30 permits up to two additional fresh plans, each with a new one-shot route."
   },
-  "updated_at": "2026-11-03T04:54:13.526Z"
+  "updated_at": "2026-11-20T04:23:18Z"
 }

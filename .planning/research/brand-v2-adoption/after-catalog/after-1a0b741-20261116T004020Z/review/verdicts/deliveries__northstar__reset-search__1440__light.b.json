@@ -1,0 +1,39 @@
+{
+  "scenario_id": "deliveries__northstar__reset-search__1440__light",
+  "judge": "b",
+  "order": "after_only",
+  "verdict": "pass",
+  "rules": [
+    {
+      "id": "R-TIME-1",
+      "ok": true,
+      "evidence_quote": "time: Nov 16, 2026, 12:05 AM UTC",
+      "screenshot_region": "Updated column of the first row"
+    },
+    {
+      "id": "R-STATUS-1",
+      "ok": true,
+      "evidence_quote": "text: Failed",
+      "screenshot_region": "Outcome column of the first row, red Failed badge with a drawn mark"
+    },
+    {
+      "id": "R-HIER-1",
+      "ok": true,
+      "evidence_quote": "searchbox \"Email address\": pw-typo-bounce@northstar.example",
+      "screenshot_region": "Search field above the list, then the single Activity row"
+    },
+    {
+      "id": "R-WORDS-1",
+      "ok": true,
+      "evidence_quote": "heading \"Activity\" [level=1]",
+      "screenshot_region": "Page heading and sidebar navigation"
+    },
+    {
+      "id": "R-TRUTH-1",
+      "ok": true,
+      "evidence_quote": "paragraph: \"Latest: Bounced\"",
+      "screenshot_region": "Outcome cell under the Failed badge"
+    }
+  ],
+  "reasons": "The search field comes before the list. The single row shows the customer's address, the subject and the Failed badge with both a mark and the word. The row's \"Latest: Bounced\" line is an event name, which is allowed. The time reads \"Nov 16, 2026, 12:05 AM UTC\" and so includes its zone. The page uses the product's words (Activity, Account, provider) and makes no retry promise or delivery claim."
+}

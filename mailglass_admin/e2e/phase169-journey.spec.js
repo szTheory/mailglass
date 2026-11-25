@@ -6,8 +6,6 @@ const path = require("node:path");
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 const beforeDir = path.resolve(process.cwd(), "../.planning/milestones/v2.9-phases/169-outbound-investigation-and-recovery/artifacts/before");
-const afterDir = path.resolve(process.cwd(), "../.planning/milestones/v2.9-phases/169-outbound-investigation-and-recovery/artifacts/after");
-
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
 }
@@ -58,7 +56,7 @@ test.describe("Phase 169 connected journey", () => {
     await page.screenshot({ path: "test-results/phase169-health-partial.png", fullPage: true });
   });
 
-  test("Account support keeps exact IDs with no matching Deliveries and opens only proven linkage", async ({ page }) => {
+  test("Account support keeps exact IDs with no matching emails and opens only proven linkage", async ({ page }) => {
     const reset = await page.request.get("/ops/browser-reset?scenario=phase169-support-empty");
     expect(reset.ok()).toBeTruthy();
     const fixture = await reset.json();
@@ -113,12 +111,15 @@ test.describe("Phase 169 connected journey", () => {
       "This exact Event is outside the displayed timeline.",
     );
     // The recorded time renders as the shared timestamp (local display, exact UTC
-    // retained) without a separate "Recorded time" caption.
-    const selectedTime = page.getByTestId("operator-timeline-selected-event").locator("time[data-local-time]");
-    await expect(selectedTime).toHaveCount(1);
+    // retained) without a separate "Recorded time" caption. Since 182-03 the provider's own
+    // time is a timestamp too, so the card holds two `time` elements and the recorded time is
+    // the first.
+    const selectedTimes = page.getByTestId("operator-timeline-selected-event").locator("time[data-local-time]");
+    await expect(selectedTimes).toHaveCount(2);
+    const selectedTime = selectedTimes.first();
     await expect(selectedTime).toBeVisible();
     await expect(selectedTime).toHaveAttribute("data-utc", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/);
-    await expect(selectedTime).toHaveAttribute("aria-label", /^Recorded at .+ local time$/);
+    await expect(selectedTime).not.toHaveAttribute("aria-label", /.*/);
 
     const ordinaryWebhook = page.locator(`[data-event-id="${fixture.ordinary_linked_event_id}"]`);
     await expect(ordinaryWebhook).toContainText("Delivered");
@@ -213,9 +214,9 @@ test.describe("Phase 169 connected journey", () => {
     await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
 
     const current = page.getByTestId("operator-suppression-card");
-    await expect(current).toContainText("Current Mailglass match");
+    await expect(current).toContainText("Current mailglass match");
     await expect(current).toContainText(fixture.recipient);
-    await expect(current).toContainText("Address · Account-local");
+    await expect(current).toContainText("Address • Account-local");
     await expect(current).toContainText("Policy");
     await expect(current).toContainText("operator review · Ångström");
     await expect(current).toContainText("Expiry date");
@@ -224,7 +225,7 @@ test.describe("Phase 169 connected journey", () => {
     // Health no longer carries a suppression metric: intentional suppression policy
     // is neither fetched nor displayed there (docs/design-system.md, Health). The
     // historical suppressed Delivery Events stay a separate population, reached
-    // through the Deliveries event filter rather than conflated with current policy.
+    // through the Activity event filter rather than conflated with current policy.
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
     const health = page.getByTestId("operator-overview-health");
     await expect(health).toBeVisible();
@@ -252,7 +253,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
     await expect(current).toContainText("Couldn’t refresh suppression evidence. Try again.");
     await expect(current).toContainText("last retrieved record and may be out of date");
-    await expect(current).toContainText("Mailglass allows removal of Policy suppressions.");
+    await expect(current).toContainText("mailglass allows removal of Policy suppressions.");
     await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);
     await expect(page.locator("body")).not.toContainText("never render");
 
@@ -267,13 +268,13 @@ test.describe("Phase 169 connected journey", () => {
       if (variant === "empty") {
         // Shorter absence copy; the scope limit (other stores and provider
         // restrictions are not checked) is the card's shared scope help.
-        await expect(card).toContainText("No current Mailglass match");
-        await expect(card).toContainText("No current Mailglass suppression matches this delivery.");
+        await expect(card).toContainText("No current mailglass match");
+        await expect(card).toContainText("No current mailglass suppression matches this delivery.");
         await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
       } else {
-        await expect(card).toContainText("Address + stream · Account-local");
+        await expect(card).toContainText("Address + stream • Account-local");
         await expect(card).toContainText("Complaint");
-        await expect(card).toContainText("Mailglass does not allow removal of Complaint suppressions.");
+        await expect(card).toContainText("mailglass does not allow removal of Complaint suppressions.");
         await expect(card).toContainText(nextFixture.recipient);
       }
     }
@@ -300,8 +301,8 @@ test.describe("Phase 169 connected journey", () => {
     }
   });
 
-  test("Phase 169 rendered route matrix stays readable across widths and missing media", async ({ page }) => {
-    fs.mkdirSync(afterDir, { recursive: true });
+  test("Phase 169 rendered route matrix stays readable across widths and missing media", async ({ page }, testInfo) => {
+    const screenshotPath = name => testInfo.outputPath(`${name}.png`);
     const cssResponses = [];
     const externalRequests = [];
     page.on("request", request => {
@@ -366,7 +367,7 @@ test.describe("Phase 169 connected journey", () => {
       expect(healthGeometry.columnWidth, `Health column width at ${width}px`).toBeLessThanOrEqual(42 * 16 + 1);
       geometryByWidth.push({ width, ...healthGeometry });
       await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
-      await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
+      await page.screenshot({ path: screenshotPath(`health-${width}`), fullPage: true });
       routes.push({ width, state: "Health", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&window_hours=24`);
@@ -400,12 +401,12 @@ test.describe("Phase 169 connected journey", () => {
           .filter(el => el.getClientRects().length > 0)
           .map(el => el.getBoundingClientRect().height)
       }));
-      expect(listGeometry.overflow, `Deliveries page overflow at ${width}px`).toBeLessThanOrEqual(1);
+      expect(listGeometry.overflow, `Activity page overflow at ${width}px`).toBeLessThanOrEqual(1);
       expect(listGeometry.mainWidth).toBe(contentWidth);
       expect(listGeometry.focusTargets.length).toBeGreaterThan(0);
       expect(Math.min(...listGeometry.focusTargets), `Open action target at ${width}px`).toBeGreaterThanOrEqual(44);
-      await page.screenshot({ path: path.join(afterDir, `deliveries-${width}.png`), fullPage: true });
-      routes.push({ width, contentWidth, state: "Deliveries", url: new URL(page.url()).pathname + new URL(page.url()).search });
+      await page.screenshot({ path: screenshotPath(`deliveries-${width}`), fullPage: true });
+      routes.push({ width, contentWidth, state: "Activity", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
       await rowOpeners.nth(3).click();
       const quickView = page.getByTestId("operator-quick-view");
@@ -422,7 +423,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(quickView).toContainText("browser-exact@example.com");
       // Overlays are fixed to the viewport; fullPage screenshots resize the capture
       // surface and place the sheet at the artificial bottom of a very tall image.
-      await page.screenshot({ path: path.join(afterDir, `quick-view-${width}.png`), animations: "disabled" });
+      await page.screenshot({ path: screenshotPath(`quick-view-${width}`), animations: "disabled" });
       routes.push({ width, state: "Quick view", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
       await page.getByTestId("operator-quick-view-full").click();
@@ -448,7 +449,7 @@ test.describe("Phase 169 connected journey", () => {
         ];
       });
       expect(detailOrder.every((top, index) => Number.isFinite(top) && (index === 0 || detailOrder[index - 1] < top)), `detail section order ${JSON.stringify(detailOrder)}`).toBeTruthy();
-      await page.screenshot({ path: path.join(afterDir, `detail-${width}.png`), fullPage: true });
+      await page.screenshot({ path: screenshotPath(`detail-${width}`), fullPage: true });
       routes.push({ width, state: "Full detail", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
       await page.getByTestId("operator-replay-open").click();
@@ -457,7 +458,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(review).toHaveAttribute("aria-modal", "true");
       await expect(review).toContainText("does not resend mail or prove provider receipt");
       expect(await review.evaluate(el => el.contains(document.activeElement)), `Replay focus remains inside at ${width}px`).toBeTruthy();
-      await page.screenshot({ path: path.join(afterDir, `replay-review-${width}.png`), animations: "disabled" });
+      await page.screenshot({ path: screenshotPath(`replay-review-${width}`), animations: "disabled" });
       routes.push({ width, state: "Replay review", url: new URL(page.url()).pathname + new URL(page.url()).search });
       await page.keyboard.press("Escape");
       await expect(review).toHaveCount(0);
@@ -479,7 +480,7 @@ test.describe("Phase 169 connected journey", () => {
       servedCssSha256: sha256(served.body),
       servedCssUrl: served.url,
       routes,
-      screenshots: widths.flatMap(width => ["health", "deliveries", "quick-view", "detail", "replay-review"].map(state => `artifacts/after/${state}-${width}.png`)),
+      screenshots: widths.flatMap(width => ["health", "deliveries", "quick-view", "detail", "replay-review"].map(state => path.relative(process.cwd(), screenshotPath(`${state}-${width}`)))),
       geometryByWidth
     })}`);
   });

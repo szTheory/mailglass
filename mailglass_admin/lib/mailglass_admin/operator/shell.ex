@@ -195,7 +195,6 @@ defmodule MailglassAdmin.Operator.Shell do
     ~H"""
     <AdminShell.shell
       testid="operator-shell"
-      theme_attr={Theme.data_theme(@theme_choice)}
       sidebar_width_class="md:grid-cols-[15rem_1fr]"
       main_max_width_class="max-w-7xl"
     >
@@ -509,7 +508,7 @@ defmodule MailglassAdmin.Operator.Shell do
             <p class="text-label font-bold uppercase text-secondary">Account</p>
             <h2 class="mt-xs text-heading font-bold text-base-content">Choose an Account</h2>
             <p class="mt-sm text-body text-secondary">
-              Select an Account to see scoped operator data.
+              Select an Account to see its activity.
             </p>
             <p class="mt-sm flex items-start gap-xs text-label text-secondary">
               <Components.icon
@@ -518,7 +517,7 @@ defmodule MailglassAdmin.Operator.Shell do
               />
               <span>
                 Account maps to <code class="mono">tenant_id</code>
-                in code and URLs. Mailglass uses it to keep email records isolated.
+                in code and URLs. mailglass uses it to keep email records isolated.
               </span>
             </p>
             <div class="mt-md grid gap-sm">
@@ -580,7 +579,7 @@ defmodule MailglassAdmin.Operator.Shell do
 
   defp copy_for(:deliveries) do
     %{
-      heading: "Deliveries",
+      heading: "Activity",
       tips: [
         "Delivery never arrived? Start here.",
         "Replay changed nothing? View the event timeline.",

@@ -160,7 +160,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
             <Components.field_help
               id="operator-health-outbound-activity-help"
               label="outbound activity"
-              text="Deliveries with a recorded event in this period, including pending and failed deliveries. Activity alone does not confirm successful delivery."
+              text="Emails with a recorded event in this period, including pending and failed emails. Activity alone does not confirm successful delivery."
             />
           </div>
           <.link
@@ -175,8 +175,8 @@ defmodule MailglassAdmin.Operator.HealthOverview do
               {if @activity.deliveries,
                 do:
                   if(@activity.deliveries.total == 1,
-                    do: "delivery updated",
-                    else: "deliveries updated"
+                    do: "email updated",
+                    else: "emails updated"
                   ),
                 else: "Outbound activity unavailable"}
             </span>
@@ -266,7 +266,7 @@ defmodule MailglassAdmin.Operator.HealthOverview do
     do: "Webhook processing wasn't refreshed. Showing results from"
 
   defp notice_copy(:stale, :orphan_backlog),
-    do: "Unmatched events weren't refreshed. Showing results from"
+    do: "Provider reports that match no email weren't refreshed. Showing results from"
 
   defp notice_copy(:stale, :delivery_activity),
     do: "Outbound activity and delivery results weren't refreshed. Showing results from"
@@ -275,7 +275,9 @@ defmodule MailglassAdmin.Operator.HealthOverview do
     do: "Inbound activity and processing results weren't refreshed. Showing results from"
 
   defp notice_copy(:unavailable, :failed_ingest), do: "Webhook processing couldn't be loaded."
-  defp notice_copy(:unavailable, :orphan_backlog), do: "Unmatched events couldn't be loaded."
+
+  defp notice_copy(:unavailable, :orphan_backlog),
+    do: "Provider reports that match no email couldn't be loaded."
 
   defp notice_copy(:unavailable, :delivery_activity),
     do: "Outbound activity and delivery results couldn't be loaded."
