@@ -289,7 +289,7 @@ function collectHookCases(receipt, identity) {
   requireThat(receipt.proof_boundary?.reset === "authenticated reset endpoint used", "hook receipt did not use this run's authenticated Demo reset");
   requireThat(receipt.source?.path === "mailglass_admin/priv/static/hooks.js" && MD5.test(receipt.source?.md5), "hook source asset identity is missing");
   requireThat(receipt.locked_versions?.demo_live_view === "1.1.34" && receipt.locked_versions?.admin_live_view === "1.2.15" && receipt.locked_versions?.phoenix_storybook === "1.2.0", "hook receipt has stale locked LiveView or Storybook versions");
-  requireThat(receipt.locked_versions?.demo_playwright === "1.60.0" && receipt.locked_versions?.admin_playwright === "1.59.1", "hook receipt does not identify both independently locked Playwright clients");
+  requireThat(receipt.locked_versions?.demo_playwright === "1.60.0" && receipt.locked_versions?.admin_playwright === "1.65.1", "hook receipt does not identify both independently locked Playwright clients");
   const responses = receipt.storybook?.hook_asset_responses;
   requireThat(Array.isArray(responses) && responses.length > 0, "Storybook hook asset responses are missing");
   requireThat(responses.every(item => item.status === 200 && item.hasStorybookRegistration === true && item.hasSocketConstructor === false), "Storybook hook registration response failed");
@@ -325,7 +325,7 @@ function validateBrowserInstall(receipt, type, condition, identity) {
   requireThat(isRecord(receipt), `${type} browser install receipt is missing`);
   requireThat(receipt.schema_version === `phase174-${type}-browser.v1`, `${type} browser receipt has an unsupported schema`);
   requireIdentity(receipt.run_identity, identity, `${type} browser`);
-  requireThat(receipt.version === (type === "admin" ? "1.59.1" : "1.60.0"), `${type} browser CLI version does not match its locked client`);
+  requireThat(receipt.version === (type === "admin" ? "1.65.1" : "1.60.0"), `${type} browser CLI version does not match its locked client`);
   requireThat(/^\d+$/.test(String(receipt.chromium_revision)), `${type} required Chromium revision is missing`);
   requireThat(receipt.cache_directory === "/cache/playwright", `${type} browser cache directory is not the run-owned shared cache`);
   requireThat(["hit", "miss"].includes(receipt.cache_state), `${type} browser cache hit/miss state is missing`);

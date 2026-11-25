@@ -151,7 +151,7 @@ function hooksReceipt(runId, condition, identity) {
       admin_live_view: "1.2.15",
       phoenix_storybook: "1.2.0",
       demo_playwright: "1.60.0",
-      admin_playwright: "1.59.1"
+      admin_playwright: "1.65.1"
     },
     storybook: {
       hook_asset_responses: [{ status: 200, hasStorybookRegistration: true, hasSocketConstructor: false }],
@@ -248,7 +248,7 @@ function browserReceipt(type, condition, identity) {
     schema_version: `phase174-${type}-browser.v1`,
     run_identity: { run_id: `${RUN_ID}-${condition}`, condition, ...identity },
     ...(admin ? { cli: "/workspace/mailglass_admin/node_modules/.bin/playwright", install_exit_code: 0 } : {}),
-    version: admin ? "1.59.1" : "1.60.0",
+    version: admin ? "1.65.1" : "1.60.0",
     chromium_revision: admin ? "1234" : "5678",
     cache_directory: "/cache/playwright",
     cache_state: condition === "cold" ? "miss" : "hit",
