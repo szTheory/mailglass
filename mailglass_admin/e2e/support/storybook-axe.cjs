@@ -158,6 +158,30 @@ function reviewedRunIds(approval) {
   ].filter(nonempty));
 }
 
+function minimumContrast(value) {
+  return value.font_size >= 24 || (value.font_size >= 56 / 3 && value.font_weight >= 700) ? 3 : 4.5;
+}
+
+function passingContrast(value) {
+  const minimum = minimumContrast(value);
+  return Number.isFinite(value.ratio) && value.ratio >= minimum && value.ratio <= 21 && value.minimum === minimum &&
+    Number.isFinite(value.font_size) && value.font_size > 0 && Number.isFinite(value.font_weight);
+}
+
+// An axe "incomplete" colour-contrast result needs no hand-written triage when
+// this run measured every one of its targets in the same case and each passed.
+// Anything unmeasured, failing, or from another rule still needs a triage record.
+function measuredContrastPass(report, finding) {
+  if (finding?.rule_id !== "color-contrast" || !Array.isArray(finding.target) || finding.target.length === 0) return false;
+  const rows = (Array.isArray(report.supplemental) ? report.supplemental : []).filter(row => row?.case_id === caseId(finding));
+  if (rows.length !== 1 || !Array.isArray(rows[0].contrasts)) return false;
+  return finding.target.every(chain => {
+    if (!Array.isArray(chain) || chain.length !== 1) return false;
+    const measured = rows[0].contrasts.filter(value => value?.target === chain[0]);
+    return measured.length > 0 && measured.every(passingContrast);
+  });
+}
+
 function findingShape(item, collection, errors, expectedIds) {
   const allowedKeys = collection === "incomplete" ? [...FINDING_KEYS, "reason", "disposition", "evidence"] : FINDING_KEYS;
   if (!exactKeys(item, allowedKeys)) {
@@ -316,11 +340,7 @@ function validateReport(report, options = {}) {
         errors.push("supplemental contrast targets are missing or changed");
       }
       for (const value of Array.isArray(contrasts) ? contrasts : []) {
-        const minimum = value.font_size >= 24 || (value.font_size >= 56 / 3 && value.font_weight >= 700) ? 3 : 4.5;
-        if (!Number.isFinite(value.ratio) || value.ratio < minimum || value.ratio > 21 || value.minimum !== minimum ||
-            !Number.isFinite(value.font_size) || value.font_size <= 0 || !Number.isFinite(value.font_weight)) {
-          errors.push("supplemental rendered contrast is insufficient or unverified");
-        }
+        if (!passingContrast(value)) errors.push("supplemental rendered contrast is insufficient or unverified");
       }
     }
   }
@@ -425,6 +445,7 @@ function compareFindings(report, approval) {
   );
   let untriaged = 0;
   for (const item of Array.isArray(report.incomplete) ? report.incomplete : []) {
+    if (measuredContrastPass(report, item)) continue;
     const match = triaged.get(fingerprint(item));
     if (!match || !nonempty(match.reason) || !nonempty(match.disposition) || match.disposition === "untriaged" || !nonempty(match.evidence)) {
       untriaged += 1;

@@ -5,7 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { normalizeTarget, selectedCases, validateReport, compareFindings } = require("./storybook-axe.cjs");
-const { aggregateContrast } = require("./storybook-axe-supplement.cjs");
+const { aggregateContrast, renderedContrast } = require("./storybook-axe-supplement.cjs");
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -51,6 +51,47 @@ test("Phase 175 selected Axe inventory executes 13 rendered variants in 26 theme
   assert.equal(selected.cases.length, 26);
   assert.equal(new Set(selected.cases.map(item => item.case_id)).size, 26);
   assert.equal(selected.emptyRouteOnly.length, 2);
+});
+
+function paintedElement(backgroundSize) {
+  let fill = [0, 0, 0, 0];
+  const context = {
+    clearRect() {},
+    fillRect() {},
+    set fillStyle(value) { fill = value.match(/\d+/g).map(Number); },
+    getImageData: () => ({ data: fill })
+  };
+  const style = {
+    backgroundImage: 'none, url("data:image/svg+xml,noise")',
+    backgroundSize,
+    backgroundColor: "rgba(255, 255, 255, 255)",
+    color: "rgba(0, 0, 0, 255)",
+    opacity: "1",
+    filter: "none",
+    mixBlendMode: "normal",
+    fontSize: "16px",
+    fontWeight: "400"
+  };
+  return {
+    ownerDocument: {
+      createElement: () => ({ getContext: () => context }),
+      defaultView: { getComputedStyle: () => style }
+    },
+    parentElement: null,
+    tagName: "SPAN",
+    id: "",
+    className: "badge"
+  };
+}
+
+test("supplemental contrast ignores only a zero-width noise layer", () => {
+  // Chromium releases serialize the same unpainted second layer differently.
+  for (const size of ["auto, 0%", "auto, 0% auto"]) {
+    assert.equal(renderedContrast(paintedElement(size)).ratio, 21, size);
+  }
+  for (const size of ["auto", "auto, auto", "auto, 100%", "auto, 0% 100%", "auto, 10%"]) {
+    assert.throws(() => renderedContrast(paintedElement(size)), /complex paint/, size);
+  }
 });
 
 test("supplemental contrast aggregates every selector match conservatively", () => {
@@ -289,6 +330,28 @@ test("compareFindings requires exact triage for every incomplete fingerprint", (
   };
   assert.equal(compareFindings(report, approvalFor([], [triage])).valid, true);
   assertInvalidComparison(report, approvalFor([], [{ ...triage, evidence: "unrelated-run" }]), /independent reviewed run/i);
+});
+
+test("compareFindings accepts a contrast incomplete only when this run measured every target as passing", () => {
+  const incomplete = finding({ target: [[".badge"], [".title"]] });
+  const measured = target => ({ target, ratio: 4.6, minimum: 4.5, font_size: 14, font_weight: 400, matches: 1 });
+  const report = validReport({ supplemental: supplement(), incomplete: [incomplete] });
+  report.supplemental[0].contrasts = [measured(".badge"), measured(".title")];
+  assert.equal(compareFindings(report, approvalFor()).valid, true);
+
+  for (const change of [
+    report => delete report.supplemental,
+    report => report.supplemental[0].contrasts.pop(),
+    report => report.supplemental[0].contrasts[1].ratio = 4.499,
+    report => Object.assign(report.supplemental[0].contrasts[1], { ratio: 3.5, minimum: 3 }),
+    report => report.supplemental[1].contrasts = report.supplemental[0].contrasts.splice(0),
+    report => report.incomplete[0].target = [[".badge", ".title"]],
+    report => report.incomplete[0].rule_id = "aria-hidden-focus"
+  ]) {
+    const bad = structuredClone(report);
+    change(bad);
+    assertInvalidComparison(bad, approvalFor(), /untriaged/i);
+  }
 });
 
 test("compareFindings retains independently identified historical and current triage runs", () => {

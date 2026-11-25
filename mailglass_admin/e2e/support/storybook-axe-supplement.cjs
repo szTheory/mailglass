@@ -25,10 +25,11 @@ function renderedContrast(element) {
   for (let node = element; node; node = node.parentElement) {
     const style = view.getComputedStyle(node);
     // daisyUI retains its noise URL even with the brand's --noise: 0.
-    // The second image layer has zero size and paints no pixels.
+    // The second image layer has zero width and paints no pixels. Chromium
+    // releases serialize that size as "0%" or "0% auto".
     const noPaintedImage = style.backgroundImage === "none" || /^none(?:,\s*none)+$/.test(style.backgroundImage);
     const unpaintedNoise = style.backgroundImage.startsWith("none, url(") &&
-      style.backgroundSize === "auto, 0%";
+      /^auto, 0%( auto)?$/.test(style.backgroundSize);
     if ((!noPaintedImage && !unpaintedNoise) || Number(style.opacity) !== 1 ||
         style.filter !== "none" || style.mixBlendMode !== "normal") {
       throw new Error(`Supplemental contrast cannot decide complex paint on ${node.tagName.toLowerCase()}#${node.id}.${String(node.className).replaceAll(" ", ".")}: image=${style.backgroundImage}; size=${style.backgroundSize}; opacity=${style.opacity}; filter=${style.filter}; blend=${style.mixBlendMode}`);
