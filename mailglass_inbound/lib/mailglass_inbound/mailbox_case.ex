@@ -38,7 +38,7 @@ defmodule MailglassInbound.MailboxCase do
   application-env keys so `deliver_later/2` runs inline), this case template
   writes and restores **no** application-env key. Inbound achieves synchronous
   execution **structurally**: `MailglassInbound.Test.Ingress` drives
-  `MailglassInbound.Execution.execute/2` (SYNC) directly — there is no
+  MailglassInbound.Execution.execute/2 (SYNC) directly — there is no
   async-mode app-env key to flip and therefore no leak surface across tests
   The only teardown is `Sandbox.stop_owner/1`; the only
   shared-state hygiene is the per-setup ETS / process-dict reset below.
@@ -48,7 +48,7 @@ defmodule MailglassInbound.MailboxCase do
   - `Ecto.Adapters.SQL.Sandbox.start_owner!(repo)` — plain ownership checkout; the suite runs serial by default (`async: false`)
   - `Mailglass.Tenancy.put_current("test-tenant")` (unless `@tag tenant: :unset`)
   - resets `Mailglass.Webhook.Providers.SES.CertCache` (process-global ETS)
-  - resets `MailglassInbound.S3Fetcher.Fake` (process-dict)
+  - resets MailglassInbound.S3Fetcher.Fake (process-dict)
   - best-effort `Phoenix.PubSub.subscribe/2` on the **core** `Mailglass.PubSub`
     server (the inbound plug broadcasts there); the send-based capture from
     `MailglassInbound.Test.Ingress` is the primary assertion path

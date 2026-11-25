@@ -2,6 +2,7 @@ defmodule MailglassDemo.DemoDataResetTest do
   use MailglassDemo.DataCase, async: false
 
   alias Mailglass.Events.Event
+  alias Mailglass.Operator.ReplayTargets
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Suppression.Entry
   alias MailglassDemo.DemoData
@@ -85,6 +86,14 @@ defmodule MailglassDemo.DemoDataResetTest do
 
   test "seed histories and projection timestamps describe consistent scenarios" do
     DemoData.reset!()
+
+    receipt = Repo.get_by!(Delivery, provider_message_id: "pm-demo-receipt-001")
+
+    assert {:ok, %{status: :exact, candidate: %{provider_event_id: "demo-receipt-delivery"}}} =
+             ReplayTargets.list_delivery_targets(%{
+               tenant_id: receipt.tenant_id,
+               delivery_id: receipt.id
+             })
 
     for delivery <- Repo.all(Delivery) do
       assert is_binary(delivery.metadata["subject"])

@@ -159,7 +159,8 @@ defmodule MailglassAdmin.TokenParityTest do
            "tokens.json not found at #{@tokens_path} — run from mailglass_admin/"
 
     {:ok,
-     tokens: Jason.decode!(File.read!(@tokens_path)), brand: Jason.decode!(File.read!(@brand_path))}
+     tokens: Jason.decode!(File.read!(@tokens_path)),
+     brand: Jason.decode!(File.read!(@brand_path))}
   end
 
   setup do

@@ -18,7 +18,7 @@ defmodule MailglassInbound.Internal.Doctor do
       the plug reads — NEVER verifies a signature; the finding text says so);
     * MIME backend availability + version via `Mailglass.OptionalDeps.GenSmtp`
       (no bare optional-dep reference);
-    * route-conflict detection REUSING `MailglassInbound.Router.Matcher.matches_route?/2`
+    * route-conflict detection REUSING MailglassInbound.Router.Matcher.matches_route?/2
       structural subsumption (broad-before-narrow) -> `:fail`,
       witness-probe shadow -> `:fail`, regex-vs-regex overlap -> `:warn`. Conflict
       findings name `router.ex:LINE` via `Route.:source`.

@@ -38,7 +38,7 @@ defmodule Mailglass.DocsMigrationSmokeTest do
     assert {:ok, _quoted} = Code.string_to_quoted(code)
   end
 
-    test "parity smoke: raw Swoosh email can be delivered via mailglass" do
+  test "parity smoke: raw Swoosh email can be delivered via mailglass" do
     email =
       Swoosh.Email.new()
       |> Swoosh.Email.to("migrated@example.com")

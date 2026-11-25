@@ -30,12 +30,12 @@ defmodule Storybook.Primitives.NavLink do
     [
       %Variation{
         id: :active_light,
-        attributes: %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}
+        attributes: %{label: "Activity", icon: "hero-paper-airplane", href: "#", active: true}
       },
       %Variation{
         id: :active_dark,
         template: @dark_template,
-        attributes: %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}
+        attributes: %{label: "Activity", icon: "hero-paper-airplane", href: "#", active: true}
       },
       %Variation{
         id: :inactive_light,

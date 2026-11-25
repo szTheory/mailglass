@@ -784,8 +784,8 @@ defmodule MailglassAdmin.Phase182CauseContractTest do
         "retry window" => "Still inside the retry window.",
         "we'll try again" => "We'll try again.",
         "try again at or in" => "The server will try again in an hour.",
-         "automatic" => "mailglass retries automatically.",
-         "a clock time after try" => "mailglass will try at 3:15 PM.",
+        "automatic" => "mailglass retries automatically.",
+        "a clock time after try" => "mailglass will try at 3:15 PM.",
         "retried" => "The email was retried."
       }
 

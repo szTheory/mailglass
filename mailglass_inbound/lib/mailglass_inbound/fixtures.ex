@@ -335,7 +335,7 @@ defmodule MailglassInbound.Fixtures do
 
   - the **real** `Mailglass.Webhook.Providers.SES.CertCache` so the real
     `SES.verify!` is a cache hit (no `:httpc` fetch), and
-  - the `MailglassInbound.S3Fetcher.Fake` so the `Action:S3` body path resolves
+  - the MailglassInbound.S3Fetcher.Fake so the `Action:S3` body path resolves
     to the fixture's raw MIME.
 
   The keypair is ephemeral, in-memory, and per call — nothing is written to

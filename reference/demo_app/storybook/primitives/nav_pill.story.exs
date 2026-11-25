@@ -28,11 +28,11 @@ defmodule Storybook.Primitives.NavPill do
         template: @dark_template,
         attributes: %{label: "Overview", href: "#", active: true}
       },
-      %Variation{id: :inactive_light, attributes: %{label: "Deliveries", href: "#", active: false}},
+      %Variation{id: :inactive_light, attributes: %{label: "Activity", href: "#", active: false}},
       %Variation{
         id: :inactive_dark,
         template: @dark_template,
-        attributes: %{label: "Deliveries", href: "#", active: false}
+        attributes: %{label: "Activity", href: "#", active: false}
       },
       %Variation{id: :disabled, attributes: %{label: "Inbound", href: "#", disabled: true}},
       %Variation{

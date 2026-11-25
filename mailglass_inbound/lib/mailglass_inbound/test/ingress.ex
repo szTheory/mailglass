@@ -55,7 +55,7 @@ defmodule MailglassInbound.Test.Ingress do
   ## The captured `outcome` slot
 
   The third element of the captured tuple is the **normalized `execute/2` result
-  map** — the actual return value of `MailglassInbound.Execution.execute/2`
+  map** — the actual return value of MailglassInbound.Execution.execute/2
   (`%{outcome: :accept}`, `%{outcome: :reject, outcome_reason: "..."}`,
   `%{outcome: :no_match}`, `%{status: :skipped}` on a duplicate, …), NOT the raw
   `%MailglassInbound.Mailbox{}` outcome atom. Keeping the real seam's return as
@@ -176,7 +176,7 @@ defmodule MailglassInbound.Test.Ingress do
     self-signed `:config`, so you only pass it to override (e.g. to sign against
     your own credentials/key). `:postmark` has no fixture config and requires
     `config: %{basic_auth: {user, pass}}` AND a matching `authorization` header.
-    For `:ses`, `s3_fetcher:` defaults to `MailglassInbound.S3Fetcher.Fake` if absent.
+    For `:ses`, `s3_fetcher:` defaults to MailglassInbound.S3Fetcher.Fake if absent.
   - `:headers` — request headers. For `:postmark` (the fixture JSON body carries
     none) pass the `{"authorization", "Basic …"}` header matching `:config`'s
     `basic_auth`. For `:sendgrid`/`:mailgun` the fixture already supplies the

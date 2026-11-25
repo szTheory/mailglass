@@ -259,17 +259,21 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   test "git runtime rules do not conceal the retired finalize-phase extension paths" do
-    assert ignored?(".gsd/gsd.db")
-    assert ignored?(".gsd/exec/probe")
-    assert ignored?(".gsd/extensions/other/index.ts")
-    refute ignored?(".gsd/extensions/finalize-phase/index.ts")
-    refute ignored?(".gsd/extensions/finalize-phase/extension-manifest.json")
+    repo = clone_repository!()
+
+    assert ignored?(repo, ".gsd/gsd.db")
+    assert ignored?(repo, ".gsd/exec/probe")
+    assert ignored?(repo, ".gsd/extensions/other/index.ts")
+    refute ignored?(repo, ".gsd/extensions/finalize-phase/index.ts")
+    refute ignored?(repo, ".gsd/extensions/finalize-phase/extension-manifest.json")
   end
 
   test "git ignores the canonical GSD lifecycle lock while planning proof stays visible" do
-    assert ignored?(".planning/milestone.lock")
-    refute ignored?(".planning/milestone-lock-proof.json")
-    refute ignored?(".planning/release-target.json")
+    repo = clone_repository!()
+
+    assert ignored?(repo, ".planning/milestone.lock")
+    refute ignored?(repo, ".planning/milestone-lock-proof.json")
+    refute ignored?(repo, ".planning/release-target.json")
   end
 
   test "retired extension rows preserve removal provenance and name the retained replacement" do
@@ -1316,9 +1320,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
-  defp ignored?(path) do
+  defp ignored?(repo, path) do
     {_output, status} =
-      System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
+      System.cmd("git", ["check-ignore", "-q", path], cd: repo, stderr_to_stdout: true)
 
     status == 0
   end

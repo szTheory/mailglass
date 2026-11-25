@@ -33,7 +33,8 @@ defmodule Storybook.Foundations do
         <code>.mg-admin-root</code> shell root. phoenix_storybook only applies CSS
         <em>classes</em>, never <code>data-theme</code>, so every theme-sensitive primitive sets
         <code>data-theme</code> at the <strong>template level</strong> per variation. No
-        class&rarr;data-theme CSS alias is added anywhere (that would trip TokenParityTest).
+        CSS alias from <code>class</code> to <code>data-theme</code> is added anywhere (that would
+        trip TokenParityTest).
       </p>
 
       <h2>Brand palette</h2>

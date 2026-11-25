@@ -17,7 +17,9 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
                      )
 
   setup_all do
-    tmp_root = Path.join(System.tmp_dir!(), "mailglass-brand-payload-#{System.unique_integer([:positive])}")
+    tmp_root =
+      Path.join(System.tmp_dir!(), "mailglass-brand-payload-#{System.unique_integer([:positive])}")
+
     File.mkdir_p!(tmp_root)
 
     unpacked =
@@ -44,7 +46,9 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
     {:ok, unpacked: unpacked}
   end
 
-  test "actual tarballs match reviewed package goldens and every golden path is digest-covered", %{unpacked: unpacked} do
+  test "actual tarballs match reviewed package goldens and every golden path is digest-covered", %{
+    unpacked: unpacked
+  } do
     for {package, _dir, _publish?} <- @packages do
       actual = package_files(Map.fetch!(unpacked, package))
       golden = read_golden(package)
@@ -53,12 +57,17 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
              "#{package} actual unpacked Hex payload differs from .planning/publish/#{package}-files.expected"
 
       uncovered = Enum.reject(golden, &digest_covered?(package, &1))
-      assert uncovered == [], "release content digest does not select #{package} paths: #{inspect(uncovered)}"
-      assert Enum.filter(actual, &forbidden_path?/1) == [], "#{package} ships forbidden source/evidence paths"
+
+      assert uncovered == [],
+             "release content digest does not select #{package} paths: #{inspect(uncovered)}"
+
+      assert Enum.filter(actual, &forbidden_path?/1) == [],
+             "#{package} ships forbidden source/evidence paths"
     end
   end
 
-  test "the actual Admin tarball contains exactly the pin-bound fonts, OFL texts, logo and favicon", %{unpacked: unpacked} do
+  test "the actual Admin tarball contains exactly the pin-bound fonts, OFL texts, logo and favicon",
+       %{unpacked: unpacked} do
     admin_root = Map.fetch!(unpacked, "mailglass_admin")
     actual = package_files(admin_root)
     actual_brand = Enum.filter(actual, &brand_class_path?/1) |> MapSet.new()
@@ -70,24 +79,41 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
       |> Enum.map(&String.replace_prefix(&1["to"], "mailglass_admin/", ""))
       |> MapSet.new()
 
-    assert pinned_font_rows == MapSet.new(Enum.map(@font_files ++ @ofl_files, &"priv/static/fonts/#{&1}"))
+    assert pinned_font_rows ==
+             MapSet.new(Enum.map(@font_files ++ @ofl_files, &"priv/static/fonts/#{&1}"))
+
     assert actual_brand == @admin_brand_files
     assert Enum.count(actual, &String.ends_with?(&1, ".woff2")) == 6
     assert Enum.count(actual, &String.ends_with?(&1, ".txt")) == 3
 
-    for row <- Enum.filter(pin["shipped"], &MapSet.member?(pinned_font_rows, String.replace_prefix(&1["to"], "mailglass_admin/", ""))) do
+    for row <-
+          Enum.filter(
+            pin["shipped"],
+            &MapSet.member?(
+              pinned_font_rows,
+              String.replace_prefix(&1["to"], "mailglass_admin/", "")
+            )
+          ) do
       path = String.replace_prefix(row["to"], "mailglass_admin/", "")
       assert_pinned_bytes!(Path.join(admin_root, path), row)
     end
 
     assert_pin_copy!(admin_root, "priv/static/favicon.svg", pin, "brandbook/v2/favicon.svg")
-    assert_pin_copy!(admin_root, "priv/static/mailglass-logo.svg", pin, "brandbook/v2/mailglass-lockup-light.svg")
+
+    assert_pin_copy!(
+      admin_root,
+      "priv/static/mailglass-logo.svg",
+      pin,
+      "brandbook/v2/mailglass-lockup-light.svg"
+    )
   end
 
   test "core and Inbound ship no brand fonts or source artwork", %{unpacked: unpacked} do
     for package <- ["mailglass", "mailglass_inbound"] do
       paths = package_files(Map.fetch!(unpacked, package))
-      assert Enum.filter(paths, &brand_class_path?/1) == [], "#{package} unexpectedly contains brand runtime payload"
+
+      assert Enum.filter(paths, &brand_class_path?/1) == [],
+             "#{package} unexpectedly contains brand runtime payload"
     end
   end
 
@@ -131,12 +157,14 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
 
   defp digest_covered?("mailglass_admin", path) do
     String.starts_with?(path, ["lib/", "priv/static/", "docs/"]) or
-      path == ".formatter.exs" or String.starts_with?(path, ["mix.exs", "README", "CHANGELOG", "LICENSE"])
+      path == ".formatter.exs" or
+      String.starts_with?(path, ["mix.exs", "README", "CHANGELOG", "LICENSE"])
   end
 
   defp digest_covered?("mailglass_inbound", path) do
     String.starts_with?(path, ["lib/", "docs/"]) or
-      path == ".formatter.exs" or String.starts_with?(path, ["mix.exs", "README", "CHANGELOG", "LICENSE"])
+      path == ".formatter.exs" or
+      String.starts_with?(path, ["mix.exs", "README", "CHANGELOG", "LICENSE"])
   end
 
   defp brand_class_path?(path) do
@@ -150,7 +178,8 @@ defmodule Mailglass.Publish.BrandAssetAllowlistTest do
       String.ends_with?(String.downcase(path), [".zip", ".ttf", ".otf"])
   end
 
-  defp valid_admin_brand_set?(paths), do: MapSet.new(Enum.filter(paths, &brand_class_path?/1)) == @admin_brand_files
+  defp valid_admin_brand_set?(paths),
+    do: MapSet.new(Enum.filter(paths, &brand_class_path?/1)) == @admin_brand_files
 
   defp assert_pinned_bytes!(path, row) do
     bytes = File.read!(path)

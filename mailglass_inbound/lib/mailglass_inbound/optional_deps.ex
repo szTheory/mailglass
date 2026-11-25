@@ -102,9 +102,9 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   The SES inbound provider fetches the raw MIME body of a received
   message from the adopter's S3 bucket (the SES receipt-rule S3 action stores
   the message at `s3://{bucketName}/{objectKey}`). The real fetch implementation
-  (`MailglassInbound.S3Fetcher.ExAwsS3`) routes **all** `ExAws`/`ExAws.S3`
+  (MailglassInbound.S3Fetcher.ExAwsS3) routes **all** `ExAws`/`ExAws.S3`
   access through this gateway; the fake-adapter-first test default
-  (`MailglassInbound.S3Fetcher.Fake`) needs no AWS dependency at all.
+  (MailglassInbound.S3Fetcher.Fake) needs no AWS dependency at all.
 
   ## STACK-lock departure
 

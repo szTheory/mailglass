@@ -533,12 +533,23 @@ defmodule MailglassAdmin.Phase182WordsContractTest do
 
   describe "detectors have teeth (fail-first proof)" do
     test "the rendered copy detector enforces lowercase mailglass prose" do
-      for planted <- ["Mailglass is a library", "# Mailglass", "This is Mailglass.", "Mailglass's", "MAILGLASS"] do
+      for planted <- [
+            "Mailglass is a library",
+            "# Mailglass",
+            "This is Mailglass.",
+            "Mailglass's",
+            "MAILGLASS"
+          ] do
         assert :brand_name in rules(scan_text("planted", planted)), planted
         assert :brand_name in rules(scan_html("planted", "<p>#{planted}</p>", nil)), planted
       end
 
-      for clean <- ["mailglass is lowercase", "MailglassAdmin.Auth", "Mailglass-Mailable", "X-Mailglass-Foo"] do
+      for clean <- [
+            "mailglass is lowercase",
+            "MailglassAdmin.Auth",
+            "Mailglass-Mailable",
+            "X-Mailglass-Foo"
+          ] do
         refute :brand_name in rules(scan_text("clean", clean)), clean
       end
     end

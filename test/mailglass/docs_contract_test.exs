@@ -823,18 +823,24 @@ defmodule Mailglass.DocsContractTest do
                "sibling constraint"
     end
 
-    @tag :skip
     test "phase 38 prepublish proof bundle captures package, docs, and sibling release truth" do
-      # SKIPPED: the original Phase 38 prepublish-proof artifact at
-      # `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md`
-      # was archived in commit 8e80600 ("chore: archive phase directories from
-      # completed milestones"). Phase 044.5 (v1.0/v1.1 release ceremony)
-      # produces an equivalent artifact at
-      # `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`
-      # but its section structure differs from Phase 38's, so a 1:1 assertion
-      # rewrite is out of scope for this CI-triage commit. Phase 51 closeout
-      # should re-pin these assertions to the v1.0/1.1 release-record format.
-      :ok
+      proof =
+        File.read!(
+          ".planning/milestones/v1.0-phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md"
+        )
+
+      for heading <- [
+            "## Tarball/package truth",
+            "## HexDocs input truth",
+            "## Sibling release truth",
+            "## Release rehearsal evidence"
+          ] do
+        assert proof =~ heading
+      end
+
+      assert proof =~ ".release-please-manifest.json"
+      assert proof =~ "mailglass_admin_publish_pin"
+      assert proof =~ "mix docs --warnings-as-errors"
     end
 
     @tag :phase_164_lifecycle_contract

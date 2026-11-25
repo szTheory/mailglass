@@ -209,8 +209,7 @@ subordinate to this README path:
 - testing harness, process-local assertion behavior, and one-assertion-per-drive:
   [`docs/inbound-testing.md`](docs/inbound-testing.md)
 - compatibility and deprecation posture for stable versus internal/deferred
-  inbound surfaces:
-  [`../guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md)
+  inbound surfaces: [compatibility and deprecation policy](https://hexdocs.pm/mailglass/compatibility-and-deprecations.html)
 
 ## Provider Notes
 

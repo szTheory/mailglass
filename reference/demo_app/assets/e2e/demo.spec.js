@@ -3,16 +3,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { resolveEvidenceOutputPath } = require("../scripts/evidence-output-path.cjs");
 
-const phase172EvidenceDir = process.env.PHASE174_EVIDENCE_DIR
-  ? resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR)
-  : path.resolve(
-      __dirname,
-      "../../../../.planning/milestones/v2.9-phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
-    );
-
-test.beforeAll(() => {
-  fs.mkdirSync(phase172EvidenceDir, { recursive: true });
-});
+function evidenceDirectory(testInfo) {
+  return process.env.PHASE174_EVIDENCE_DIR
+    ? resolveEvidenceOutputPath(process.env.PHASE174_EVIDENCE_DIR)
+    : testInfo.outputDir;
+}
 
 // PreviewLive mints a new render_nonce on connected mount, so the preview-iframe-<nonce>
 // element is replaced when the socket joins; any inline style written before that is lost.
@@ -21,7 +16,7 @@ async function gotoPreview(page, url) {
   await page.locator("[data-phx-main].phx-connected").waitFor();
 }
 
-async function captureEmailPreview(page, frameSelector, filename, expectedWidth) {
+async function captureEmailPreview(page, frameSelector, filename, expectedWidth, outputDir) {
   const frame = page.locator(frameSelector);
   await expect(frame).toBeVisible();
   await frame.evaluate((iframe, width) => {
@@ -31,22 +26,14 @@ async function captureEmailPreview(page, frameSelector, filename, expectedWidth)
   expect(bounds).not.toBeNull();
   expect(Math.abs(bounds.width - expectedWidth)).toBeLessThanOrEqual(1);
   await page.screenshot({
-    path: path.join(phase172EvidenceDir, filename),
+    path: path.join(outputDir, filename),
     clip: bounds,
   });
 }
 
-test.describe("mailglass demo evidence", () => {
-  test.beforeEach(async ({ request }) => {
-    const response = await request.post("/demo/evidence/reset", {
-      headers: {
-        "x-mailglass-demo-reset-token": process.env.DEMO_EVIDENCE_RESET_TOKEN || "",
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-  });
-
-  test("built-in unsubscribe pages keep their copy within narrow viewports", async ({ page }) => {
+  test("built-in unsubscribe pages keep their copy within narrow viewports", async ({ page }, testInfo) => {
+    const phase172EvidenceDir = evidenceDirectory(testInfo);
+    fs.mkdirSync(phase172EvidenceDir, { recursive: true });
     const states = [
       {
         name: "valid",
@@ -66,48 +53,76 @@ test.describe("mailglass demo evidence", () => {
       },
     ];
 
-    for (const state of states) {
-      for (const width of [1280, 320, 160]) {
-        await page.setViewportSize({ width, height: 900 });
-        await page.goto(`/dev/unsubscribe/${state.name}`);
-        await expect(page.getByRole("heading", { name: state.heading, exact: true })).toBeVisible();
-        await expect(page.getByText(state.copy, { exact: true })).toBeVisible();
-        if (state.nextStep) {
-          await expect(page.getByText(state.nextStep, { exact: true })).toBeVisible();
-        }
+    for (const theme of ["light", "dark"]) {
+      await page.emulateMedia({ colorScheme: theme });
 
-        const geometry = await page.evaluate(() => {
-          const documentElement = document.documentElement;
-          const main = document.querySelector("main");
-          const paragraphs = Array.from(document.querySelectorAll("main p"));
+      for (const state of states) {
+        for (const width of [1280, 320, 160]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.goto(`/dev/unsubscribe/${state.name}`);
+          await expect(page.getByRole("heading", { name: state.heading, exact: true })).toBeVisible();
+          await expect(page.getByText(state.copy, { exact: true })).toBeVisible();
+          if (state.nextStep) {
+            await expect(page.getByText(state.nextStep, { exact: true })).toBeVisible();
+          }
 
-          return {
-            scrollWidth: documentElement.scrollWidth,
-            viewportWidth: documentElement.clientWidth,
-            mainLeft: main.getBoundingClientRect().left,
-            mainRight: main.getBoundingClientRect().right,
-            clippedParagraphs: paragraphs.filter(
-              (paragraph) => paragraph.scrollWidth > paragraph.clientWidth + 1,
-            ).length,
-          };
-        });
+          const geometry = await page.evaluate(() => {
+            const documentElement = document.documentElement;
+            const main = document.querySelector("main");
+            const paragraphs = Array.from(document.querySelectorAll("main p"));
+            const body = getComputedStyle(document.body);
+            const brand = getComputedStyle(document.querySelector(".brand"));
+            const heading = getComputedStyle(document.querySelector("h1"));
 
-        expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewportWidth);
-        expect(geometry.mainLeft).toBeGreaterThanOrEqual(0);
-        expect(geometry.mainRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
-        expect(geometry.clippedParagraphs).toBe(0);
-
-        if (width === 1280 || width === 320) {
-          await page.screenshot({
-            path: path.join(
-              phase172EvidenceDir,
-              `unsubscribe-${state.name}-${width}.png`,
-            ),
-            fullPage: true,
+            return {
+              scrollWidth: documentElement.scrollWidth,
+              viewportWidth: documentElement.clientWidth,
+              mainLeft: main.getBoundingClientRect().left,
+              mainRight: main.getBoundingClientRect().right,
+              clippedParagraphs: paragraphs.filter(
+                (paragraph) => paragraph.scrollWidth > paragraph.clientWidth + 1,
+              ).length,
+              background: body.backgroundColor,
+              text: body.color,
+              brand: brand.color,
+              heading: heading.color,
+            };
           });
+
+          expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+          expect(geometry.mainLeft).toBeGreaterThanOrEqual(0);
+          expect(geometry.mainRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+          expect(geometry.clippedParagraphs).toBe(0);
+          expect(geometry.background).toBe(theme === "dark" ? "rgb(29, 23, 19)" : "rgb(246, 241, 232)");
+          expect(geometry.text).toBe(theme === "dark" ? "rgb(243, 238, 234)" : "rgb(42, 29, 23)");
+          expect(geometry.brand).toBe(theme === "dark" ? "rgb(185, 173, 163)" : "rgb(102, 88, 80)");
+          if (state.name !== "valid") {
+            expect(geometry.heading).toBe(theme === "dark" ? "rgb(240, 154, 147)" : "rgb(179, 38, 30)");
+          }
+
+          if (theme === "light" && (width === 1280 || width === 320)) {
+            await page.screenshot({
+              path: path.join(
+                phase172EvidenceDir,
+                `unsubscribe-${state.name}-${width}.png`,
+              ),
+              fullPage: true,
+            });
+          }
         }
       }
     }
+  });
+
+
+test.describe("mailglass demo evidence", () => {
+  test.beforeEach(async ({ request }) => {
+    const response = await request.post("/demo/evidence/reset", {
+      headers: {
+        "x-mailglass-demo-reset-token": process.env.DEMO_EVIDENCE_RESET_TOKEN || "",
+      },
+    });
+    expect(response.ok()).toBeTruthy();
   });
 
   test("dashboard links to preview and operator surfaces", async ({ page }) => {
@@ -137,7 +152,9 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("preview-email-menu-trigger")).toContainText("AccountMailer");
   });
 
-  test("preview distinguishes the public component and AtlasDesk HTML authoring paths", async ({ page }) => {
+  test("preview distinguishes the public component and AtlasDesk HTML authoring paths", async ({ page }, testInfo) => {
+    const phase172EvidenceDir = evidenceDirectory(testInfo);
+    fs.mkdirSync(phase172EvidenceDir, { recursive: true });
     await page.setViewportSize({ width: 1024, height: 900 });
     await gotoPreview(page, "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375");
 
@@ -185,7 +202,7 @@ test.describe("mailglass demo evidence", () => {
       "Illustration of the May 2026 invoice summary for Northstar Logistics",
     );
     await page.setViewportSize({ width: 1024, height: 1600 });
-    await captureEmailPreview(page, frameSelector, "invoice-preview-375.png", 375);
+    await captureEmailPreview(page, frameSelector, "invoice-preview-375.png", 375, phase172EvidenceDir);
 
     const previewOrder = await page.locator(frameSelector).evaluate((iframe) => {
       const document = iframe.contentDocument;
@@ -257,7 +274,7 @@ test.describe("mailglass demo evidence", () => {
     // the iframe itself stays at 320px, the rendered-email width under test.
     await page.setViewportSize({ width: 1024, height: 1600 });
     await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
-    await captureEmailPreview(page, frameSelector, "invoice-preview-320.png", 320);
+    await captureEmailPreview(page, frameSelector, "invoice-preview-320.png", 320, phase172EvidenceDir);
 
     // A 2× zoom on the rendered email keeps the same live text and link available.
     await emailFrame.locator("html").evaluate((html) => {

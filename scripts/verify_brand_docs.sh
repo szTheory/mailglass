@@ -42,11 +42,11 @@ MIX_ENV=dev mix docs --warnings-as-errors --output "$output_root/core"
 printf '[verify_brand_docs] core docs build: %ss\n' "$((SECONDS - started))"
 
 started=$SECONDS
-(cd mailglass_admin && MIX_ENV=dev mix docs --output "$output_root/admin")
+(cd mailglass_admin && MIX_ENV=dev mix docs --warnings-as-errors --output "$output_root/admin")
 printf '[verify_brand_docs] admin docs build: %ss\n' "$((SECONDS - started))"
 
 started=$SECONDS
-(cd mailglass_inbound && MIX_ENV=dev mix docs --output "$output_root/inbound")
+(cd mailglass_inbound && MIX_ENV=dev mix docs --warnings-as-errors --output "$output_root/inbound")
 printf '[verify_brand_docs] inbound docs build: %ss\n' "$((SECONDS - started))"
 
 started=$SECONDS

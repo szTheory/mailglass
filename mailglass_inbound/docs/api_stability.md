@@ -98,7 +98,7 @@ testing surface; they are not internal and they are not runtime APIs:
   and execute write path and captures the outcome in the test process. Drive
   routing through the `:router` option with a compiled `use
   MailglassInbound.Router` module. The internal
-  `MailglassInbound.Router.Route` struct is not part of the testing contract.
+  MailglassInbound.Router.Route struct is not part of the testing contract.
 - `MailglassInbound.TestAssertions` - `assert_inbound_*` matchers reading the
   captured outcome.
 - `MailglassInbound.MailboxCase` - the `ExUnit.CaseTemplate` adopters `use`,
@@ -112,20 +112,20 @@ or used by first-party packages, but they are implementation details:
 
 - `MailglassInbound.OptionalDeps`
 - `MailglassInbound.OptionalDeps.Oban`
-- `MailglassInbound.Execution`
-- `MailglassInbound.Execution.Worker`
-- `MailglassInbound.Ingress.Provider`
-- `MailglassInbound.Ingress.Providers.Postmark`
-- `MailglassInbound.Ingress.Providers.Sendgrid`
-- `MailglassInbound.Ingress.Providers.Mailgun`
-- `MailglassInbound.Ingress.Providers.SES`
-- `MailglassInbound.Ingress.Persist`
+- MailglassInbound.Execution
+- MailglassInbound.Execution.Worker
+- MailglassInbound.Ingress.Provider
+- MailglassInbound.Ingress.Providers.Postmark
+- MailglassInbound.Ingress.Providers.Sendgrid
+- MailglassInbound.Ingress.Providers.Mailgun
+- MailglassInbound.Ingress.Providers.SES
+- MailglassInbound.Ingress.Persist
 - package-local ingress pipeline orchestration
 - `MailglassInbound.Internal.Doctor`
-- `MailglassInbound.Internal.Replay`
+- MailglassInbound.Internal.Replay
 - `MailglassInbound.Internal.Prune`
 - `MailglassInbound.Prune.Worker`
-- `MailglassInbound.Router.Route`
+- MailglassInbound.Router.Route
 - package-local persistence modules under `MailglassInbound.InboundRecords.*`
 - repo and schema helpers used to stamp package-owned storage
 - queue names, retry tuning, worker args, direct Oban job shapes, and direct
@@ -140,7 +140,7 @@ adopter code. Availability checks through this module are supported, but worker
 modules, Oban job structs, queue names, and enqueue internals are not part of
 the stable contract. These details are not part of the stable contract.
 
-`MailglassInbound.Ingress.Provider` and the
+MailglassInbound.Ingress.Provider and the
 `MailglassInbound.Ingress.Providers.*` modules are provider implementation
 support only. Provider support is stable through `MailglassInbound.Ingress.Plug`
 options and behavior, not through provider module APIs.
@@ -219,7 +219,7 @@ Documented guarantees:
   control-plane, replay, and S3 fetch outcomes through documented response
   semantics
 - keeps provider modules internal; adopters configure the plug, not
-  `MailglassInbound.Ingress.Provider` or provider module APIs
+  MailglassInbound.Ingress.Provider or provider module APIs
 
 Postmark and Mailgun signed payloads use verify-first request handling.
 SendGrid raw MIME ingress uses basic auth and raw MIME parsing. SES SNS ingress

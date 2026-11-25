@@ -200,7 +200,7 @@ config :mailglass_inbound, :ses,
   s3_fetcher: MailglassInbound.S3Fetcher.ExAwsS3
 ```
 
-`MailglassInbound.S3Fetcher.ExAwsS3` is the real adapter that calls `ExAws.S3.get_object/2`
+MailglassInbound.S3Fetcher.ExAwsS3 is the real adapter that calls `ExAws.S3.get_object/2`
 to fetch the message body. It is gated behind the optional deps above — the config key is
 `nil` (and therefore resolves to the Fake adapter) unless you set it explicitly.
 
@@ -274,7 +274,7 @@ Client-side KMS encryption (where encryption happens before upload using the AWS
 ## Testing in Development
 
 In the test and development environments, the `s3_fetcher` key defaults to the Fake adapter
-(`MailglassInbound.S3Fetcher.Fake`), which returns a pre-configured raw MIME body without
+(MailglassInbound.S3Fetcher.Fake), which returns a pre-configured raw MIME body without
 making any real S3 calls. You do not need AWS credentials to run the test suite.
 
 Use the built-in fixture helper to construct test payloads:
@@ -296,7 +296,7 @@ payload = MailglassInbound.Fixtures.build_ses_sns_payload(
 
 The Fake adapter is wired by default when no `s3_fetcher` is configured in the test
 environment. In production, the `s3_fetcher` must be set explicitly to
-`MailglassInbound.S3Fetcher.ExAwsS3`.
+MailglassInbound.S3Fetcher.ExAwsS3.
 
 ## Persistence Semantics
 

@@ -2,7 +2,7 @@ defmodule MailglassInbound.RateLimiter.TableOwner do
   @moduledoc """
   Owns the `:mailglass_inbound_rate_limit` ETS table and the small amount of
   work that must be serialized: missing-key admission, bounded contention
-  fallback, and idle sweeping. `Mailglass.RateLimiter.AtomicBucket` keeps the
+  fallback, and idle sweeping. Mailglass.RateLimiter.AtomicBucket keeps the
   normal path as a fixed-point compare-and-swap loop; only exhausted callers
   enter this package-local owner mailbox.
 
