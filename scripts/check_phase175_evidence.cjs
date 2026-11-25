@@ -589,7 +589,7 @@ function validateAxeReceipt(report, {
     incomplete_count: report.incomplete.length,
     unapproved_violation_count: comparison.metrics.unapproved,
     untriaged_incomplete_count: comparison.metrics.untriaged,
-    incomplete_disposition: "retained and independently triaged; never counted as violations or as a clean pass"
+    incomplete_disposition: "retained and independently triaged, or covered by this run's passing rendered contrast measurement; never counted as violations or as a clean pass"
   };
 }
 

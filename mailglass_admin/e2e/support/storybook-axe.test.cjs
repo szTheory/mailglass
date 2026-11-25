@@ -291,6 +291,28 @@ test("compareFindings requires exact triage for every incomplete fingerprint", (
   assertInvalidComparison(report, approvalFor([], [{ ...triage, evidence: "unrelated-run" }]), /independent reviewed run/i);
 });
 
+test("compareFindings accepts a contrast incomplete only when this run measured every target as passing", () => {
+  const incomplete = finding({ target: [[".badge"], [".title"]] });
+  const measured = target => ({ target, ratio: 4.6, minimum: 4.5, font_size: 14, font_weight: 400, matches: 1 });
+  const report = validReport({ supplemental: supplement(), incomplete: [incomplete] });
+  report.supplemental[0].contrasts = [measured(".badge"), measured(".title")];
+  assert.equal(compareFindings(report, approvalFor()).valid, true);
+
+  for (const change of [
+    report => delete report.supplemental,
+    report => report.supplemental[0].contrasts.pop(),
+    report => report.supplemental[0].contrasts[1].ratio = 4.499,
+    report => Object.assign(report.supplemental[0].contrasts[1], { ratio: 3.5, minimum: 3 }),
+    report => report.supplemental[1].contrasts = report.supplemental[0].contrasts.splice(0),
+    report => report.incomplete[0].target = [[".badge", ".title"]],
+    report => report.incomplete[0].rule_id = "aria-hidden-focus"
+  ]) {
+    const bad = structuredClone(report);
+    change(bad);
+    assertInvalidComparison(bad, approvalFor(), /untriaged/i);
+  }
+});
+
 test("compareFindings retains independently identified historical and current triage runs", () => {
   const incomplete = finding({ rule_id: "color-contrast" });
   const triage = {
