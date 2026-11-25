@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><%= if @state == :valid, do: "Unsubscribe", else: "Unsubscribe link" %></title>
     <style>
+      :root { color-scheme: light dark; }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        background: #F8FBFD;
-        color: #0D1B2A;
-        font-family: Inter, system-ui, sans-serif;
+        background: #F6F1E8;
+        color: #2A1D17;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 16px;
         font-weight: 400;
         line-height: 1.5;
@@ -23,7 +24,7 @@
       }
       .brand {
         margin: 0 0 16px;
-        color: #5C6B7A;
+        color: #665850;
         font-size: 14px;
         font-weight: 400;
         line-height: 1.4;
@@ -38,9 +39,14 @@
         overflow-wrap: break-word;
         word-wrap: break-word;
       }
-      .state-error h1 { color: #B42318; }
+      .state-error h1 { color: #B3261E; }
       p { margin: 0 0 16px; overflow-wrap: break-word; word-wrap: break-word; }
       strong { font-weight: 700; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #1D1713; color: #F3EEEA; }
+        .brand { color: #B9ADA3; }
+        .state-error h1 { color: #F09A93; }
+      }
       @media (max-width: 600px) {
         main { margin: 24px auto; padding: 16px; }
       }

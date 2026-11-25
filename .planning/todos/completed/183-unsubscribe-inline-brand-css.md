@@ -1,3 +1,8 @@
+---
+completed: 2026-11-17
+status: completed
+---
+
 # Replace legacy inline brand CSS in the unsubscribe page
 
 ## Owner
@@ -24,3 +29,12 @@ task updates this surface and its recipient-facing rendering tests together.
   checks without changing redirect or protocol POST behavior.
 - Remove the file-scoped `overused-font` exception through the `impeccable`
   CLI and confirm the scoped detector run is clean.
+
+## Completion
+
+Replaced the remaining inline legacy font and colors with approved brand roles,
+verified the rendered unsubscribe page in light and dark themes at 1280px,
+320px, and 160px, removed the scoped Inter exception through the Impeccable
+CLI, and confirmed the scoped typography detector reports zero primary
+anti-patterns. The browser and source checks passed; the only detector advisory
+is the existing 28px H1 size recommendation.

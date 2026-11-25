@@ -3,16 +3,6 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": [
-      {
-        "rule": "overused-font",
-        "value": "inter",
-        "files": [
-          "lib/mailglass/compliance/unsubscribe_html/**"
-        ],
-        "createdAt": "2026-11-16T17:17:10.600Z",
-        "reason": "The v2 source retires Inter (brandbook/v2/brand.json); remaining v1 inline CSS is limited to this subtree and tracked in .planning/todos/pending/183-unsubscribe-inline-brand-css.md."
-      }
-    ]
+    "ignoreValues": []
   }
 }

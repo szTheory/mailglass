@@ -4,7 +4,14 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
   @repo_root Path.expand("../..", __DIR__)
   @design_path Path.join(@repo_root, "DESIGN.md")
   @guide_path Path.join(@repo_root, "mailglass_admin/docs/design-system.md")
-  @todo_path Path.join(@repo_root, ".planning/todos/pending/183-unsubscribe-inline-brand-css.md")
+  @pending_todo_path Path.join(
+                       @repo_root,
+                       ".planning/todos/pending/183-unsubscribe-inline-brand-css.md"
+                     )
+  @completed_todo_path Path.join(
+                         @repo_root,
+                         ".planning/todos/completed/183-unsubscribe-inline-brand-css.md"
+                       )
   @owner_dir Path.join(@repo_root, ".planning/research/brand-v2-adoption/owner-signoff")
   @claude_patch Path.join(@owner_dir, "CLAUDE.md.patch")
   @product_patch Path.join(@owner_dir, "PRODUCT.md.patch")
@@ -241,22 +248,16 @@ defmodule Mailglass.Scripts.BrandDesignMdTest do
     refute guide =~ "Mailglass Admin"
   end
 
-  test "the Inter exception is scoped to the legacy unsubscribe page and has a follow-up" do
+  test "the unsubscribe page needs no Inter exception and its follow-up is closed" do
     config = json!(".impeccable/config.json")
-    ignores = config["detector"]["ignoreValues"]
-    assert length(ignores) == 1
-    [ignore] = ignores
-    assert ignore["rule"] == "overused-font"
-    assert ignore["value"] == "inter"
-    assert ignore["files"] == ["lib/mailglass/compliance/unsubscribe_html/**"]
-    assert ignore["reason"] =~ "brandbook/v2/brand.json"
-    assert ignore["reason"] =~ ~r/retired|retires/
-    assert ignore["reason"] =~ ".planning/todos/pending/183-unsubscribe-inline-brand-css.md"
+    assert config["detector"]["ignoreValues"] == []
 
-    todo = File.read!(@todo_path)
-    assert todo =~ "Owner"
-    assert todo =~ "Exit condition"
-    assert todo =~ "lib/mailglass/compliance/unsubscribe_html/"
+    template =
+      File.read!(Path.join(@repo_root, "lib/mailglass/compliance/unsubscribe_html/state.html.heex"))
+
+    refute template =~ "Inter"
+    refute File.exists?(@pending_todo_path)
+    assert File.exists?(@completed_todo_path)
   end
 
   test "paired owner patches apply-check together while canonical files remain pending" do

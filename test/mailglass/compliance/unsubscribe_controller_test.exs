@@ -138,7 +138,20 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<meta charset="utf-8")
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
-      assert html =~ "font-family: Inter, system-ui, sans-serif;"
+      assert html =~ "color-scheme: light dark;"
+
+      assert html =~
+               "font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;"
+
+      assert html =~ "background: #F6F1E8;"
+      assert html =~ "color: #2A1D17;"
+      assert html =~ "color: #665850;"
+      assert html =~ "background: #1D1713; color: #F3EEEA;"
+      assert html =~ "color: #B9ADA3;"
+      refute html =~ "Inter"
+      refute html =~ "#F8FBFD"
+      refute html =~ "#0D1B2A"
+      refute html =~ "#5C6B7A"
       assert html =~ "font-size: 14px;"
       assert html =~ "font-weight: 400;"
       assert html =~ "margin: 0 0 16px;"
@@ -212,7 +225,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
       assert html =~ ~s(<main class="state-error">)
       assert html =~ ".state-error h1"
-      assert html =~ "color: #B42318;"
+      assert html =~ "color: #B3261E;"
       assert html =~ "This unsubscribe link has expired."
 
       assert html =~
@@ -234,7 +247,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
       assert html =~ ~s(<main class="state-error">)
       assert html =~ ".state-error h1"
-      assert html =~ "color: #B42318;"
+      assert html =~ "color: #B3261E;"
       assert html =~ "This unsubscribe link is not valid."
 
       assert html =~
