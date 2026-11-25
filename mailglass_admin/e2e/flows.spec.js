@@ -2574,7 +2574,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     page.on("websocket", socket => actualWebSockets.push(socket.url()));
     const lock = fs.readFileSync(path.resolve(__dirname, "../mix.lock"), "utf8");
     const liveViewVersion = lock.match(/^\s+"phoenix_live_view": \{:hex, :phoenix_live_view, "([^"]+)"/m)?.[1];
-    expect(liveViewVersion).toBe("1.2.13");
+    expect(liveViewVersion).toBe("1.2.15");
 
     const cases = [];
     await openOperator(page);

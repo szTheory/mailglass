@@ -78,7 +78,7 @@ test.describe("judgment gates (armed in Phase 119)", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOverview(page);
 
-    const sidebar = page.getByRole("navigation", { name: "Mailglass sections" }).first();
+    const sidebar = page.getByRole("navigation", { name: "mailglass sections" }).first();
 
     // Activity must NOT be the active (aria-current=page) item on the Overview route.
     // nav_link emits aria-current={@active && "page"}: when inactive, Phoenix OMITS the

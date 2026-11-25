@@ -119,7 +119,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors",
         "docs/inbound-operator.md",
         "docs/inbound-testing.md",
-        "../guides/compatibility-and-deprecations.md"
+        "https://hexdocs.pm/mailglass/compatibility-and-deprecations.html"
       ],
       forbidden: [
         "mix mailglass.install",
@@ -374,7 +374,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "async: false",
         "The stable provider lanes in this slice are `:postmark` and `:sendgrid`.",
         "not part of the current stable provider contract",
-        "../../guides/compatibility-and-deprecations.md"
+        "https://hexdocs.pm/mailglass/compatibility-and-deprecations.html"
       ],
       forbidden: [
         "mix mailglass.install",

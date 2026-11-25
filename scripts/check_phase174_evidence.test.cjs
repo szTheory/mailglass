@@ -147,8 +147,8 @@ function hooksReceipt(runId, condition, identity) {
     proof_boundary: { reset: "authenticated reset endpoint used" },
     source: { path: "mailglass_admin/priv/static/hooks.js", md5: "a".repeat(32) },
     locked_versions: {
-      demo_live_view: "1.1.33",
-      admin_live_view: "1.2.13",
+      demo_live_view: "1.1.34",
+      admin_live_view: "1.2.15",
       phoenix_storybook: "1.2.0",
       demo_playwright: "1.60.0",
       admin_playwright: "1.59.1"

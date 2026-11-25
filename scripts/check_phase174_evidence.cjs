@@ -288,7 +288,7 @@ function collectHookCases(receipt, identity) {
   requireIdentity(receipt.run_identity, identity, "hook");
   requireThat(receipt.proof_boundary?.reset === "authenticated reset endpoint used", "hook receipt did not use this run's authenticated Demo reset");
   requireThat(receipt.source?.path === "mailglass_admin/priv/static/hooks.js" && MD5.test(receipt.source?.md5), "hook source asset identity is missing");
-  requireThat(receipt.locked_versions?.demo_live_view === "1.1.33" && receipt.locked_versions?.admin_live_view === "1.2.13" && receipt.locked_versions?.phoenix_storybook === "1.2.0", "hook receipt has stale locked LiveView or Storybook versions");
+  requireThat(receipt.locked_versions?.demo_live_view === "1.1.34" && receipt.locked_versions?.admin_live_view === "1.2.15" && receipt.locked_versions?.phoenix_storybook === "1.2.0", "hook receipt has stale locked LiveView or Storybook versions");
   requireThat(receipt.locked_versions?.demo_playwright === "1.60.0" && receipt.locked_versions?.admin_playwright === "1.59.1", "hook receipt does not identify both independently locked Playwright clients");
   const responses = receipt.storybook?.hook_asset_responses;
   requireThat(Array.isArray(responses) && responses.length > 0, "Storybook hook asset responses are missing");

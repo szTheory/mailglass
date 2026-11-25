@@ -358,7 +358,7 @@ test.describe("Phase 177 Account scope", () => {
   test("Phase 177 scope group axe", async ({ page }, testInfo) => {
     // Both navigation copies are included on purpose: axe checks duplicate
     // ids across them, and it skips the copy CSS hides.
-    const include = 'nav[aria-label="Mailglass sections"]';
+    const include = 'nav[aria-label="mailglass sections"]';
     const receipts = [];
 
     async function scan(label) {
