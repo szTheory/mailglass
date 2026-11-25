@@ -97,21 +97,25 @@ defmodule Mailglass.Operator.ReplayTargets do
   defp replay_ref(_event), do: nil
 
   defp load_candidate(tenant_id, %Delivery{} = delivery, {:webhook_event_id, webhook_event_id}) do
-    query =
-      from(webhook_event in "mailglass_webhook_events",
-        where: field(webhook_event, :id) == type(^webhook_event_id, Ecto.UUID),
-        select: %{
-          id: field(webhook_event, :id),
-          provider: field(webhook_event, :provider),
-          provider_event_id: field(webhook_event, :provider_event_id),
-          received_at: field(webhook_event, :received_at)
-        },
-        limit: 1
-      )
+    with {:ok, webhook_event_id} <- Ecto.UUID.cast(webhook_event_id) do
+      query =
+        from(webhook_event in "mailglass_webhook_events",
+          where: field(webhook_event, :id) == type(^webhook_event_id, Ecto.UUID),
+          select: %{
+            id: field(webhook_event, :id),
+            provider: field(webhook_event, :provider),
+            provider_event_id: field(webhook_event, :provider_event_id),
+            received_at: field(webhook_event, :received_at)
+          },
+          limit: 1
+        )
 
-    case Repo.one(Tenancy.scope(query, tenant_id)) do
-      webhook_event when is_map(webhook_event) -> candidate(delivery, webhook_event)
-      nil -> nil
+      case Repo.one(Tenancy.scope(query, tenant_id)) do
+        webhook_event when is_map(webhook_event) -> candidate(delivery, webhook_event)
+        nil -> nil
+      end
+    else
+      :error -> nil
     end
   end
 

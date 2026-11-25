@@ -130,6 +130,29 @@ defmodule Mailglass.Operator.ReplayTargetsTest do
                })
     end
 
+    test "ignores malformed webhook UUID metadata instead of raising" do
+      delivery =
+        insert_delivery!(
+          tenant_id: "tenant-a",
+          provider: "postmark",
+          recipient: "malformed@example.com",
+          provider_message_id: "msg-malformed"
+        )
+
+      append_delivery_event!(
+        tenant_id: "tenant-a",
+        delivery_id: delivery.id,
+        type: :webhook_replay_succeeded,
+        metadata: %{"provider" => "postmark", "webhook_event_id" => "demo-replay-wh-001"}
+      )
+
+      assert {:ok, %{status: :unavailable, reason: :missing_replay_linkage, candidates: []}} =
+               ReplayTargets.list_delivery_targets(%{
+                 tenant_id: "tenant-a",
+                 delivery_id: delivery.id
+               })
+    end
+
     test "rejects tenant mismatches before replay-target lookup" do
       delivery =
         insert_delivery!(
