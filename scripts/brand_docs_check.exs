@@ -172,7 +172,7 @@ defmodule Mailglass.BrandDocsCheck do
 
   defp output_html_issues(doc_dir) do
     html_files = Path.wildcard(Path.join(doc_dir, "**/*.html"))
-    readme_html = Path.join(doc_dir, "README.html")
+    readme_html = Path.join(doc_dir, "readme.html")
 
     issues =
       []

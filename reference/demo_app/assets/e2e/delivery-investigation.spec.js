@@ -91,7 +91,7 @@ test("Phase 175 retained Delivery scenario inventory and production composition"
     "Expiry date not recorded"
   );
   await expect(unknownExpiry.getByTestId("operator-suppression-card")).toContainText(
-    "Mailglass does not allow removal"
+    "mailglass does not allow removal"
   );
   await expect(unknownExpiry.getByTestId("operator-suppression-card")).not.toContainText(
     "Never expires"

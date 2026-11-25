@@ -395,6 +395,7 @@ test.describe("Phase 177 Account scope", () => {
         await page.setViewportSize({ width, height: 900 });
         await openHealth(page, accountId);
         await page.goto(`/ops/mail?tenant_id=${accountId}&theme=${theme}`);
+        await expect(page.locator("[data-phx-main].phx-connected")).toHaveCount(1);
         await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
         await scan(`health ${theme} ${width}`);
 

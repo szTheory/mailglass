@@ -17,7 +17,7 @@ defmodule Mailglass.ReferenceHost.PublicSeamsContractTest do
       "mailglass_admin_routes/2",
       "mailglass_operator_routes/2",
       "MailglassInbound.Ingress.Plug",
-       "Public seam boundary: this host does not call mailglass internal modules or provider internals."
+      "Public seam boundary: this host does not call Mailglass internal modules or provider internals."
     ]
 
     forbidden_tokens = [

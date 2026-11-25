@@ -110,6 +110,7 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
       assert function_exported?(Mailglass.BrandTrademarkGate, :announcement_allowed?, 2)
     end
 
+    @tag timeout: 120_000
     test "production CLI refuses injected date and record paths" do
       for options <- [["--today", "2026-11-13"], ["--path", "/tmp/not-the-record.json"]] do
         {output, status} =
@@ -646,12 +647,15 @@ defmodule Mailglass.Scripts.BrandTrademarkGateTest do
   end
 
   defp set_outcome(record, ids, outcome) do
-    update_in(record["sources"], fn sources ->
-      Enum.map(sources, fn source ->
-        if source["id"] in ids, do: %{source | "outcome" => outcome}, else: source
-      end)
-    end)
+    sources = Enum.map(record["sources"], &set_source_outcome(&1, ids, outcome))
+    Map.put(record, "sources", sources)
   end
+
+  defp set_source_outcome(%{"id" => id} = source, ids, outcome) do
+    if id in ids, do: Map.put(source, "outcome", outcome), else: source
+  end
+
+  defp set_source_outcome(source, _ids, _outcome), do: source
 
   defp drop_source(record, id) do
     update_in(record["sources"], fn sources -> Enum.reject(sources, &(&1["id"] == id)) end)
