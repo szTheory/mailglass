@@ -10,6 +10,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
   attr(:suppression_state, :map, default: nil)
   attr(:read_state, :atom, default: :ready)
+  attr(:id_prefix, :string, default: nil)
 
   def suppression_card(assigns) do
     assigns =
@@ -21,7 +22,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
     ~H"""
     <Components.card
-      id="delivery-suppression"
+      id={prefixed_id(@id_prefix, "delivery-suppression")}
       padding={:lg}
       data-testid="operator-suppression-card"
       data-group-card="operator-suppression-card"
@@ -30,7 +31,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
         <div class="flex flex-wrap items-center gap-xs">
           <h3 class="text-body font-bold text-base-content">Current suppression</h3>
           <Components.field_help
-            id="delivery-suppression-scope"
+            id={prefixed_id(@id_prefix, "delivery-suppression-scope")}
             label="suppression scope"
             text="This shows one current mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
           />
@@ -112,7 +113,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
         phx-click="retry_suppression"
         phx-disable-with="Refreshing suppression…"
         phx-hook="SuppressionRefreshFocus"
-        id="operator-suppression-refresh-action"
+        id={prefixed_id(@id_prefix, "operator-suppression-refresh-action")}
         class="btn btn-ghost mt-md min-h-11"
         data-testid="operator-suppression-refresh"
       >
@@ -147,6 +148,9 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       _ -> "Unavailable"
     end
   end
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp scope_label(:address), do: "Address • Account-local"
   defp scope_label(:domain), do: "Domain • Account-local"

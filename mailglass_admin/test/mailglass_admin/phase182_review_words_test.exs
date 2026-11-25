@@ -10,9 +10,8 @@ defmodule MailglassAdmin.Phase182ReviewWordsTest do
   change and a new deterministic test, never by argument, so this file proves, for every
   delivery status and for every Activity summary tile, that the help text names an email.
 
-  Scope: the delivery (outbound) wording only. The inbound outcome help keeps its own
-  vocabulary, and the support-card help strings are pinned by an evidence-bound persona
-  baseline, so neither is scanned here.
+  The check covers both outbound and inbound status help plus the evidence-bound support
+  card copy, so the same screen-language rule holds across the operator surfaces.
 
   Lane: required (`mix verify.support_contract.admin`).
   """
@@ -25,6 +24,7 @@ defmodule MailglassAdmin.Phase182ReviewWordsTest do
 
   @tenant_id "browser-tenant"
   @message_word ~r/\bmessages?\b/i
+  @operator_live_source Path.expand("../../lib/mailglass_admin/operator_live.ex", __DIR__)
 
   describe "delivery outcome help" do
     test "names an email, never a message, for every status the product knows" do
@@ -46,8 +46,27 @@ defmodule MailglassAdmin.Phase182ReviewWordsTest do
       assert message_hits(text) == []
     end
 
-    test "the inbound help keeps its own words (the scan is scoped to delivery)" do
-      assert message_hits(Components.outcome_description(:inbound, :accepted)) != []
+    test "names an inbound email, never a message, for every inbound outcome" do
+      for status <- [
+            :accepted,
+            :no_match,
+            :ignore,
+            :no_change,
+            :rejected,
+            :bounced,
+            :failed,
+            :missing_history
+          ] do
+        text = Components.outcome_description(:inbound, status)
+
+        assert message_hits(text) == [],
+               "inbound #{status} help says #{inspect(message_hits(text))}: #{text}"
+      end
+    end
+
+    test "the context-free processing fallback names an email" do
+      assert Components.outcome_description(:other, :unknown) ==
+               "Open the email to inspect its recorded processing history."
     end
   end
 
@@ -67,6 +86,22 @@ defmodule MailglassAdmin.Phase182ReviewWordsTest do
       end
 
       assert tile_text(html, :awaiting) =~ "Emails are queued or have been sent to the provider"
+    end
+  end
+
+  describe "support-card help" do
+    test "delivery and inbound summary copy uses the approved email wording" do
+      source = File.read!(@operator_live_source)
+
+      for copy <- [
+            "The provider reported that these emails could not be delivered.",
+            "The provider rejected these emails.",
+            "Mailbox processing ended in failure when these inbound emails were received. Open an email to inspect its error and any later recovery attempts.",
+            "No mailbox routing rule matched these inbound emails when they were received."
+          ] do
+        assert source =~ copy
+        assert message_hits(copy) == []
+      end
     end
   end
 

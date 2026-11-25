@@ -4859,6 +4859,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-master-detail")
       assert html =~ ~s(data-testid="operator-deliveries-list")
       refute html =~ ~s(data-testid="operator-overview")
+
+      {:ok, doc} = Floki.parse_document(html)
+      assert [mobile_card] = Floki.find(doc, ~s(ul[data-testid="operator-deliveries-list"] > li))
+      assert "space-y-sm" in (mobile_card |> Floki.attribute("class") |> hd() |> String.split())
     end
 
     # SHELL-02: operator-overview-nav block deleted (D-04/D-NAV-DUP)

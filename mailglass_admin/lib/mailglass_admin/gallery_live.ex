@@ -179,6 +179,7 @@ defmodule MailglassAdmin.GalleryLive do
       kind={@assigns_map[:kind]}
       message={@assigns_map[:message]}
       placement={:inline}
+      id_prefix={"gallery-#{@specimen_id}"}
     />
     """
   end
@@ -311,6 +312,7 @@ defmodule MailglassAdmin.GalleryLive do
       deliveries={@assigns_map[:deliveries]}
       selected_delivery={@assigns_map[:selected_delivery]}
       data_state={@assigns_map[:data_state]}
+      id_prefix={"gallery-#{@specimen_id}"}
     />
     """
   end
@@ -328,7 +330,10 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :detail_header} = assigns) do
     ~H"""
-    <DetailHeader.detail_header delivery={@assigns_map[:delivery]} />
+    <DetailHeader.detail_header
+      delivery={@assigns_map[:delivery]}
+      id_prefix={"gallery-#{@specimen_id}"}
+    />
     """
   end
 
@@ -383,7 +388,10 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :suppression_card} = assigns) do
     ~H"""
-    <SuppressionCard.suppression_card suppression_state={@assigns_map[:suppression_state]} />
+    <SuppressionCard.suppression_card
+      suppression_state={@assigns_map[:suppression_state]}
+      id_prefix={"gallery-#{@specimen_id}"}
+    />
     """
   end
 
@@ -392,6 +400,7 @@ defmodule MailglassAdmin.GalleryLive do
     <Timeline.timeline
       timeline_events={@assigns_map[:timeline_events]}
       highlight_event_id={@assigns_map[:highlight_event_id]}
+      id_prefix={"gallery-#{@specimen_id}"}
     />
     """
   end
@@ -409,7 +418,10 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :routing_trace} = assigns) do
     ~H"""
-    <RoutingTrace.routing_trace trace={@assigns_map[:trace]} />
+    <RoutingTrace.routing_trace
+      trace={@assigns_map[:trace]}
+      id_prefix={"gallery-#{@specimen_id}"}
+    />
     """
   end
 
@@ -418,6 +430,7 @@ defmodule MailglassAdmin.GalleryLive do
     <EvidenceCard.evidence_card
       evidence={@assigns_map[:evidence]}
       reveal_state={@assigns_map[:reveal_state]}
+      id_prefix={"gallery-#{@specimen_id}"}
     />
     """
   end
@@ -464,7 +477,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp render_specimen(%{component: :composed_support_triage} = assigns) do
     ~H"""
     <div data-testid="gallery-composed-support-triage">
-      <.composed_support_triage />
+      <.composed_support_triage id_prefix={"gallery-#{@specimen_id}"} />
     </div>
     """
   end
@@ -472,7 +485,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp render_specimen(%{component: :composed_routing_evidence} = assigns) do
     ~H"""
     <div data-testid="gallery-composed-routing-evidence">
-      <.composed_routing_evidence />
+      <.composed_routing_evidence id_prefix={"gallery-#{@specimen_id}"} />
     </div>
     """
   end
@@ -480,7 +493,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp render_specimen(%{component: :composed_detail_timeline} = assigns) do
     ~H"""
     <div data-testid="gallery-composed-detail-timeline">
-      <.composed_detail_timeline />
+      <.composed_detail_timeline id_prefix={"gallery-#{@specimen_id}"} />
     </div>
     """
   end
@@ -496,6 +509,7 @@ defmodule MailglassAdmin.GalleryLive do
     <Timeline.timeline
       timeline_events={[@assigns_map[:event]]}
       highlight_event_id={@assigns_map[:highlight_event_id]}
+      id_prefix={"gallery-#{@specimen_id}"}
     />
     """
   end
@@ -537,6 +551,8 @@ defmodule MailglassAdmin.GalleryLive do
   @doc false
   # Operator detail column: detail_header + support_cards + timeline + suppression_card
   # (operator_live.ex:579-593 order).
+  attr(:id_prefix, :string, default: nil)
+
   def composed_support_triage(assigns) do
     assigns =
       assigns
@@ -564,9 +580,16 @@ defmodule MailglassAdmin.GalleryLive do
 
     ~H"""
     <div data-region class="space-y-4">
-      <DetailHeader.detail_header delivery={@delivery} />
-      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
-      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+      <DetailHeader.detail_header delivery={@delivery} id_prefix={@id_prefix} />
+      <Timeline.timeline
+        timeline_events={[]}
+        highlight_event_id={@highlight_event_id}
+        id_prefix={@id_prefix}
+      />
+      <SuppressionCard.suppression_card
+        suppression_state={@suppression_state}
+        id_prefix={@id_prefix}
+      />
       <SupportCards.support_cards
         support_summary={
           %{
@@ -594,13 +617,19 @@ defmodule MailglassAdmin.GalleryLive do
   @doc false
   # Inbound routing+evidence group: routing_trace + evidence_card
   # (inbound_live.ex:493-500 routing/evidence pairing).
+  attr(:id_prefix, :string, default: nil)
+
   def composed_routing_evidence(assigns) do
     assigns = assign(assigns, :evidence, nil)
 
     ~H"""
     <div data-region class="space-y-4">
-      <RoutingTrace.routing_trace trace={[]} />
-      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} />
+      <RoutingTrace.routing_trace trace={[]} id_prefix={@id_prefix} />
+      <EvidenceCard.evidence_card
+        evidence={@evidence}
+        reveal_state={:redacted}
+        id_prefix={@id_prefix}
+      />
     </div>
     """
   end
@@ -608,6 +637,8 @@ defmodule MailglassAdmin.GalleryLive do
   @doc false
   # Inbound detail column head: inbound detail_header + inbound timeline
   # (inbound_live.ex:491-492 order).
+  attr(:id_prefix, :string, default: nil)
+
   def composed_detail_timeline(assigns) do
     assigns =
       assign(assigns, :detail, %{

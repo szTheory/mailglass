@@ -263,6 +263,7 @@ defmodule MailglassAdmin.Components do
   attr(:flash_key, :atom, default: nil)
   attr(:message, :string, required: true)
   attr(:placement, :atom, values: [:toast, :inline], default: :toast)
+  attr(:id_prefix, :string, default: nil)
 
   @doc """
   Renders a brand-voice flash message in a daisyUI toast wrapper.
@@ -278,7 +279,7 @@ defmodule MailglassAdmin.Components do
 
     ~H"""
     <div
-      id={"flash-#{@kind}"}
+      id={prefixed_id(@id_prefix, "flash-#{@kind}")}
       class={
         if @placement == :toast,
           do: "toast toast-top toast-end mg-toast mg-layer-toast"
@@ -308,6 +309,9 @@ defmodule MailglassAdmin.Components do
   defp flash_kind_label(:success), do: "success"
   defp flash_kind_label(:warning), do: "warning"
   defp flash_kind_label(:error), do: "error"
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp alert_class(:info), do: "alert-info"
   defp alert_class(:success), do: "alert-success"
@@ -854,7 +858,7 @@ defmodule MailglassAdmin.Components do
       case full_name do
         "Unrouted" ->
           {full_name,
-           "None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.",
+           "None of the routing rules matched this inbound email, so it wasn't sent to a mailbox. Open the email to see which rules were checked.",
            false}
 
         "No execution recorded" ->
@@ -864,9 +868,9 @@ defmodule MailglassAdmin.Components do
           {"Not recorded",
            if(Map.get(assigns.record, :outcome) == :failed,
              do:
-               "Processing failed, but no mailbox name was saved for this attempt. Open the message to inspect the error.",
+               "Processing failed, but no mailbox name was saved for this attempt. Open the email to inspect the error.",
              else:
-               "No mailbox name was saved for this processing attempt. Open the message to inspect its processing history."
+               "No mailbox name was saved for this processing attempt. Open the email to inspect its processing history."
            ), false}
 
         mailbox ->
@@ -1567,10 +1571,10 @@ defmodule MailglassAdmin.Components do
     <span
       :if={@mark}
       data-mg-status={@mark.class}
-      class="badge badge-outline badge-md text-label whitespace-nowrap"
+      class={["badge badge-outline text-label whitespace-nowrap", size_class(@size)]}
       style={"color: var(--mg-color-#{@mark.role})"}
     >
-      <.status_mark class={@mark.class} size={:row} />{@mark.word}
+      <.status_mark class={@mark.class} size={mark_size(@size)} />{@mark.word}
     </span>
     <span
       :if={!@mark}
@@ -1607,13 +1611,16 @@ defmodule MailglassAdmin.Components do
 
   defp mark_branch(_assigns), do: nil
 
+  defp mark_size(:sm), do: :row
+  defp mark_size(:md), do: :detail
+
   attr(:row, :map, required: true, doc: "one operator delivery row from the list or get_delivery")
   attr(:size, :atom, values: [:row, :detail], default: :row)
 
   @doc """
   The status badge for one operator delivery row: the pane mark and the class word.
 
-  A thin wrapper: it picks the class and the word from `MailglassAdmin.Copy` and calls
+  A thin wrapper: it picks the class and the word from MailglassAdmin.Copy and calls
   `status_badge/1`, which draws the mark. A row without the `:bounced_at` key comes from
   a core that predates the lifecycle fields, so it gets the Unknown badge and never a
   confident class word.
@@ -1665,14 +1672,14 @@ defmodule MailglassAdmin.Components do
 
   attr(:verdict, :map,
     required: true,
-    doc: "the map from `MailglassAdmin.Copy.delivery_verdict/2`"
+    doc: "the map from MailglassAdmin.Copy.delivery_verdict/2"
   )
 
   attr(:form, :atom, values: [:full, :line], default: :full)
   attr(:id, :string, required: true)
 
   @doc """
-  Renders one delivery verdict. The verdict is computed once, in `MailglassAdmin.Copy`;
+  Renders one delivery verdict. The verdict is computed once, in MailglassAdmin.Copy;
   this component only draws it, so a row, the Quick view and Full detail cannot disagree.
 
   The full form leads with the pane mark and the class word, then the sentence, the
@@ -1799,29 +1806,30 @@ defmodule MailglassAdmin.Components do
   @doc false
   def outcome_description(context, status), do: outcome_help(context, status)
 
-  defp outcome_help(:inbound, :accepted), do: "A mailbox processed and accepted this message."
+  defp outcome_help(:inbound, :accepted),
+    do: "A mailbox processed and accepted this inbound email."
 
   defp outcome_help(:inbound, :no_match),
-    do: "No routing rule matched, so this message was not sent to a mailbox."
+    do: "No routing rule matched, so this inbound email was not sent to a mailbox."
 
   defp outcome_help(:inbound, :ignore),
-    do: "The mailbox deliberately skipped this message without rejecting it."
+    do: "The mailbox deliberately skipped this inbound email without rejecting it."
 
   defp outcome_help(:inbound, :no_change),
-    do: "The mailbox processed this message without changing its state."
+    do: "The mailbox processed this inbound email without changing its state."
 
   defp outcome_help(:inbound, :rejected),
-    do: "The mailbox rejected this message. Open it to inspect the recorded reason."
+    do: "The mailbox rejected this inbound email. Open it to inspect the recorded reason."
 
   defp outcome_help(:inbound, :bounced),
     do:
-      "The mailbox returned a bounce result for this message. Open it to inspect the recorded reason."
+      "The mailbox returned a bounce result for this inbound email. Open it to inspect the recorded reason."
 
   defp outcome_help(:inbound, :failed),
-    do: "Mailbox processing failed. Open the message to inspect the error."
+    do: "Inbound email processing failed. Open the email to inspect the error."
 
   defp outcome_help(:inbound, :missing_history),
-    do: "No mailbox processing attempt is recorded for this message."
+    do: "No mailbox processing attempt is recorded for this inbound email."
 
   defp outcome_help(:delivery, :queued), do: "This email is waiting to be sent to the provider."
 
@@ -1875,7 +1883,7 @@ defmodule MailglassAdmin.Components do
   # A delivery status with no clause above names an email, never a "message" (the brand words).
   defp outcome_help(:delivery, _), do: "Open the email to inspect its recorded history."
 
-  defp outcome_help(_, _), do: "Open the message to inspect its recorded processing history."
+  defp outcome_help(_, _), do: "Open the email to inspect its recorded processing history."
 
   # Downstream outcome events that supersede the dispatch snapshot — when one of these
   # is the delivery's latest event, it IS the status the operator should see.

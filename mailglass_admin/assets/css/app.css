@@ -316,6 +316,13 @@
   }
 }
 
+/* Placeholder text is useful content, so give it the full secondary text role
+   instead of daisyUI's half-opacity base-content treatment. */
+::placeholder {
+  color: var(--color-secondary);
+  opacity: 1;
+}
+
 .mg-nav-current .mg-nav-label {
   text-decoration: underline;
   text-decoration-color: var(--color-primary);

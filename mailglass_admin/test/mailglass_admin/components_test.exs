@@ -48,7 +48,9 @@ defmodule MailglassAdmin.ComponentsTest do
         context: :inbound
       )
 
-    assert failed =~ "Mailbox processing failed"
+    assert failed =~ "Inbound email processing failed"
+    assert failed =~ "Open the email to inspect the error"
+    refute failed =~ "message"
   end
 
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
@@ -88,6 +90,35 @@ defmodule MailglassAdmin.ComponentsTest do
 
       assert_class_badge(html, "sent", "Sent")
       refute html =~ "hero-paper-airplane"
+    end
+
+    test "class badges honor compact and detail sizes for both badge and mark" do
+      compact =
+        render_component(&Components.status_badge/1,
+          status: :sent,
+          size: :sm,
+          context: :delivery
+        )
+
+      detail =
+        render_component(&Components.status_badge/1,
+          status: :sent,
+          size: :md,
+          context: :delivery
+        )
+
+      assert [compact_badge] = Floki.parse_fragment!(compact) |> Floki.find("[data-mg-status]")
+      assert [detail_badge] = Floki.parse_fragment!(detail) |> Floki.find("[data-mg-status]")
+      assert "badge-sm" in (compact_badge |> Floki.attribute("class") |> hd() |> String.split())
+      assert "badge-md" in (detail_badge |> Floki.attribute("class") |> hd() |> String.split())
+
+      assert [compact_mark] = Floki.find(compact_badge, "svg")
+      assert Floki.attribute(compact_mark, "width") == ["17"]
+      assert Floki.attribute(compact_mark, "height") == ["20"]
+
+      assert [detail_mark] = Floki.find(detail_badge, "svg")
+      assert Floki.attribute(detail_mark, "width") == ["37"]
+      assert Floki.attribute(detail_mark, "height") == ["44"]
     end
 
     test "sent without a delivery context keeps badge-primary + paper-airplane icon" do

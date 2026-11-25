@@ -27,6 +27,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   alias MailglassAdmin.Operator.ResultsStatus
 
   attr(:heading, :string, default: "Activity")
+  attr(:id_prefix, :string, default: nil)
   attr(:deliveries, :list, required: true)
   attr(:account_labels, :map, default: %{})
 
@@ -179,7 +180,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     phx-keydown="select_delivery"
                     phx-key="Enter"
                     phx-value-id={delivery.id}
-                    phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                    phx-value-focus-return-id={row_id(@id_prefix, :desktop, delivery.id)}
                     tabindex="0"
                     class={[
                       "transition-colors",
@@ -188,11 +189,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   >
                     <td class="min-w-0 text-body text-base-content">
                       <button
-                        id={row_id(:desktop, delivery.id)}
+                        id={row_id(@id_prefix, :desktop, delivery.id)}
                         type="button"
                         phx-click="select_delivery"
                         phx-value-id={delivery.id}
-                        phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                        phx-value-focus-return-id={row_id(@id_prefix, :desktop, delivery.id)}
                         aria-label={"Open delivery for #{delivery.recipient}"}
                         aria-current={
                           if selected?(@selected_delivery, delivery), do: "true", else: "false"
@@ -248,9 +249,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 data-testid="operator-deliveries-list"
                 class="divide-y divide-base-300 tabular-nums"
               >
-                <li :for={delivery <- @deliveries} class="px-4 py-4">
+                <li :for={delivery <- @deliveries} class="px-4 py-4 space-y-sm">
                   <button
-                    id={row_id(:mobile, delivery.id)}
+                    id={row_id(@id_prefix, :mobile, delivery.id)}
                     data-testid="operator-delivery-row"
                     data-selected={
                       if selected?(@selected_delivery, delivery), do: "true", else: "false"
@@ -258,7 +259,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     type="button"
                     phx-click="select_delivery"
                     phx-value-id={delivery.id}
-                    phx-value-focus-return-id={row_id(:mobile, delivery.id)}
+                    phx-value-focus-return-id={row_id(@id_prefix, :mobile, delivery.id)}
                     aria-current={
                       if selected?(@selected_delivery, delivery), do: "true", else: "false"
                     }
@@ -437,8 +438,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   defp event_label(event) when is_atom(event),
     do: event |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
 
-  defp row_id(:desktop, id), do: "operator-delivery-desktop-#{id}"
-  defp row_id(:mobile, id), do: "operator-delivery-mobile-#{id}"
+  defp row_id(nil, :desktop, id), do: "operator-delivery-desktop-#{id}"
+  defp row_id(nil, :mobile, id), do: "operator-delivery-mobile-#{id}"
+  defp row_id(prefix, :desktop, id), do: "#{prefix}-operator-delivery-desktop-#{id}"
+  defp row_id(prefix, :mobile, id), do: "#{prefix}-operator-delivery-mobile-#{id}"
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"

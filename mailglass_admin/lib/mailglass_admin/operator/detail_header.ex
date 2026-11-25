@@ -11,6 +11,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   alias MailglassAdmin.Operator.MailerName
 
   attr(:delivery, :map, required: true)
+  attr(:id_prefix, :string, default: nil)
   attr(:account_labels, :map, default: %{})
   # The evidence the verdict may read: the loaded timeline and the suppression match.
   # A read that did not succeed is passed on as such, so the verdict never shows a
@@ -41,11 +42,11 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           status={Components.delivery_display_status(@delivery)}
           delivery_row={@delivery}
           context={:delivery}
-          id="delivery-detail-outcome"
+          id={prefixed_id(@id_prefix, "delivery-detail-outcome")}
         />
         <Components.delivery_verdict
           form={:full}
-          id="delivery-detail-verdict"
+          id={prefixed_id(@id_prefix, "delivery-detail-verdict")}
           verdict={
             Copy.delivery_verdict(@delivery, %{
               events: events_evidence(@timeline_state, @timeline_events),
@@ -61,7 +62,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
             <dt class="text-label font-bold">Mailer</dt>
             <dd class="mt-xs text-base-content">
               <Components.field_help
-                id="delivery-detail-mailer"
+                id={prefixed_id(@id_prefix, "delivery-detail-mailer")}
                 label={@mailer_name}
                 text={@mailer_identity}
                 trigger_text={@mailer_name}
@@ -105,7 +106,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
         </dl>
         <Components.technical_details
           collapsible={true}
-          id="delivery-detail-technical"
+          id={prefixed_id(@id_prefix, "delivery-detail-technical")}
         >
           <div>
             <dt class="text-label font-bold text-secondary">Delivery ID</dt>
@@ -148,4 +149,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   end
 
   defp present?(value), do: value not in [nil, ""]
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 end

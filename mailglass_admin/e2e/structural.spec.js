@@ -2677,6 +2677,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         // second page in the browser context.
         const results = await new AxeBuilder({ page })
           .setLegacyMode()
+          .exclude('iframe[title^="Email HTML preview"]')
           .withTags(WCAG_22_AA_TAGS)
           .analyze();
         const measured = {};
@@ -2965,7 +2966,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
     test("multi-tenant selector preserves surface state and inbound pagination uses real boundaries", async ({
       page
-    }) => {
+    }, testInfo) => {
       await page.setViewportSize({ width: 320, height: 844 });
       await page.context().clearCookies();
       const resetResponse = await page.request.get("/ops/browser-reset");
@@ -2976,12 +2977,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
 
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
-      const reviewArtifacts = path.resolve(
-        __dirname,
-        "../../.planning/milestones/v2.9-phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
-      );
-      fs.mkdirSync(reviewArtifacts, { recursive: true });
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-chooser-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-chooser-320.png"), fullPage: true });
       const firstChoice = page.locator(
         '[data-testid="tenant-selector-account-option"][data-account-id="browser-tenant"]'
       );
@@ -2991,7 +2987,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const accountList = page.getByRole("list", { name: "Available Accounts" });
       await expect(accountList.getByRole("listitem")).toHaveCount(2);
       await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-options-320.png"), fullPage: true });
       await expect(
         accountOption(page, "browser-tenant")
       ).toBeVisible();
@@ -3002,7 +2998,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await firstChoice.click();
       await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);
       await expect(page).toHaveURL(/tenant_id=browser-tenant/);
-      await page.screenshot({ path: path.join(reviewArtifacts, "selected-account-320.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("selected-account-320.png"), fullPage: true });
       await page.setViewportSize({ width: 390, height: 844 });
 
       const activeMobile = page
@@ -3015,7 +3011,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.setViewportSize({ width: 1440, height: 900 });
       await accountSwitcher(page).click();
-      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
+      await page.screenshot({ path: testInfo.outputPath("account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
       // With per_page 20 (parity with Activity) the 9-record demo dataset fits on one

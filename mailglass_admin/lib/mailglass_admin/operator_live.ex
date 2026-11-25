@@ -2890,8 +2890,8 @@ defmodule MailglassAdmin.OperatorLive do
         {:failed, "Failed emails",
          "These emails did not get through: sending failed, or the provider reported a failure."},
         {:bounced, "Bounced emails",
-         "The provider reported that these messages could not be delivered."},
-        {:rejected, "Rejected emails", "The provider rejected these messages."},
+         "The provider reported that these emails could not be delivered."},
+        {:rejected, "Rejected emails", "The provider rejected these emails."},
         {:deferred, "Delayed emails",
          "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
       ]
@@ -2933,9 +2933,9 @@ defmodule MailglassAdmin.OperatorLive do
       if Map.has_key?(states, :inbound_activity) do
         [
           {:failed, "Failed inbound processing",
-           "Mailbox processing ended in failure when these messages were received. Open a message to inspect its error and any later recovery attempts."},
+           "Mailbox processing ended in failure when these inbound emails were received. Open an email to inspect its error and any later recovery attempts."},
           {:no_match, "Unrouted inbound messages",
-           "No mailbox routing rule matched these messages when they were received."}
+           "No mailbox routing rule matched these inbound emails when they were received."}
         ]
         |> Enum.map(fn {outcome, label, help} ->
           %{

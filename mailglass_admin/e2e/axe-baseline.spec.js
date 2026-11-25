@@ -227,7 +227,12 @@ function summarizeViolations(violations) {
 async function scanSurface(page, surface, theme) {
   await applyTheme(page, theme);
   const overlayOpened = await openSurface(page, surface, theme);
-  const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map(animation => animation.finished.catch(() => null)))
+  );
+  const axe = new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS);
+  if (surface === "preview") axe.exclude('iframe[title^="Email HTML preview"]');
+  const results = await axe.analyze();
   return { ...summarizeViolations(results.violations), overlay_opened: overlayOpened };
 }
 

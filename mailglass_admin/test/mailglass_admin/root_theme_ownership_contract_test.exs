@@ -25,7 +25,6 @@ defmodule MailglassAdmin.RootThemeOwnershipContractTest do
   @operator_path "/ops/mail?tenant_id=" <> @tenant_id
   @inbound_path "/ops/mail/inbound?tenant_id=" <> @tenant_id
   @gallery_path "/dev/mail/gallery"
-  @duplicate_id_floor 39
 
   @lib_dir Path.expand("../../lib", __DIR__)
   @root_layout "mailglass_admin/layouts/root.html.heex"
@@ -97,13 +96,7 @@ defmodule MailglassAdmin.RootThemeOwnershipContractTest do
              "#{specimen_count} specimen wrappers for #{length(cells)} state cells"
     end
 
-    # Collapsing the light, dark and system columns to one specimen took the
-    # distinct duplicated id values from 182 to 39 (measured). The 39 left are
-    # literal ids owned by shared components that the gallery renders in several
-    # states (flash-error, inbound-routing-trace-content, delivery-detail-*).
-    # Making those unique is a component change outside BRPIPE-02 (see the
-    # phase deferred-items file); this floor stops the count from growing back.
-    test "duplicated id values stay at or below the post-collapse floor", %{conn: conn} do
+    test "every id value in the gallery document is unique", %{conn: conn} do
       duplicates =
         conn
         |> get(@gallery_path)
@@ -115,8 +108,8 @@ defmodule MailglassAdmin.RootThemeOwnershipContractTest do
         |> Enum.filter(fn {_id, n} -> n > 1 end)
         |> Enum.map(&elem(&1, 0))
 
-      assert length(duplicates) <= @duplicate_id_floor,
-             "#{length(duplicates)} duplicated id values, floor is #{@duplicate_id_floor}: " <>
+      assert duplicates == [],
+             "#{length(duplicates)} duplicated id values: " <>
                inspect(Enum.sort(duplicates))
     end
 

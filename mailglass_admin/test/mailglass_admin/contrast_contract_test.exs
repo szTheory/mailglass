@@ -296,10 +296,8 @@ defmodule MailglassAdmin.ContrastContractTest do
       carrying: ["text-secondary-on-base-100", "text-secondary-on-base-200"]
     },
     "::placeholder" => %{
-      exempt:
-        "placeholder hint in inbound/filters_form.ex; about 3.1:1 under the v2 palette and " <>
-          "3.3:1 under the retired v1 palette, so this phase did not make it new, and axe does not " <>
-          "evaluate placeholder pseudo-text; recorded in the phase deferred items for Phase 182"
+      override: "::placeholder{color:var(--color-secondary);opacity:1}",
+      carrying: ["text-secondary-on-base-100", "text-secondary-on-base-200"]
     }
   }
 

@@ -146,7 +146,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
       <%!-- Tier 1: non-zero/actionable counts — full card containers --%>
       <div class="flex flex-col gap-lg mt-md">
         <article
-          :if={@support_summary && @support_summary.failed_ingest.count > 0}
+          :if={(summary_count(@support_summary, :failed_ingest) || 0) > 0}
           class="rounded-box bg-base-100 p-lg border-l-4 border-error"
           data-testid="support-card-failed-ingest-tier1"
         >

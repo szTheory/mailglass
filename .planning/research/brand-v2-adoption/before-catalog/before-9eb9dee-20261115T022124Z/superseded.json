@@ -2,9 +2,9 @@
   "schema": "mailglass.before_catalog.superseded.v1",
   "catalog_id": "before-9eb9dee-20261115T022124Z",
   "superseded_by": {
-    "bundle_sha256": "fc2df1a788e0089beb3c9778582917e0b5cbe10d231795ea05f23e757fadc1f0",
+    "bundle_sha256": "6021738074f81d9dd634e4d9b8928796fac90c26f8e36a371d91c985f00b84c9",
     "root_layout_git_blob_sha": "c89fca348193f24ea614f0d48e8ff29187d7b519"
   },
-  "superseded_in": "Phase 182 plan 182-03: the zone token sits inline from the sm breakpoint",
-  "reason": "Brand v2 tokens, fonts and logo replace the captured v1 look; PNGs, cases.json and manifest.json stay immutable."
+  "superseded_in": "v2.11: enforce the secondary text role for input placeholders",
+  "reason": "The placeholder contrast fix regenerated the Admin CSS bundle; immutable catalog captures remain bound to their original bytes."
 }

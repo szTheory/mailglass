@@ -9,6 +9,7 @@ defmodule MailglassAdmin.Operator.Timeline do
   alias MailglassAdmin.Operator.RepairState
 
   attr(:timeline_events, :list, required: true)
+  attr(:id_prefix, :string, default: nil)
   attr(:highlight_event_id, :string, default: nil)
   attr(:read_state, :atom, default: :ready)
   attr(:selected_event, :map, default: nil)
@@ -96,7 +97,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                               :autoresponded
                             ]
                           }
-                          id={"delivery-event-outcome-#{event.id}"}
+                          id={prefixed_id(@id_prefix, "delivery-event-outcome-#{event.id}")}
                           label={event_label(event.type)}
                           trigger_text={event_label(event.type)}
                           trigger_class="font-bold text-base-content"
@@ -142,7 +143,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                       <Components.technical_details
                         collapsible={not is_nil(provider_reference(event))}
                         divider?={false}
-                        id={"delivery-event-technical-#{event.id}"}
+                        id={prefixed_id(@id_prefix, "delivery-event-technical-#{event.id}")}
                       >
                         <div>
                           <dt class="text-label font-bold text-secondary">Event ID</dt>
@@ -241,6 +242,9 @@ defmodule MailglassAdmin.Operator.Timeline do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp event_label(:autoresponded), do: "Auto-replied"
 

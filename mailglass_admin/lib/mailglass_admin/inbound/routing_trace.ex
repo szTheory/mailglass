@@ -14,6 +14,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   alias MailglassAdmin.Components
 
   attr(:trace, :list, required: true)
+  attr(:id_prefix, :string, default: nil)
 
   def routing_trace(assigns) do
     ~H"""
@@ -24,14 +25,17 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     >
       <details data-testid="inbound-routing-disclosure">
         <summary
-          aria-controls="inbound-routing-trace-content"
+          aria-controls={prefixed_id(@id_prefix, "inbound-routing-trace-content")}
           class="mg-focus-ring block min-h-11 cursor-pointer rounded-box"
         >
           <span class="text-body font-bold text-base-content">Current router simulation</span>
           <span class="block text-label text-secondary">How current route rules compare</span>
         </summary>
 
-        <div id="inbound-routing-trace-content" class="mt-md space-y-md">
+        <div
+          id={prefixed_id(@id_prefix, "inbound-routing-trace-content")}
+          class="mt-md space-y-md"
+        >
           <p class="text-label text-secondary">
             These are today’s routing rules. They may differ from the rules used when this message arrived.
           </p>
@@ -50,7 +54,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                   <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
                     <Components.module_identity
                       value={route.mailbox}
-                      id={"inbound-route-mailbox-#{:erlang.phash2(route)}"}
+                      id={prefixed_id(@id_prefix, "inbound-route-mailbox-#{:erlang.phash2(route)}")}
                     />
                     <span
                       data-testid="inbound-route-result"
@@ -133,6 +137,9 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     </Components.card>
     """
   end
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""

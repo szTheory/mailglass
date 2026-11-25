@@ -471,7 +471,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   Shared by the sidebar links and `PreviewLive`'s start-page deep link so
   both build identical, mount-aware URLs. `mount_path` is the absolute base
   the admin surface is mounted at (`/dev/mail`, `/admin/preview`, …) as
-  recovered by `MailglassAdmin.MountPath.base/1`.
+  recovered by MailglassAdmin.MountPath.base/1.
   """
   @spec scenario_base_path(String.t() | nil, module(), atom() | String.t()) :: String.t()
   def scenario_base_path(mount_path, mod, scenario) do

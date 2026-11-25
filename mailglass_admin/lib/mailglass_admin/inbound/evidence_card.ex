@@ -46,6 +46,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   attr(:evidence, :map, default: nil)
   attr(:reveal_state, :atom, default: :redacted)
   attr(:received_at, :any, default: nil)
+  attr(:id_prefix, :string, default: nil)
 
   def evidence_card(assigns) do
     ~H"""
@@ -65,7 +66,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
           <p
             :if={@evidence && not nothing_stored?(@evidence)}
-            id="inbound-evidence-caption"
+            id={prefixed_id(@id_prefix, "inbound-evidence-caption")}
             data-testid="inbound-evidence-caption"
             class="text-label text-secondary"
           >
@@ -74,13 +75,13 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
         </div>
         <button
           :if={@evidence && not nothing_stored?(@evidence)}
-          id="inbound-evidence-reveal-btn"
+          id={prefixed_id(@id_prefix, "inbound-evidence-reveal-btn")}
           type="button"
           phx-click={if @reveal_state == :revealed, do: "re_redact_raw", else: "reveal_raw"}
           data-testid="inbound-evidence-reveal"
           aria-expanded={if @reveal_state == :revealed, do: "true", else: "false"}
-          aria-controls="inbound-evidence-raw"
-          aria-describedby="inbound-evidence-caption"
+          aria-controls={prefixed_id(@id_prefix, "inbound-evidence-raw")}
+          aria-describedby={prefixed_id(@id_prefix, "inbound-evidence-caption")}
           class="mg-focus-ring btn btn-ghost min-h-11 px-md border border-base-300 w-full sm:ml-auto sm:w-auto"
         >
           {if @reveal_state == :revealed, do: "Hide raw source", else: "Reveal raw source"}
@@ -138,7 +139,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <%= case @reveal_state do %>
             <% :revealed -> %>
               <pre
-                id="inbound-evidence-raw"
+                id={prefixed_id(@id_prefix, "inbound-evidence-raw")}
                 data-testid="inbound-evidence-raw"
                 tabindex="0"
                 aria-label="Raw provider source, read-only"
@@ -169,6 +170,9 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
     </.card>
     """
   end
+
+  defp prefixed_id(nil, id), do: id
+  defp prefixed_id(prefix, id), do: "#{prefix}-#{id}"
 
   # Byte size of the raw source the reveal shows, or nil when it cannot be known
   # (D-26). One selector, raw_source/1, drives both this size and the revealed
