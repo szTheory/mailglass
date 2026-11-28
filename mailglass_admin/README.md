@@ -56,8 +56,8 @@ If the app uses only the development preview, scope `mailglass_admin` to dev:
 
     def deps do
       [
-        {:mailglass, "~> 2.7"},
-        {:mailglass_admin, "~> 2.7", only: :dev}
+        {:mailglass, "~> 2.8"},
+        {:mailglass_admin, "~> 2.8", only: :dev}
       ]
     end
 
@@ -68,8 +68,8 @@ operator modules are compiled and available in production:
 
     def deps do
       [
-        {:mailglass, "~> 2.7"},
-        {:mailglass_admin, "~> 2.7"}
+        {:mailglass, "~> 2.8"},
+        {:mailglass_admin, "~> 2.8"}
       ]
     end
 
