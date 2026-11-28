@@ -14,6 +14,14 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.8.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.7.0...mailglass-v2.8.0) (2026-11-28)
+
+
+### Features
+
+* **admin:** adopt brand v2.0 across the admin, docs and unsubscribe page ([#331](https://github.com/szTheory/mailglass/issues/331)) ([969f0ee](https://github.com/szTheory/mailglass/commit/969f0ee0cf34657f9aaa5076e1ea387ffc36cba0))
+* **admin:** v2.10 UI repairs and faithful Storybook ([#317](https://github.com/szTheory/mailglass/issues/317)) ([c94fcdd](https://github.com/szTheory/mailglass/commit/c94fcdda32c73c93628b840f0b6b9feafe43cb17))
+
 ## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.6.0...mailglass-v2.7.0) (2026-10-26)
 
 
